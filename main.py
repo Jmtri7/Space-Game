@@ -100,21 +100,17 @@ class SaveDialog:
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
         self.save_name = ""
-        self.success_timer = 0
-        self.was_saved = False
-        self.existing_saves = self._get_pilot_saves()
+        self.existing_saves = self._get_all_saves()
         self.selected_existing = 0 if self.existing_saves else None
         self.input_mode = not self.existing_saves
 
-    def _get_pilot_saves(self):
-        if not self.pilot_name:
-            return []
+    def _get_all_saves(self):
         saves = []
         save_dir = "saves"
         if os.path.exists(save_dir):
             try:
                 for file in os.listdir(save_dir):
-                    if file.startswith(f"save_{self.pilot_name}_") and file.endswith(".json"):
+                    if file.startswith("save_") and file.endswith(".json"):
                         saves.append(file)
             except:
                 pass
@@ -150,20 +146,11 @@ class SaveDialog:
                     self.save_name += event.text
         return (None, None)
 
-    def update(self):
-        if self.success_timer > 0:
-            self.success_timer -= 1
-
     def draw(self, surface):
         scale = get_scale()
         offset_x, offset_y = get_offset()
 
-        if self.success_timer > 0:
-            pygame.draw.rect(surface, (40, 60, 40), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.4), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.2)))
-            font_text = pygame.font.Font(None, int(28 * scale))
-            success_text = font_text.render("Successfully saved!", True, (0, 255, 0))
-            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - success_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5)))
-        elif self.input_mode:
+        if self.input_mode:
             pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
             font_title = pygame.font.Font(None, int(32 * scale))
             font_text = pygame.font.Font(None, int(24 * scale))
@@ -181,13 +168,12 @@ class SaveDialog:
             font_title = pygame.font.Font(None, int(32 * scale))
             font_text = pygame.font.Font(None, int(20 * scale))
 
-            title = font_title.render("Overwrite Save", True, YELLOW)
+            title = font_title.render("Select Save to Overwrite", True, YELLOW)
             surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.2)))
 
             for i, save in enumerate(self.existing_saves[:5]):
                 color = YELLOW if i == self.selected_existing else GRAY
-                save_name = save.replace(f"save_{self.pilot_name}_", "").replace(".json", "")
-                text = font_text.render(save_name[:40], True, color)
+                text = font_text.render(save, True, color)
                 surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 35)))
 
             help_text = font_text.render("Enter: overwrite, N: new save, ESC: cancel", True, GRAY)
@@ -229,13 +215,18 @@ class LoadMenu:
         else:
             for i, save in enumerate(self.saves[:5]):
                 color = YELLOW if i == self.selected else GRAY
-                text = font_save.render(save[:50], True, color)
+                text = font_save.render(save, True, color)
                 surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 40)))
 
 class PauseMenu:
     def __init__(self):
         self.options = ["Resume", "Save Game", "Quit to Menu"]
         self.selected = 0
+        self.success_timer = 0
+
+    def update(self):
+        if self.success_timer > 0:
+            self.success_timer -= 1
 
     def handle_input(self, events):
         for event in events:
@@ -272,6 +263,11 @@ class PauseMenu:
             color = YELLOW if i == self.selected else GRAY
             text = font_option.render(option, True, color)
             surface.blit(text, (int(offset_x + GAME_WIDTH * scale // 2 - text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5 + i * 50)))
+
+        if self.success_timer > 0:
+            font_success = pygame.font.Font(None, int(32 * scale))
+            success_text = font_success.render("Saved!", True, (0, 255, 0))
+            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - success_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.15)))
 
 class Ship:
     def __init__(self, x, y):
@@ -940,9 +936,10 @@ def main():
                     station_interior.draw(screen)
 
             elif current_screen == "pause":
+                pause_menu.update()
+
                 if save_dialog:
                     dialog_action, save_name = save_dialog.handle_input(events)
-                    save_dialog.update()
                     if dialog_action == "save":
                         if not pilot_name and save_name:
                             pilot_name = save_name
@@ -954,11 +951,9 @@ def main():
                             create_save_file(pilot_name, save_name, game_screen.system_config, {})
                         elif station_interior:
                             create_save_file(pilot_name, save_name, station_interior.station_config, {})
-                        save_dialog.was_saved = True
-                    elif dialog_action == "cancel":
+                        pause_menu.success_timer = 120
                         save_dialog = None
-
-                    if save_dialog and save_dialog.was_saved and save_dialog.success_timer <= 0:
+                    elif dialog_action == "cancel":
                         save_dialog = None
 
                 if not save_dialog:

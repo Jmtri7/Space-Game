@@ -1,0 +1,27 @@
+{
+  "pilot_name": "Test Pilot",
+  "name": "Test Pilot",
+  "timestamp": "20260821_171511",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {}
+}
