@@ -75,14 +75,15 @@ def get_save_files():
         pass
     return sorted(saves, reverse=True)
 
-def create_save_file(pilot_name, name, system_data, station_data):
+def create_save_file(pilot_name, name, system_data, station_data, game_state=None):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_data = {
         "pilot_name": pilot_name,
         "name": name,
         "timestamp": timestamp,
         "system": system_data,
-        "station": station_data
+        "station": station_data,
+        "game_state": game_state or {}
     }
     save_dir = "saves"
     if not os.path.exists(save_dir):
@@ -784,6 +785,46 @@ class GameScreen:
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
+    def get_state(self):
+        return {
+            "player": {
+                "x": self.player.x,
+                "y": self.player.y,
+                "angle": self.player.angle,
+                "velocity_x": self.player.velocity_x,
+                "velocity_y": self.player.velocity_y,
+                "thrust": self.player.thrust
+            },
+            "ai_ship": {
+                "x": self.ai_ship.x,
+                "y": self.ai_ship.y,
+                "angle": self.ai_ship.angle,
+                "velocity_x": self.ai_ship.velocity_x,
+                "velocity_y": self.ai_ship.velocity_y,
+                "thrust": self.ai_ship.thrust
+            }
+        }
+
+    def restore_state(self, state):
+        if not state:
+            return
+        if "player" in state:
+            player_state = state["player"]
+            self.player.x = player_state.get("x", self.player.x)
+            self.player.y = player_state.get("y", self.player.y)
+            self.player.angle = player_state.get("angle", self.player.angle)
+            self.player.velocity_x = player_state.get("velocity_x", self.player.velocity_x)
+            self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
+            self.player.thrust = player_state.get("thrust", self.player.thrust)
+        if "ai_ship" in state:
+            ai_state = state["ai_ship"]
+            self.ai_ship.x = ai_state.get("x", self.ai_ship.x)
+            self.ai_ship.y = ai_state.get("y", self.ai_ship.y)
+            self.ai_ship.angle = ai_state.get("angle", self.ai_ship.angle)
+            self.ai_ship.velocity_x = ai_state.get("velocity_x", self.ai_ship.velocity_x)
+            self.ai_ship.velocity_y = ai_state.get("velocity_y", self.ai_ship.velocity_y)
+            self.ai_ship.thrust = ai_state.get("thrust", self.ai_ship.thrust)
+
 class Menu:
     def __init__(self):
         self.has_saves = len(get_save_files()) > 0
@@ -905,6 +946,7 @@ def main():
                     if save_data:
                         pilot_name = save_data.get("pilot_name", "")
                         game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                        game_screen.restore_state(save_data.get("game_state", {}))
                         current_screen = "game"
                 elif action == "cancel":
                     current_screen = "menu"
@@ -948,9 +990,9 @@ def main():
                             if station_interior:
                                 station_interior.pilot_name = pilot_name
                         if game_screen:
-                            create_save_file(pilot_name, save_name, game_screen.system_config, {})
+                            create_save_file(pilot_name, save_name, game_screen.system_config, {}, game_screen.get_state())
                         elif station_interior:
-                            create_save_file(pilot_name, save_name, station_interior.station_config, {})
+                            create_save_file(pilot_name, save_name, station_interior.station_config, {}, {})
                         pause_menu.success_timer = 120
                         save_dialog = None
                     elif dialog_action == "cancel":
