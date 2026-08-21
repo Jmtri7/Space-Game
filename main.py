@@ -2,6 +2,9 @@ import pygame
 import sys
 import math
 import random
+import json
+import os
+from datetime import datetime
 
 pygame.init()
 
@@ -47,6 +50,67 @@ def to_screen_x(x):
 def to_screen_y(y):
     scale = get_scale()
     return int(round(y * scale))
+
+def load_json(filename):
+    try:
+        with open(filename, 'r') as f:
+            return json.load(f)
+    except:
+        return None
+
+def save_json(filename, data):
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=2)
+
+def create_save_file(system_data, station_data):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    save_data = {
+        "timestamp": timestamp,
+        "system": system_data,
+        "station": station_data
+    }
+    filename = f"save_{timestamp}.json"
+    save_json(filename, save_data)
+    return filename
+
+class PauseMenu:
+    def __init__(self):
+        self.options = ["Resume", "Save Game", "Quit to Menu"]
+        self.selected = 0
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.selected = (self.selected - 1) % len(self.options)
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self.selected = (self.selected + 1) % len(self.options)
+                elif event.key == pygame.K_RETURN:
+                    if self.selected == 0:
+                        return "resume"
+                    elif self.selected == 1:
+                        return "save"
+                    elif self.selected == 2:
+                        return "quit"
+        return None
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (0, 0, 0), (0, 0, screen_width, screen_height))
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.3), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.4)))
+
+        font_title = pygame.font.Font(None, int(48 * scale))
+        font_option = pygame.font.Font(None, int(32 * scale))
+
+        title = font_title.render("PAUSED", True, YELLOW)
+        surface.blit(title, (int(offset_x + GAME_WIDTH * scale // 2 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.35)))
+
+        for i, option in enumerate(self.options):
+            color = YELLOW if i == self.selected else GRAY
+            text = font_option.render(option, True, color)
+            surface.blit(text, (int(offset_x + GAME_WIDTH * scale // 2 - text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5 + i * 50)))
 
 class Ship:
     def __init__(self, x, y):
@@ -298,25 +362,32 @@ class NPC(Person):
         self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
 
 class StationInterior:
-    def __init__(self):
+    def __init__(self, station_config=None):
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
         self.player_x = GAME_WIDTH // 2
         self.player_y = GAME_HEIGHT - 80
 
-        self.hallway_narrow_width = 80
-        self.hallway_wide_width = 200
+        self.station_config = station_config or load_json("station_interior.json") or {}
+
+        hallway_cfg = self.station_config.get("hallway", {})
+        self.hallway_narrow_width = hallway_cfg.get("narrow_width", 80)
+        self.hallway_wide_width = hallway_cfg.get("wide_width", 200)
         self.hallway_x = GAME_WIDTH // 2 - self.hallway_narrow_width // 2
-        self.hallway_transition_y = GAME_HEIGHT // 2
+        self.hallway_transition_y = int(GAME_HEIGHT * hallway_cfg.get("transition_y", 0.5))
 
-        self.bar_x = GAME_WIDTH // 2
-        self.bar_y = 100
-        self.door_x = GAME_WIDTH // 2
-        self.door_y = GAME_HEIGHT - 50
+        bar_cfg = self.station_config.get("bar", {})
+        self.bar_x = int(GAME_WIDTH * bar_cfg.get("x", 0.5))
+        self.bar_y = int(GAME_HEIGHT * bar_cfg.get("y", 0.15))
 
-        self.bartender = NPC(self.bar_x, self.bar_y, "bar", "Bartender", "What'll it be?", ["Order drink", "Leave"])
-        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", "Traveler", "Safe travels!", ["Thanks", "Leave"])
-        self.door_guard = NPC(self.door_x, self.door_y, "bar", "Guard", "Welcome to the station.", ["Thanks", "Leave"])
+        door_cfg = self.station_config.get("door", {})
+        self.door_x = int(GAME_WIDTH * door_cfg.get("x", 0.5))
+        self.door_y = int(GAME_HEIGHT * door_cfg.get("y", 0.9))
+
+        npcs_cfg = self.station_config.get("npcs", [])
+        self.bartender = NPC(self.bar_x, self.bar_y, "bar", npcs_cfg[0].get("name", "Bartender"), npcs_cfg[0].get("greeting", "What'll it be?"), npcs_cfg[0].get("dialogue_options", ["Talk", "Leave"]))
+        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", npcs_cfg[1].get("name", "Traveler"), npcs_cfg[1].get("greeting", "Safe travels!"), npcs_cfg[1].get("dialogue_options", ["Thanks", "Leave"]))
+        self.door_guard = NPC(self.door_x, self.door_y, "bar", npcs_cfg[2].get("name", "Guard"), npcs_cfg[2].get("greeting", "Welcome to the station."), npcs_cfg[2].get("dialogue_options", ["Thanks", "Leave"]))
 
         self.current_dialogue = None
         self.nearby_npc = None
@@ -330,7 +401,7 @@ class StationInterior:
                     if self.current_dialogue:
                         self.current_dialogue = None
                     else:
-                        return "exit_station"
+                        return "pause"
                 elif event.key == pygame.K_l:
                     return "exit_station"
                 elif event.key == pygame.K_t and self.nearby_npc:
@@ -482,11 +553,16 @@ class StarField:
             pygame.draw.circle(surface, (brightness, brightness, brightness), to_screen(x, y), 1)
 
 class GameScreen:
-    def __init__(self):
+    def __init__(self, system_config=None):
         self.player = Player(GAME_WIDTH // 2, GAME_HEIGHT // 2)
         self.star_field = StarField()
-        self.station = SpaceStation(GAME_WIDTH * 0.75, GAME_HEIGHT * 0.3)
-        self.ai_ship = AIShip(GAME_WIDTH * 0.75, GAME_HEIGHT * 0.3 - 150)
+        self.system_config = system_config or load_json("space_system.json") or {}
+
+        station_cfg = self.system_config.get("station", {})
+        self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3))
+
+        ai_cfg = self.system_config.get("ai_ships", [{}])[0]
+        self.ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1))
         self.landing_text = 0
 
     def handle_input(self, events):
@@ -495,7 +571,7 @@ class GameScreen:
                 return "quit"
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return "menu"
+                    return "pause"
                 elif event.key == pygame.K_l:
                     if self._can_land():
                         return "land"
@@ -624,7 +700,9 @@ def main():
         menu = Menu()
         game_screen = None
         station_interior = None
+        pause_menu = PauseMenu()
         current_screen = "menu"
+        previous_screen = None
         running = True
 
         while running:
@@ -650,11 +728,11 @@ def main():
                 action = game_screen.handle_input(events)
                 if action == "quit":
                     running = False
-                elif action == "menu":
-                    current_screen = "menu"
-                    game_screen = None
+                elif action == "pause":
+                    previous_screen = "game"
+                    current_screen = "pause"
                 elif action == "land":
-                    station_interior = StationInterior()
+                    station_interior = StationInterior(game_screen.system_config)
                     current_screen = "station"
                 game_screen.update()
                 game_screen.draw(screen)
@@ -663,12 +741,31 @@ def main():
                 action = station_interior.handle_input(events)
                 if action == "quit":
                     running = False
-                elif action == "exit_station":
-                    current_screen = "game"
-                    station_interior = None
+                elif action == "pause":
+                    previous_screen = "station"
+                    current_screen = "pause"
                 if station_interior:
                     station_interior.update()
                     station_interior.draw(screen)
+
+            elif current_screen == "pause":
+                action = pause_menu.handle_input(events)
+                if action == "resume":
+                    current_screen = previous_screen
+                elif action == "save":
+                    if game_screen:
+                        create_save_file(game_screen.system_config, {})
+                    elif station_interior:
+                        create_save_file(station_interior.station_config, {})
+                elif action == "quit":
+                    current_screen = "menu"
+
+                if previous_screen == "game" and game_screen:
+                    game_screen.draw(screen)
+                elif previous_screen == "station" and station_interior:
+                    station_interior.draw(screen)
+
+                pause_menu.draw(screen)
 
             pygame.display.flip()
             clock.tick(FPS)
