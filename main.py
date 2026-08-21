@@ -104,6 +104,8 @@ class SaveDialog:
         self.existing_saves = self._get_all_saves()
         self.selected_existing = 0 if self.existing_saves else None
         self.input_mode = not self.existing_saves
+        self.scroll_offset = 0
+        self.max_visible = 5
 
     def _get_all_saves(self):
         saves = []
@@ -131,12 +133,21 @@ class SaveDialog:
                 else:
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         if self.selected_existing is not None:
-                            self.selected_existing = (self.selected_existing - 1) % len(self.existing_saves)
+                            self.selected_existing -= 1
+                            if self.selected_existing < 0:
+                                self.selected_existing = len(self.existing_saves) - 1
+                                self.scroll_offset = max(0, len(self.existing_saves) - self.max_visible)
+                            elif self.selected_existing < self.scroll_offset:
+                                self.scroll_offset -= 1
                     elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                         if self.selected_existing is not None:
-                            self.selected_existing = (self.selected_existing + 1) % len(self.existing_saves)
+                            self.selected_existing += 1
+                            if self.selected_existing >= len(self.existing_saves):
+                                self.selected_existing = 0
+                                self.scroll_offset = 0
+                            elif self.selected_existing >= self.scroll_offset + self.max_visible:
+                                self.scroll_offset += 1
                     elif event.key == pygame.K_RETURN and self.selected_existing is not None:
-                        self.success_timer = 120
                         return ("save", self.existing_saves[self.selected_existing])
                     elif event.key == pygame.K_ESCAPE:
                         return ("cancel", None)
@@ -172,10 +183,20 @@ class SaveDialog:
             title = font_title.render("Select Save to Overwrite", True, YELLOW)
             surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.2)))
 
-            for i, save in enumerate(self.existing_saves[:5]):
-                color = YELLOW if i == self.selected_existing else GRAY
+            if self.scroll_offset > 0:
+                up_indicator = font_text.render("↑ more", True, GRAY)
+                surface.blit(up_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.33)))
+
+            visible_saves = self.existing_saves[self.scroll_offset:self.scroll_offset + self.max_visible]
+            for i, save in enumerate(visible_saves):
+                is_selected = (self.scroll_offset + i == self.selected_existing)
+                color = YELLOW if is_selected else GRAY
                 text = font_text.render(save, True, color)
                 surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 35)))
+
+            if self.scroll_offset + self.max_visible < len(self.existing_saves):
+                down_indicator = font_text.render("↓ more", True, GRAY)
+                surface.blit(down_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + self.max_visible * 35)))
 
             help_text = font_text.render("Enter: overwrite, N: new save, ESC: cancel", True, GRAY)
             surface.blit(help_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - help_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.75)))
@@ -184,14 +205,26 @@ class LoadMenu:
     def __init__(self):
         self.saves = get_save_files()
         self.selected = 0
+        self.scroll_offset = 0
+        self.max_visible = 5
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.selected = (self.selected - 1) % len(self.saves)
+                    self.selected -= 1
+                    if self.selected < 0:
+                        self.selected = len(self.saves) - 1
+                        self.scroll_offset = max(0, len(self.saves) - self.max_visible)
+                    elif self.selected < self.scroll_offset:
+                        self.scroll_offset -= 1
                 elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.selected = (self.selected + 1) % len(self.saves)
+                    self.selected += 1
+                    if self.selected >= len(self.saves):
+                        self.selected = 0
+                        self.scroll_offset = 0
+                    elif self.selected >= self.scroll_offset + self.max_visible:
+                        self.scroll_offset += 1
                 elif event.key == pygame.K_RETURN and self.saves:
                     return ("load", self.saves[self.selected])
                 elif event.key == pygame.K_ESCAPE:
@@ -214,10 +247,20 @@ class LoadMenu:
             no_saves = font_save.render("No saves found", True, GRAY)
             surface.blit(no_saves, (int(offset_x + GAME_WIDTH * scale * 0.5 - no_saves.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5)))
         else:
-            for i, save in enumerate(self.saves[:5]):
-                color = YELLOW if i == self.selected else GRAY
+            if self.scroll_offset > 0:
+                up_indicator = font_save.render("↑ more", True, GRAY)
+                surface.blit(up_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.33)))
+
+            visible_saves = self.saves[self.scroll_offset:self.scroll_offset + self.max_visible]
+            for i, save in enumerate(visible_saves):
+                is_selected = (self.scroll_offset + i == self.selected)
+                color = YELLOW if is_selected else GRAY
                 text = font_save.render(save, True, color)
                 surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 40)))
+
+            if self.scroll_offset + self.max_visible < len(self.saves):
+                down_indicator = font_save.render("↓ more", True, GRAY)
+                surface.blit(down_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + self.max_visible * 40)))
 
 class PauseMenu:
     def __init__(self):

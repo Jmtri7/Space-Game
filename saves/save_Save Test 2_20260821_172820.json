@@ -1,0 +1,45 @@
+{
+  "pilot_name": "Save Test 2",
+  "name": "Save Test 2",
+  "timestamp": "20260821_172820",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 147.87345957692762,
+      "y": 519.0635732859704,
+      "angle": 65,
+      "velocity_x": -0.9483998715237564,
+      "velocity_y": 0.4777186701570026,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 698.0831084955121,
+      "y": 88.65204815777687,
+      "angle": 231.05688535741993,
+      "velocity_x": 0.5153654649126198,
+      "velocity_y": 0.980153255737338,
+      "thrust": 0.15
+    }
+  }
+}
