@@ -5,8 +5,9 @@ import random
 
 pygame.init()
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+info = pygame.display.Info()
+SCREEN_WIDTH = min(info.current_w - 100, 1600)
+SCREEN_HEIGHT = min(info.current_h - 100, 900)
 FPS = 60
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
@@ -130,11 +131,13 @@ class AIShip:
                 self.angle = (self.angle + random.uniform(-1, 1)) % 360
 
         elif self.state == "brake":
-            if speed < 0.1:
+            if speed < 0.15:
                 self.state = "accelerate"
                 self.state_timer = random.randint(40, 80)
-                self.angle = random.randint(0, 360)
+                self.angle = random.uniform(0, 360)
                 self.thrust = 0
+                self.velocity_x *= 0.95
+                self.velocity_y *= 0.95
             else:
                 velocity_angle = math.degrees(math.atan2(self.velocity_x, -self.velocity_y)) % 360
                 target_angle = (velocity_angle + 180) % 360
@@ -224,10 +227,10 @@ class SpaceStation:
         for lx, ly in local_points:
             rotated_x = lx * cos_a - ly * sin_a
             rotated_y = lx * sin_a + ly * cos_a
-            points.append((int(self.x + rotated_x), int(self.y + rotated_y)))
+            points.append((int(round(self.x + rotated_x)), int(round(self.y + rotated_y))))
 
         pygame.draw.polygon(surface, (100, 200, 255), points)
-        pygame.draw.circle(surface, (150, 220, 255), (int(self.x), int(self.y)), int(size * 0.25))
+        pygame.draw.circle(surface, (150, 220, 255), (int(round(self.x)), int(round(self.y))), max(1, int(round(size * 0.25))))
 
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
@@ -339,14 +342,38 @@ class StationInterior:
                     return "exit_station"
                 elif event.key == pygame.K_t and self.nearby_npc:
                     self.current_dialogue = self.nearby_npc.dialogue
+                elif self.current_dialogue:
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        self.current_dialogue.selected_option = (self.current_dialogue.selected_option - 1) % len(self.current_dialogue.options)
+                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                        self.current_dialogue.selected_option = (self.current_dialogue.selected_option + 1) % len(self.current_dialogue.options)
+                    elif event.key == pygame.K_RETURN:
+                        self.current_dialogue = None
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.current_dialogue:
+                self._handle_dialogue_click(pygame.mouse.get_pos())
         return None
+
+    def _handle_dialogue_click(self, mouse_pos):
+        scale = min(screen_width, screen_height) / 600.0
+        screen_w = screen_width
+        screen_h = screen_height
+        box_width = int(400 * scale)
+        box_height = int(250 * scale)
+        box_x = screen_w // 2 - box_width // 2
+        box_y = screen_h // 2 - box_height // 2
+
+        for i in range(len(self.current_dialogue.options)):
+            option_y = box_y + 100 + i * int(30 * scale)
+            if (mouse_pos[1] > option_y and mouse_pos[1] < option_y + int(25 * scale)):
+                self.current_dialogue = None
+                return
 
     def _is_in_hallway(self, x, y):
         if y > self.hallway_transition_y:
-            return (x > self.hallway_x and x < self.hallway_x + self.hallway_narrow_width)
+            return (x >= self.hallway_x + 10 and x <= self.hallway_x + self.hallway_narrow_width - 10 and y <= self.room_height - 30)
         else:
             hallway_wide_x = screen_width // 2 - self.hallway_wide_width // 2
-            return (x > hallway_wide_x and x < hallway_wide_x + self.hallway_wide_width)
+            return (x >= hallway_wide_x + 10 and x <= hallway_wide_x + self.hallway_wide_width - 10 and y >= 30)
 
     def update(self):
         if self.current_dialogue:
