@@ -62,16 +62,111 @@ def save_json(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=2)
 
-def create_save_file(system_data, station_data):
+def get_save_files():
+    saves = []
+    for file in os.listdir("."):
+        if file.startswith("save_") and file.endswith(".json"):
+            saves.append(file)
+    return sorted(saves, reverse=True)
+
+def create_save_file(name, system_data, station_data):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_data = {
+        "name": name,
         "timestamp": timestamp,
         "system": system_data,
         "station": station_data
     }
-    filename = f"save_{timestamp}.json"
+    filename = f"save_{name}_{timestamp}.json"
     save_json(filename, save_data)
     return filename
+
+def load_save_file(filename):
+    return load_json(filename)
+
+class SaveDialog:
+    def __init__(self):
+        self.save_name = ""
+        self.success_timer = 0
+        self.saved = False
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and self.save_name:
+                    self.saved = True
+                    self.success_timer = 120
+                    return ("save", self.save_name)
+                elif event.key == pygame.K_BACKSPACE:
+                    self.save_name = self.save_name[:-1]
+                elif event.key == pygame.K_ESCAPE:
+                    return ("cancel", None)
+            elif event.type == pygame.TEXTINPUT:
+                if len(self.save_name) < 30:
+                    self.save_name += event.text
+        return (None, None)
+
+    def update(self):
+        if self.success_timer > 0:
+            self.success_timer -= 1
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.35), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.3)))
+
+        font_title = pygame.font.Font(None, int(32 * scale))
+        font_text = pygame.font.Font(None, int(24 * scale))
+
+        title = font_title.render("Enter Save Name:", True, WHITE)
+        surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.4)))
+
+        input_box = font_text.render(self.save_name + "|", True, YELLOW)
+        surface.blit(input_box, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.5)))
+
+        if self.success_timer > 0:
+            success_text = font_text.render("Successfully saved!", True, (0, 255, 0))
+            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.6)))
+
+class LoadMenu:
+    def __init__(self):
+        self.saves = get_save_files()
+        self.selected = 0
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.selected = (self.selected - 1) % len(self.saves)
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self.selected = (self.selected + 1) % len(self.saves)
+                elif event.key == pygame.K_RETURN and self.saves:
+                    return ("load", self.saves[self.selected])
+                elif event.key == pygame.K_ESCAPE:
+                    return ("cancel", None)
+        return (None, None)
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
+
+        font_title = pygame.font.Font(None, int(40 * scale))
+        font_save = pygame.font.Font(None, int(24 * scale))
+
+        title = font_title.render("Load Game", True, YELLOW)
+        surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+
+        if not self.saves:
+            no_saves = font_save.render("No saves found", True, GRAY)
+            surface.blit(no_saves, (int(offset_x + GAME_WIDTH * scale * 0.5 - no_saves.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5)))
+        else:
+            for i, save in enumerate(self.saves[:5]):
+                color = YELLOW if i == self.selected else GRAY
+                text = font_save.render(save[:50], True, color)
+                surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 40)))
 
 class PauseMenu:
     def __init__(self):
@@ -614,7 +709,9 @@ class GameScreen:
             font = pygame.font.Font(None, int(24 * scale))
             land_text = font.render("Press L to land", True, YELLOW)
             offset_x, offset_y = get_offset()
-            surface.blit(land_text, (offset_x + GAME_WIDTH * scale // 2 - land_text.get_width() // 2, offset_y + GAME_HEIGHT * scale - 60))
+            land_x = int(offset_x + GAME_WIDTH * scale // 2 - land_text.get_width() // 2)
+            land_y = int(offset_y + GAME_HEIGHT * scale - 60)
+            surface.blit(land_text, (land_x, land_y))
 
         scale = get_scale()
         offset_x, offset_y = get_offset()
@@ -623,7 +720,9 @@ class GameScreen:
 
 class Menu:
     def __init__(self):
-        self.items = ["NEW", "LOAD", "QUIT"]
+        self.has_saves = len(get_save_files()) > 0
+        self.items = ["NEW", "LOAD"] if self.has_saves else ["NEW"]
+        self.items.append("QUIT")
         self.selected_index = 0
 
     def _get_fonts(self):
@@ -703,6 +802,8 @@ def main():
         game_screen = None
         station_interior = None
         pause_menu = PauseMenu()
+        save_dialog = None
+        load_menu = None
         current_screen = "menu"
         previous_screen = None
         running = True
@@ -724,7 +825,21 @@ def main():
                 elif selection == "new":
                     game_screen = GameScreen()
                     current_screen = "game"
+                elif selection == "load":
+                    load_menu = LoadMenu()
+                    current_screen = "load"
                 menu.draw(screen)
+
+            elif current_screen == "load":
+                action, filename = load_menu.handle_input(events)
+                if action == "load":
+                    save_data = load_save_file(filename)
+                    if save_data:
+                        game_screen = GameScreen(save_data.get("system", {}))
+                        current_screen = "game"
+                elif action == "cancel":
+                    current_screen = "menu"
+                load_menu.draw(screen)
 
             elif current_screen == "game":
                 action = game_screen.handle_input(events)
@@ -754,13 +869,23 @@ def main():
                 action = pause_menu.handle_input(events)
                 if action == "resume":
                     current_screen = previous_screen
+                    save_dialog = None
                 elif action == "save":
-                    if game_screen:
-                        create_save_file(game_screen.system_config, {})
-                    elif station_interior:
-                        create_save_file(station_interior.station_config, {})
+                    save_dialog = SaveDialog()
                 elif action == "quit":
                     current_screen = "menu"
+                    save_dialog = None
+
+                if save_dialog:
+                    dialog_action, save_name = save_dialog.handle_input(events)
+                    save_dialog.update()
+                    if dialog_action == "save":
+                        if game_screen:
+                            create_save_file(save_name, game_screen.system_config, {})
+                        elif station_interior:
+                            create_save_file(save_name, station_interior.station_config, {})
+                    elif dialog_action == "cancel":
+                        save_dialog = None
 
                 if previous_screen == "game" and game_screen:
                     game_screen.draw(screen)
@@ -768,6 +893,9 @@ def main():
                     station_interior.draw(screen)
 
                 pause_menu.draw(screen)
+
+                if save_dialog:
+                    save_dialog.draw(screen)
 
             pygame.display.flip()
             clock.tick(FPS)
