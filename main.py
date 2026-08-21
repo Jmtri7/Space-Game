@@ -102,6 +102,130 @@ class Player:
             flame_y = int(back_point[1] + cos_a * flame_length)
             pygame.draw.line(surface, YELLOW, back_point, (flame_x, flame_y), max(1, int(2 * scale)))
 
+class SpaceStation:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.rotation = 0
+
+    def update(self):
+        self.rotation = (self.rotation + 0.5) % 360
+
+    def draw(self, surface):
+        scale = min(screen_width, screen_height) / 600.0
+        size = 40 * scale
+        rad = math.radians(self.rotation)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
+        local_points = [
+            (0, -size * 0.8),
+            (size * 0.4, -size * 0.3),
+            (size * 0.5, size * 0.3),
+            (size * 0.2, size * 0.6),
+            (-size * 0.2, size * 0.6),
+            (-size * 0.5, size * 0.3),
+            (-size * 0.4, -size * 0.3),
+        ]
+
+        points = []
+        for lx, ly in local_points:
+            rotated_x = lx * cos_a - ly * sin_a
+            rotated_y = lx * sin_a + ly * cos_a
+            points.append((int(self.x + rotated_x), int(self.y + rotated_y)))
+
+        pygame.draw.polygon(surface, (100, 200, 255), points)
+        pygame.draw.circle(surface, (150, 220, 255), (int(self.x), int(self.y)), int(size * 0.25))
+
+    def get_distance(self, x, y):
+        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
+
+class NPC:
+    def __init__(self, x, y, behavior="wander"):
+        self.x = x
+        self.y = y
+        self.behavior = behavior
+        self.wander_time = 0
+        self.wander_x = 0
+        self.wander_y = 0
+
+    def update(self, room_width, room_height):
+        if self.behavior == "wander":
+            self.wander_time -= 1
+            if self.wander_time <= 0:
+                self.wander_x = (random.random() - 0.5) * 2
+                self.wander_y = (random.random() - 0.5) * 2
+                self.wander_time = random.randint(60, 180)
+
+            self.x += self.wander_x
+            self.y += self.wander_y
+
+            self.x = max(50, min(room_width - 50, self.x))
+            self.y = max(50, min(room_height - 50, self.y))
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, (200, 100, 100), (int(self.x), int(self.y)), 8)
+        pygame.draw.circle(surface, (255, 150, 150), (int(self.x), int(self.y - 12)), 5)
+
+class StationInterior:
+    def __init__(self):
+        self.player_x = screen_width // 2
+        self.player_y = screen_height - 100
+        self.room_width = screen_width
+        self.room_height = screen_height
+        self.bar_x = 150
+        self.bar_y = 80
+
+        self.bartender = NPC(self.bar_x, self.bar_y, "bar")
+        self.wanderer = NPC(self.room_width // 2, self.room_height // 2, "wander")
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_l:
+                    return "exit_station"
+        return None
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        speed = 3
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.player_x -= speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.player_x += speed
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.player_y -= speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.player_y += speed
+
+        self.player_x = max(30, min(self.room_width - 30, self.player_x))
+        self.player_y = max(30, min(self.room_height - 30, self.player_y))
+
+        self.wanderer.update(self.room_width, self.room_height)
+
+    def draw(self, surface):
+        surface.fill((40, 40, 60))
+
+        pygame.draw.rect(surface, (60, 60, 80), (0, 0, self.room_width, self.room_height), 3)
+
+        pygame.draw.rect(surface, (100, 80, 40), (self.bar_x - 60, self.bar_y - 20, 120, 40))
+        font = pygame.font.Font(None, int(20 * min(screen_width, screen_height) / 600.0))
+        bar_text = font.render("BAR", True, (200, 200, 100))
+        surface.blit(bar_text, (self.bar_x - 20, self.bar_y - 10))
+
+        self.bartender.draw(surface)
+        self.wanderer.draw(surface)
+
+        pygame.draw.circle(surface, (0, 255, 0), (int(self.player_x), int(self.player_y)), 8)
+        pygame.draw.circle(surface, (100, 255, 100), (int(self.player_x), int(self.player_y - 12)), 4)
+
+        scale = min(screen_width, screen_height) / 600.0
+        font_small = pygame.font.Font(None, int(16 * scale))
+        help_text = font_small.render("WASD/Arrows to move, L/ESC to exit", True, (200, 200, 200))
+        surface.blit(help_text, (10, 10))
+
 class StarField:
     def __init__(self, num_stars=200):
         self.num_stars = num_stars
@@ -125,6 +249,8 @@ class GameScreen:
     def __init__(self):
         self.player = Player(screen_width // 2, screen_height // 2)
         self.star_field = StarField()
+        self.station = SpaceStation(screen_width * 0.75, screen_height * 0.3)
+        self.landing_text = 0
 
     def handle_input(self, events):
         for event in events:
@@ -133,17 +259,38 @@ class GameScreen:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "menu"
+                elif event.key == pygame.K_l:
+                    if self._can_land():
+                        return "land"
         return None
+
+    def _can_land(self):
+        distance = self.station.get_distance(self.player.x, self.player.y)
+        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+        return distance < 100 and speed < 2.0
 
     def update(self):
         keys = pygame.key.get_pressed()
         self.player.handle_input(keys)
         self.player.update()
+        self.station.update()
+
+        if self._can_land():
+            self.landing_text = 60
+        else:
+            self.landing_text = max(0, self.landing_text - 1)
 
     def draw(self, surface):
         surface.fill(BLACK)
         self.star_field.draw(surface)
+        self.station.draw(surface)
         self.player.draw(surface)
+
+        if self.landing_text > 0:
+            scale = min(screen_width, screen_height) / 600.0
+            font = pygame.font.Font(None, int(24 * scale))
+            land_text = font.render("Press L to land", True, YELLOW)
+            surface.blit(land_text, (screen_width // 2 - land_text.get_width() // 2, screen_height - 60))
 
 class Menu:
     def __init__(self):
@@ -225,6 +372,7 @@ def main():
     try:
         menu = Menu()
         game_screen = None
+        station_interior = None
         current_screen = "menu"
         running = True
 
@@ -254,8 +402,21 @@ def main():
                 elif action == "menu":
                     current_screen = "menu"
                     game_screen = None
+                elif action == "land":
+                    station_interior = StationInterior()
+                    current_screen = "station"
                 game_screen.update()
                 game_screen.draw(screen)
+
+            elif current_screen == "station":
+                action = station_interior.handle_input(events)
+                if action == "quit":
+                    running = False
+                elif action == "exit_station":
+                    current_screen = "game"
+                    station_interior = None
+                station_interior.update()
+                station_interior.draw(screen)
 
             pygame.display.flip()
             clock.tick(FPS)
