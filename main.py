@@ -29,15 +29,24 @@ screen_height = SCREEN_HEIGHT
 def get_scale():
     return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT)
 
+def get_offset():
+    scale = get_scale()
+    offset_x = (screen_width - GAME_WIDTH * scale) / 2
+    offset_y = (screen_height - GAME_HEIGHT * scale) / 2
+    return (offset_x, offset_y)
+
 def to_screen(x, y):
     scale = get_scale()
-    return (int(round(x * scale)), int(round(y * scale)))
+    offset_x, offset_y = get_offset()
+    return (int(round(x * scale + offset_x)), int(round(y * scale + offset_y)))
 
 def to_screen_x(x):
-    return int(round(x * get_scale()))
+    scale = get_scale()
+    return int(round(x * scale))
 
 def to_screen_y(y):
-    return int(round(y * get_scale()))
+    scale = get_scale()
+    return int(round(y * scale))
 
 class Player:
     def __init__(self, x, y):
@@ -112,8 +121,10 @@ class Player:
 
         if self.thrust > 0.05:
             flame_length = self.thrust * 30
-            back_x = self.x + (local_points[1][0] * cos_a - local_points[1][1] * sin_a)
-            back_y = self.y + (local_points[1][0] * sin_a + local_points[1][1] * cos_a)
+            mid_back_x = (local_points[1][0] + local_points[2][0]) / 2
+            mid_back_y = (local_points[1][1] + local_points[2][1]) / 2
+            back_x = self.x + (mid_back_x * cos_a - mid_back_y * sin_a)
+            back_y = self.y + (mid_back_x * sin_a + mid_back_y * cos_a)
             flame_x = back_x - sin_a * flame_length
             flame_y = back_y + cos_a * flame_length
             pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(2 * scale)))
@@ -475,6 +486,10 @@ class StationInterior:
         if self.current_dialogue:
             self.current_dialogue.draw(surface, scale)
 
+        offset_x, offset_y = get_offset()
+        border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
+        pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
+
 class StarField:
     def __init__(self, num_stars=200):
         self.num_stars = num_stars
@@ -545,10 +560,16 @@ class GameScreen:
         self.player.draw(surface)
 
         if self.landing_text > 0:
-            scale = min(screen_width, screen_height) / 600.0
+            scale = get_scale()
             font = pygame.font.Font(None, int(24 * scale))
             land_text = font.render("Press L to land", True, YELLOW)
-            surface.blit(land_text, (screen_width // 2 - land_text.get_width() // 2, screen_height - 60))
+            offset_x, offset_y = get_offset()
+            surface.blit(land_text, (offset_x + GAME_WIDTH * scale // 2 - land_text.get_width() // 2, offset_y + GAME_HEIGHT * scale - 60))
+
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+        border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
+        pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
 class Menu:
     def __init__(self):
