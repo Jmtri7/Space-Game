@@ -232,14 +232,53 @@ class SpaceStation:
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 
+class Dialogue:
+    def __init__(self, npc_name, greetings, options):
+        self.npc_name = npc_name
+        self.greetings = greetings
+        self.options = options
+        self.selected_option = 0
+
+    def draw(self, surface, scale):
+        font_title = pygame.font.Font(None, int(24 * scale))
+        font_text = pygame.font.Font(None, int(18 * scale))
+
+        screen_w = surface.get_width()
+        screen_h = surface.get_height()
+        box_width = int(400 * scale)
+        box_height = int(250 * scale)
+        box_x = screen_w // 2 - box_width // 2
+        box_y = screen_h // 2 - box_height // 2
+
+        pygame.draw.rect(surface, (40, 40, 60), (box_x, box_y, box_width, box_height))
+        pygame.draw.rect(surface, (100, 150, 200), (box_x, box_y, box_width, box_height), 3)
+
+        title = font_title.render(self.npc_name, True, (200, 200, 255))
+        surface.blit(title, (box_x + 20, box_y + 10))
+
+        greeting = font_text.render(self.greetings[0], True, (200, 200, 200))
+        surface.blit(greeting, (box_x + 20, box_y + 40))
+
+        for i, option in enumerate(self.options):
+            color = (255, 255, 0) if i == self.selected_option else (150, 150, 150)
+            text = font_text.render(f"> {option}", True, color)
+            surface.blit(text, (box_x + 30, box_y + 100 + i * 30))
+
+        close_text = font_text.render("Press ESC to close", True, (150, 150, 150))
+        surface.blit(close_text, (box_x + 20, box_y + box_height - 30))
+
 class NPC:
-    def __init__(self, x, y, behavior="wander"):
+    def __init__(self, x, y, behavior="wander", name="NPC", greeting="Hello!", dialogue_options=None):
         self.x = x
         self.y = y
         self.behavior = behavior
         self.wander_time = 0
         self.wander_x = 0
         self.wander_y = 0
+        self.name = name
+        self.greeting = greeting
+        self.dialogue_options = dialogue_options or ["Talk", "Leave"]
+        self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
 
     def update(self, room_width, room_height):
         if self.behavior == "wander":
@@ -259,6 +298,9 @@ class NPC:
         pygame.draw.rect(surface, (200, 100, 100), (int(self.x - 6), int(self.y), 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (int(self.x), int(self.y - 10)), 5)
 
+    def get_distance(self, px, py):
+        return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
+
 class StationInterior:
     def __init__(self):
         self.room_width = screen_width
@@ -276,17 +318,27 @@ class StationInterior:
         self.door_x = screen_width // 2
         self.door_y = screen_height - 50
 
-        self.bartender = NPC(self.bar_x, self.bar_y, "bar")
-        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander")
-        self.door_guard = NPC(self.door_x, self.door_y, "bar")
+        self.bartender = NPC(self.bar_x, self.bar_y, "bar", "Bartender", "What'll it be?", ["Order drink", "Leave"])
+        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", "Traveler", "Safe travels!", ["Thanks", "Leave"])
+        self.door_guard = NPC(self.door_x, self.door_y, "bar", "Guard", "Welcome to the station.", ["Thanks", "Leave"])
+
+        self.current_dialogue = None
+        self.nearby_npc = None
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.QUIT:
                 return "quit"
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_l:
+                if event.key == pygame.K_ESCAPE:
+                    if self.current_dialogue:
+                        self.current_dialogue = None
+                    else:
+                        return "exit_station"
+                elif event.key == pygame.K_l:
                     return "exit_station"
+                elif event.key == pygame.K_t and self.nearby_npc:
+                    self.current_dialogue = self.nearby_npc.dialogue
         return None
 
     def _is_in_hallway(self, x, y):
@@ -297,6 +349,9 @@ class StationInterior:
             return (x > hallway_wide_x and x < hallway_wide_x + self.hallway_wide_width)
 
     def update(self):
+        if self.current_dialogue:
+            return
+
         keys = pygame.key.get_pressed()
         speed = 3
         new_x = self.player_x
@@ -317,9 +372,27 @@ class StationInterior:
 
         self.player_y = max(30, min(self.room_height - 30, self.player_y))
 
-        self.wanderer.update(self.room_width, self.room_height)
+        self.wanderer.wander_time -= 1
+        if self.wanderer.wander_time <= 0:
+            self.wanderer.wander_x = (random.random() - 0.5) * 2
+            self.wanderer.wander_y = (random.random() - 0.5) * 2
+            self.wanderer.wander_time = random.randint(60, 180)
+
+        new_wander_x = self.wanderer.x + self.wanderer.wander_x
+        new_wander_y = self.wanderer.y + self.wanderer.wander_y
+
+        if self._is_in_hallway(new_wander_x, new_wander_y):
+            self.wanderer.x = new_wander_x
+            self.wanderer.y = new_wander_y
+
         self.bartender.wander_time = float('inf')
         self.door_guard.wander_time = float('inf')
+
+        self.nearby_npc = None
+        for npc in [self.bartender, self.wanderer, self.door_guard]:
+            if npc.get_distance(self.player_x, self.player_y) < 50:
+                self.nearby_npc = npc
+                break
 
     def draw(self, surface):
         surface.fill((30, 30, 50))
@@ -352,6 +425,13 @@ class StationInterior:
         help_text = font_small.render("WASD/Arrows to move, L/ESC to exit", True, (200, 200, 200))
         surface.blit(help_text, (10, 10))
 
+        if self.nearby_npc and not self.current_dialogue:
+            talk_text = font_small.render("Press T to talk", True, (255, 255, 0))
+            surface.blit(talk_text, (int(self.nearby_npc.x - 30), int(self.nearby_npc.y - 30)))
+
+        if self.current_dialogue:
+            self.current_dialogue.draw(surface, scale)
+
 class StarField:
     def __init__(self, num_stars=200):
         self.num_stars = num_stars
@@ -375,9 +455,10 @@ class GameScreen:
     def __init__(self):
         self.player = Player(screen_width // 2, screen_height // 2)
         self.star_field = StarField()
-        self.station = SpaceStation(screen_width * 0.75, screen_height * 0.3)
-        self.ai_ship = AIShip(screen_width * 0.75, screen_height * 0.3 - 150)
+        self.station = SpaceStation(0, 0)
+        self.ai_ship = AIShip(0, 0)
         self.landing_text = 0
+        self._update_positions()
 
     def handle_input(self, events):
         for event in events:
@@ -390,6 +471,12 @@ class GameScreen:
                     if self._can_land():
                         return "land"
         return None
+
+    def _update_positions(self):
+        self.station.x = screen_width * 0.75
+        self.station.y = screen_height * 0.3
+        self.ai_ship.x = screen_width * 0.75
+        self.ai_ship.y = screen_height * 0.3 - 150
 
     def _can_land(self):
         distance = self.station.get_distance(self.player.x, self.player.y)
@@ -514,6 +601,7 @@ def main():
                     screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
                     if game_screen:
                         game_screen.star_field.generate_stars()
+                        game_screen._update_positions()
 
             if current_screen == "menu":
                 selection = menu.handle_input(events)
