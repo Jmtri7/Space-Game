@@ -48,14 +48,14 @@ class Player:
             self.velocity_x += math.sin(rad) * self.thrust
             self.velocity_y -= math.cos(rad) * self.thrust
 
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-        if speed > self.max_velocity:
-            scale = self.max_velocity / speed
-            self.velocity_x *= scale
-            self.velocity_y *= scale
+            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+            if speed > self.max_velocity:
+                scale = self.max_velocity / speed
+                self.velocity_x *= scale
+                self.velocity_y *= scale
 
-        self.velocity_x *= self.drag
-        self.velocity_y *= self.drag
+            self.velocity_x *= self.drag
+            self.velocity_y *= self.drag
 
         self.x += self.velocity_x
         self.y += self.velocity_y
