@@ -113,13 +113,38 @@ class AIShip:
         self.thrust_timer = 0
         self.max_thrust = 0.15
         self.drag = 0.99
+        self.state = "accelerate"
+        self.state_timer = 0
 
     def update(self):
-        self.thrust_timer -= 1
-        if self.thrust_timer <= 0:
-            self.thrust = random.uniform(0.05, self.max_thrust)
-            self.angle = (self.angle + random.uniform(-30, 30)) % 360
-            self.thrust_timer = random.randint(20, 60)
+        self.state_timer -= 1
+
+        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+
+        if self.state == "accelerate":
+            if self.state_timer <= 0:
+                self.state = "brake"
+                self.state_timer = random.randint(30, 60)
+            else:
+                self.thrust = self.max_thrust
+                self.angle = (self.angle + random.uniform(-1, 1)) % 360
+
+        elif self.state == "brake":
+            if speed < 0.1:
+                self.state = "accelerate"
+                self.state_timer = random.randint(40, 80)
+                self.angle = random.randint(0, 360)
+                self.thrust = 0
+            else:
+                velocity_angle = math.degrees(math.atan2(self.velocity_x, -self.velocity_y)) % 360
+                target_angle = (velocity_angle + 180) % 360
+                angle_diff = (target_angle - self.angle) % 360
+                if angle_diff > 180:
+                    angle_diff -= 360
+
+                if abs(angle_diff) > 2:
+                    self.angle = (self.angle + angle_diff * 0.1) % 360
+                self.thrust = self.max_thrust
 
         rad = math.radians(self.angle)
         if self.thrust > 0.01:
@@ -236,17 +261,23 @@ class NPC:
 
 class StationInterior:
     def __init__(self):
-        self.player_x = screen_width // 2
-        self.player_y = screen_height - 80
         self.room_width = screen_width
         self.room_height = screen_height
+        self.player_x = screen_width // 2
+        self.player_y = screen_height - 80
+
+        self.hallway_narrow_width = 80
+        self.hallway_wide_width = 200
+        self.hallway_x = screen_width // 2 - self.hallway_narrow_width // 2
+        self.hallway_transition_y = screen_height // 2
+
         self.bar_x = screen_width // 2
         self.bar_y = 100
         self.door_x = screen_width // 2
         self.door_y = screen_height - 50
 
         self.bartender = NPC(self.bar_x, self.bar_y, "bar")
-        self.wanderer = NPC(self.room_width // 2 + 100, self.room_height // 2, "wander")
+        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander")
         self.door_guard = NPC(self.door_x, self.door_y, "bar")
 
     def handle_input(self, events):
@@ -258,36 +289,55 @@ class StationInterior:
                     return "exit_station"
         return None
 
+    def _is_in_hallway(self, x, y):
+        if y > self.hallway_transition_y:
+            return (x > self.hallway_x and x < self.hallway_x + self.hallway_narrow_width)
+        else:
+            hallway_wide_x = screen_width // 2 - self.hallway_wide_width // 2
+            return (x > hallway_wide_x and x < hallway_wide_x + self.hallway_wide_width)
+
     def update(self):
         keys = pygame.key.get_pressed()
         speed = 3
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.player_x -= speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.player_x += speed
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.player_y -= speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.player_y += speed
+        new_x = self.player_x
+        new_y = self.player_y
 
-        self.player_x = max(30, min(self.room_width - 30, self.player_x))
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            new_x -= speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            new_x += speed
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            new_y -= speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            new_y += speed
+
+        if self._is_in_hallway(new_x, new_y):
+            self.player_x = new_x
+            self.player_y = new_y
+
         self.player_y = max(30, min(self.room_height - 30, self.player_y))
 
         self.wanderer.update(self.room_width, self.room_height)
+        self.bartender.wander_time = float('inf')
+        self.door_guard.wander_time = float('inf')
 
     def draw(self, surface):
         surface.fill((30, 30, 50))
 
-        hallway_width = 150
-        hallway_x = self.room_width // 2 - hallway_width // 2
-        pygame.draw.rect(surface, (50, 50, 70), (hallway_x, 0, hallway_width, self.room_height))
+        hallway_wide_x = screen_width // 2 - self.hallway_wide_width // 2
+        hallway_wide_width = self.hallway_wide_width
+
+        pygame.draw.rect(surface, (50, 50, 70), (hallway_wide_x, 0, hallway_wide_width, self.hallway_transition_y))
+        pygame.draw.rect(surface, (50, 50, 70), (self.hallway_x, self.hallway_transition_y, self.hallway_narrow_width, self.room_height - self.hallway_transition_y))
 
         pygame.draw.rect(surface, (60, 60, 80), (0, 0, self.room_width, self.room_height), 3)
-        pygame.draw.line(surface, (80, 80, 100), (hallway_x, 0), (hallway_x, self.room_height), 2)
-        pygame.draw.line(surface, (80, 80, 100), (hallway_x + hallway_width, 0), (hallway_x + hallway_width, self.room_height), 2)
+
+        pygame.draw.line(surface, (80, 80, 100), (hallway_wide_x, 0), (self.hallway_x, self.hallway_transition_y), 2)
+        pygame.draw.line(surface, (80, 80, 100), (hallway_wide_x + hallway_wide_width, 0), (self.hallway_x + self.hallway_narrow_width, self.hallway_transition_y), 2)
 
         pygame.draw.rect(surface, (100, 80, 40), (self.bar_x - 60, self.bar_y - 20, 120, 40))
-        font = pygame.font.Font(None, int(20 * min(screen_width, screen_height) / 600.0))
+        scale = min(screen_width, screen_height) / 600.0
+        font = pygame.font.Font(None, int(20 * scale))
         bar_text = font.render("BAR", True, (200, 200, 100))
         surface.blit(bar_text, (self.bar_x - 20, self.bar_y - 10))
 
@@ -298,7 +348,6 @@ class StationInterior:
         pygame.draw.rect(surface, (0, 255, 0), (int(self.player_x - 6), int(self.player_y), 12, 16))
         pygame.draw.circle(surface, (100, 255, 100), (int(self.player_x), int(self.player_y - 10)), 5)
 
-        scale = min(screen_width, screen_height) / 600.0
         font_small = pygame.font.Font(None, int(16 * scale))
         help_text = font_small.render("WASD/Arrows to move, L/ESC to exit", True, (200, 200, 200))
         surface.blit(help_text, (10, 10))
