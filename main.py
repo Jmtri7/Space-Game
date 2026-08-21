@@ -81,7 +81,9 @@ class PauseMenu:
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                if event.key == pygame.K_ESCAPE:
+                    return "resume"
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
                     self.selected = (self.selected - 1) % len(self.options)
                 elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                     self.selected = (self.selected + 1) % len(self.options)
@@ -732,7 +734,7 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    station_interior = StationInterior(game_screen.system_config)
+                    station_interior = StationInterior()
                     current_screen = "station"
                 game_screen.update()
                 game_screen.draw(screen)
