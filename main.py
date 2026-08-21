@@ -102,6 +102,44 @@ class Player:
             flame_y = int(back_point[1] + cos_a * flame_length)
             pygame.draw.line(surface, YELLOW, back_point, (flame_x, flame_y), max(1, int(2 * scale)))
 
+class AIShip:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.angle = 0
+        self.distance_from_station = 150
+        self.orbit_angle = 0
+        self.station_x = screen_width * 0.75
+        self.station_y = screen_height * 0.3
+
+    def update(self):
+        self.orbit_angle = (self.orbit_angle + 0.5) % 360
+        rad = math.radians(self.orbit_angle)
+        self.x = self.station_x + math.cos(rad) * self.distance_from_station
+        self.y = self.station_y + math.sin(rad) * self.distance_from_station
+        self.angle = (self.orbit_angle + 90) % 360
+
+    def draw(self, surface):
+        scale = min(screen_width, screen_height) / 600.0
+        ship_size = 12 * scale
+        rad = math.radians(self.angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
+        local_points = [
+            (0, -ship_size),
+            (-ship_size * 0.6, ship_size * 0.6),
+            (ship_size * 0.6, ship_size * 0.6),
+        ]
+
+        points = []
+        for lx, ly in local_points:
+            rotated_x = lx * cos_a - ly * sin_a
+            rotated_y = lx * sin_a + ly * cos_a
+            points.append((int(self.x + rotated_x), int(self.y + rotated_y)))
+
+        pygame.draw.polygon(surface, (150, 150, 200), points)
+
 class SpaceStation:
     def __init__(self, x, y):
         self.x = x
@@ -164,8 +202,8 @@ class NPC:
             self.y = max(50, min(room_height - 50, self.y))
 
     def draw(self, surface):
-        pygame.draw.circle(surface, (200, 100, 100), (int(self.x), int(self.y)), 8)
-        pygame.draw.circle(surface, (255, 150, 150), (int(self.x), int(self.y - 12)), 5)
+        pygame.draw.rect(surface, (200, 100, 100), (int(self.x - 6), int(self.y), 12, 16))
+        pygame.draw.rect(surface, (255, 150, 150), (int(self.x - 4), int(self.y - 8), 8, 8))
 
 class StationInterior:
     def __init__(self):
@@ -218,8 +256,8 @@ class StationInterior:
         self.bartender.draw(surface)
         self.wanderer.draw(surface)
 
-        pygame.draw.circle(surface, (0, 255, 0), (int(self.player_x), int(self.player_y)), 8)
-        pygame.draw.circle(surface, (100, 255, 100), (int(self.player_x), int(self.player_y - 12)), 4)
+        pygame.draw.rect(surface, (0, 255, 0), (int(self.player_x - 6), int(self.player_y), 12, 16))
+        pygame.draw.rect(surface, (100, 255, 100), (int(self.player_x - 4), int(self.player_y - 8), 8, 8))
 
         scale = min(screen_width, screen_height) / 600.0
         font_small = pygame.font.Font(None, int(16 * scale))
@@ -250,6 +288,7 @@ class GameScreen:
         self.player = Player(screen_width // 2, screen_height // 2)
         self.star_field = StarField()
         self.station = SpaceStation(screen_width * 0.75, screen_height * 0.3)
+        self.ai_ship = AIShip(screen_width * 0.75, screen_height * 0.3 - 150)
         self.landing_text = 0
 
     def handle_input(self, events):
@@ -267,13 +306,14 @@ class GameScreen:
     def _can_land(self):
         distance = self.station.get_distance(self.player.x, self.player.y)
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-        return distance < 100 and speed < 2.0
+        return distance < 100 and speed < 0.5
 
     def update(self):
         keys = pygame.key.get_pressed()
         self.player.handle_input(keys)
         self.player.update()
         self.station.update()
+        self.ai_ship.update()
 
         if self._can_land():
             self.landing_text = 60
@@ -284,6 +324,7 @@ class GameScreen:
         surface.fill(BLACK)
         self.star_field.draw(surface)
         self.station.draw(surface)
+        self.ai_ship.draw(surface)
         self.player.draw(surface)
 
         if self.landing_text > 0:
