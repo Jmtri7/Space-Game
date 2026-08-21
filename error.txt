@@ -1,0 +1,8 @@
+list index out of range
+Traceback (most recent call last):
+  File "C:\Users\Play\Documents\Projects\main.py", line 735, in main
+    station_interior = StationInterior(game_screen.system_config)
+  File "C:\Users\Play\Documents\Projects\main.py", line 388, in __init__
+    self.bartender = NPC(self.bar_x, self.bar_y, "bar", npcs_cfg[0].get("name", "Bartender"), npcs_cfg[0].get("greeting", "What'll it be?"), npcs_cfg[0].get("dialogue_options", ["Talk", "Leave"]))
+                                                        ~~~~~~~~^^^
+IndexError: list index out of range

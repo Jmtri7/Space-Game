@@ -64,45 +64,88 @@ def save_json(filename, data):
 
 def get_save_files():
     saves = []
-    for file in os.listdir("."):
-        if file.startswith("save_") and file.endswith(".json"):
-            saves.append(file)
+    save_dir = "saves"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    try:
+        for file in os.listdir(save_dir):
+            if file.startswith("save_") and file.endswith(".json"):
+                saves.append(file)
+    except:
+        pass
     return sorted(saves, reverse=True)
 
-def create_save_file(name, system_data, station_data):
+def create_save_file(pilot_name, name, system_data, station_data):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_data = {
+        "pilot_name": pilot_name,
         "name": name,
         "timestamp": timestamp,
         "system": system_data,
         "station": station_data
     }
-    filename = f"save_{name}_{timestamp}.json"
+    save_dir = "saves"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    filename = f"{save_dir}/save_{pilot_name}_{timestamp}.json"
     save_json(filename, save_data)
     return filename
 
 def load_save_file(filename):
-    return load_json(filename)
+    save_dir = "saves"
+    filepath = f"{save_dir}/{filename}"
+    return load_json(filepath)
 
 class SaveDialog:
-    def __init__(self):
+    def __init__(self, pilot_name=""):
+        self.pilot_name = pilot_name
         self.save_name = ""
         self.success_timer = 0
-        self.saved = False
+        self.existing_saves = self._get_pilot_saves()
+        self.selected_existing = 0 if self.existing_saves else None
+        self.input_mode = not self.existing_saves
+
+    def _get_pilot_saves(self):
+        if not self.pilot_name:
+            return []
+        saves = []
+        save_dir = "saves"
+        if os.path.exists(save_dir):
+            try:
+                for file in os.listdir(save_dir):
+                    if file.startswith(f"save_{self.pilot_name}_") and file.endswith(".json"):
+                        saves.append(file)
+            except:
+                pass
+        return sorted(saves, reverse=True)
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and self.save_name:
-                    self.saved = True
-                    self.success_timer = 120
-                    return ("save", self.save_name)
-                elif event.key == pygame.K_BACKSPACE:
-                    self.save_name = self.save_name[:-1]
-                elif event.key == pygame.K_ESCAPE:
-                    return ("cancel", None)
+                if self.input_mode:
+                    if event.key == pygame.K_RETURN and self.save_name:
+                        self.success_timer = 120
+                        return ("save", self.save_name)
+                    elif event.key == pygame.K_BACKSPACE:
+                        self.save_name = self.save_name[:-1]
+                    elif event.key == pygame.K_ESCAPE:
+                        return ("cancel", None)
+                else:
+                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                        if self.selected_existing is not None:
+                            self.selected_existing = (self.selected_existing - 1) % len(self.existing_saves)
+                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                        if self.selected_existing is not None:
+                            self.selected_existing = (self.selected_existing + 1) % len(self.existing_saves)
+                    elif event.key == pygame.K_RETURN and self.selected_existing is not None:
+                        self.success_timer = 120
+                        return ("save", self.existing_saves[self.selected_existing])
+                    elif event.key == pygame.K_ESCAPE:
+                        return ("cancel", None)
+                    elif event.key == pygame.K_n:
+                        self.input_mode = True
             elif event.type == pygame.TEXTINPUT:
-                if len(self.save_name) < 30:
+                if self.input_mode and len(self.save_name) < 30:
                     self.save_name += event.text
         return (None, None)
 
@@ -114,20 +157,40 @@ class SaveDialog:
         scale = get_scale()
         offset_x, offset_y = get_offset()
 
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.35), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.3)))
-
-        font_title = pygame.font.Font(None, int(32 * scale))
-        font_text = pygame.font.Font(None, int(24 * scale))
-
-        title = font_title.render("Enter Save Name:", True, WHITE)
-        surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.4)))
-
-        input_box = font_text.render(self.save_name + "|", True, YELLOW)
-        surface.blit(input_box, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.5)))
-
         if self.success_timer > 0:
+            pygame.draw.rect(surface, (40, 60, 40), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.4), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.2)))
+            font_text = pygame.font.Font(None, int(28 * scale))
             success_text = font_text.render("Successfully saved!", True, (0, 255, 0))
-            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.25), int(offset_y + GAME_HEIGHT * scale * 0.6)))
+            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - success_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5)))
+        elif self.input_mode:
+            pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
+            font_title = pygame.font.Font(None, int(32 * scale))
+            font_text = pygame.font.Font(None, int(24 * scale))
+
+            title = font_title.render("Enter Pilot Name:", True, WHITE)
+            surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+
+            input_box = font_text.render(self.save_name + "|", True, YELLOW)
+            surface.blit(input_box, (int(offset_x + GAME_WIDTH * scale * 0.5 - input_box.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.4)))
+
+            help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
+            surface.blit(help_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - help_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.6)))
+        else:
+            pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.15), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.7)))
+            font_title = pygame.font.Font(None, int(32 * scale))
+            font_text = pygame.font.Font(None, int(20 * scale))
+
+            title = font_title.render("Overwrite Save", True, YELLOW)
+            surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.2)))
+
+            for i, save in enumerate(self.existing_saves[:5]):
+                color = YELLOW if i == self.selected_existing else GRAY
+                save_name = save.replace(f"save_{self.pilot_name}_", "").replace(".json", "")
+                text = font_text.render(save_name[:40], True, color)
+                surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 35)))
+
+            help_text = font_text.render("Enter: overwrite, N: new save, ESC: cancel", True, GRAY)
+            surface.blit(help_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - help_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.75)))
 
 class LoadMenu:
     def __init__(self):
@@ -459,13 +522,14 @@ class NPC(Person):
         self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
 
 class StationInterior:
-    def __init__(self, station_config=None):
+    def __init__(self, station_config=None, pilot_name=""):
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
         self.player_x = GAME_WIDTH // 2
         self.player_y = GAME_HEIGHT - 80
+        self.pilot_name = pilot_name
 
-        self.station_config = station_config or load_json("station_interior.json") or {}
+        self.station_config = station_config or load_json("config/station_interior.json") or {}
 
         hallway_cfg = self.station_config.get("hallway", {})
         self.hallway_narrow_width = hallway_cfg.get("narrow_width", 80)
@@ -482,9 +546,13 @@ class StationInterior:
         self.door_y = int(GAME_HEIGHT * door_cfg.get("y", 0.9))
 
         npcs_cfg = self.station_config.get("npcs", [])
-        self.bartender = NPC(self.bar_x, self.bar_y, "bar", npcs_cfg[0].get("name", "Bartender"), npcs_cfg[0].get("greeting", "What'll it be?"), npcs_cfg[0].get("dialogue_options", ["Talk", "Leave"]))
-        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", npcs_cfg[1].get("name", "Traveler"), npcs_cfg[1].get("greeting", "Safe travels!"), npcs_cfg[1].get("dialogue_options", ["Thanks", "Leave"]))
-        self.door_guard = NPC(self.door_x, self.door_y, "bar", npcs_cfg[2].get("name", "Guard"), npcs_cfg[2].get("greeting", "Welcome to the station."), npcs_cfg[2].get("dialogue_options", ["Thanks", "Leave"]))
+        npc0 = npcs_cfg[0] if len(npcs_cfg) > 0 else {}
+        npc1 = npcs_cfg[1] if len(npcs_cfg) > 1 else {}
+        npc2 = npcs_cfg[2] if len(npcs_cfg) > 2 else {}
+
+        self.bartender = NPC(self.bar_x, self.bar_y, "bar", npc0.get("name", "Bartender"), npc0.get("greeting", "What'll it be?"), npc0.get("dialogue_options", ["Talk", "Leave"]))
+        self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", npc1.get("name", "Traveler"), npc1.get("greeting", "Safe travels!"), npc1.get("dialogue_options", ["Thanks", "Leave"]))
+        self.door_guard = NPC(self.door_x, self.door_y, "bar", npc2.get("name", "Guard"), npc2.get("greeting", "Welcome to the station."), npc2.get("dialogue_options", ["Thanks", "Leave"]))
 
         self.current_dialogue = None
         self.nearby_npc = None
@@ -616,7 +684,7 @@ class StationInterior:
         pygame.draw.circle(surface, (100, 255, 100), to_screen(self.player_x, self.player_y - 10), max(1, int(5 * scale)))
 
         font_small = pygame.font.Font(None, int(16 * scale))
-        help_text = font_small.render("WASD/Arrows to move, L/ESC to exit", True, (200, 200, 200))
+        help_text = font_small.render("WASD/Arrows to move, L to exit, ESC for menu", True, (200, 200, 200))
         surface.blit(help_text, (10, 10))
 
         if self.nearby_npc and not self.current_dialogue:
@@ -650,10 +718,11 @@ class StarField:
             pygame.draw.circle(surface, (brightness, brightness, brightness), to_screen(x, y), 1)
 
 class GameScreen:
-    def __init__(self, system_config=None):
+    def __init__(self, system_config=None, pilot_name=""):
         self.player = Player(GAME_WIDTH // 2, GAME_HEIGHT // 2)
         self.star_field = StarField()
-        self.system_config = system_config or load_json("space_system.json") or {}
+        self.system_config = system_config or load_json("config/space_system.json") or {}
+        self.pilot_name = pilot_name
 
         station_cfg = self.system_config.get("station", {})
         self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3))
@@ -807,6 +876,7 @@ def main():
         current_screen = "menu"
         previous_screen = None
         running = True
+        pilot_name = ""
 
         while running:
             events = pygame.event.get()
@@ -823,7 +893,8 @@ def main():
                 if selection == "quit":
                     running = False
                 elif selection == "new":
-                    game_screen = GameScreen()
+                    game_screen = GameScreen(pilot_name="")
+                    pilot_name = ""
                     current_screen = "game"
                 elif selection == "load":
                     load_menu = LoadMenu()
@@ -835,7 +906,8 @@ def main():
                 if action == "load":
                     save_data = load_save_file(filename)
                     if save_data:
-                        game_screen = GameScreen(save_data.get("system", {}))
+                        pilot_name = save_data.get("pilot_name", "")
+                        game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
                         current_screen = "game"
                 elif action == "cancel":
                     current_screen = "menu"
@@ -849,7 +921,7 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    station_interior = StationInterior()
+                    station_interior = StationInterior(pilot_name=pilot_name)
                     current_screen = "station"
                 game_screen.update()
                 game_screen.draw(screen)
@@ -871,7 +943,7 @@ def main():
                     current_screen = previous_screen
                     save_dialog = None
                 elif action == "save":
-                    save_dialog = SaveDialog()
+                    save_dialog = SaveDialog(pilot_name=pilot_name)
                 elif action == "quit":
                     current_screen = "menu"
                     save_dialog = None
@@ -880,10 +952,16 @@ def main():
                     dialog_action, save_name = save_dialog.handle_input(events)
                     save_dialog.update()
                     if dialog_action == "save":
+                        if not pilot_name and save_name:
+                            pilot_name = save_name
+                            if game_screen:
+                                game_screen.pilot_name = pilot_name
+                            if station_interior:
+                                station_interior.pilot_name = pilot_name
                         if game_screen:
-                            create_save_file(save_name, game_screen.system_config, {})
+                            create_save_file(pilot_name, save_name, game_screen.system_config, {})
                         elif station_interior:
-                            create_save_file(save_name, station_interior.station_config, {})
+                            create_save_file(pilot_name, save_name, station_interior.station_config, {})
                     elif dialog_action == "cancel":
                         save_dialog = None
 
