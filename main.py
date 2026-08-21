@@ -101,6 +101,7 @@ class SaveDialog:
         self.pilot_name = pilot_name
         self.save_name = ""
         self.success_timer = 0
+        self.was_saved = False
         self.existing_saves = self._get_pilot_saves()
         self.selected_existing = 0 if self.existing_saves else None
         self.input_mode = not self.existing_saves
@@ -953,21 +954,21 @@ def main():
                             create_save_file(pilot_name, save_name, game_screen.system_config, {})
                         elif station_interior:
                             create_save_file(pilot_name, save_name, station_interior.station_config, {})
+                        save_dialog.was_saved = True
                     elif dialog_action == "cancel":
                         save_dialog = None
 
-                    if save_dialog and save_dialog.success_timer <= 0:
+                    if save_dialog and save_dialog.was_saved and save_dialog.success_timer <= 0:
                         save_dialog = None
-                else:
+
+                if not save_dialog:
                     action = pause_menu.handle_input(events)
                     if action == "resume":
                         current_screen = previous_screen
-                        save_dialog = None
                     elif action == "save":
                         save_dialog = SaveDialog(pilot_name=pilot_name)
                     elif action == "quit":
                         current_screen = "menu"
-                        save_dialog = None
                         menu = Menu()
 
                 if previous_screen == "game" and game_screen:
