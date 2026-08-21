@@ -48,18 +48,62 @@ def to_screen_y(y):
     scale = get_scale()
     return int(round(y * scale))
 
-class Player:
+class Ship:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.angle = 0
-        self.thrust = 0
         self.velocity_x = 0
         self.velocity_y = 0
-        self.rotation_speed = 5
+        self.thrust = 0
         self.max_thrust = 0.3
         self.max_velocity = 4.0
         self.drag = 0.98
+        self.rotation_speed = 5
+
+    def draw_ship(self, surface, ship_size=15, color=DARK_GRAY):
+        scale = get_scale()
+        rad = math.radians(self.angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
+        local_points = [
+            (0, -ship_size),
+            (-ship_size * 0.6, ship_size * 0.6),
+            (ship_size * 0.6, ship_size * 0.6),
+        ]
+
+        points = []
+        for lx, ly in local_points:
+            rotated_x = lx * cos_a - ly * sin_a
+            rotated_y = lx * sin_a + ly * cos_a
+            points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
+
+        pygame.draw.polygon(surface, color, points)
+
+        if self.thrust > 0.05:
+            flame_length = self.thrust * 30
+            mid_back_x = (local_points[1][0] + local_points[2][0]) / 2
+            mid_back_y = (local_points[1][1] + local_points[2][1]) / 2
+            back_x = self.x + (mid_back_x * cos_a - mid_back_y * sin_a)
+            back_y = self.y + (mid_back_x * sin_a + mid_back_y * cos_a)
+            flame_x = back_x - sin_a * flame_length
+            flame_y = back_y + cos_a * flame_length
+            pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(2 * scale)))
+
+    def wrap_position(self):
+        if self.x < 0:
+            self.x = GAME_WIDTH
+        elif self.x > GAME_WIDTH:
+            self.x = 0
+        if self.y < 0:
+            self.y = GAME_HEIGHT
+        elif self.y > GAME_HEIGHT:
+            self.y = 0
+
+class Player(Ship):
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
     def handle_input(self, keys):
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -89,47 +133,12 @@ class Player:
         self.x += self.velocity_x
         self.y += self.velocity_y
 
-        if self.x < 0:
-            self.x = GAME_WIDTH
-        elif self.x > GAME_WIDTH:
-            self.x = 0
-        if self.y < 0:
-            self.y = GAME_HEIGHT
-        elif self.y > GAME_HEIGHT:
-            self.y = 0
+        self.wrap_position()
 
     def draw(self, surface):
-        scale = get_scale()
-        ship_size = 15
-        rad = math.radians(self.angle)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
+        self.draw_ship(surface, ship_size=15, color=DARK_GRAY)
 
-        local_points = [
-            (0, -ship_size),
-            (-ship_size * 0.6, ship_size * 0.6),
-            (ship_size * 0.6, ship_size * 0.6),
-        ]
-
-        points = []
-        for lx, ly in local_points:
-            rotated_x = lx * cos_a - ly * sin_a
-            rotated_y = lx * sin_a + ly * cos_a
-            points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
-
-        pygame.draw.polygon(surface, DARK_GRAY, points)
-
-        if self.thrust > 0.05:
-            flame_length = self.thrust * 30
-            mid_back_x = (local_points[1][0] + local_points[2][0]) / 2
-            mid_back_y = (local_points[1][1] + local_points[2][1]) / 2
-            back_x = self.x + (mid_back_x * cos_a - mid_back_y * sin_a)
-            back_y = self.y + (mid_back_x * sin_a + mid_back_y * cos_a)
-            flame_x = back_x - sin_a * flame_length
-            flame_y = back_y + cos_a * flame_length
-            pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(2 * scale)))
-
-class AIShip:
+class AIShip(Ship):
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -185,43 +194,10 @@ class AIShip:
         self.x += self.velocity_x
         self.y += self.velocity_y
 
-        if self.x < 0:
-            self.x = screen_width
-        elif self.x > screen_width:
-            self.x = 0
-        if self.y < 0:
-            self.y = screen_height
-        elif self.y > screen_height:
-            self.y = 0
+        self.wrap_position()
 
     def draw(self, surface):
-        scale = get_scale()
-        ship_size = 12
-        rad = math.radians(self.angle)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
-
-        local_points = [
-            (0, -ship_size),
-            (-ship_size * 0.6, ship_size * 0.6),
-            (ship_size * 0.6, ship_size * 0.6),
-        ]
-
-        points = []
-        for lx, ly in local_points:
-            rotated_x = lx * cos_a - ly * sin_a
-            rotated_y = lx * sin_a + ly * cos_a
-            points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
-
-        pygame.draw.polygon(surface, (150, 150, 200), points)
-
-        if self.thrust > 0.05:
-            flame_length = self.thrust * 20
-            back_x = self.x + (local_points[1][0] * cos_a - local_points[1][1] * sin_a)
-            back_y = self.y + (local_points[1][0] * sin_a + local_points[1][1] * cos_a)
-            flame_x = back_x - sin_a * flame_length
-            flame_y = back_y + cos_a * flame_length
-            pygame.draw.line(surface, (200, 150, 0), to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(scale)))
+        self.draw_ship(surface, ship_size=12, color=(150, 150, 200))
 
 class SpaceStation:
     def __init__(self, x, y):
@@ -261,6 +237,22 @@ class SpaceStation:
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 
+class Person:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.wander_time = 0
+        self.wander_x = 0
+        self.wander_y = 0
+
+    def draw(self, surface):
+        scale = get_scale()
+        pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - 6, self.y), to_screen_x(12), to_screen_y(16)))
+        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 10), max(1, int(5 * scale)))
+
+    def get_distance(self, px, py):
+        return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
+
 class Dialogue:
     def __init__(self, npc_name, greetings, options):
         self.npc_name = npc_name
@@ -296,40 +288,14 @@ class Dialogue:
         close_text = font_text.render("Press ESC to close", True, (150, 150, 150))
         surface.blit(close_text, (box_x + 20, box_y + box_height - 30))
 
-class NPC:
+class NPC(Person):
     def __init__(self, x, y, behavior="wander", name="NPC", greeting="Hello!", dialogue_options=None):
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.behavior = behavior
-        self.wander_time = 0
-        self.wander_x = 0
-        self.wander_y = 0
         self.name = name
         self.greeting = greeting
         self.dialogue_options = dialogue_options or ["Talk", "Leave"]
         self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
-
-    def update(self, room_width, room_height):
-        if self.behavior == "wander":
-            self.wander_time -= 1
-            if self.wander_time <= 0:
-                self.wander_x = (random.random() - 0.5) * 2
-                self.wander_y = (random.random() - 0.5) * 2
-                self.wander_time = random.randint(60, 180)
-
-            self.x += self.wander_x
-            self.y += self.wander_y
-
-            self.x = max(50, min(room_width - 50, self.x))
-            self.y = max(50, min(room_height - 50, self.y))
-
-    def draw(self, surface):
-        scale = get_scale()
-        pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - 6, self.y), to_screen_x(12), to_screen_y(16)))
-        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 10), max(1, int(5 * scale)))
-
-    def get_distance(self, px, py):
-        return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
 
 class StationInterior:
     def __init__(self):
@@ -399,8 +365,17 @@ class StationInterior:
         if y > self.hallway_transition_y:
             return (x >= self.hallway_x + 10 and x <= self.hallway_x + self.hallway_narrow_width - 10 and y <= self.room_height - 30)
         else:
-            hallway_wide_x = screen_width // 2 - self.hallway_wide_width // 2
+            hallway_wide_x = GAME_WIDTH // 2 - self.hallway_wide_width // 2
             return (x >= hallway_wide_x + 10 and x <= hallway_wide_x + self.hallway_wide_width - 10 and y >= 30)
+
+    def _is_in_valid_area(self, x, y):
+        if self._is_in_hallway(x, y):
+            return True
+        bar_left = self.bar_x - 100
+        bar_right = self.bar_x + 100
+        bar_top = 50
+        bar_bottom = self.hallway_transition_y - 50
+        return (x >= bar_left and x <= bar_right and y >= bar_top and y <= bar_bottom)
 
     def update(self):
         if self.current_dialogue:
@@ -420,7 +395,7 @@ class StationInterior:
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             new_y += speed
 
-        if self._is_in_hallway(new_x, new_y):
+        if self._is_in_valid_area(new_x, new_y):
             self.player_x = new_x
             self.player_y = new_y
 
@@ -435,12 +410,9 @@ class StationInterior:
         new_wander_x = self.wanderer.x + self.wanderer.wander_x
         new_wander_y = self.wanderer.y + self.wanderer.wander_y
 
-        if self._is_in_hallway(new_wander_x, new_wander_y):
+        if self._is_in_valid_area(new_wander_x, new_wander_y):
             self.wanderer.x = new_wander_x
             self.wanderer.y = new_wander_y
-
-        self.bartender.wander_time = float('inf')
-        self.door_guard.wander_time = float('inf')
 
         self.nearby_npc = None
         for npc in [self.bartender, self.wanderer, self.door_guard]:
