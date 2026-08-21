@@ -911,6 +911,7 @@ def main():
                         current_screen = "game"
                 elif action == "cancel":
                     current_screen = "menu"
+                    menu = Menu()
                 load_menu.draw(screen)
 
             elif current_screen == "game":
@@ -938,16 +939,6 @@ def main():
                     station_interior.draw(screen)
 
             elif current_screen == "pause":
-                action = pause_menu.handle_input(events)
-                if action == "resume":
-                    current_screen = previous_screen
-                    save_dialog = None
-                elif action == "save":
-                    save_dialog = SaveDialog(pilot_name=pilot_name)
-                elif action == "quit":
-                    current_screen = "menu"
-                    save_dialog = None
-
                 if save_dialog:
                     dialog_action, save_name = save_dialog.handle_input(events)
                     save_dialog.update()
@@ -964,6 +955,20 @@ def main():
                             create_save_file(pilot_name, save_name, station_interior.station_config, {})
                     elif dialog_action == "cancel":
                         save_dialog = None
+
+                    if save_dialog and save_dialog.success_timer <= 0:
+                        save_dialog = None
+                else:
+                    action = pause_menu.handle_input(events)
+                    if action == "resume":
+                        current_screen = previous_screen
+                        save_dialog = None
+                    elif action == "save":
+                        save_dialog = SaveDialog(pilot_name=pilot_name)
+                    elif action == "quit":
+                        current_screen = "menu"
+                        save_dialog = None
+                        menu = Menu()
 
                 if previous_screen == "game" and game_screen:
                     game_screen.draw(screen)
