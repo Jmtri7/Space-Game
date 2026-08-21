@@ -106,18 +106,39 @@ class AIShip:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.angle = 0
-        self.distance_from_station = 150
-        self.orbit_angle = 0
-        self.station_x = screen_width * 0.75
-        self.station_y = screen_height * 0.3
+        self.angle = random.randint(0, 360)
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.thrust = 0
+        self.thrust_timer = 0
+        self.max_thrust = 0.15
+        self.drag = 0.99
 
     def update(self):
-        self.orbit_angle = (self.orbit_angle + 0.5) % 360
-        rad = math.radians(self.orbit_angle)
-        self.x = self.station_x + math.cos(rad) * self.distance_from_station
-        self.y = self.station_y + math.sin(rad) * self.distance_from_station
-        self.angle = (self.orbit_angle + 90) % 360
+        self.thrust_timer -= 1
+        if self.thrust_timer <= 0:
+            self.thrust = random.uniform(0.05, self.max_thrust)
+            self.angle = (self.angle + random.uniform(-30, 30)) % 360
+            self.thrust_timer = random.randint(20, 60)
+
+        rad = math.radians(self.angle)
+        if self.thrust > 0.01:
+            self.velocity_x += math.sin(rad) * self.thrust
+            self.velocity_y -= math.cos(rad) * self.thrust
+            self.velocity_x *= self.drag
+            self.velocity_y *= self.drag
+
+        self.x += self.velocity_x
+        self.y += self.velocity_y
+
+        if self.x < 0:
+            self.x = screen_width
+        elif self.x > screen_width:
+            self.x = 0
+        if self.y < 0:
+            self.y = screen_height
+        elif self.y > screen_height:
+            self.y = 0
 
     def draw(self, surface):
         scale = min(screen_width, screen_height) / 600.0
@@ -139,6 +160,14 @@ class AIShip:
             points.append((int(self.x + rotated_x), int(self.y + rotated_y)))
 
         pygame.draw.polygon(surface, (150, 150, 200), points)
+
+        if self.thrust > 0.05:
+            flame_length = self.thrust * 20 * scale
+            back_x = (points[1][0] + points[2][0]) / 2
+            back_y = (points[1][1] + points[2][1]) / 2
+            flame_x = int(back_x - sin_a * flame_length)
+            flame_y = int(back_y + cos_a * flame_length)
+            pygame.draw.line(surface, (200, 150, 0), (int(back_x), int(back_y)), (flame_x, flame_y), max(1, int(scale)))
 
 class SpaceStation:
     def __init__(self, x, y):
@@ -203,19 +232,22 @@ class NPC:
 
     def draw(self, surface):
         pygame.draw.rect(surface, (200, 100, 100), (int(self.x - 6), int(self.y), 12, 16))
-        pygame.draw.rect(surface, (255, 150, 150), (int(self.x - 4), int(self.y - 8), 8, 8))
+        pygame.draw.circle(surface, (255, 150, 150), (int(self.x), int(self.y - 10)), 5)
 
 class StationInterior:
     def __init__(self):
         self.player_x = screen_width // 2
-        self.player_y = screen_height - 100
+        self.player_y = screen_height - 80
         self.room_width = screen_width
         self.room_height = screen_height
-        self.bar_x = 150
-        self.bar_y = 80
+        self.bar_x = screen_width // 2
+        self.bar_y = 100
+        self.door_x = screen_width // 2
+        self.door_y = screen_height - 50
 
         self.bartender = NPC(self.bar_x, self.bar_y, "bar")
-        self.wanderer = NPC(self.room_width // 2, self.room_height // 2, "wander")
+        self.wanderer = NPC(self.room_width // 2 + 100, self.room_height // 2, "wander")
+        self.door_guard = NPC(self.door_x, self.door_y, "bar")
 
     def handle_input(self, events):
         for event in events:
@@ -244,9 +276,15 @@ class StationInterior:
         self.wanderer.update(self.room_width, self.room_height)
 
     def draw(self, surface):
-        surface.fill((40, 40, 60))
+        surface.fill((30, 30, 50))
+
+        hallway_width = 150
+        hallway_x = self.room_width // 2 - hallway_width // 2
+        pygame.draw.rect(surface, (50, 50, 70), (hallway_x, 0, hallway_width, self.room_height))
 
         pygame.draw.rect(surface, (60, 60, 80), (0, 0, self.room_width, self.room_height), 3)
+        pygame.draw.line(surface, (80, 80, 100), (hallway_x, 0), (hallway_x, self.room_height), 2)
+        pygame.draw.line(surface, (80, 80, 100), (hallway_x + hallway_width, 0), (hallway_x + hallway_width, self.room_height), 2)
 
         pygame.draw.rect(surface, (100, 80, 40), (self.bar_x - 60, self.bar_y - 20, 120, 40))
         font = pygame.font.Font(None, int(20 * min(screen_width, screen_height) / 600.0))
@@ -255,9 +293,10 @@ class StationInterior:
 
         self.bartender.draw(surface)
         self.wanderer.draw(surface)
+        self.door_guard.draw(surface)
 
         pygame.draw.rect(surface, (0, 255, 0), (int(self.player_x - 6), int(self.player_y), 12, 16))
-        pygame.draw.rect(surface, (100, 255, 100), (int(self.player_x - 4), int(self.player_y - 8), 8, 8))
+        pygame.draw.circle(surface, (100, 255, 100), (int(self.player_x), int(self.player_y - 10)), 5)
 
         scale = min(screen_width, screen_height) / 600.0
         font_small = pygame.font.Font(None, int(16 * scale))
@@ -456,8 +495,9 @@ def main():
                 elif action == "exit_station":
                     current_screen = "game"
                     station_interior = None
-                station_interior.update()
-                station_interior.draw(screen)
+                if station_interior:
+                    station_interior.update()
+                    station_interior.draw(screen)
 
             pygame.display.flip()
             clock.tick(FPS)
