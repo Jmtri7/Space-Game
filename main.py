@@ -313,8 +313,9 @@ class NPC:
             self.y = max(50, min(room_height - 50, self.y))
 
     def draw(self, surface):
-        pygame.draw.rect(surface, (200, 100, 100), (int(self.x - 6), int(self.y), 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (int(self.x), int(self.y - 10)), 5)
+        scale = get_scale()
+        pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - 6, self.y), to_screen_x(12), to_screen_y(16)))
+        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 10), max(1, int(5 * scale)))
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
@@ -439,29 +440,29 @@ class StationInterior:
     def draw(self, surface):
         surface.fill((30, 30, 50))
 
-        hallway_wide_x = screen_width // 2 - self.hallway_wide_width // 2
+        scale = get_scale()
+        hallway_wide_x = GAME_WIDTH // 2 - self.hallway_wide_width // 2
         hallway_wide_width = self.hallway_wide_width
 
-        pygame.draw.rect(surface, (50, 50, 70), (hallway_wide_x, 0, hallway_wide_width, self.hallway_transition_y))
-        pygame.draw.rect(surface, (50, 50, 70), (self.hallway_x, self.hallway_transition_y, self.hallway_narrow_width, self.room_height - self.hallway_transition_y))
+        pygame.draw.rect(surface, (50, 50, 70), (*to_screen(hallway_wide_x, 0), to_screen_x(hallway_wide_width), to_screen_y(self.hallway_transition_y)))
+        pygame.draw.rect(surface, (50, 50, 70), (*to_screen(self.hallway_x, self.hallway_transition_y), to_screen_x(self.hallway_narrow_width), to_screen_y(self.room_height - self.hallway_transition_y)))
 
-        pygame.draw.rect(surface, (60, 60, 80), (0, 0, self.room_width, self.room_height), 3)
+        pygame.draw.rect(surface, (60, 60, 80), (*to_screen(0, 0), to_screen_x(self.room_width), to_screen_y(self.room_height)), 3)
 
-        pygame.draw.line(surface, (80, 80, 100), (hallway_wide_x, 0), (self.hallway_x, self.hallway_transition_y), 2)
-        pygame.draw.line(surface, (80, 80, 100), (hallway_wide_x + hallway_wide_width, 0), (self.hallway_x + self.hallway_narrow_width, self.hallway_transition_y), 2)
+        pygame.draw.line(surface, (80, 80, 100), to_screen(hallway_wide_x, 0), to_screen(self.hallway_x, self.hallway_transition_y), 2)
+        pygame.draw.line(surface, (80, 80, 100), to_screen(hallway_wide_x + hallway_wide_width, 0), to_screen(self.hallway_x + self.hallway_narrow_width, self.hallway_transition_y), 2)
 
-        pygame.draw.rect(surface, (100, 80, 40), (self.bar_x - 60, self.bar_y - 20, 120, 40))
-        scale = min(screen_width, screen_height) / 600.0
+        pygame.draw.rect(surface, (100, 80, 40), (*to_screen(self.bar_x - 60, self.bar_y - 20), to_screen_x(120), to_screen_y(40)))
         font = pygame.font.Font(None, int(20 * scale))
         bar_text = font.render("BAR", True, (200, 200, 100))
-        surface.blit(bar_text, (self.bar_x - 20, self.bar_y - 10))
+        surface.blit(bar_text, to_screen(self.bar_x - 20, self.bar_y - 10))
 
         self.bartender.draw(surface)
         self.wanderer.draw(surface)
         self.door_guard.draw(surface)
 
-        pygame.draw.rect(surface, (0, 255, 0), (int(self.player_x - 6), int(self.player_y), 12, 16))
-        pygame.draw.circle(surface, (100, 255, 100), (int(self.player_x), int(self.player_y - 10)), 5)
+        pygame.draw.rect(surface, (0, 255, 0), (*to_screen(self.player_x - 6, self.player_y), to_screen_x(12), to_screen_y(16)))
+        pygame.draw.circle(surface, (100, 255, 100), to_screen(self.player_x, self.player_y - 10), max(1, int(5 * scale)))
 
         font_small = pygame.font.Font(None, int(16 * scale))
         help_text = font_small.render("WASD/Arrows to move, L/ESC to exit", True, (200, 200, 200))
@@ -469,7 +470,7 @@ class StationInterior:
 
         if self.nearby_npc and not self.current_dialogue:
             talk_text = font_small.render("Press T to talk", True, (255, 255, 0))
-            surface.blit(talk_text, (int(self.nearby_npc.x - 30), int(self.nearby_npc.y - 30)))
+            surface.blit(talk_text, to_screen(self.nearby_npc.x - 30, self.nearby_npc.y - 30))
 
         if self.current_dialogue:
             self.current_dialogue.draw(surface, scale)
