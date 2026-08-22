@@ -167,7 +167,7 @@ class SaveDialog:
                         return ("cancel", None)
                     elif event.key == pygame.K_n:
                         self.input_mode = True
-                        self.save_name = ""
+                        # Keep the pre-populated save name (don't clear it)
             elif event.type == pygame.TEXTINPUT:
                 if self.input_mode and len(self.save_name) < 30:
                     self.save_name += event.text
@@ -182,7 +182,7 @@ class SaveDialog:
             font_title = pygame.font.Font(None, int(32 * scale))
             font_text = pygame.font.Font(None, int(24 * scale))
 
-            title = font_title.render("Enter Pilot Name:", True, WHITE)
+            title = font_title.render("Save Name:", True, WHITE)
             surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
 
             input_box = font_text.render(self.save_name + "|", True, YELLOW)
@@ -1352,6 +1352,7 @@ def main():
                                 moon_interior = MoonCity(pilot_name=pilot_name)
                             else:
                                 moon_interior = MoonOutdoor(pilot_name=pilot_name)
+                            moon_interior.restore_state(game_state)
                             current_screen = "moon"
                 elif action == "cancel":
                     current_screen = "menu"
