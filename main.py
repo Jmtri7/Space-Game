@@ -183,7 +183,9 @@ class SaveDialog:
             title = font_title.render("Save Name:", True, WHITE)
             surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
 
-            input_box = font_text.render(self.save_name + "|", True, YELLOW)
+            # Show full filename with save_ prefix and .json extension
+            full_filename = f"save_{self.save_name}.json"
+            input_box = font_text.render(full_filename, True, YELLOW)
             surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.4)))
 
             help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
@@ -278,6 +280,8 @@ class LoadMenu:
                         event.key, self.selected, self.saves, self.scroll_offset, self.max_visible)
                 elif event.key == pygame.K_RETURN and self.saves:
                     return ("load", self.saves[self.selected])
+                elif event.key == pygame.K_d and self.saves:
+                    return ("delete", self.saves[self.selected])
                 elif event.key == pygame.K_ESCAPE:
                     return ("cancel", None)
         return (None, None)
@@ -1364,37 +1368,54 @@ def main():
                 pilot_name_dialog.draw(screen)
 
             elif current_screen == "load":
-                action, filename = load_menu.handle_input(events)
-                if action == "load":
-                    save_data = load_save_file(filename)
-                    if save_data:
-                        pilot_name = save_data.get("pilot_name", "")
-                        game_state = save_data.get("game_state", {})
-                        location = game_state.get("location", "space")
+                if delete_confirm_dialog:
+                    confirm_action = delete_confirm_dialog.handle_input(events)
+                    if confirm_action == "confirm":
+                        try:
+                            filepath = f"{SAVE_DIR}/{delete_confirm_dialog.filename}"
+                            if os.path.exists(filepath):
+                                os.remove(filepath)
+                        except:
+                            pass
+                        delete_confirm_dialog = None
+                        load_menu = LoadMenu()
+                    elif confirm_action == "cancel":
+                        delete_confirm_dialog = None
+                    delete_confirm_dialog.draw(screen)
+                else:
+                    action, filename = load_menu.handle_input(events)
+                    if action == "load":
+                        save_data = load_save_file(filename)
+                        if save_data:
+                            pilot_name = save_data.get("pilot_name", "")
+                            game_state = save_data.get("game_state", {})
+                            location = game_state.get("location", "space")
 
-                        if location == "space":
-                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
-                            game_screen.restore_state(game_state)
-                            current_screen = "game"
-                        elif location == "station":
-                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
-                            game_screen.restore_state(game_state)
-                            station_interior = StationInterior(pilot_name=pilot_name)
-                            current_screen = "station"
-                        elif location == "moon":
-                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
-                            game_screen.restore_state(game_state)
-                            moon_location = game_state.get("moon_location", "city")
-                            if moon_location == "city":
-                                moon_interior = MoonCity(pilot_name=pilot_name)
-                            else:
-                                moon_interior = MoonOutdoor(pilot_name=pilot_name)
-                            moon_interior.restore_state(game_state)
-                            current_screen = "moon"
-                elif action == "cancel":
-                    current_screen = "menu"
-                    menu = Menu()
-                load_menu.draw(screen)
+                            if location == "space":
+                                game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen.restore_state(game_state)
+                                current_screen = "game"
+                            elif location == "station":
+                                game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen.restore_state(game_state)
+                                station_interior = StationInterior(pilot_name=pilot_name)
+                                current_screen = "station"
+                            elif location == "moon":
+                                game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen.restore_state(game_state)
+                                moon_location = game_state.get("moon_location", "city")
+                                if moon_location == "city":
+                                    moon_interior = MoonCity(pilot_name=pilot_name)
+                                else:
+                                    moon_interior = MoonOutdoor(pilot_name=pilot_name)
+                                moon_interior.restore_state(game_state)
+                                current_screen = "moon"
+                    elif action == "delete":
+                        delete_confirm_dialog = DeleteConfirmDialog(filename)
+                    elif action == "cancel":
+                        current_screen = "menu"
+                        menu = Menu()
+                    load_menu.draw(screen)
 
             elif current_screen == "game":
                 action = game_screen.handle_input(events)

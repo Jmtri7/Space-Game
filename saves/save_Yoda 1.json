@@ -1,0 +1,50 @@
+{
+  "pilot_name": "Yoda",
+  "name": "Yoda 1",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "moon": {
+      "x": 0.2,
+      "y": 0.4,
+      "name": "Luna"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 168.1600747331646,
+      "y": 222.47319221181817,
+      "angle": 70,
+      "velocity_x": 0.23130559639436118,
+      "velocity_y": -0.05579144636623343,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 698.4632166759905,
+      "y": 89.69399105022195,
+      "angle": 241.17765341222062,
+      "velocity_x": 0.3801081804784085,
+      "velocity_y": 1.041942892445074,
+      "thrust": 0.15
+    },
+    "location": "space"
+  }
+}
