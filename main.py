@@ -856,23 +856,32 @@ class MoonCity:
     def draw(self, surface):
         surface.fill((50, 50, 70))
 
-        # Draw buildings - spread across larger world
-        pygame.draw.rect(surface, (150, 150, 150), (200, 100, 200, 250))
-        pygame.draw.rect(surface, (100, 100, 100), (600, 80, 250, 280))
-        pygame.draw.rect(surface, (120, 120, 120), (1200, 150, 150, 220))
-        pygame.draw.rect(surface, (140, 140, 140), (350, 600, 180, 200))
+        # Draw buildings - using world coordinates with camera
+        buildings = [
+            (200, 100, 200, 250),
+            (600, 80, 250, 280),
+            (1200, 150, 150, 220),
+            (350, 600, 180, 200)
+        ]
+        for bx, by, bw, bh in buildings:
+            x1, y1 = to_screen(bx, by)
+            x2, y2 = to_screen(bx + bw, by + bh)
+            pygame.draw.rect(surface, (150, 150, 150), (x1, y1, x2 - x1, y2 - y1))
 
         # Draw windows
-        for bx in range(200, 400, 40):
-            for by in range(100, 350, 40):
-                pygame.draw.rect(surface, YELLOW, (bx, by, 20, 20))
-        for bx in range(600, 850, 40):
-            for by in range(80, 360, 40):
-                pygame.draw.rect(surface, YELLOW, (bx, by, 20, 20))
+        window_positions = [
+            (200, 100, 350, 400), (600, 80, 850, 360)
+        ]
+        for bx_start, by_start, bx_end, by_end in window_positions:
+            for bx in range(bx_start, bx_end, 40):
+                for by in range(by_start, by_end, 40):
+                    x, y = to_screen(bx, by)
+                    pygame.draw.rect(surface, YELLOW, (x, y, 15, 15))
 
         # Draw player
-        pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
+        px, py = to_screen(self.player_x, self.player_y)
+        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
         # Draw UI (not camera-affected)
         scale = get_scale()
@@ -927,24 +936,28 @@ class MoonOutdoor:
         # Draw moon terrain
         surface.fill((80, 80, 100))
 
+        scale = get_scale()
+
         # Draw craters spread across larger world
         crater_list = [(300, 400), (800, 600), (1200, 500), (400, 1000), (1300, 1000), (600, 200)]
         for cx, cy in crater_list:
-            pygame.draw.circle(surface, (60, 60, 80), to_screen(cx, cy), 50)
-            pygame.draw.circle(surface, (70, 70, 90), to_screen(cx, cy), 45)
+            crater_x, crater_y = to_screen(cx, cy)
+            pygame.draw.circle(surface, (60, 60, 80), (crater_x, crater_y), max(1, int(50 * scale)))
+            pygame.draw.circle(surface, (70, 70, 90), (crater_x, crater_y), max(1, int(45 * scale)))
 
         # Draw rocks spread across terrain
         rock_list = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350), (900, 450), (1100, 200), (1400, 600)]
         for rx, ry in rock_list:
-            screen_x, screen_y = to_screen(rx, ry)
-            pygame.draw.polygon(surface, (120, 120, 140), [(screen_x, screen_y), (screen_x + 30, screen_y + 15), (screen_x + 20, screen_y + 35), (screen_x - 10, screen_y + 30)])
+            rock_x, rock_y = to_screen(rx, ry)
+            size = int(30 * scale)
+            pygame.draw.polygon(surface, (120, 120, 140), [(rock_x, rock_y), (rock_x + size, rock_y + size//2), (rock_x + size - 10, rock_y + size + 5), (rock_x - 10, rock_y + size)])
 
         # Draw player
-        pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
+        px, py = to_screen(self.player_x, self.player_y)
+        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
         # Draw UI (not camera-affected)
-        scale = get_scale()
         offset_x, offset_y = get_offset()
         font = pygame.font.Font(None, int(24 * scale))
         ui_text = font.render("Moon Wilderness | Press L to leave", True, WHITE)
