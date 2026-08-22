@@ -567,7 +567,7 @@ class Person:
     def draw(self, surface):
         scale = get_scale()
         pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - 6, self.y), to_screen_x(12), to_screen_y(16)))
-        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 10), max(1, int(5 * scale)))
+        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 6), max(1, int(5 * scale)))
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
@@ -634,6 +634,8 @@ class WalkableArea:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
                     return "exit"
+                elif event.key == pygame.K_ESCAPE:
+                    return "pause"
         return None
 
     def _handle_movement(self, keys, can_move_func=None):
@@ -1310,7 +1312,7 @@ def main():
                 elif action == "pause":
                     previous_screen = "station"
                     current_screen = "pause"
-                elif action == "exit_station":
+                elif action == "exit":
                     current_screen = "game"
                 if station_interior:
                     station_interior.update()
@@ -1334,6 +1336,9 @@ def main():
                     running = False
                 elif action == "exit":
                     current_screen = "game"
+                elif action == "pause":
+                    previous_screen = "moon"
+                    current_screen = "pause"
                 if moon_interior:
                     moon_interior.update()
                     moon_interior.draw(screen)
