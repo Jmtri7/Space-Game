@@ -1,0 +1,181 @@
+# Space Game Development Guide
+
+**For detailed documentation, see [docs/README.md](docs/README.md)** — comprehensive guides on architecture, physics, save systems, UI flow, and design patterns.
+
+## Project Overview
+A pygame-based space exploration game with procedurally generated star fields, AI ships, space stations with NPCs, and a complete save/load system. The game features physics-based ship movement, NPC dialogue, and persistent game state.
+
+## For Agents: Pattern Recognition & Contributions
+
+**Read this:** When implementing features or fixes, watch for opportunities to **generalize solutions into reusable patterns**. If you notice:
+
+- Code being repeated in multiple places
+- A clever solution that other code might benefit from
+- A design pattern that worked well and could guide future work
+
+...then **suggest adding it to [docs/DESIGN_PATTERNS.md](docs/DESIGN_PATTERNS.md)**. 
+
+**Example suggestion:**
+> "I noticed the save/load system uses a consistent {getter, setter} pattern for state capture. This could generalize to DESIGN_PATTERNS.md as a 'State Persistence Pattern' that future systems could follow when adding new saveable objects."
+
+See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--contribution) for the full contribution workflow.
+
+## Running the Game
+```bash
+cd C:\Users\Play\Documents\Projects\space-game
+python main.py
+```
+
+## Project Structure
+```
+space-game/
+├── main.py                 # Complete game implementation (~1000+ lines)
+├── config/
+│   ├── space_system.json  # System layout: station position, AI ships
+│   └── station_interior.json # Station rooms, NPCs, dialogue
+├── saves/                 # Player save files (generated at runtime)
+└── requirements.txt       # pygame only
+```
+
+## Coordinate System
+**Critical:** All game graphics are defined in **game-space** (800x600) and scaled to window size.
+- Game space: 800x600 (fixed logical space)
+- Screen space: Variable based on window resize
+- Conversion functions: `to_screen(x, y)`, `to_screen_x()`, `to_screen_y()`
+- Always use game-space for positions, velocities, etc.
+- Only convert to screen-space when drawing
+
+## Key Classes & Architecture
+
+### Ships
+- **Ship** (base class): Position, angle, velocity, thrust, drag, rotation
+  - `draw_ship()`: Rotated polygon with flame at rear
+  - `wrap_position()`: Screen-wrapping at edges
+  - `update()`: Physics simulation
+- **Player** (extends Ship): Handles WASD/arrow input, thrust control
+- **AIShip** (extends Ship): Autonomous behavior (wanders, avoids)
+
+### Game Screens
+- **GameScreen**: Space view with player, AI ships, star field, station
+  - `get_state()`: Saves player/AI positions for save files
+  - `restore_state()`: Restores positions from save files
+- **StationInterior**: First-person station exploration
+- **Menu**: NEW/LOAD/QUIT menu (LOAD appears when saves exist)
+- **PauseMenu**: Resume/Save/Quit with success banner
+- **SaveDialog**: Shows all saves, allows overwriting, scrolling list
+- **LoadMenu**: Browse and load saves with scrolling
+
+### NPCs & Dialogue
+- **Person** (base): Position, sprite drawing (body + head)
+- **NPC** (extends Person): Behavior (bar/wander), dialogue system
+- **Dialogue**: Text-based conversation tree with options
+
+## Save System
+**Location:** `saves/` directory (auto-created)
+**Format:** `save_{pilot_name}_{timestamp}.json`
+**Contents:**
+- `pilot_name`: Player identifier
+- `name`: Save description (user-entered)
+- `timestamp`: When saved
+- `system`: Original system config
+- `game_state`: Player/AI positions, velocities, angles
+
+**On Load:**
+1. Restore player/AI positions and velocities from `game_state`
+2. Use original `system` config for static objects (station, star field)
+
+## UI/Menu Flow
+1. **Main Menu** → NEW/LOAD/QUIT
+2. **NEW Game** → GameScreen (player at center)
+3. **Pause Menu** (ESC) → Resume/Save/Quit with success banner
+4. **Save Dialog** → Shows all saves (scrollable), enter pilot name or select to overwrite
+5. **Load Menu** → Browse saves (scrollable), select to load
+6. **Station Landing** (L key near station) → StationInterior
+7. **Station Interior** (ESC) → Pause Menu
+
+## Physics & Movement
+- **Velocity**: Continuous momentum-based (not tile-based)
+- **Drag**: Applied each frame (0.98 multiplier)
+- **Max Velocity**: 4.0 units/frame
+- **Thrust**: Incremental acceleration (0-0.3 per frame)
+- **Rotation**: 5 degrees per frame
+
+**Key Behavior:**
+- Thrust OFF: Velocity decays via drag (coasting to stop)
+- Thrust ON: Acceleration in direction ship is facing
+- Reverse (DOWN key in station): Only decreases thrust, doesn't reverse velocity
+
+## Configuration Files
+**space_system.json**: System layout
+```json
+{
+  "station": {"x": 0.75, "y": 0.3},
+  "ai_ships": [{"x": 0.75, "y": 0.1, "color": [...]}]
+}
+```
+
+**station_interior.json**: Interior layout & NPCs
+```json
+{
+  "bar": {"x": 0.5, "y": 0.15},
+  "hallway": {"narrow_width": 80, "transition_y": 0.5},
+  "npcs": [{"name": "...", "x": ..., "behavior": "bar/wander", "dialogue_options": [...]}]
+}
+```
+
+## Common Fixes & Known Patterns
+
+### Screen Deformation Issues
+Always convert to screen-space only when drawing. Never store screen-space coords.
+
+### Ship Rotation Math
+Use proper 2D rotation matrix:
+```python
+rad = math.radians(angle)
+cos_a = math.cos(rad)
+sin_a = math.sin(rad)
+rotated_x = lx * cos_a - ly * sin_a
+rotated_y = lx * sin_a + ly * cos_a
+```
+
+### NPC Collision
+Use `_is_in_valid_area()` to check hallway + bar regions before moving.
+
+### Save Dialog
+- Shows ALL saves in directory (not filtered by pilot)
+- Scrolls 5 at a time with ↑/↓ indicators
+- User selects existing save to overwrite or presses N for new
+
+### Menu Persistence
+Menu must be recreated when returning from load/save so "LOAD" option appears dynamically.
+
+## Testing Checklist
+- [ ] Game starts without errors
+- [ ] Menu shows LOAD option after first save
+- [ ] Player can move and rotate smoothly
+- [ ] Momentum works (coasting after thrust off)
+- [ ] Can land on station (L key within range)
+- [ ] Can walk in station interior
+- [ ] Save/load preserves position and velocity
+- [ ] Scrolling works in save/load menus (5+ saves)
+- [ ] Window resizing scales graphics smoothly
+- [ ] AI ship appears and moves autonomously
+
+## Commit Message Convention
+```
+[Feature/Fix] Brief description
+
+- Bullet points of changes
+- One per line
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+```
+
+## Next Feature Ideas
+- Station docking/departure sequence
+- Inventory system
+- Asteroid/obstacle collision
+- Multiple star systems
+- Sound effects and music
+- Multiplayer (local)
+- Missions/objectives
