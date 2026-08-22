@@ -805,6 +805,193 @@ class StarField:
         for x, y, brightness in self.stars:
             pygame.draw.circle(surface, (brightness, brightness, brightness), to_screen(x, y), 1)
 
+class MoonCity:
+    def __init__(self, pilot_name=""):
+        self.player_x = GAME_WIDTH // 2
+        self.player_y = GAME_HEIGHT - 80
+        self.pilot_name = pilot_name
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return "exit"
+                elif event.key == pygame.K_l:
+                    return "exit"
+        return None
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        speed = 3
+        new_x = self.player_x
+        new_y = self.player_y
+
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            new_y -= speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            new_y += speed
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            new_x -= speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            new_x += speed
+
+        if 0 < new_x < GAME_WIDTH and 0 < new_y < GAME_HEIGHT:
+            self.player_x = new_x
+            self.player_y = new_y
+
+    def draw(self, surface):
+        surface.fill((50, 50, 70))
+
+        # Draw buildings
+        pygame.draw.rect(surface, (150, 150, 150), (200, 100, 150, 200))
+        pygame.draw.rect(surface, (100, 100, 100), (400, 80, 200, 220))
+        pygame.draw.rect(surface, (120, 120, 120), (650, 120, 100, 180))
+
+        # Draw windows
+        for bx in range(200, 350, 40):
+            for by in range(100, 300, 40):
+                pygame.draw.rect(surface, YELLOW, (bx, by, 20, 20))
+
+        # Draw player
+        pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
+
+        # Draw UI
+        scale = get_scale()
+        font = pygame.font.Font(None, int(24 * scale))
+        ui_text = font.render("Moon City | Press L or ESC to leave", True, WHITE)
+        surface.blit(ui_text, (20, 20))
+
+class MoonOutdoor:
+    def __init__(self, pilot_name=""):
+        self.player_x = GAME_WIDTH // 2
+        self.player_y = GAME_HEIGHT - 80
+        self.pilot_name = pilot_name
+        self.rocks = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350)]
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return "exit"
+                elif event.key == pygame.K_l:
+                    return "exit"
+        return None
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        speed = 3
+        new_x = self.player_x
+        new_y = self.player_y
+
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            new_y -= speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            new_y += speed
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            new_x -= speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            new_x += speed
+
+        if 0 < new_x < GAME_WIDTH and 0 < new_y < GAME_HEIGHT:
+            self.player_x = new_x
+            self.player_y = new_y
+
+    def draw(self, surface):
+        # Draw moon terrain
+        pygame.draw.line(surface, (100, 100, 120), (0, 500), (GAME_WIDTH, 520), 3)
+        surface.fill((80, 80, 100))
+
+        # Draw stars
+        for i in range(20):
+            x = random.randint(0, GAME_WIDTH)
+            y = random.randint(0, 150)
+            pygame.draw.circle(surface, WHITE, (x, y), 1)
+
+        # Draw craters
+        for cx, cy in [(150, 450), (450, 480), (700, 470)]:
+            pygame.draw.circle(surface, (60, 60, 80), (cx, cy), 40)
+            pygame.draw.circle(surface, (70, 70, 90), (cx, cy), 35)
+
+        # Draw rocks
+        for rx, ry in self.rocks:
+            pygame.draw.polygon(surface, (120, 120, 140), [(rx, ry), (rx + 30, ry + 15), (rx + 20, ry + 35), (rx - 10, ry + 30)])
+
+        # Draw player
+        pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
+
+        # Draw UI
+        scale = get_scale()
+        font = pygame.font.Font(None, int(24 * scale))
+        ui_text = font.render("Moon Wilderness | Press L or ESC to leave", True, WHITE)
+        surface.blit(ui_text, (20, 20))
+
+class Moon:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.phase = 0
+
+    def update(self):
+        self.phase = (self.phase + 0.1) % 360
+
+    def draw(self, surface):
+        scale = get_scale()
+        size = 30
+        color = (200, 200, 200)
+        pygame.draw.circle(surface, color, to_screen(self.x, self.y), max(1, int(round(size * scale))))
+        # Draw craters
+        pygame.draw.circle(surface, (150, 150, 150), to_screen(self.x - 8, self.y - 5), max(1, int(4 * scale)))
+        pygame.draw.circle(surface, (150, 150, 150), to_screen(self.x + 10, self.y + 8), max(1, int(5 * scale)))
+
+    def get_distance(self, x, y):
+        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
+
+class LocationSelector:
+    def __init__(self):
+        self.locations = ["Moon City", "Wilderness"]
+        self.selected = 0
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.selected = (self.selected - 1) % len(self.locations)
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self.selected = (self.selected + 1) % len(self.locations)
+                elif event.key == pygame.K_RETURN:
+                    return self.locations[self.selected]
+                elif event.key == pygame.K_ESCAPE:
+                    return "cancel"
+        return None
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.25), int(GAME_WIDTH * scale * 0.7), int(GAME_HEIGHT * scale * 0.5)))
+
+        font_title = pygame.font.Font(None, int(40 * scale))
+        font_text = pygame.font.Font(None, int(28 * scale))
+
+        title = font_title.render("Landing Location", True, YELLOW)
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.3)))
+
+        for i, location in enumerate(self.locations):
+            color = YELLOW if i == self.selected else GRAY
+            text = font_text.render(location, True, color)
+            text_x = int(offset_x + GAME_WIDTH * scale * 0.3)
+            text_y = int(offset_y + GAME_HEIGHT * scale * 0.45 + i * 40)
+            surface.blit(text, (text_x, text_y))
+            if i == self.selected:
+                box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
+                pygame.draw.rect(surface, YELLOW, box_rect, 2)
+
 class GameScreen:
     def __init__(self, system_config=None, pilot_name=""):
         self.player = Player(GAME_WIDTH // 2, GAME_HEIGHT // 2)
@@ -815,9 +1002,13 @@ class GameScreen:
         station_cfg = self.system_config.get("station", {})
         self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3))
 
+        moon_cfg = self.system_config.get("moon", {})
+        self.moon = Moon(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4))
+
         ai_cfg = self.system_config.get("ai_ships", [{}])[0]
         self.ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1))
         self.landing_text = 0
+        self.landing_target = None
 
     def handle_input(self, events):
         for event in events:
@@ -827,7 +1018,9 @@ class GameScreen:
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
                 elif event.key == pygame.K_l:
-                    if self._can_land():
+                    landing_target = self._check_landing()
+                    if landing_target:
+                        self.landing_target = landing_target
                         return "land"
         return None
 
@@ -837,7 +1030,20 @@ class GameScreen:
         self.ai_ship.x = screen_width * 0.75
         self.ai_ship.y = screen_height * 0.3 - 150
 
-    def _can_land(self):
+    def _check_landing(self):
+        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+
+        station_distance = self.station.get_distance(self.player.x, self.player.y)
+        if station_distance < 100 and speed < 0.5:
+            return "station"
+
+        moon_distance = self.moon.get_distance(self.player.x, self.player.y)
+        if moon_distance < 100 and speed < 0.5:
+            return "moon"
+
+        return None
+
+    def _can_land_at_station(self):
         distance = self.station.get_distance(self.player.x, self.player.y)
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         return distance < 100 and speed < 0.5
@@ -847,9 +1053,10 @@ class GameScreen:
         self.player.handle_input(keys)
         self.player.update()
         self.station.update()
+        self.moon.update()
         self.ai_ship.update()
 
-        if self._can_land():
+        if self._check_landing():
             self.landing_text = 60
         else:
             self.landing_text = max(0, self.landing_text - 1)
@@ -858,6 +1065,7 @@ class GameScreen:
         surface.fill(BLACK)
         self.star_field.draw(surface)
         self.station.draw(surface)
+        self.moon.draw(surface)
         self.ai_ship.draw(surface)
         self.player.draw(surface)
 
@@ -1001,6 +1209,8 @@ def main():
         menu = Menu()
         game_screen = None
         station_interior = None
+        moon_interior = None
+        location_selector = None
         pause_menu = PauseMenu()
         save_dialog = None
         delete_confirm_dialog = None
@@ -1055,8 +1265,12 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    station_interior = StationInterior(pilot_name=pilot_name)
-                    current_screen = "station"
+                    if game_screen.landing_target == "station":
+                        station_interior = StationInterior(pilot_name=pilot_name)
+                        current_screen = "station"
+                    elif game_screen.landing_target == "moon":
+                        location_selector = LocationSelector()
+                        current_screen = "select_location"
                 game_screen.update()
                 game_screen.draw(screen)
 
@@ -1067,9 +1281,33 @@ def main():
                 elif action == "pause":
                     previous_screen = "station"
                     current_screen = "pause"
+                elif action == "exit_station":
+                    current_screen = "game"
                 if station_interior:
                     station_interior.update()
                     station_interior.draw(screen)
+
+            elif current_screen == "select_location":
+                location = location_selector.handle_input(events)
+                if location == "Moon City":
+                    moon_interior = MoonCity(pilot_name=pilot_name)
+                    current_screen = "moon"
+                elif location == "Wilderness":
+                    moon_interior = MoonOutdoor(pilot_name=pilot_name)
+                    current_screen = "moon"
+                elif location == "cancel":
+                    current_screen = "game"
+                location_selector.draw(screen)
+
+            elif current_screen == "moon":
+                action = moon_interior.handle_input(events)
+                if action == "quit":
+                    running = False
+                elif action == "exit":
+                    current_screen = "game"
+                if moon_interior:
+                    moon_interior.update()
+                    moon_interior.draw(screen)
 
             elif current_screen == "pause":
                 pause_menu.update()
