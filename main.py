@@ -1281,7 +1281,7 @@ class Menu:
         y_spacing = int(80 * scale)
         _, font_menu = self._get_fonts()
         text = font_menu.render(self.items[index], True, WHITE)
-        rect = text.get_rect(center=(int(screen_width // 2 + 80 * scale), y_base + index * y_spacing))
+        rect = text.get_rect(center=(screen_width // 2, y_base + index * y_spacing))
         return rect
 
     def draw(self, surface):
@@ -1300,15 +1300,12 @@ class Menu:
             color = YELLOW if i == self.selected_index else GRAY
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
-            text_x = int(screen_width // 2 + 80 * scale)
+            text_x = screen_width // 2 - text.get_width() // 2
             surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
                 box_rect = pygame.Rect(text_x - 5, y - 2, text.get_width() + 10, text.get_height() + 4)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
-                dot_radius = int(12 * scale)
-                dot_x = int(screen_width // 2 + 40 * scale)
-                pygame.draw.circle(surface, YELLOW, (dot_x, y + text.get_height() // 2), dot_radius)
 
 def main():
     global screen_width, screen_height, screen
