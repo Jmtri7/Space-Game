@@ -288,6 +288,51 @@ class ScrollableMenu:
 
 ---
 
+## Pattern: Scrollable List Handler (Shared Logic)
+
+**Problem:** SaveDialog, LoadMenu both duplicate up/down navigation with wrapping and scroll-sync.
+
+**Solution:** Extract to a pure function that returns (new_selected, new_scroll_offset).
+
+**Implementation:**
+```python
+def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
+    """Handle up/down navigation with wrapping and auto-scroll."""
+    if key in (pygame.K_UP, pygame.K_w):
+        selected -= 1
+        if selected < 0:
+            selected = len(items) - 1
+            scroll_offset = max(0, len(items) - max_visible)
+        elif selected < scroll_offset:
+            scroll_offset -= 1
+    elif key in (pygame.K_DOWN, pygame.K_s):
+        selected += 1
+        if selected >= len(items):
+            selected = 0
+            scroll_offset = 0
+        elif selected >= scroll_offset + max_visible:
+            scroll_offset += 1
+    return selected, scroll_offset
+
+# In SaveDialog.handle_input():
+self.selected, self.scroll_offset = _handle_scrolling_input(
+    event.key, self.selected, self.items, self.scroll_offset, self.max_visible)
+
+# In LoadMenu.handle_input():
+self.selected, self.scroll_offset = _handle_scrolling_input(
+    event.key, self.selected, self.items, self.scroll_offset, self.max_visible)
+```
+
+**Why this works:**
+- Pure function (no side effects, testable in isolation)
+- Reusable by both SaveDialog and LoadMenu (DRY)
+- Single place to fix boundary/wrapping bugs
+- Easy to add new key bindings (modify function signature once)
+
+**Use case:** Multiple menus/lists that all need identical scrolling behavior.
+
+---
+
 ## Pattern: Screen State Machine
 
 **Problem:** Complex navigation between multiple screens (menu, game, pause, load, etc.).

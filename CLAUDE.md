@@ -123,6 +123,17 @@ space-game/
 }
 ```
 
+## Code Organization & Helpers
+
+### Extracted Helper Functions
+These functions eliminate duplication across menus:
+- **`_list_files_by_pattern(directory, prefix, suffix)`** — Unifies file listing for SaveDialog and get_save_files()
+- **`_handle_scrolling_input(key, selected, items, scroll_offset, max_visible)`** — Shared up/down navigation for SaveDialog and LoadMenu
+- **`_center_text_x(surface, text, offset_x=0)`** — Unified menu text centering
+
+### Constants
+- **`SAVE_DIR = "saves"`** — Centralized save directory path (replaces hardcoded strings)
+
 ## Common Fixes & Known Patterns
 
 ### Screen Deformation Issues

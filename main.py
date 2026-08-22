@@ -152,10 +152,13 @@ class SaveDialog:
                                 self.scroll_offset, self.max_visible)
                     elif event.key == pygame.K_RETURN and self.selected_existing is not None:
                         return ("save", self.existing_saves[self.selected_existing])
+                    elif event.key == pygame.K_d and self.selected_existing is not None:
+                        return ("delete", self.existing_saves[self.selected_existing])
                     elif event.key == pygame.K_ESCAPE:
                         return ("cancel", None)
                     elif event.key == pygame.K_n:
                         self.input_mode = True
+                        self.save_name = ""
             elif event.type == pygame.TEXTINPUT:
                 if self.input_mode and len(self.save_name) < 30:
                     self.save_name += event.text
@@ -195,14 +198,61 @@ class SaveDialog:
                 is_selected = (self.scroll_offset + i == self.selected_existing)
                 color = YELLOW if is_selected else GRAY
                 text = font_text.render(save, True, color)
-                surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 35)))
+                text_x = int(offset_x + GAME_WIDTH * scale * 0.15)
+                text_y = int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 35)
+                surface.blit(text, (text_x, text_y))
+                if is_selected:
+                    box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
+                    pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
             if self.scroll_offset + self.max_visible < len(self.existing_saves):
                 down_indicator = font_text.render("↓ more", True, GRAY)
                 surface.blit(down_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + self.max_visible * 35)))
 
-            help_text = font_text.render("Enter: overwrite, N: new save, ESC: cancel", True, GRAY)
+            help_text = font_text.render("Enter: overwrite, N: new save, D: delete, ESC: cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.75)))
+
+class DeleteConfirmDialog:
+    def __init__(self, save_filename):
+        self.save_filename = save_filename
+        self.confirm_text = ""
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and self.confirm_text.lower() == "confirm":
+                    return ("delete", self.save_filename)
+                elif event.key == pygame.K_BACKSPACE:
+                    self.confirm_text = self.confirm_text[:-1]
+                elif event.key == pygame.K_ESCAPE:
+                    return ("cancel", None)
+            elif event.type == pygame.TEXTINPUT:
+                if len(self.confirm_text) < 30:
+                    self.confirm_text += event.text
+        return (None, None)
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
+        font_title = pygame.font.Font(None, int(32 * scale))
+        font_text = pygame.font.Font(None, int(24 * scale))
+
+        title = font_title.render("Delete Save?", True, WHITE)
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+
+        filename_text = font_text.render(self.save_filename[:50], True, YELLOW)
+        surface.blit(filename_text, (_center_text_x(surface, filename_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.35)))
+
+        confirm_prompt = font_text.render('Type "confirm" to delete:', True, GRAY)
+        surface.blit(confirm_prompt, (_center_text_x(surface, confirm_prompt, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.45)))
+
+        input_box = font_text.render(self.confirm_text + "|", True, YELLOW)
+        surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.55)))
+
+        help_text = font_text.render("Enter to confirm, ESC to cancel", True, GRAY)
+        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.7)))
 
 class LoadMenu:
     def __init__(self):
@@ -248,7 +298,12 @@ class LoadMenu:
                 is_selected = (self.scroll_offset + i == self.selected)
                 color = YELLOW if is_selected else GRAY
                 text = font_save.render(save, True, color)
-                surface.blit(text, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 40)))
+                text_x = int(offset_x + GAME_WIDTH * scale * 0.15)
+                text_y = int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 40)
+                surface.blit(text, (text_x, text_y))
+                if is_selected:
+                    box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
+                    pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
             if self.scroll_offset + self.max_visible < len(self.saves):
                 down_indicator = font_save.render("↓ more", True, GRAY)
@@ -298,7 +353,12 @@ class PauseMenu:
         for i, option in enumerate(self.options):
             color = YELLOW if i == self.selected else GRAY
             text = font_option.render(option, True, color)
-            surface.blit(text, (int(offset_x + GAME_WIDTH * scale // 2 - text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5 + i * 50)))
+            text_x = int(offset_x + GAME_WIDTH * scale // 2 - text.get_width() // 2)
+            text_y = int(offset_y + GAME_HEIGHT * scale * 0.5 + i * 50)
+            surface.blit(text, (text_x, text_y))
+            if i == self.selected:
+                box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
+                pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
         if self.success_timer > 0:
             font_success = pygame.font.Font(None, int(32 * scale))
@@ -925,9 +985,12 @@ class Menu:
             color = YELLOW if i == self.selected_index else GRAY
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
-            surface.blit(text, (int(screen_width // 2 + 80 * scale), y))
+            text_x = int(screen_width // 2 + 80 * scale)
+            surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
+                box_rect = pygame.Rect(text_x - 5, y - 2, text.get_width() + 10, text.get_height() + 4)
+                pygame.draw.rect(surface, YELLOW, box_rect, 2)
                 dot_radius = int(12 * scale)
                 dot_x = int(screen_width // 2 + 40 * scale)
                 pygame.draw.circle(surface, YELLOW, (dot_x, y + text.get_height() // 2), dot_radius)
@@ -940,6 +1003,7 @@ def main():
         station_interior = None
         pause_menu = PauseMenu()
         save_dialog = None
+        delete_confirm_dialog = None
         load_menu = None
         current_screen = "menu"
         previous_screen = None
@@ -1010,7 +1074,23 @@ def main():
             elif current_screen == "pause":
                 pause_menu.update()
 
-                if save_dialog:
+                if delete_confirm_dialog:
+                    dialog_action, filename = delete_confirm_dialog.handle_input(events)
+                    if dialog_action == "delete":
+                        try:
+                            filepath = f"{SAVE_DIR}/{filename}"
+                            if os.path.exists(filepath):
+                                os.remove(filepath)
+                            pause_menu.success_timer = 120
+                        except:
+                            pass
+                        delete_confirm_dialog = None
+                        if save_dialog:
+                            save_dialog.existing_saves = save_dialog._get_all_saves()
+                    elif dialog_action == "cancel":
+                        delete_confirm_dialog = None
+
+                elif save_dialog:
                     dialog_action, save_name = save_dialog.handle_input(events)
                     if dialog_action == "save":
                         if not pilot_name and save_name:
@@ -1025,10 +1105,12 @@ def main():
                             create_save_file(pilot_name, save_name, station_interior.station_config, {}, {})
                         pause_menu.success_timer = 120
                         save_dialog = None
+                    elif dialog_action == "delete":
+                        delete_confirm_dialog = DeleteConfirmDialog(save_name)
                     elif dialog_action == "cancel":
                         save_dialog = None
 
-                if not save_dialog:
+                if not save_dialog and not delete_confirm_dialog:
                     action = pause_menu.handle_input(events)
                     if action == "resume":
                         current_screen = previous_screen
@@ -1045,7 +1127,9 @@ def main():
 
                 pause_menu.draw(screen)
 
-                if save_dialog:
+                if delete_confirm_dialog:
+                    delete_confirm_dialog.draw(screen)
+                elif save_dialog:
                     save_dialog.draw(screen)
 
             pygame.display.flip()
