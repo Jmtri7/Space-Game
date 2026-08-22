@@ -616,13 +616,79 @@ class NPC(Person):
         self.dialogue_options = dialogue_options or ["Talk", "Leave"]
         self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
 
-class StationInterior:
+class WalkableArea:
+    """Base class for all walkable/explorable areas with camera system"""
+    def __init__(self, start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT // 2, world_width=1600, world_height=1600):
+        self.player_x = start_x
+        self.player_y = start_y
+        self.world_width = world_width
+        self.world_height = world_height
+        self.pilot_name = ""
+        self.speed = 3
+
+    def handle_input(self, events):
+        """Override for area-specific input (dialogue, etc.)"""
+        for event in events:
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_l:
+                    return "exit"
+        return None
+
+    def _handle_movement(self, keys, can_move_func=None):
+        """Generalized movement input handling"""
+        new_x = self.player_x
+        new_y = self.player_y
+
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            new_y -= self.speed
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            new_y += self.speed
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            new_x -= self.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            new_x += self.speed
+
+        # Check bounds
+        if can_move_func:
+            can_move = can_move_func(new_x, new_y)
+        else:
+            can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
+
+        if can_move:
+            self.player_x = new_x
+            self.player_y = new_y
+
+    def update_camera(self):
+        """Update global camera to follow player"""
+        global camera_offset_x, camera_offset_y
+        camera_offset_x = self.player_x - GAME_WIDTH // 2
+        camera_offset_y = self.player_y - GAME_HEIGHT // 2
+
+    def draw_ui_text(self, surface, text, scale=None):
+        """Draw UI text that stays on screen (not camera-affected)"""
+        if scale is None:
+            scale = get_scale()
+        offset_x, offset_y = get_offset()
+        font = pygame.font.Font(None, int(24 * scale))
+        ui_text = font.render(text, True, WHITE)
+        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
+
+    def update(self):
+        """Override in subclass"""
+        pass
+
+    def draw(self, surface):
+        """Override in subclass"""
+        pass
+
+class StationInterior(WalkableArea):
     def __init__(self, station_config=None, pilot_name=""):
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=GAME_WIDTH, world_height=GAME_HEIGHT)
+        self.pilot_name = pilot_name
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
-        self.player_x = GAME_WIDTH // 2
-        self.player_y = GAME_HEIGHT - 80
-        self.pilot_name = pilot_name
 
         self.station_config = station_config or load_json("config/station_interior.json") or {}
 
@@ -709,34 +775,13 @@ class StationInterior:
         return (x >= bar_left and x <= bar_right and y >= bar_top and y <= bar_bottom)
 
     def update(self):
-        global camera_offset_x, camera_offset_y
-
         if self.current_dialogue:
             return
 
         keys = pygame.key.get_pressed()
-        speed = 3
-        new_x = self.player_x
-        new_y = self.player_y
-
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            new_x -= speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            new_x += speed
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            new_y -= speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            new_y += speed
-
-        if self._is_in_valid_area(new_x, new_y):
-            self.player_x = new_x
-            self.player_y = new_y
-
+        self._handle_movement(keys, self._is_in_valid_area)
         self.player_y = max(30, min(self.room_height - 30, self.player_y))
-
-        # Update camera to follow player
-        camera_offset_x = self.player_x - GAME_WIDTH // 2
-        camera_offset_y = self.player_y - GAME_HEIGHT // 2
+        self.update_camera()
 
         self.wanderer.wander_time -= 1
         if self.wanderer.wander_time <= 0:
@@ -784,9 +829,9 @@ class StationInterior:
         pygame.draw.rect(surface, (0, 255, 0), (*to_screen(self.player_x - 6, self.player_y), to_screen_x(12), to_screen_y(16)))
         pygame.draw.circle(surface, (100, 255, 100), to_screen(self.player_x, self.player_y - 10), max(1, int(5 * scale)))
 
+        offset_x, offset_y = get_offset()
         font_small = pygame.font.Font(None, int(16 * scale))
         help_text = font_small.render("WASD/Arrows to move, L to exit, ESC for menu", True, (200, 200, 200))
-        offset_x, offset_y = get_offset()
         surface.blit(help_text, (int(offset_x + 10), int(offset_y + 10)))
 
         if self.nearby_npc and not self.current_dialogue:
@@ -819,46 +864,15 @@ class StarField:
         for x, y, brightness in self.stars:
             pygame.draw.circle(surface, (brightness, brightness, brightness), to_screen(x, y), 1)
 
-class MoonCity:
+class MoonCity(WalkableArea):
     def __init__(self, pilot_name=""):
-        self.player_x = GAME_WIDTH // 2
-        self.player_y = GAME_HEIGHT - 80
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
         self.pilot_name = pilot_name
 
-    def handle_input(self, events):
-        for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_l:
-                    return "exit"
-        return None
-
     def update(self):
-        global camera_offset_x, camera_offset_y
-
         keys = pygame.key.get_pressed()
-        speed = 3
-        new_x = self.player_x
-        new_y = self.player_y
-
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            new_y -= speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            new_y += speed
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            new_x -= speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            new_x += speed
-
-        # Bound to world
-        if 0 < new_x < 1600 and 0 < new_y < 1600:
-            self.player_x = new_x
-            self.player_y = new_y
-
-        # Update camera to follow player
-        camera_offset_x = self.player_x - GAME_WIDTH // 2
-        camera_offset_y = self.player_y - GAME_HEIGHT // 2
+        self._handle_movement(keys)
+        self.update_camera()
 
     def draw(self, surface):
         surface.fill((50, 50, 70))
@@ -890,54 +904,19 @@ class MoonCity:
         pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
-        # Draw UI (not camera-affected)
-        scale = get_scale()
-        offset_x, offset_y = get_offset()
-        font = pygame.font.Font(None, int(24 * scale))
-        ui_text = font.render("Moon City | Press L to leave", True, WHITE)
-        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
+        # Draw UI
+        self.draw_ui_text(surface, "Moon City | Press L to leave")
 
-class MoonOutdoor:
+class MoonOutdoor(WalkableArea):
     def __init__(self, pilot_name=""):
-        self.player_x = GAME_WIDTH // 2
-        self.player_y = GAME_HEIGHT - 80
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
         self.pilot_name = pilot_name
-        self.rocks = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350)]
-
-    def handle_input(self, events):
-        for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_l:
-                    return "exit"
-        return None
+        self.rocks = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350), (900, 450), (1100, 200), (1400, 600)]
 
     def update(self):
-        global camera_offset_x, camera_offset_y
-
         keys = pygame.key.get_pressed()
-        speed = 3
-        new_x = self.player_x
-        new_y = self.player_y
-
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            new_y -= speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            new_y += speed
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            new_x -= speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            new_x += speed
-
-        # Bound to world
-        if 0 < new_x < 1600 and 0 < new_y < 1600:
-            self.player_x = new_x
-            self.player_y = new_y
-
-        # Update camera to follow player
-        camera_offset_x = self.player_x - GAME_WIDTH // 2
-        camera_offset_y = self.player_y - GAME_HEIGHT // 2
+        self._handle_movement(keys)
+        self.update_camera()
 
     def draw(self, surface):
         # Draw moon terrain
@@ -964,11 +943,8 @@ class MoonOutdoor:
         pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
-        # Draw UI (not camera-affected)
-        offset_x, offset_y = get_offset()
-        font = pygame.font.Font(None, int(24 * scale))
-        ui_text = font.render("Moon Wilderness | Press L to leave", True, WHITE)
-        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
+        # Draw UI
+        self.draw_ui_text(surface, "Moon Wilderness | Press L to leave")
 
 class Moon:
     def __init__(self, x, y):
