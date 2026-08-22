@@ -129,7 +129,9 @@ def _center_text_x(surface, text, offset_x=0):
 class SaveDialog:
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
-        self.save_name = ""
+        # Pre-populate with default save name
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.save_name = f"{pilot_name} - {timestamp}" if pilot_name else timestamp
         self.success_timer = 0
         self.existing_saves = self._get_all_saves()
         self.selected_existing = 0 if self.existing_saves else None
@@ -270,7 +272,9 @@ class LoadMenu:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT:
+                return ("quit", None)
+            elif event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
                     self.selected, self.scroll_offset = _handle_scrolling_input(
                         event.key, self.selected, self.saves, self.scroll_offset, self.max_visible)
@@ -968,6 +972,45 @@ class Moon:
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 
+class PilotNameDialog:
+    def __init__(self):
+        self.pilot_name = ""
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and self.pilot_name:
+                    return self.pilot_name
+                elif event.key == pygame.K_BACKSPACE:
+                    self.pilot_name = self.pilot_name[:-1]
+                elif event.key == pygame.K_ESCAPE:
+                    return "cancel"
+            elif event.type == pygame.TEXTINPUT:
+                if len(self.pilot_name) < 30:
+                    self.pilot_name += event.text
+        return None
+
+    def draw(self, surface):
+        scale = get_scale()
+        offset_x, offset_y = get_offset()
+
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.25), int(GAME_WIDTH * scale * 0.7), int(GAME_HEIGHT * scale * 0.5)))
+
+        font_title = pygame.font.Font(None, int(40 * scale))
+        font_text = pygame.font.Font(None, int(28 * scale))
+
+        title = font_title.render("New Game", True, YELLOW)
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.3)))
+
+        prompt = font_text.render("Enter Pilot Name:", True, WHITE)
+        surface.blit(prompt, (_center_text_x(surface, prompt, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.4)))
+
+        input_box = font_text.render(self.pilot_name + "|", True, YELLOW)
+        surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.5)))
+
+        help_text = font_text.render("Enter to start, ESC to cancel", True, GRAY)
+        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.65)))
+
 class LocationSelector:
     def __init__(self):
         self.locations = ["Moon City", "Wilderness"]
@@ -1155,9 +1198,7 @@ class GameScreen:
 
 class Menu:
     def __init__(self):
-        self.has_saves = len(get_save_files()) > 0
-        self.items = ["NEW", "LOAD"] if self.has_saves else ["NEW"]
-        self.items.append("QUIT")
+        self.items = ["NEW", "LOAD", "QUIT"]
         self.selected_index = 0
 
     def _get_fonts(self):
@@ -1241,6 +1282,7 @@ def main():
         station_interior = None
         moon_interior = None
         location_selector = None
+        pilot_name_dialog = None
         pause_menu = PauseMenu()
         save_dialog = None
         delete_confirm_dialog = None
@@ -1265,13 +1307,22 @@ def main():
                 if selection == "quit":
                     running = False
                 elif selection == "new":
-                    game_screen = GameScreen(pilot_name="")
-                    pilot_name = ""
-                    current_screen = "game"
+                    pilot_name_dialog = PilotNameDialog()
+                    current_screen = "pilot_name"
                 elif selection == "load":
                     load_menu = LoadMenu()
                     current_screen = "load"
                 menu.draw(screen)
+
+            elif current_screen == "pilot_name":
+                result = pilot_name_dialog.handle_input(events)
+                if result and result != "cancel":
+                    pilot_name = result
+                    game_screen = GameScreen(pilot_name=pilot_name)
+                    current_screen = "game"
+                elif result == "cancel":
+                    current_screen = "menu"
+                pilot_name_dialog.draw(screen)
 
             elif current_screen == "load":
                 action, filename = load_menu.handle_input(events)
@@ -1279,9 +1330,27 @@ def main():
                     save_data = load_save_file(filename)
                     if save_data:
                         pilot_name = save_data.get("pilot_name", "")
-                        game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
-                        game_screen.restore_state(save_data.get("game_state", {}))
-                        current_screen = "game"
+                        game_state = save_data.get("game_state", {})
+                        location = game_state.get("location", "space")
+
+                        if location == "space":
+                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                            game_screen.restore_state(game_state)
+                            current_screen = "game"
+                        elif location == "station":
+                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                            game_screen.restore_state(game_state)
+                            station_interior = StationInterior(pilot_name=pilot_name)
+                            current_screen = "station"
+                        elif location == "moon":
+                            game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                            game_screen.restore_state(game_state)
+                            moon_location = game_state.get("moon_location", "city")
+                            if moon_location == "city":
+                                moon_interior = MoonCity(pilot_name=pilot_name)
+                            else:
+                                moon_interior = MoonOutdoor(pilot_name=pilot_name)
+                            current_screen = "moon"
                 elif action == "cancel":
                     current_screen = "menu"
                     menu = Menu()
@@ -1364,16 +1433,47 @@ def main():
                 elif save_dialog:
                     dialog_action, save_name = save_dialog.handle_input(events)
                     if dialog_action == "save":
-                        if not pilot_name and save_name:
+                        # Check if we're overwriting an existing save
+                        is_overwriting = save_name in save_dialog.existing_saves
+                        if is_overwriting:
+                            # Delete the old save file
+                            try:
+                                filepath = f"{SAVE_DIR}/{save_name}"
+                                if os.path.exists(filepath):
+                                    os.remove(filepath)
+                            except:
+                                pass
+
+                        if not pilot_name and save_name and not is_overwriting:
                             pilot_name = save_name
                             if game_screen:
                                 game_screen.pilot_name = pilot_name
                             if station_interior:
                                 station_interior.pilot_name = pilot_name
+
+                        # Extract description from save_name (before the timestamp)
+                        save_description = save_name.split(" - ")[0] if " - " in save_name else save_name
+
+                        # Add location state for restoration
+                        game_state = {}
                         if game_screen:
-                            create_save_file(pilot_name, save_name, game_screen.system_config, {}, game_screen.get_state())
+                            game_state = game_screen.get_state()
+                            game_state["location"] = "space"
                         elif station_interior:
-                            create_save_file(pilot_name, save_name, station_interior.station_config, {}, {})
+                            game_state["location"] = "station"
+                        elif moon_interior:
+                            game_state["location"] = "moon"
+                            if isinstance(moon_interior, MoonCity):
+                                game_state["moon_location"] = "city"
+                            else:
+                                game_state["moon_location"] = "wilderness"
+
+                        if game_screen:
+                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
+                        elif station_interior:
+                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                        elif moon_interior:
+                            create_save_file(pilot_name, save_description, {}, {}, game_state)
                         pause_menu.success_timer = 120
                         save_dialog = None
                     elif dialog_action == "delete":
