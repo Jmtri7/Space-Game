@@ -322,6 +322,9 @@ class LoadMenu:
                 down_indicator = font_save.render("↓ more", True, GRAY)
                 surface.blit(down_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + self.max_visible * 40)))
 
+            help_text = font_save.render("Enter: load, D: delete, ESC: cancel", True, GRAY)
+            surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.75)))
+
 class PauseMenu:
     def __init__(self):
         self.options = ["Resume", "Save Game", "Quit to Menu"]
