@@ -33,6 +33,14 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 
 Keep the bar practical: test regressions you've actually seen or critical paths (save/load, physics, input handling). Don't test UI rendering or Pygame drawing.
 
+**After implementing or updating a feature:**
+1. Close all running instances of the game (kill the process if needed)
+2. Run automated tests: `python run_tests.py`
+3. Start the game fresh: `python main.py`
+4. Test the feature in-game to verify changes took effect
+
+This ensures code changes are actually loaded and the feature works as expected.
+
 ## Running the Game
 ```bash
 cd C:\Users\Play\Documents\Projects\space-game
