@@ -12,6 +12,10 @@ GAME_WIDTH = 800
 GAME_HEIGHT = 600
 SAVE_DIR = "saves"
 
+# Camera offset for following player
+camera_offset_x = 0
+camera_offset_y = 0
+
 info = pygame.display.Info()
 SCREEN_WIDTH = min(info.current_w - 100, 1600)
 SCREEN_HEIGHT = min(info.current_h - 100, 900)
@@ -42,7 +46,10 @@ def get_offset():
 def to_screen(x, y):
     scale = get_scale()
     offset_x, offset_y = get_offset()
-    return (int(round(x * scale + offset_x)), int(round(y * scale + offset_y)))
+    # Apply camera offset
+    x_camera = x - camera_offset_x
+    y_camera = y - camera_offset_y
+    return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
 
 def to_screen_x(x):
     scale = get_scale()
@@ -816,13 +823,13 @@ class MoonCity:
             if event.type == pygame.QUIT:
                 return "quit"
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    return "exit"
-                elif event.key == pygame.K_l:
+                if event.key == pygame.K_l:
                     return "exit"
         return None
 
     def update(self):
+        global camera_offset_x, camera_offset_y
+
         keys = pygame.key.get_pressed()
         speed = 3
         new_x = self.player_x
@@ -837,32 +844,42 @@ class MoonCity:
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             new_x += speed
 
-        if 0 < new_x < GAME_WIDTH and 0 < new_y < GAME_HEIGHT:
+        # Bound to world
+        if 0 < new_x < 1600 and 0 < new_y < 1600:
             self.player_x = new_x
             self.player_y = new_y
+
+        # Update camera to follow player
+        camera_offset_x = self.player_x - GAME_WIDTH // 2
+        camera_offset_y = self.player_y - GAME_HEIGHT // 2
 
     def draw(self, surface):
         surface.fill((50, 50, 70))
 
-        # Draw buildings
-        pygame.draw.rect(surface, (150, 150, 150), (200, 100, 150, 200))
-        pygame.draw.rect(surface, (100, 100, 100), (400, 80, 200, 220))
-        pygame.draw.rect(surface, (120, 120, 120), (650, 120, 100, 180))
+        # Draw buildings - spread across larger world
+        pygame.draw.rect(surface, (150, 150, 150), (200, 100, 200, 250))
+        pygame.draw.rect(surface, (100, 100, 100), (600, 80, 250, 280))
+        pygame.draw.rect(surface, (120, 120, 120), (1200, 150, 150, 220))
+        pygame.draw.rect(surface, (140, 140, 140), (350, 600, 180, 200))
 
         # Draw windows
-        for bx in range(200, 350, 40):
-            for by in range(100, 300, 40):
+        for bx in range(200, 400, 40):
+            for by in range(100, 350, 40):
+                pygame.draw.rect(surface, YELLOW, (bx, by, 20, 20))
+        for bx in range(600, 850, 40):
+            for by in range(80, 360, 40):
                 pygame.draw.rect(surface, YELLOW, (bx, by, 20, 20))
 
         # Draw player
         pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
 
-        # Draw UI
+        # Draw UI (not camera-affected)
         scale = get_scale()
+        offset_x, offset_y = get_offset()
         font = pygame.font.Font(None, int(24 * scale))
-        ui_text = font.render("Moon City | Press L or ESC to leave", True, WHITE)
-        surface.blit(ui_text, (20, 20))
+        ui_text = font.render("Moon City | Press L to leave", True, WHITE)
+        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
 
 class MoonOutdoor:
     def __init__(self, pilot_name=""):
@@ -876,13 +893,13 @@ class MoonOutdoor:
             if event.type == pygame.QUIT:
                 return "quit"
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    return "exit"
-                elif event.key == pygame.K_l:
+                if event.key == pygame.K_l:
                     return "exit"
         return None
 
     def update(self):
+        global camera_offset_x, camera_offset_y
+
         keys = pygame.key.get_pressed()
         speed = 3
         new_x = self.player_x
@@ -897,39 +914,41 @@ class MoonOutdoor:
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             new_x += speed
 
-        if 0 < new_x < GAME_WIDTH and 0 < new_y < GAME_HEIGHT:
+        # Bound to world
+        if 0 < new_x < 1600 and 0 < new_y < 1600:
             self.player_x = new_x
             self.player_y = new_y
 
+        # Update camera to follow player
+        camera_offset_x = self.player_x - GAME_WIDTH // 2
+        camera_offset_y = self.player_y - GAME_HEIGHT // 2
+
     def draw(self, surface):
         # Draw moon terrain
-        pygame.draw.line(surface, (100, 100, 120), (0, 500), (GAME_WIDTH, 520), 3)
         surface.fill((80, 80, 100))
 
-        # Draw stars
-        for i in range(20):
-            x = random.randint(0, GAME_WIDTH)
-            y = random.randint(0, 150)
-            pygame.draw.circle(surface, WHITE, (x, y), 1)
+        # Draw craters spread across larger world
+        crater_list = [(300, 400), (800, 600), (1200, 500), (400, 1000), (1300, 1000), (600, 200)]
+        for cx, cy in crater_list:
+            pygame.draw.circle(surface, (60, 60, 80), to_screen(cx, cy), 50)
+            pygame.draw.circle(surface, (70, 70, 90), to_screen(cx, cy), 45)
 
-        # Draw craters
-        for cx, cy in [(150, 450), (450, 480), (700, 470)]:
-            pygame.draw.circle(surface, (60, 60, 80), (cx, cy), 40)
-            pygame.draw.circle(surface, (70, 70, 90), (cx, cy), 35)
-
-        # Draw rocks
-        for rx, ry in self.rocks:
-            pygame.draw.polygon(surface, (120, 120, 140), [(rx, ry), (rx + 30, ry + 15), (rx + 20, ry + 35), (rx - 10, ry + 30)])
+        # Draw rocks spread across terrain
+        rock_list = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350), (900, 450), (1100, 200), (1400, 600)]
+        for rx, ry in rock_list:
+            screen_x, screen_y = to_screen(rx, ry)
+            pygame.draw.polygon(surface, (120, 120, 140), [(screen_x, screen_y), (screen_x + 30, screen_y + 15), (screen_x + 20, screen_y + 35), (screen_x - 10, screen_y + 30)])
 
         # Draw player
         pygame.draw.rect(surface, (200, 100, 100), (self.player_x - 6, self.player_y, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (self.player_x, self.player_y - 10), 5)
 
-        # Draw UI
+        # Draw UI (not camera-affected)
         scale = get_scale()
+        offset_x, offset_y = get_offset()
         font = pygame.font.Font(None, int(24 * scale))
-        ui_text = font.render("Moon Wilderness | Press L or ESC to leave", True, WHITE)
-        surface.blit(ui_text, (20, 20))
+        ui_text = font.render("Moon Wilderness | Press L to leave", True, WHITE)
+        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
 
 class Moon:
     def __init__(self, x, y):
@@ -1009,6 +1028,8 @@ class GameScreen:
         self.ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1))
         self.landing_text = 0
         self.landing_target = None
+        self.camera_x = 0
+        self.camera_y = 0
 
     def handle_input(self, events):
         for event in events:
@@ -1048,13 +1069,25 @@ class GameScreen:
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         return distance < 100 and speed < 0.5
 
+    def _to_screen_camera(self, x, y):
+        """Convert world coordinates to screen coordinates using camera offset"""
+        world_x = x - self.camera_x
+        world_y = y - self.camera_y
+        return to_screen(world_x, world_y)
+
     def update(self):
+        global camera_offset_x, camera_offset_y
+
         keys = pygame.key.get_pressed()
         self.player.handle_input(keys)
         self.player.update()
         self.station.update()
         self.moon.update()
         self.ai_ship.update()
+
+        # Update camera to follow player
+        camera_offset_x = self.player.x - GAME_WIDTH // 2
+        camera_offset_y = self.player.y - GAME_HEIGHT // 2
 
         if self._check_landing():
             self.landing_text = 60
