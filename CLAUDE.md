@@ -20,6 +20,19 @@ A pygame-based space exploration game with procedurally generated star fields, A
 
 See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--contribution) for the full contribution workflow.
 
+## For Agents: Testing Guidance
+
+**When making changes**, watch for untested critical logic:
+
+1. **Discovered a bug during development?** Add a test case that catches it *before* fixing it, so it never regresses.
+2. **Finding untested business logic?** If it's pure or testable, suggest adding a test (don't block the feature on it).
+3. **Extracting a helper function?** Include unit tests in the same commit.
+
+**Example:**
+> "While implementing the new thruster balance, I noticed the velocity-capping logic has no tests. I've added 3 test cases to catch regressions when changing drag constants."
+
+Keep the bar practical: test regressions you've actually seen or critical paths (save/load, physics, input handling). Don't test UI rendering or Pygame drawing.
+
 ## Running the Game
 ```bash
 cd C:\Users\Play\Documents\Projects\space-game
@@ -125,11 +138,24 @@ space-game/
 
 ## Code Organization & Helpers
 
-### Extracted Helper Functions
+### Extracted Helper Functions (in main.py)
 These functions eliminate duplication across menus:
 - **`_list_files_by_pattern(directory, prefix, suffix)`** — Unifies file listing for SaveDialog and get_save_files()
 - **`_handle_scrolling_input(key, selected, items, scroll_offset, max_visible)`** — Shared up/down navigation for SaveDialog and LoadMenu
 - **`_center_text_x(surface, text, offset_x=0)`** — Unified menu text centering
+
+### Physics Engine (in game_physics.py)
+Pure functions decoupled from Pygame for testability:
+- **`update_velocity(vx, vy, thrust, angle)`** — Apply thrust and drag, cap speed
+- **`update_position(x, y, vx, vy)`** — Move ship by velocity
+- **`wrap_position(x, y)`** — Handle screen wrapping (torus topology)
+- **`update_thrust(thrust, keys_accel, keys_decel)`** — Control thrust input
+- **`update_angle(angle, keys_left, keys_right)`** — Rotate ship
+- **`get_distance(x1, y1, x2, y2)`** — Euclidean distance
+- **`can_land(px, py, sx, sy)`** — Check landing conditions
+- **`rotate_point(x, y, cx, cy, angle)`** — 2D point rotation
+
+These are tested independently (31 tests) and can be used without Pygame.
 
 ### Constants
 - **`SAVE_DIR = "saves"`** — Centralized save directory path (replaces hardcoded strings)
@@ -180,10 +206,20 @@ Menu must be recreated when returning from load/save so "LOAD" option appears dy
 python run_tests.py
 ```
 
-**Current test coverage:**
-- `_handle_scrolling_input()` — 12 tests covering up/down navigation, wrapping, scrolling
-- `_list_files_by_pattern()` — 6 tests covering file filtering, sorting, directory creation
-- `_center_text_x()` — 3 tests covering horizontal centering and offset handling
+**Current test coverage (49 tests):**
+- Helper functions (18 tests):
+  - `_handle_scrolling_input()` — 12 tests covering up/down navigation, wrapping, scrolling
+  - `_list_files_by_pattern()` — 6 tests covering file filtering, sorting, directory creation
+  - `_center_text_x()` — 3 tests covering horizontal centering and offset handling
+- Physics engine (31 tests):
+  - `update_velocity()` — 4 tests for thrust, drag, speed cap
+  - `update_position()` — 2 tests for movement
+  - `wrap_position()` — 5 tests for screen boundary wrapping
+  - `update_thrust()` — 4 tests for thrust control
+  - `update_angle()` — 5 tests for rotation
+  - `get_distance()` — 4 tests for distance calculation
+  - `can_land()` — 4 tests for landing conditions
+  - `rotate_point()` — 3 tests for point rotation
 
 **When to add new tests:**
 1. **Before fixing a bug:** Write a test that reproduces the bug, then fix it
