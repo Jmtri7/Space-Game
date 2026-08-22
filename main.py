@@ -1310,8 +1310,11 @@ class Menu:
 
             if i == self.selected_index:
                 box_x = screen_width // 2 - box_width // 2
-                box_height = int((text.get_height() + y_spacing) / 2)
-                box_rect = pygame.Rect(box_x, y, box_width, box_height)
+                box_top_padding = int(8 * scale)
+                box_bottom_padding = int((y_spacing - text.get_height()) / 2)
+                box_y = y - box_top_padding
+                box_height = text.get_height() + box_top_padding + box_bottom_padding
+                box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
 def main():
