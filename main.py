@@ -867,9 +867,12 @@ class StarField:
             pygame.draw.circle(surface, (brightness, brightness, brightness), to_screen(x, y), 1)
 
 class MoonCity(WalkableArea):
-    def __init__(self, pilot_name=""):
+    def __init__(self, config=None, pilot_name=""):
         super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
         self.pilot_name = pilot_name
+        self.city_config = config or load_json("config/moon_city.json") or {}
+        self.buildings = self.city_config.get("buildings", [])
+        self.windows = self.city_config.get("windows", [])
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -879,25 +882,19 @@ class MoonCity(WalkableArea):
     def draw(self, surface):
         surface.fill((50, 50, 70))
 
-        # Draw buildings - using world coordinates with camera
-        buildings = [
-            (200, 100, 200, 250),
-            (600, 80, 250, 280),
-            (1200, 150, 150, 220),
-            (350, 600, 180, 200)
-        ]
-        for bx, by, bw, bh in buildings:
+        # Draw buildings from config
+        for building in self.buildings:
+            bx, by, bw, bh = building["x"], building["y"], building["width"], building["height"]
+            color = tuple(building.get("color", [150, 150, 150]))
             x1, y1 = to_screen(bx, by)
             x2, y2 = to_screen(bx + bw, by + bh)
-            pygame.draw.rect(surface, (150, 150, 150), (x1, y1, x2 - x1, y2 - y1))
+            pygame.draw.rect(surface, color, (x1, y1, x2 - x1, y2 - y1))
 
-        # Draw windows
-        window_positions = [
-            (200, 100, 350, 400), (600, 80, 850, 360)
-        ]
-        for bx_start, by_start, bx_end, by_end in window_positions:
-            for bx in range(bx_start, bx_end, 40):
-                for by in range(by_start, by_end, 40):
+        # Draw windows from config
+        for window in self.windows:
+            sx, sy, ex, ey, spacing = window["start_x"], window["start_y"], window["end_x"], window["end_y"], window["spacing"]
+            for bx in range(sx, ex, spacing):
+                for by in range(sy, ey, spacing):
                     x, y = to_screen(bx, by)
                     pygame.draw.rect(surface, YELLOW, (x, y, 15, 15))
 
@@ -910,10 +907,12 @@ class MoonCity(WalkableArea):
         self.draw_ui_text(surface, "Moon City | Press L to leave")
 
 class MoonOutdoor(WalkableArea):
-    def __init__(self, pilot_name=""):
+    def __init__(self, config=None, pilot_name=""):
         super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
         self.pilot_name = pilot_name
-        self.rocks = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350), (900, 450), (1100, 200), (1400, 600)]
+        self.wilderness_config = config or load_json("config/moon_wilderness.json") or {}
+        self.craters = self.wilderness_config.get("craters", [])
+        self.rocks = self.wilderness_config.get("rocks", [])
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -926,16 +925,16 @@ class MoonOutdoor(WalkableArea):
 
         scale = get_scale()
 
-        # Draw craters spread across larger world
-        crater_list = [(300, 400), (800, 600), (1200, 500), (400, 1000), (1300, 1000), (600, 200)]
-        for cx, cy in crater_list:
+        # Draw craters from config
+        for crater in self.craters:
+            cx, cy, r = crater["x"], crater["y"], crater.get("radius", 50)
             crater_x, crater_y = to_screen(cx, cy)
-            pygame.draw.circle(surface, (60, 60, 80), (crater_x, crater_y), max(1, int(50 * scale)))
-            pygame.draw.circle(surface, (70, 70, 90), (crater_x, crater_y), max(1, int(45 * scale)))
+            pygame.draw.circle(surface, (60, 60, 80), (crater_x, crater_y), max(1, int(r * scale)))
+            pygame.draw.circle(surface, (70, 70, 90), (crater_x, crater_y), max(1, int((r - 5) * scale)))
 
-        # Draw rocks spread across terrain
-        rock_list = [(150, 200), (350, 150), (650, 300), (200, 400), (500, 350), (900, 450), (1100, 200), (1400, 600)]
-        for rx, ry in rock_list:
+        # Draw rocks from config
+        for rock in self.rocks:
+            rx, ry = rock["x"], rock["y"]
             rock_x, rock_y = to_screen(rx, ry)
             size = int(30 * scale)
             pygame.draw.polygon(surface, (120, 120, 140), [(rock_x, rock_y), (rock_x + size, rock_y + size//2), (rock_x + size - 10, rock_y + size + 5), (rock_x - 10, rock_y + size)])
