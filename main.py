@@ -620,14 +620,39 @@ class NPC(Person):
         self.dialogue_options = dialogue_options or ["Talk", "Leave"]
         self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
 
-class WalkableArea:
+class ScreenBase:
+    """Base class for all game screens (space, station, moon)"""
+    def __init__(self, pilot_name=""):
+        self.pilot_name = pilot_name
+
+    def handle_input(self, events):
+        """Process input events. Override in subclass."""
+        raise NotImplementedError
+
+    def update(self):
+        """Update game logic. Override in subclass."""
+        raise NotImplementedError
+
+    def draw(self, surface):
+        """Draw screen. Override in subclass."""
+        raise NotImplementedError
+
+    def get_state(self):
+        """Return game state dict for saving. Override in subclass."""
+        raise NotImplementedError
+
+    def restore_state(self, state):
+        """Restore game state from dict. Override in subclass."""
+        raise NotImplementedError
+
+class WalkableArea(ScreenBase):
     """Base class for all walkable/explorable areas with camera system"""
-    def __init__(self, start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT // 2, world_width=1600, world_height=1600):
+    def __init__(self, start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT // 2, world_width=1600, world_height=1600, pilot_name=""):
+        super().__init__(pilot_name=pilot_name)
         self.player_x = start_x
         self.player_y = start_y
         self.world_width = world_width
         self.world_height = world_height
-        self.pilot_name = ""
         self.speed = 3
 
     def handle_input(self, events):
@@ -708,8 +733,7 @@ class WalkableArea:
 
 class StationInterior(WalkableArea):
     def __init__(self, station_config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=GAME_WIDTH, world_height=GAME_HEIGHT)
-        self.pilot_name = pilot_name
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=GAME_WIDTH, world_height=GAME_HEIGHT, pilot_name=pilot_name)
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
 
@@ -889,8 +913,7 @@ class StarField:
 
 class MoonCity(WalkableArea):
     def __init__(self, config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
-        self.pilot_name = pilot_name
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600, pilot_name=pilot_name)
         self.city_config = config or load_json("config/moon_city.json") or {}
         self.buildings = self.city_config.get("buildings", [])
         self.windows = self.city_config.get("windows", [])
@@ -929,8 +952,7 @@ class MoonCity(WalkableArea):
 
 class MoonOutdoor(WalkableArea):
     def __init__(self, config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600)
-        self.pilot_name = pilot_name
+        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600, pilot_name=pilot_name)
         self.wilderness_config = config or load_json("config/moon_wilderness.json") or {}
         self.craters = self.wilderness_config.get("craters", [])
         self.rocks = self.wilderness_config.get("rocks", [])
@@ -1068,12 +1090,12 @@ class LocationSelector:
                 box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
-class GameScreen:
+class GameScreen(ScreenBase):
     def __init__(self, system_config=None, pilot_name=""):
+        super().__init__(pilot_name=pilot_name)
         self.player = Player(GAME_WIDTH // 2, GAME_HEIGHT // 2)
         self.star_field = StarField()
         self.system_config = system_config or load_json("config/space_system.json") or {}
-        self.pilot_name = pilot_name
 
         station_cfg = self.system_config.get("station", {})
         self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3))

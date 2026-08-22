@@ -1,0 +1,50 @@
+{
+  "pilot_name": "Lol",
+  "name": "Lol 1",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "moon": {
+      "x": 0.2,
+      "y": 0.4,
+      "name": "Luna"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 189.80378680476315,
+      "y": 217.27542949212574,
+      "angle": 145,
+      "velocity_x": -0.2919027516089716,
+      "velocity_y": -0.008296069562211482,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 689.8363805480604,
+      "y": 91.39507667990858,
+      "angle": 130.89469780227856,
+      "velocity_x": 0.6580126781251157,
+      "velocity_y": -0.5689166391788123,
+      "thrust": 0.15
+    },
+    "location": "space"
+  }
+}
