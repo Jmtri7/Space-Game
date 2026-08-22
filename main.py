@@ -1296,6 +1296,11 @@ class Menu:
         y_base = int(200 * scale)
         y_spacing = int(80 * scale)
 
+        # Find max width of all menu items for padding
+        max_width = max(font_menu.render(item, True, WHITE).get_width() for item in self.items)
+        box_padding = int(20 * scale)
+        box_width = max_width + box_padding * 2
+
         for i, item in enumerate(self.items):
             color = YELLOW if i == self.selected_index else GRAY
             text = font_menu.render(item, True, color)
@@ -1304,7 +1309,9 @@ class Menu:
             surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
-                box_rect = pygame.Rect(text_x - 5, y - 2, text.get_width() + 10, text.get_height() + 4)
+                box_x = screen_width // 2 - box_width // 2
+                box_height = int((text.get_height() + y_spacing) / 2)
+                box_rect = pygame.Rect(box_x, y, box_width, box_height)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
 def main():
