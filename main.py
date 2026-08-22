@@ -142,9 +142,7 @@ class SaveDialog:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return ("cancel", None)
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if self.input_mode:
                     if event.key == pygame.K_RETURN and self.save_name:
                         self.success_timer = 120
@@ -230,9 +228,7 @@ class DeleteConfirmDialog:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return ("quit", None)
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.confirm_text.lower() == "confirm":
                     return ("confirm", self.save_filename)
                 elif event.key == pygame.K_BACKSPACE:
@@ -276,9 +272,7 @@ class LoadMenu:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return ("quit", None)
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
                     self.selected, self.scroll_offset = _handle_scrolling_input(
                         event.key, self.selected, self.saves, self.scroll_offset, self.max_visible)
@@ -341,9 +335,7 @@ class PauseMenu:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "resume"
                 elif event.key == pygame.K_UP or event.key == pygame.K_w:
@@ -669,9 +661,7 @@ class WalkableArea(ScreenBase):
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
                     return "exit"
                 elif event.key == pygame.K_ESCAPE:
@@ -1028,9 +1018,7 @@ class PilotNameDialog:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return "cancel"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.pilot_name:
                     return self.pilot_name
                 elif event.key == pygame.K_BACKSPACE:
@@ -1070,9 +1058,7 @@ class LocationSelector:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
                     self.selected = (self.selected - 1) % len(self.locations)
                 elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
@@ -1127,9 +1113,7 @@ class GameScreen(ScreenBase):
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
                 elif event.key == pygame.K_l:
@@ -1263,9 +1247,7 @@ class Menu:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.selected_index = (self.selected_index - 1) % len(self.items)
                 elif event.key == pygame.K_DOWN:
@@ -1348,6 +1330,15 @@ def main():
 
         while running:
             events = pygame.event.get()
+
+            # Handle window close button globally (all screens automatically support it)
+            for event in events:
+                if event.type == pygame.QUIT:
+                    running = False
+                    break
+
+            if not running:
+                break
 
             for event in events:
                 if event.type == pygame.VIDEORESIZE:
@@ -1471,8 +1462,6 @@ def main():
                     current_screen = "moon"
                 elif location == "cancel":
                     current_screen = "game"
-                elif location == "quit":
-                    running = False
                 location_selector.draw(screen)
 
             elif current_screen == "moon":
