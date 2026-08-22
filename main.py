@@ -1306,7 +1306,6 @@ class Menu:
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
             text_x = screen_width // 2 - text.get_width() // 2
-            surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
                 box_x = screen_width // 2 - box_width // 2
@@ -1314,8 +1313,13 @@ class Menu:
                 box_bottom_padding = int((y_spacing - text.get_height()) / 2)
                 box_y = y - box_top_padding
                 box_height = text.get_height() + box_top_padding + box_bottom_padding
+                # Center text vertically in the box
+                text_y = box_y + (box_height - text.get_height()) // 2
+                surface.blit(text, (text_x, text_y))
                 box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
+            else:
+                surface.blit(text, (text_x, y))
 
 def main():
     global screen_width, screen_height, screen
