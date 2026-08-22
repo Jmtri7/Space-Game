@@ -86,18 +86,16 @@ def get_save_files():
     return _list_files_by_pattern(SAVE_DIR, "save_", ".json")
 
 def create_save_file(pilot_name, name, system_data, station_data, game_state=None):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_data = {
         "pilot_name": pilot_name,
         "name": name,
-        "timestamp": timestamp,
         "system": system_data,
         "station": station_data,
         "game_state": game_state or {}
     }
     if not os.path.exists(SAVE_DIR):
         os.makedirs(SAVE_DIR)
-    filename = f"{SAVE_DIR}/save_{pilot_name}_{timestamp}.json"
+    filename = f"{SAVE_DIR}/save_{name}.json"
     save_json(filename, save_data)
     return filename
 
@@ -690,6 +688,23 @@ class WalkableArea:
     def draw(self, surface):
         """Override in subclass"""
         pass
+
+    def get_state(self):
+        """Save player position state for walkable areas"""
+        return {
+            "player": {
+                "x": self.player_x,
+                "y": self.player_y
+            }
+        }
+
+    def restore_state(self, state):
+        """Restore player position state for walkable areas"""
+        if not state or "player" not in state:
+            return
+        player_state = state["player"]
+        self.player_x = player_state.get("x", self.player_x)
+        self.player_y = player_state.get("y", self.player_y)
 
 class StationInterior(WalkableArea):
     def __init__(self, station_config=None, pilot_name=""):
@@ -1454,9 +1469,6 @@ def main():
                             if station_interior:
                                 station_interior.pilot_name = pilot_name
 
-                        # Extract description from save_name (before the timestamp)
-                        save_description = save_name.split(" - ")[0] if " - " in save_name else save_name
-
                         # Add location state for restoration
                         game_state = {}
                         if current_screen == "moon":
@@ -1466,15 +1478,15 @@ def main():
                                 game_state["moon_location"] = "city"
                             else:
                                 game_state["moon_location"] = "wilderness"
-                            create_save_file(pilot_name, save_description, {}, {}, game_state)
+                            create_save_file(pilot_name, save_name, {}, {}, game_state)
                         elif current_screen == "station":
                             game_state = station_interior.get_state()
                             game_state["location"] = "station"
-                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                            create_save_file(pilot_name, save_name, station_interior.station_config, {}, game_state)
                         else:  # current_screen == "game"
                             game_state = game_screen.get_state()
                             game_state["location"] = "space"
-                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
+                            create_save_file(pilot_name, save_name, game_screen.system_config, {}, game_state)
                         pause_menu.success_timer = 120
                         save_dialog = None
                     elif dialog_action == "delete":

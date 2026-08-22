@@ -1,0 +1,51 @@
+{
+  "pilot_name": "Rory",
+  "name": "Rory Sace",
+  "timestamp": "20260822_161429",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "moon": {
+      "x": 0.2,
+      "y": 0.4,
+      "name": "Luna"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 200.13906645178628,
+      "y": 210.8611781370386,
+      "angle": 145,
+      "velocity_x": -0.12705897970301824,
+      "velocity_y": -0.03896418968695012,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 694.957083956519,
+      "y": 97.30367601127179,
+      "angle": 312.31018183054005,
+      "velocity_x": -0.6718641110491362,
+      "velocity_y": 0.5524875320336683,
+      "thrust": 0.15
+    },
+    "location": "space"
+  }
+}
