@@ -1,0 +1,51 @@
+{
+  "pilot_name": "Guy Montag",
+  "name": "Guy Montag",
+  "timestamp": "20260822_161239",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "moon": {
+      "x": 0.2,
+      "y": 0.4,
+      "name": "Luna"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 156.9685502492695,
+      "y": 231.38002570776663,
+      "angle": 105,
+      "velocity_x": 0.4093942583969052,
+      "velocity_y": 0.027213810375015867,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 689.2522905740193,
+      "y": 98.92418079999796,
+      "angle": 32.737123396475745,
+      "velocity_x": -0.6593207516505039,
+      "velocity_y": -0.562697842339069,
+      "thrust": 0.15
+    },
+    "location": "space"
+  }
+}

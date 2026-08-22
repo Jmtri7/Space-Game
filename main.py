@@ -1459,24 +1459,22 @@ def main():
 
                         # Add location state for restoration
                         game_state = {}
-                        if game_screen:
-                            game_state = game_screen.get_state()
-                            game_state["location"] = "space"
-                        elif station_interior:
-                            game_state["location"] = "station"
-                        elif moon_interior:
+                        if current_screen == "moon":
+                            game_state = moon_interior.get_state()
                             game_state["location"] = "moon"
                             if isinstance(moon_interior, MoonCity):
                                 game_state["moon_location"] = "city"
                             else:
                                 game_state["moon_location"] = "wilderness"
-
-                        if game_screen:
-                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
-                        elif station_interior:
-                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
-                        elif moon_interior:
                             create_save_file(pilot_name, save_description, {}, {}, game_state)
+                        elif current_screen == "station":
+                            game_state = station_interior.get_state()
+                            game_state["location"] = "station"
+                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                        else:  # current_screen == "game"
+                            game_state = game_screen.get_state()
+                            game_state["location"] = "space"
+                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
                         pause_menu.success_timer = 120
                         save_dialog = None
                     elif dialog_action == "delete":
