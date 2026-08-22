@@ -709,6 +709,8 @@ class StationInterior:
         return (x >= bar_left and x <= bar_right and y >= bar_top and y <= bar_bottom)
 
     def update(self):
+        global camera_offset_x, camera_offset_y
+
         if self.current_dialogue:
             return
 
@@ -731,6 +733,10 @@ class StationInterior:
             self.player_y = new_y
 
         self.player_y = max(30, min(self.room_height - 30, self.player_y))
+
+        # Update camera to follow player
+        camera_offset_x = self.player_x - GAME_WIDTH // 2
+        camera_offset_y = self.player_y - GAME_HEIGHT // 2
 
         self.wanderer.wander_time -= 1
         if self.wanderer.wander_time <= 0:
@@ -780,7 +786,8 @@ class StationInterior:
 
         font_small = pygame.font.Font(None, int(16 * scale))
         help_text = font_small.render("WASD/Arrows to move, L to exit, ESC for menu", True, (200, 200, 200))
-        surface.blit(help_text, (10, 10))
+        offset_x, offset_y = get_offset()
+        surface.blit(help_text, (int(offset_x + 10), int(offset_y + 10)))
 
         if self.nearby_npc and not self.current_dialogue:
             talk_text = font_small.render("Press T to talk", True, (255, 255, 0))
