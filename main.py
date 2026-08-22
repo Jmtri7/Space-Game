@@ -228,9 +228,11 @@ class DeleteConfirmDialog:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT:
+                return ("quit", None)
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.confirm_text.lower() == "confirm":
-                    return ("delete", self.save_filename)
+                    return ("confirm", self.save_filename)
                 elif event.key == pygame.K_BACKSPACE:
                     self.confirm_text = self.confirm_text[:-1]
                 elif event.key == pygame.K_ESCAPE:
@@ -1372,10 +1374,10 @@ def main():
 
             elif current_screen == "load":
                 if delete_confirm_dialog:
-                    confirm_action = delete_confirm_dialog.handle_input(events)
+                    confirm_action, filename = delete_confirm_dialog.handle_input(events)
                     if confirm_action == "confirm":
                         try:
-                            filepath = f"{SAVE_DIR}/{delete_confirm_dialog.filename}"
+                            filepath = f"{SAVE_DIR}/{filename}"
                             if os.path.exists(filepath):
                                 os.remove(filepath)
                         except:
@@ -1384,7 +1386,10 @@ def main():
                         load_menu = LoadMenu()
                     elif confirm_action == "cancel":
                         delete_confirm_dialog = None
-                    delete_confirm_dialog.draw(screen)
+                    elif confirm_action == "quit":
+                        running = False
+                    if delete_confirm_dialog:
+                        delete_confirm_dialog.draw(screen)
                 else:
                     action, filename = load_menu.handle_input(events)
                     if action == "load":
