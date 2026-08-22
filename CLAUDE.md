@@ -20,6 +20,32 @@ A pygame-based space exploration game with procedurally generated star fields, A
 
 See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--contribution) for the full contribution workflow.
 
+## For Agents: Design Principles & Code Patterns
+
+### Menu Help Text (Consistency & Discoverability)
+**Rule:** All interactive menus and dialogs must display concise help text at the bottom showing available actions.
+- **Format:** "Action: key/button, Action: key/button, ESC: cancel" (terse, scannable)
+- **Maintenance:** Update help text whenever adding/changing menu options
+- **Benefit:** Players discover features without trial-and-error; new menu options self-document
+
+**Example:**
+- Menu: `"Enter: select, ESC: cancel"`
+- SaveDialog: `"Enter: save, N: new, D: delete, ESC: cancel"`
+- LoadMenu: `"Enter: load, D: delete, ESC: cancel"`
+
+### Cross-Cutting Concerns: Handle at the Source
+**Principle:** When a behavior needs to apply everywhere (like window close, event filtering, startup logic), handle it once in the main loop or base class, not repeated in every subclass.
+- **Benefit:** New screens inherit correct behavior by default; no need to remember to add it
+- **Example:** pygame.QUIT is handled in the main event loop, so any new screen works without modification
+- **Anti-pattern:** Duplicated QUIT checks in 10 different screen classes
+
+### Generalization Strategy
+When you notice the same pattern appearing in multiple places:
+1. **Extract to a helper function** if it's utility code (e.g., `_handle_scrolling_input()`)
+2. **Move to base class** if it's core to the entity type (e.g., `get_state()` in `ScreenBase`)
+3. **Handle centrally** if it's a cross-cutting concern (e.g., QUIT events in main loop)
+4. **Document in DESIGN_PATTERNS.md** if it's a reusable principle other parts of the game should follow
+
 ## For Agents: Testing Guidance
 
 **When making changes**, watch for untested critical logic:
