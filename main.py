@@ -332,7 +332,9 @@ class PauseMenu:
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT:
+                return "quit"
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "resume"
                 elif event.key == pygame.K_UP or event.key == pygame.K_w:

@@ -1,0 +1,51 @@
+{
+  "pilot_name": "Dash Riprock",
+  "name": "save_Dash Riprock_20260822_160651.json",
+  "timestamp": "20260822_160653",
+  "system": {
+    "name": "Alpha Station System",
+    "description": "A small trading post on the edge of known space",
+    "station": {
+      "x": 0.75,
+      "y": 0.3,
+      "name": "Alpha Station"
+    },
+    "moon": {
+      "x": 0.2,
+      "y": 0.4,
+      "name": "Luna"
+    },
+    "ai_ships": [
+      {
+        "name": "Patrol Ship 1",
+        "x": 0.75,
+        "y": 0.1,
+        "color": [
+          150,
+          150,
+          200
+        ]
+      }
+    ]
+  },
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 143.49861376981292,
+      "y": 265.74497935565967,
+      "angle": 40,
+      "velocity_x": -0.10834873490607921,
+      "velocity_y": 0.16304395490805557,
+      "thrust": 0
+    },
+    "ai_ship": {
+      "x": 685.8142749357546,
+      "y": 96.12812639096916,
+      "angle": 87.08400756349634,
+      "velocity_x": 0.08058251752636603,
+      "velocity_y": -0.8661627648895132,
+      "thrust": 0.15
+    },
+    "location": "space"
+  }
+}
