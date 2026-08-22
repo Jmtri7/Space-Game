@@ -10,6 +10,7 @@ pygame.init()
 
 GAME_WIDTH = 800
 GAME_HEIGHT = 600
+SAVE_DIR = "saves"
 
 info = pygame.display.Info()
 SCREEN_WIDTH = min(info.current_w - 100, 1600)
@@ -62,18 +63,20 @@ def save_json(filename, data):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=2)
 
-def get_save_files():
-    saves = []
-    save_dir = "saves"
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+def _list_files_by_pattern(directory, prefix, suffix):
+    files = []
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     try:
-        for file in os.listdir(save_dir):
-            if file.startswith("save_") and file.endswith(".json"):
-                saves.append(file)
+        for file in os.listdir(directory):
+            if file.startswith(prefix) and file.endswith(suffix):
+                files.append(file)
     except:
         pass
-    return sorted(saves, reverse=True)
+    return sorted(files, reverse=True)
+
+def get_save_files():
+    return _list_files_by_pattern(SAVE_DIR, "save_", ".json")
 
 def create_save_file(pilot_name, name, system_data, station_data, game_state=None):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -85,22 +88,42 @@ def create_save_file(pilot_name, name, system_data, station_data, game_state=Non
         "station": station_data,
         "game_state": game_state or {}
     }
-    save_dir = "saves"
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    filename = f"{save_dir}/save_{pilot_name}_{timestamp}.json"
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
+    filename = f"{SAVE_DIR}/save_{pilot_name}_{timestamp}.json"
     save_json(filename, save_data)
     return filename
 
 def load_save_file(filename):
-    save_dir = "saves"
-    filepath = f"{save_dir}/{filename}"
+    filepath = f"{SAVE_DIR}/{filename}"
     return load_json(filepath)
+
+def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
+    if key in (pygame.K_UP, pygame.K_w):
+        selected -= 1
+        if selected < 0:
+            selected = len(items) - 1
+            scroll_offset = max(0, len(items) - max_visible)
+        elif selected < scroll_offset:
+            scroll_offset -= 1
+    elif key in (pygame.K_DOWN, pygame.K_s):
+        selected += 1
+        if selected >= len(items):
+            selected = 0
+            scroll_offset = 0
+        elif selected >= scroll_offset + max_visible:
+            scroll_offset += 1
+    return selected, scroll_offset
+
+def _center_text_x(surface, text, offset_x=0):
+    scale = get_scale()
+    return int(offset_x + GAME_WIDTH * scale * 0.5 - text.get_width() // 2)
 
 class SaveDialog:
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
         self.save_name = ""
+        self.success_timer = 0
         self.existing_saves = self._get_all_saves()
         self.selected_existing = 0 if self.existing_saves else None
         self.input_mode = not self.existing_saves
@@ -108,16 +131,7 @@ class SaveDialog:
         self.max_visible = 5
 
     def _get_all_saves(self):
-        saves = []
-        save_dir = "saves"
-        if os.path.exists(save_dir):
-            try:
-                for file in os.listdir(save_dir):
-                    if file.startswith("save_") and file.endswith(".json"):
-                        saves.append(file)
-            except:
-                pass
-        return sorted(saves, reverse=True)
+        return _list_files_by_pattern(SAVE_DIR, "save_", ".json")
 
     def handle_input(self, events):
         for event in events:
@@ -131,22 +145,11 @@ class SaveDialog:
                     elif event.key == pygame.K_ESCAPE:
                         return ("cancel", None)
                 else:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
                         if self.selected_existing is not None:
-                            self.selected_existing -= 1
-                            if self.selected_existing < 0:
-                                self.selected_existing = len(self.existing_saves) - 1
-                                self.scroll_offset = max(0, len(self.existing_saves) - self.max_visible)
-                            elif self.selected_existing < self.scroll_offset:
-                                self.scroll_offset -= 1
-                    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                        if self.selected_existing is not None:
-                            self.selected_existing += 1
-                            if self.selected_existing >= len(self.existing_saves):
-                                self.selected_existing = 0
-                                self.scroll_offset = 0
-                            elif self.selected_existing >= self.scroll_offset + self.max_visible:
-                                self.scroll_offset += 1
+                            self.selected_existing, self.scroll_offset = _handle_scrolling_input(
+                                event.key, self.selected_existing, self.existing_saves,
+                                self.scroll_offset, self.max_visible)
                     elif event.key == pygame.K_RETURN and self.selected_existing is not None:
                         return ("save", self.existing_saves[self.selected_existing])
                     elif event.key == pygame.K_ESCAPE:
@@ -168,20 +171,20 @@ class SaveDialog:
             font_text = pygame.font.Font(None, int(24 * scale))
 
             title = font_title.render("Enter Pilot Name:", True, WHITE)
-            surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+            surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
 
             input_box = font_text.render(self.save_name + "|", True, YELLOW)
-            surface.blit(input_box, (int(offset_x + GAME_WIDTH * scale * 0.5 - input_box.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.4)))
+            surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.4)))
 
             help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
-            surface.blit(help_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - help_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.6)))
+            surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.6)))
         else:
             pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.15), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.7)))
             font_title = pygame.font.Font(None, int(32 * scale))
             font_text = pygame.font.Font(None, int(20 * scale))
 
             title = font_title.render("Select Save to Overwrite", True, YELLOW)
-            surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.2)))
+            surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.2)))
 
             if self.scroll_offset > 0:
                 up_indicator = font_text.render("↑ more", True, GRAY)
@@ -199,7 +202,7 @@ class SaveDialog:
                 surface.blit(down_indicator, (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.35 + self.max_visible * 35)))
 
             help_text = font_text.render("Enter: overwrite, N: new save, ESC: cancel", True, GRAY)
-            surface.blit(help_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - help_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.75)))
+            surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.75)))
 
 class LoadMenu:
     def __init__(self):
@@ -211,20 +214,9 @@ class LoadMenu:
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.selected -= 1
-                    if self.selected < 0:
-                        self.selected = len(self.saves) - 1
-                        self.scroll_offset = max(0, len(self.saves) - self.max_visible)
-                    elif self.selected < self.scroll_offset:
-                        self.scroll_offset -= 1
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.selected += 1
-                    if self.selected >= len(self.saves):
-                        self.selected = 0
-                        self.scroll_offset = 0
-                    elif self.selected >= self.scroll_offset + self.max_visible:
-                        self.scroll_offset += 1
+                if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
+                    self.selected, self.scroll_offset = _handle_scrolling_input(
+                        event.key, self.selected, self.saves, self.scroll_offset, self.max_visible)
                 elif event.key == pygame.K_RETURN and self.saves:
                     return ("load", self.saves[self.selected])
                 elif event.key == pygame.K_ESCAPE:
@@ -241,11 +233,11 @@ class LoadMenu:
         font_save = pygame.font.Font(None, int(24 * scale))
 
         title = font_title.render("Load Game", True, YELLOW)
-        surface.blit(title, (int(offset_x + GAME_WIDTH * scale * 0.5 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
 
         if not self.saves:
             no_saves = font_save.render("No saves found", True, GRAY)
-            surface.blit(no_saves, (int(offset_x + GAME_WIDTH * scale * 0.5 - no_saves.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.5)))
+            surface.blit(no_saves, (_center_text_x(surface, no_saves, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.5)))
         else:
             if self.scroll_offset > 0:
                 up_indicator = font_save.render("↑ more", True, GRAY)
@@ -405,13 +397,8 @@ class Player(Ship):
 
 class AIShip(Ship):
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.angle = random.randint(0, 360)
-        self.velocity_x = 0
-        self.velocity_y = 0
-        self.thrust = 0
-        self.thrust_timer = 0
         self.max_thrust = 0.15
         self.drag = 0.99
         self.state = "accelerate"
