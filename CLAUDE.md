@@ -172,6 +172,37 @@ Menu must be recreated when returning from load/save so "LOAD" option appears dy
 - [ ] Window resizing scales graphics smoothly
 - [ ] AI ship appears and moves autonomously
 
+## Automated Testing
+
+**Run tests after making changes** to catch regressions:
+
+```bash
+python run_tests.py
+```
+
+**Current test coverage:**
+- `_handle_scrolling_input()` — 12 tests covering up/down navigation, wrapping, scrolling
+- `_list_files_by_pattern()` — 6 tests covering file filtering, sorting, directory creation
+- `_center_text_x()` — 3 tests covering horizontal centering and offset handling
+
+**When to add new tests:**
+1. **Before fixing a bug:** Write a test that reproduces the bug, then fix it
+2. **After extracting a helper function:** Add unit tests for the pure function
+3. **For critical paths:** Save/load, menu navigation, file operations
+
+**How to add a test:**
+1. Add test case to `tests/test_helpers.py` in the appropriate test class
+2. Run `python run_tests.py` to verify
+3. Commit the test along with the feature/fix
+
+**Example: Testing a new helper function**
+```python
+def test_my_new_function(self):
+    """Brief description of what this tests"""
+    result = main.my_new_function(input_data)
+    self.assertEqual(result, expected_output)
+```
+
 ## Commit Message Convention
 ```
 [Feature/Fix] Brief description
