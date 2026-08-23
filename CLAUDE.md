@@ -58,15 +58,48 @@ When you notice the same pattern appearing in multiple places:
 3. **Handle centrally** if it's a cross-cutting concern (e.g., QUIT events in main loop)
 4. **Document in DESIGN_PATTERNS.md** if it's a reusable principle other parts of the game should follow
 
-## For Agents: Testing Guidance
+## For Agents: Development Workflow
 
-**CRITICAL: After any code changes (features, fixes, refactors), you MUST:**
-1. Close all running game instances
-2. Run automated tests: `python run_tests.py`
-3. Start the game fresh: `python main.py`
-4. Test the feature/fix in-game to verify changes took effect
+**After each feature addition or code change:**
 
-This is non-negotiable. Code changes must be loaded and verified in-game before considering work done.
+1. **Kill any running game instance** — Close all pygame windows from previous runs
+   ```bash
+   taskkill /f /im python.exe 2>nul || true  # Kill Python processes
+   ```
+
+2. **Run automated tests** (optional but recommended)
+   ```bash
+   python run_tests.py
+   ```
+
+3. **Start the game fresh** to load new code
+   ```bash
+   python main.py
+   ```
+
+4. **Test in-game** — Verify the feature/fix works as intended by interacting with it
+
+5. **Commit the changes** with a clear message describing what changed and why
+   ```bash
+   git add .
+   git commit -m "Feature: [description]"
+   ```
+
+**Why this matters:**
+- Fresh app restart ensures new code is loaded (not cached from previous run)
+- Testing in-game catches issues that automated tests miss
+- Regular commits create a good history and let you revert if needed
+- Clear commit messages help you and others understand what changed and when
+
+**Example workflow:**
+```
+1. Edit ship.py to improve autopilot braking
+2. Kill running game (taskkill /f /im python.exe)
+3. Start fresh game (python main.py)
+4. Test autopilot by targeting station and landing
+5. Verify it brakes smoothly without overshooting
+6. Commit: "Improve: Refine autopilot braking distance calculation"
+```
 
 **When making changes**, watch for untested critical logic:
 
