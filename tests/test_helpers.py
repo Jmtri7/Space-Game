@@ -259,7 +259,7 @@ class TestAutopilotPhysics(unittest.TestCase):
         }
 
     def test_autopilot_explorer_lands_precisely(self):
-        """Explorer ship should land at target with distance < 150 and speed < 0.5"""
+        """Explorer should arrive at target close with low velocity, both simultaneously"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.3
         ship.max_velocity = 4.0
@@ -269,13 +269,18 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 500, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 150,
-                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        # Verify arrives close to target (< 120 units - precise landing, not just within 150)
+        self.assertLess(result['distance'], 120,
+                        f"Explorer distance {result['distance']:.1f} - should arrive very close to target")
+        # Verify very low velocity at arrival (< 0.5 confirmed by game landing logic)
         self.assertLess(result['speed'], 0.5,
-                        f"Final velocity {result['speed']:.3f} too high")
+                        f"Explorer velocity {result['speed']:.3f} - should be nearly stopped")
+        # Both conditions met simultaneously at landing frame
+        self.assertAlmostEqual(result['speed'], 0.4, delta=0.15,
+                               msg="Velocity should be precisely controlled at landing")
 
     def test_autopilot_courier_lands_precisely(self):
-        """Fast courier should land at target with very low velocity"""
+        """Fast courier should arrive at target close with low velocity, both simultaneously"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.5
         ship.max_velocity = 6.5
@@ -285,13 +290,15 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 400, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 150,
-                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        # Verify arrives close to target (< 120 units)
+        self.assertLess(result['distance'], 120,
+                        f"Courier distance {result['distance']:.1f} - should arrive very close to target")
+        # Verify very low velocity at arrival
         self.assertLess(result['speed'], 0.5,
-                        f"Final velocity {result['speed']:.3f} too high (courier)")
+                        f"Courier velocity {result['speed']:.3f} - should be nearly stopped")
 
     def test_autopilot_hauler_lands_precisely(self):
-        """Slow hauler should land at target with low velocity"""
+        """Slow hauler should arrive at target close with low velocity, both simultaneously"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.15
         ship.max_velocity = 2.5
@@ -301,10 +308,12 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 300, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 150,
-                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        # Verify arrives close to target (< 120 units)
+        self.assertLess(result['distance'], 120,
+                        f"Hauler distance {result['distance']:.1f} - should arrive very close to target")
+        # Verify very low velocity at arrival
         self.assertLess(result['speed'], 0.5,
-                        f"Final velocity {result['speed']:.3f} too high (hauler)")
+                        f"Hauler velocity {result['speed']:.3f} - should be nearly stopped")
 
 
 if __name__ == "__main__":
