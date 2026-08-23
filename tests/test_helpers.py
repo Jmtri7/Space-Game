@@ -187,9 +187,10 @@ class TestCenterTextX(unittest.TestCase):
         text.get_width.return_value = 200
 
         result = main._center_text_x(None, text)
-        # offset_x=0 + GAME_WIDTH(800) * scale(1.5) * 0.5 - text.get_width(200) // 2
-        # = 0 + 600 - 100 = 500
-        self.assertEqual(result, 500)
+        # offset_x=0 + GAME_WIDTH(2400) * scale(1.683) * 0.5 - text.get_width(200) // 2
+        # scale = min(1870/2400, 1010/1800) * 3.0 = 0.5611 * 3.0 = 1.683
+        # = 0 + 2020 - 100 = 1920
+        self.assertEqual(result, 1920)
 
     def test_respects_offset(self):
         """Should apply offset_x parameter"""
@@ -197,9 +198,9 @@ class TestCenterTextX(unittest.TestCase):
         text.get_width.return_value = 200
 
         result = main._center_text_x(None, text, offset_x=50)
-        # offset_x(50) + GAME_WIDTH(800) * scale(1.5) * 0.5 - text.get_width(200) // 2
-        # = 50 + 600 - 100 = 550
-        self.assertEqual(result, 550)
+        # offset_x(50) + GAME_WIDTH(2400) * scale(1.683) * 0.5 - text.get_width(200) // 2
+        # = 50 + 2020 - 100 = 1970
+        self.assertEqual(result, 1970)
 
 
 if __name__ == "__main__":

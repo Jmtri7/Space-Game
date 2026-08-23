@@ -8,8 +8,9 @@ from datetime import datetime
 
 pygame.init()
 
-GAME_WIDTH = 800
-GAME_HEIGHT = 600
+GAME_WIDTH = 2400
+GAME_HEIGHT = 1800
+CAMERA_ZOOM = 3.0  # Zoom to keep objects at same visual scale despite larger world
 SAVE_DIR = "saves"
 
 # Camera offset for following player
@@ -17,11 +18,14 @@ camera_offset_x = 0
 camera_offset_y = 0
 
 info = pygame.display.Info()
-SCREEN_WIDTH = min(info.current_w - 100, 1600)
-SCREEN_HEIGHT = min(info.current_h - 100, 900)
+# Account for taskbar (~40px) and window title bar (~30px)
+SCREEN_WIDTH = info.current_w - 50
+SCREEN_HEIGHT = info.current_h - 100
 FPS = 60
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
+screen.fill((0, 0, 0))  # Initialize with black
+pygame.display.flip()
 pygame.display.set_caption("Space Game")
 clock = pygame.time.Clock()
 
@@ -68,7 +72,7 @@ def draw_target_brackets(surface, x, y, size=40, thickness=2):
     pygame.draw.line(surface, GREEN, (screen_x + size, screen_y + size), (screen_x + size, screen_y + quarter), thickness)
 
 def get_scale():
-    return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT)
+    return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT) * CAMERA_ZOOM
 
 def get_offset():
     scale = get_scale()
@@ -91,6 +95,18 @@ def to_screen_x(x):
 def to_screen_y(y):
     scale = get_scale()
     return int(round(y * scale))
+
+# UI/Overlay functions (independent of camera zoom)
+def get_ui_scale():
+    """Get scale for UI elements - based only on window size, not camera zoom or world size"""
+    return min(screen_width / 800, screen_height / 600)
+
+def get_ui_offset():
+    """Get offset for UI elements - centers UI on screen without camera zoom or world size"""
+    ui_scale = get_ui_scale()
+    offset_x = (screen_width - 800 * ui_scale) / 2
+    offset_y = (screen_height - 600 * ui_scale) / 2
+    return (offset_x, offset_y)
 
 def load_json(filename):
     try:
@@ -442,6 +458,8 @@ class Ship:
         self.max_velocity = 4.0
         self.drag = 0.98
         self.rotation_speed = 5
+        self.autopilot_active = False
+        self.autopilot_target = None
 
     def draw_ship(self, surface, ship_size=15, color=DARK_GRAY):
         scale = get_scale()
@@ -483,11 +501,56 @@ class Ship:
         elif self.y > GAME_HEIGHT:
             self.y = 0
 
+    def update_autopilot(self):
+        """Update autopilot - flies toward target"""
+        if not self.autopilot_active or not self.autopilot_target:
+            return
+
+        target = self.autopilot_target
+        distance = target.get_distance(self.x, self.y)
+
+        # Check if in landing range
+        if distance < 150:
+            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+            if speed < 0.5:
+                # Ready to land
+                pass
+            else:
+                # In range but too fast, reduce thrust to slow down
+                self.thrust = max(0, self.thrust - 0.1)
+        else:
+            # Not in range, fly toward target
+            dx = target.x - self.x
+            dy = target.y - self.y
+            angle_to_target = math.atan2(dy, dx)
+            angle_to_target_deg = math.degrees(angle_to_target)
+
+            # Normalize angles to -180 to 180
+            current_angle = self.angle % 360
+            target_angle = angle_to_target_deg % 360
+            angle_diff = (target_angle - current_angle + 180) % 360 - 180
+
+            # Rotate toward target
+            rotation_speed = 5
+            if angle_diff > rotation_speed:
+                self.angle += rotation_speed
+            elif angle_diff < -rotation_speed:
+                self.angle -= rotation_speed
+            else:
+                self.angle = angle_to_target_deg
+
+            # Apply thrust toward target
+            self.thrust = min(self.max_thrust, self.thrust + 0.05)
+
 class Player(Ship):
     def __init__(self, x, y):
         super().__init__(x, y)
 
     def handle_input(self, keys):
+        # Don't accept manual input during autopilot
+        if self.autopilot_active:
+            return
+
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.angle = (self.angle - self.rotation_speed) % 360
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
@@ -498,6 +561,8 @@ class Player(Ship):
             self.thrust = max(self.thrust - 0.02, 0)
 
     def update(self):
+        self.update_autopilot()
+
         rad = math.radians(self.angle)
         if self.thrust > 0.01:
             self.velocity_x += math.sin(rad) * self.thrust
@@ -758,8 +823,8 @@ class WalkableArea(ScreenBase):
     def draw_ui_text(self, surface, text, scale=None):
         """Draw UI text that stays on screen (not camera-affected)"""
         if scale is None:
-            scale = get_scale()
-        offset_x, offset_y = get_offset()
+            scale = get_ui_scale()
+        offset_x, offset_y = get_ui_offset()
         font = pygame.font.Font(None, int(24 * scale))
         ui_text = font.render(text, True, WHITE)
         surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
@@ -1267,10 +1332,17 @@ class GameScreen(ScreenBase):
                 elif event.key == pygame.K_t:
                     self._cycle_target()
                 elif event.key == pygame.K_l:
-                    landing_target = self._check_landing()
-                    if landing_target:
-                        self.landing_target = landing_target
-                        return "land"
+                    # If target is selected, engage autopilot
+                    target_obj = self._get_target_object()
+                    if target_obj and self.current_target is not None:
+                        self.player.autopilot_active = True
+                        self.player.autopilot_target = target_obj
+                    else:
+                        # Otherwise check if close enough to land manually
+                        landing_target = self._check_landing()
+                        if landing_target:
+                            self.landing_target = landing_target
+                            return "land"
         return None
 
     def _cycle_target(self):
@@ -1305,11 +1377,11 @@ class GameScreen(ScreenBase):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
         station_distance = self.station.get_distance(self.player.x, self.player.y)
-        if station_distance < 100 and speed < 0.5:
+        if station_distance < 150 and speed < 0.5:
             return "station"
 
         moon_distance = self.moon.get_distance(self.player.x, self.player.y)
-        if moon_distance < 100 and speed < 0.5:
+        if moon_distance < 150 and speed < 0.5:
             return "moon"
 
         return None
@@ -1317,7 +1389,7 @@ class GameScreen(ScreenBase):
     def _can_land_at_station(self):
         distance = self.station.get_distance(self.player.x, self.player.y)
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-        return distance < 100 and speed < 0.5
+        return distance < 150 and speed < 0.5
 
     def _to_screen_camera(self, x, y):
         """Convert world coordinates to screen coordinates using camera offset"""
@@ -1341,6 +1413,19 @@ class GameScreen(ScreenBase):
         # Update camera to follow player
         camera_offset_x = self.player.x - GAME_WIDTH // 2
         camera_offset_y = self.player.y - GAME_HEIGHT // 2
+
+        # Auto-land if autopilot is active and in range
+        if self.player.autopilot_active and self.player.autopilot_target:
+            distance = self.player.autopilot_target.get_distance(self.player.x, self.player.y)
+            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+            if distance < 150 and speed < 0.5:
+                self.player.autopilot_active = False
+                if self.player.autopilot_target == self.station:
+                    self.landing_target = "station"
+                    return "land"
+                elif self.player.autopilot_target == self.moon:
+                    self.landing_target = "moon"
+                    return "land"
 
         if self._check_landing():
             self.landing_text = 60
@@ -1367,25 +1452,34 @@ class GameScreen(ScreenBase):
         target_name = self._get_target_name()
         if target_obj and target_name:
             draw_target_brackets(surface, target_obj.x, target_obj.y)
-            scale = get_scale()
-            offset_x, offset_y = get_offset()
-            font_target = pygame.font.Font(None, int(20 * scale))
+            ui_scale = get_ui_scale()
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            font_target = pygame.font.Font(None, int(20 * ui_scale))
             target_text = font_target.render(f"Target: {target_name}", True, GREEN)
-            surface.blit(target_text, (int(offset_x + 10), int(offset_y + 10)))
+            surface.blit(target_text, (int(ui_offset_x + 10), int(ui_offset_y + 10)))
 
         if self.landing_text > 0:
-            scale = get_scale()
-            font = pygame.font.Font(None, int(24 * scale))
+            ui_scale = get_ui_scale()
+            font = pygame.font.Font(None, int(24 * ui_scale))
             land_text = font.render("Press L to land", True, YELLOW)
-            offset_x, offset_y = get_offset()
-            land_x = int(offset_x + GAME_WIDTH * scale // 2 - land_text.get_width() // 2)
-            land_y = int(offset_y + GAME_HEIGHT * scale - 60)
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            land_x = int(ui_offset_x + screen_width // 2 - land_text.get_width() // 2)
+            land_y = int(ui_offset_y + screen_height - 60)
             surface.blit(land_text, (land_x, land_y))
 
         scale = get_scale()
         offset_x, offset_y = get_offset()
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
+
+        # Draw help text at bottom
+        ui_scale = get_ui_scale()
+        ui_offset_x, ui_offset_y = get_ui_offset()
+        font_help = pygame.font.Font(None, int(16 * ui_scale))
+        help_text = font_help.render("T: target, L: land, ESC: pause", True, WHITE)
+        help_x = int(ui_offset_x + screen_width // 2 - help_text.get_width() // 2)
+        help_y = int(ui_offset_y + screen_height - 30)
+        surface.blit(help_text, (help_x, help_y))
 
     def get_state(self):
         return {

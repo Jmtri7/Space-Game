@@ -1,0 +1,63 @@
+{
+  "name": "Quick Trade System",
+  "description": "Two distant stations with automated courier service",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Trade Star",
+    "size": 80,
+    "color": [255, 200, 100]
+  },
+  "station": {
+    "x": 0.1,
+    "y": 0.5,
+    "name": "Trade Port Alpha"
+  },
+  "moon": {
+    "x": 0.9,
+    "y": 0.5,
+    "name": "Trade Port Omega"
+  },
+  "ai_ships": [
+    {
+      "name": "Fast Courier One",
+      "x": 0.3,
+      "y": 0.4,
+      "ship_type": "courier",
+      "pilot_type": "explorer"
+    },
+    {
+      "name": "Fast Courier Two",
+      "x": 0.7,
+      "y": 0.6,
+      "ship_type": "courier",
+      "pilot_type": "explorer"
+    },
+    {
+      "name": "Bulk Hauler",
+      "x": 0.5,
+      "y": 0.35,
+      "ship_type": "freighter",
+      "pilot_type": "wander"
+    },
+    {
+      "name": "Patrol Corvette",
+      "x": 0.4,
+      "y": 0.65,
+      "ship_type": "patrol",
+      "pilot_type": "patrol"
+    }
+  ],
+  "stars": [
+    {"x": 0.05, "y": 0.15, "size": 2, "color": [255, 255, 200]},
+    {"x": 0.95, "y": 0.85, "size": 2, "color": [255, 240, 150]}
+  ],
+  "asteroids": [
+    {"x": 0.3, "y": 0.3, "vx": 0.25, "vy": 0.1, "size": 4},
+    {"x": 0.4, "y": 0.5, "vx": -0.15, "vy": 0.2, "size": 5},
+    {"x": 0.5, "y": 0.4, "vx": 0.1, "vy": -0.15, "size": 3},
+    {"x": 0.6, "y": 0.55, "vx": -0.2, "vy": -0.1, "size": 4},
+    {"x": 0.35, "y": 0.65, "vx": 0.15, "vy": 0.15, "size": 4},
+    {"x": 0.65, "y": 0.35, "vx": -0.1, "vy": 0.2, "size": 3}
+  ]
+}

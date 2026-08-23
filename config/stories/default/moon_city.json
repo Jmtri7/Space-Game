@@ -3,7 +3,7 @@
   "description": "Lunar metropolitan settlement",
   "entrance": {
     "x": 800,
-    "y": 1400
+    "y": 800
   },
   "buildings": [
     {
@@ -51,6 +51,23 @@
       "end_x": 850,
       "end_y": 360,
       "spacing": 40
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Merchant",
+      "x": 300,
+      "y": 200
+    },
+    {
+      "name": "Vendor",
+      "x": 700,
+      "y": 150
+    },
+    {
+      "name": "Trader",
+      "x": 1250,
+      "y": 250
     }
   ]
 }

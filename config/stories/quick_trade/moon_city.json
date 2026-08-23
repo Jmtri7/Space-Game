@@ -1,0 +1,46 @@
+{
+  "name": "Trade Post",
+  "description": "A small trading outpost",
+  "entrance": {
+    "x": 800,
+    "y": 800
+  },
+  "buildings": [
+    {
+      "x": 500,
+      "y": 300,
+      "width": 300,
+      "height": 400,
+      "color": [180, 100, 100]
+    },
+    {
+      "x": 1100,
+      "y": 400,
+      "width": 250,
+      "height": 300,
+      "color": [100, 180, 100]
+    }
+  ],
+  "windows": [
+    {
+      "building": 0,
+      "start_x": 500,
+      "start_y": 300,
+      "end_x": 800,
+      "end_y": 700,
+      "spacing": 50
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Chief Merchant",
+      "x": 650,
+      "y": 500
+    },
+    {
+      "name": "Trader",
+      "x": 1225,
+      "y": 550
+    }
+  ]
+}

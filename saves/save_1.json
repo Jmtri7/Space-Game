@@ -1,0 +1,16 @@
+{
+  "pilot_name": "shdh",
+  "name": "1",
+  "story_id": "default",
+  "timestamp": "2026-08-23T11:20:46.298400",
+  "system": {},
+  "station": {},
+  "game_state": {
+    "player": {
+      "x": 839,
+      "y": 401
+    },
+    "location": "moon",
+    "moon_location": "city"
+  }
+}

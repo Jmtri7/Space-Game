@@ -9,7 +9,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **W** or **↑** | Thrust forward |
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
-| **S** or **↓** | Reduce thrust (coast) |
+| **S** or **↓** | Turn to face opposite velocity (reverse heading) |
 | **T** | Cycle through targetable objects (station, moon, AI ship) |
 | **L** | Land on targeted object or nearby (when in range) |
 | **ESC** | Pause menu |
