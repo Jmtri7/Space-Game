@@ -1508,6 +1508,7 @@ def main():
                     if dialog_action == "save":
                         # Check if we're overwriting an existing save
                         is_overwriting = save_name in save_dialog.existing_saves
+                        save_description = save_name
                         if is_overwriting:
                             # Delete the old save file
                             try:
@@ -1516,9 +1517,12 @@ def main():
                                     os.remove(filepath)
                             except:
                                 pass
+                            # Strip prefix and extension for create_save_file
+                            if save_name.startswith("save_") and save_name.endswith(".json"):
+                                save_description = save_name[5:-5]
 
-                        if not pilot_name and save_name and not is_overwriting:
-                            pilot_name = save_name
+                        if not pilot_name and save_description and not is_overwriting:
+                            pilot_name = save_description
                             if game_screen:
                                 game_screen.pilot_name = pilot_name
                             if station_interior:
@@ -1533,15 +1537,15 @@ def main():
                                 game_state["moon_location"] = "city"
                             else:
                                 game_state["moon_location"] = "wilderness"
-                            create_save_file(pilot_name, save_name, {}, {}, game_state)
+                            create_save_file(pilot_name, save_description, {}, {}, game_state)
                         elif current_screen == "station":
                             game_state = station_interior.get_state()
                             game_state["location"] = "station"
-                            create_save_file(pilot_name, save_name, station_interior.station_config, {}, game_state)
+                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
                         else:  # current_screen == "game"
                             game_state = game_screen.get_state()
                             game_state["location"] = "space"
-                            create_save_file(pilot_name, save_name, game_screen.system_config, {}, game_state)
+                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
                         pause_menu.success_timer = 120
                         save_dialog = None
                     elif dialog_action == "delete":
