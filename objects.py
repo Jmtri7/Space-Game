@@ -65,6 +65,11 @@ class SpaceStation:
         pygame.draw.polygon(surface, self.color, points)
         pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
+        # Debug: draw landing radius circle
+        if DEBUG_MODE:
+            landing_radius_screen = int(self.landing_distance * scale)
+            pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
+
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 
@@ -192,6 +197,11 @@ class Moon:
             crater_y = self.y + crater.get("y", 0)
             crater_radius = crater.get("radius", 4)
             pygame.draw.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))
+
+        # Debug: draw landing radius circle
+        if DEBUG_MODE:
+            landing_radius_screen = int(self.landing_distance * scale)
+            pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
