@@ -33,7 +33,7 @@ class SpaceStation:
             self.core_color = (150, 220, 255)
             self.rotation_speed = 0.5
             self.local_points = self._default_points()
-            self.landing_distance = 140
+            self.landing_distance = 50
 
     def _default_points(self):
         """Default hexapod shape."""
@@ -184,7 +184,7 @@ class Moon:
                 {"x": -8, "y": -5, "radius": 4},
                 {"x": 10, "y": 8, "radius": 5}
             ]
-            self.landing_distance = 105
+            self.landing_distance = 35
 
     def update(self):
         self.phase = (self.phase + 0.1) % 360
