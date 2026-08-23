@@ -317,40 +317,6 @@ class Ship:
             braking_distance = self._predict_braking_distance_from_stop(speed)
             should_brake = distance <= braking_distance and speed > 0.1
 
-            # Predictive braking check - stop if speed would increase
-            if should_brake:
-                # Simulate one frame of physics to check actual speed change
-                test_rad = math.radians(sim_angle)
-                test_vx = sim_vx
-                test_vy = sim_vy
-                test_thrust = sim_thrust
-
-                # Calculate acceleration direction
-                dx = target.x - sim_x
-                dy = target.y - sim_y
-                target_angle = math.atan2(dx, -dy)
-                accel_angle = self._calculate_brake_redirect_angle(target_angle)
-
-                # Determine if we'd be aligned to apply thrust
-                accel_angle_deg = math.degrees(accel_angle)
-                current_angle = sim_angle % 360
-                target_angle_norm = accel_angle_deg % 360
-                angle_diff = target_angle_norm - current_angle
-                if angle_diff > 180:
-                    angle_diff -= 360
-                elif angle_diff < -180:
-                    angle_diff += 360
-
-                aligned = abs(angle_diff) < 10
-                if aligned:
-                    test_rad = math.radians(sim_angle)
-                    test_vx += math.sin(test_rad) * self.acceleration_magnitude
-                    test_vy -= math.cos(test_rad) * self.acceleration_magnitude
-
-                test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
-                if test_speed > speed:  # Speed would increase instead of decrease
-                    return waypoints
-
             # Calculate acceleration direction
             dx = target.x - sim_x
             dy = target.y - sim_y
