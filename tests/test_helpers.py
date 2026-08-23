@@ -205,13 +205,13 @@ class TestCenterTextX(unittest.TestCase):
 
 
 class TestAutopilotPhysics(unittest.TestCase):
-    """Test autopilot physics simulation framework"""
+    """Test autopilot arrives at target with precise position and velocity"""
 
-    def simulate_autopilot_approach(self, ship, target_distance, target_x, target_y, max_frames=1000):
-        """Simulate ship approaching and braking to stop at target"""
+    def simulate_autopilot_to_landing(self, ship, target_x, target_y, max_frames=2000):
+        """Simulate ship autopilot from start to landing, return final state"""
         ship.autopilot_active = True
 
-        # Create mock target
+        # Create mock target with get_distance method
         target = MagicMock()
         target.x = target_x
         target.y = target_y
@@ -226,10 +226,11 @@ class TestAutopilotPhysics(unittest.TestCase):
         ship.thrust = 0
 
         frames = 0
+        landed = False
         while ship.autopilot_active and frames < max_frames:
             frames += 1
 
-            # Update autopilot
+            # Update autopilot control logic
             if hasattr(ship, 'update_autopilot'):
                 ship.update_autopilot()
 
@@ -242,53 +243,68 @@ class TestAutopilotPhysics(unittest.TestCase):
 
             if distance < 150 and speed < 0.5:
                 ship.autopilot_active = False
-                return frames, distance, speed
+                landed = True
+                break
 
-        # Timeout
+        # Return final state
         distance = target.get_distance(ship.x, ship.y)
         speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
-        return frames, distance, speed
+        return {
+            'landed': landed,
+            'frames': frames,
+            'distance': distance,
+            'speed': speed,
+            'x': ship.x,
+            'y': ship.y
+        }
 
-    def test_autopilot_physics_framework_exists(self):
-        """Test that autopilot physics simulation framework is in place"""
+    def test_autopilot_explorer_lands_precisely(self):
+        """Explorer ship should land at target with distance < 150 and speed < 0.5"""
         ship = main.Player(0, 0)
+        ship.max_thrust = 0.3
+        ship.max_velocity = 4.0
+        ship.drag = 0.98
+        ship.rotation_speed = 5
 
-        # Verify ship has autopilot attributes
-        self.assertTrue(hasattr(ship, 'autopilot_active'))
-        self.assertTrue(hasattr(ship, 'autopilot_target'))
+        result = self.simulate_autopilot_to_landing(ship, 500, 0)
 
-        # Verify ship can be simulated
-        ship.x = 100
-        ship.y = 100
-        ship.update()
-        self.assertEqual(ship.x, 100)
+        self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
+        self.assertLess(result['distance'], 150,
+                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        self.assertLess(result['speed'], 0.5,
+                        f"Final velocity {result['speed']:.3f} too high")
 
-    def test_autopilot_target_selection(self):
-        """Test autopilot can track a target"""
+    def test_autopilot_courier_lands_precisely(self):
+        """Fast courier should land at target with very low velocity"""
         ship = main.Player(0, 0)
-        target = MagicMock()
-        target.x = 500
-        target.y = 0
-        target.get_distance = lambda x, y: ((target.x - x)**2 + (target.y - y)**2)**0.5
+        ship.max_thrust = 0.5
+        ship.max_velocity = 6.5
+        ship.drag = 0.99
+        ship.rotation_speed = 9
 
-        ship.autopilot_target = target
-        distance = target.get_distance(ship.x, ship.y)
+        result = self.simulate_autopilot_to_landing(ship, 400, 0)
 
-        self.assertEqual(distance, 500)
+        self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
+        self.assertLess(result['distance'], 150,
+                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        self.assertLess(result['speed'], 0.5,
+                        f"Final velocity {result['speed']:.3f} too high (courier)")
 
-    def test_autopilot_velocity_decay(self):
-        """Test that ship can be updated in simulation"""
+    def test_autopilot_hauler_lands_precisely(self):
+        """Slow hauler should land at target with low velocity"""
         ship = main.Player(0, 0)
-        ship.velocity_x = 5
-        ship.velocity_y = 0
-        ship.thrust = 0
+        ship.max_thrust = 0.15
+        ship.max_velocity = 2.5
+        ship.drag = 0.95
+        ship.rotation_speed = 2
 
-        # Simulate one frame without errors
-        initial_pos_x = ship.x
-        ship.update()
+        result = self.simulate_autopilot_to_landing(ship, 300, 0)
 
-        # Ship position should have changed due to velocity
-        self.assertNotEqual(ship.x, initial_pos_x)
+        self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
+        self.assertLess(result['distance'], 150,
+                        f"Final distance {result['distance']:.1f} exceeds landing zone")
+        self.assertLess(result['speed'], 0.5,
+                        f"Final velocity {result['speed']:.3f} too high (hauler)")
 
 
 if __name__ == "__main__":
