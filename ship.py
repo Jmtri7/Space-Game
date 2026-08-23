@@ -7,7 +7,7 @@ from utils import get_scale, to_screen
 
 class Ship:
     """Base ship class with physics and autopilot."""
-    def __init__(self, x, y, space_drag=0):
+    def __init__(self, x, y, space_drag=0, graphics=None):
         self.x = x
         self.y = y
         self.angle = 0
@@ -20,19 +20,26 @@ class Ship:
         self.autopilot_active = False
         self.autopilot_target = None
         self.space_drag = space_drag
+        self.graphics = graphics or {}
 
-    def draw(self, surface, ship_size=15, color=DARK_GRAY):
-        """Draw ship as rotated polygon with thrust flame."""
+    def draw(self, surface, ship_size=None, color=None):
+        """Draw ship using graphics asset, with fallback to defaults."""
+        # Use graphics asset if available, otherwise use parameters
+        if self.graphics:
+            ship_size = self.graphics.get("size", ship_size or 15)
+            color = tuple(self.graphics.get("color", color or DARK_GRAY))
+            shape = self.graphics.get("shape", "triangle")
+        else:
+            ship_size = ship_size or 15
+            color = color or DARK_GRAY
+
         scale = get_scale()
         rad = math.radians(self.angle)
         cos_a = math.cos(rad)
         sin_a = math.sin(rad)
 
-        local_points = [
-            (0, -ship_size),
-            (-ship_size * 0.6, ship_size * 0.6),
-            (ship_size * 0.6, ship_size * 0.6),
-        ]
+        # Get local points based on shape
+        local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
 
         points = []
         for lx, ly in local_points:
@@ -51,6 +58,29 @@ class Ship:
             flame_x = back_x - sin_a * flame_length
             flame_y = back_y + cos_a * flame_length
             pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(2 * scale)))
+
+    def _get_shape_points(self, size, shape):
+        """Get local points for ship shape."""
+        if shape == "rectangle":
+            return [
+                (0, -size * 0.7),
+                (-size * 0.4, size * 0.7),
+                (0, size * 0.5),
+                (size * 0.4, size * 0.7),
+            ]
+        elif shape == "diamond":
+            return [
+                (0, -size),
+                (-size * 0.5, 0),
+                (0, size * 0.7),
+                (size * 0.5, 0),
+            ]
+        else:  # triangle (default)
+            return [
+                (0, -size),
+                (-size * 0.6, size * 0.6),
+                (size * 0.6, size * 0.6),
+            ]
 
     def wrap_position(self):
         """Wrap position at screen edges (torus topology)."""

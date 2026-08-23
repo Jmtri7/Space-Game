@@ -33,7 +33,11 @@ class GameScreen(ScreenBase):
         # Get space system drag (default 0 = no drag)
         space_drag = self.system_config.get("drag", 0)
 
-        self.player = PlayerController(GAME_WIDTH // 2, GAME_HEIGHT // 2, space_drag=space_drag)
+        # Get player ship type and graphics
+        player_ship_type_id = story_meta.get("ships", {}).get("player_type", "explorer")
+        player_graphics = get_graphics_asset("ships", player_ship_type_id)
+
+        self.player = PlayerController(GAME_WIDTH // 2, GAME_HEIGHT // 2, space_drag=space_drag, graphics=player_graphics)
         self.star_field = StarField()
 
         # Load graphics assets for station and moon
@@ -53,12 +57,14 @@ class GameScreen(ScreenBase):
         for ai_cfg in self.system_config.get("ai_ships", []):
             ship_type_id = ai_cfg.get("ship_type", "trader")
             ship_type = get_ship_type(ship_type_id)
+            ship_graphics = get_graphics_asset("ships", ship_type_id)
             ai_ship = AIShip(
                 GAME_WIDTH * ai_cfg.get("x", 0.75),
                 GAME_HEIGHT * ai_cfg.get("y", 0.1),
                 space_drag=space_drag,
                 ship_type=ship_type,
-                ship_type_id=ship_type_id
+                ship_type_id=ship_type_id,
+                graphics=ship_graphics
             )
             self.ai_ships.append(ai_ship)
 

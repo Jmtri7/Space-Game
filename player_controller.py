@@ -2,12 +2,13 @@
 import pygame
 from constants import DARK_GRAY
 from ship import Ship
+from utils import get_graphics_asset
 
 
 class PlayerController:
     """Controls the player's ship - owns the ship and handles input."""
-    def __init__(self, x, y, space_drag=0):
-        self.ship = Ship(x, y, space_drag=space_drag)
+    def __init__(self, x, y, space_drag=0, graphics=None):
+        self.ship = Ship(x, y, space_drag=space_drag, graphics=graphics)
 
     def handle_input(self, keys):
         """Handle player keyboard input (blocked during autopilot)."""
