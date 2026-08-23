@@ -48,6 +48,14 @@ When you notice the same pattern appearing in multiple places:
 
 ## For Agents: Testing Guidance
 
+**CRITICAL: After any code changes (features, fixes, refactors), you MUST:**
+1. Close all running game instances
+2. Run automated tests: `python run_tests.py`
+3. Start the game fresh: `python main.py`
+4. Test the feature/fix in-game to verify changes took effect
+
+This is non-negotiable. Code changes must be loaded and verified in-game before considering work done.
+
 **When making changes**, watch for untested critical logic:
 
 1. **Discovered a bug during development?** Add a test case that catches it *before* fixing it, so it never regresses.
@@ -58,14 +66,6 @@ When you notice the same pattern appearing in multiple places:
 > "While implementing the new thruster balance, I noticed the velocity-capping logic has no tests. I've added 3 test cases to catch regressions when changing drag constants."
 
 Keep the bar practical: test regressions you've actually seen or critical paths (save/load, physics, input handling). Don't test UI rendering or Pygame drawing.
-
-**After implementing or updating a feature:**
-1. Close all running instances of the game (kill the process if needed)
-2. Run automated tests: `python run_tests.py`
-3. Start the game fresh: `python main.py`
-4. Test the feature in-game to verify changes took effect
-
-This ensures code changes are actually loaded and the feature works as expected.
 
 ## Running the Game
 ```bash
