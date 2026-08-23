@@ -15,16 +15,24 @@ from space_station import SpaceStation
 from moon import Moon
 from game_screen import GameScreen
 from station_interior import StationInterior
-from moon_locations import MoonCity, MoonOutdoor
+from location import Location
 from menu import Menu
 from pilot_name_dialog import PilotNameDialog
 from location_selector import LocationSelector
 from pause_menu import PauseMenu
 from save_dialog import SaveDialog
-from delete_confirm_dialog import DeleteConfirmDialog
-from overwrite_confirm_dialog import OverwriteConfirmDialog
+from confirm_dialog import ConfirmDialog
 from load_menu import LoadMenu
 from story_selector import StorySelector
+
+# Moon location factories
+def MoonCity(pilot_name=""):
+    """Create a moon city location."""
+    return Location(config_file="config/stories/default/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
+
+def MoonOutdoor(pilot_name=""):
+    """Create a moon wilderness location."""
+    return Location(config_file="config/stories/default/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 # Initialize pygame and display
 pygame.init()
@@ -159,7 +167,7 @@ def main():
                                 moon_interior.restore_state(game_state)
                                 current_screen = "moon"
                     elif action == "delete":
-                        delete_confirm_dialog = DeleteConfirmDialog(filename)
+                        delete_confirm_dialog = ConfirmDialog("Delete Save?", filename[:50], context_data=filename)
                     elif action == "cancel":
                         current_screen = "menu"
                         menu = Menu()
@@ -294,7 +302,7 @@ def main():
                         is_overwriting = save_name in save_dialog.existing_saves
                         if is_overwriting:
                             # Show confirmation dialog for overwrite
-                            overwrite_confirm_dialog = OverwriteConfirmDialog(save_name)
+                            overwrite_confirm_dialog = ConfirmDialog("Overwrite Save?", save_name[:50], context_data=save_name)
                             save_dialog = None
                         else:
                             save_description = save_name

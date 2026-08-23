@@ -1,23 +1,24 @@
-"""Generic yes/no confirmation dialog."""
+"""Confirmation dialogs for user actions."""
 import pygame
 from constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GRAY
 from utils import get_scale, get_offset, _center_text_x
 
 
 class ConfirmDialog:
-    """Generic yes/no confirmation dialog"""
-    def __init__(self, title, message):
+    """Generic yes/no confirmation dialog with optional context data."""
+    def __init__(self, title, message, context_data=None):
         self.title = title
         self.message = message
+        self.context_data = context_data
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_y:
-                    return "confirm"
+                    return ("confirm", self.context_data)
                 elif event.key == pygame.K_n or event.key == pygame.K_ESCAPE:
-                    return "cancel"
-        return None
+                    return ("cancel", None)
+        return (None, None)
 
     def draw(self, surface):
         scale = get_scale()
