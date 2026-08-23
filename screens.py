@@ -222,10 +222,11 @@ class Location(WalkableArea):
 class StationInterior(Location):
     """Interior of a space station with NPCs and dialogue. Loads from config/station_interior.json."""
     def __init__(self, station_config=None, pilot_name=""):
-        # Load config
-        self.station_config = station_config or load_json("config/station_interior.json") or {}
+        # Load config from story directory
+        config_file = "config/stories/default/station_interior.json"
+        self.station_config = station_config or load_json(config_file) or {}
 
-        super().__init__(config_file="config/station_interior.json", world_width=GAME_WIDTH, world_height=GAME_HEIGHT, pilot_name=pilot_name)
+        super().__init__(config_file=config_file, world_width=GAME_WIDTH, world_height=GAME_HEIGHT, pilot_name=pilot_name)
 
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
@@ -439,9 +440,9 @@ class StationInterior(Location):
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
 
-# Type aliases for Location instantiation
-MoonCity = lambda pilot_name="": Location(config_file="config/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
-MoonOutdoor = lambda pilot_name="": Location(config_file="config/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
+# Type aliases for Location instantiation - loads from story config
+MoonCity = lambda pilot_name="": Location(config_file="config/stories/default/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
+MoonOutdoor = lambda pilot_name="": Location(config_file="config/stories/default/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 
 class GameScreen(ScreenBase):
