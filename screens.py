@@ -649,12 +649,6 @@ class GameScreen(ScreenBase):
         points = [(tip_x, tip_y), (wing1_x, wing1_y), (wing2_x, wing2_y)]
         pygame.draw.polygon(surface, GREEN, points)
 
-    def _update_positions(self):
-        self.station.x = utils.screen_width * 0.75
-        self.station.y = utils.screen_height * 0.3
-        self.ai_ship.x = utils.screen_width * 0.75
-        self.ai_ship.y = utils.screen_height * 0.3 - 150
-
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
@@ -667,17 +661,6 @@ class GameScreen(ScreenBase):
             return "moon"
 
         return None
-
-    def _can_land_at_station(self):
-        distance = self.station.get_distance(self.player.x, self.player.y)
-        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-        return distance < 150 and speed < 0.5
-
-    def _to_screen_camera(self, x, y):
-        """Convert world coordinates to screen coordinates using camera offset"""
-        world_x = x - self.camera_x
-        world_y = y - self.camera_y
-        return to_screen(world_x, world_y)
 
     def update_physics(self):
         """Update physics without camera - used when space is background"""
