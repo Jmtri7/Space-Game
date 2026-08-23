@@ -80,6 +80,10 @@ class Ship:
         """Reduce thrust (coast to stop)."""
         self.thrust = max(self.thrust - step, 0)
 
+    def release_thrust(self):
+        """Release thrust immediately (no gradual coast)."""
+        self.thrust = 0
+
     def point_to_reverse_velocity(self):
         """Rotate ship to point opposite current velocity direction."""
         if self.velocity_x == 0 and self.velocity_y == 0:
@@ -297,8 +301,7 @@ class PlayerController:
             # Point ship toward opposite velocity (brake/reverse)
             self.ship.point_to_reverse_velocity()
         else:
-            # Release thrust immediately
-            self.ship.thrust = 0
+            self.ship.release_thrust()
 
     def update(self):
         """Update ship physics."""
