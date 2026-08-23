@@ -466,8 +466,15 @@ class GameScreen(ScreenBase):
         moon_cfg = self.system_config.get("moon", {})
         self.moon = Moon(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4))
 
-        ai_cfg = self.system_config.get("ai_ships", [{}])[0]
-        self.ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1), space_drag=space_drag)
+        # Load all AI ships from config
+        self.ai_ships = []
+        for ai_cfg in self.system_config.get("ai_ships", []):
+            ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1), space_drag=space_drag)
+            self.ai_ships.append(ai_ship)
+
+        # Keep self.ai_ship for backwards compatibility (first ship if it exists)
+        self.ai_ship = self.ai_ships[0] if self.ai_ships else None
+
         self.landing_text = 0
         self.landing_target = None
         self.camera_x = 0
@@ -476,8 +483,10 @@ class GameScreen(ScreenBase):
         self.targetable_objects = [
             ("Station", self.station),
             ("Moon", self.moon),
-            ("AI Ship", self.ai_ship),
         ]
+        # Add all AI ships to targetable objects
+        for i, ship in enumerate(self.ai_ships):
+            self.targetable_objects.append((f"AI Ship {i+1}", ship))
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
@@ -654,7 +663,8 @@ class GameScreen(ScreenBase):
         self.player.update()
         self.station.update()
         self.moon.update()
-        self.ai_ship.update()
+        for ai_ship in self.ai_ships:
+            ai_ship.update()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -686,7 +696,8 @@ class GameScreen(ScreenBase):
         self.star_field.draw(surface)
         self.station.draw(surface)
         self.moon.draw(surface)
-        self.ai_ship.draw(surface)
+        for ai_ship in self.ai_ships:
+            ai_ship.draw(surface)
         self.player.draw(surface)
 
         # Debug markers for entity positions
@@ -694,7 +705,8 @@ class GameScreen(ScreenBase):
             draw_debug_marker(surface, self.player.x, self.player.y, 10)
             draw_debug_marker(surface, self.station.x, self.station.y, 10)
             draw_debug_marker(surface, self.moon.x, self.moon.y, 10)
-            draw_debug_marker(surface, self.ai_ship.x, self.ai_ship.y, 8)
+            for ai_ship in self.ai_ships:
+                draw_debug_marker(surface, ai_ship.x, ai_ship.y, 8)
 
         # Draw target brackets and label
         target_obj = self._get_target_object()
@@ -742,7 +754,7 @@ class GameScreen(ScreenBase):
         surface.blit(help_text, (help_x, help_y))
 
     def get_state(self):
-        return {
+        state = {
             "player": {
                 "x": self.player.x,
                 "y": self.player.y,
@@ -750,16 +762,21 @@ class GameScreen(ScreenBase):
                 "velocity_x": self.player.velocity_x,
                 "velocity_y": self.player.velocity_y,
                 "thrust": self.player.thrust
-            },
-            "ai_ship": {
-                "x": self.ai_ship.x,
-                "y": self.ai_ship.y,
-                "angle": self.ai_ship.angle,
-                "velocity_x": self.ai_ship.velocity_x,
-                "velocity_y": self.ai_ship.velocity_y,
-                "thrust": self.ai_ship.thrust
             }
         }
+        # Save all AI ships
+        if self.ai_ships:
+            state["ai_ships"] = []
+            for ai_ship in self.ai_ships:
+                state["ai_ships"].append({
+                    "x": ai_ship.x,
+                    "y": ai_ship.y,
+                    "angle": ai_ship.angle,
+                    "velocity_x": ai_ship.velocity_x,
+                    "velocity_y": ai_ship.velocity_y,
+                    "thrust": ai_ship.thrust
+                })
+        return state
 
     def restore_state(self, state):
         if not state:
@@ -772,14 +789,16 @@ class GameScreen(ScreenBase):
             self.player.velocity_x = player_state.get("velocity_x", self.player.velocity_x)
             self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
             self.player.thrust = player_state.get("thrust", self.player.thrust)
-        if "ai_ship" in state:
-            ai_state = state["ai_ship"]
-            self.ai_ship.x = ai_state.get("x", self.ai_ship.x)
-            self.ai_ship.y = ai_state.get("y", self.ai_ship.y)
-            self.ai_ship.angle = ai_state.get("angle", self.ai_ship.angle)
-            self.ai_ship.velocity_x = ai_state.get("velocity_x", self.ai_ship.velocity_x)
-            self.ai_ship.velocity_y = ai_state.get("velocity_y", self.ai_ship.velocity_y)
-            self.ai_ship.thrust = ai_state.get("thrust", self.ai_ship.thrust)
+        # Restore all AI ships
+        if "ai_ships" in state:
+            for i, ai_state in enumerate(state["ai_ships"]):
+                if i < len(self.ai_ships):
+                    self.ai_ships[i].x = ai_state.get("x", self.ai_ships[i].x)
+                    self.ai_ships[i].y = ai_state.get("y", self.ai_ships[i].y)
+                    self.ai_ships[i].angle = ai_state.get("angle", self.ai_ships[i].angle)
+                    self.ai_ships[i].velocity_x = ai_state.get("velocity_x", self.ai_ships[i].velocity_x)
+                    self.ai_ships[i].velocity_y = ai_state.get("velocity_y", self.ai_ships[i].velocity_y)
+                    self.ai_ships[i].thrust = ai_state.get("thrust", self.ai_ships[i].thrust)
 
 
 class SaveDialog:
