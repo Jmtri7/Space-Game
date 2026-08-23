@@ -1,0 +1,11 @@
+StorySelector init started
+Current directory: C:\Users\Play\Documents\Projects\space-game
+Stories dir path: config/stories
+Absolute path: C:\Users\Play\Documents\Projects\space-game\config\stories
+Directory exists: True
+Items in directory: ['default', 'quick_trade']
+  default: isdir=True, json=True
+    -> ADDED
+  quick_trade: isdir=True, json=True
+    -> ADDED
+Final stories: ['default', 'quick_trade']

@@ -1188,7 +1188,8 @@ class StorySelector:
 
         # Story options
         font_menu = pygame.font.Font(None, int(48 * scale))
-        offset_x, offset_y = get_ui_offset()
+        y_base = int(250 * scale)
+        y_spacing = int(80 * scale)
 
         for i, story in enumerate(self.stories):
             color = YELLOW if i == self.selected_index else WHITE
@@ -1196,7 +1197,7 @@ class StorySelector:
             display_name = story.replace("_", " ").title()
             text = font_menu.render(display_name, True, color)
             text_x = utils.screen_width // 2 - text.get_width() // 2
-            text_y = int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 60)
+            text_y = y_base + i * y_spacing
             surface.blit(text, (text_x, text_y))
 
             if i == self.selected_index:
