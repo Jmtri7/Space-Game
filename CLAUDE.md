@@ -1,9 +1,21 @@
 # Space Game Development Guide
 
-**For detailed documentation, see [docs/README.md](docs/README.md)** — comprehensive guides on architecture, physics, save systems, UI flow, and design patterns.
+**For detailed documentation, see [docs/README.md](docs/README.md)** — comprehensive guides on architecture, physics, save systems, UI flow, controls, and design patterns.
+
+**When adding or updating controls, check [docs/CONTROLS.md](docs/CONTROLS.md)** — all keyboard bindings are documented there for player discovery and consistency.
 
 ## Project Overview
 A pygame-based space exploration game with procedurally generated star fields, AI ships, space stations with NPCs, and a complete save/load system. The game features physics-based ship movement, NPC dialogue, and persistent game state.
+
+## For Agents: Controls & Documentation Trail
+
+**Control Documentation:** When adding or changing ANY keyboard binding:
+1. **First**: Check [docs/CONTROLS.md](docs/CONTROLS.md) for existing bindings
+2. **Add/Update**: The control in CONTROLS.md with action description
+3. **Add/Update**: Help text in the menu/screen displaying the control to players
+4. **Commit**: Include "controls:" in the commit message so future agents know controls changed
+
+This ensures players can discover controls, agents know where to look, and conflicts are avoided.
 
 ## For Agents: Pattern Recognition & Contributions
 

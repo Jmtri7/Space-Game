@@ -5,6 +5,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 ## Core Documentation
 
 - **[CLAUDE.md](../CLAUDE.md)** ← Start here for quick reference
+- **[CONTROLS.md](CONTROLS.md)** — All keyboard bindings and player controls
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — Class hierarchy, entity design, base classes
 - **[PHYSICS.md](PHYSICS.md)** — Coordinate systems, movement, collision
 - **[SAVE_SYSTEM.md](SAVE_SYSTEM.md)** — Persistence, state management, file format

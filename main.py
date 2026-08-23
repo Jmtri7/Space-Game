@@ -32,7 +32,7 @@ YELLOW = (255, 255, 0)
 DARK_GRAY = (60, 60, 60)
 GREEN = (0, 255, 0)
 
-DEBUG_MODE = False  # Press D to toggle
+DEBUG_MODE = False  # Press ` (backtick) to toggle
 
 screen_width = SCREEN_WIDTH
 screen_height = SCREEN_HEIGHT
@@ -1393,7 +1393,7 @@ def main():
                     screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
                     if game_screen:
                         game_screen.star_field.generate_stars()
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     global DEBUG_MODE
                     DEBUG_MODE = not DEBUG_MODE
 
