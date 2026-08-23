@@ -154,8 +154,8 @@ class Ship:
         while angle_diff < -math.pi:
             angle_diff += 2 * math.pi
 
-        # Disengage when velocity is closely aligned with target (within 15 degrees)
-        if abs(angle_diff) < math.radians(15):
+        # Disengage when velocity is precisely aligned with target (within 1 degree)
+        if abs(angle_diff) < math.radians(1):
             self.autopilot_active = False
             self.release_thrust()
             if hasattr(self, '_autopilot_accel_angle'):
