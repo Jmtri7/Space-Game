@@ -139,6 +139,7 @@ class Ship:
 
         target = self.autopilot_target
         distance = target.get_distance(self.x, self.y)
+        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
         # Distance vector from ship to target
         dx = target.x - self.x
@@ -155,27 +156,26 @@ class Ship:
         while angle_diff < -math.pi:
             angle_diff += 2 * math.pi
 
-        # Check if velocity is aligned with target
-        velocity_aligned = abs(angle_diff) < math.radians(1)
+        # Check braking distance
+        braking_distance = self._predict_braking_distance_to_target(speed)
 
-        if velocity_aligned:
-            # Velocity points at target - check if we need to brake
-            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-            braking_distance = self._predict_braking_distance_to_target(speed)
+        # If too close to target, brake immediately (no time to redirect velocity)
+        if distance < braking_distance and speed > 0.1:
+            self._autopilot_brake(target_angle)
+        elif distance < 10 and speed < 0.1:
+            # Reached target with near-zero velocity
+            self.autopilot_active = False
+            self.release_thrust()
+        else:
+            # Check if velocity is aligned with target
+            velocity_aligned = abs(angle_diff) < math.radians(1)
 
-            # If we're within braking distance, start braking sequence
-            if distance < braking_distance and speed > 0.1:
-                self._autopilot_brake(target_angle)
-            elif distance < 10 and speed < 0.1:
-                # Reached target with near-zero velocity
-                self.autopilot_active = False
+            if velocity_aligned:
+                # Velocity points at target - coast toward it
                 self.release_thrust()
             else:
-                # Coasting toward target with velocity aligned
-                self.release_thrust()
-        else:
-            # Velocity not aligned - redirect it toward target
-            self._autopilot_redirect_velocity(dx, dy)
+                # Velocity not aligned - redirect it toward target
+                self._autopilot_redirect_velocity(dx, dy)
 
     def _predict_braking_distance_to_target(self, current_speed):
         """Predict distance needed to brake from current speed to zero.
