@@ -58,6 +58,14 @@ When you notice the same pattern appearing in multiple places:
 3. **Handle centrally** if it's a cross-cutting concern (e.g., QUIT events in main loop)
 4. **Document in DESIGN_PATTERNS.md** if it's a reusable principle other parts of the game should follow
 
+### One Class Per File
+**Rule:** Each Python file should contain exactly one class.
+- **File naming:** Use `snake_case.py` for the filename, matching the class name: `MyClass` → `my_class.py`
+- **Exceptions:** Utility functions and constants can live in dedicated modules (e.g., `utils.py`, `constants.py`)
+- **Inheritance:** If a class extends another, place both imports at the top of the child class file
+- **Benefit:** Makes the codebase more navigable; easier to find and modify individual classes
+- **Example:** `dialogue.py` contains only the `Dialogue` class; `station_interior.py` contains only the `StationInterior` class (which imports `Location`)
+
 ## For Agents: Development Workflow
 
 **After each feature addition or code change:**

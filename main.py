@@ -11,13 +11,20 @@ from utils import (
 )
 from player_controller import PlayerController
 from ai_ship import AIShip
-from objects import SpaceStation, Moon
-from screens import (
-    GameScreen, StationInterior, MoonCity, MoonOutdoor,
-    Menu, PilotNameDialog, LocationSelector, PauseMenu,
-    SaveDialog, DeleteConfirmDialog, OverwriteConfirmDialog, LoadMenu,
-    StorySelector
-)
+from space_station import SpaceStation
+from moon import Moon
+from game_screen import GameScreen
+from station_interior import StationInterior
+from moon_locations import MoonCity, MoonOutdoor
+from menu import Menu
+from pilot_name_dialog import PilotNameDialog
+from location_selector import LocationSelector
+from pause_menu import PauseMenu
+from save_dialog import SaveDialog
+from delete_confirm_dialog import DeleteConfirmDialog
+from overwrite_confirm_dialog import OverwriteConfirmDialog
+from load_menu import LoadMenu
+from story_selector import StorySelector
 
 # Initialize pygame and display
 pygame.init()
