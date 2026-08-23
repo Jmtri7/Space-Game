@@ -6,9 +6,10 @@ from datetime import datetime
 from constants import (
     GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, DEBUG_MODE
 )
+import utils
 from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, to_screen, to_screen_x, to_screen_y,
-    load_json, delete_save_file, get_save_files, create_save_file,
+    load_json, delete_save_file, get_save_files, create_save_file, load_save_file,
     draw_debug_marker, draw_target_brackets, _center_text_x, _handle_scrolling_input,
     set_camera_offset
 )
@@ -619,10 +620,10 @@ class GameScreen(ScreenBase):
         pygame.draw.polygon(surface, GREEN, points)
 
     def _update_positions(self):
-        self.station.x = screen_width * 0.75
-        self.station.y = screen_height * 0.3
-        self.ai_ship.x = screen_width * 0.75
-        self.ai_ship.y = screen_height * 0.3 - 150
+        self.station.x = utils.screen_width * 0.75
+        self.station.y = utils.screen_height * 0.3
+        self.ai_ship.x = utils.screen_width * 0.75
+        self.ai_ship.y = utils.screen_height * 0.3 - 150
 
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -714,16 +715,16 @@ class GameScreen(ScreenBase):
             font = pygame.font.Font(None, int(24 * ui_scale))
             autopilot_text = font.render("Autopilot engaged - press any key to cancel", True, CYAN)
             ui_offset_x, ui_offset_y = get_ui_offset()
-            ap_x = int(ui_offset_x + screen_width // 2 - autopilot_text.get_width() // 2)
-            ap_y = int(ui_offset_y + screen_height - 60)
+            ap_x = int(ui_offset_x + utils.screen_width // 2 - autopilot_text.get_width() // 2)
+            ap_y = int(ui_offset_y + utils.screen_height - 60)
             surface.blit(autopilot_text, (ap_x, ap_y))
         elif self.landing_text > 0:
             ui_scale = get_ui_scale()
             font = pygame.font.Font(None, int(24 * ui_scale))
             land_text = font.render("Press L to land", True, YELLOW)
             ui_offset_x, ui_offset_y = get_ui_offset()
-            land_x = int(ui_offset_x + screen_width // 2 - land_text.get_width() // 2)
-            land_y = int(ui_offset_y + screen_height - 60)
+            land_x = int(ui_offset_x + utils.screen_width // 2 - land_text.get_width() // 2)
+            land_y = int(ui_offset_y + utils.screen_height - 60)
             surface.blit(land_text, (land_x, land_y))
 
         scale = get_scale()
@@ -736,8 +737,8 @@ class GameScreen(ScreenBase):
         ui_offset_x, ui_offset_y = get_ui_offset()
         font_help = pygame.font.Font(None, int(16 * ui_scale))
         help_text = font_help.render("T: target, L: land, ESC: pause", True, WHITE)
-        help_x = int(ui_offset_x + screen_width // 2 - help_text.get_width() // 2)
-        help_y = int(ui_offset_y + screen_height - 30)
+        help_x = int(ui_offset_x + utils.screen_width // 2 - help_text.get_width() // 2)
+        help_y = int(ui_offset_y + utils.screen_height - 30)
         surface.blit(help_text, (help_x, help_y))
 
     def get_state(self):
@@ -1038,7 +1039,7 @@ class PauseMenu:
         scale = get_scale()
         offset_x, offset_y = get_offset()
 
-        pygame.draw.rect(surface, (0, 0, 0), (0, 0, screen_width, screen_height))
+        pygame.draw.rect(surface, (0, 0, 0), (0, 0, utils.screen_width, utils.screen_height))
         pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.3), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.4)))
 
         font_title = pygame.font.Font(None, int(48 * scale))
@@ -1153,7 +1154,7 @@ class Menu:
         self.selected_index = 0
 
     def _get_fonts(self):
-        scale = min(screen_width, screen_height) / 600.0
+        scale = min(utils.screen_width, utils.screen_height) / 600.0
         font_large = pygame.font.Font(None, int(72 * scale))
         font_menu = pygame.font.Font(None, int(48 * scale))
         return font_large, font_menu
@@ -1189,22 +1190,22 @@ class Menu:
         return None
 
     def _get_item_rect(self, index):
-        scale = min(screen_width, screen_height) / 600.0
+        scale = min(utils.screen_width, utils.screen_height) / 600.0
         y_base = int(200 * scale)
         y_spacing = int(80 * scale)
         _, font_menu = self._get_fonts()
         text = font_menu.render(self.items[index], True, WHITE)
-        rect = text.get_rect(center=(screen_width // 2, y_base + index * y_spacing))
+        rect = text.get_rect(center=(utils.screen_width // 2, y_base + index * y_spacing))
         return rect
 
     def draw(self, surface):
         surface.fill(BLACK)
 
-        scale = min(screen_width, screen_height) / 600.0
+        scale = min(utils.screen_width, utils.screen_height) / 600.0
         font_large, font_menu = self._get_fonts()
 
         title = font_large.render("MENU", True, WHITE)
-        surface.blit(title, (screen_width // 2 - title.get_width() // 2, int(50 * scale)))
+        surface.blit(title, (utils.screen_width // 2 - title.get_width() // 2, int(50 * scale)))
 
         y_base = int(200 * scale)
         y_spacing = int(80 * scale)
@@ -1218,11 +1219,11 @@ class Menu:
             color = YELLOW if i == self.selected_index else GRAY
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
-            text_x = screen_width // 2 - text.get_width() // 2
+            text_x = utils.screen_width // 2 - text.get_width() // 2
             surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
-                box_x = screen_width // 2 - box_width // 2
+                box_x = utils.screen_width // 2 - box_width // 2
                 box_top_padding = int(8 * scale)
                 box_bottom_padding = int((y_spacing - text.get_height()) / 2)
                 box_y = y - box_top_padding
