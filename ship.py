@@ -133,12 +133,11 @@ class Ship:
         self.wrap_position()
 
     def update_autopilot(self):
-        """Update autopilot - accelerate toward target until velocity points at target, then disengage."""
+        """Update autopilot - apply thrust perpendicular to velocity toward target until velocity points at target."""
         if not self.autopilot_active or not self.autopilot_target:
             return
 
         target = self.autopilot_target
-        distance = target.get_distance(self.x, self.y)
 
         # Distance vector from ship to target
         dx = target.x - self.x
@@ -153,32 +152,62 @@ class Ship:
             self.release_thrust()
             return
 
-        # Calculate angle to target
-        angle_to_target = math.atan2(dx, -dy)
-        angle_to_target_deg = math.degrees(angle_to_target)
+        # Calculate most efficient thrust direction: perpendicular to velocity, toward target
+        self._autopilot_redirect_velocity(dx, dy)
 
-        # Rotate ship to face target and apply thrust
-        self._autopilot_accelerate(angle_to_target_deg)
+    def _autopilot_redirect_velocity(self, target_dx, target_dy):
+        """Apply thrust perpendicular to velocity to efficiently redirect it toward target.
 
-    def _autopilot_accelerate(self, target_angle_deg):
-        """Accelerate toward target: rotate to face it and apply thrust."""
-        # Point ship toward target
+        Most efficient direction: perpendicular to current velocity, toward target.
+        """
+        # Current velocity vector
+        vx = self.velocity_x
+        vy = self.velocity_y
+
+        # Speed to determine which perpendicular direction
+        speed_sq = vx * vx + vy * vy
+
+        if speed_sq < 0.01:
+            # Nearly stopped, point toward target and thrust
+            target_angle = math.atan2(target_dx, -target_dy)
+            target_angle_deg = math.degrees(target_angle)
+        else:
+            # Calculate perpendicular directions to velocity (left and right)
+            # Perpendicular to (vx, vy) is (-vy, vx) and (vy, -vx)
+            perp_left_x = -vy
+            perp_left_y = vx
+            perp_right_x = vy
+            perp_right_y = -vx
+
+            # Check which perpendicular direction is more aligned with target
+            dot_left = target_dx * perp_left_x + target_dy * perp_left_y
+            dot_right = target_dx * perp_right_x + target_dy * perp_right_y
+
+            # Choose the perpendicular that points more toward target
+            if dot_left > dot_right:
+                target_angle = math.atan2(perp_left_x, -perp_left_y)
+            else:
+                target_angle = math.atan2(perp_right_x, -perp_right_y)
+
+            target_angle_deg = math.degrees(target_angle)
+
+        # Rotate ship to face optimal thrust direction
         current_angle = self.angle % 360
-        target_angle = target_angle_deg % 360
+        target_angle_norm = target_angle_deg % 360
 
-        angle_diff = target_angle - current_angle
+        angle_diff = target_angle_norm - current_angle
         if angle_diff > 180:
             angle_diff -= 360
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Rotate toward target (using turn_left/turn_right)
+        # Rotate toward optimal direction
         if angle_diff < -self.rotation_speed:
             self.turn_left()
         elif angle_diff > self.rotation_speed:
             self.turn_right()
 
-        # If aligned with target, apply thrust
+        # If aligned with optimal direction, apply thrust
         aligned = abs(angle_diff) < 10
         if aligned:
             self.increase_thrust(step=0.01)
