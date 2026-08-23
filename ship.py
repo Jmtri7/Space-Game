@@ -133,7 +133,7 @@ class Ship:
         self.wrap_position()
 
     def update_autopilot(self):
-        """Update autopilot - apply thrust perpendicular to velocity toward target until velocity points at target."""
+        """Update autopilot - apply thrust perpendicular to velocity toward target until velocity is closely aligned."""
         if not self.autopilot_active or not self.autopilot_target:
             return
 
@@ -143,11 +143,19 @@ class Ship:
         dx = target.x - self.x
         dy = target.y - self.y
 
-        # Check if velocity is already pointing toward target using dot product
-        dot_product = dx * self.velocity_x + dy * self.velocity_y
+        # Calculate angle between velocity and target direction
+        velocity_angle = math.atan2(self.velocity_x, -self.velocity_y)
+        target_angle = math.atan2(dx, -dy)
 
-        if dot_product > 0:
-            # Velocity is pointing toward target, disengage autopilot
+        angle_diff = velocity_angle - target_angle
+        # Normalize to [-pi, pi]
+        while angle_diff > math.pi:
+            angle_diff -= 2 * math.pi
+        while angle_diff < -math.pi:
+            angle_diff += 2 * math.pi
+
+        # Disengage when velocity is closely aligned with target (within 15 degrees)
+        if abs(angle_diff) < math.radians(15):
             self.autopilot_active = False
             self.release_thrust()
             return
