@@ -136,6 +136,7 @@ class Ship:
         """Update autopilot - point at target, accelerate, brake when close enough.
 
         Base case: handles stopped ship (velocity ≈ 0).
+        Shuts off when landing conditions met: distance < 150, speed < 0.5
         """
         if not self.autopilot_active or not self.autopilot_target:
             return
@@ -152,8 +153,8 @@ class Ship:
         target_angle = math.atan2(dx, -dy)
         target_angle_deg = math.degrees(target_angle)
 
-        # Check if reached target with near-zero velocity
-        if distance < 10 and speed < 0.1:
+        # Landing condition: distance < 150, speed < 0.5 (same as GameScreen)
+        if distance < 150 and speed < 0.5:
             self.autopilot_active = False
             self.release_thrust()
             return
@@ -259,8 +260,8 @@ class Ship:
             # Stop thrust if one more frame would make velocity negative (reverse direction)
             if speed <= decel_per_frame:
                 self.release_thrust()
-                # If close to target and velocity is low, disengage autopilot
-                if distance < 15 and speed < 0.15:
+                # Landing condition: distance < 150, speed < 0.5 (same as GameScreen)
+                if distance < 150 and speed < 0.5:
                     self.autopilot_active = False
             else:
                 self.increase_thrust()
