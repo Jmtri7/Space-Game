@@ -82,7 +82,10 @@ class GameScreen(ScreenBase):
         ]
         # Add all AI ships to targetable objects
         for i, ship in enumerate(self.ai_ships):
-            self.targetable_objects.append((f"AI Ship {i+1}", ship))
+            # Use ship type name if available, otherwise use generic label
+            ship_type = get_ship_type(ship.ship_type_id)
+            ship_name = ship_type.get("name", f"AI Ship {i+1}")
+            self.targetable_objects.append((ship_name, ship))
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
@@ -101,23 +104,29 @@ class GameScreen(ScreenBase):
                 elif event.key == pygame.K_t:
                     self._cycle_target()
                 elif event.key == pygame.K_l:
-                    # If target is selected, check if already in landing range
+                    # If target is selected
                     target_obj = self._get_target_object()
                     if target_obj and self.current_target is not None:
-                        distance = target_obj.get_distance(self.player.x, self.player.y)
-                        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-                        # If close and slow enough, land directly
-                        if distance < 150 and speed < 0.4:
-                            if target_obj == self.station:
-                                self.landing_target = "station"
-                                return "land"
-                            elif target_obj == self.moon:
-                                self.landing_target = "moon"
-                                return "land"
-                        else:
-                            # Otherwise engage autopilot to approach target
+                        # For AI ships, always engage autopilot to follow them
+                        if isinstance(target_obj, AIShip):
                             self.player.autopilot_active = True
                             self.player.autopilot_target = target_obj
+                        # For landables (station/moon), check if in landing range
+                        else:
+                            distance = target_obj.get_distance(self.player.x, self.player.y)
+                            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+                            # If close and slow enough, land directly
+                            if distance < 150 and speed < 0.4:
+                                if target_obj == self.station:
+                                    self.landing_target = "station"
+                                    return "land"
+                                elif target_obj == self.moon:
+                                    self.landing_target = "moon"
+                                    return "land"
+                            else:
+                                # Otherwise engage autopilot to approach target
+                                self.player.autopilot_active = True
+                                self.player.autopilot_target = target_obj
                     else:
                         # No target selected, check if close enough to land manually
                         landing_target = self._check_landing()
