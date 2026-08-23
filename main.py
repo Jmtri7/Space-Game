@@ -14,7 +14,8 @@ from objects import SpaceStation, Moon
 from screens import (
     GameScreen, StationInterior, MoonCity, MoonOutdoor,
     Menu, PilotNameDialog, LocationSelector, PauseMenu,
-    SaveDialog, DeleteConfirmDialog, OverwriteConfirmDialog, LoadMenu
+    SaveDialog, DeleteConfirmDialog, OverwriteConfirmDialog, LoadMenu,
+    StorySelector
 )
 
 # Initialize pygame and display
@@ -31,6 +32,7 @@ def main():
     global screen, DEBUG_MODE
     try:
         menu = Menu()
+        story_selector = None
         game_screen = None
         station_interior = None
         moon_interior = None
@@ -45,6 +47,7 @@ def main():
         previous_screen = None
         running = True
         pilot_name = ""
+        selected_story = "default"
 
         while running:
             events = pygame.event.get()
@@ -73,18 +76,28 @@ def main():
                 if selection == "quit":
                     running = False
                 elif selection == "new":
-                    pilot_name_dialog = PilotNameDialog()
-                    current_screen = "pilot_name"
+                    story_selector = StorySelector()
+                    current_screen = "story_select"
                 elif selection == "load":
                     load_menu = LoadMenu()
                     current_screen = "load"
                 menu.draw(screen)
 
+            elif current_screen == "story_select":
+                story = story_selector.handle_input(events)
+                if story and story != "cancel":
+                    selected_story = story
+                    pilot_name_dialog = PilotNameDialog()
+                    current_screen = "pilot_name"
+                elif story == "cancel":
+                    current_screen = "menu"
+                story_selector.draw(screen)
+
             elif current_screen == "pilot_name":
                 result = pilot_name_dialog.handle_input(events)
                 if result and result != "cancel":
                     pilot_name = result
-                    game_screen = GameScreen(pilot_name=pilot_name)
+                    game_screen = GameScreen(pilot_name=pilot_name, story=selected_story)
                     current_screen = "game"
                 elif result == "cancel":
                     current_screen = "menu"

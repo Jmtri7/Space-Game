@@ -447,9 +447,11 @@ MoonOutdoor = lambda pilot_name="": Location(config_file="config/stories/default
 
 class GameScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
-    def __init__(self, system_config=None, pilot_name=""):
+    def __init__(self, system_config=None, pilot_name="", story="default"):
         super().__init__(pilot_name=pilot_name)
-        self.system_config = system_config or load_json("config/space_system.json") or {}
+        # Load config from story directory
+        config_file = f"config/stories/{story}/space_system.json"
+        self.system_config = system_config or load_json(config_file) or {}
 
         # Get space system drag (default 0 = no drag)
         space_drag = self.system_config.get("drag", 0)
@@ -1142,6 +1144,70 @@ class LocationSelector:
             if i == self.selected:
                 box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
+
+
+class StorySelector:
+    """Screen for selecting which story/campaign to play."""
+    def __init__(self):
+        # Scan for available stories
+        import os
+        stories_dir = "config/stories"
+        self.stories = []
+        if os.path.exists(stories_dir):
+            for item in sorted(os.listdir(stories_dir)):
+                item_path = os.path.join(stories_dir, item)
+                if os.path.isdir(item_path) and os.path.exists(os.path.join(item_path, "story.json")):
+                    self.stories.append(item)
+
+        self.selected_index = 0
+
+    def handle_input(self, events):
+        """Handle input and return selected story or 'cancel'."""
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    self.selected_index = (self.selected_index - 1) % len(self.stories)
+                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self.selected_index = (self.selected_index + 1) % len(self.stories)
+                elif event.key == pygame.K_RETURN:
+                    return self.stories[self.selected_index]
+                elif event.key == pygame.K_ESCAPE:
+                    return "cancel"
+        return None
+
+    def draw(self, surface):
+        """Draw story selection screen."""
+        surface.fill(BLACK)
+        scale = min(utils.screen_width, utils.screen_height) / 600.0
+
+        # Title
+        font_large = pygame.font.Font(None, int(72 * scale))
+        title = font_large.render("SELECT STORY", True, WHITE)
+        title_rect = title.get_rect(center=(utils.screen_width // 2, int(100 * scale)))
+        surface.blit(title, title_rect)
+
+        # Story options
+        font_menu = pygame.font.Font(None, int(48 * scale))
+        offset_x, offset_y = get_ui_offset()
+
+        for i, story in enumerate(self.stories):
+            color = YELLOW if i == self.selected_index else WHITE
+            # Capitalize story name
+            display_name = story.replace("_", " ").title()
+            text = font_menu.render(display_name, True, color)
+            text_x = utils.screen_width // 2 - text.get_width() // 2
+            text_y = int(offset_y + GAME_HEIGHT * scale * 0.35 + i * 60)
+            surface.blit(text, (text_x, text_y))
+
+            if i == self.selected_index:
+                box_rect = pygame.Rect(text_x - 10, text_y - 5, text.get_width() + 20, text.get_height() + 10)
+                pygame.draw.rect(surface, YELLOW, box_rect, 3)
+
+        # Help text
+        font_small = pygame.font.Font(None, int(24 * scale))
+        help_text = font_small.render("UP/DOWN: select, ENTER: play, ESC: cancel", True, GRAY)
+        help_rect = help_text.get_rect(center=(utils.screen_width // 2, utils.screen_height - int(50 * scale)))
+        surface.blit(help_text, help_rect)
 
 
 class Menu:
