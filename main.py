@@ -577,7 +577,7 @@ class Ship:
             self._autopilot_brake(angle_to_target_deg)
 
     def _autopilot_approach(self, target_angle_deg):
-        """Approach phase: fly toward target, slowing when close to braking threshold"""
+        """Approach phase: fly toward target, timing to avoid overshooting"""
         if not self.autopilot_target:
             return
 
@@ -585,7 +585,7 @@ class Ship:
         distance = target.get_distance(self.x, self.y)
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
-        # Point ship toward target (angle already in ship coordinates)
+        # Point ship toward target
         current_angle = self.angle % 360
         target_angle = target_angle_deg % 360
 
@@ -595,7 +595,7 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Rotate using ship controls
+        # Rotate toward target
         rotation_step = 5
         if angle_diff < -rotation_step:
             self.angle = (self.angle - rotation_step) % 360
@@ -604,27 +604,34 @@ class Ship:
         else:
             self.angle = target_angle
 
-        # Calculate braking distance needed for current speed
-        total_rotation_degrees = abs(angle_diff) + 180
-        rotation_frames = total_rotation_degrees / 5
-        distance_during_rotation = speed * rotation_frames * 0.75
-        braking_distance = (speed * speed) / (2 * 0.25) if speed > 0.1 else 50
-        distance_needed = distance_during_rotation + braking_distance
+        # Time-based decision: how long until we reach target?
+        if speed > 0.05:
+            frames_to_target = distance / speed
+        else:
+            frames_to_target = 10000
 
-        # Apply thrust when roughly aligned, but reduce thrust if getting close to braking point
+        # How long for rotation + minimum braking?
+        rotation_frames = 180 / self.rotation_speed
+        buffer_frames = 40
+        time_threshold = rotation_frames + buffer_frames
+
         aligned = abs(angle_diff) < 15
-        thrust_step = self.max_thrust * 0.1  # 10% of max thrust per frame
+        thrust_step = self.max_thrust * 0.08
 
         if aligned:
-            # If approaching braking point, start slowing down
-            if distance < distance_needed + 150:
-                # Close to braking point - reduce thrust more aggressively
+            # If we're getting close in time, prepare to brake
+            if frames_to_target < time_threshold:
+                # IMMEDIATE: Start decelerating hard
+                self.thrust = 0
+            elif distance < 250:
+                # Getting close - don't accelerate, just coast with light thrust
                 self.thrust = max(self.thrust - thrust_step * 2, 0)
             else:
-                # Far from braking point - accelerate normally
+                # Accelerate normally
                 self.thrust = min(self.thrust + thrust_step, self.max_thrust)
         else:
-            self.thrust = max(self.thrust - thrust_step, 0)
+            # Not aligned - cut thrust to prepare for rotation
+            self.thrust = 0
 
     def _autopilot_brake(self, target_angle_deg):
         """Braking phase: rotate to face away from target, then apply reverse thrust"""
