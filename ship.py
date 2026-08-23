@@ -14,7 +14,7 @@ class Ship:
         self.velocity_x = 0
         self.velocity_y = 0
         self.thrust = 0
-        self.acceleration_magnitude = 0.3
+        self.acceleration_magnitude = 0.1
         self.max_velocity = 4.0
         self.rotation_speed = 5
         self.autopilot_active = False
