@@ -227,6 +227,9 @@ class Ship:
 
     def _autopilot_brake(self, target_angle_deg):
         """Braking phase: turn around (face away) and apply reverse thrust."""
+        target = self.autopilot_target
+        distance = target.get_distance(self.x, self.y)
+
         # Calculate angle facing away from target
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
@@ -256,5 +259,8 @@ class Ship:
             # Stop thrust if one more frame would make velocity negative (reverse direction)
             if speed <= decel_per_frame:
                 self.release_thrust()
+                # If close to target and velocity is low, disengage autopilot
+                if distance < 15 and speed < 0.15:
+                    self.autopilot_active = False
             else:
                 self.increase_thrust()
