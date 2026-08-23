@@ -1479,7 +1479,7 @@ class LocationSelector:
 class GameScreen(ScreenBase):
     def __init__(self, system_config=None, pilot_name=""):
         super().__init__(pilot_name=pilot_name)
-        self.player = Player(GAME_WIDTH // 2, GAME_HEIGHT // 2)
+        self.player = PlayerController(GAME_WIDTH // 2, GAME_HEIGHT // 2)
         self.star_field = StarField()
         self.system_config = system_config or load_json("config/space_system.json") or {}
 
