@@ -1,0 +1,4 @@
+DEBUG: L pressed, target_obj=<ai_ship.AIShip object at 0x0000029529B20440>, type=<class 'ai_ship.AIShip'>
+DEBUG: Checking isinstance AIShip: True
+DEBUG: Setting autopilot for ship
+DEBUG: Autopilot set successfully

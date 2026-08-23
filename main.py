@@ -34,6 +34,11 @@ clock = pygame.time.Clock()
 def main():
     """Main game loop."""
     global screen
+    # Redirect output to file for debugging
+    import sys
+    log_file = open("debug.log", "w")
+    sys.stdout = log_file
+    sys.stderr = log_file
     try:
         menu = Menu()
         story_selector = None
