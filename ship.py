@@ -158,6 +158,20 @@ class Ship:
         braking_distance = self._predict_braking_distance_from_stop(speed)
         should_brake = distance <= braking_distance and speed > 0.1
 
+        # Step 2b: Predictive braking - check if next iteration would overshoot zero
+        if should_brake:
+            decel_per_frame = self.acceleration_magnitude
+            if self.space_drag > 0:
+                decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
+
+            next_speed = speed - decel_per_frame
+
+            # Stop braking if next iteration would reverse or nearly stop
+            if next_speed <= 0.05:
+                self.autopilot_active = False
+                self.release_thrust()
+                return
+
         # Step 3: Calculate optimal acceleration direction
         dx = target.x - self.x
         dy = target.y - self.y
