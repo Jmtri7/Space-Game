@@ -33,7 +33,10 @@
       [5, 28],
       [20, 25],
       [25, 15]
-    ]
+    ],
+    "interiors": {
+      "default": "config/stories/quick_trade/station_interior.json"
+    }
   },
   "moon": {
     "x": 0.9,
@@ -47,7 +50,11 @@
       {"x": -6, "y": -10, "radius": 3},
       {"x": 8, "y": 6, "radius": 4},
       {"x": 2, "y": -2, "radius": 2}
-    ]
+    ],
+    "interiors": {
+      "city": "config/stories/quick_trade/moon_city.json",
+      "wilderness": "config/stories/quick_trade/moon_wilderness.json"
+    }
   },
   "ai_ships": [
     {

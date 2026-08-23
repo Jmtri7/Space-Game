@@ -12,7 +12,6 @@ from utils import (
 from player_controller import PlayerController
 from ai_ship import AIShip
 from game_screen import GameScreen
-from station_interior import StationInterior
 from location import Location
 from menu import Menu
 from pilot_name_dialog import PilotNameDialog
@@ -22,15 +21,6 @@ from save_dialog import SaveDialog
 from confirm_dialog import ConfirmDialog
 from load_menu import LoadMenu
 from story_selector import StorySelector
-
-# Moon location factories
-def MoonCity(pilot_name=""):
-    """Create a moon city location."""
-    return Location(config_file="config/stories/default/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
-
-def MoonOutdoor(pilot_name=""):
-    """Create a moon wilderness location."""
-    return Location(config_file="config/stories/default/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 # Initialize pygame and display
 pygame.init()
@@ -151,18 +141,19 @@ def main():
                             elif location == "station":
                                 game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
                                 game_screen.restore_state(game_state)
-                                station_interior = StationInterior(pilot_name=pilot_name)
-                                station_interior.restore_state(game_state)
+                                interior_config = game_screen.station.interiors.get("default")
+                                if interior_config:
+                                    station_interior = Location(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
+                                    station_interior.restore_state(game_state)
                                 current_screen = "station"
                             elif location == "moon":
                                 game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
                                 game_screen.restore_state(game_state)
                                 moon_location = game_state.get("moon_location", "city")
-                                if moon_location == "city":
-                                    moon_interior = MoonCity(pilot_name=pilot_name)
-                                else:
-                                    moon_interior = MoonOutdoor(pilot_name=pilot_name)
-                                moon_interior.restore_state(game_state)
+                                interior_config = game_screen.moon.interiors.get(moon_location, game_screen.moon.interiors.get("city"))
+                                if interior_config:
+                                    moon_interior = Location(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
+                                    moon_interior.restore_state(game_state)
                                 current_screen = "moon"
                     elif action == "delete":
                         delete_confirm_dialog = ConfirmDialog("Delete Save?", filename[:50], context_data=filename)
@@ -183,10 +174,12 @@ def main():
                     game_screen.player.velocity_x = 0
                     game_screen.player.velocity_y = 0
                     if game_screen.landing_target == "station":
-                        station_interior = StationInterior(pilot_name=pilot_name)
+                        interior_config = game_screen.station.interiors.get("default")
+                        if interior_config:
+                            station_interior = Location(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
                         current_screen = "station"
                     elif game_screen.landing_target == "moon":
-                        location_selector = LocationSelector()
+                        location_selector = LocationSelector(game_screen.moon.interiors)
                         current_screen = "select_location"
                 game_screen.update()
                 game_screen.draw(screen)
@@ -208,14 +201,12 @@ def main():
                     station_interior.draw(screen)
 
             elif current_screen == "select_location":
-                location = location_selector.handle_input(events)
-                if location == "Moon City":
-                    moon_interior = MoonCity(pilot_name=pilot_name)
+                location_key = location_selector.handle_input(events)
+                if location_key and location_key in location_selector.interior_configs:
+                    interior_config = location_selector.interior_configs[location_key]
+                    moon_interior = Location(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
                     current_screen = "moon"
-                elif location == "Wilderness":
-                    moon_interior = MoonOutdoor(pilot_name=pilot_name)
-                    current_screen = "moon"
-                elif location == "cancel":
+                elif location_key == "cancel":
                     current_screen = "game"
                 location_selector.draw(screen)
 
@@ -275,7 +266,8 @@ def main():
                         if previous_screen == "moon":
                             game_state = moon_interior.get_state()
                             game_state["location"] = "moon"
-                            if isinstance(moon_interior, MoonCity):
+                            # Determine moon location type from config file path
+                            if "moon_city" in moon_interior.config_file:
                                 game_state["moon_location"] = "city"
                             else:
                                 game_state["moon_location"] = "wilderness"
@@ -316,7 +308,8 @@ def main():
                             if previous_screen == "moon":
                                 game_state = moon_interior.get_state()
                                 game_state["location"] = "moon"
-                                if isinstance(moon_interior, MoonCity):
+                                # Determine moon location type from config file path
+                                if "moon_city" in moon_interior.config_file:
                                     game_state["moon_location"] = "city"
                                 else:
                                     game_state["moon_location"] = "wilderness"

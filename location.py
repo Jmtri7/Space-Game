@@ -11,6 +11,7 @@ class Location(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
     def __init__(self, config_file, world_width=1600, world_height=1600, pilot_name=""):
         # Load config
+        self.config_file = config_file
         self.config = load_json(config_file) or {}
         entrance_cfg = self.config.get("entrance", {})
         start_x = entrance_cfg.get("x", world_width // 2)

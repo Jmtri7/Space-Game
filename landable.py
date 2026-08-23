@@ -8,10 +8,11 @@ from utils import get_scale, to_screen
 
 class Landable:
     """A landable object in the game world (space station or moon)."""
-    def __init__(self, x, y, graphics=None):
+    def __init__(self, x, y, graphics=None, interiors=None):
         self.x = x
         self.y = y
         self.graphics = graphics or {}
+        self.interiors = interiors or {}
 
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
         self.is_station = "rotation_speed" in self.graphics or self.graphics.get("shape") in ["hexapod", "octagon"]

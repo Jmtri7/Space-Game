@@ -26,7 +26,10 @@
       [-8, 24],
       [-20, 12],
       [-16, -12]
-    ]
+    ],
+    "interiors": {
+      "default": "config/stories/default/station_interior.json"
+    }
   },
   "moon": {
     "x": 0.85,
@@ -39,7 +42,11 @@
     "craters": [
       {"x": -8, "y": -5, "radius": 4},
       {"x": 10, "y": 8, "radius": 5}
-    ]
+    ],
+    "interiors": {
+      "city": "config/stories/default/moon_city.json",
+      "wilderness": "config/stories/default/moon_wilderness.json"
+    }
   },
   "ai_ships": [
     {
