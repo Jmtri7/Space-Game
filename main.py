@@ -128,7 +128,7 @@ class SaveDialog:
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
         # Pre-populate with default save name
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H%M")
         self.save_name = f"{pilot_name} - {timestamp}" if pilot_name else timestamp
         self.success_timer = 0
         self.existing_saves = self._get_all_saves()
@@ -1306,6 +1306,7 @@ class Menu:
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
             text_x = screen_width // 2 - text.get_width() // 2
+            surface.blit(text, (text_x, y))
 
             if i == self.selected_index:
                 box_x = screen_width // 2 - box_width // 2
@@ -1313,13 +1314,8 @@ class Menu:
                 box_bottom_padding = int((y_spacing - text.get_height()) / 2)
                 box_y = y - box_top_padding
                 box_height = text.get_height() + box_top_padding + box_bottom_padding
-                # Center text vertically in the box
-                text_y = box_y + (box_height - text.get_height()) // 2
-                surface.blit(text, (text_x, text_y))
                 box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
                 pygame.draw.rect(surface, YELLOW, box_rect, 2)
-            else:
-                surface.blit(text, (text_x, y))
 
 def main():
     global screen_width, screen_height, screen
