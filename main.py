@@ -2,12 +2,12 @@
 import pygame
 import sys
 import os
+import constants
 from constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
 from utils import (
-    load_save_file, create_save_file, set_camera_offset, set_screen_size,
-    DEBUG_MODE
+    load_save_file, create_save_file, set_camera_offset, set_screen_size
 )
 from player_controller import PlayerController
 from ai_ship import AIShip
@@ -30,7 +30,7 @@ clock = pygame.time.Clock()
 
 def main():
     """Main game loop."""
-    global screen, DEBUG_MODE
+    global screen
     try:
         menu = Menu()
         story_selector = None
@@ -70,7 +70,7 @@ def main():
                     if game_screen:
                         game_screen.star_field.generate_stars()
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
-                    DEBUG_MODE = not DEBUG_MODE
+                    constants.DEBUG_MODE = not constants.DEBUG_MODE
 
             if current_screen == "menu":
                 selection = menu.handle_input(events)
