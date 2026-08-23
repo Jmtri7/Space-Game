@@ -4,7 +4,7 @@ import math
 import random
 from datetime import datetime
 from constants import (
-    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, DEBUG_MODE
+    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, GREEN, DEBUG_MODE
 )
 import utils
 from utils import (
