@@ -133,11 +133,12 @@ class Ship:
         self.wrap_position()
 
     def update_autopilot(self):
-        """Update autopilot - accelerate in fixed direction until velocity points at target."""
+        """Update autopilot - accelerate toward target, then brake to land with zero velocity."""
         if not self.autopilot_active or not self.autopilot_target:
             return
 
         target = self.autopilot_target
+        distance = target.get_distance(self.x, self.y)
 
         # Distance vector from ship to target
         dx = target.x - self.x
@@ -154,14 +155,90 @@ class Ship:
         while angle_diff < -math.pi:
             angle_diff += 2 * math.pi
 
-        # Disengage when velocity is precisely aligned with target (within 1 degree)
-        if abs(angle_diff) < math.radians(1):
-            self.autopilot_active = False
-            self.release_thrust()
-            return
+        # Check if velocity is aligned with target
+        velocity_aligned = abs(angle_diff) < math.radians(1)
 
-        # Calculate most efficient thrust direction: perpendicular to velocity, toward target
-        self._autopilot_redirect_velocity(dx, dy)
+        if velocity_aligned:
+            # Velocity points at target - check if we need to brake
+            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+            braking_distance = self._predict_braking_distance_to_target(speed)
+
+            # If we're within braking distance, start braking sequence
+            if distance < braking_distance and speed > 0.1:
+                self._autopilot_brake(target_angle)
+            elif distance < 10 and speed < 0.1:
+                # Reached target with near-zero velocity
+                self.autopilot_active = False
+                self.release_thrust()
+            else:
+                # Coasting toward target with velocity aligned
+                self.release_thrust()
+        else:
+            # Velocity not aligned - redirect it toward target
+            self._autopilot_redirect_velocity(dx, dy)
+
+    def _predict_braking_distance_to_target(self, current_speed):
+        """Predict distance needed to brake from current speed to zero.
+
+        Simulates:
+        1. Time to rotate 180 degrees (turn around)
+        2. Time to decelerate from current speed to near-zero with reverse thrust
+        """
+        if current_speed < 0.05:
+            return 0
+
+        # Time to turn 180 degrees (coasting at current speed)
+        turn_frames = 180 / self.rotation_speed
+        distance_during_turn = current_speed * turn_frames
+
+        # Time to decelerate from current_speed to near-zero
+        # Deceleration = acceleration_magnitude (minus drag effect)
+        decel_per_frame = self.acceleration_magnitude
+        if self.space_drag > 0:
+            decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
+
+        decel_frames = 0
+        distance_during_decel = 0
+        v = current_speed
+
+        # Simulate deceleration frame by frame
+        while v > 0.05 and decel_frames < 500:
+            v_avg = (v + max(0, v - decel_per_frame)) / 2.0
+            distance_during_decel += v_avg
+            v = max(0, v - decel_per_frame)
+            decel_frames += 1
+
+        total_distance = distance_during_turn + distance_during_decel
+
+        # Add 10% safety buffer
+        return total_distance * 1.1
+
+    def _autopilot_brake(self, target_angle_deg):
+        """Braking phase: turn 180 degrees and apply reverse thrust to stop at target."""
+        # Calculate reverse angle (turn around)
+        reverse_angle = (target_angle_deg + 180) % 360
+        current_angle = self.angle % 360
+
+        angle_diff = reverse_angle - current_angle
+        if angle_diff > 180:
+            angle_diff -= 360
+        elif angle_diff < -180:
+            angle_diff += 360
+
+        # Phase 1: Turn to face away from target (reverse direction)
+        if abs(angle_diff) > self.rotation_speed:
+            if angle_diff < 0:
+                self.turn_left()
+            else:
+                self.turn_right()
+            self.release_thrust()
+        else:
+            # Phase 2: Facing away - apply reverse thrust to decelerate
+            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+            if speed < 0.1:
+                self.release_thrust()
+            else:
+                self.increase_thrust()
 
     def _autopilot_redirect_velocity(self, target_dx, target_dy):
         """Apply thrust perpendicular to velocity to redirect it toward target.
