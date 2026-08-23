@@ -610,10 +610,19 @@ class Ship:
         else:
             frames_to_target = 10000
 
-        # How long for rotation + minimum braking?
+        # How long for rotation?
         rotation_frames = 180 / self.rotation_speed
-        buffer_frames = 40
-        time_threshold = rotation_frames + buffer_frames
+
+        # Estimate braking time: how long to decelerate from current speed to ~0?
+        # With max reverse thrust, deceleration ≈ max_thrust / mass
+        # Simplified: assume ~0.4 deceleration per frame with strong reverse thrust
+        if speed > 0.1:
+            braking_frames = speed / 0.4  # frames needed to brake to zero
+        else:
+            braking_frames = 5
+
+        # Total time needed: rotation + braking + safety buffer
+        time_threshold = rotation_frames + braking_frames + 20
 
         aligned = abs(angle_diff) < 15
         thrust_step = self.max_thrust * 0.08

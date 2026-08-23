@@ -224,8 +224,9 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         frames = 0
         landed = False
-        max_distance = 0
-        overshoot_distance = 0
+        min_distance = float('inf')
+        oscillated = False  # Did ship overshoot then come back?
+        closest_frame = 0
 
         while ship.autopilot_active and frames < max_frames:
             frames += 1
@@ -234,17 +235,20 @@ class TestAutopilotPhysics(unittest.TestCase):
             if hasattr(ship, 'update_autopilot'):
                 ship.update_autopilot()
 
-            # Update ship physics - uses Player.update() which differs from Ship.update()
+            # Update ship physics
             ship.update()
 
             # Check landing condition - exactly as game does it
             distance = target.get_distance(ship.x, ship.y)
             speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
 
-            # Track overshoot: if we get closer then farther away
-            if distance > max_distance:
-                overshoot_distance = distance
-            max_distance = max(max_distance, distance)
+            # Track closest approach and detect oscillation
+            if distance < min_distance:
+                min_distance = distance
+                closest_frame = frames
+            elif distance > min_distance + 50 and min_distance < 150:
+                # Ship got close (within 150), then moved away significantly = oscillation
+                oscillated = True
 
             if debug and frames % 100 == 0:
                 print(f"Frame {frames}: dist={distance:.1f}, speed={speed:.3f}, thrust={ship.thrust:.3f}, angle={ship.angle:.1f}")
@@ -265,8 +269,9 @@ class TestAutopilotPhysics(unittest.TestCase):
             'speed': speed,
             'x': ship.x,
             'y': ship.y,
-            'max_distance': max_distance,
-            'overshoot': overshoot_distance
+            'min_distance': min_distance,
+            'oscillated': oscillated,
+            'closest_frame': closest_frame
         }
 
     def test_autopilot_explorer_lands_precisely(self):
