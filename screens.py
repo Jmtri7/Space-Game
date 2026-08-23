@@ -12,7 +12,7 @@ from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, to_screen, to_screen_x, to_screen_y,
     load_json, delete_save_file, get_save_files, create_save_file, load_save_file,
     draw_debug_marker, draw_target_brackets, _center_text_x, _handle_scrolling_input,
-    set_camera_offset
+    set_camera_offset, get_ship_type, get_graphics_asset
 )
 from ship import PlayerController, AIShip
 from objects import SpaceStation, NPC, Dialogue, StarField, Moon
@@ -450,6 +450,12 @@ class GameScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
     def __init__(self, system_config=None, pilot_name="", story="default"):
         super().__init__(pilot_name=pilot_name)
+        self.story = story
+
+        # Load story metadata (ship types, graphics, etc)
+        story_file = f"config/stories/{story}/story.json"
+        story_meta = load_json(story_file) or {}
+
         # Load config from story directory
         config_file = f"config/stories/{story}/space_system.json"
         self.system_config = system_config or load_json(config_file) or {}
@@ -460,16 +466,30 @@ class GameScreen(ScreenBase):
         self.player = PlayerController(GAME_WIDTH // 2, GAME_HEIGHT // 2, space_drag=space_drag)
         self.star_field = StarField()
 
+        # Load graphics assets for station and moon
+        station_asset_id = story_meta.get("assets", {}).get("space_station", "station_alpha")
+        moon_asset_id = story_meta.get("assets", {}).get("moon", "moon_silver")
+
         station_cfg = self.system_config.get("station", {})
-        self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3))
+        station_graphics = get_graphics_asset("space_stations", station_asset_id)
+        self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics)
 
         moon_cfg = self.system_config.get("moon", {})
-        self.moon = Moon(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4))
+        moon_graphics = get_graphics_asset("moons", moon_asset_id)
+        self.moon = Moon(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics)
 
         # Load all AI ships from config
         self.ai_ships = []
         for ai_cfg in self.system_config.get("ai_ships", []):
-            ai_ship = AIShip(GAME_WIDTH * ai_cfg.get("x", 0.75), GAME_HEIGHT * ai_cfg.get("y", 0.1), space_drag=space_drag)
+            ship_type_id = ai_cfg.get("ship_type", "trader")
+            ship_type = get_ship_type(ship_type_id)
+            ai_ship = AIShip(
+                GAME_WIDTH * ai_cfg.get("x", 0.75),
+                GAME_HEIGHT * ai_cfg.get("y", 0.1),
+                space_drag=space_drag,
+                ship_type=ship_type,
+                ship_type_id=ship_type_id
+            )
             self.ai_ships.append(ai_ship)
 
         # Keep self.ai_ship for backwards compatibility (first ship if it exists)

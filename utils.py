@@ -90,6 +90,19 @@ def save_json(filename, data):
         json.dump(data, f, indent=2)
 
 
+def get_ship_type(ship_type_id):
+    """Load ship type properties from config/ship_types.json."""
+    ship_types = load_json("config/ship_types.json") or {}
+    return ship_types.get(ship_type_id, {})
+
+
+def get_graphics_asset(asset_type, asset_id):
+    """Load graphics asset from config/graphics.json."""
+    graphics = load_json("config/graphics.json") or {}
+    asset_category = graphics.get(asset_type, {})
+    return asset_category.get(asset_id, {})
+
+
 def _list_files_by_pattern(directory, prefix, suffix):
     """List files matching pattern, sorted reverse alphabetically."""
     files = []

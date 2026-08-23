@@ -368,10 +368,23 @@ class PlayerController:
 
 class AIShip(Ship):
     """Autonomous AI ship with wandering behavior."""
-    def __init__(self, x, y, space_drag=0):
+    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="trader"):
         super().__init__(x, y, space_drag=space_drag)
+        self.ship_type_id = ship_type_id
         self.angle = random.randint(0, 360)
-        self.max_thrust = 0.15
+
+        # Apply ship type properties if provided
+        if ship_type:
+            self.max_thrust = ship_type.get("max_thrust", 0.15)
+            self.max_velocity = ship_type.get("max_velocity", 4.0)
+            self.rotation_speed = ship_type.get("rotation_speed", 5)
+            self.ship_color = ship_type.get("color", DARK_GRAY)
+            self.ship_size = ship_type.get("size", 12)
+        else:
+            self.max_thrust = 0.15
+            self.ship_color = DARK_GRAY
+            self.ship_size = 12
+
         self.state = "accelerate"
         self.state_timer = 0
 
@@ -424,5 +437,5 @@ class AIShip(Ship):
         self.wrap_position()
 
     def draw(self, surface):
-        """Draw AI ship with custom size and color."""
-        super().draw(surface, ship_size=12, color=(150, 150, 200))
+        """Draw AI ship with ship type size and color."""
+        super().draw(surface, ship_size=self.ship_size, color=tuple(self.ship_color))

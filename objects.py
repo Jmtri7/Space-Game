@@ -13,22 +13,29 @@ from utils import (
 
 class SpaceStation:
     """A rotating space station in the game world."""
-    def __init__(self, x, y):
+    def __init__(self, x, y, graphics=None):
         self.x = x
         self.y = y
         self.rotation = 0
 
-    def update(self):
-        self.rotation = (self.rotation + 0.5) % 360
+        # Load graphics from config or use defaults
+        if graphics:
+            self.size = graphics.get("size", 40)
+            self.color = tuple(graphics.get("color", [100, 200, 255]))
+            self.core_color = tuple(graphics.get("core_color", [150, 220, 255]))
+            self.rotation_speed = graphics.get("rotation_speed", 0.5)
+            self.local_points = graphics.get("local_points", self._default_points())
+        else:
+            self.size = 40
+            self.color = (100, 200, 255)
+            self.core_color = (150, 220, 255)
+            self.rotation_speed = 0.5
+            self.local_points = self._default_points()
 
-    def draw(self, surface):
-        scale = get_scale()
-        size = 40
-        rad = math.radians(self.rotation)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
-
-        local_points = [
+    def _default_points(self):
+        """Default hexapod shape."""
+        size = self.size
+        return [
             (0, -size * 0.8),
             (size * 0.4, -size * 0.3),
             (size * 0.5, size * 0.3),
@@ -38,14 +45,23 @@ class SpaceStation:
             (-size * 0.4, -size * 0.3),
         ]
 
+    def update(self):
+        self.rotation = (self.rotation + self.rotation_speed) % 360
+
+    def draw(self, surface):
+        scale = get_scale()
+        rad = math.radians(self.rotation)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
         points = []
-        for lx, ly in local_points:
+        for lx, ly in self.local_points:
             rotated_x = lx * cos_a - ly * sin_a
             rotated_y = lx * sin_a + ly * cos_a
             points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
 
-        pygame.draw.polygon(surface, (100, 200, 255), points)
-        pygame.draw.circle(surface, (150, 220, 255), to_screen(self.x, self.y), max(1, int(round(size * 0.25 * scale))))
+        pygame.draw.polygon(surface, self.color, points)
+        pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
@@ -140,22 +156,38 @@ class StarField:
 
 class Moon:
     """A celestial moon object in space."""
-    def __init__(self, x, y):
+    def __init__(self, x, y, graphics=None):
         self.x = x
         self.y = y
         self.phase = 0
+
+        # Load graphics from config or use defaults
+        if graphics:
+            self.size = graphics.get("size", 30)
+            self.color = tuple(graphics.get("color", [200, 200, 200]))
+            self.crater_color = tuple(graphics.get("crater_color", [150, 150, 150]))
+            self.craters = graphics.get("craters", [])
+        else:
+            self.size = 30
+            self.color = (200, 200, 200)
+            self.crater_color = (150, 150, 150)
+            self.craters = [
+                {"x": -8, "y": -5, "radius": 4},
+                {"x": 10, "y": 8, "radius": 5}
+            ]
 
     def update(self):
         self.phase = (self.phase + 0.1) % 360
 
     def draw(self, surface):
         scale = get_scale()
-        size = 30
-        color = (200, 200, 200)
-        pygame.draw.circle(surface, color, to_screen(self.x, self.y), max(1, int(round(size * scale))))
+        pygame.draw.circle(surface, self.color, to_screen(self.x, self.y), max(1, int(round(self.size * scale))))
         # Draw craters
-        pygame.draw.circle(surface, (150, 150, 150), to_screen(self.x - 8, self.y - 5), max(1, int(4 * scale)))
-        pygame.draw.circle(surface, (150, 150, 150), to_screen(self.x + 10, self.y + 8), max(1, int(5 * scale)))
+        for crater in self.craters:
+            crater_x = self.x + crater.get("x", 0)
+            crater_y = self.y + crater.get("y", 0)
+            crater_radius = crater.get("radius", 4)
+            pygame.draw.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))
 
     def get_distance(self, x, y):
         return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
