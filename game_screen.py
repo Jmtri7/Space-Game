@@ -265,9 +265,11 @@ class GameScreen(ScreenBase):
         if self.player.autopilot_active and self.player.autopilot_target:
             distance = self.player.autopilot_target.get_distance(self.player.x, self.player.y)
             speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-            landing_distance = self.player.autopilot_target.landing_distance
+            # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
+            landing_distance = getattr(self.player.autopilot_target, 'landing_distance', 100)
             if distance < landing_distance and speed < 0.4:
                 self.player.autopilot_active = False
+                # Only try to land on landables, not ships
                 if self.player.autopilot_target == self.station:
                     self.landing_target = "station"
                     return "land"
