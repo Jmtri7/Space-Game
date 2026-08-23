@@ -10,7 +10,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
 | **S** or **↓** | Reduce thrust (coast) |
-| **L** | Land on nearby station or moon (when in range) |
+| **T** | Cycle through targetable objects (station, moon, AI ship) |
+| **L** | Land on targeted object or nearby (when in range) |
 | **ESC** | Pause menu |
 
 ## Station Interior
@@ -18,7 +19,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **T** | Talk to nearby NPC |
+| **T** | Cycle through targetable NPCs |
+| **Enter** | Talk to targeted NPC |
 | **L** | Exit station, return to space |
 | **ESC** | Pause menu |
 
@@ -27,7 +29,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **T** | Talk to nearby NPC (City only) |
+| **T** | Cycle through targetable NPCs (City only) |
+| **Enter** | Talk to targeted NPC |
 | **L** | Exit moon, return to space |
 | **ESC** | Pause menu |
 

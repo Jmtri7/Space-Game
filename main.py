@@ -46,6 +46,27 @@ def draw_debug_marker(surface, x, y, size=8):
     pygame.draw.line(surface, GREEN, (screen_x - half, screen_y - half), (screen_x + half, screen_y + half), 1)
     pygame.draw.line(surface, GREEN, (screen_x - half, screen_y + half), (screen_x + half, screen_y - half), 1)
 
+def draw_target_brackets(surface, x, y, size=40, thickness=2):
+    """Draw corner brackets around a targeted object at world coordinates"""
+    screen_x, screen_y = to_screen(x, y)
+    quarter = size // 4
+
+    # Top-left corner
+    pygame.draw.line(surface, GREEN, (screen_x - size, screen_y - size), (screen_x - quarter, screen_y - size), thickness)
+    pygame.draw.line(surface, GREEN, (screen_x - size, screen_y - size), (screen_x - size, screen_y - quarter), thickness)
+
+    # Top-right corner
+    pygame.draw.line(surface, GREEN, (screen_x + size, screen_y - size), (screen_x + quarter, screen_y - size), thickness)
+    pygame.draw.line(surface, GREEN, (screen_x + size, screen_y - size), (screen_x + size, screen_y - quarter), thickness)
+
+    # Bottom-left corner
+    pygame.draw.line(surface, GREEN, (screen_x - size, screen_y + size), (screen_x - quarter, screen_y + size), thickness)
+    pygame.draw.line(surface, GREEN, (screen_x - size, screen_y + size), (screen_x - size, screen_y + quarter), thickness)
+
+    # Bottom-right corner
+    pygame.draw.line(surface, GREEN, (screen_x + size, screen_y + size), (screen_x + quarter, screen_y + size), thickness)
+    pygame.draw.line(surface, GREEN, (screen_x + size, screen_y + size), (screen_x + size, screen_y + quarter), thickness)
+
 def get_scale():
     return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT)
 
@@ -775,8 +796,15 @@ class StationInterior(WalkableArea):
         self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", npc1.get("name", "Traveler"), npc1.get("greeting", "Safe travels!"), npc1.get("dialogue_options", ["Thanks", "Leave"]))
         self.door_guard = NPC(self.door_x, self.door_y, "bar", npc2.get("name", "Guard"), npc2.get("greeting", "Welcome to the station."), npc2.get("dialogue_options", ["Thanks", "Leave"]))
 
+        self.npcs = [
+            (self.bartender.name, self.bartender),
+            (self.wanderer.name, self.wanderer),
+            (self.door_guard.name, self.door_guard),
+        ]
+
         self.current_dialogue = None
         self.nearby_npc = None
+        self.current_target = None  # For T key targeting
 
     def handle_input(self, events):
         for event in events:
@@ -790,8 +818,15 @@ class StationInterior(WalkableArea):
                         return "pause"
                 elif event.key == pygame.K_l:
                     return "exit_station"
-                elif event.key == pygame.K_t and self.nearby_npc:
-                    self.current_dialogue = self.nearby_npc.dialogue
+                elif event.key == pygame.K_t:
+                    self._cycle_target()
+                elif event.key == pygame.K_RETURN:
+                    if self.current_target is not None:
+                        self.current_dialogue = self.npcs[self.current_target][1].dialogue
+                    elif self.nearby_npc and not self.current_dialogue:
+                        self.current_dialogue = self.nearby_npc.dialogue
+                    elif self.current_dialogue:
+                        self.current_dialogue = None
                 elif self.current_dialogue:
                     if event.key == pygame.K_UP or event.key == pygame.K_w:
                         self.current_dialogue.selected_option = (self.current_dialogue.selected_option - 1) % len(self.current_dialogue.options)
@@ -802,6 +837,21 @@ class StationInterior(WalkableArea):
             elif event.type == pygame.MOUSEBUTTONDOWN and self.current_dialogue:
                 self._handle_dialogue_click(pygame.mouse.get_pos())
         return None
+
+    def _cycle_target(self):
+        """Cycle through targetable NPCs"""
+        if not self.npcs:
+            return
+        if self.current_target is None:
+            self.current_target = 0
+        else:
+            self.current_target = (self.current_target + 1) % len(self.npcs)
+
+    def _get_target_npc(self):
+        """Get the currently targeted NPC"""
+        if self.current_target is None or self.current_target >= len(self.npcs):
+            return None
+        return self.npcs[self.current_target][1]
 
     def _handle_dialogue_click(self, mouse_pos):
         scale = min(screen_width, screen_height) / 600.0
@@ -896,9 +946,18 @@ class StationInterior(WalkableArea):
             draw_debug_marker(surface, self.wanderer.x, self.wanderer.y, 8)
             draw_debug_marker(surface, self.door_guard.x, self.door_guard.y, 8)
 
+        # Draw target brackets and label
+        target_npc = self._get_target_npc()
+        if target_npc:
+            draw_target_brackets(surface, target_npc.x, target_npc.y)
+            offset_x, offset_y = get_offset()
+            font_target = pygame.font.Font(None, int(16 * scale))
+            target_text = font_target.render(f"Target: {target_npc.name}", True, GREEN)
+            surface.blit(target_text, (int(offset_x + 10), int(offset_y + 30)))
+
         offset_x, offset_y = get_offset()
         font_small = pygame.font.Font(None, int(16 * scale))
-        help_text = font_small.render("WASD/Arrows to move, L to exit, ESC for menu", True, (200, 200, 200))
+        help_text = font_small.render("WASD/Arrows to move, T to target, Enter to talk, L to exit, ESC for menu", True, (200, 200, 200))
         surface.blit(help_text, (int(offset_x + 10), int(offset_y + 10)))
 
         if self.nearby_npc and not self.current_dialogue:
@@ -1137,6 +1196,12 @@ class GameScreen(ScreenBase):
         self.landing_target = None
         self.camera_x = 0
         self.camera_y = 0
+        self.current_target = None  # For T key targeting
+        self.targetable_objects = [
+            ("Station", self.station),
+            ("Moon", self.moon),
+            ("AI Ship", self.ai_ship),
+        ]
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
@@ -1146,12 +1211,36 @@ class GameScreen(ScreenBase):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
+                elif event.key == pygame.K_t:
+                    self._cycle_target()
                 elif event.key == pygame.K_l:
                     landing_target = self._check_landing()
                     if landing_target:
                         self.landing_target = landing_target
                         return "land"
         return None
+
+    def _cycle_target(self):
+        """Cycle through targetable objects"""
+        if not self.targetable_objects:
+            return
+        # Find current target index
+        if self.current_target is None:
+            self.current_target = 0
+        else:
+            self.current_target = (self.current_target + 1) % len(self.targetable_objects)
+
+    def _get_target_name(self):
+        """Get the name of the current target"""
+        if self.current_target is None or self.current_target >= len(self.targetable_objects):
+            return None
+        return self.targetable_objects[self.current_target][0]
+
+    def _get_target_object(self):
+        """Get the current target object"""
+        if self.current_target is None or self.current_target >= len(self.targetable_objects):
+            return None
+        return self.targetable_objects[self.current_target][1]
 
     def _update_positions(self):
         self.station.x = screen_width * 0.75
@@ -1219,6 +1308,17 @@ class GameScreen(ScreenBase):
             draw_debug_marker(surface, self.station.x, self.station.y, 10)
             draw_debug_marker(surface, self.moon.x, self.moon.y, 10)
             draw_debug_marker(surface, self.ai_ship.x, self.ai_ship.y, 8)
+
+        # Draw target brackets and label
+        target_obj = self._get_target_object()
+        target_name = self._get_target_name()
+        if target_obj and target_name:
+            draw_target_brackets(surface, target_obj.x, target_obj.y)
+            scale = get_scale()
+            offset_x, offset_y = get_offset()
+            font_target = pygame.font.Font(None, int(20 * scale))
+            target_text = font_target.render(f"Target: {target_name}", True, GREEN)
+            surface.blit(target_text, (int(offset_x + 10), int(offset_y + 10)))
 
         if self.landing_text > 0:
             scale = get_scale()
