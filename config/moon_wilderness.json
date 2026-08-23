@@ -2,8 +2,9 @@
   "name": "Moon Wilderness",
   "description": "Natural lunar terrain",
   "entrance": {
-    "x": 800,
-    "y": 1400
+    "x": 200,
+    "y": 200,
+    "name": "Landing Zone"
   },
   "craters": [
     {"x": 300, "y": 400, "radius": 50},

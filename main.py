@@ -1113,6 +1113,11 @@ class MoonOutdoor(WalkableArea):
             size = int(30 * scale)
             pygame.draw.polygon(surface, (120, 120, 140), [(rock_x, rock_y), (rock_x + size, rock_y + size//2), (rock_x + size - 10, rock_y + size + 5), (rock_x - 10, rock_y + size)])
 
+        # Draw entrance marker
+        ex, ey = to_screen(self.entrance_x, self.entrance_y)
+        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
+        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
+
         # Draw player
         px, py = to_screen(self.player_x, self.player_y)
         pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
