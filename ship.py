@@ -297,7 +297,8 @@ class PlayerController:
             # Point ship toward opposite velocity (brake/reverse)
             self.ship.point_to_reverse_velocity()
         else:
-            self.ship.decrease_thrust()
+            # Release thrust immediately
+            self.ship.thrust = 0
 
     def update(self):
         """Update ship physics."""
