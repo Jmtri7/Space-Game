@@ -275,7 +275,7 @@ class TestAutopilotPhysics(unittest.TestCase):
         }
 
     def test_autopilot_explorer_lands_precisely(self):
-        """Explorer should arrive at target close with low velocity, both simultaneously"""
+        """Explorer lands once with smooth approach (no oscillation)"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.3
         ship.max_velocity = 4.0
@@ -284,19 +284,20 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         result = self.simulate_autopilot_to_landing(ship, 500, 0)
 
+        # Ship must land
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        # Verify arrives close to target (< 120 units - precise landing, not just within 150)
+        # Ship must arrive very close to target
         self.assertLess(result['distance'], 120,
                         f"Explorer distance {result['distance']:.1f} - should arrive very close to target")
-        # Verify very low velocity at arrival (< 0.5 confirmed by game landing logic)
+        # Ship must be nearly stopped
         self.assertLess(result['speed'], 0.5,
                         f"Explorer velocity {result['speed']:.3f} - should be nearly stopped")
-        # Both conditions met simultaneously at landing frame
-        self.assertAlmostEqual(result['speed'], 0.4, delta=0.15,
-                               msg="Velocity should be precisely controlled at landing")
+        # CRITICAL: Ship must NOT oscillate (come close, go away, come back)
+        self.assertFalse(result['oscillated'],
+                        f"Explorer oscillated - ship should come to stop once, not bounce")
 
     def test_autopilot_courier_lands_precisely(self):
-        """Fast courier should arrive at target close with low velocity, both simultaneously"""
+        """Courier lands once with smooth approach (no oscillation)"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.5
         ship.max_velocity = 6.5
@@ -306,15 +307,16 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 400, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        # Verify arrives close to target (< 120 units)
         self.assertLess(result['distance'], 120,
                         f"Courier distance {result['distance']:.1f} - should arrive very close to target")
-        # Verify very low velocity at arrival
         self.assertLess(result['speed'], 0.5,
                         f"Courier velocity {result['speed']:.3f} - should be nearly stopped")
+        # Ship must NOT oscillate
+        self.assertFalse(result['oscillated'],
+                        f"Courier oscillated - ship should come to stop once, not bounce")
 
     def test_autopilot_hauler_lands_precisely(self):
-        """Slow hauler should arrive at target close with low velocity, both simultaneously"""
+        """Hauler lands once with smooth approach (no oscillation)"""
         ship = main.Player(0, 0)
         ship.max_thrust = 0.15
         ship.max_velocity = 2.5
@@ -324,12 +326,13 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 300, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        # Verify arrives close to target (< 120 units)
         self.assertLess(result['distance'], 120,
                         f"Hauler distance {result['distance']:.1f} - should arrive very close to target")
-        # Verify very low velocity at arrival
         self.assertLess(result['speed'], 0.5,
                         f"Hauler velocity {result['speed']:.3f} - should be nearly stopped")
+        # Ship must NOT oscillate
+        self.assertFalse(result['oscillated'],
+                        f"Hauler oscillated - ship should come to stop once, not bounce")
 
 
 if __name__ == "__main__":
