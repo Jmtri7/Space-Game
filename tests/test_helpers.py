@@ -207,7 +207,7 @@ class TestCenterTextX(unittest.TestCase):
 class TestAutopilotPhysics(unittest.TestCase):
     """Test autopilot arrives at target with precise position and velocity"""
 
-    def simulate_autopilot_to_landing(self, ship, target_x, target_y, max_frames=2000):
+    def simulate_autopilot_to_landing(self, ship, target_x, target_y, max_frames=2000, debug=False):
         """Simulate ship autopilot from start to landing using real game physics"""
         ship.autopilot_active = True
 
@@ -224,19 +224,30 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         frames = 0
         landed = False
+        max_distance = 0
+        overshoot_distance = 0
+
         while ship.autopilot_active and frames < max_frames:
             frames += 1
 
-            # Update autopilot control logic - mimics game's update loop
+            # Update autopilot control logic - exactly as game does
             if hasattr(ship, 'update_autopilot'):
                 ship.update_autopilot()
 
-            # Update ship physics - mimics game's update loop
+            # Update ship physics - uses Player.update() which differs from Ship.update()
             ship.update()
 
             # Check landing condition - exactly as game does it
             distance = target.get_distance(ship.x, ship.y)
             speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
+
+            # Track overshoot: if we get closer then farther away
+            if distance > max_distance:
+                overshoot_distance = distance
+            max_distance = max(max_distance, distance)
+
+            if debug and frames % 100 == 0:
+                print(f"Frame {frames}: dist={distance:.1f}, speed={speed:.3f}, thrust={ship.thrust:.3f}, angle={ship.angle:.1f}")
 
             # Game's actual landing condition in GameScreen.update()
             if distance < 150 and speed < 0.5:
@@ -253,7 +264,9 @@ class TestAutopilotPhysics(unittest.TestCase):
             'distance': distance,
             'speed': speed,
             'x': ship.x,
-            'y': ship.y
+            'y': ship.y,
+            'max_distance': max_distance,
+            'overshoot': overshoot_distance
         }
 
     def test_autopilot_explorer_lands_precisely(self):

@@ -502,6 +502,29 @@ class Ship:
         elif self.y > GAME_HEIGHT:
             self.y = 0
 
+    def update(self):
+        """Base physics update: apply thrust, drag, velocity cap, and movement"""
+        self.update_autopilot()
+
+        rad = math.radians(self.angle)
+        if self.thrust > 0.01:
+            self.velocity_x += math.sin(rad) * self.thrust
+            self.velocity_y -= math.cos(rad) * self.thrust
+
+            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+            if speed > self.max_velocity:
+                scale = self.max_velocity / speed
+                self.velocity_x *= scale
+                self.velocity_y *= scale
+
+            self.velocity_x *= self.drag
+            self.velocity_y *= self.drag
+
+        self.x += self.velocity_x
+        self.y += self.velocity_y
+
+        self.wrap_position()
+
     def update_autopilot(self):
         """Update autopilot: approach target, then reverse-thrust to stop at landing point"""
         if not self.autopilot_active or not self.autopilot_target:
@@ -658,28 +681,6 @@ class Player(Ship):
             self.thrust = min(self.thrust + 0.02, self.max_thrust)
         else:
             self.thrust = max(self.thrust - 0.02, 0)
-
-    def update(self):
-        self.update_autopilot()
-
-        rad = math.radians(self.angle)
-        if self.thrust > 0.01:
-            self.velocity_x += math.sin(rad) * self.thrust
-            self.velocity_y -= math.cos(rad) * self.thrust
-
-            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-            if speed > self.max_velocity:
-                scale = self.max_velocity / speed
-                self.velocity_x *= scale
-                self.velocity_y *= scale
-
-            self.velocity_x *= self.drag
-            self.velocity_y *= self.drag
-
-        self.x += self.velocity_x
-        self.y += self.velocity_y
-
-        self.wrap_position()
 
     def draw(self, surface):
         self.draw_ship(surface, ship_size=15, color=DARK_GRAY)
