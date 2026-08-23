@@ -32,6 +32,9 @@ class SpaceStation:
             self.rotation_speed = 0.5
             self.local_points = self._default_points()
 
+        # Landing distance based on station size (roughly 3.5x the radius)
+        self.landing_distance = self.size * 3.5
+
     def _default_points(self):
         """Default hexapod shape."""
         size = self.size
@@ -175,6 +178,9 @@ class Moon:
                 {"x": -8, "y": -5, "radius": 4},
                 {"x": 10, "y": 8, "radius": 5}
             ]
+
+        # Landing distance based on moon size (roughly 3.5x the radius)
+        self.landing_distance = self.size * 3.5
 
     def update(self):
         self.phase = (self.phase + 0.1) % 360

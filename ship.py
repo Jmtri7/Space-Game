@@ -148,7 +148,8 @@ class Ship:
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
         # Step 1: Landing condition check
-        if distance < 150 and speed < 0.5:
+        landing_distance = self.autopilot_target.landing_distance
+        if distance < landing_distance and speed < 0.5:
             self.autopilot_active = False
             self.release_thrust()
             return
