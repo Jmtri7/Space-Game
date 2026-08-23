@@ -617,9 +617,9 @@ class Ship:
 
         if aligned:
             # If approaching braking point, start slowing down
-            if distance < distance_needed + 100:
-                # Close to braking point - reduce thrust
-                self.thrust = max(self.thrust - thrust_step, 0)
+            if distance < distance_needed + 150:
+                # Close to braking point - reduce thrust more aggressively
+                self.thrust = max(self.thrust - thrust_step * 2, 0)
             else:
                 # Far from braking point - accelerate normally
                 self.thrust = min(self.thrust + thrust_step, self.max_thrust)
@@ -655,14 +655,17 @@ class Ship:
             # Phase 2: Facing away from target - apply reverse thrust to brake
             self.angle = reverse_angle
 
-            if speed < 0.1:
+            if speed < 0.15:
                 # Very slow - cut thrust and coast
                 self.thrust = 0
             else:
-                # Apply reverse thrust proportional to speed and distance
-                # Calculate how much thrust needed to stop at target
-                braking_thrust = min(self.max_thrust, (speed * speed) / (2 * max(10, distance)) * 0.1)
-                self.thrust = max(0.1, braking_thrust)  # Minimum 10% thrust while braking
+                # Apply strong reverse thrust to actually stop the ship
+                # Calculate deceleration needed: a = v^2 / (2*d)
+                # Then use 50% of that to ensure reliable stopping
+                required_decel = (speed * speed) / (2 * max(20, distance))
+                braking_thrust = min(self.max_thrust, required_decel * 0.5)
+                # Ensure minimum braking force
+                self.thrust = max(self.max_thrust * 0.3, braking_thrust)
 
 class Player(Ship):
     def __init__(self, x, y):
