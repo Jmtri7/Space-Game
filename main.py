@@ -35,6 +35,7 @@ GRAY = (100, 100, 100)
 YELLOW = (255, 255, 0)
 DARK_GRAY = (60, 60, 60)
 GREEN = (0, 255, 0)
+CYAN = (0, 255, 255)
 
 DEBUG_MODE = False  # Press ` (backtick) to toggle
 
@@ -502,45 +503,89 @@ class Ship:
             self.y = 0
 
     def update_autopilot(self):
-        """Update autopilot - flies toward target"""
+        """Update autopilot: approach target, then reverse-thrust to stop at landing point"""
         if not self.autopilot_active or not self.autopilot_target:
             return
 
         target = self.autopilot_target
         distance = target.get_distance(self.x, self.y)
+        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
-        # Check if in landing range
-        if distance < 150:
-            speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-            if speed < 0.5:
-                # Ready to land
-                pass
-            else:
-                # In range but too fast, reduce thrust to slow down
-                self.thrust = max(0, self.thrust - 0.1)
+        # Distance vector to target
+        dx = target.x - self.x
+        dy = target.y - self.y
+
+        # Calculate angle in ship coordinates (0°=up, 90°=right, clockwise)
+        angle_to_target = math.atan2(dx, -dy)
+        angle_to_target_deg = math.degrees(angle_to_target)
+
+        # Calculate braking distance needed: d = v^2 / (2*a)
+        # With deceleration of ~0.03 thrust reduction per frame
+        braking_distance = max(100, (speed * speed) / (2 * 0.03)) if speed > 0.1 else 100
+
+        # Determine flight phase based on distance to target
+        if distance > braking_distance + 100:
+            # APPROACH PHASE: fly toward target
+            self._autopilot_approach(angle_to_target_deg)
         else:
-            # Not in range, fly toward target
-            dx = target.x - self.x
-            dy = target.y - self.y
-            angle_to_target = math.atan2(dy, dx)
-            angle_to_target_deg = math.degrees(angle_to_target)
+            # BRAKING PHASE: turn around and reverse thrust
+            self._autopilot_brake(angle_to_target_deg)
 
-            # Normalize angles to -180 to 180
-            current_angle = self.angle % 360
-            target_angle = angle_to_target_deg % 360
-            angle_diff = (target_angle - current_angle + 180) % 360 - 180
+    def _autopilot_approach(self, target_angle_deg):
+        """Approach phase: fly toward target"""
+        # Point ship toward target (angle already in ship coordinates)
+        current_angle = self.angle % 360
+        target_angle = target_angle_deg % 360
 
-            # Rotate toward target
-            rotation_speed = 5
-            if angle_diff > rotation_speed:
-                self.angle += rotation_speed
-            elif angle_diff < -rotation_speed:
-                self.angle -= rotation_speed
+        angle_diff = target_angle - current_angle
+        if angle_diff > 180:
+            angle_diff -= 360
+        elif angle_diff < -180:
+            angle_diff += 360
+
+        # Rotate using ship controls
+        rotation_step = 5
+        if angle_diff < -rotation_step:
+            self.angle = (self.angle - rotation_step) % 360
+        elif angle_diff > rotation_step:
+            self.angle = (self.angle + rotation_step) % 360
+        else:
+            self.angle = target_angle
+
+        # Apply thrust when roughly aligned
+        aligned = abs(angle_diff) < 15
+        if aligned:
+            self.thrust = min(self.thrust + 0.02, 0.3)
+        else:
+            self.thrust = max(self.thrust - 0.02, 0)
+
+    def _autopilot_brake(self, target_angle_deg):
+        """Braking phase: turn around and apply reverse thrust"""
+        # Point ship AWAY from target (opposite direction)
+        reverse_angle = (target_angle_deg + 180) % 360
+        current_angle = self.angle % 360
+
+        angle_diff = reverse_angle - current_angle
+        if angle_diff > 180:
+            angle_diff -= 360
+        elif angle_diff < -180:
+            angle_diff += 360
+
+        # Rotate to face away from target
+        rotation_step = 5
+        alignment_tolerance = 20  # Only apply thrust when well-aligned
+
+        if abs(angle_diff) > rotation_step:
+            # Still rotating toward reverse direction - cut thrust
+            if angle_diff < 0:
+                self.angle = (self.angle - rotation_step) % 360
             else:
-                self.angle = angle_to_target_deg
-
-            # Apply thrust toward target
-            self.thrust = min(self.max_thrust, self.thrust + 0.05)
+                self.angle = (self.angle + rotation_step) % 360
+            self.thrust = max(self.thrust - 0.03, 0)  # Cut thrust while turning
+        else:
+            # Well-aligned with reverse direction - apply reverse thrust to brake
+            self.angle = reverse_angle
+            self.thrust = min(self.thrust + 0.02, 0.3)
 
 class Player(Ship):
     def __init__(self, x, y):
@@ -1327,6 +1372,12 @@ class GameScreen(ScreenBase):
 
         for event in events:
             if event.type == pygame.KEYDOWN:
+                # Cancel autopilot on any key press (except ESC which handles pause)
+                if self.player.autopilot_active and event.key != pygame.K_ESCAPE:
+                    self.player.autopilot_active = False
+                    self.player.autopilot_target = None
+                    return None
+
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
                 elif event.key == pygame.K_t:
@@ -1366,6 +1417,80 @@ class GameScreen(ScreenBase):
         if self.current_target is None or self.current_target >= len(self.targetable_objects):
             return None
         return self.targetable_objects[self.current_target][1]
+
+    def _draw_target_arrow(self, surface, target):
+        """Draw arrow at screen edge pointing toward target"""
+        # Calculate direction from player to target
+        dx = target.x - self.player.x
+        dy = target.y - self.player.y
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        if distance == 0:
+            return
+
+        # Normalize direction
+        angle = math.atan2(dy, dx)
+        dir_x = math.cos(angle)
+        dir_y = math.sin(angle)
+
+        # Find arrow position at screen edge
+        ui_scale = get_ui_scale()
+        ui_offset_x, ui_offset_y = get_ui_offset()
+
+        # Screen bounds in UI space
+        screen_left = ui_offset_x
+        screen_right = ui_offset_x + screen_width
+        screen_top = ui_offset_y
+        screen_bottom = ui_offset_y + screen_height
+
+        # Start from screen center (player position in UI space)
+        center_x = ui_offset_x + screen_width // 2
+        center_y = ui_offset_y + screen_height // 2
+
+        # Calculate where ray hits screen edge
+        t = 1
+        if dir_x > 0:
+            t = min(t, (screen_right - center_x) / dir_x)
+        elif dir_x < 0:
+            t = min(t, (screen_left - center_x) / dir_x)
+
+        if dir_y > 0:
+            t = min(t, (screen_bottom - center_y) / dir_y)
+        elif dir_y < 0:
+            t = min(t, (screen_top - center_y) / dir_y)
+
+        arrow_x = center_x + dir_x * t
+        arrow_y = center_y + dir_y * t
+
+        # Clamp to screen edges with padding
+        padding = 20
+        arrow_x = max(screen_left + padding, min(screen_right - padding, arrow_x))
+        arrow_y = max(screen_top + padding, min(screen_bottom - padding, arrow_y))
+
+        # Draw arrow pointing toward target
+        arrow_size = 12
+
+        # Arrow head points in direction of target
+        tip_x = arrow_x + dir_x * arrow_size
+        tip_y = arrow_y + dir_y * arrow_size
+
+        # Arrow tail points opposite
+        tail_x = arrow_x - dir_x * arrow_size
+        tail_y = arrow_y - dir_y * arrow_size
+
+        # Perpendicular for arrow wings
+        perp_x = -dir_y
+        perp_y = dir_x
+
+        # Draw arrow as triangle
+        wing_size = 8
+        wing1_x = tail_x + perp_x * wing_size
+        wing1_y = tail_y + perp_y * wing_size
+        wing2_x = tail_x - perp_x * wing_size
+        wing2_y = tail_y - perp_y * wing_size
+
+        points = [(tip_x, tip_y), (wing1_x, wing1_y), (wing2_x, wing2_y)]
+        pygame.draw.polygon(surface, GREEN, points)
 
     def _update_positions(self):
         self.station.x = screen_width * 0.75
@@ -1458,7 +1583,18 @@ class GameScreen(ScreenBase):
             target_text = font_target.render(f"Target: {target_name}", True, GREEN)
             surface.blit(target_text, (int(ui_offset_x + 10), int(ui_offset_y + 10)))
 
-        if self.landing_text > 0:
+            # Draw directional arrow pointing toward target
+            self._draw_target_arrow(surface, target_obj)
+
+        if self.player.autopilot_active:
+            ui_scale = get_ui_scale()
+            font = pygame.font.Font(None, int(24 * ui_scale))
+            autopilot_text = font.render("Autopilot engaged - press any key to cancel", True, CYAN)
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            ap_x = int(ui_offset_x + screen_width // 2 - autopilot_text.get_width() // 2)
+            ap_y = int(ui_offset_y + screen_height - 60)
+            surface.blit(autopilot_text, (ap_x, ap_y))
+        elif self.landing_text > 0:
             ui_scale = get_ui_scale()
             font = pygame.font.Font(None, int(24 * ui_scale))
             land_text = font.render("Press L to land", True, YELLOW)
