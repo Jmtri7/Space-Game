@@ -288,7 +288,7 @@ class Ship:
         else:
             self.release_thrust()
 
-    def predict_landing_trajectory(self, target, max_frames=500, sample_rate=10):
+    def predict_landing_trajectory(self, target, max_frames=500, sample_rate=5):
         """Predict landing trajectory and return waypoints for visualization.
 
         Returns list of (x, y) positions sampled every sample_rate frames.
@@ -306,6 +306,10 @@ class Ship:
 
         # Simulate forward frame by frame
         for frame in range(max_frames):
+            # Sample waypoint BEFORE landing check
+            if frame > 0 and frame % sample_rate == 0:
+                waypoints.append((sim_x, sim_y))
+
             distance = target.get_distance(sim_x, sim_y)
             speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
 
@@ -364,10 +368,6 @@ class Ship:
 
             sim_x += sim_vx
             sim_y += sim_vy
-
-            # Sample waypoint
-            if frame % sample_rate == 0:
-                waypoints.append((sim_x, sim_y))
 
         return waypoints
 
