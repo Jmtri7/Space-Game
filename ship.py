@@ -93,6 +93,12 @@ class Ship:
         elif self.y > GAME_HEIGHT:
             self.y = 0
 
+    def get_distance(self, target_x, target_y):
+        """Calculate distance to a point (for compatibility with Landables)."""
+        dx = target_x - self.x
+        dy = target_y - self.y
+        return math.sqrt(dx * dx + dy * dy)
+
     def turn_left(self):
         """Rotate ship left."""
         self.angle = (self.angle - self.rotation_speed) % 360
@@ -139,7 +145,14 @@ class Ship:
 
     def update(self):
         """Base physics update: apply thrust, velocity cap, and movement."""
-        self.update_autopilot()
+        try:
+            self.update_autopilot()
+        except Exception as e:
+            import traceback
+            print(f"ERROR in update_autopilot: {e}")
+            traceback.print_exc()
+            self.autopilot_active = False
+            self.autopilot_target = None
 
         rad = math.radians(self.angle)
         if self.thrust > 0.01:
