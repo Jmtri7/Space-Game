@@ -30,9 +30,21 @@ WHITE = (255, 255, 255)
 GRAY = (100, 100, 100)
 YELLOW = (255, 255, 0)
 DARK_GRAY = (60, 60, 60)
+GREEN = (0, 255, 0)
+
+DEBUG_MODE = False  # Press D to toggle
 
 screen_width = SCREEN_WIDTH
 screen_height = SCREEN_HEIGHT
+
+def draw_debug_marker(surface, x, y, size=8):
+    """Draw a green X at world coordinates to show entity position"""
+    if not DEBUG_MODE:
+        return
+    screen_x, screen_y = to_screen(x, y)
+    half = size // 2
+    pygame.draw.line(surface, GREEN, (screen_x - half, screen_y - half), (screen_x + half, screen_y + half), 1)
+    pygame.draw.line(surface, GREEN, (screen_x - half, screen_y + half), (screen_x + half, screen_y - half), 1)
 
 def get_scale():
     return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT)
@@ -877,6 +889,13 @@ class StationInterior(WalkableArea):
         pygame.draw.rect(surface, (0, 255, 0), (*to_screen(self.player_x - 6, self.player_y), to_screen_x(12), to_screen_y(16)))
         pygame.draw.circle(surface, (100, 255, 100), to_screen(self.player_x, self.player_y - 10), max(1, int(5 * scale)))
 
+        # Debug marker for player position
+        if DEBUG_MODE:
+            draw_debug_marker(surface, self.player_x, self.player_y, 10)
+            draw_debug_marker(surface, self.bartender.x, self.bartender.y, 8)
+            draw_debug_marker(surface, self.wanderer.x, self.wanderer.y, 8)
+            draw_debug_marker(surface, self.door_guard.x, self.door_guard.y, 8)
+
         offset_x, offset_y = get_offset()
         font_small = pygame.font.Font(None, int(16 * scale))
         help_text = font_small.render("WASD/Arrows to move, L to exit, ESC for menu", True, (200, 200, 200))
@@ -948,6 +967,10 @@ class MoonCity(WalkableArea):
         pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
+        # Debug marker for player position
+        if DEBUG_MODE:
+            draw_debug_marker(surface, self.player_x, self.player_y, 10)
+
         # Draw UI
         self.draw_ui_text(surface, "Moon City | Press L to leave")
 
@@ -987,6 +1010,10 @@ class MoonOutdoor(WalkableArea):
         px, py = to_screen(self.player_x, self.player_y)
         pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
         pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
+
+        # Debug marker for player position
+        if DEBUG_MODE:
+            draw_debug_marker(surface, self.player_x, self.player_y, 10)
 
         # Draw UI
         self.draw_ui_text(surface, "Moon Wilderness | Press L to leave")
@@ -1186,6 +1213,13 @@ class GameScreen(ScreenBase):
         self.ai_ship.draw(surface)
         self.player.draw(surface)
 
+        # Debug markers for entity positions
+        if DEBUG_MODE:
+            draw_debug_marker(surface, self.player.x, self.player.y, 10)
+            draw_debug_marker(surface, self.station.x, self.station.y, 10)
+            draw_debug_marker(surface, self.moon.x, self.moon.y, 10)
+            draw_debug_marker(surface, self.ai_ship.x, self.ai_ship.y, 8)
+
         if self.landing_text > 0:
             scale = get_scale()
             font = pygame.font.Font(None, int(24 * scale))
@@ -1359,6 +1393,9 @@ def main():
                     screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
                     if game_screen:
                         game_screen.star_field.generate_stars()
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                    global DEBUG_MODE
+                    DEBUG_MODE = not DEBUG_MODE
 
             if current_screen == "menu":
                 selection = menu.handle_input(events)
