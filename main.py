@@ -817,7 +817,7 @@ class StationInterior(WalkableArea):
                     else:
                         return "pause"
                 elif event.key == pygame.K_l:
-                    return "exit_station"
+                    return "exit"
                 elif event.key == pygame.K_t:
                     self._cycle_target()
                 elif event.key == pygame.K_RETURN:
