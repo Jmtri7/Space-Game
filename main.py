@@ -503,6 +503,22 @@ class Ship:
         elif self.y > GAME_HEIGHT:
             self.y = 0
 
+    def turn_left(self):
+        """Rotate ship left"""
+        self.angle = (self.angle - self.rotation_speed) % 360
+
+    def turn_right(self):
+        """Rotate ship right"""
+        self.angle = (self.angle + self.rotation_speed) % 360
+
+    def increase_thrust(self, step=0.02):
+        """Apply thrust in current direction"""
+        self.thrust = min(self.thrust + step, self.max_thrust)
+
+    def decrease_thrust(self, step=0.02):
+        """Reduce thrust (coast to stop)"""
+        self.thrust = max(self.thrust - step, 0)
+
     def update(self):
         """Base physics update: apply thrust, drag, velocity cap, and movement"""
         self.update_autopilot()
@@ -672,14 +688,17 @@ class Player(Ship):
         if self.autopilot_active:
             return
 
+        # Rotation controls
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.angle = (self.angle - self.rotation_speed) % 360
+            self.turn_left()
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.angle = (self.angle + self.rotation_speed) % 360
+            self.turn_right()
+
+        # Thrust controls
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.thrust = min(self.thrust + 0.02, self.max_thrust)
+            self.increase_thrust()
         else:
-            self.thrust = max(self.thrust - 0.02, 0)
+            self.decrease_thrust()
 
 class AIShip(Ship):
     def __init__(self, x, y):
