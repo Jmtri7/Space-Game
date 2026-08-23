@@ -519,12 +519,32 @@ class Ship:
         angle_to_target = math.atan2(dx, -dy)
         angle_to_target_deg = math.degrees(angle_to_target)
 
-        # Calculate braking distance needed: d = v^2 / (2*a)
-        # With deceleration of ~0.03 thrust reduction per frame
-        braking_distance = max(100, (speed * speed) / (2 * 0.03)) if speed > 0.1 else 100
+        # Calculate angle difference to know how long rotation will take
+        current_angle = self.angle % 360
+        target_angle = angle_to_target_deg % 360
+        angle_diff_approach = target_angle - current_angle
+        if angle_diff_approach > 180:
+            angle_diff_approach -= 360
+        elif angle_diff_approach < -180:
+            angle_diff_approach += 360
+
+        # Estimate frames needed to rotate 180 degrees for braking
+        # Ship rotates at 5 degrees per frame, so 180 degrees = 36 frames
+        rotation_frames = abs(angle_diff_approach + 180) / 5
+
+        # Distance traveled during rotation (accounting for drag reducing velocity)
+        # Average velocity during rotation is roughly 75% of current (due to drag)
+        distance_during_rotation = speed * rotation_frames * 0.75
+
+        # Braking distance needed after rotation: d = v^2 / (2*a)
+        # Using deceleration of 0.25 for proper reverse thrust braking
+        braking_distance = (speed * speed) / (2 * 0.25) if speed > 0.1 else 50
+
+        # Total distance needed: rotation distance + braking distance
+        total_distance_needed = distance_during_rotation + braking_distance
 
         # Determine flight phase based on distance to target
-        if distance > braking_distance + 100:
+        if distance > total_distance_needed + 40:  # Add buffer to start braking earlier
             # APPROACH PHASE: fly toward target
             self._autopilot_approach(angle_to_target_deg)
         else:
@@ -552,15 +572,20 @@ class Ship:
         else:
             self.angle = target_angle
 
-        # Apply thrust when roughly aligned
+        # Apply thrust when roughly aligned, using ship's max_thrust property
         aligned = abs(angle_diff) < 15
+        thrust_step = self.max_thrust * 0.1  # 10% of max thrust per frame
         if aligned:
-            self.thrust = min(self.thrust + 0.02, 0.3)
+            self.thrust = min(self.thrust + thrust_step, self.max_thrust)
         else:
-            self.thrust = max(self.thrust - 0.02, 0)
+            self.thrust = max(self.thrust - thrust_step, 0)
 
     def _autopilot_brake(self, target_angle_deg):
-        """Braking phase: turn around and apply reverse thrust"""
+        """Braking phase: rotate to face away from target, then apply reverse thrust"""
+        target = self.autopilot_target
+        distance = target.get_distance(self.x, self.y)
+        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+
         # Point ship AWAY from target (opposite direction)
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
@@ -571,21 +596,27 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Rotate to face away from target
+        # Phase 1: Rotate to face away from target
         rotation_step = 5
-        alignment_tolerance = 20  # Only apply thrust when well-aligned
-
         if abs(angle_diff) > rotation_step:
-            # Still rotating toward reverse direction - cut thrust
+            # Still rotating - cut thrust to avoid changing velocity while turning
             if angle_diff < 0:
                 self.angle = (self.angle - rotation_step) % 360
             else:
                 self.angle = (self.angle + rotation_step) % 360
-            self.thrust = max(self.thrust - 0.03, 0)  # Cut thrust while turning
+            self.thrust = 0  # No thrust while rotating
         else:
-            # Well-aligned with reverse direction - apply reverse thrust to brake
+            # Phase 2: Facing away from target - apply reverse thrust to brake
             self.angle = reverse_angle
-            self.thrust = min(self.thrust + 0.02, 0.3)
+
+            if speed < 0.1:
+                # Very slow - cut thrust and coast
+                self.thrust = 0
+            else:
+                # Apply reverse thrust proportional to speed and distance
+                # Calculate how much thrust needed to stop at target
+                braking_thrust = min(self.max_thrust, (speed * speed) / (2 * max(10, distance)) * 0.1)
+                self.thrust = max(0.1, braking_thrust)  # Minimum 10% thrust while braking
 
 class Player(Ship):
     def __init__(self, x, y):
