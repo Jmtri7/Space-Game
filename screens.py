@@ -534,7 +534,7 @@ class GameScreen(ScreenBase):
                         distance = target_obj.get_distance(self.player.x, self.player.y)
                         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
                         # If close and slow enough, land directly
-                        if distance < 150 and speed < 0.5:
+                        if distance < 150 and speed < 0.4:
                             if target_obj == self.station:
                                 self.landing_target = "station"
                                 return "land"
@@ -655,11 +655,11 @@ class GameScreen(ScreenBase):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
         station_distance = self.station.get_distance(self.player.x, self.player.y)
-        if station_distance < self.station.landing_distance and speed < 0.5:
+        if station_distance < self.station.landing_distance and speed < 0.4:
             return "station"
 
         moon_distance = self.moon.get_distance(self.player.x, self.player.y)
-        if moon_distance < self.moon.landing_distance and speed < 0.5:
+        if moon_distance < self.moon.landing_distance and speed < 0.4:
             return "moon"
 
         return None
@@ -684,7 +684,7 @@ class GameScreen(ScreenBase):
             distance = self.player.autopilot_target.get_distance(self.player.x, self.player.y)
             speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
             landing_distance = self.player.autopilot_target.landing_distance
-            if distance < landing_distance and speed < 0.5:
+            if distance < landing_distance and speed < 0.4:
                 self.player.autopilot_active = False
                 if self.player.autopilot_target == self.station:
                     self.landing_target = "station"

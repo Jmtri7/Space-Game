@@ -149,7 +149,7 @@ class Ship:
 
         # Step 1: Landing condition check
         landing_distance = self.autopilot_target.landing_distance
-        if distance < landing_distance and speed < 0.5:
+        if distance < landing_distance and speed < 0.4:
             self.autopilot_active = False
             self.release_thrust()
             return
@@ -314,7 +314,7 @@ class Ship:
             speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
 
             # Check landing condition
-            if distance < landing_distance and speed < 0.5:
+            if distance < landing_distance and speed < 0.4:
                 return waypoints
 
             # Braking decision
