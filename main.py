@@ -462,7 +462,8 @@ class Ship:
         self.autopilot_active = False
         self.autopilot_target = None
 
-    def draw_ship(self, surface, ship_size=15, color=DARK_GRAY):
+    def draw(self, surface, ship_size=15, color=DARK_GRAY):
+        """Draw ship as rotated polygon with thrust flame"""
         scale = get_scale()
         rad = math.radians(self.angle)
         cos_a = math.cos(rad)
@@ -661,10 +662,12 @@ class Ship:
                 self.thrust = max(self.max_thrust * 0.3, braking_thrust)
 
 class Player(Ship):
+    """Player-controlled ship: inherits all physics and drawing from Ship"""
     def __init__(self, x, y):
         super().__init__(x, y)
 
     def handle_input(self, keys):
+        """Handle player keyboard input (blocked during autopilot)"""
         # Don't accept manual input during autopilot
         if self.autopilot_active:
             return
@@ -677,9 +680,6 @@ class Player(Ship):
             self.thrust = min(self.thrust + 0.02, self.max_thrust)
         else:
             self.thrust = max(self.thrust - 0.02, 0)
-
-    def draw(self, surface):
-        self.draw_ship(surface, ship_size=15, color=DARK_GRAY)
 
 class AIShip(Ship):
     def __init__(self, x, y):
@@ -735,7 +735,8 @@ class AIShip(Ship):
         self.wrap_position()
 
     def draw(self, surface):
-        self.draw_ship(surface, ship_size=12, color=(150, 150, 200))
+        """Draw AI ship with custom size and color"""
+        super().draw(surface, ship_size=12, color=(150, 150, 200))
 
 class SpaceStation:
     def __init__(self, x, y):
