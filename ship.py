@@ -99,6 +99,27 @@ class Ship:
         dy = target_y - self.y
         return math.sqrt(dx * dx + dy * dy)
 
+    def _get_wrapped_direction(self, target_x, target_y):
+        """Calculate direction to target, accounting for screen wrapping.
+
+        Returns (dx, dy) that represents the shortest path to the target,
+        considering the torus topology of the game world.
+        """
+        dx = target_x - self.x
+        dy = target_y - self.y
+
+        # Check if wrapping around horizontally is shorter
+        if abs(dx) > GAME_WIDTH / 2:
+            # Going the other way (wrapping) is shorter
+            dx = dx - GAME_WIDTH if dx > 0 else dx + GAME_WIDTH
+
+        # Check if wrapping around vertically is shorter
+        if abs(dy) > GAME_HEIGHT / 2:
+            # Going the other way (wrapping) is shorter
+            dy = dy - GAME_HEIGHT if dy > 0 else dy + GAME_HEIGHT
+
+        return dx, dy
+
     def turn_left(self):
         """Rotate ship left."""
         self.angle = (self.angle - self.rotation_speed) % 360
@@ -205,7 +226,8 @@ class Ship:
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
             # Simulate one frame to check if we'd actually slow down
-            target_angle_rad = math.atan2(target.x - self.x, -(target.y - self.y))
+            dx, dy = self._get_wrapped_direction(target.x, target.y)
+            target_angle_rad = math.atan2(dx, -dy)
             accel_angle = self._calculate_brake_redirect_angle(target_angle_rad)
 
             # Check if aligned enough to thrust
@@ -232,9 +254,8 @@ class Ship:
                     self.release_thrust()
                     return
 
-        # Step 3: Calculate optimal acceleration direction
-        dx = target.x - self.x
-        dy = target.y - self.y
+        # Step 3: Calculate optimal acceleration direction (accounting for wrapping)
+        dx, dy = self._get_wrapped_direction(target.x, target.y)
         target_angle = math.atan2(dx, -dy)
 
         if should_brake:
@@ -366,9 +387,14 @@ class Ship:
             braking_distance = self._predict_braking_distance_from_stop(speed)
             should_brake = distance <= braking_distance and speed > 0.1
 
-            # Calculate acceleration direction
+            # Calculate acceleration direction (with wrapping)
+            # Account for torus topology when simulating
             dx = target.x - sim_x
             dy = target.y - sim_y
+            if abs(dx) > GAME_WIDTH / 2:
+                dx = dx - GAME_WIDTH if dx > 0 else dx + GAME_WIDTH
+            if abs(dy) > GAME_HEIGHT / 2:
+                dy = dy - GAME_HEIGHT if dy > 0 else dy + GAME_HEIGHT
             target_angle = math.atan2(dx, -dy)
 
             if should_brake:
