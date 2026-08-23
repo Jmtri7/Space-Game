@@ -93,3 +93,7 @@ class PlayerController:
     @autopilot_target.setter
     def autopilot_target(self, value):
         self.ship.autopilot_target = value
+
+    def predict_landing_position(self, target):
+        """Delegate to ship's landing position prediction."""
+        return self.ship.predict_landing_position(target)

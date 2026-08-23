@@ -1,8 +1,9 @@
-'AIShip' object has no attribute 'get_distance'
+'PlayerController' object has no attribute 'predict_landing_position'
 Traceback (most recent call last):
-  File "C:\Users\Play\Documents\Projects\space-game\main.py", line 162, in main
-    action = game_screen.handle_input(events)
-  File "C:\Users\Play\Documents\Projects\space-game\screens.py", line 533, in handle_input
-    distance = target_obj.get_distance(self.player.x, self.player.y)
-               ^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'AIShip' object has no attribute 'get_distance'
+  File "C:\Users\Play\Documents\Projects\space-game\main.py", line 179, in main
+    game_screen.draw(screen)
+    ~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Play\Documents\Projects\space-game\screens.py", line 734, in draw
+    pred_x, pred_y, dist = self.player.predict_landing_position(target_obj)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PlayerController' object has no attribute 'predict_landing_position'
