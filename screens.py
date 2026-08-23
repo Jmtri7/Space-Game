@@ -2,6 +2,7 @@
 import pygame
 import math
 import random
+import os
 from datetime import datetime
 from constants import (
     GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, GREEN, DEBUG_MODE
@@ -1150,7 +1151,6 @@ class StorySelector:
     """Screen for selecting which story/campaign to play."""
     def __init__(self):
         # Scan for available stories
-        import os
         stories_dir = "config/stories"
         self.stories = []
         if os.path.exists(stories_dir):
