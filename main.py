@@ -254,47 +254,65 @@ class SaveDialog:
             help_text = font_text.render("Enter: overwrite, N: new save, D: delete, ESC: cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.75)))
 
-class DeleteConfirmDialog:
-    def __init__(self, save_filename):
-        self.save_filename = save_filename
-        self.confirm_text = ""
+class ConfirmDialog:
+    """Generic yes/no confirmation dialog"""
+    def __init__(self, title, message):
+        self.title = title
+        self.message = message
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and self.confirm_text.lower() == "confirm":
-                    return ("confirm", self.save_filename)
-                elif event.key == pygame.K_BACKSPACE:
-                    self.confirm_text = self.confirm_text[:-1]
-                elif event.key == pygame.K_ESCAPE:
-                    return ("cancel", None)
-            elif event.type == pygame.TEXTINPUT:
-                if len(self.confirm_text) < 30:
-                    self.confirm_text += event.text
-        return (None, None)
+                if event.key == pygame.K_y:
+                    return "confirm"
+                elif event.key == pygame.K_n or event.key == pygame.K_ESCAPE:
+                    return "cancel"
+        return None
 
     def draw(self, surface):
         scale = get_scale()
         offset_x, offset_y = get_offset()
 
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.25), int(GAME_WIDTH * scale * 0.7), int(GAME_HEIGHT * scale * 0.5)))
         font_title = pygame.font.Font(None, int(32 * scale))
         font_text = pygame.font.Font(None, int(24 * scale))
 
-        title = font_title.render("Delete Save?", True, WHITE)
-        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
+        title = font_title.render(self.title, True, WHITE)
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.3)))
 
-        filename_text = font_text.render(self.save_filename[:50], True, YELLOW)
-        surface.blit(filename_text, (_center_text_x(surface, filename_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.35)))
+        message_text = font_text.render(self.message, True, YELLOW)
+        surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.45)))
 
-        confirm_prompt = font_text.render('Type "confirm" to delete:', True, GRAY)
-        surface.blit(confirm_prompt, (_center_text_x(surface, confirm_prompt, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.45)))
+        help_text = font_text.render("Y: Yes   N: No   ESC: Cancel", True, GRAY)
+        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.65)))
 
-        input_box = font_text.render(self.confirm_text + "|", True, YELLOW)
-        surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.55)))
+class DeleteConfirmDialog(ConfirmDialog):
+    """Confirmation for deleting a save"""
+    def __init__(self, save_filename):
+        self.save_filename = save_filename
+        super().__init__("Delete Save?", save_filename[:50])
 
-        help_text = font_text.render("Enter to confirm, ESC to cancel", True, GRAY)
-        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.7)))
+    def handle_input(self, events):
+        result = super().handle_input(events)
+        if result == "confirm":
+            return ("confirm", self.save_filename)
+        elif result == "cancel":
+            return ("cancel", None)
+        return (None, None)
+
+class OverwriteConfirmDialog(ConfirmDialog):
+    """Confirmation for overwriting a save"""
+    def __init__(self, save_filename):
+        self.save_filename = save_filename
+        super().__init__("Overwrite Save?", save_filename[:50])
+
+    def handle_input(self, events):
+        result = super().handle_input(events)
+        if result == "confirm":
+            return ("confirm", self.save_filename)
+        elif result == "cancel":
+            return ("cancel", None)
+        return (None, None)
 
 class LoadMenu:
     def __init__(self):
@@ -1499,6 +1517,7 @@ def main():
         pause_menu = PauseMenu()
         save_dialog = None
         delete_confirm_dialog = None
+        overwrite_confirm_dialog = None
         load_menu = None
         current_screen = "menu"
         previous_screen = None
@@ -1686,33 +1705,23 @@ def main():
                     elif dialog_action == "cancel":
                         delete_confirm_dialog = None
 
-                elif save_dialog:
-                    dialog_action, save_name = save_dialog.handle_input(events)
-                    if dialog_action == "save":
-                        # Check if we're overwriting an existing save
-                        is_overwriting = save_name in save_dialog.existing_saves
+                elif overwrite_confirm_dialog:
+                    dialog_action, save_name = overwrite_confirm_dialog.handle_input(events)
+                    if dialog_action == "confirm":
+                        # Proceed with overwrite
                         save_description = save_name
-                        if is_overwriting:
-                            # Delete the old save file
-                            try:
-                                filepath = f"{SAVE_DIR}/{save_name}"
-                                if os.path.exists(filepath):
-                                    os.remove(filepath)
-                            except:
-                                pass
-                            # Strip prefix and extension for create_save_file
-                            if save_name.startswith("save_") and save_name.endswith(".json"):
-                                save_description = save_name[5:-5]
+                        if save_name.startswith("save_") and save_name.endswith(".json"):
+                            save_description = save_name[5:-5]
 
-                        if not pilot_name and save_description and not is_overwriting:
-                            pilot_name = save_description
-                            if game_screen:
-                                game_screen.pilot_name = pilot_name
-                            if station_interior:
-                                station_interior.pilot_name = pilot_name
+                        # Delete old save
+                        try:
+                            filepath = f"{SAVE_DIR}/{save_name}"
+                            if os.path.exists(filepath):
+                                os.remove(filepath)
+                        except:
+                            pass
 
-                        # Add location state for restoration
-                        # Use previous_screen since current_screen is "pause"
+                        # Save new game
                         game_state = {}
                         if previous_screen == "moon":
                             game_state = moon_interior.get_state()
@@ -1731,13 +1740,54 @@ def main():
                             game_state["location"] = "space"
                             create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
                         pause_menu.success_timer = 120
+                        overwrite_confirm_dialog = None
+                    elif dialog_action == "cancel":
+                        overwrite_confirm_dialog = None
+
+                elif save_dialog:
+                    dialog_action, save_name = save_dialog.handle_input(events)
+                    if dialog_action == "save":
+                        # Check if we're overwriting an existing save
+                        is_overwriting = save_name in save_dialog.existing_saves
+                        if is_overwriting:
+                            # Show confirmation dialog for overwrite
+                            overwrite_confirm_dialog = OverwriteConfirmDialog(save_name)
+                            save_dialog = None
+                        else:
+                            save_description = save_name
+                            if not pilot_name and save_description:
+                                pilot_name = save_description
+                                if game_screen:
+                                    game_screen.pilot_name = pilot_name
+                                if station_interior:
+                                    station_interior.pilot_name = pilot_name
+
+                            # Save new game
+                            game_state = {}
+                            if previous_screen == "moon":
+                                game_state = moon_interior.get_state()
+                                game_state["location"] = "moon"
+                                if isinstance(moon_interior, MoonCity):
+                                    game_state["moon_location"] = "city"
+                                else:
+                                    game_state["moon_location"] = "wilderness"
+                                create_save_file(pilot_name, save_description, {}, {}, game_state)
+                            elif previous_screen == "station":
+                                game_state = station_interior.get_state()
+                                game_state["location"] = "station"
+                                create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                            else:  # previous_screen == "game" or None
+                                game_state = game_screen.get_state()
+                                game_state["location"] = "space"
+                                create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
+                            pause_menu.success_timer = 120
+                            save_dialog = None
+                    elif dialog_action == "cancel":
                         save_dialog = None
                     elif dialog_action == "delete":
                         delete_confirm_dialog = DeleteConfirmDialog(save_name)
-                    elif dialog_action == "cancel":
-                        save_dialog = None
 
-                if not save_dialog and not delete_confirm_dialog:
+                if not save_dialog and not delete_confirm_dialog and not overwrite_confirm_dialog:
                     action = pause_menu.handle_input(events)
                     if action == "resume":
                         current_screen = previous_screen
@@ -1756,6 +1806,8 @@ def main():
 
                 if delete_confirm_dialog:
                     delete_confirm_dialog.draw(screen)
+                elif overwrite_confirm_dialog:
+                    overwrite_confirm_dialog.draw(screen)
                 elif save_dialog:
                     save_dialog.draw(screen)
 
