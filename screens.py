@@ -12,7 +12,7 @@ import utils
 from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, to_screen, to_screen_x, to_screen_y,
     load_json, delete_save_file, get_save_files, create_save_file, load_save_file,
-    draw_debug_marker, draw_target_brackets, draw_landing_prediction, _center_text_x, _handle_scrolling_input,
+    draw_debug_marker, draw_target_brackets, draw_landing_prediction, draw_landing_trajectory, _center_text_x, _handle_scrolling_input,
     set_camera_offset, get_ship_type, get_graphics_asset,
     get_font, get_centered_x, get_centered_y, render_help_text, handle_menu_navigation, draw_dialog_box
 )
@@ -729,10 +729,13 @@ class GameScreen(ScreenBase):
             # Draw directional arrow pointing toward target
             self._draw_target_arrow(surface, target_obj)
 
-            # Draw predicted landing position (debug visualization)
+            # Draw predicted landing trajectory (debug visualization)
             if self.player.autopilot_active:
-                pred_x, pred_y, dist = self.player.predict_landing_position(target_obj)
-                draw_landing_prediction(surface, pred_x, pred_y)
+                waypoints = self.player.predict_landing_trajectory(target_obj)
+                draw_landing_trajectory(surface, waypoints)
+                if waypoints:
+                    final_x, final_y = waypoints[-1]
+                    draw_landing_prediction(surface, final_x, final_y)
 
         if self.player.autopilot_active:
             ui_scale = get_ui_scale()
