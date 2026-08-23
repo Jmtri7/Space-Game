@@ -715,6 +715,14 @@ class GameScreen(ScreenBase):
             for ai_ship in self.ai_ships:
                 draw_debug_marker(surface, ai_ship.x, ai_ship.y, 8)
 
+            # Draw velocity info
+            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+            ui_scale = get_ui_scale()
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            font_debug = pygame.font.Font(None, int(16 * ui_scale))
+            velocity_text = font_debug.render(f"Velocity: {speed:.2f}", True, (100, 255, 100))
+            surface.blit(velocity_text, (int(ui_offset_x + 10), int(ui_offset_y + 40)))
+
         # Draw target brackets and label
         target_obj = self._get_target_object()
         target_name = self._get_target_name()
