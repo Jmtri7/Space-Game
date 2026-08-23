@@ -439,16 +439,9 @@ class StationInterior(Location):
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
 
-class MoonCity(Location):
-    """Lunar city exploration area. Loads from config/moon_city.json."""
-    def __init__(self, config=None, pilot_name=""):
-        super().__init__(config_file="config/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
-
-
-class MoonOutdoor(Location):
-    """Lunar wilderness exploration area. Loads from config/moon_wilderness.json."""
-    def __init__(self, config=None, pilot_name=""):
-        super().__init__(config_file="config/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
+# Type aliases for Location instantiation
+MoonCity = lambda pilot_name="": Location(config_file="config/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
+MoonOutdoor = lambda pilot_name="": Location(config_file="config/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 
 class GameScreen(ScreenBase):
