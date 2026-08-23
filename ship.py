@@ -217,25 +217,21 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Rotate toward target
-        rotation_step = 5
-        if angle_diff < -rotation_step:
-            self.angle = (self.angle - rotation_step) % 360
-        elif angle_diff > rotation_step:
-            self.angle = (self.angle + rotation_step) % 360
-        else:
-            self.angle = target_angle
+        # Rotate toward target (using turn_left/turn_right)
+        if angle_diff < -self.rotation_speed:
+            self.turn_left()
+        elif angle_diff > self.rotation_speed:
+            self.turn_right()
 
         aligned = abs(angle_diff) < 15
-        thrust_step = self.max_thrust * 0.08
 
         if aligned:
             if distance < 200:
-                self.thrust = max(self.thrust - thrust_step * 2, 0)
+                self.release_thrust()
             else:
-                self.thrust = min(self.thrust + thrust_step, self.max_thrust)
+                self.increase_thrust(step=0.008)
         else:
-            self.thrust = 0
+            self.release_thrust()
 
     def _autopilot_brake(self, target_angle_deg):
         """Braking phase: rotate to face away from target, then apply reverse thrust."""
@@ -243,7 +239,7 @@ class Ship:
         distance = target.get_distance(self.x, self.y)
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
-        # Point ship AWAY from target (opposite direction)
+        # Point ship AWAY from target (opposite direction) using point_to_reverse_velocity
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
 
@@ -254,28 +250,15 @@ class Ship:
             angle_diff += 360
 
         # Phase 1: Rotate to face away from target
-        rotation_step = 5
-        if abs(angle_diff) > rotation_step:
-            if angle_diff < 0:
-                self.angle = (self.angle - rotation_step) % 360
-            else:
-                self.angle = (self.angle + rotation_step) % 360
-            self.thrust = 0
+        if abs(angle_diff) > self.rotation_speed:
+            self.point_to_reverse_velocity()
+            self.release_thrust()
         else:
-            # Phase 2: Facing away from target - apply precise reverse thrust
-            self.angle = reverse_angle
-
+            # Phase 2: Facing away from target - apply reverse thrust
             if speed < 0.15:
-                self.thrust = 0
+                self.release_thrust()
             else:
-                min_distance = max(10, distance - 5)
-                required_decel = (speed * speed) / (2 * min_distance)
-
-                if self.space_drag > 0:
-                    required_decel *= (1 - self.space_drag)
-
-                self.thrust = min(self.max_thrust, required_decel)
-                self.thrust = max(self.max_thrust * 0.2, self.thrust)
+                self.increase_thrust(step=0.02)
 
 
 class PlayerController:
