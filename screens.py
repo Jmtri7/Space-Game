@@ -508,13 +508,25 @@ class GameScreen(ScreenBase):
                 elif event.key == pygame.K_t:
                     self._cycle_target()
                 elif event.key == pygame.K_l:
-                    # If target is selected, engage autopilot
+                    # If target is selected, check if already in landing range
                     target_obj = self._get_target_object()
                     if target_obj and self.current_target is not None:
-                        self.player.autopilot_active = True
-                        self.player.autopilot_target = target_obj
+                        distance = target_obj.get_distance(self.player.x, self.player.y)
+                        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+                        # If close and slow enough, land directly
+                        if distance < 150 and speed < 0.5:
+                            if target_obj == self.station:
+                                self.landing_target = "station"
+                                return "land"
+                            elif target_obj == self.moon:
+                                self.landing_target = "moon"
+                                return "land"
+                        else:
+                            # Otherwise engage autopilot to approach target
+                            self.player.autopilot_active = True
+                            self.player.autopilot_target = target_obj
                     else:
-                        # Otherwise check if close enough to land manually
+                        # No target selected, check if close enough to land manually
                         landing_target = self._check_landing()
                         if landing_target:
                             self.landing_target = landing_target
