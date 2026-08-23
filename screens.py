@@ -132,14 +132,103 @@ class WalkableArea(ScreenBase):
         self.player_y = player_state.get("y", self.player_y)
 
 
-class StationInterior(WalkableArea):
-    """Interior of a space station with NPCs and dialogue."""
+class Location(WalkableArea):
+    """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
+    def __init__(self, config_file, world_width=1600, world_height=1600, pilot_name=""):
+        # Load config
+        self.config = load_json(config_file) or {}
+        entrance_cfg = self.config.get("entrance", {})
+        start_x = entrance_cfg.get("x", world_width // 2)
+        start_y = entrance_cfg.get("y", world_height - 80)
+
+        super().__init__(start_x=start_x, start_y=start_y, world_width=world_width, world_height=world_height, pilot_name=pilot_name)
+
+        # Set entrance
+        self.entrance_x = start_x
+        self.entrance_y = start_y
+        self.player_x = self.entrance_x
+        self.player_y = self.entrance_y
+
+        # Get display properties
+        self.ui_label = self.config.get("label", "Location")
+        self.bg_color = tuple(self.config.get("background_color", [50, 50, 70]))
+
+        # Load structures (buildings, craters, rocks, etc.)
+        self.structures = self.config.get("structures", [])
+        self.npcs_config = self.config.get("npcs", [])
+
+    def update(self):
+        """Update location - handle movement and camera."""
+        keys = pygame.key.get_pressed()
+        self._handle_movement(keys)
+        self.update_camera()
+
+    def draw(self, surface):
+        """Draw location from config."""
+        surface.fill(self.bg_color)
+        scale = get_scale()
+
+        # Draw structures from config
+        for structure in self.structures:
+            struct_type = structure.get("type", "rect")
+            color = tuple(structure.get("color", [150, 150, 150]))
+
+            if struct_type == "rect":
+                x, y, w, h = structure["x"], structure["y"], structure["width"], structure["height"]
+                x1, y1 = to_screen(x, y)
+                x2, y2 = to_screen(x + w, y + h)
+                pygame.draw.rect(surface, color, (x1, y1, x2 - x1, y2 - y1))
+
+            elif struct_type == "circle":
+                x, y, r = structure["x"], structure["y"], structure.get("radius", 50)
+                cx, cy = to_screen(x, y)
+                pygame.draw.circle(surface, color, (cx, cy), max(1, int(r * scale)))
+
+            elif struct_type == "polygon":
+                points = [(p["x"], p["y"]) for p in structure["points"]]
+                screen_points = [to_screen(x, y) for x, y in points]
+                pygame.draw.polygon(surface, color, screen_points)
+
+        # Draw windows/details from config
+        for detail in self.config.get("details", []):
+            detail_type = detail.get("type", "window")
+            color = tuple(detail.get("color", [255, 255, 0]))
+
+            if detail_type == "window":
+                sx, sy, ex, ey, spacing = detail["start_x"], detail["start_y"], detail["end_x"], detail["end_y"], detail.get("spacing", 50)
+                for x in range(sx, ex, spacing):
+                    for y in range(sy, ey, spacing):
+                        px, py = to_screen(x, y)
+                        pygame.draw.rect(surface, color, (px, py, 15, 15))
+
+        # Draw entrance marker
+        ex, ey = to_screen(self.entrance_x, self.entrance_y)
+        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
+        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
+
+        # Draw player
+        px, py = to_screen(self.player_x, self.player_y)
+        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
+
+        # Debug marker
+        if DEBUG_MODE:
+            draw_debug_marker(surface, self.player_x, self.player_y, 10)
+
+        # Draw UI
+        self.draw_ui_text(surface, self.ui_label)
+
+
+class StationInterior(Location):
+    """Interior of a space station with NPCs and dialogue. Loads from config/station_interior.json."""
     def __init__(self, station_config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=GAME_WIDTH, world_height=GAME_HEIGHT, pilot_name=pilot_name)
+        # Load config
+        self.station_config = station_config or load_json("config/station_interior.json") or {}
+
+        super().__init__(config_file="config/station_interior.json", world_width=GAME_WIDTH, world_height=GAME_HEIGHT, pilot_name=pilot_name)
+
         self.room_width = GAME_WIDTH
         self.room_height = GAME_HEIGHT
-
-        self.station_config = station_config or load_json("config/station_interior.json") or {}
 
         hallway_cfg = self.station_config.get("hallway", {})
         self.hallway_narrow_width = hallway_cfg.get("narrow_width", 80)
@@ -350,114 +439,16 @@ class StationInterior(WalkableArea):
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
 
-class MoonCity(WalkableArea):
-    """Lunar city exploration area."""
+class MoonCity(Location):
+    """Lunar city exploration area. Loads from config/moon_city.json."""
     def __init__(self, config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600, pilot_name=pilot_name)
-        self.city_config = config or load_json("config/moon_city.json") or {}
-        self.buildings = self.city_config.get("buildings", [])
-        self.windows = self.city_config.get("windows", [])
-
-        # Load entrance from config
-        entrance_cfg = self.city_config.get("entrance", {})
-        self.entrance_x = entrance_cfg.get("x", 800)
-        self.entrance_y = entrance_cfg.get("y", 1400)
-        self.player_x = self.entrance_x
-        self.player_y = self.entrance_y
-
-    def update(self):
-        keys = pygame.key.get_pressed()
-        self._handle_movement(keys)
-        self.update_camera()
-
-    def draw(self, surface):
-        surface.fill((50, 50, 70))
-
-        # Draw buildings from config
-        for building in self.buildings:
-            bx, by, bw, bh = building["x"], building["y"], building["width"], building["height"]
-            color = tuple(building.get("color", [150, 150, 150]))
-            x1, y1 = to_screen(bx, by)
-            x2, y2 = to_screen(bx + bw, by + bh)
-            pygame.draw.rect(surface, color, (x1, y1, x2 - x1, y2 - y1))
-
-        # Draw windows from config
-        for window in self.windows:
-            sx, sy, ex, ey, spacing = window["start_x"], window["start_y"], window["end_x"], window["end_y"], window["spacing"]
-            for bx in range(sx, ex, spacing):
-                for by in range(sy, ey, spacing):
-                    x, y = to_screen(bx, by)
-                    pygame.draw.rect(surface, YELLOW, (x, y, 15, 15))
-
-        # Draw player
-        px, py = to_screen(self.player_x, self.player_y)
-        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
-
-        # Debug marker for player position
-        if DEBUG_MODE:
-            draw_debug_marker(surface, self.player_x, self.player_y, 10)
-
-        # Draw UI
-        self.draw_ui_text(surface, "Moon City | Press L to leave")
+        super().__init__(config_file="config/moon_city.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 
-class MoonOutdoor(WalkableArea):
-    """Lunar wilderness exploration area."""
+class MoonOutdoor(Location):
+    """Lunar wilderness exploration area. Loads from config/moon_wilderness.json."""
     def __init__(self, config=None, pilot_name=""):
-        super().__init__(start_x=GAME_WIDTH // 2, start_y=GAME_HEIGHT - 80, world_width=1600, world_height=1600, pilot_name=pilot_name)
-        self.wilderness_config = config or load_json("config/moon_wilderness.json") or {}
-        self.craters = self.wilderness_config.get("craters", [])
-        self.rocks = self.wilderness_config.get("rocks", [])
-
-        # Load entrance from config
-        entrance_cfg = self.wilderness_config.get("entrance", {})
-        self.entrance_x = entrance_cfg.get("x", 800)
-        self.entrance_y = entrance_cfg.get("y", 1400)
-        self.player_x = self.entrance_x
-        self.player_y = self.entrance_y
-
-    def update(self):
-        keys = pygame.key.get_pressed()
-        self._handle_movement(keys)
-        self.update_camera()
-
-    def draw(self, surface):
-        # Draw moon terrain
-        surface.fill((80, 80, 100))
-
-        scale = get_scale()
-
-        # Draw craters from config
-        for crater in self.craters:
-            cx, cy, r = crater["x"], crater["y"], crater.get("radius", 50)
-            crater_x, crater_y = to_screen(cx, cy)
-            pygame.draw.circle(surface, (60, 60, 80), (crater_x, crater_y), max(1, int(r * scale)))
-            pygame.draw.circle(surface, (70, 70, 90), (crater_x, crater_y), max(1, int((r - 5) * scale)))
-
-        # Draw rocks from config
-        for rock in self.rocks:
-            rx, ry = rock["x"], rock["y"]
-            rock_x, rock_y = to_screen(rx, ry)
-            size = int(30 * scale)
-            pygame.draw.polygon(surface, (120, 120, 140), [(rock_x, rock_y), (rock_x + size, rock_y + size//2), (rock_x + size - 10, rock_y + size + 5), (rock_x - 10, rock_y + size)])
-
-        # Draw entrance marker
-        ex, ey = to_screen(self.entrance_x, self.entrance_y)
-        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
-        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
-
-        # Draw player
-        px, py = to_screen(self.player_x, self.player_y)
-        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
-
-        # Debug marker for player position
-        if DEBUG_MODE:
-            draw_debug_marker(surface, self.player_x, self.player_y, 10)
-
-        # Draw UI
-        self.draw_ui_text(surface, "Moon Wilderness | Press L to leave")
+        super().__init__(config_file="config/moon_wilderness.json", world_width=1600, world_height=1600, pilot_name=pilot_name)
 
 
 class GameScreen(ScreenBase):
