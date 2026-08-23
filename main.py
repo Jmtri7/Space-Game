@@ -1529,8 +1529,9 @@ def main():
                                 station_interior.pilot_name = pilot_name
 
                         # Add location state for restoration
+                        # Use previous_screen since current_screen is "pause"
                         game_state = {}
-                        if current_screen == "moon":
+                        if previous_screen == "moon":
                             game_state = moon_interior.get_state()
                             game_state["location"] = "moon"
                             if isinstance(moon_interior, MoonCity):
@@ -1538,11 +1539,11 @@ def main():
                             else:
                                 game_state["moon_location"] = "wilderness"
                             create_save_file(pilot_name, save_description, {}, {}, game_state)
-                        elif current_screen == "station":
+                        elif previous_screen == "station":
                             game_state = station_interior.get_state()
                             game_state["location"] = "station"
                             create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
-                        else:  # current_screen == "game"
+                        else:  # previous_screen == "game" or None
                             game_state = game_screen.get_state()
                             game_state["location"] = "space"
                             create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
