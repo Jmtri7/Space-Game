@@ -12,7 +12,8 @@ from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, to_screen, to_screen_x, to_screen_y,
     load_json, delete_save_file, get_save_files, create_save_file, load_save_file,
     draw_debug_marker, draw_target_brackets, _center_text_x, _handle_scrolling_input,
-    set_camera_offset, get_ship_type, get_graphics_asset
+    set_camera_offset, get_ship_type, get_graphics_asset,
+    get_font, get_centered_x, get_centered_y, render_help_text, handle_menu_navigation, draw_dialog_box
 )
 from ship import PlayerController, AIShip
 from objects import SpaceStation, NPC, Dialogue, StarField, Moon
@@ -874,9 +875,9 @@ class SaveDialog:
         offset_x, offset_y = get_offset()
 
         if self.input_mode:
-            pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.2), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.6)))
-            font_title = pygame.font.Font(None, int(32 * scale))
-            font_text = pygame.font.Font(None, int(24 * scale))
+            draw_dialog_box(surface, offset_x + GAME_WIDTH * scale * 0.1, offset_y + GAME_HEIGHT * scale * 0.2, GAME_WIDTH * scale * 0.8, GAME_HEIGHT * scale * 0.6)
+            font_title = get_font(int(32 * scale))
+            font_text = get_font(int(24 * scale))
 
             title = font_title.render("Save Name:", True, WHITE)
             surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.25)))
@@ -889,9 +890,9 @@ class SaveDialog:
             help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.6)))
         else:
-            pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.1), int(offset_y + GAME_HEIGHT * scale * 0.15), int(GAME_WIDTH * scale * 0.8), int(GAME_HEIGHT * scale * 0.7)))
-            font_title = pygame.font.Font(None, int(32 * scale))
-            font_text = pygame.font.Font(None, int(20 * scale))
+            draw_dialog_box(surface, offset_x + GAME_WIDTH * scale * 0.1, offset_y + GAME_HEIGHT * scale * 0.15, GAME_WIDTH * scale * 0.8, GAME_HEIGHT * scale * 0.7)
+            font_title = get_font(int(32 * scale))
+            font_text = get_font(int(20 * scale))
 
             title = font_title.render("Select Save to Overwrite", True, YELLOW)
             surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.2)))
@@ -1204,10 +1205,10 @@ class StorySelector:
         """Handle input and return selected story or 'cancel'."""
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    self.selected_index = (self.selected_index - 1) % len(self.stories)
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    self.selected_index = (self.selected_index + 1) % len(self.stories)
+                # Use menu navigation helper
+                new_index = handle_menu_navigation(event, self.selected_index, len(self.stories))
+                if new_index is not None:
+                    self.selected_index = new_index
                 elif event.key == pygame.K_RETURN:
                     return self.stories[self.selected_index]
                 elif event.key == pygame.K_ESCAPE:
@@ -1220,13 +1221,13 @@ class StorySelector:
         scale = min(utils.screen_width, utils.screen_height) / 600.0
 
         # Title
-        font_large = pygame.font.Font(None, int(72 * scale))
+        font_large = get_font(int(72 * scale))
         title = font_large.render("SELECT STORY", True, WHITE)
         title_rect = title.get_rect(center=(utils.screen_width // 2, int(100 * scale)))
         surface.blit(title, title_rect)
 
         # Story options
-        font_menu = pygame.font.Font(None, int(48 * scale))
+        font_menu = get_font(int(48 * scale))
         y_base = int(250 * scale)
         y_spacing = int(80 * scale)
 
@@ -1235,7 +1236,7 @@ class StorySelector:
             # Capitalize story name
             display_name = story.replace("_", " ").title()
             text = font_menu.render(display_name, True, color)
-            text_x = utils.screen_width // 2 - text.get_width() // 2
+            text_x = get_centered_x(text.get_width())
             text_y = y_base + i * y_spacing
             surface.blit(text, (text_x, text_y))
 
@@ -1244,10 +1245,7 @@ class StorySelector:
                 pygame.draw.rect(surface, YELLOW, box_rect, 3)
 
         # Help text
-        font_small = pygame.font.Font(None, int(24 * scale))
-        help_text = font_small.render("UP/DOWN: select, ENTER: play, ESC: cancel", True, GRAY)
-        help_rect = help_text.get_rect(center=(utils.screen_width // 2, utils.screen_height - int(50 * scale)))
-        surface.blit(help_text, help_rect)
+        render_help_text(surface, "UP/DOWN: select, ENTER: play, ESC: cancel", utils.screen_height - int(50 * scale))
 
 
 class Menu:
@@ -1256,19 +1254,12 @@ class Menu:
         self.items = ["NEW", "LOAD", "QUIT"]
         self.selected_index = 0
 
-    def _get_fonts(self):
-        scale = min(utils.screen_width, utils.screen_height) / 600.0
-        font_large = pygame.font.Font(None, int(72 * scale))
-        font_menu = pygame.font.Font(None, int(48 * scale))
-        return font_large, font_menu
-
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.selected_index = (self.selected_index - 1) % len(self.items)
-                elif event.key == pygame.K_DOWN:
-                    self.selected_index = (self.selected_index + 1) % len(self.items)
+                new_index = handle_menu_navigation(event, self.selected_index, len(self.items))
+                if new_index is not None:
+                    self.selected_index = new_index
                 elif event.key == pygame.K_RETURN:
                     return self.items[self.selected_index].lower()
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -1296,7 +1287,7 @@ class Menu:
         scale = min(utils.screen_width, utils.screen_height) / 600.0
         y_base = int(200 * scale)
         y_spacing = int(80 * scale)
-        _, font_menu = self._get_fonts()
+        font_menu = get_font(int(48 * scale))
         text = font_menu.render(self.items[index], True, WHITE)
         rect = text.get_rect(center=(utils.screen_width // 2, y_base + index * y_spacing))
         return rect
@@ -1305,10 +1296,11 @@ class Menu:
         surface.fill(BLACK)
 
         scale = min(utils.screen_width, utils.screen_height) / 600.0
-        font_large, font_menu = self._get_fonts()
+        font_large = get_font(int(72 * scale))
+        font_menu = get_font(int(48 * scale))
 
         title = font_large.render("MENU", True, WHITE)
-        surface.blit(title, (utils.screen_width // 2 - title.get_width() // 2, int(50 * scale)))
+        surface.blit(title, (get_centered_x(title.get_width()), int(50 * scale)))
 
         y_base = int(200 * scale)
         y_spacing = int(80 * scale)
@@ -1322,7 +1314,7 @@ class Menu:
             color = YELLOW if i == self.selected_index else GRAY
             text = font_menu.render(item, True, color)
             y = y_base + i * y_spacing
-            text_x = utils.screen_width // 2 - text.get_width() // 2
+            text_x = get_centered_x(text.get_width())
             surface.blit(text, (text_x, y))
 
             if i == self.selected_index:

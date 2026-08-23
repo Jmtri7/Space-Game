@@ -75,6 +75,56 @@ def get_ui_offset():
     return (offset_x, offset_y)
 
 
+# Font cache for efficient font reuse
+_font_cache = {}
+
+def get_font(size, bold=False):
+    """Get or create a cached font to avoid recreating fonts every frame."""
+    key = (size, bold)
+    if key not in _font_cache:
+        _font_cache[key] = pygame.font.Font(None, int(size))
+    return _font_cache[key]
+
+
+def get_centered_x(text_width):
+    """Get X coordinate to center text horizontally on screen."""
+    return screen_width // 2 - text_width // 2
+
+
+def get_centered_y(text_height):
+    """Get Y coordinate to center text vertically on screen."""
+    return screen_height // 2 - text_height // 2
+
+
+def render_help_text(surface, text, y_pos=None, color=(150, 150, 150)):
+    """Render help text at bottom of screen or at specified Y position."""
+    from constants import GRAY
+    color = color or GRAY
+    font = get_font(int(16 * get_ui_scale()))
+    help_text = font.render(text, True, color)
+    if y_pos is None:
+        y_pos = screen_height - 30
+    x = get_centered_x(help_text.get_width())
+    surface.blit(help_text, (x, int(y_pos)))
+
+
+def handle_menu_navigation(event, current_index, list_length):
+    """Handle UP/DOWN arrow key navigation for menus. Returns new index or None if unchanged."""
+    if not event or event.type != pygame.KEYDOWN or list_length == 0:
+        return None
+    if event.key == pygame.K_UP or event.key == pygame.K_w:
+        return (current_index - 1) % list_length
+    elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+        return (current_index + 1) % list_length
+    return None
+
+
+def draw_dialog_box(surface, x, y, width, height, color=(40, 40, 60), border_color=(100, 100, 100)):
+    """Draw a dialog box background with border."""
+    pygame.draw.rect(surface, color, (int(x), int(y), int(width), int(height)))
+    pygame.draw.rect(surface, border_color, (int(x), int(y), int(width), int(height)), 2)
+
+
 def load_json(filename):
     """Load JSON file, return None if error."""
     try:
