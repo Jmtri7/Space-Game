@@ -80,6 +80,30 @@ class Ship:
         """Reduce thrust (coast to stop)."""
         self.thrust = max(self.thrust - step, 0)
 
+    def point_to_reverse_velocity(self):
+        """Rotate ship to point opposite current velocity direction."""
+        if self.velocity_x == 0 and self.velocity_y == 0:
+            return  # No velocity, nothing to reverse
+        # Calculate velocity angle
+        velocity_angle = math.degrees(math.atan2(self.velocity_x, -self.velocity_y))
+        # Point opposite: add 180 degrees
+        target_angle = (velocity_angle + 180) % 360
+        # Rotate ship toward target angle (using same rotation speed as normal rotation)
+        current_angle = self.angle % 360
+        angle_diff = target_angle - current_angle
+        if angle_diff > 180:
+            angle_diff -= 360
+        elif angle_diff < -180:
+            angle_diff += 360
+        # Rotate one step toward target
+        rotation_step = self.rotation_speed
+        if angle_diff < -rotation_step:
+            self.angle = (self.angle - rotation_step) % 360
+        elif angle_diff > rotation_step:
+            self.angle = (self.angle + rotation_step) % 360
+        else:
+            self.angle = target_angle
+
     def update(self):
         """Base physics update: apply thrust, velocity cap, and movement."""
         self.update_autopilot()
@@ -269,6 +293,9 @@ class PlayerController:
         # Thrust controls
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.ship.increase_thrust()
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            # Point ship toward opposite velocity (brake/reverse)
+            self.ship.point_to_reverse_velocity()
         else:
             self.ship.decrease_thrust()
 
