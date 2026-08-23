@@ -1480,19 +1480,13 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    # Park the ship: zero velocity and position next to landing target
+                    # Park the ship: zero velocity, keep current position
                     game_screen.player.velocity_x = 0
                     game_screen.player.velocity_y = 0
                     if game_screen.landing_target == "station":
-                        # Position ship next to station
-                        game_screen.player.x = game_screen.station.x + 100
-                        game_screen.player.y = game_screen.station.y
                         station_interior = StationInterior(pilot_name=pilot_name)
                         current_screen = "station"
                     elif game_screen.landing_target == "moon":
-                        # Position ship next to moon
-                        game_screen.player.x = game_screen.moon.x + 80
-                        game_screen.player.y = game_screen.moon.y
                         location_selector = LocationSelector()
                         current_screen = "select_location"
                 game_screen.update()
