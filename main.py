@@ -1554,6 +1554,7 @@ def main():
                                 game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
                                 game_screen.restore_state(game_state)
                                 station_interior = StationInterior(pilot_name=pilot_name)
+                                station_interior.restore_state(game_state)
                                 current_screen = "station"
                             elif location == "moon":
                                 game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
