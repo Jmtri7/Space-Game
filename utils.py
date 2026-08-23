@@ -242,17 +242,25 @@ def draw_landing_prediction(surface, x, y):
 
 def draw_landing_trajectory(surface, waypoints):
     """Draw predicted trajectory as connected waypoints."""
-    if not constants.DEBUG_MODE or not waypoints or len(waypoints) < 2:
+    if not constants.DEBUG_MODE or not waypoints:
         return
 
-    screen_points = [to_screen(x, y) for x, y in waypoints]
+    try:
+        screen_points = []
+        for wx, wy in waypoints:
+            screen_points.append(to_screen(wx, wy))
 
-    # Draw line connecting waypoints
-    pygame.draw.lines(surface, (255, 200, 0), screen_points, 1)
+        if len(screen_points) < 2:
+            return
 
-    # Draw waypoint circles
-    for point in screen_points:
-        pygame.draw.circle(surface, (200, 150, 0), point, 3, 1)
+        # Draw line connecting waypoints
+        pygame.draw.lines(surface, (255, 200, 0), screen_points, 1)
+
+        # Draw waypoint circles
+        for point in screen_points:
+            pygame.draw.circle(surface, (200, 150, 0), point, 3, 1)
+    except Exception:
+        pass  # Silently skip if waypoints are malformed
 
 
 def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):

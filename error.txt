@@ -1,9 +1,12 @@
-'PlayerController' object has no attribute 'predict_landing_position'
+points argument must be a sequence of number pairs
 Traceback (most recent call last):
   File "C:\Users\Play\Documents\Projects\space-game\main.py", line 179, in main
     game_screen.draw(screen)
     ~~~~~~~~~~~~~~~~^^^^^^^^
-  File "C:\Users\Play\Documents\Projects\space-game\screens.py", line 734, in draw
-    pred_x, pred_y, dist = self.player.predict_landing_position(target_obj)
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'PlayerController' object has no attribute 'predict_landing_position'
+  File "C:\Users\Play\Documents\Projects\space-game\screens.py", line 735, in draw
+    draw_landing_trajectory(surface, waypoints)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Play\Documents\Projects\space-game\utils.py", line 251, in draw_landing_trajectory
+    pygame.draw.lines(surface, (255, 200, 0), screen_points, 1)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: points argument must be a sequence of number pairs

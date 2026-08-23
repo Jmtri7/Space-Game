@@ -731,11 +731,14 @@ class GameScreen(ScreenBase):
 
             # Draw predicted landing trajectory (debug visualization)
             if self.player.autopilot_active:
-                waypoints = self.player.predict_landing_trajectory(target_obj)
-                draw_landing_trajectory(surface, waypoints)
-                if waypoints:
-                    final_x, final_y = waypoints[-1]
-                    draw_landing_prediction(surface, final_x, final_y)
+                try:
+                    waypoints = self.player.predict_landing_trajectory(target_obj)
+                    if waypoints:
+                        draw_landing_trajectory(surface, waypoints)
+                        final_x, final_y = waypoints[-1]
+                        draw_landing_prediction(surface, final_x, final_y)
+                except Exception:
+                    pass  # Silently skip trajectory if prediction fails
 
         if self.player.autopilot_active:
             ui_scale = get_ui_scale()
