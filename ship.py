@@ -333,7 +333,8 @@ class Ship:
         sim_angle = self.angle
         sim_thrust = self.thrust
 
-        landing_distance = target.landing_distance
+        # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
+        landing_distance = getattr(target, 'landing_distance', 100)
 
         # Simulate forward frame by frame
         for frame in range(max_frames):
