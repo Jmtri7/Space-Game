@@ -88,13 +88,30 @@ python main.py
 ## Project Structure
 ```
 space-game/
-├── main.py                 # Complete game implementation (~1000+ lines)
+├── main.py                 # Game loop and initialization
+├── constants.py            # Game config: colors, dimensions, FPS
+├── utils.py                # Rendering, file I/O, coordinate conversion
+├── ship.py                 # Ship, PlayerController, AIShip classes
+├── objects.py              # SpaceStation, Moon, StarField, NPCs, Dialogue
+├── screens.py              # All game screens and UI (GameScreen, Menus, Dialogs, etc.)
 ├── config/
-│   ├── space_system.json  # System layout: station position, AI ships
+│   ├── space_system.json   # System layout: station position, AI ships
 │   └── station_interior.json # Station rooms, NPCs, dialogue
-├── saves/                 # Player save files (generated at runtime)
-└── requirements.txt       # pygame only
+├── saves/                  # Player save files (generated at runtime)
+├── docs/
+│   ├── README.md           # Architecture and systems overview
+│   ├── CONTROLS.md         # Keyboard bindings and control documentation
+│   └── DESIGN_PATTERNS.md  # Reusable patterns and best practices
+└── requirements.txt        # pygame only
 ```
+
+**Module Responsibilities:**
+- **main.py** — Game loop, screen state machine, pygame initialization
+- **constants.py** — Colors, game dimensions, UI configuration
+- **utils.py** — Coordinate conversion, rendering helpers, file I/O, camera management
+- **ship.py** — Ship physics, autopilot logic, player input handling
+- **objects.py** — World objects (station, moon, starfield, NPCs)
+- **screens.py** — All user-facing screens (game, menus, dialogs, interior exploration)
 
 ## Coordinate System
 **Critical:** All game graphics are defined in **game-space** (800x600) and scaled to window size.
@@ -106,28 +123,35 @@ space-game/
 
 ## Key Classes & Architecture
 
-### Ships
-- **Ship** (base class): Position, angle, velocity, thrust, drag, rotation
-  - `draw_ship()`: Rotated polygon with flame at rear
-  - `wrap_position()`: Screen-wrapping at edges
-  - `update()`: Physics simulation
-- **Player** (extends Ship): Handles WASD/arrow input, thrust control
-- **AIShip** (extends Ship): Autonomous behavior (wanders, avoids)
+### Ships (in ship.py)
+- **Ship** (base class): Position, angle, velocity, thrust, space_drag, rotation
+  - `draw()`: Rotated polygon with thrust flame
+  - `update()`: Physics simulation with autopilot integration
+  - `update_autopilot()`: Kinematic-based autopilot controller
+  - `_predict_braking_distance()`: Predict stopping distance
+  - `_autopilot_approach()`, `_autopilot_brake()`: Autopilot execution
+  - `wrap_position()`: Screen-wrapping at edges (torus topology)
+- **PlayerController**: Owns Ship, handles WASD/arrow input for thrust and rotation
+- **AIShip** (extends Ship): Autonomous behavior (accelerate/brake cycling with random course changes)
 
-### Game Screens
-- **GameScreen**: Space view with player, AI ships, star field, station
-  - `get_state()`: Saves player/AI positions for save files
-  - `restore_state()`: Restores positions from save files
-- **StationInterior**: First-person station exploration
-- **Menu**: NEW/LOAD/QUIT menu (LOAD appears when saves exist)
-- **PauseMenu**: Resume/Save/Quit with success banner
-- **SaveDialog**: Shows all saves, allows overwriting, scrolling list
-- **LoadMenu**: Browse and load saves with scrolling
+### Game Screens (in screens.py)
+- **ScreenBase**: Base class for all screens with `get_state()` and `restore_state()`
+- **GameScreen**: Main space exploration view (player, AI ships, star field, station)
+- **StationInterior**: First-person station interior exploration with NPCs
+- **MoonCity**, **MoonOutdoor**: Lunar location exploration
+- **Menu**: Main menu (NEW/LOAD/QUIT, LOAD appears when saves exist)
+- **PauseMenu**: In-game pause (Resume/Save/Quit)
+- **SaveDialog**, **LoadMenu**: Save file browsing and selection
+- **PilotNameDialog**: Pilot name entry for new games
+- **LocationSelector**: Target selection for autopilot
 
-### NPCs & Dialogue
-- **Person** (base): Position, sprite drawing (body + head)
-- **NPC** (extends Person): Behavior (bar/wander), dialogue system
-- **Dialogue**: Text-based conversation tree with options
+### World Objects (in objects.py)
+- **SpaceStation**: Rotating space station with landing detection
+- **Moon**: Celestial body with surface and city
+- **StarField**: Procedurally generated background stars
+- **Person** (base): Position, sprite with body and head
+- **NPC** (extends Person): Interactive character with behavior (bar/wander) and dialogue
+- **Dialogue**: Text-based conversation system with options
 
 ## Save System
 **Location:** `saves/` directory (auto-created)
@@ -184,27 +208,34 @@ space-game/
 
 ## Code Organization & Helpers
 
-### Extracted Helper Functions (in main.py)
-These functions eliminate duplication across menus:
-- **`_list_files_by_pattern(directory, prefix, suffix)`** — Unifies file listing for SaveDialog and get_save_files()
-- **`_handle_scrolling_input(key, selected, items, scroll_offset, max_visible)`** — Shared up/down navigation for SaveDialog and LoadMenu
-- **`_center_text_x(surface, text, offset_x=0)`** — Unified menu text centering
+### Rendering & Utility Functions (in utils.py)
+Core utilities used across all modules:
+- **`to_screen(x, y)`** — Convert world to screen coordinates
+- **`to_screen_x(x)`, `to_screen_y(y)`** — Single-axis screen conversion
+- **`get_scale()`, `get_offset()`** — Rendering scale and centering
+- **`set_camera_offset(x, y)`, `set_screen_size(w, h)`** — Camera and viewport management
+- **`get_ui_scale()`, `get_ui_offset()`** — UI element scaling (independent of world zoom)
+- **`load_json()`, `save_json()`** — File I/O with error handling
+- **`get_save_files()`, `create_save_file()`, `load_save_file()`, `delete_save_file()`** — Save file management
+- **`_list_files_by_pattern()`** — Unified file listing
+- **`_handle_scrolling_input()`** — Shared menu navigation logic
+- **`_center_text_x()`** — Text centering helper
+- **`draw_debug_marker()`, `draw_target_brackets()`** — Debug visualization
 
-### Physics Engine (in game_physics.py)
-Pure functions decoupled from Pygame for testability:
-- **`update_velocity(vx, vy, thrust, angle)`** — Apply thrust and drag, cap speed
-- **`update_position(x, y, vx, vy)`** — Move ship by velocity
-- **`wrap_position(x, y)`** — Handle screen wrapping (torus topology)
-- **`update_thrust(thrust, keys_accel, keys_decel)`** — Control thrust input
-- **`update_angle(angle, keys_left, keys_right)`** — Rotate ship
-- **`get_distance(x1, y1, x2, y2)`** — Euclidean distance
-- **`can_land(px, py, sx, sy)`** — Check landing conditions
-- **`rotate_point(x, y, cx, cy, angle)`** — 2D point rotation
+### Ship Physics (in ship.py)
+Integrated into Ship class with kinematic autopilot:
+- **`Ship.update()`** — Physics simulation: thrust, velocity capping, drag, movement
+- **`Ship.update_autopilot()`** — Autopilot controller (approach → brake phases)
+- **`Ship._predict_braking_distance()`** — Kinematic prediction of stopping distance
+- **`Ship._autopilot_approach()`, `_autopilot_brake()`** — Autopilot execution logic
 
-These are tested independently (31 tests) and can be used without Pygame.
-
-### Constants
-- **`SAVE_DIR = "saves"`** — Centralized save directory path (replaces hardcoded strings)
+### Constants (in constants.py)
+- **`GAME_WIDTH`, `GAME_HEIGHT`** — World dimensions (2400x1800)
+- **`CAMERA_ZOOM`** — Camera magnification (3.0x)
+- **`SCREEN_WIDTH`, `SCREEN_HEIGHT`** — Window dimensions
+- **`SAVE_DIR`** — Save directory path
+- **Color constants** — BLACK, WHITE, GRAY, YELLOW, DARK_GRAY, GREEN, CYAN
+- **`FPS`** — Frame rate (60)
 
 ## Common Fixes & Known Patterns
 
