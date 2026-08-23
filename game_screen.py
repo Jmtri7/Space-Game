@@ -12,8 +12,7 @@ import utils
 from screen_base import ScreenBase
 from player_controller import PlayerController
 from ai_ship import AIShip
-from space_station import SpaceStation
-from moon import Moon
+from landable import Landable
 from starfield import StarField
 
 
@@ -43,11 +42,11 @@ class GameScreen(ScreenBase):
 
         station_cfg = self.system_config.get("station", {})
         station_graphics = get_graphics_asset("space_stations", station_asset_id)
-        self.station = SpaceStation(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics)
+        self.station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics)
 
         moon_cfg = self.system_config.get("moon", {})
         moon_graphics = get_graphics_asset("moons", moon_asset_id)
-        self.moon = Moon(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics)
+        self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics)
 
         # Load all AI ships from config
         self.ai_ships = []

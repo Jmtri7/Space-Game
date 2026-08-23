@@ -11,8 +11,6 @@ from utils import (
 )
 from player_controller import PlayerController
 from ai_ship import AIShip
-from space_station import SpaceStation
-from moon import Moon
 from game_screen import GameScreen
 from station_interior import StationInterior
 from location import Location
