@@ -177,8 +177,9 @@ class Ship:
         distance = target.get_distance(self.x, self.y)
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
-        # Step 1: Landing condition check
-        landing_distance = self.autopilot_target.landing_distance
+        # Step 1: Landing/arrival condition check
+        # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
+        landing_distance = getattr(self.autopilot_target, 'landing_distance', 100)
         if distance < landing_distance and speed < 0.4:
             self.autopilot_active = False
             self.release_thrust()
