@@ -271,3 +271,94 @@ class Ship:
             self.increase_thrust()
         else:
             self.release_thrust()
+
+    def predict_landing_position(self, target, max_frames=500):
+        """Predict where ship will stop given current autopilot trajectory.
+
+        Simulates autopilot behavior forward in time to determine final position.
+        Returns (final_x, final_y, distance_from_target).
+        """
+        if not target:
+            return self.x, self.y, 0
+
+        # Snapshot current state
+        sim_x, sim_y = self.x, self.y
+        sim_vx, sim_vy = self.velocity_x, self.velocity_y
+        sim_angle = self.angle
+        sim_thrust = self.thrust
+
+        landing_distance = target.landing_distance
+
+        # Simulate forward frame by frame
+        for _ in range(max_frames):
+            distance = target.get_distance(sim_x, sim_y)
+            speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
+
+            # Check landing condition
+            if distance < landing_distance and speed < 0.5:
+                return sim_x, sim_y, distance
+
+            # Braking decision (same as autopilot logic)
+            braking_distance = self._predict_braking_distance_from_stop(speed)
+            should_brake = distance <= braking_distance and speed > 0.1
+
+            # Predictive braking check
+            if should_brake:
+                decel_per_frame = self.acceleration_magnitude
+                if self.space_drag > 0:
+                    decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
+                next_speed = speed - decel_per_frame
+                if next_speed < 0.5:
+                    return sim_x, sim_y, distance
+
+            # Calculate acceleration direction
+            dx = target.x - sim_x
+            dy = target.y - sim_y
+            target_angle = math.atan2(dx, -dy)
+
+            if should_brake:
+                accel_angle = self._calculate_brake_redirect_angle(target_angle)
+            else:
+                accel_angle = target_angle
+
+            # Point ship (same as _autopilot_point_and_thrust)
+            accel_angle_deg = math.degrees(accel_angle)
+            current_angle = sim_angle % 360
+            target_angle_norm = accel_angle_deg % 360
+
+            angle_diff = target_angle_norm - current_angle
+            if angle_diff > 180:
+                angle_diff -= 360
+            elif angle_diff < -180:
+                angle_diff += 360
+
+            if angle_diff < -self.rotation_speed:
+                sim_angle = (sim_angle - self.rotation_speed) % 360
+            elif angle_diff > self.rotation_speed:
+                sim_angle = (sim_angle + self.rotation_speed) % 360
+
+            aligned = abs(angle_diff) < 10
+            sim_thrust = self.acceleration_magnitude if aligned else 0
+
+            # Physics update (same as Ship.update)
+            rad = math.radians(sim_angle)
+            if sim_thrust > 0.01:
+                sim_vx += math.sin(rad) * sim_thrust
+                sim_vy -= math.cos(rad) * sim_thrust
+
+                speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
+                if speed > self.max_velocity:
+                    scale = self.max_velocity / speed
+                    sim_vx *= scale
+                    sim_vy *= scale
+
+            if self.space_drag > 0:
+                sim_vx *= self.space_drag
+                sim_vy *= self.space_drag
+
+            sim_x += sim_vx
+            sim_y += sim_vy
+
+        # Max frames reached without landing
+        distance = target.get_distance(sim_x, sim_y)
+        return sim_x, sim_y, distance
