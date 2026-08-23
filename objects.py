@@ -25,15 +25,14 @@ class SpaceStation:
             self.core_color = tuple(graphics.get("core_color", [150, 220, 255]))
             self.rotation_speed = graphics.get("rotation_speed", 0.5)
             self.local_points = graphics.get("local_points", self._default_points())
+            self.landing_distance = graphics.get("landing_distance", self.size * 3.5)
         else:
             self.size = 40
             self.color = (100, 200, 255)
             self.core_color = (150, 220, 255)
             self.rotation_speed = 0.5
             self.local_points = self._default_points()
-
-        # Landing distance based on station size (roughly 3.5x the radius)
-        self.landing_distance = self.size * 3.5
+            self.landing_distance = 140
 
     def _default_points(self):
         """Default hexapod shape."""
@@ -170,6 +169,7 @@ class Moon:
             self.color = tuple(graphics.get("color", [200, 200, 200]))
             self.crater_color = tuple(graphics.get("crater_color", [150, 150, 150]))
             self.craters = graphics.get("craters", [])
+            self.landing_distance = graphics.get("landing_distance", self.size * 3.5)
         else:
             self.size = 30
             self.color = (200, 200, 200)
@@ -178,9 +178,7 @@ class Moon:
                 {"x": -8, "y": -5, "radius": 4},
                 {"x": 10, "y": 8, "radius": 5}
             ]
-
-        # Landing distance based on moon size (roughly 3.5x the radius)
-        self.landing_distance = self.size * 3.5
+            self.landing_distance = 105
 
     def update(self):
         self.phase = (self.phase + 0.1) % 360
