@@ -577,7 +577,7 @@ class Ship:
             self._autopilot_brake(angle_to_target_deg)
 
     def _autopilot_approach(self, target_angle_deg):
-        """Approach phase: fly toward target, timing to avoid overshooting"""
+        """Approach phase: conservative early deceleration to prevent overshooting"""
         if not self.autopilot_target:
             return
 
@@ -604,42 +604,19 @@ class Ship:
         else:
             self.angle = target_angle
 
-        # Time-based decision: how long until we reach target?
-        if speed > 0.05:
-            frames_to_target = distance / speed
-        else:
-            frames_to_target = 10000
-
-        # How long for rotation?
-        rotation_frames = 180 / self.rotation_speed
-
-        # Estimate braking time: how long to decelerate from current speed to ~0?
-        # With max reverse thrust, deceleration ≈ max_thrust / mass
-        # Simplified: assume ~0.4 deceleration per frame with strong reverse thrust
-        if speed > 0.1:
-            braking_frames = speed / 0.4  # frames needed to brake to zero
-        else:
-            braking_frames = 5
-
-        # Total time needed: rotation + braking + safety buffer
-        time_threshold = rotation_frames + braking_frames + 20
-
         aligned = abs(angle_diff) < 15
         thrust_step = self.max_thrust * 0.08
 
         if aligned:
-            # If we're getting close in time, prepare to brake
-            if frames_to_target < time_threshold:
-                # IMMEDIATE: Start decelerating hard
-                self.thrust = 0
-            elif distance < 250:
-                # Getting close - don't accelerate, just coast with light thrust
+            # Simple approach: decelerate only when very close
+            if distance < 200:
+                # Very close - start cutting thrust hard
                 self.thrust = max(self.thrust - thrust_step * 2, 0)
             else:
-                # Accelerate normally
+                # Not close yet - just accelerate to max velocity
                 self.thrust = min(self.thrust + thrust_step, self.max_thrust)
         else:
-            # Not aligned - cut thrust to prepare for rotation
+            # Not aligned - cut thrust
             self.thrust = 0
 
     def _autopilot_brake(self, target_angle_deg):
