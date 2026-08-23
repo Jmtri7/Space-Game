@@ -528,9 +528,11 @@ class Ship:
         elif angle_diff_approach < -180:
             angle_diff_approach += 360
 
-        # Estimate frames needed to rotate 180 degrees for braking
-        # Ship rotates at 5 degrees per frame, so 180 degrees = 36 frames
-        rotation_frames = abs(angle_diff_approach + 180) / 5
+        # Estimate total frames needed: rotate to face target + rotate 180 for braking
+        # First rotate to target angle, then rotate 180 more to reverse direction
+        # Ship rotates at 5 degrees per frame
+        total_rotation_degrees = abs(angle_diff_approach) + 180
+        rotation_frames = total_rotation_degrees / 5
 
         # Distance traveled during rotation (accounting for drag reducing velocity)
         # Average velocity during rotation is roughly 75% of current (due to drag)
@@ -544,7 +546,7 @@ class Ship:
         total_distance_needed = distance_during_rotation + braking_distance
 
         # Determine flight phase based on distance to target
-        if distance > total_distance_needed + 40:  # Add buffer to start braking earlier
+        if distance > total_distance_needed + 20:  # Add smaller buffer since calculation is more accurate
             # APPROACH PHASE: fly toward target
             self._autopilot_approach(angle_to_target_deg)
         else:
