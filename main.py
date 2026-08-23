@@ -1112,6 +1112,9 @@ class GameScreen(ScreenBase):
         self.camera_y = 0
 
     def handle_input(self, events):
+        keys = pygame.key.get_pressed()
+        self.player.handle_input(keys)
+
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -1156,8 +1159,6 @@ class GameScreen(ScreenBase):
     def update(self):
         global camera_offset_x, camera_offset_y
 
-        keys = pygame.key.get_pressed()
-        self.player.handle_input(keys)
         self.player.update()
         self.station.update()
         self.moon.update()
