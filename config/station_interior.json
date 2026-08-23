@@ -1,5 +1,9 @@
 {
   "name": "Alpha Station Interior",
+  "entrance": {
+    "x": 0.5,
+    "y": 0.85
+  },
   "bar": {
     "x": 0.5,
     "y": 0.15

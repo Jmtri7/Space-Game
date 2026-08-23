@@ -1,6 +1,10 @@
 {
   "name": "Moon Wilderness",
   "description": "Natural lunar terrain",
+  "entrance": {
+    "x": 800,
+    "y": 1400
+  },
   "craters": [
     {"x": 300, "y": 400, "radius": 50},
     {"x": 800, "y": 600, "radius": 60},

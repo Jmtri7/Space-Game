@@ -690,13 +690,19 @@ class WalkableArea(ScreenBase):
         self.world_width = world_width
         self.world_height = world_height
         self.speed = 3
+        self.entrance_x = start_x  # Where player enters
+        self.entrance_y = start_y
+        self.entrance_range = 50  # How close to entrance to exit
 
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
-                    return "exit"
+                    # Only allow exit if near entrance
+                    dist_to_entrance = math.sqrt((self.player_x - self.entrance_x) ** 2 + (self.player_y - self.entrance_y) ** 2)
+                    if dist_to_entrance <= self.entrance_range:
+                        return "exit"
                 elif event.key == pygame.K_ESCAPE:
                     return "pause"
         return None
@@ -792,6 +798,13 @@ class StationInterior(WalkableArea):
         npc1 = npcs_cfg[1] if len(npcs_cfg) > 1 else {}
         npc2 = npcs_cfg[2] if len(npcs_cfg) > 2 else {}
 
+        # Load entrance from config
+        entrance_cfg = self.station_config.get("entrance", {})
+        self.entrance_x = int(GAME_WIDTH * entrance_cfg.get("x", 0.5))
+        self.entrance_y = int(GAME_HEIGHT * entrance_cfg.get("y", 0.85))
+        self.player_x = self.entrance_x
+        self.player_y = self.entrance_y
+
         self.bartender = NPC(self.bar_x, self.bar_y, "bar", npc0.get("name", "Bartender"), npc0.get("greeting", "What'll it be?"), npc0.get("dialogue_options", ["Talk", "Leave"]))
         self.wanderer = NPC(self.room_width // 2, self.hallway_transition_y - 100, "wander", npc1.get("name", "Traveler"), npc1.get("greeting", "Safe travels!"), npc1.get("dialogue_options", ["Thanks", "Leave"]))
         self.door_guard = NPC(self.door_x, self.door_y, "bar", npc2.get("name", "Guard"), npc2.get("greeting", "Welcome to the station."), npc2.get("dialogue_options", ["Thanks", "Leave"]))
@@ -817,7 +830,10 @@ class StationInterior(WalkableArea):
                     else:
                         return "pause"
                 elif event.key == pygame.K_l:
-                    return "exit"
+                    # Only allow exit if near entrance
+                    dist_to_entrance = math.sqrt((self.player_x - self.entrance_x) ** 2 + (self.player_y - self.entrance_y) ** 2)
+                    if dist_to_entrance <= self.entrance_range:
+                        return "exit"
                 elif event.key == pygame.K_t:
                     self._cycle_target()
                 elif event.key == pygame.K_RETURN:
@@ -997,6 +1013,13 @@ class MoonCity(WalkableArea):
         self.buildings = self.city_config.get("buildings", [])
         self.windows = self.city_config.get("windows", [])
 
+        # Load entrance from config
+        entrance_cfg = self.city_config.get("entrance", {})
+        self.entrance_x = entrance_cfg.get("x", 800)
+        self.entrance_y = entrance_cfg.get("y", 1400)
+        self.player_x = self.entrance_x
+        self.player_y = self.entrance_y
+
     def update(self):
         keys = pygame.key.get_pressed()
         self._handle_movement(keys)
@@ -1039,6 +1062,13 @@ class MoonOutdoor(WalkableArea):
         self.wilderness_config = config or load_json("config/moon_wilderness.json") or {}
         self.craters = self.wilderness_config.get("craters", [])
         self.rocks = self.wilderness_config.get("rocks", [])
+
+        # Load entrance from config
+        entrance_cfg = self.wilderness_config.get("entrance", {})
+        self.entrance_x = entrance_cfg.get("x", 800)
+        self.entrance_y = entrance_cfg.get("y", 1400)
+        self.player_x = self.entrance_x
+        self.player_y = self.entrance_y
 
     def update(self):
         keys = pygame.key.get_pressed()

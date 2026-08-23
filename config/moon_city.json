@@ -1,6 +1,10 @@
 {
   "name": "Moon City",
   "description": "Lunar metropolitan settlement",
+  "entrance": {
+    "x": 800,
+    "y": 1400
+  },
   "buildings": [
     {
       "x": 200,
