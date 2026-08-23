@@ -4,8 +4,9 @@ import math
 import random
 import os
 from datetime import datetime
+import constants
 from constants import (
-    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, GREEN, DEBUG_MODE
+    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GRAY, BLACK, CYAN, GREEN
 )
 import utils
 from utils import (
@@ -215,7 +216,7 @@ class Location(WalkableArea):
         pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
 
         # Debug marker
-        if DEBUG_MODE:
+        if constants.DEBUG_MODE:
             draw_debug_marker(surface, self.player_x, self.player_y, 10)
 
         # Draw UI
@@ -411,7 +412,7 @@ class StationInterior(Location):
         pygame.draw.circle(surface, (100, 255, 100), to_screen(self.player_x, self.player_y - 10), max(1, int(5 * scale)))
 
         # Debug marker for player position
-        if DEBUG_MODE:
+        if constants.DEBUG_MODE:
             draw_debug_marker(surface, self.player_x, self.player_y, 10)
             draw_debug_marker(surface, self.bartender.x, self.bartender.y, 8)
             draw_debug_marker(surface, self.wanderer.x, self.wanderer.y, 8)
@@ -707,7 +708,7 @@ class GameScreen(ScreenBase):
         self.player.draw(surface)
 
         # Debug markers for entity positions
-        if DEBUG_MODE:
+        if constants.DEBUG_MODE:
             draw_debug_marker(surface, self.player.x, self.player.y, 10)
             draw_debug_marker(surface, self.station.x, self.station.y, 10)
             draw_debug_marker(surface, self.moon.x, self.moon.y, 10)

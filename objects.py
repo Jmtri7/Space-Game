@@ -2,8 +2,9 @@
 import pygame
 import math
 import random
+import constants
 from constants import (
-    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GREEN, DEBUG_MODE
+    GAME_WIDTH, GAME_HEIGHT, YELLOW, WHITE, GREEN
 )
 from utils import (
     get_scale, to_screen, to_screen_x, to_screen_y, get_offset, load_json,
@@ -66,7 +67,7 @@ class SpaceStation:
         pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
         # Debug: draw landing radius circle
-        if DEBUG_MODE:
+        if constants.DEBUG_MODE:
             landing_radius_screen = int(self.landing_distance * scale)
             pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 
@@ -199,7 +200,7 @@ class Moon:
             pygame.draw.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))
 
         # Debug: draw landing radius circle
-        if DEBUG_MODE:
+        if constants.DEBUG_MODE:
             landing_radius_screen = int(self.landing_distance * scale)
             pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 

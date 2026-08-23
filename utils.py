@@ -2,9 +2,10 @@
 import json
 import os
 import pygame
+import constants
 from constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
-    CAMERA_ZOOM, SAVE_DIR, DEBUG_MODE, GREEN
+    CAMERA_ZOOM, SAVE_DIR, GREEN
 )
 
 # Global camera offset
@@ -205,7 +206,7 @@ def delete_save_file(filename):
 
 def draw_debug_marker(surface, x, y, size=8):
     """Draw a green X at world coordinates to show entity position."""
-    if not DEBUG_MODE:
+    if not constants.DEBUG_MODE:
         return
     screen_x, screen_y = to_screen(x, y)
     half = size // 2
