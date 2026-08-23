@@ -20,7 +20,6 @@ from pause_menu import PauseMenu
 from save_dialog import SaveDialog
 from confirm_dialog import ConfirmDialog
 from load_menu import LoadMenu
-from story_selector import StorySelector
 
 # Initialize pygame and display
 pygame.init()
@@ -36,7 +35,6 @@ def main():
     global screen
     try:
         menu = Menu()
-        story_selector = None
         game_screen = None
         station_interior = None
         moon_interior = None
@@ -80,22 +78,13 @@ def main():
                 if selection == "quit":
                     running = False
                 elif selection == "new":
-                    story_selector = StorySelector()
-                    current_screen = "story_select"
+                    selected_story = "default"
+                    pilot_name_dialog = PilotNameDialog()
+                    current_screen = "pilot_name"
                 elif selection == "load":
                     load_menu = LoadMenu()
                     current_screen = "load"
                 menu.draw(screen)
-
-            elif current_screen == "story_select":
-                story = story_selector.handle_input(events)
-                if story and story != "cancel":
-                    selected_story = story
-                    pilot_name_dialog = PilotNameDialog()
-                    current_screen = "pilot_name"
-                elif story == "cancel":
-                    current_screen = "menu"
-                story_selector.draw(screen)
 
             elif current_screen == "pilot_name":
                 result = pilot_name_dialog.handle_input(events)
