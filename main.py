@@ -1156,13 +1156,18 @@ class GameScreen(ScreenBase):
         world_y = y - self.camera_y
         return to_screen(world_x, world_y)
 
-    def update(self):
-        global camera_offset_x, camera_offset_y
-
+    def update_physics(self):
+        """Update physics without camera - used when space is background"""
         self.player.update()
         self.station.update()
         self.moon.update()
         self.ai_ship.update()
+
+    def update(self):
+        """Full update including camera - only called when space is active screen"""
+        global camera_offset_x, camera_offset_y
+
+        self.update_physics()
 
         # Update camera to follow player
         camera_offset_x = self.player.x - GAME_WIDTH // 2
@@ -1465,9 +1470,9 @@ def main():
                     current_screen = "pause"
                 elif action == "exit":
                     current_screen = "game"
-                # Keep space view updated while docked
+                # Keep space physics updated while docked (but not camera)
                 if game_screen:
-                    game_screen.update()
+                    game_screen.update_physics()
                 if station_interior:
                     station_interior.update()
                     station_interior.draw(screen)
@@ -1493,9 +1498,9 @@ def main():
                 elif action == "pause":
                     previous_screen = "moon"
                     current_screen = "pause"
-                # Keep space view updated while on moon
+                # Keep space physics updated while on moon (but not camera)
                 if game_screen:
-                    game_screen.update()
+                    game_screen.update_physics()
                 if moon_interior:
                     moon_interior.update()
                     moon_interior.draw(screen)
