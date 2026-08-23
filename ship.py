@@ -247,7 +247,14 @@ class Ship:
         else:
             # Phase 2: Facing away - apply reverse thrust to decelerate
             speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-            if speed < 0.1:
+
+            # Calculate deceleration per frame
+            decel_per_frame = self.acceleration_magnitude
+            if self.space_drag > 0:
+                decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
+
+            # Stop thrust if one more frame would make velocity negative (reverse direction)
+            if speed <= decel_per_frame:
                 self.release_thrust()
             else:
                 self.increase_thrust()
