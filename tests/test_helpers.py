@@ -208,14 +208,11 @@ class TestAutopilotPhysics(unittest.TestCase):
     """Test autopilot arrives at target with precise position and velocity"""
 
     def simulate_autopilot_to_landing(self, ship, target_x, target_y, max_frames=2000):
-        """Simulate ship autopilot from start to landing, return final state"""
+        """Simulate ship autopilot from start to landing using real game physics"""
         ship.autopilot_active = True
 
-        # Create mock target with get_distance method
-        target = MagicMock()
-        target.x = target_x
-        target.y = target_y
-        target.get_distance = lambda x, y: ((target.x - x)**2 + (target.y - y)**2)**0.5
+        # Use real SpaceStation object like the game does
+        target = main.SpaceStation(target_x, target_y)
 
         ship.autopilot_target = target
         ship.x = 0
@@ -230,17 +227,18 @@ class TestAutopilotPhysics(unittest.TestCase):
         while ship.autopilot_active and frames < max_frames:
             frames += 1
 
-            # Update autopilot control logic
+            # Update autopilot control logic - mimics game's update loop
             if hasattr(ship, 'update_autopilot'):
                 ship.update_autopilot()
 
-            # Update physics
+            # Update ship physics - mimics game's update loop
             ship.update()
 
-            # Check if landed (distance < 150, speed < 0.5)
+            # Check landing condition - exactly as game does it
             distance = target.get_distance(ship.x, ship.y)
             speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
 
+            # Game's actual landing condition in GameScreen.update()
             if distance < 150 and speed < 0.5:
                 ship.autopilot_active = False
                 landed = True
