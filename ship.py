@@ -71,16 +71,16 @@ class Ship:
         """Rotate ship right."""
         self.angle = (self.angle + self.rotation_speed) % 360
 
-    def increase_thrust(self, step=0.02):
-        """Apply thrust in current direction."""
-        self.thrust = min(self.thrust + step, self.max_thrust)
+    def increase_thrust(self, step=None):
+        """Apply full thrust in current direction (constant acceleration)."""
+        self.thrust = self.max_thrust
 
-    def decrease_thrust(self, step=0.02):
+    def decrease_thrust(self, step=None):
         """Reduce thrust (coast to stop)."""
-        self.thrust = max(self.thrust - step, 0)
+        self.thrust = 0
 
     def release_thrust(self):
-        """Release thrust immediately (no gradual coast)."""
+        """Release thrust immediately."""
         self.thrust = 0
 
     def point_to_reverse_velocity(self):
@@ -218,6 +218,6 @@ class Ship:
         # If aligned with optimal direction, apply thrust
         aligned = abs(angle_diff) < 10
         if aligned:
-            self.increase_thrust(step=0.01)
+            self.increase_thrust()
         else:
             self.release_thrust()
