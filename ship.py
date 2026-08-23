@@ -133,7 +133,10 @@ class Ship:
         self.wrap_position()
 
     def update_autopilot(self):
-        """Update autopilot - accelerate toward target, then brake to land with zero velocity."""
+        """Update autopilot - point at target, accelerate, brake when close enough.
+
+        Base case: handles stopped ship (velocity ≈ 0).
+        """
         if not self.autopilot_active or not self.autopilot_target:
             return
 
@@ -145,54 +148,39 @@ class Ship:
         dx = target.x - self.x
         dy = target.y - self.y
 
-        # Calculate angle between velocity and target direction
-        velocity_angle = math.atan2(self.velocity_x, -self.velocity_y)
+        # Calculate angle to target
         target_angle = math.atan2(dx, -dy)
+        target_angle_deg = math.degrees(target_angle)
 
-        angle_diff = velocity_angle - target_angle
-        # Normalize to [-pi, pi]
-        while angle_diff > math.pi:
-            angle_diff -= 2 * math.pi
-        while angle_diff < -math.pi:
-            angle_diff += 2 * math.pi
-
-        # Check braking distance
-        braking_distance = self._predict_braking_distance_to_target(speed)
-
-        # If too close to target, brake immediately (no time to redirect velocity)
-        if distance < braking_distance and speed > 0.1:
-            self._autopilot_brake(target_angle)
-        elif distance < 10 and speed < 0.1:
-            # Reached target with near-zero velocity
+        # Check if reached target with near-zero velocity
+        if distance < 10 and speed < 0.1:
             self.autopilot_active = False
             self.release_thrust()
+            return
+
+        # Predict how far we'll travel during braking (turn + decelerate)
+        braking_distance = self._predict_braking_distance_from_stop(speed)
+
+        # If within braking distance, start braking (turn around and reverse thrust)
+        if distance <= braking_distance and speed > 0.1:
+            self._autopilot_brake(target_angle_deg)
         else:
-            # Check if velocity is aligned with target
-            velocity_aligned = abs(angle_diff) < math.radians(1)
+            # Point at target and accelerate
+            self._autopilot_point_and_accelerate(target_angle_deg)
 
-            if velocity_aligned:
-                # Velocity points at target - coast toward it
-                self.release_thrust()
-            else:
-                # Velocity not aligned - redirect it toward target
-                self._autopilot_redirect_velocity(dx, dy)
+    def _predict_braking_distance_from_stop(self, current_speed):
+        """Predict distance needed to stop from current speed.
 
-    def _predict_braking_distance_to_target(self, current_speed):
-        """Predict distance needed to brake from current speed to zero.
-
-        Simulates:
-        1. Time to rotate 180 degrees (turn around)
-        2. Time to decelerate from current speed to near-zero with reverse thrust
+        Assumes: turn 180 degrees while coasting, then apply reverse thrust until stopped.
         """
-        if current_speed < 0.05:
+        if current_speed < 0.1:
             return 0
 
         # Time to turn 180 degrees (coasting at current speed)
         turn_frames = 180 / self.rotation_speed
         distance_during_turn = current_speed * turn_frames
 
-        # Time to decelerate from current_speed to near-zero
-        # Deceleration = acceleration_magnitude (minus drag effect)
+        # Time to decelerate from current_speed to zero with full reverse thrust
         decel_per_frame = self.acceleration_magnitude
         if self.space_drag > 0:
             decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
@@ -213,9 +201,33 @@ class Ship:
         # Add 10% safety buffer
         return total_distance * 1.1
 
+    def _autopilot_point_and_accelerate(self, target_angle_deg):
+        """Point directly at target and accelerate toward it."""
+        current_angle = self.angle % 360
+        target_angle_norm = target_angle_deg % 360
+
+        angle_diff = target_angle_norm - current_angle
+        if angle_diff > 180:
+            angle_diff -= 360
+        elif angle_diff < -180:
+            angle_diff += 360
+
+        # Rotate toward target
+        if angle_diff < -self.rotation_speed:
+            self.turn_left()
+        elif angle_diff > self.rotation_speed:
+            self.turn_right()
+
+        # If aligned with target, apply thrust
+        aligned = abs(angle_diff) < 10
+        if aligned:
+            self.increase_thrust()
+        else:
+            self.release_thrust()
+
     def _autopilot_brake(self, target_angle_deg):
-        """Braking phase: turn 180 degrees and apply reverse thrust to stop at target."""
-        # Calculate reverse angle (turn around)
+        """Braking phase: turn around (face away) and apply reverse thrust."""
+        # Calculate angle facing away from target
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
 
@@ -225,7 +237,7 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Phase 1: Turn to face away from target (reverse direction)
+        # Phase 1: Turn around (rotate to face away)
         if abs(angle_diff) > self.rotation_speed:
             if angle_diff < 0:
                 self.turn_left()
@@ -239,62 +251,3 @@ class Ship:
                 self.release_thrust()
             else:
                 self.increase_thrust()
-
-    def _autopilot_redirect_velocity(self, target_dx, target_dy):
-        """Apply thrust perpendicular to velocity to redirect it toward target.
-
-        Continuously recalculates perpendicular direction as target angle changes.
-        """
-        # Current velocity vector
-        vx = self.velocity_x
-        vy = self.velocity_y
-
-        # Speed to determine which perpendicular direction
-        speed_sq = vx * vx + vy * vy
-
-        if speed_sq < 0.01:
-            # Nearly stopped, point toward target and thrust
-            target_angle = math.atan2(target_dx, -target_dy)
-            target_angle_deg = math.degrees(target_angle)
-        else:
-            # Calculate perpendicular directions to velocity (left and right)
-            # Perpendicular to (vx, vy) is (-vy, vx) and (vy, -vx)
-            perp_left_x = -vy
-            perp_left_y = vx
-            perp_right_x = vy
-            perp_right_y = -vx
-
-            # Check which perpendicular direction is more aligned with target
-            dot_left = target_dx * perp_left_x + target_dy * perp_left_y
-            dot_right = target_dx * perp_right_x + target_dy * perp_right_y
-
-            # Choose the perpendicular that points more toward target
-            if dot_left > dot_right:
-                target_angle = math.atan2(perp_left_x, -perp_left_y)
-            else:
-                target_angle = math.atan2(perp_right_x, -perp_right_y)
-
-            target_angle_deg = math.degrees(target_angle)
-
-        # Rotate ship to face optimal thrust direction
-        current_angle = self.angle % 360
-        target_angle_norm = target_angle_deg % 360
-
-        angle_diff = target_angle_norm - current_angle
-        if angle_diff > 180:
-            angle_diff -= 360
-        elif angle_diff < -180:
-            angle_diff += 360
-
-        # Rotate toward optimal direction
-        if angle_diff < -self.rotation_speed:
-            self.turn_left()
-        elif angle_diff > self.rotation_speed:
-            self.turn_right()
-
-        # If aligned with optimal direction, apply thrust
-        aligned = abs(angle_diff) < 10
-        if aligned:
-            self.increase_thrust()
-        else:
-            self.release_thrust()
