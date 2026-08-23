@@ -1,0 +1,95 @@
+"""Player ship controller."""
+import pygame
+from constants import DARK_GRAY
+from ship import Ship
+
+
+class PlayerController:
+    """Controls the player's ship - owns the ship and handles input."""
+    def __init__(self, x, y, space_drag=0):
+        self.ship = Ship(x, y, space_drag=space_drag)
+
+    def handle_input(self, keys):
+        """Handle player keyboard input (blocked during autopilot)."""
+        if self.ship.autopilot_active:
+            return
+
+        # Rotation controls
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.ship.turn_left()
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.ship.turn_right()
+
+        # Thrust controls
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.ship.increase_thrust()
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            # Point ship toward opposite velocity (brake/reverse)
+            self.ship.point_to_reverse_velocity()
+        else:
+            self.ship.release_thrust()
+
+    def update(self):
+        """Update ship physics."""
+        self.ship.update()
+
+    def draw(self, surface):
+        """Draw ship."""
+        self.ship.draw(surface, ship_size=15, color=DARK_GRAY)
+
+    # Delegation properties for backward compatibility
+    @property
+    def x(self):
+        return self.ship.x
+
+    @x.setter
+    def x(self, value):
+        self.ship.x = value
+
+    @property
+    def y(self):
+        return self.ship.y
+
+    @y.setter
+    def y(self, value):
+        self.ship.y = value
+
+    @property
+    def velocity_x(self):
+        return self.ship.velocity_x
+
+    @velocity_x.setter
+    def velocity_x(self, value):
+        self.ship.velocity_x = value
+
+    @property
+    def velocity_y(self):
+        return self.ship.velocity_y
+
+    @velocity_y.setter
+    def velocity_y(self, value):
+        self.ship.velocity_y = value
+
+    @property
+    def angle(self):
+        return self.ship.angle
+
+    @angle.setter
+    def angle(self, value):
+        self.ship.angle = value
+
+    @property
+    def autopilot_active(self):
+        return self.ship.autopilot_active
+
+    @autopilot_active.setter
+    def autopilot_active(self, value):
+        self.ship.autopilot_active = value
+
+    @property
+    def autopilot_target(self):
+        return self.ship.autopilot_target
+
+    @autopilot_target.setter
+    def autopilot_target(self, value):
+        self.ship.autopilot_target = value

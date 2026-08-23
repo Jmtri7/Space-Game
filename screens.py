@@ -15,7 +15,8 @@ from utils import (
     set_camera_offset, get_ship_type, get_graphics_asset,
     get_font, get_centered_x, get_centered_y, render_help_text, handle_menu_navigation, draw_dialog_box
 )
-from ship import PlayerController, AIShip
+from player_controller import PlayerController
+from ai_ship import AIShip
 from objects import SpaceStation, NPC, Dialogue, StarField, Moon
 
 

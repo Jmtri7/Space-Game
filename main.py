@@ -9,7 +9,8 @@ from utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size,
     DEBUG_MODE
 )
-from ship import PlayerController, AIShip
+from player_controller import PlayerController
+from ai_ship import AIShip
 from objects import SpaceStation, Moon
 from screens import (
     GameScreen, StationInterior, MoonCity, MoonOutdoor,

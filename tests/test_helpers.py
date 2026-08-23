@@ -28,6 +28,8 @@ sys.modules['pygame'] = pygame_mock
 
 import utils
 from ship import Ship
+from player_controller import PlayerController
+from ai_ship import AIShip
 from objects import SpaceStation
 
 

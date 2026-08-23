@@ -1,7 +1,6 @@
-"""Ship classes: Ship (base), PlayerController, and AIShip."""
+"""Base ship class with physics and autopilot."""
 import pygame
 import math
-import random
 from constants import DARK_GRAY, YELLOW, GAME_WIDTH, GAME_HEIGHT
 from utils import get_scale, to_screen
 
@@ -134,13 +133,19 @@ class Ship:
         self.wrap_position()
 
     def update_autopilot(self):
-        """Update autopilot using kinematic prediction."""
+        """Update autopilot - approach and brake to land with zero velocity at target."""
         if not self.autopilot_active or not self.autopilot_target:
             return
 
         target = self.autopilot_target
         distance = target.get_distance(self.x, self.y)
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+
+        # Check if we've landed (nearly stopped and very close)
+        if distance < 10 and speed < 0.1:
+            self.autopilot_active = False
+            self.release_thrust()
+            return
 
         # Distance vector to target
         dx = target.x - self.x
@@ -150,19 +155,27 @@ class Ship:
         angle_to_target = math.atan2(dx, -dy)
         angle_to_target_deg = math.degrees(angle_to_target)
 
-        # Predict braking distance using kinematic simulation
+        # Predict braking distance (how far we'll travel during the entire braking sequence)
         braking_distance = self._predict_braking_distance(angle_to_target_deg, speed)
 
         if distance > braking_distance:
             # APPROACH PHASE: fly toward target
             self._autopilot_approach(angle_to_target_deg)
         else:
-            # BRAKING PHASE: turn around and reverse thrust
+            # BRAKING PHASE: reverse thrust to stop at target
             self._autopilot_brake(angle_to_target_deg)
 
     def _predict_braking_distance(self, target_angle_deg, current_speed):
-        """Predict total distance needed to brake from current state using kinematics."""
-        # Simulate rotation to opposite angle
+        """Predict total distance needed to brake from current speed to zero at target.
+
+        Simulates:
+        1. Time to rotate to face opposite direction (coast at current speed)
+        2. Time to decelerate from current speed to near-zero with reverse thrust
+        """
+        if current_speed < 0.05:
+            return 0  # Already nearly stopped
+
+        # Calculate angle we need to face (opposite of approach direction)
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
 
@@ -172,40 +185,39 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Time to rotate 180° (5°/frame rotation speed)
-        rotation_frames = max(1, int(abs(angle_diff) / 5.0))
-
-        # Simulate movement during rotation (constant velocity, no thrust)
+        # Time to rotate to reverse angle (coasting at current speed)
+        rotation_frames = max(1, int(abs(angle_diff) / self.rotation_speed))
         distance_during_rotation = current_speed * rotation_frames
 
-        # Simulate deceleration after rotation
+        # Time to decelerate from current_speed to near-zero with max reverse thrust
+        # Velocity decreases by (max_thrust - space_drag effect) per frame
         v = current_speed
+        decel_frames = 0
         decel_distance = 0
-        frames_to_stop = 0
 
-        # Apply drag-adjusted deceleration math
-        if v > 0.1:
+        # Simulate deceleration frame by frame for accuracy
+        while v > 0.05 and decel_frames < 500:
+            # Apply reverse thrust (decrease velocity)
+            decel_per_frame = self.max_thrust
             if self.space_drag > 0:
-                frames_to_stop = int(v / (self.max_thrust * (1 - self.space_drag)))
-            else:
-                frames_to_stop = int(v / self.max_thrust) + 2
+                decel_per_frame = self.max_thrust * (1 - self.space_drag)
 
-            # Estimate distance during deceleration (average velocity method)
-            decel_distance = (v / 2.0) * frames_to_stop
+            # Average velocity during this frame
+            v_avg = (v + max(0, v - decel_per_frame)) / 2.0
+            decel_distance += v_avg
+
+            v = max(0, v - decel_per_frame)
+            decel_frames += 1
 
         total_distance = distance_during_rotation + decel_distance
 
-        # Add small safety buffer for margin of error
+        # Add small safety buffer (10%)
         return total_distance * 1.1
 
     def _autopilot_approach(self, target_angle_deg):
-        """Approach phase: conservative early deceleration to prevent overshooting."""
+        """Approach phase: fly toward target while maintaining alignment."""
         if not self.autopilot_target:
             return
-
-        target = self.autopilot_target
-        distance = target.get_distance(self.x, self.y)
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
         # Point ship toward target
         current_angle = self.angle % 360
@@ -223,23 +235,23 @@ class Ship:
         elif angle_diff > self.rotation_speed:
             self.turn_right()
 
-        aligned = abs(angle_diff) < 15
-
+        # If aligned with target, thrust toward it
+        aligned = abs(angle_diff) < 10
         if aligned:
-            if distance < 200:
-                self.release_thrust()
-            else:
-                self.increase_thrust(step=0.008)
+            self.increase_thrust(step=0.01)
         else:
             self.release_thrust()
 
     def _autopilot_brake(self, target_angle_deg):
-        """Braking phase: rotate to face away from target, then apply reverse thrust."""
+        """Braking phase: rotate to face opposite direction, then apply reverse thrust to stop at target.
+
+        Uses reverse thrust (increase_thrust while facing opposite direction) to decelerate.
+        """
         target = self.autopilot_target
         distance = target.get_distance(self.x, self.y)
         speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
 
-        # Point ship AWAY from target (opposite direction) using point_to_reverse_velocity
+        # Calculate the direction opposite to target approach
         reverse_angle = (target_angle_deg + 180) % 360
         current_angle = self.angle % 360
 
@@ -249,179 +261,22 @@ class Ship:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Phase 1: Rotate to face away from target
+        # Phase 1: Rotate to face away from target (coasting with no thrust)
         if abs(angle_diff) > self.rotation_speed:
-            self.point_to_reverse_velocity()
+            self.turn_left() if angle_diff < 0 else self.turn_right()
             self.release_thrust()
         else:
-            # Phase 2: Facing away from target - apply reverse thrust
-            if speed < 0.15:
+            # Phase 2: Facing opposite direction - apply reverse thrust to decelerate
+            if speed < 0.1:
+                # Nearly stopped, shut down and land
                 self.release_thrust()
             else:
-                self.increase_thrust(step=0.02)
-
-
-class PlayerController:
-    """Controls the player's ship - owns the ship and handles input."""
-    def __init__(self, x, y, space_drag=0):
-        self.ship = Ship(x, y, space_drag=space_drag)
-
-    def handle_input(self, keys):
-        """Handle player keyboard input (blocked during autopilot)."""
-        if self.ship.autopilot_active:
-            return
-
-        # Rotation controls
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.ship.turn_left()
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.ship.turn_right()
-
-        # Thrust controls
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.ship.increase_thrust()
-        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            # Point ship toward opposite velocity (brake/reverse)
-            self.ship.point_to_reverse_velocity()
-        else:
-            self.ship.release_thrust()
-
-    def update(self):
-        """Update ship physics."""
-        self.ship.update()
-
-    def draw(self, surface):
-        """Draw ship."""
-        self.ship.draw(surface, ship_size=15, color=DARK_GRAY)
-
-    # Delegation properties for backward compatibility
-    @property
-    def x(self):
-        return self.ship.x
-
-    @x.setter
-    def x(self, value):
-        self.ship.x = value
-
-    @property
-    def y(self):
-        return self.ship.y
-
-    @y.setter
-    def y(self, value):
-        self.ship.y = value
-
-    @property
-    def velocity_x(self):
-        return self.ship.velocity_x
-
-    @velocity_x.setter
-    def velocity_x(self, value):
-        self.ship.velocity_x = value
-
-    @property
-    def velocity_y(self):
-        return self.ship.velocity_y
-
-    @velocity_y.setter
-    def velocity_y(self, value):
-        self.ship.velocity_y = value
-
-    @property
-    def angle(self):
-        return self.ship.angle
-
-    @angle.setter
-    def angle(self, value):
-        self.ship.angle = value
-
-    @property
-    def autopilot_active(self):
-        return self.ship.autopilot_active
-
-    @autopilot_active.setter
-    def autopilot_active(self, value):
-        self.ship.autopilot_active = value
-
-    @property
-    def autopilot_target(self):
-        return self.ship.autopilot_target
-
-    @autopilot_target.setter
-    def autopilot_target(self, value):
-        self.ship.autopilot_target = value
-
-
-class AIShip(Ship):
-    """Autonomous AI ship with wandering behavior."""
-    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="trader"):
-        super().__init__(x, y, space_drag=space_drag)
-        self.ship_type_id = ship_type_id
-        self.angle = random.randint(0, 360)
-
-        # Apply ship type properties if provided
-        if ship_type:
-            self.max_thrust = ship_type.get("max_thrust", 0.15)
-            self.max_velocity = ship_type.get("max_velocity", 4.0)
-            self.rotation_speed = ship_type.get("rotation_speed", 5)
-            self.ship_color = ship_type.get("color", DARK_GRAY)
-            self.ship_size = ship_type.get("size", 12)
-        else:
-            self.max_thrust = 0.15
-            self.ship_color = DARK_GRAY
-            self.ship_size = 12
-
-        self.state = "accelerate"
-        self.state_timer = 0
-
-    def update(self):
-        """Update AI ship with autonomous behavior."""
-        self.state_timer -= 1
-
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-
-        if self.state == "accelerate":
-            if self.state_timer <= 0:
-                self.state = "brake"
-                self.state_timer = random.randint(30, 60)
-            else:
-                self.thrust = self.max_thrust
-                self.angle = (self.angle + random.uniform(-1, 1)) % 360
-
-        elif self.state == "brake":
-            if speed < 0.15:
-                self.state = "accelerate"
-                self.state_timer = random.randint(40, 80)
-                self.angle = random.uniform(0, 360)
-                self.thrust = 0
-                self.velocity_x *= 0.95
-                self.velocity_y *= 0.95
-            else:
-                velocity_angle = math.degrees(math.atan2(self.velocity_x, -self.velocity_y)) % 360
-                target_angle = (velocity_angle + 180) % 360
-                angle_diff = (target_angle - self.angle) % 360
-                if angle_diff > 180:
-                    angle_diff -= 360
-
-                if abs(angle_diff) > 2:
-                    self.angle = (self.angle + angle_diff * 0.1) % 360
-                self.thrust = self.max_thrust
-
-        rad = math.radians(self.angle)
-        if self.thrust > 0.01:
-            self.velocity_x += math.sin(rad) * self.thrust
-            self.velocity_y -= math.cos(rad) * self.thrust
-
-        # Apply space system drag
-        if self.space_drag > 0:
-            self.velocity_x *= self.space_drag
-            self.velocity_y *= self.space_drag
-
-        self.x += self.velocity_x
-        self.y += self.velocity_y
-
-        self.wrap_position()
-
-    def draw(self, surface):
-        """Draw AI ship with ship type size and color."""
-        super().draw(surface, ship_size=self.ship_size, color=tuple(self.ship_color))
+                # Apply reverse thrust (thrust while facing opposite direction)
+                # Modulate thrust based on distance to ensure smooth deceleration
+                remaining_decel_distance = self._predict_braking_distance(target_angle_deg, speed)
+                if distance < remaining_decel_distance * 0.5:
+                    # Very close, maximum reverse thrust
+                    self.increase_thrust(step=self.max_thrust)
+                else:
+                    # Normal braking
+                    self.increase_thrust(step=0.015)
