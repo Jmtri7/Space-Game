@@ -158,7 +158,7 @@ class Ship:
         braking_distance = self._predict_braking_distance_from_stop(speed)
         should_brake = distance <= braking_distance and speed > 0.1
 
-        # Step 2b: Predictive braking - check if next iteration would overshoot zero
+        # Step 2b: Predictive braking - check if next iteration speed would be below landing threshold
         if should_brake:
             decel_per_frame = self.acceleration_magnitude
             if self.space_drag > 0:
@@ -166,8 +166,8 @@ class Ship:
 
             next_speed = speed - decel_per_frame
 
-            # Stop braking if next iteration would reverse or nearly stop
-            if next_speed <= 0.05:
+            # Stop braking if next iteration would reach landing speed (< 0.5)
+            if next_speed < 0.5:
                 self.autopilot_active = False
                 self.release_thrust()
                 return
