@@ -1,6 +1,6 @@
 'AIShip' object has no attribute 'get_distance'
 Traceback (most recent call last):
-  File "C:\Users\Play\Documents\Projects\space-game\main.py", line 198, in main
+  File "C:\Users\Play\Documents\Projects\space-game\main.py", line 193, in main
     game_screen.update()
     ~~~~~~~~~~~~~~~~~~^^
   File "C:\Users\Play\Documents\Projects\space-game\game_screen.py", line 263, in update

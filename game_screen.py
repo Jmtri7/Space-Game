@@ -106,15 +106,11 @@ class GameScreen(ScreenBase):
                 elif event.key == pygame.K_l:
                     # If target is selected
                     target_obj = self._get_target_object()
-                    print(f"DEBUG: L pressed, target_obj={target_obj}, type={type(target_obj)}")
                     if target_obj and self.current_target is not None:
                         # For AI ships, always engage autopilot to follow them
-                        print(f"DEBUG: Checking isinstance AIShip: {isinstance(target_obj, AIShip)}")
                         if isinstance(target_obj, AIShip):
-                            print("DEBUG: Setting autopilot for ship")
                             self.player.autopilot_active = True
                             self.player.autopilot_target = target_obj
-                            print("DEBUG: Autopilot set successfully")
                         # For landables (station/moon), check if in landing range
                         else:
                             distance = target_obj.get_distance(self.player.x, self.player.y)
