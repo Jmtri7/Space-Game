@@ -103,7 +103,7 @@ class TestUpdateThrust(unittest.TestCase):
 
     def test_thrust_capped_at_max(self):
         """Thrust should not exceed max"""
-        thrust = game_physics.update_thrust(0.28, keys_accelerating=True, keys_decelerating=False, max_thrust=0.3)
+        thrust = game_physics.update_thrust(0.28, keys_accelerating=True, keys_decelerating=False, acceleration_magnitude=0.3)
         self.assertLessEqual(thrust, 0.3)
 
     def test_thrust_cannot_go_below_zero(self):

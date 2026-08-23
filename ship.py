@@ -14,7 +14,7 @@ class Ship:
         self.velocity_x = 0
         self.velocity_y = 0
         self.thrust = 0
-        self.max_thrust = 0.3
+        self.acceleration_magnitude = 0.3
         self.max_velocity = 4.0
         self.rotation_speed = 5
         self.autopilot_active = False
@@ -73,7 +73,7 @@ class Ship:
 
     def increase_thrust(self, step=None):
         """Apply full thrust in current direction (constant acceleration)."""
-        self.thrust = self.max_thrust
+        self.thrust = self.acceleration_magnitude
 
     def decrease_thrust(self, step=None):
         """Reduce thrust (coast to stop)."""

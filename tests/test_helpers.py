@@ -281,7 +281,7 @@ class TestAutopilotPhysics(unittest.TestCase):
     def test_autopilot_explorer_lands_precisely(self):
         """Explorer lands once with smooth approach (no oscillation)"""
         ship = Ship(0, 0)
-        ship.max_thrust = 0.3
+        ship.acceleration_magnitude = 0.3
         ship.max_velocity = 4.0
         ship.drag = 0.98
         ship.rotation_speed = 5
@@ -303,7 +303,7 @@ class TestAutopilotPhysics(unittest.TestCase):
     def test_autopilot_courier_lands_precisely(self):
         """Courier lands once with smooth approach (no oscillation)"""
         ship = Ship(0, 0)
-        ship.max_thrust = 0.5
+        ship.acceleration_magnitude = 0.5
         ship.max_velocity = 6.5
         ship.drag = 0.99
         ship.rotation_speed = 9
@@ -322,7 +322,7 @@ class TestAutopilotPhysics(unittest.TestCase):
     def test_autopilot_hauler_lands_precisely(self):
         """Hauler lands once with smooth approach (no oscillation)"""
         ship = Ship(0, 0)
-        ship.max_thrust = 0.15
+        ship.acceleration_magnitude = 0.15
         ship.max_velocity = 2.5
         ship.drag = 0.95
         ship.rotation_speed = 2

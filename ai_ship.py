@@ -14,13 +14,13 @@ class AIShip(Ship):
 
         # Apply ship type properties if provided
         if ship_type:
-            self.max_thrust = ship_type.get("max_thrust", 0.15)
+            self.acceleration_magnitude = ship_type.get("acceleration_magnitude", 0.15)
             self.max_velocity = ship_type.get("max_velocity", 4.0)
             self.rotation_speed = ship_type.get("rotation_speed", 5)
             self.ship_color = ship_type.get("color", DARK_GRAY)
             self.ship_size = ship_type.get("size", 12)
         else:
-            self.max_thrust = 0.15
+            self.acceleration_magnitude = 0.15
             self.ship_color = DARK_GRAY
             self.ship_size = 12
 
@@ -38,7 +38,7 @@ class AIShip(Ship):
                 self.state = "brake"
                 self.state_timer = random.randint(30, 60)
             else:
-                self.thrust = self.max_thrust
+                self.thrust = self.acceleration_magnitude
                 self.angle = (self.angle + random.uniform(-1, 1)) % 360
 
         elif self.state == "brake":
@@ -58,7 +58,7 @@ class AIShip(Ship):
 
                 if abs(angle_diff) > 2:
                     self.angle = (self.angle + angle_diff * 0.1) % 360
-                self.thrust = self.max_thrust
+                self.thrust = self.acceleration_magnitude
 
         rad = math.radians(self.angle)
         if self.thrust > 0.01:
