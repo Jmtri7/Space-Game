@@ -91,7 +91,7 @@
     "rotation_speed": 1,
     "size": 35,
     "color": [120, 120, 120],
-    "shape": "rectangle"
+    "shape": "long_rectangle"
   },
   "patrol": {
     "name": "Patrol Corvette",

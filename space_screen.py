@@ -5,7 +5,7 @@ import constants
 from constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
 from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
-    draw_debug_marker, draw_target_brackets, draw_landing_prediction, draw_landing_trajectory,
+    draw_debug_marker, draw_target_brackets,
     get_ship_type, get_graphics_asset, get_pilot
 )
 import utils
@@ -324,14 +324,6 @@ class SpaceScreen(ScreenBase):
 
             # Draw directional arrow on a circle around the ship, pointing toward target
             self._draw_target_arrow(surface, target_obj)
-
-            # Draw predicted landing trajectory (debug visualization)
-            if self.player.autopilot_active:
-                waypoints = self.player.predict_landing_trajectory(target_obj)
-                if waypoints and len(waypoints) > 0:
-                    draw_landing_trajectory(surface, waypoints)
-                    final_x, final_y = waypoints[-1]
-                    draw_landing_prediction(surface, final_x, final_y)
 
         if self.player.autopilot_active:
             ui_scale = get_ui_scale()

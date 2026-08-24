@@ -258,37 +258,6 @@ def draw_target_brackets(surface, x, y, size=40, thickness=2):
     pygame.draw.line(surface, GREEN, (screen_x + size, screen_y + size), (screen_x + size, screen_y + quarter), thickness)
 
 
-def draw_landing_prediction(surface, x, y):
-    """Draw predicted landing position as a yellow circle."""
-    if not constants.DEBUG_MODE:
-        return
-    screen_x, screen_y = to_screen(x, y)
-    pygame.draw.circle(surface, (255, 200, 0), (screen_x, screen_y), 8, 2)
-
-
-def draw_landing_trajectory(surface, waypoints):
-    """Draw predicted trajectory as connected waypoints."""
-    if not constants.DEBUG_MODE or not waypoints:
-        return
-
-    try:
-        screen_points = []
-        for wx, wy in waypoints:
-            screen_points.append(to_screen(wx, wy))
-
-        if len(screen_points) < 2:
-            return
-
-        # Draw line connecting waypoints
-        pygame.draw.lines(surface, (255, 200, 0), screen_points, 1)
-
-        # Draw waypoint circles
-        for point in screen_points:
-            pygame.draw.circle(surface, (200, 150, 0), point, 3, 1)
-    except Exception:
-        pass  # Silently skip if waypoints are malformed
-
-
 def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
     """Handle up/down navigation in scrollable lists."""
     if key in (pygame.K_UP, pygame.K_w):

@@ -2,7 +2,7 @@
 import pygame
 import math
 from constants import DARK_GRAY, YELLOW
-from utils import get_scale, to_screen
+from utils import to_screen
 from world_object import WorldObject
 from autopilot import Autopilot
 
@@ -57,21 +57,21 @@ class Ship(WorldObject):
             ship_size = ship_size or 15
             color = color or DARK_GRAY
 
-        scale = get_scale()
-
         # Get local points based on shape
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
         self._draw_rotated_polygon(surface, local_points, self.angle, color)
 
         if self.thrust > 0.05:
-            self._draw_thrusters(surface, ship_size, scale)
+            self._draw_thrusters(surface, ship_size)
 
-    def _draw_thrusters(self, surface, ship_size, scale):
-        """Draw a flame at each thruster mount point defined by the ship's graphics.
+    def _draw_thrusters(self, surface, ship_size):
+        """Draw a triangular flame, pointed backward, at each thruster mount point.
 
         Thruster positions are given as (x, y) fractions of ship_size, in the same
         local space as _get_shape_points (0,0 = center, +y = toward the back).
         Ships without a "thrusters" entry fall back to a single back-center mount.
+        The triangle's base sits at the hull mount point; its apex points backward
+        (opposite the ship's facing), like a small exhaust cone.
         """
         thruster_points = self.graphics.get("thrusters", [(0, 0.6)])
 
@@ -79,15 +79,24 @@ class Ship(WorldObject):
         cos_a = math.cos(rad)
         sin_a = math.sin(rad)
         flame_length = self.thrust * 30
-        thickness = max(2, int(round(4 * scale)))
+        half_width = max(2, ship_size * 0.15)
+
+        # World-space unit vectors for this ship's current heading: "backward"
+        # (opposite the nose) and "right" (perpendicular, for the flame's base).
+        back_x_dir, back_y_dir = -sin_a, cos_a
+        right_x_dir, right_y_dir = cos_a, sin_a
 
         for tx, ty in thruster_points:
             lx, ly = tx * ship_size, ty * ship_size
-            back_x = self.x + (lx * cos_a - ly * sin_a)
-            back_y = self.y + (lx * sin_a + ly * cos_a)
-            flame_x = back_x - sin_a * flame_length
-            flame_y = back_y + cos_a * flame_length
-            pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), thickness)
+            mount_x = self.x + (lx * cos_a - ly * sin_a)
+            mount_y = self.y + (lx * sin_a + ly * cos_a)
+
+            tip_x = mount_x + back_x_dir * flame_length
+            tip_y = mount_y + back_y_dir * flame_length
+            base_left = to_screen(mount_x + right_x_dir * half_width, mount_y + right_y_dir * half_width)
+            base_right = to_screen(mount_x - right_x_dir * half_width, mount_y - right_y_dir * half_width)
+
+            pygame.draw.polygon(surface, YELLOW, [to_screen(tip_x, tip_y), base_left, base_right])
 
     def _get_shape_points(self, size, shape):
         """Get local points for ship shape."""
@@ -104,6 +113,13 @@ class Ship(WorldObject):
                 (-size * 0.5, 0),
                 (0, size * 0.7),
                 (size * 0.5, 0),
+            ]
+        elif shape == "long_rectangle":
+            return [
+                (-size * 0.3, -size),
+                (size * 0.3, -size),
+                (size * 0.3, size),
+                (-size * 0.3, size),
             ]
         else:  # triangle (default)
             return [
@@ -186,17 +202,3 @@ class Ship(WorldObject):
         self.y += self.velocity_y
 
         self.wrap_position()
-
-    def predict_landing_trajectory(self, target, max_frames=500, sample_rate=5):
-        """Predict landing trajectory and return waypoints for visualization.
-
-        Returns list of (x, y) positions sampled every sample_rate frames.
-        """
-        return self.autopilot.predict_trajectory(target, max_frames, sample_rate)
-
-    def predict_landing_position(self, target, max_frames=500):
-        """Predict where ship will stop given current autopilot trajectory.
-
-        Returns (final_x, final_y, distance_from_target).
-        """
-        return self.autopilot.predict_position(target, max_frames)
