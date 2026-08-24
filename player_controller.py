@@ -109,3 +109,6 @@ class PlayerController:
     def engage_seek(self, target):
         """Delegate to ship's standardized seek-autopilot mode."""
         self.ship.engage_seek(target)
+
+    def get_distance(self, target_x, target_y):
+        return self.ship.get_distance(target_x, target_y)

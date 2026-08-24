@@ -456,7 +456,8 @@ class SpaceScreen(ScreenBase):
             ui_scale = get_ui_scale()
             ui_offset_x, ui_offset_y = get_ui_offset()
             font_target = pygame.font.Font(None, int(20 * ui_scale))
-            target_text = font_target.render(f"Target: {target_name}", True, GREEN)
+            distance = self.player.get_distance(target_obj.x, target_obj.y)
+            target_text = font_target.render(f"Target: {target_name} ({distance:.0f})", True, GREEN)
             surface.blit(target_text, (int(ui_offset_x + 10), int(ui_offset_y + 10)))
 
             # Draw directional arrow on a circle around the ship, pointing toward target
