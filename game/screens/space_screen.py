@@ -5,10 +5,11 @@ import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
 from game.utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
-    draw_debug_marker, draw_target_brackets,
+    draw_debug_marker, draw_target_brackets, get_font, get_centered_x, render_help_text,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
 import game.utils as utils
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title
 from game.screens.screen_base import ScreenBase
 from game.world.player_controller import PlayerController
 from game.world.ai_ship import AIShip
@@ -440,89 +441,90 @@ class SpaceScreen(ScreenBase):
             for asteroid in self.asteroid_field.asteroids:
                 draw_debug_marker(surface, asteroid.x, asteroid.y, 6)
 
-            # Draw velocity info
-            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-            ui_scale = get_ui_scale()
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            font_debug = pygame.font.Font(None, int(16 * ui_scale))
-            velocity_text = font_debug.render(f"Velocity: {speed:.2f}", True, (100, 255, 100))
-            surface.blit(velocity_text, (int(ui_offset_x + 10), int(ui_offset_y + 40)))
-
-        # Draw target brackets and label
+        # Target brackets/arrow are drawn over the world; everything else is
+        # the HUD overlay (status panels, messages, help text).
         target_obj = self._get_target_object()
-        target_name = self._get_target_name()
-        if target_obj and target_name:
+        if target_obj:
             draw_target_brackets(surface, target_obj.x, target_obj.y)
-            ui_scale = get_ui_scale()
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            font_target = pygame.font.Font(None, int(20 * ui_scale))
-            distance = self.player.get_distance(target_obj.x, target_obj.y)
-            target_text = font_target.render(f"Target: {target_name} ({distance:.0f})", True, GREEN)
-            surface.blit(target_text, (int(ui_offset_x + 10), int(ui_offset_y + 10)))
-
-            # Draw directional arrow on a circle around the ship, pointing toward target
             self._draw_target_arrow(surface, target_obj)
-
-        if self.jump_state:
-            ui_scale = get_ui_scale()
-            font = pygame.font.Font(None, int(24 * ui_scale))
-            phase_label = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
-            jump_text = font.render(phase_label, True, CYAN)
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            jx = int(ui_offset_x + utils.screen_width // 2 - jump_text.get_width() // 2)
-            jy = int(ui_offset_y + utils.screen_height - 60)
-            surface.blit(jump_text, (jx, jy))
-        elif self.player.autopilot_active:
-            ui_scale = get_ui_scale()
-            font = pygame.font.Font(None, int(24 * ui_scale))
-            autopilot_text = font.render("Autopilot engaged - press any key to cancel", True, CYAN)
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            ap_x = int(ui_offset_x + utils.screen_width // 2 - autopilot_text.get_width() // 2)
-            ap_y = int(ui_offset_y + utils.screen_height - 60)
-            surface.blit(autopilot_text, (ap_x, ap_y))
-        elif self.landing_text > 0:
-            ui_scale = get_ui_scale()
-            font = pygame.font.Font(None, int(24 * ui_scale))
-            land_text = font.render("Press L to land", True, YELLOW)
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            land_x = int(ui_offset_x + utils.screen_width // 2 - land_text.get_width() // 2)
-            land_y = int(ui_offset_y + utils.screen_height - 60)
-            surface.blit(land_text, (land_x, land_y))
-
-        # Selected jump destination (persists across star map open/close)
-        if not self.jump_state and self.selected_system_id:
-            systems = get_star_systems(self.story)
-            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
-            label = f"Jump Target: {selected_name}"
-            if self.selected_system_id == self.system_id:
-                label += " (current)"
-            ui_scale = get_ui_scale()
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            font_sel = pygame.font.Font(None, int(20 * ui_scale))
-            sel_text = font_sel.render(label, True, CYAN)
-            surface.blit(sel_text, (int(ui_offset_x + utils.screen_width - sel_text.get_width() - 10), int(ui_offset_y + 10)))
-
-        if self.jump_message_timer > 0:
-            ui_scale = get_ui_scale()
-            ui_offset_x, ui_offset_y = get_ui_offset()
-            font_msg = pygame.font.Font(None, int(20 * ui_scale))
-            msg_text = font_msg.render("Too close to jump - move away from center first", True, YELLOW)
-            mx = int(ui_offset_x + utils.screen_width // 2 - msg_text.get_width() // 2)
-            surface.blit(msg_text, (mx, int(ui_offset_y + 40)))
 
         scale = get_scale()
         offset_x, offset_y = get_offset()
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
-        # Draw help text at bottom
+        self._draw_hud(surface, target_obj)
+
+    def _draw_hud(self, surface, target_obj):
+        """Ship status, targeting, jump-target, and status-message overlays -
+        styled with the same glass-panel/glow-text look as the menus
+        (ui_theme.py) instead of each being its own ad-hoc text blit."""
         ui_scale = get_ui_scale()
         ui_offset_x, ui_offset_y = get_ui_offset()
-        font_help = pygame.font.Font(None, int(16 * ui_scale))
-        help_text = font_help.render("T: target, L: land, M: star map, ESC: pause", True, WHITE)
-        help_x = int(ui_offset_x + utils.screen_width // 2 - help_text.get_width() // 2)
-        help_y = int(ui_offset_y + utils.screen_height - 30)
-        surface.blit(help_text, (help_x, help_y))
+        font_body = get_font(int(18 * ui_scale))
+
+        # --- Top-left: ship status panel (speed, plus target info if any) ---
+        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+        lines = [(f"Speed: {speed:.2f}", WHITE)]
+        target_name = self._get_target_name()
+        if target_obj and target_name:
+            distance = self.player.get_distance(target_obj.x, target_obj.y)
+            lines.append((f"Target: {target_name} ({distance:.0f})", GREEN))
+
+        pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+        line_height = int(22 * ui_scale)
+        rendered = [(font_body.render(text, True, color), color) for text, color in lines]
+        panel_width = max(text.get_width() for text, _ in rendered) + pad_x * 2
+        panel_height = pad_y * 2 + line_height * len(rendered)
+        status_rect = pygame.Rect(int(ui_offset_x + 10), int(ui_offset_y + 10), panel_width, panel_height)
+        draw_glass_panel(surface, status_rect, ui_scale)
+        for i, (text, _) in enumerate(rendered):
+            surface.blit(text, (status_rect.x + pad_x, status_rect.y + pad_y + i * line_height))
+
+        # --- Top-right: jump target panel (persists across star map open/close) ---
+        if not self.jump_state and self.selected_system_id:
+            systems = get_star_systems(self.story)
+            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
+            label = f"Jump Target: {selected_name}"
+            if self.selected_system_id == self.system_id:
+                label += " (current)"
+            label_text = font_body.render(label, True, CYAN)
+            jump_rect = pygame.Rect(0, 0, label_text.get_width() + pad_x * 2, label_text.get_height() + pad_y * 2)
+            jump_rect.topright = (int(ui_offset_x + utils.screen_width - 10), int(ui_offset_y + 10))
+            draw_glass_panel(surface, jump_rect, ui_scale)
+            surface.blit(label_text, (jump_rect.x + pad_x, jump_rect.y + pad_y))
+
+        # --- Top-center: transient "too close to jump" warning ---
+        if self.jump_message_timer > 0:
+            font_warn = get_font(int(20 * ui_scale))
+            draw_glow_title(
+                surface, "Too close to jump - move away from center first", font_warn,
+                int(ui_offset_x + utils.screen_width // 2), int(ui_offset_y + 30),
+                color=YELLOW, shadow_color=(60, 45, 10)
+            )
+
+        # --- Bottom-center: current status (mutually exclusive) ---
+        status_text, status_color = None, None
+        if self.jump_state:
+            status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
+            status_color = CYAN
+        elif self.player.autopilot_active:
+            status_text = "Autopilot engaged - press any key to cancel"
+            status_color = CYAN
+        elif self.landing_text > 0:
+            status_text = "Press L to land"
+            status_color = YELLOW
+
+        if status_text:
+            font_status = get_font(int(24 * ui_scale))
+            shadow = (20, 45, 45) if status_color == CYAN else (60, 45, 10)
+            draw_glow_title(
+                surface, status_text, font_status,
+                int(ui_offset_x + utils.screen_width // 2), int(ui_offset_y + utils.screen_height - 70),
+                color=status_color, shadow_color=shadow
+            )
+
+        render_help_text(surface, "T: target, L: land, M: star map, ESC: pause")
 
     def get_state(self):
         state = {
