@@ -1,13 +1,10 @@
 """Dialog for saving games with name input and overwrite selection."""
-import math
 import pygame
 from datetime import datetime
 from constants import WHITE, YELLOW, GRAY
-from utils import (
-    get_ui_scale, get_ui_offset, get_font, _center_text_x, _handle_scrolling_input,
-    get_save_files
-)
-from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+from utils import get_ui_scale, get_ui_offset, get_font, _center_text_x, get_save_files
+from ui_theme import draw_glass_panel, draw_glow_title
+from selectable_list import SelectableList
 
 
 class SaveDialog:
@@ -18,14 +15,20 @@ class SaveDialog:
         timestamp = datetime.now().strftime("%Y-%m-%d %H%M")
         self.save_name = f"{pilot_name} - {timestamp}" if pilot_name else timestamp
         self.success_timer = 0
-        self.existing_saves = self._get_all_saves()
-        self.selected_existing = 0 if self.existing_saves else None
-        self.input_mode = not self.existing_saves
-        self.scroll_offset = 0
-        self.max_visible = 5
+        self.list = SelectableList(self._get_all_saves(), max_visible=5)
+        self.input_mode = not self.list.items
 
     def _get_all_saves(self):
         return get_save_files()
+
+    # Kept for external callers (main.py) that refresh the save list after a delete.
+    @property
+    def existing_saves(self):
+        return self.list.items
+
+    @existing_saves.setter
+    def existing_saves(self, value):
+        self.list.items = value
 
     def handle_input(self, events):
         for event in events:
@@ -40,14 +43,11 @@ class SaveDialog:
                         return ("cancel", None)
                 else:
                     if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                        if self.selected_existing is not None:
-                            self.selected_existing, self.scroll_offset = _handle_scrolling_input(
-                                event.key, self.selected_existing, self.existing_saves,
-                                self.scroll_offset, self.max_visible)
-                    elif event.key == pygame.K_RETURN and self.selected_existing is not None:
-                        return ("save", self.existing_saves[self.selected_existing])
-                    elif event.key == pygame.K_d and self.selected_existing is not None:
-                        return ("delete", self.existing_saves[self.selected_existing])
+                        self.list.handle_key(event.key)
+                    elif event.key == pygame.K_RETURN and self.list.current():
+                        return ("save", self.list.current())
+                    elif event.key == pygame.K_d and self.list.current():
+                        return ("delete", self.list.current())
                     elif event.key == pygame.K_ESCAPE:
                         return ("cancel", None)
                     elif event.key == pygame.K_n:
@@ -85,26 +85,7 @@ class SaveDialog:
 
             draw_glow_title(surface, "Select Save to Overwrite", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.2))
 
-            if self.scroll_offset > 0:
-                up_indicator = font_text.render("↑ more", True, GRAY)
-                surface.blit(up_indicator, (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.33)))
-
-            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
-            visible_saves = self.existing_saves[self.scroll_offset:self.scroll_offset + self.max_visible]
-            for i, save in enumerate(visible_saves):
-                is_selected = (self.scroll_offset + i == self.selected_existing)
-                color = YELLOW if is_selected else GRAY
-                text = font_text.render(save, True, color)
-                text_x = _center_text_x(surface, text, offset_x)
-                text_y = int(offset_y + 600 * scale * 0.35 + i * 35)
-                if is_selected:
-                    box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
-                    draw_selection_highlight(surface, box_rect, scale, pulse)
-                surface.blit(text, (text_x, text_y))
-
-            if self.scroll_offset + self.max_visible < len(self.existing_saves):
-                down_indicator = font_text.render("↓ more", True, GRAY)
-                surface.blit(down_indicator, (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.35 + self.max_visible * 35)))
+            self.list.draw(surface, font_text, panel_rect.centerx, int(offset_y + 600 * scale * 0.35), int(35 * scale), scale)
 
             help_text = font_text.render("Enter: overwrite, N: new save, D: delete, ESC: cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.75)))

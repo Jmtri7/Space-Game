@@ -1,29 +1,25 @@
 """Menu for loading saved games."""
-import math
 import pygame
-from constants import YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset, _center_text_x, _handle_scrolling_input, get_save_files, get_font
-from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+from constants import GRAY
+from utils import get_ui_scale, get_ui_offset, _center_text_x, get_save_files, get_font
+from ui_theme import draw_glass_panel, draw_glow_title
+from selectable_list import SelectableList
 
 
 class LoadMenu:
     """Menu for loading saved games."""
     def __init__(self):
-        self.saves = get_save_files()
-        self.selected = 0
-        self.scroll_offset = 0
-        self.max_visible = 5
+        self.list = SelectableList(get_save_files(), max_visible=5)
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                    self.selected, self.scroll_offset = _handle_scrolling_input(
-                        event.key, self.selected, self.saves, self.scroll_offset, self.max_visible)
-                elif event.key == pygame.K_RETURN and self.saves:
-                    return ("load", self.saves[self.selected])
-                elif event.key == pygame.K_d and self.saves:
-                    return ("delete", self.saves[self.selected])
+                    self.list.handle_key(event.key)
+                elif event.key == pygame.K_RETURN and self.list.current():
+                    return ("load", self.list.current())
+                elif event.key == pygame.K_d and self.list.current():
+                    return ("delete", self.list.current())
                 elif event.key == pygame.K_ESCAPE:
                     return ("cancel", None)
         return (None, None)
@@ -40,31 +36,11 @@ class LoadMenu:
 
         draw_glow_title(surface, "Load Game", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.25))
 
-        if not self.saves:
+        if not self.list.items:
             no_saves = font_save.render("No saves found", True, GRAY)
             surface.blit(no_saves, (_center_text_x(surface, no_saves, offset_x), int(offset_y + 600 * scale * 0.5)))
         else:
-            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
-
-            if self.scroll_offset > 0:
-                up_indicator = font_save.render("↑ more", True, GRAY)
-                surface.blit(up_indicator, (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.33)))
-
-            visible_saves = self.saves[self.scroll_offset:self.scroll_offset + self.max_visible]
-            for i, save in enumerate(visible_saves):
-                is_selected = (self.scroll_offset + i == self.selected)
-                color = YELLOW if is_selected else GRAY
-                text = font_save.render(save, True, color)
-                text_x = _center_text_x(surface, text, offset_x)
-                text_y = int(offset_y + 600 * scale * 0.35 + i * 40)
-                if is_selected:
-                    box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
-                    draw_selection_highlight(surface, box_rect, scale, pulse)
-                surface.blit(text, (text_x, text_y))
-
-            if self.scroll_offset + self.max_visible < len(self.saves):
-                down_indicator = font_save.render("↓ more", True, GRAY)
-                surface.blit(down_indicator, (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.35 + self.max_visible * 40)))
+            self.list.draw(surface, font_save, panel_rect.centerx, int(offset_y + 600 * scale * 0.35), int(40 * scale), scale)
 
             help_text = font_save.render("Enter: load, D: delete, ESC: cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.75)))
