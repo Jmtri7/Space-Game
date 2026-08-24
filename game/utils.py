@@ -8,72 +8,137 @@ from game.constants import (
     CAMERA_ZOOM, SAVE_DIR, GREEN
 )
 
-# Global camera offset
-camera_offset_x = 0
-camera_offset_y = 0
-screen_width = SCREEN_WIDTH
-screen_height = SCREEN_HEIGHT
+class Camera:
+    """Owns the camera's world offset and the window's screen size, and
+    derives every scale/coordinate conversion from them. Replaces what used
+    to be bare module-level globals (camera_offset_x/y, screen_width/height)
+    mutated directly by anyone who imported this module - that state now
+    lives here, only reachable through these methods and the module-level
+    functions below that delegate to a single shared instance."""
+    def __init__(self, screen_width, screen_height):
+        self.offset_x = 0
+        self.offset_y = 0
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+
+    def set_offset(self, x, y):
+        self.offset_x = x
+        self.offset_y = y
+
+    def set_screen_size(self, width, height):
+        self.screen_width = width
+        self.screen_height = height
+
+    def get_scale(self):
+        """Get rendering scale based on window size."""
+        return min(self.screen_width / GAME_WIDTH, self.screen_height / GAME_HEIGHT) * CAMERA_ZOOM
+
+    def get_world_offset(self):
+        """Get rendering offset to center game world."""
+        scale = self.get_scale()
+        offset_x = (self.screen_width - GAME_WIDTH * scale) / 2
+        offset_y = (self.screen_height - GAME_HEIGHT * scale) / 2
+        return (offset_x, offset_y)
+
+    def to_screen(self, x, y):
+        """Convert world coordinates to screen coordinates."""
+        scale = self.get_scale()
+        offset_x, offset_y = self.get_world_offset()
+        x_camera = x - self.offset_x
+        y_camera = y - self.offset_y
+        return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
+
+    def to_screen_x(self, x):
+        """Convert world X coordinate to screen space."""
+        return int(round(x * self.get_scale()))
+
+    def to_screen_y(self, y):
+        """Convert world Y coordinate to screen space."""
+        return int(round(y * self.get_scale()))
+
+    def get_ui_scale(self):
+        """Get scale for UI elements - based only on window size, not camera zoom."""
+        return min(self.screen_width / 800, self.screen_height / 600)
+
+    def get_ui_offset(self):
+        """Get offset for UI elements - centers UI on screen."""
+        ui_scale = self.get_ui_scale()
+        offset_x = (self.screen_width - 800 * ui_scale) / 2
+        offset_y = (self.screen_height - 600 * ui_scale) / 2
+        return (offset_x, offset_y)
+
+    def get_centered_x(self, text_width):
+        """Get X coordinate to center text horizontally on screen."""
+        return self.screen_width // 2 - text_width // 2
+
+    def get_centered_y(self, text_height):
+        """Get Y coordinate to center text vertically on screen."""
+        return self.screen_height // 2 - text_height // 2
+
+
+_camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+
+def __getattr__(name):
+    """Read-only passthrough so the many call sites that read
+    `utils.screen_width`/`screen_height`/`camera_offset_x`/`camera_offset_y`
+    as bare module attributes keep working unchanged, while the state
+    itself now genuinely lives inside the Camera instance above rather than
+    as directly-mutable module globals. See PEP 562."""
+    if name == "screen_width":
+        return _camera.screen_width
+    if name == "screen_height":
+        return _camera.screen_height
+    if name == "camera_offset_x":
+        return _camera.offset_x
+    if name == "camera_offset_y":
+        return _camera.offset_y
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def set_camera_offset(x, y):
-    """Update global camera offset."""
-    global camera_offset_x, camera_offset_y
-    camera_offset_x = x
-    camera_offset_y = y
+    """Update the camera's world offset."""
+    _camera.set_offset(x, y)
 
 
 def set_screen_size(width, height):
-    """Update global screen dimensions."""
-    global screen_width, screen_height
-    screen_width = width
-    screen_height = height
+    """Update the camera's screen dimensions."""
+    _camera.set_screen_size(width, height)
 
 
 def get_scale():
     """Get rendering scale based on window size."""
-    return min(screen_width / GAME_WIDTH, screen_height / GAME_HEIGHT) * CAMERA_ZOOM
+    return _camera.get_scale()
 
 
 def get_offset():
     """Get rendering offset to center game world."""
-    scale = get_scale()
-    offset_x = (screen_width - GAME_WIDTH * scale) / 2
-    offset_y = (screen_height - GAME_HEIGHT * scale) / 2
-    return (offset_x, offset_y)
+    return _camera.get_world_offset()
 
 
 def to_screen(x, y):
     """Convert world coordinates to screen coordinates."""
-    scale = get_scale()
-    offset_x, offset_y = get_offset()
-    x_camera = x - camera_offset_x
-    y_camera = y - camera_offset_y
-    return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
+    return _camera.to_screen(x, y)
 
 
 def to_screen_x(x):
     """Convert world X coordinate to screen space."""
-    scale = get_scale()
-    return int(round(x * scale))
+    return _camera.to_screen_x(x)
 
 
 def to_screen_y(y):
     """Convert world Y coordinate to screen space."""
-    scale = get_scale()
-    return int(round(y * scale))
+    return _camera.to_screen_y(y)
 
 
 def get_ui_scale():
     """Get scale for UI elements - based only on window size, not camera zoom."""
-    return min(screen_width / 800, screen_height / 600)
+    return _camera.get_ui_scale()
 
 
 def get_ui_offset():
     """Get offset for UI elements - centers UI on screen."""
-    ui_scale = get_ui_scale()
-    offset_x = (screen_width - 800 * ui_scale) / 2
-    offset_y = (screen_height - 600 * ui_scale) / 2
-    return (offset_x, offset_y)
+    return _camera.get_ui_offset()
 
 
 # Font cache for efficient font reuse
@@ -89,12 +154,12 @@ def get_font(size, bold=False):
 
 def get_centered_x(text_width):
     """Get X coordinate to center text horizontally on screen."""
-    return screen_width // 2 - text_width // 2
+    return _camera.get_centered_x(text_width)
 
 
 def get_centered_y(text_height):
     """Get Y coordinate to center text vertically on screen."""
-    return screen_height // 2 - text_height // 2
+    return _camera.get_centered_y(text_height)
 
 
 def render_help_text(surface, text, y_pos=None, color=(150, 150, 150)):
@@ -104,7 +169,7 @@ def render_help_text(surface, text, y_pos=None, color=(150, 150, 150)):
     font = get_font(int(16 * get_ui_scale()))
     help_text = font.render(text, True, color)
     if y_pos is None:
-        y_pos = screen_height - 30
+        y_pos = _camera.screen_height - 30
     x = get_centered_x(help_text.get_width())
     surface.blit(help_text, (x, int(y_pos)))
 
