@@ -25,19 +25,27 @@
       "default": {
         "label": "Delta Outpost Interior",
         "culture": "drossholt",
+        "entrance": {
+          "x": 60,
+          "y": 300
+        },
+        "rooms": [
+          {"label": "Airlock", "rect": [20, 260, 300, 80]},
+          {"label": "Supply Bay", "rect": [320, 100, 440, 400]}
+        ],
         "npcs": [
           {
             "name": "Quartermaster",
-            "x": 400,
-            "y": 200,
+            "x": 500,
+            "y": 220,
             "behavior": "wander",
             "greeting": "Supplies are thin out here, but we make do.",
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
             "name": "Dockhand",
-            "x": 400,
-            "y": 450,
+            "x": 620,
+            "y": 420,
             "behavior": "wander",
             "greeting": "Watch your step, the deck plating's loose.",
             "dialogue_options": ["Thanks", "Leave"]
@@ -51,6 +59,48 @@
     "y": 0.7,
     "name": "Rust Moon",
     "interiors": {
+      "city": {
+        "label": "Rust Moon Settlement",
+        "description": "A cluster of bolted-together Drossholt cargo bunkers and a watch tower",
+        "culture": "drossholt",
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "structures": [
+          {"x": 200, "y": 650, "building_type": "drossholt_warehouse"},
+          {"x": 650, "y": 600, "building_type": "drossholt_bunker"},
+          {"x": 1100, "y": 500, "building_type": "drossholt_tower"},
+          {"x": 300, "y": 950, "building_type": "drossholt_bunker"},
+          {"x": 950, "y": 900, "building_type": "drossholt_warehouse"}
+        ],
+        "npcs": [
+          {
+            "name": "Foreman",
+            "x": 350,
+            "y": 600,
+            "behavior": "wander",
+            "greeting": "Mind the crates, they're not stacked for looks.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Scavenger",
+            "x": 750,
+            "y": 550,
+            "behavior": "wander",
+            "greeting": "Found some good salvage out past the ridge.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Trader",
+            "x": 1150,
+            "y": 450,
+            "behavior": "wander",
+            "greeting": "Prices are fair. Mostly.",
+            "dialogue_options": ["Thanks", "Leave"]
+          }
+        ]
+      },
       "wilderness": {
         "label": "Rust Moon Wilderness",
         "description": "Cratered, rust-red terrain",
@@ -67,6 +117,11 @@
       }
     }
   },
+  "celestial_bodies": [
+    {"name": "Cinderpoint", "x": 0.54, "y": 0.53, "size": 12, "color": [170, 80, 60], "body_type": "rocky"},
+    {"name": "Wraithmoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
+    {"name": "Bulwark", "x": 0.05, "y": 0.1, "size": 50, "color": [210, 170, 130], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 170, 140]}
+  ],
   "ai_ships": [
     {
       "name": "Trader One",

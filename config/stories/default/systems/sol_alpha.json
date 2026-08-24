@@ -40,19 +40,14 @@
       "default": {
         "label": "Alpha Station Interior",
         "culture": "vherathi",
-        "bar": {
+        "entrance": {
           "x": 400,
-          "y": 90
+          "y": 560
         },
-        "door": {
-          "x": 400,
-          "y": 540
-        },
-        "hallway": {
-          "narrow_width": 80,
-          "wide_width": 200,
-          "transition_y": 300
-        },
+        "rooms": [
+          {"label": "Entrance Hall", "rect": [360, 300, 80, 300]},
+          {"label": "Bar", "rect": [300, 0, 200, 300]}
+        ],
         "npcs": [
           {
             "name": "Bartender",
@@ -156,6 +151,11 @@
       }
     }
   },
+  "celestial_bodies": [
+    {"name": "Emberrock", "x": 0.56, "y": 0.53, "size": 14, "color": [180, 90, 60], "body_type": "rocky"},
+    {"name": "Frostvane", "x": 0.05, "y": 0.95, "size": 22, "color": [210, 225, 255], "body_type": "ice"},
+    {"name": "Kolossus", "x": 0.95, "y": 0.08, "size": 55, "color": [230, 180, 120], "body_type": "gas_giant", "has_ring": true, "ring_color": [200, 190, 150]}
+  ],
   "ai_ships": [
     {
       "name": "Freighter One",
