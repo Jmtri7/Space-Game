@@ -2,10 +2,10 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
+from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN
 from game.utils import (
-    get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
-    draw_debug_marker, draw_target_brackets, get_font, get_centered_x, render_help_text,
+    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
+    draw_debug_marker, draw_target_brackets, get_font,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
 import game.utils as utils
@@ -457,28 +457,41 @@ class SpaceScreen(ScreenBase):
 
     def _draw_hud(self, surface, target_obj):
         """Ship status, targeting, jump-target, and status-message overlays -
-        styled with the same glass-panel/glow-text look as the menus
-        (ui_theme.py) instead of each being its own ad-hoc text blit."""
-        ui_scale = get_ui_scale()
-        ui_offset_x, ui_offset_y = get_ui_offset()
-        font_body = get_font(int(18 * ui_scale))
+        styled with the same glass-panel look as the menus (ui_theme.py)
+        instead of each being its own ad-hoc text blit.
 
-        # --- Top-left: ship status panel (speed, plus target info if any) ---
+        Anchored directly to the real screen edges (0/screen_width/
+        screen_height), not get_ui_offset() - that offset centers the
+        menus' fixed 800x600 virtual canvas within the window, which this
+        full-viewport HUD isn't confined to. Adding it while right/bottom-
+        anchoring (screen_width - x) pushed panels past the real edge,
+        which is why the jump target panel was rendering off-screen.
+        """
+        ui_scale = get_ui_scale()
+        font_body = get_font(int(18 * ui_scale))
+        pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+        margin = int(10 * ui_scale)
+
+        # --- Top-left: ship status panel (speed, plus target if any).
+        # Always both lines (a placeholder "None" target line rather than
+        # omitting it) so the panel doesn't resize every time targeting is
+        # toggled - only its selected/deselected color changes.
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-        lines = [(f"Speed: {speed:.2f}", WHITE)]
         target_name = self._get_target_name()
         if target_obj and target_name:
             distance = self.player.get_distance(target_obj.x, target_obj.y)
-            lines.append((f"Target: {target_name} ({distance:.0f})", GREEN))
+            target_line, target_color = f"Target: {target_name} ({distance:.0f})", GREEN
+        else:
+            target_line, target_color = "Target: None", GRAY
+        lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color)]
 
-        pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
         line_height = int(22 * ui_scale)
-        rendered = [(font_body.render(text, True, color), color) for text, color in lines]
-        panel_width = max(text.get_width() for text, _ in rendered) + pad_x * 2
+        rendered = [font_body.render(text, True, color) for text, color in lines]
+        panel_width = max(text.get_width() for text in rendered) + pad_x * 2
         panel_height = pad_y * 2 + line_height * len(rendered)
-        status_rect = pygame.Rect(int(ui_offset_x + 10), int(ui_offset_y + 10), panel_width, panel_height)
+        status_rect = pygame.Rect(margin, margin, panel_width, panel_height)
         draw_glass_panel(surface, status_rect, ui_scale)
-        for i, (text, _) in enumerate(rendered):
+        for i, text in enumerate(rendered):
             surface.blit(text, (status_rect.x + pad_x, status_rect.y + pad_y + i * line_height))
 
         # --- Top-right: jump target panel (persists across star map open/close) ---
@@ -490,7 +503,7 @@ class SpaceScreen(ScreenBase):
                 label += " (current)"
             label_text = font_body.render(label, True, CYAN)
             jump_rect = pygame.Rect(0, 0, label_text.get_width() + pad_x * 2, label_text.get_height() + pad_y * 2)
-            jump_rect.topright = (int(ui_offset_x + utils.screen_width - 10), int(ui_offset_y + 10))
+            jump_rect.topright = (utils.screen_width - margin, margin)
             draw_glass_panel(surface, jump_rect, ui_scale)
             surface.blit(label_text, (jump_rect.x + pad_x, jump_rect.y + pad_y))
 
@@ -499,11 +512,19 @@ class SpaceScreen(ScreenBase):
             font_warn = get_font(int(20 * ui_scale))
             draw_glow_title(
                 surface, "Too close to jump - move away from center first", font_warn,
-                int(ui_offset_x + utils.screen_width // 2), int(ui_offset_y + 30),
+                utils.screen_width // 2, margin + int(10 * ui_scale),
                 color=YELLOW, shadow_color=(60, 45, 10)
             )
 
-        # --- Bottom-center: current status (mutually exclusive) ---
+        # --- Bottom-center: a control-help bar (always) with the current
+        # status (autopilot/landing/jump - mutually exclusive) as its own
+        # panel directly above, so the two never crowd into one another.
+        help_text = font_body.render("T: target, L: land, M: star map, ESC: pause", True, WHITE)
+        help_rect = pygame.Rect(0, 0, help_text.get_width() + pad_x * 2, help_text.get_height() + pad_y * 2)
+        help_rect.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
+        draw_glass_panel(surface, help_rect, ui_scale)
+        surface.blit(help_text, (help_rect.x + pad_x, help_rect.y + pad_y))
+
         status_text, status_color = None, None
         if self.jump_state:
             status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
@@ -516,15 +537,12 @@ class SpaceScreen(ScreenBase):
             status_color = YELLOW
 
         if status_text:
-            font_status = get_font(int(24 * ui_scale))
-            shadow = (20, 45, 45) if status_color == CYAN else (60, 45, 10)
-            draw_glow_title(
-                surface, status_text, font_status,
-                int(ui_offset_x + utils.screen_width // 2), int(ui_offset_y + utils.screen_height - 70),
-                color=status_color, shadow_color=shadow
-            )
-
-        render_help_text(surface, "T: target, L: land, M: star map, ESC: pause")
+            font_status = get_font(int(22 * ui_scale))
+            status_render = font_status.render(status_text, True, status_color)
+            status_panel = pygame.Rect(0, 0, status_render.get_width() + pad_x * 2, status_render.get_height() + pad_y * 2)
+            status_panel.midbottom = (utils.screen_width // 2, help_rect.top - int(8 * ui_scale))
+            draw_glass_panel(surface, status_panel, ui_scale)
+            surface.blit(status_render, (status_panel.x + pad_x, status_panel.y + pad_y))
 
     def get_state(self):
         state = {
