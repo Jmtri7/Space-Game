@@ -2,12 +2,19 @@
 import pygame
 from game.constants import DARK_GRAY
 from game.world.ship import Ship
+from game.world.person import Person
 
 
 class PlayerController:
-    """Controls the player's ship - owns the ship and handles input."""
-    def __init__(self, x, y, space_drag=0, graphics=None, ship_type=None):
+    """Controls the player's ship - owns the ship and handles input.
+
+    Also owns a Person representing the player themselves, aboard the ship
+    while flying (mirrored to the ship's position each frame, not drawn
+    separately - see LocationScreen/PlayerCharacter for the player's walking
+    body once they land)."""
+    def __init__(self, x, y, space_drag=0, graphics=None, ship_type=None, pilot_name=""):
         self.ship = Ship(x, y, space_drag=space_drag, graphics=graphics)
+        self.person = Person(x, y, name=pilot_name)
         if ship_type:
             self.ship.acceleration_magnitude = ship_type.get("max_thrust", self.ship.acceleration_magnitude)
             self.ship.max_velocity = ship_type.get("max_velocity", self.ship.max_velocity)
@@ -34,12 +41,18 @@ class PlayerController:
             self.ship.release_thrust()
 
     def update(self):
-        """Update ship physics."""
+        """Update ship physics, and keep the pilot's Person aboard it."""
         self.ship.update()
+        self.person.x = self.ship.x
+        self.person.y = self.ship.y
 
     def draw(self, surface):
         """Draw ship."""
         self.ship.draw(surface, ship_size=15, color=DARK_GRAY)
+
+    def park(self):
+        """Come to a full stop - landed/docked."""
+        self.ship.park()
 
     # Delegation properties for backward compatibility
     @property

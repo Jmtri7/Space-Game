@@ -177,9 +177,7 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    # Park the ship: zero velocity, keep current position
-                    game_screen.player.velocity_x = 0
-                    game_screen.player.velocity_y = 0
+                    game_screen.player.park()
                     if game_screen.landing_target == "station":
                         interior_config = game_screen.station.interiors.get("default")
                         if interior_config:

@@ -6,6 +6,7 @@ from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
 from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture
 from game.screens.screen_base import ScreenBase
 from game.world.npc import NPC
+from game.world.player_character import PlayerCharacter
 
 
 class LocationScreen(ScreenBase):
@@ -27,8 +28,7 @@ class LocationScreen(ScreenBase):
         super().__init__(pilot_name=pilot_name)
 
         # Initialize walkable area properties
-        self.player_x = start_x
-        self.player_y = start_y
+        self.player = PlayerCharacter(start_x, start_y, name=pilot_name)
         self.world_width = world_width
         self.world_height = world_height
         self.speed = 3
@@ -87,11 +87,14 @@ class LocationScreen(ScreenBase):
         return self.npcs[self.current_npc_target]
 
     def update(self):
-        """Update location - handle movement and camera."""
+        """Update location - handle movement, camera, and NPCs. NPCs keep
+        living even mid-dialogue - only the player's own movement pauses."""
         if not self.active_dialogue:
             keys = pygame.key.get_pressed()
             self._handle_movement(keys)
         self.update_camera()
+        for npc in self.npcs:
+            npc.update()
 
     def draw(self, surface):
         """Draw location from config."""
@@ -159,13 +162,11 @@ class LocationScreen(ScreenBase):
         pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
 
         # Draw player
-        px, py = to_screen(self.player_x, self.player_y)
-        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
+        self.player.draw(surface)
 
         # Debug marker
         if constants.DEBUG_MODE:
-            draw_debug_marker(surface, self.player_x, self.player_y, 10)
+            draw_debug_marker(surface, self.player.x, self.player.y, 10)
 
         # Draw UI
         ui_scale = get_ui_scale()
@@ -246,7 +247,7 @@ class LocationScreen(ScreenBase):
 
             if event.key == pygame.K_l:
                 # Only allow exit if near entrance
-                dist_to_entrance = math.sqrt((self.player_x - self.entrance_x) ** 2 + (self.player_y - self.entrance_y) ** 2)
+                dist_to_entrance = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2)
                 if dist_to_entrance <= self.entrance_range:
                     return "exit"
             elif event.key == pygame.K_t:
@@ -262,8 +263,8 @@ class LocationScreen(ScreenBase):
 
     def _handle_movement(self, keys, can_move_func=None):
         """Generalized movement input handling"""
-        new_x = self.player_x
-        new_y = self.player_y
+        new_x = self.player.x
+        new_y = self.player.y
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             new_y -= self.speed
@@ -284,12 +285,12 @@ class LocationScreen(ScreenBase):
             can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
 
         if can_move:
-            self.player_x = new_x
-            self.player_y = new_y
+            self.player.x = new_x
+            self.player.y = new_y
 
     def update_camera(self):
         """Update global camera to follow player"""
-        set_camera_offset(self.player_x - GAME_WIDTH // 2, self.player_y - GAME_HEIGHT // 2)
+        set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
 
     def draw_ui_text(self, surface, text, scale=None):
         """Draw UI text that stays on screen (not camera-affected)"""
@@ -304,8 +305,8 @@ class LocationScreen(ScreenBase):
         """Save player position state for locations"""
         return {
             "player": {
-                "x": self.player_x,
-                "y": self.player_y
+                "x": self.player.x,
+                "y": self.player.y
             }
         }
 
@@ -314,5 +315,5 @@ class LocationScreen(ScreenBase):
         if not state or "player" not in state:
             return
         player_state = state["player"]
-        self.player_x = player_state.get("x", self.player_x)
-        self.player_y = player_state.get("y", self.player_y)
+        self.player.x = player_state.get("x", self.player.x)
+        self.player.y = player_state.get("y", self.player.y)

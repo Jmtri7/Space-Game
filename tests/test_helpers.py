@@ -268,8 +268,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
                         f"Shuttle distance {result['distance']:.1f} - should arrive close to the landable's center")
-        self.assertLess(result['speed'], 0.3,
-                        f"Shuttle velocity {result['speed']:.3f} - should be nearly stopped")
+        self.assertEqual(result['speed'], 0,
+                        f"Shuttle velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
                         f"Shuttle oscillated - ship should come to stop once, not bounce")
 
@@ -285,8 +285,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
                         f"Freighter distance {result['distance']:.1f} - should arrive close to the landable's center")
-        self.assertLess(result['speed'], 0.3,
-                        f"Freighter velocity {result['speed']:.3f} - should be nearly stopped")
+        self.assertEqual(result['speed'], 0,
+                        f"Freighter velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
                         f"Freighter oscillated - ship should come to stop once, not bounce")
 
@@ -302,8 +302,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
                         f"Patrol distance {result['distance']:.1f} - should arrive close to the landable's center")
-        self.assertLess(result['speed'], 0.3,
-                        f"Patrol velocity {result['speed']:.3f} - should be nearly stopped")
+        self.assertEqual(result['speed'], 0,
+                        f"Patrol velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
                         f"Patrol oscillated - ship should come to stop once, not bounce")
 

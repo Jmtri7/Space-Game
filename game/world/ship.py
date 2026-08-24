@@ -188,6 +188,13 @@ class Ship(WorldObject):
         """Release thrust immediately."""
         self.thrust = 0
 
+    def park(self):
+        """Come to a full stop and release thrust - landed/docked, not just
+        autopilot-disengaged, so the ship doesn't keep drifting."""
+        self.velocity_x = 0
+        self.velocity_y = 0
+        self.release_thrust()
+
     def point_to_reverse_velocity(self):
         """Rotate ship to point opposite current velocity direction."""
         if self.velocity_x == 0 and self.velocity_y == 0:

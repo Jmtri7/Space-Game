@@ -130,6 +130,9 @@ class SeekMode:
         landing_distance = getattr(target, 'landing_distance', 100)
         arrival_tolerance = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION)
         if distance < arrival_tolerance and speed < ARRIVAL_SPEED_THRESHOLD:
+            # Arrival, not just a disengage - come to a full stop so the ship
+            # doesn't keep drifting on whatever residual speed was left.
+            ship.park()
             autopilot.disengage()
             return
 
@@ -162,8 +165,14 @@ class SeekMode:
                 test_vy = ship.velocity_y - math.cos(rad) * ship.acceleration_magnitude
                 test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
 
-                # Stop braking if speed would increase instead of decrease
+                # Stop braking if speed would increase instead of decrease.
+                # This only fires once already within braking_distance of the
+                # target (should_brake), so it's functionally an arrival too
+                # (confirmed by simulation: fires around ~2 units out at low
+                # residual speed) - park so it doesn't drift on whatever
+                # speed was left when braking stopped being productive.
                 if test_speed > speed:
+                    ship.park()
                     autopilot.disengage()
                     return
 

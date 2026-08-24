@@ -1,17 +1,17 @@
 """Base class for NPCs and other characters in the game."""
 import pygame
 import math
-from game.utils import to_screen, get_scale
+from game.utils import to_screen, to_screen_x, to_screen_y, get_scale
 
 
 class Person:
-    """Base class for NPCs and other characters in the game."""
-    def __init__(self, x, y):
+    """Base class for anyone with a position and a body - the player's own
+    walking self (see PlayerCharacter), NPCs, and a ship's pilot all share
+    this identity regardless of whether they currently have a ship."""
+    def __init__(self, x, y, name=""):
         self.x = x
         self.y = y
-        self.wander_time = 0
-        self.wander_x = 0
-        self.wander_y = 0
+        self.name = name
 
     def draw(self, surface):
         scale = get_scale()
@@ -20,17 +20,3 @@ class Person:
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
-
-
-def to_screen_x(x):
-    """Convert world X coordinate to screen space."""
-    from game.utils import get_scale
-    scale = get_scale()
-    return int(round(x * scale))
-
-
-def to_screen_y(y):
-    """Convert world Y coordinate to screen space."""
-    from game.utils import get_scale
-    scale = get_scale()
-    return int(round(y * scale))

@@ -1,6 +1,7 @@
 """AI ship whose behavior is chosen by its pilot's faction and role."""
 import random
 from game.world.ship import Ship
+from game.world.person import Person
 
 
 class ShuttleRoutine:
@@ -79,7 +80,12 @@ class AIShip(Ship):
     autopilot (engage_seek / engage_orbit); only the decision of which mode
     to use, and its target, is autonomous - chosen from the pilot's faction
     and role, as a Routine strategy object (ShuttleRoutine/OrbitRoutine/
-    IdleRoutine) rather than a string re-checked every frame."""
+    IdleRoutine) rather than a string re-checked every frame.
+
+    Also owns a Person (pilot_person) representing the character flying it -
+    aboard and mirrored to the ship's position each frame, same as
+    PlayerController.person. A future docking routine can suspend that sync
+    to walk the pilot around a station/moon instead."""
     def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="freighter", graphics=None, pilot=None, route=None):
         super().__init__(x, y, space_drag=space_drag, graphics=graphics)
         self.ship_type_id = ship_type_id
@@ -94,6 +100,7 @@ class AIShip(Ship):
             self.acceleration_magnitude = 0.15
 
         self.pilot = pilot or {}
+        self.pilot_person = Person(x, y, name=self.pilot.get("name", ""))
         self.route = route or []
         self.routine = self._choose_routine()
         self.routine.start(self)
@@ -106,9 +113,12 @@ class AIShip(Ship):
         return routine_cls(self.route)
 
     def update(self):
-        """Let the job routine advance, then run standard ship autopilot/physics."""
+        """Let the job routine advance, then run standard ship autopilot/
+        physics, then keep the pilot's Person aboard."""
         self.routine.run(self)
         super().update()
+        self.pilot_person.x = self.x
+        self.pilot_person.y = self.y
 
     def draw(self, surface):
         """Draw AI ship using graphics asset."""

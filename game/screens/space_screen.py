@@ -53,7 +53,7 @@ class SpaceScreen(ScreenBase):
         player_start_cfg = self.system_config.get("player_start", {})
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
-        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type)
+        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name)
 
         self._load_system_content()
 
