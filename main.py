@@ -306,7 +306,7 @@ def main():
                         elif previous_screen == "station":
                             game_state = station_interior.get_state()
                             game_state["location"] = "station"
-                            create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                            create_save_file(pilot_name, save_description, {}, {}, game_state)
                         else:  # previous_screen == "game" or None
                             game_state = game_screen.get_state()
                             game_state["location"] = "space"
@@ -353,7 +353,7 @@ def main():
                             elif previous_screen == "station":
                                 game_state = station_interior.get_state()
                                 game_state["location"] = "station"
-                                create_save_file(pilot_name, save_description, station_interior.station_config, {}, game_state)
+                                create_save_file(pilot_name, save_description, {}, {}, game_state)
                             else:  # previous_screen == "game" or None
                                 game_state = game_screen.get_state()
                                 game_state["location"] = "space"
