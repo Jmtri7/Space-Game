@@ -93,32 +93,26 @@ def predict_braking_distance_from_stop(ship, current_speed):
     return total_distance * 1.1
 
 
-def calculate_brake_redirect_angle(ship, target_angle_rad):
-    """Calculate acceleration direction that blends braking (opposite velocity) with redirect (toward target).
+def retrograde_angle(ship):
+    """Direction directly opposite the ship's current velocity - a pure
+    braking burn, no redirect blended in.
 
-    When braking: accelerate in direction that has both:
-    - Component opposite to velocity (to slow down)
-    - Component toward target (to redirect)
+    An earlier version blended in some redirect-toward-target (30%) on top
+    of this, meant to correct for velocity that had drifted off the line to
+    the target. In practice it did the opposite: since the ship's heading
+    already tracks the target closely by the time braking starts (Step 3's
+    non-braking approach continuously points at the target), that 30% pull
+    fought the braking heading it was supposed to reach every frame instead
+    of ever settling on it, so alignment (and thus real thrust) kept getting
+    delayed - long enough that the ship coasted straight through the target
+    before finally braking, then had to loop back around. Pure retrograde
+    matches what predict_braking_distance_from_stop already assumes (turn
+    to face away from travel, then reverse-thrust) and, confirmed by
+    simulation across a spread of approach angles/distances, stops in a
+    straight line with no pass-by at all.
     """
-    # Calculate velocity angle
     velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
-
-    # Calculate reverse velocity angle (opposite direction)
-    reverse_velocity_angle = (velocity_angle + math.pi) % (2 * math.pi)
-
-    # Blend between reverse velocity direction and target direction
-    # This creates a direction that both brakes and redirects
-    angle_diff = target_angle_rad - reverse_velocity_angle
-    # Normalize angle difference
-    while angle_diff > math.pi:
-        angle_diff -= 2 * math.pi
-    while angle_diff < -math.pi:
-        angle_diff += 2 * math.pi
-
-    # Blend: 70% reverse velocity (brake), 30% target (redirect)
-    blended_angle = reverse_velocity_angle + angle_diff * 0.3
-
-    return blended_angle
+    return (velocity_angle + math.pi) % (2 * math.pi)
 
 
 class SeekMode:
@@ -152,9 +146,7 @@ class SeekMode:
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
             # Simulate one frame to check if we'd actually slow down
-            dx, dy = target.x - ship.x, target.y - ship.y
-            target_angle_rad = math.atan2(dx, -dy)
-            accel_angle = calculate_brake_redirect_angle(ship, target_angle_rad)
+            accel_angle = retrograde_angle(ship)
 
             # Check if aligned enough to thrust
             accel_angle_deg = math.degrees(accel_angle)
@@ -186,15 +178,12 @@ class SeekMode:
                     return
 
         # Step 3: Calculate optimal acceleration direction
-        dx, dy = target.x - ship.x, target.y - ship.y
-        target_angle = math.atan2(dx, -dy)
-
         if should_brake:
-            # Blend toward slowing down while redirecting to target
-            accel_angle = calculate_brake_redirect_angle(ship, target_angle)
+            accel_angle = retrograde_angle(ship)
         else:
             # Point toward target and accelerate
-            accel_angle = target_angle
+            dx, dy = target.x - ship.x, target.y - ship.y
+            accel_angle = math.atan2(dx, -dy)
 
         # Step 4: Point and thrust in that direction
         point_and_thrust(ship, accel_angle)
