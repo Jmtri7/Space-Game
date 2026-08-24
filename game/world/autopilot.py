@@ -113,9 +113,16 @@ class SeekMode:
         speed = math.sqrt(ship.velocity_x ** 2 + ship.velocity_y ** 2)
 
         # Step 1: Landing/arrival condition check
-        # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
+        # landing_distance is how close a *manual* landing (L key) is allowed
+        # from - generous, since it's sized to the landable itself. Arriving
+        # anywhere in that whole radius and calling it "landed" left the
+        # autopilot stopping visibly off-center (25-50 units out, in testing).
+        # Use a much tighter fraction of it instead, so the autopilot keeps
+        # braking all the way in to (near) the landable's exact middle,
+        # floored so it stays reachable for slow/sluggish ships.
         landing_distance = getattr(target, 'landing_distance', 100)
-        if distance < landing_distance and speed < 0.4:
+        arrival_tolerance = max(8, landing_distance * 0.15)
+        if distance < arrival_tolerance and speed < 0.4:
             autopilot.disengage()
             return
 

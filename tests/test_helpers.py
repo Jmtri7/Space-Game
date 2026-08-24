@@ -266,8 +266,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 500, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 120,
-                        f"Shuttle distance {result['distance']:.1f} - should arrive very close to target")
+        self.assertLess(result['distance'], 20,
+                        f"Shuttle distance {result['distance']:.1f} - should arrive close to the landable's center")
         self.assertLess(result['speed'], 0.5,
                         f"Shuttle velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
@@ -283,8 +283,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 400, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 120,
-                        f"Freighter distance {result['distance']:.1f} - should arrive very close to target")
+        self.assertLess(result['distance'], 20,
+                        f"Freighter distance {result['distance']:.1f} - should arrive close to the landable's center")
         self.assertLess(result['speed'], 0.5,
                         f"Freighter velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
@@ -300,8 +300,8 @@ class TestAutopilotPhysics(unittest.TestCase):
         result = self.simulate_autopilot_to_landing(ship, 300, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        self.assertLess(result['distance'], 120,
-                        f"Patrol distance {result['distance']:.1f} - should arrive very close to target")
+        self.assertLess(result['distance'], 20,
+                        f"Patrol distance {result['distance']:.1f} - should arrive close to the landable's center")
         self.assertLess(result['speed'], 0.5,
                         f"Patrol velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
