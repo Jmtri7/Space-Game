@@ -3,7 +3,7 @@ import pygame
 import math
 import constants
 from constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from utils import get_scale, load_json, to_screen, draw_debug_marker, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type
+from utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type
 from screen_base import ScreenBase
 from npc import NPC
 
@@ -52,11 +52,29 @@ class LocationScreen(ScreenBase):
             )
             for cfg in self.npcs_config
         ]
+        self.current_npc_target = None  # For T key targeting
+        self.active_dialogue = None  # Set to an NPC's Dialogue while talking
+
+    def _cycle_npc_target(self):
+        """Cycle through targetable NPCs."""
+        if not self.npcs:
+            return
+        if self.current_npc_target is None:
+            self.current_npc_target = 0
+        else:
+            self.current_npc_target = (self.current_npc_target + 1) % len(self.npcs)
+
+    def _get_npc_target(self):
+        """Get the currently targeted NPC, if any."""
+        if self.current_npc_target is None or self.current_npc_target >= len(self.npcs):
+            return None
+        return self.npcs[self.current_npc_target]
 
     def update(self):
         """Update location - handle movement and camera."""
-        keys = pygame.key.get_pressed()
-        self._handle_movement(keys)
+        if not self.active_dialogue:
+            keys = pygame.key.get_pressed()
+            self._handle_movement(keys)
         self.update_camera()
 
     def draw(self, surface):
@@ -106,6 +124,11 @@ class LocationScreen(ScreenBase):
         for npc in self.npcs:
             npc.draw(surface)
 
+        # Highlight and label the targeted NPC
+        target_npc = self._get_npc_target()
+        if target_npc:
+            draw_target_brackets(surface, target_npc.x, target_npc.y, size=25)
+
         # Draw entrance marker
         ex, ey = to_screen(self.entrance_x, self.entrance_y)
         pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
@@ -121,7 +144,23 @@ class LocationScreen(ScreenBase):
             draw_debug_marker(surface, self.player_x, self.player_y, 10)
 
         # Draw UI
-        self.draw_ui_text(surface, self.ui_label)
+        ui_scale = get_ui_scale()
+        offset_x, offset_y = get_ui_offset()
+        self.draw_ui_text(surface, self.ui_label, scale=ui_scale)
+        if target_npc:
+            font_target = pygame.font.Font(None, int(20 * ui_scale))
+            target_text = font_target.render(f"Target: {target_npc.name}", True, (100, 255, 100))
+            surface.blit(target_text, (int(offset_x + 20), int(offset_y + 45)))
+
+        font_help = pygame.font.Font(None, int(16 * ui_scale))
+        help_text = font_help.render("WASD: move, T: target NPC, Enter: talk, L: exit, ESC: pause", True, WHITE)
+        help_x = int(offset_x + surface.get_width() // 2 - help_text.get_width() // 2)
+        help_y = int(offset_y + surface.get_height() - 30)
+        surface.blit(help_text, (help_x, help_y))
+
+        # Draw active dialogue box on top of everything
+        if self.active_dialogue:
+            self.active_dialogue.draw(surface, ui_scale)
 
     def _draw_culture_building(self, surface, structure, building_type_id, scale):
         """Draw a building whose hull/window colors come from its type's culture -
@@ -164,14 +203,33 @@ class LocationScreen(ScreenBase):
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_l:
-                    # Only allow exit if near entrance
-                    dist_to_entrance = math.sqrt((self.player_x - self.entrance_x) ** 2 + (self.player_y - self.entrance_y) ** 2)
-                    if dist_to_entrance <= self.entrance_range:
-                        return "exit"
-                elif event.key == pygame.K_ESCAPE:
-                    return "pause"
+            if event.type != pygame.KEYDOWN:
+                continue
+
+            if self.active_dialogue:
+                # While talking, input drives the dialogue box instead of movement
+                if event.key in (pygame.K_UP, pygame.K_w):
+                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option - 1) % len(self.active_dialogue.options)
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
+                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option + 1) % len(self.active_dialogue.options)
+                elif event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+                    self.active_dialogue = None
+                continue
+
+            if event.key == pygame.K_l:
+                # Only allow exit if near entrance
+                dist_to_entrance = math.sqrt((self.player_x - self.entrance_x) ** 2 + (self.player_y - self.entrance_y) ** 2)
+                if dist_to_entrance <= self.entrance_range:
+                    return "exit"
+            elif event.key == pygame.K_t:
+                self._cycle_npc_target()
+            elif event.key == pygame.K_RETURN:
+                target_npc = self._get_npc_target()
+                if target_npc:
+                    target_npc.dialogue.selected_option = 0
+                    self.active_dialogue = target_npc.dialogue
+            elif event.key == pygame.K_ESCAPE:
+                return "pause"
         return None
 
     def _handle_movement(self, keys, can_move_func=None):
