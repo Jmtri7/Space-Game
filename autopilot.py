@@ -123,11 +123,18 @@ class Autopilot:
         self._point_and_thrust(accel_angle)
 
     def _update_orbit(self):
-        """Chase a point that continuously sweeps around the orbit circle.
+        """Chase a point that continuously sweeps around the orbit circle,
+        actively braking if going faster than the point it's chasing.
 
-        No braking phase: the chased point never stops moving, so the ship
-        just keeps pointing at it and thrusting - settling into a steady
-        pursuit curve around the circle rather than a discrete arrival.
+        The chased point never stops moving, so there's no discrete arrival
+        like seek mode has - but it does need a braking phase: without one,
+        the ship accelerates toward max_velocity (faster than the waypoint),
+        overtakes it, and has to spin around ~180 degrees to re-approach it
+        from ahead every lap. Just cutting thrust once too fast isn't enough
+        either - turning doesn't change velocity, and with no space drag in
+        a system nothing would ever slow the ship back down, so it would
+        coast off in a straight line forever. Braking (like seek mode's
+        braking phase) actually cancels the excess speed regardless of drag.
         """
         if self.orbit_radius <= 0:
             self.ship.release_thrust()
@@ -144,19 +151,14 @@ class Autopilot:
 
         dx, dy = waypoint_x - self.ship.x, waypoint_y - self.ship.y
         target_angle = math.atan2(dx, -dy)
-        aligned = self._turn_toward(target_angle)
 
-        # Cap cruise speed at the waypoint's own sweep speed instead of always
-        # thrusting once aligned. Without this, the ship accelerates toward
-        # max_velocity (faster than the point it's chasing), overtakes it,
-        # and has to spin around ~180 degrees to re-approach from ahead -
-        # the "turning around" this is fixing. Coasting once at pace keeps
-        # it settled into a steady pursuit curve instead of oscillating.
         speed = math.sqrt(self.ship.velocity_x ** 2 + self.ship.velocity_y ** 2)
-        if aligned and speed < linear_speed:
-            self.ship.increase_thrust()
+        if speed > linear_speed:
+            accel_angle = self._calculate_brake_redirect_angle(target_angle)
         else:
-            self.ship.release_thrust()
+            accel_angle = target_angle
+
+        self._point_and_thrust(accel_angle)
 
     def _predict_braking_distance_from_stop(self, current_speed):
         """Predict distance needed to stop from current_speed.
