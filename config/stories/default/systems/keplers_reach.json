@@ -70,8 +70,16 @@
       "name": "Trader One",
       "x": 0.65,
       "y": 0.6,
-      "ship_type": "freighter",
+      "ship_type": "drossholt_freighter",
       "pilot": "priya_nandan",
+      "route": ["station", "moon"]
+    },
+    {
+      "name": "Patrol One",
+      "x": 0.5,
+      "y": 0.4,
+      "ship_type": "drossholt_patrol",
+      "pilot": "kade_marsh",
       "route": ["station", "moon"]
     }
   ]
