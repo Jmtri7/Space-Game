@@ -144,7 +144,19 @@ class Autopilot:
 
         dx, dy = waypoint_x - self.ship.x, waypoint_y - self.ship.y
         target_angle = math.atan2(dx, -dy)
-        self._point_and_thrust(target_angle)
+        aligned = self._turn_toward(target_angle)
+
+        # Cap cruise speed at the waypoint's own sweep speed instead of always
+        # thrusting once aligned. Without this, the ship accelerates toward
+        # max_velocity (faster than the point it's chasing), overtakes it,
+        # and has to spin around ~180 degrees to re-approach from ahead -
+        # the "turning around" this is fixing. Coasting once at pace keeps
+        # it settled into a steady pursuit curve instead of oscillating.
+        speed = math.sqrt(self.ship.velocity_x ** 2 + self.ship.velocity_y ** 2)
+        if aligned and speed < linear_speed:
+            self.ship.increase_thrust()
+        else:
+            self.ship.release_thrust()
 
     def _predict_braking_distance_from_stop(self, current_speed):
         """Predict distance needed to stop from current_speed.
@@ -208,12 +220,13 @@ class Autopilot:
 
         return blended_angle
 
-    def _point_and_thrust(self, accel_angle_rad):
-        """Point ship in acceleration direction and apply thrust once aligned."""
+    def _turn_toward(self, angle_rad):
+        """Rotate the ship one step toward angle_rad (radians). Returns True
+        once the ship is aligned with it within 10 degrees."""
         ship = self.ship
-        accel_angle_deg = math.degrees(accel_angle_rad)
+        angle_deg = math.degrees(angle_rad)
         current_angle = ship.angle % 360
-        target_angle_norm = accel_angle_deg % 360
+        target_angle_norm = angle_deg % 360
 
         angle_diff = target_angle_norm - current_angle
         if angle_diff > 180:
@@ -221,15 +234,16 @@ class Autopilot:
         elif angle_diff < -180:
             angle_diff += 360
 
-        # Rotate toward acceleration direction
         if angle_diff < -ship.rotation_speed:
             ship.turn_left()
         elif angle_diff > ship.rotation_speed:
             ship.turn_right()
 
-        # If aligned with acceleration direction, apply thrust
-        aligned = abs(angle_diff) < 10
-        if aligned:
-            ship.increase_thrust()
+        return abs(angle_diff) < 10
+
+    def _point_and_thrust(self, accel_angle_rad):
+        """Point ship in acceleration direction and apply thrust once aligned."""
+        if self._turn_toward(accel_angle_rad):
+            self.ship.increase_thrust()
         else:
-            ship.release_thrust()
+            self.ship.release_thrust()
