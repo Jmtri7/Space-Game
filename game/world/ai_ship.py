@@ -2,6 +2,7 @@
 import random
 from game.world.ship import Ship
 from game.world.person import Person
+from game.world.dock_routine import DockRoutine
 
 
 class ShuttleRoutine:
@@ -63,7 +64,7 @@ class IdleRoutine:
 # frame. Roles with no entry here just get IdleRoutine (never engages the
 # autopilot).
 ROLE_ROUTINES = {
-    "freighter_pilot": ShuttleRoutine,
+    "freighter_pilot": DockRoutine,
     "trader_captain": ShuttleRoutine,
     "patrol_officer": OrbitRoutine,
 }
@@ -83,10 +84,10 @@ class AIShip(Ship):
     IdleRoutine) rather than a string re-checked every frame.
 
     Also owns a Person (pilot_person) representing the character flying it -
-    aboard and mirrored to the ship's position each frame, same as
-    PlayerController.person. A future docking routine can suspend that sync
-    to walk the pilot around a station/moon instead."""
-    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="freighter", graphics=None, pilot=None, route=None):
+    aboard and mirrored to the ship's position each frame, unless
+    pilot_ashore is True (DockRoutine sets this while walking the pilot
+    around a station/moon interior instead - see get_interior_screen)."""
+    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="freighter", graphics=None, pilot=None, route=None, get_interior_screen=None):
         super().__init__(x, y, space_drag=space_drag, graphics=graphics)
         self.ship_type_id = ship_type_id
         self.angle = random.randint(0, 360)
@@ -101,6 +102,13 @@ class AIShip(Ship):
 
         self.pilot = pilot or {}
         self.pilot_person = Person(x, y, name=self.pilot.get("name", ""))
+        self.pilot_ashore = False  # True while DockRoutine has the pilot walking around a station/moon
+        # SpaceScreen.get_interior_screen, bound - lets a routine (DockRoutine)
+        # find/create a stop's interior LocationScreen without AIShip (a world
+        # object) importing anything from game.screens, which this codebase
+        # keeps strictly one-directional (screens depend on world, not the
+        # reverse).
+        self.get_interior_screen = get_interior_screen
         self.route = route or []
         self.routine = self._choose_routine()
         self.routine.start(self)
@@ -114,11 +122,13 @@ class AIShip(Ship):
 
     def update(self):
         """Let the job routine advance, then run standard ship autopilot/
-        physics, then keep the pilot's Person aboard."""
+        physics, then keep the pilot's Person aboard - unless they're
+        ashore (DockRoutine), in which case it's walking them instead."""
         self.routine.run(self)
         super().update()
-        self.pilot_person.x = self.x
-        self.pilot_person.y = self.y
+        if not self.pilot_ashore:
+            self.pilot_person.x = self.x
+            self.pilot_person.y = self.y
 
     def draw(self, surface):
         """Draw AI ship using graphics asset."""

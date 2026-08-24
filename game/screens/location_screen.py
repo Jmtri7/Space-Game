@@ -71,6 +71,14 @@ class LocationScreen(ScreenBase):
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
 
+        # AI pilots (Person, not NPC - no dialogue/behavior, just a body)
+        # currently walking around inside this interior on a docking errand
+        # (see DockRoutine). Not targetable/talkable, just visible - so the
+        # player can actually see a freighter pilot they're sharing the
+        # room with, even while docked at a different station than the
+        # player happens to be standing in.
+        self.visitors = []
+
     def _cycle_npc_target(self):
         """Cycle through targetable NPCs."""
         if not self.npcs:
@@ -161,6 +169,10 @@ class LocationScreen(ScreenBase):
         # Draw NPCs
         for npc in self.npcs:
             npc.draw(surface)
+
+        # Draw visiting AI pilots (see self.visitors)
+        for visitor in self.visitors:
+            visitor.draw(surface)
 
         # Highlight and label the targeted NPC
         target_npc = self._get_npc_target()

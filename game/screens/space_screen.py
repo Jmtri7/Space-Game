@@ -116,7 +116,8 @@ class SpaceScreen(ScreenBase):
                 ship_type_id=ship_type_id,
                 graphics=ship_graphics,
                 pilot=pilot,
-                route=route
+                route=route,
+                get_interior_screen=self.get_interior_screen
             )
             self.ai_ships.append(ai_ship)
 
