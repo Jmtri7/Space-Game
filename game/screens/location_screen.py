@@ -79,20 +79,27 @@ class LocationScreen(ScreenBase):
         # player happens to be standing in.
         self.visitors = []
 
+    def _targetable_people(self):
+        """NPCs plus any visiting AI pilots currently in this location -
+        anyone the player can target/talk to with T/Enter."""
+        return self.npcs + self.visitors
+
     def _cycle_npc_target(self):
-        """Cycle through targetable NPCs."""
-        if not self.npcs:
+        """Cycle through targetable NPCs and visiting pilots."""
+        people = self._targetable_people()
+        if not people:
             return
         if self.current_npc_target is None:
             self.current_npc_target = 0
         else:
-            self.current_npc_target = (self.current_npc_target + 1) % len(self.npcs)
+            self.current_npc_target = (self.current_npc_target + 1) % len(people)
 
     def _get_npc_target(self):
-        """Get the currently targeted NPC, if any."""
-        if self.current_npc_target is None or self.current_npc_target >= len(self.npcs):
+        """Get the currently targeted NPC or visiting pilot, if any."""
+        people = self._targetable_people()
+        if self.current_npc_target is None or self.current_npc_target >= len(people):
             return None
-        return self.npcs[self.current_npc_target]
+        return people[self.current_npc_target]
 
     def update(self):
         """Full update for the active/foreground location: player movement,

@@ -2,6 +2,7 @@
 import random
 from game.world.ship import Ship
 from game.world.person import Person
+from game.world.dialogue import Dialogue
 from game.world.dock_routine import DockRoutine
 
 
@@ -102,6 +103,15 @@ class AIShip(Ship):
 
         self.pilot = pilot or {}
         self.pilot_person = Person(x, y, name=self.pilot.get("name", ""))
+        # Lets the player target/talk to this pilot while they're walking
+        # around a station/moon interior (see LocationScreen.visitors) the
+        # same way they would an NPC - flavored from the pilot's own
+        # personality line in pilots.json rather than a generic greeting.
+        self.pilot_person.dialogue = Dialogue(
+            self.pilot.get("name", "Pilot"),
+            [self.pilot.get("personality", "...")],
+            ["Nod", "Leave"]
+        )
         self.pilot_ashore = False  # True while DockRoutine has the pilot walking around a station/moon
         # SpaceScreen.get_interior_screen, bound - lets a routine (DockRoutine)
         # find/create a stop's interior LocationScreen without AIShip (a world
