@@ -141,19 +141,20 @@ def save_json(filename, data):
         json.dump(data, f, indent=2)
 
 
-def get_ship_type(ship_type_id):
-    """Load ship type properties from config/ship_types.json."""
-    ship_types = load_json("config/ship_types.json") or {}
+def get_ship_type(story, ship_type_id):
+    """Load ship type properties from config/stories/{story}/ship_types.json."""
+    ship_types = load_json(f"config/stories/{story}/ship_types.json") or {}
     return ship_types.get(ship_type_id, {})
 
 
-def get_culture(culture_id):
-    """Load culture properties (material palette, design theme) from config/cultures.json."""
-    cultures = load_json("config/cultures.json") or {}
+def get_culture(story, culture_id):
+    """Load culture properties (material palette, design theme) from
+    config/stories/{story}/cultures.json."""
+    cultures = load_json(f"config/stories/{story}/cultures.json") or {}
     return cultures.get(culture_id, {})
 
 
-def _resolve_culture_palette(asset):
+def _resolve_culture_palette(story, asset):
     """Fill in color/core_color/window_color/thrust_color from the asset's
     culture, if it declares one and doesn't already set them explicitly.
     Lets ships, stations, and buildings share one culture's material palette
@@ -162,7 +163,7 @@ def _resolve_culture_palette(asset):
     """
     culture_id = asset.get("culture")
     if culture_id:
-        culture = get_culture(culture_id)
+        culture = get_culture(story, culture_id)
         for asset_key, culture_key in (
             ("color", "metal_color"),
             ("core_color", "glass_color"),
@@ -175,24 +176,26 @@ def _resolve_culture_palette(asset):
     return asset
 
 
-def get_graphics_asset(asset_type, asset_id):
-    """Load graphics asset from config/graphics.json, with culture colors resolved."""
-    graphics = load_json("config/graphics.json") or {}
+def get_graphics_asset(story, asset_type, asset_id):
+    """Load graphics asset from config/stories/{story}/graphics.json, with culture colors resolved."""
+    graphics = load_json(f"config/stories/{story}/graphics.json") or {}
     asset_category = graphics.get(asset_type, {})
     asset = dict(asset_category.get(asset_id, {}))
-    return _resolve_culture_palette(asset)
+    return _resolve_culture_palette(story, asset)
 
 
-def get_building_type(building_type_id):
-    """Load building type properties from config/building_types.json, with culture colors resolved."""
-    building_types = load_json("config/building_types.json") or {}
+def get_building_type(story, building_type_id):
+    """Load building type properties from config/stories/{story}/building_types.json,
+    with culture colors resolved."""
+    building_types = load_json(f"config/stories/{story}/building_types.json") or {}
     asset = dict(building_types.get(building_type_id, {}))
-    return _resolve_culture_palette(asset)
+    return _resolve_culture_palette(story, asset)
 
 
-def get_pilot(pilot_id):
-    """Load pilot properties (name, faction, role, personality) from config/pilots.json."""
-    pilots = load_json("config/pilots.json") or {}
+def get_pilot(story, pilot_id):
+    """Load pilot properties (name, faction, role, personality) from
+    config/stories/{story}/pilots.json."""
+    pilots = load_json(f"config/stories/{story}/pilots.json") or {}
     return pilots.get(pilot_id, {})
 
 

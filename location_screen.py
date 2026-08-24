@@ -10,7 +10,8 @@ from npc import NPC
 
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
-    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name=""):
+    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default"):
+        self.story = story  # which story's config/building_types.json etc. to resolve against
         # Load config from file or use inline data
         if config_data is not None:
             self.config = config_data
@@ -172,7 +173,7 @@ class LocationScreen(ScreenBase):
         "circle" uses center, "polygon" is whatever the type's local_points
         were authored relative to (typically ground level).
         """
-        building_type = get_building_type(building_type_id)
+        building_type = get_building_type(self.story, building_type_id)
         metal_color = tuple(building_type.get("color", (150, 150, 150)))
         glass_color = tuple(building_type.get("window_color", (255, 255, 0)))
         anchor_x, anchor_y = structure["x"], structure["y"]

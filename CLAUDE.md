@@ -136,8 +136,9 @@ space-game/
 ├── objects.py              # SpaceStation, Moon, StarField, NPCs, Dialogue
 ├── screens.py              # All game screens and UI (GameScreen, Menus, Dialogs, etc.)
 ├── config/
-│   ├── space_system.json   # System layout: station position, AI ships
-│   └── station_interior.json # Station rooms, NPCs, dialogue
+│   └── stories/{story}/    # All config is per-story — nothing shared between stories
+│       ├── ship_types.json, graphics.json, cultures.json, building_types.json, pilots.json
+│       └── systems/{system_id}.json  # System layout: station position, AI ships
 ├── saves/                  # Player save files (generated at runtime)
 ├── docs/
 │   ├── README.md           # Architecture and systems overview
@@ -230,7 +231,7 @@ space-game/
 - Reverse (DOWN key in station): Only decreases thrust, doesn't reverse velocity
 
 ## Configuration Files
-**space_system.json**: System layout
+**config/stories/{story}/systems/{system_id}.json**: System layout
 ```json
 {
   "station": {"x": 0.75, "y": 0.3},

@@ -90,18 +90,19 @@ See [PHYSICS.md](PHYSICS.md#coordinate-system) for coordinate conversion details
 
 **Subclass: `AIShip(Ship)`**
 - Reads `acceleration_magnitude` (from `ship_type`'s `max_thrust`), `max_velocity`,
-  `rotation_speed` from a `ship_type` dict (see `config/ship_types.json`), falling back
-  to defaults if none given
+  `rotation_speed` from a `ship_type` dict (see `config/stories/{story}/ship_types.json`),
+  falling back to defaults if none given
 - Its `update()` never touches physics directly — it picks an autopilot mode/target each
   frame (from the pilot's faction/role, via `ROLE_ROUTINES`) and calls `engage_seek()` or
   `engage_orbit()`, then `super().update()` runs the real `Ship`/`Autopilot` physics
 
 ### Adding or Updating a Ship Type
 
-Almost always **data-driven, not a new class** — add an entry to `config/ship_types.json`
-(physics/turning: `max_thrust`, `max_velocity`, `rotation_speed`) and a matching entry in
-`config/graphics.json`'s `"ships"` section (`size`, `color`, `shape`, `thrusters`, optionally
-`thruster_width`/`thruster_length`). Reference the type's key from a story's `space_system.json`
+Almost always **data-driven, not a new class** — add an entry to
+`config/stories/{story}/ship_types.json` (physics/turning: `max_thrust`, `max_velocity`,
+`rotation_speed`) and a matching entry in `config/stories/{story}/graphics.json`'s `"ships"`
+section (`size`, `color`, `shape`, `thrusters`, optionally `thruster_width`/`thruster_length`).
+Reference the type's key from one of the story's `systems/{system_id}.json` files
 (`ai_ships[].ship_type`) or `story.json` (`ships.player_type`) — no Python required.
 
 Only subclass `Ship` (like `AIShip` does) when you need genuinely new *behavior*, not new stats.
@@ -125,11 +126,12 @@ still work (nothing enforces them) but will feel very different from the rest of
 **Culture and material palette:** if a ship (or building — see `Landable`/`LocationScreen`
 below) belongs to an existing culture, set `"culture": "<culture_id>"` in its `graphics.json`/
 `building_types.json` entry instead of hardcoding `color`. `get_graphics_asset()`/
-`get_building_type()` (in `utils.py`) automatically fill in `color` and `core_color`/
-`window_color` from that culture's `metal_color`/`glass_color` in `config/cultures.json`.
-Each culture entry also carries a `theme` field — read it and follow it when designing new
-ships or buildings for that culture, so the whole culture stays visually cohesive. See
-`config/cultures.json` for the currently defined cultures (e.g. the Vherathi Concord).
+`get_building_type()` (in `utils.py`) automatically fill in `color`, `core_color`/
+`window_color`, and `thrust_color` from that culture's `metal_color`/`glass_color`/
+`thrust_color` in `config/stories/{story}/cultures.json`. Each culture entry also carries a
+`theme` field — read it and follow it when designing new ships or buildings for that culture,
+so the whole culture stays visually cohesive. See `config/stories/default/cultures.json` for
+the currently defined cultures (e.g. the Vherathi Concord).
 
 ## Person Class: NPCs & Drawing
 

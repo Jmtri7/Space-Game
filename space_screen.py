@@ -44,8 +44,8 @@ class SpaceScreen(ScreenBase):
 
         # Get player ship type and graphics (fixed for the story, not per-system)
         player_ship_type_id = story_meta.get("ships", {}).get("player_type", "shuttle")
-        player_ship_type = get_ship_type(player_ship_type_id)
-        player_graphics = get_graphics_asset("ships", player_ship_type_id)
+        player_ship_type = get_ship_type(self.story, player_ship_type_id)
+        player_graphics = get_graphics_asset(self.story, "ships", player_ship_type_id)
 
         # Spawn away from map center by default, since that's where a central
         # star (if the system has one) usually sits.
@@ -78,11 +78,11 @@ class SpaceScreen(ScreenBase):
         moon_asset_id = self.system_config.get("moon_asset", "moon_silver")
 
         station_cfg = self.system_config.get("station", {})
-        station_graphics = get_graphics_asset("space_stations", station_asset_id)
+        station_graphics = get_graphics_asset(self.story, "space_stations", station_asset_id)
         self.station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}))
 
         moon_cfg = self.system_config.get("moon", {})
-        moon_graphics = get_graphics_asset("moons", moon_asset_id)
+        moon_graphics = get_graphics_asset(self.story, "moons", moon_asset_id)
         self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}))
 
         # Central star (optional, drawn but not landable/targetable)
@@ -102,9 +102,9 @@ class SpaceScreen(ScreenBase):
         self.ai_ships = []
         for ai_cfg in self.system_config.get("ai_ships", []):
             ship_type_id = ai_cfg.get("ship_type", "freighter")
-            ship_type = get_ship_type(ship_type_id)
-            ship_graphics = get_graphics_asset("ships", ship_type_id)
-            pilot = get_pilot(ai_cfg["pilot"]) if "pilot" in ai_cfg else None
+            ship_type = get_ship_type(self.story, ship_type_id)
+            ship_graphics = get_graphics_asset(self.story, "ships", ship_type_id)
+            pilot = get_pilot(self.story, ai_cfg["pilot"]) if "pilot" in ai_cfg else None
             route = [landable_lookup[key] for key in ai_cfg.get("route", []) if key in landable_lookup]
             ai_ship = AIShip(
                 GAME_WIDTH * ai_cfg.get("x", 0.75),
@@ -129,7 +129,7 @@ class SpaceScreen(ScreenBase):
         # Add all AI ships to targetable objects
         for i, ship in enumerate(self.ai_ships):
             # Use ship type name if available, otherwise use generic label
-            ship_type = get_ship_type(ship.ship_type_id)
+            ship_type = get_ship_type(self.story, ship.ship_type_id)
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
             pilot_name = ship.pilot.get("name")
             if pilot_name:

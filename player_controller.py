@@ -2,7 +2,6 @@
 import pygame
 from constants import DARK_GRAY
 from ship import Ship
-from utils import get_graphics_asset
 
 
 class PlayerController:

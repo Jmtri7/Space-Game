@@ -144,9 +144,9 @@ def main():
                                 interior_config = game_screen.station.interiors.get("default")
                                 if interior_config:
                                     if isinstance(interior_config, str):
-                                        station_interior = LocationScreen(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
+                                        station_interior = LocationScreen(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name, story=game_screen.story)
                                     else:
-                                        station_interior = LocationScreen(config_data=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
+                                        station_interior = LocationScreen(config_data=interior_config, world_width=800, world_height=600, pilot_name=pilot_name, story=game_screen.story)
                                     station_interior.restore_state(game_state)
                                 current_screen = "station"
                             elif location == "moon":
@@ -156,9 +156,9 @@ def main():
                                 interior_config = game_screen.moon.interiors.get(moon_location, game_screen.moon.interiors.get("city"))
                                 if interior_config:
                                     if isinstance(interior_config, str):
-                                        moon_interior = LocationScreen(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
+                                        moon_interior = LocationScreen(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name, story=game_screen.story)
                                     else:
-                                        moon_interior = LocationScreen(config_data=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
+                                        moon_interior = LocationScreen(config_data=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name, story=game_screen.story)
                                     moon_interior.restore_state(game_state)
                                 current_screen = "moon"
                     elif action == "delete":
@@ -183,9 +183,9 @@ def main():
                         interior_config = game_screen.station.interiors.get("default")
                         if interior_config:
                             if isinstance(interior_config, str):
-                                station_interior = LocationScreen(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
+                                station_interior = LocationScreen(config_file=interior_config, world_width=800, world_height=600, pilot_name=pilot_name, story=game_screen.story)
                             else:
-                                station_interior = LocationScreen(config_data=interior_config, world_width=800, world_height=600, pilot_name=pilot_name)
+                                station_interior = LocationScreen(config_data=interior_config, world_width=800, world_height=600, pilot_name=pilot_name, story=game_screen.story)
                         current_screen = "station"
                     elif game_screen.landing_target == "moon":
                         location_selector = LocationSelector(game_screen.moon.interiors)
@@ -227,9 +227,9 @@ def main():
                 if location_key and location_key in location_selector.interior_configs:
                     interior_config = location_selector.interior_configs[location_key]
                     if isinstance(interior_config, str):
-                        moon_interior = LocationScreen(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
+                        moon_interior = LocationScreen(config_file=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name, story=game_screen.story)
                     else:
-                        moon_interior = LocationScreen(config_data=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name)
+                        moon_interior = LocationScreen(config_data=interior_config, world_width=1600, world_height=1600, pilot_name=pilot_name, story=game_screen.story)
                     current_screen = "moon"
                 elif location_key == "cancel":
                     current_screen = "game"
