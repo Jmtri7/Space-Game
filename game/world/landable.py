@@ -8,8 +8,9 @@ from game.world.world_object import WorldObject
 
 class Landable(WorldObject):
     """A landable object in the game world (space station or moon)."""
-    def __init__(self, x, y, graphics=None, interiors=None):
+    def __init__(self, x, y, graphics=None, interiors=None, name=""):
         super().__init__(x, y, graphics=graphics)
+        self.name = name
         self.interiors = interiors or {}
         # Live LocationScreen cache, keyed by interior key ("default" for
         # stations, "city"/"wilderness" for moons) - populated lazily by
@@ -54,6 +55,18 @@ class Landable(WorldObject):
             (-size * 0.5, size * 0.3),
             (-size * 0.4, -size * 0.3),
         ]
+
+    def get_interior_labels(self):
+        """Display label for each configured interior (station's "default",
+        or a moon's "city"/"wilderness"), for the targeting HUD and any
+        other place that needs to list what's inside this landable."""
+        labels = []
+        for key, interior_config in self.interiors.items():
+            if isinstance(interior_config, dict):
+                labels.append(interior_config.get("label", key))
+            else:
+                labels.append(key)
+        return labels
 
     def update(self):
         """Update animation state."""

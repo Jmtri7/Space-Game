@@ -81,11 +81,11 @@ class SpaceScreen(ScreenBase):
 
         station_cfg = self.system_config.get("station", {})
         station_graphics = get_graphics_asset(self.story, "space_stations", station_asset_id)
-        self.station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}))
+        self.station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}), name=station_cfg.get("name", "Station"))
 
         moon_cfg = self.system_config.get("moon", {})
         moon_graphics = get_graphics_asset(self.story, "moons", moon_asset_id)
-        self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}))
+        self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}), name=moon_cfg.get("name", "Moon"))
 
         # Central star (optional, drawn but not landable/targetable)
         central_star_cfg = self.system_config.get("central_star")
@@ -126,8 +126,8 @@ class SpaceScreen(ScreenBase):
 
         self.current_target = None
         self.targetable_objects = [
-            ("Station", self.station),
-            ("Moon", self.moon),
+            (self.station.name, self.station),
+            (self.moon.name, self.moon),
         ]
         # Add all AI ships to targetable objects
         for i, ship in enumerate(self.ai_ships):
@@ -510,6 +510,12 @@ class SpaceScreen(ScreenBase):
         else:
             target_line, target_color = "Target: None", GRAY
         lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color)]
+        # Landables (station/moon) list what's inside them, right under the
+        # target line - lets the player see where they'll end up before
+        # committing to land.
+        if isinstance(target_obj, Landable):
+            for label in target_obj.get_interior_labels():
+                lines.append((f"  - {label}", GRAY))
 
         line_height = int(22 * ui_scale)
         rendered = [font_body.render(text, True, color) for text, color in lines]

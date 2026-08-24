@@ -1,7 +1,8 @@
 """Galaxy-scale star map overlay: pan around, select a system to jump to."""
 import pygame
-from game.constants import WHITE, YELLOW, GREEN, GRAY
+from game.constants import WHITE, YELLOW, GREEN, GRAY, CYAN
 from game.utils import get_ui_scale, get_star_systems
+from game.ui.ui_theme import draw_glass_panel
 
 
 class StarMap:
@@ -92,3 +93,29 @@ class StarMap:
 
         help_text = font_help.render("Click a system to select, drag to pan, M/ESC to close", True, GRAY)
         surface.blit(help_text, (20, surface.get_height() - 30))
+
+        self._draw_selected_panel(surface, ui_scale, font_label)
+
+    def _draw_selected_panel(self, surface, ui_scale, font_label):
+        """Top-right panel listing the selected system's station and moon,
+        so a player deciding where to jump can see what's actually there."""
+        selected = self.systems.get(self.selected_system_id)
+        if not selected:
+            return
+
+        pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+        line_height = int(22 * ui_scale)
+        lines = [
+            (selected.get("name", self.selected_system_id), CYAN),
+            (f"Station: {selected.get('station_name', 'Station')}", WHITE),
+            (f"Moon: {selected.get('moon_name', 'Moon')}", WHITE),
+        ]
+        rendered = [font_label.render(text, True, color) for text, color in lines]
+        panel_width = max(text.get_width() for text in rendered) + pad_x * 2
+        panel_height = pad_y * 2 + line_height * len(rendered)
+        margin = int(10 * ui_scale)
+        panel_rect = pygame.Rect(0, 0, panel_width, panel_height)
+        panel_rect.topright = (surface.get_width() - margin, margin)
+        draw_glass_panel(surface, panel_rect, ui_scale)
+        for i, text in enumerate(rendered):
+            surface.blit(text, (panel_rect.x + pad_x, panel_rect.y + pad_y + i * line_height))

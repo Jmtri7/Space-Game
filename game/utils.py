@@ -264,10 +264,10 @@ def get_star_systems(story):
     story - the Jump mechanic can move a ship between systems in its own
     story, never into a different story (stories are wholly separate saves).
 
-    Returns {system_id: {"name": ..., "star_map_position": {"x": ..., "y": ...}}}.
-    This is the single source of truth for the galaxy star map - no separate
-    registry to keep in sync, since each system file already declares its own
-    name/position.
+    Returns {system_id: {"name": ..., "star_map_position": {"x": ..., "y": ...},
+    "station_name": ..., "moon_name": ...}}. This is the single source of
+    truth for the galaxy star map - no separate registry to keep in sync,
+    since each system file already declares its own name/position/contents.
     """
     systems = {}
     systems_dir = f"config/stories/{story}/systems"
@@ -281,7 +281,9 @@ def get_star_systems(story):
         if data:
             systems[system_id] = {
                 "name": data.get("name", system_id),
-                "star_map_position": data.get("star_map_position", {"x": 0, "y": 0})
+                "star_map_position": data.get("star_map_position", {"x": 0, "y": 0}),
+                "station_name": data.get("station", {}).get("name", "Station"),
+                "moon_name": data.get("moon", {}).get("name", "Moon"),
             }
     return systems
 

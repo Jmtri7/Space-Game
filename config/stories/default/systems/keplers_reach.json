@@ -20,6 +20,7 @@
   "station": {
     "x": 0.75,
     "y": 0.25,
+    "name": "Delta Outpost",
     "interiors": {
       "default": {
         "label": "Delta Outpost Interior",
@@ -48,6 +49,7 @@
   "moon": {
     "x": 0.2,
     "y": 0.7,
+    "name": "Rust Moon",
     "interiors": {
       "wilderness": {
         "label": "Rust Moon Wilderness",
