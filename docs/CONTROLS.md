@@ -10,7 +10,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
-| **T** | Cycle through targetable objects (station, moon, AI ship) |
+| **T** or **]** | Cycle forward through targetable objects (station, moon, AI ship, celestial bodies, star) |
+| **[** | Cycle backward through targetable objects |
 | **L** | Land on targeted object or nearby (when in range) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
@@ -34,7 +35,8 @@ from its center.
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **T** | Cycle through targetable NPCs |
+| **T** or **]** | Cycle forward through targetable NPCs |
+| **[** | Cycle backward through targetable NPCs |
 | **Enter** | Talk to targeted NPC |
 | **L** | Exit station, return to space |
 | **ESC** | Pause menu |
@@ -44,7 +46,7 @@ from its center.
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **T** | Cycle through targetable NPCs (City only) |
+| **T** or **]** / **[** | Cycle through targetable NPCs, forward/backward (City only) |
 | **Enter** | Talk to targeted NPC |
 | **L** | Exit moon, return to space |
 | **ESC** | Pause menu |

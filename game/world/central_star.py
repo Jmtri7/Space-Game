@@ -5,11 +5,17 @@ from game.world.world_object import WorldObject
 
 
 class CentralStar(WorldObject):
-    """A large, non-interactive star at the center of the system."""
+    """A large, non-landable star at the center of the system - targetable
+    like any other body, but always hazardous (see SpaceScreen's HUD)."""
+    hazardous = True
+
     def __init__(self, x, y, graphics=None):
         super().__init__(x, y, graphics=graphics)
+        self.name = self.graphics.get("name", "Star")
         self.size = self.graphics.get("size", 100)
         self.color = tuple(self.graphics.get("color", [255, 255, 100]))
+        # Not landable, but gives the autopilot/HUD a sane approach distance.
+        self.landing_distance = self.size * 3
 
     def draw(self, surface):
         """Draw the star as a solid core with a soft glow halo."""

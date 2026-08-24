@@ -175,16 +175,17 @@ if player.get_distance(station.x, station.y) < 100:
 ```
 
 ### Collision Areas (Station Interior)
+A station interior's walkable area is one or more rectangular rooms
+(`LocationScreen.rooms`, from the interior's `"rooms"` config - a hallway is
+just another room-shaped rect whose bounds touch the ones it connects).
+Movement is allowed anywhere inside their union, which is what keeps the
+player from walking through walls:
 ```python
-def _is_in_valid_area(self, x, y):
-    if self._is_in_hallway(x, y):
-        return True
-    if self._is_in_bar(x, y):
-        return True
-    return False
+can_move = any(fx < new_x < fx + fw and fy < new_y < fy + fh
+               for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
 ```
-
-Movement only allowed in defined rooms to prevent walking through walls.
+An interior with no `"rooms"` configured (most moon interiors) falls back to
+a single rect inset from the world edges by `wall_margin`.
 
 ## Performance Considerations
 

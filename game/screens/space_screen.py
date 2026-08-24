@@ -17,6 +17,7 @@ from game.world.ai_ship import AIShip
 from game.world.landable import Landable
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
+from game.world.celestial_body import CelestialBody
 from game.world.asteroid_field import AsteroidField
 
 # Jump mechanic tuning
@@ -94,6 +95,14 @@ class SpaceScreen(ScreenBase):
         else:
             self.central_star = None
 
+        # Non-landable planets/ice balls/gas giants - just scenery to fly near,
+        # never something you can dock at (see CelestialBody.hazardous, used
+        # by the HUD's targeting note).
+        self.celestial_bodies = [
+            CelestialBody(GAME_WIDTH * body_cfg.get("x", 0.5), GAME_HEIGHT * body_cfg.get("y", 0.5), graphics=body_cfg)
+            for body_cfg in self.system_config.get("celestial_bodies", [])
+        ]
+
         # Asteroids: infinite, seeded, generated only in chunks near the camera
         self.asteroid_field = AsteroidField(seed=self.system_config.get("asteroid_seed", 1))
 
@@ -129,6 +138,10 @@ class SpaceScreen(ScreenBase):
             (self.station.name, self.station),
             (self.moon.name, self.moon),
         ]
+        if self.central_star:
+            self.targetable_objects.append((self.central_star.name, self.central_star))
+        for body in self.celestial_bodies:
+            self.targetable_objects.append((body.name, body))
         # Add all AI ships to targetable objects
         for i, ship in enumerate(self.ai_ships):
             # Use ship type name if available, otherwise use generic label
@@ -177,8 +190,10 @@ class SpaceScreen(ScreenBase):
 
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
-                elif event.key == pygame.K_t:
-                    self._cycle_target()
+                elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
+                    self._cycle_target(1)
+                elif event.key == pygame.K_LEFTBRACKET:
+                    self._cycle_target(-1)
                 elif event.key == pygame.K_l:
                     # If target is selected
                     target_obj = self._get_target_object()
@@ -213,15 +228,14 @@ class SpaceScreen(ScreenBase):
                     self._try_jump()
         return None
 
-    def _cycle_target(self):
-        """Cycle through targetable objects"""
+    def _cycle_target(self, direction=1):
+        """Cycle through targetable objects - direction=1 for T/], -1 for [."""
         if not self.targetable_objects:
             return
-        # Find current target index
         if self.current_target is None:
             self.current_target = 0
         else:
-            self.current_target = (self.current_target + 1) % len(self.targetable_objects)
+            self.current_target = (self.current_target + direction) % len(self.targetable_objects)
 
     def _get_target_name(self):
         """Get the name of the current target"""
@@ -406,6 +420,8 @@ class SpaceScreen(ScreenBase):
             self.player.update()
         self.station.update()
         self.moon.update()
+        for body in self.celestial_bodies:
+            body.update()
         for ai_ship in self.ai_ships:
             ai_ship.update()
         self.asteroid_field.update()
@@ -448,6 +464,8 @@ class SpaceScreen(ScreenBase):
         self.star_field.draw(surface)
         if self.central_star:
             self.central_star.draw(surface)
+        for body in self.celestial_bodies:
+            body.draw(surface)
         self.station.draw(surface)
         self.moon.draw(surface)
         self.asteroid_field.draw(surface)
@@ -516,6 +534,8 @@ class SpaceScreen(ScreenBase):
         if isinstance(target_obj, Landable):
             for label in target_obj.get_interior_labels():
                 lines.append((f"  - {label}", GRAY))
+        elif target_obj and getattr(target_obj, "hazardous", False):
+            lines.append(("  Hazardous - not landable", YELLOW))
 
         line_height = int(22 * ui_scale)
         rendered = [font_body.render(text, True, color) for text, color in lines]
@@ -551,7 +571,7 @@ class SpaceScreen(ScreenBase):
         # --- Bottom-center: a control-help bar (always) with the current
         # status (autopilot/landing/jump - mutually exclusive) as its own
         # panel directly above, so the two never crowd into one another.
-        help_text = font_body.render("T: target, L: land, M: star map, ESC: pause", True, WHITE)
+        help_text = font_body.render("T/[/]: target, L: land, M: star map, ESC: pause", True, WHITE)
         help_rect = pygame.Rect(0, 0, help_text.get_width() + pad_x * 2, help_text.get_height() + pad_y * 2)
         help_rect.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
         draw_glass_panel(surface, help_rect, ui_scale)

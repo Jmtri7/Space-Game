@@ -41,19 +41,28 @@ class LocationScreen(ScreenBase):
         self.bg_color = tuple(self.config.get("background_color", [50, 50, 70]))
 
         # A "culture" on the interior itself (independent of any exterior asset lookup)
-        # walls become the culture's wall_color and a smaller inset floor rect in
-        # floor_color marks the walkable area, so the room reads distinctly from its
-        # walls instead of one flat fill. Locations with no culture keep the old
+        # walls become the culture's wall_color and the walkable area is one or more
+        # inset rooms in floor_color, so the room reads distinctly from its walls
+        # instead of one flat fill. Locations with no culture keep the old
         # flat-background behavior (movement bounded by the full world rect).
         self.culture_id = self.config.get("culture")
-        self.floor_rect = None
+        # Each room is {"rect": (x, y, w, h), "label": str or None} in world space.
+        # A station interior with a "rooms" list gets one rect per room/hallway
+        # (movement is allowed anywhere in their union, so a hallway rect between
+        # two room rects reads as a corridor connecting them); one without falls
+        # back to a single margin-inset rect, same as before rooms existed.
+        self.rooms = []
         self.floor_color = None
         if self.culture_id:
             culture = get_culture(self.story, self.culture_id)
             self.bg_color = tuple(culture.get("wall_color", self.bg_color))
             self.floor_color = tuple(culture.get("floor_color", self.bg_color))
-            margin = self.config.get("wall_margin", 60)
-            self.floor_rect = (margin, margin, world_width - 2 * margin, world_height - 2 * margin)
+            rooms_cfg = self.config.get("rooms")
+            if rooms_cfg:
+                self.rooms = [{"rect": tuple(room["rect"]), "label": room.get("label")} for room in rooms_cfg]
+            else:
+                margin = self.config.get("wall_margin", 60)
+                self.rooms = [{"rect": (margin, margin, world_width - 2 * margin, world_height - 2 * margin), "label": None}]
 
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
@@ -84,15 +93,16 @@ class LocationScreen(ScreenBase):
         anyone the player can target/talk to with T/Enter."""
         return self.npcs + self.visitors
 
-    def _cycle_npc_target(self):
-        """Cycle through targetable NPCs and visiting pilots."""
+    def _cycle_npc_target(self, direction=1):
+        """Cycle through targetable NPCs and visiting pilots - direction=1
+        for T/], -1 for [."""
         people = self._targetable_people()
         if not people:
             return
         if self.current_npc_target is None:
             self.current_npc_target = 0
         else:
-            self.current_npc_target = (self.current_npc_target + 1) % len(people)
+            self.current_npc_target = (self.current_npc_target + direction) % len(people)
 
     def _get_npc_target(self):
         """Get the currently targeted NPC or visiting pilot, if any."""
@@ -127,13 +137,22 @@ class LocationScreen(ScreenBase):
         surface.fill(self.bg_color)
         scale = get_scale()
 
-        # Walkable floor - an inset rect in the culture's floor_color, so the room
-        # reads as distinct from the surrounding wall_color fill
-        if self.floor_rect is not None:
-            fx, fy, fw, fh = self.floor_rect
+        # Walkable floor - one rect per room/hallway in the culture's floor_color,
+        # so each reads as distinct from the surrounding wall_color fill
+        for room in self.rooms:
+            fx, fy, fw, fh = room["rect"]
             x1, y1 = to_screen(fx, fy)
             x2, y2 = to_screen(fx + fw, fy + fh)
             pygame.draw.rect(surface, self.floor_color, (x1, y1, x2 - x1, y2 - y1))
+        if self.rooms:
+            font_room_label = pygame.font.Font(None, max(10, int(16 * scale)))
+            for room in self.rooms:
+                if not room["label"]:
+                    continue
+                fx, fy, fw, fh = room["rect"]
+                label_pos = to_screen(fx + 10, fy + 8)
+                label_surf = font_room_label.render(room["label"], True, (200, 200, 210))
+                surface.blit(label_surf, label_pos)
 
         # Draw structures from config
         for structure in self.structures:
@@ -186,17 +205,26 @@ class LocationScreen(ScreenBase):
         if target_npc:
             draw_target_brackets(surface, target_npc.x, target_npc.y, size=25)
 
-        # Draw entrance marker
+        # Draw entrance marker - a flat floor ring rather than a tall ball,
+        # so a character standing on it (feet at its center) doesn't get
+        # visually swallowed by it.
         ex, ey = to_screen(self.entrance_x, self.entrance_y)
-        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
-        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
+        pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
+        pad_rect = pygame.Rect(0, 0, pad_w, pad_h)
+        pad_rect.center = (ex, ey)
+        pygame.draw.ellipse(surface, (100, 255, 150), pad_rect)
+        pygame.draw.ellipse(surface, (0, 255, 100), pad_rect, max(1, int(2 * scale)))
 
         # Draw player
         self.player.draw(surface)
 
-        # Debug marker
+        # Debug markers
         if constants.DEBUG_MODE:
             draw_debug_marker(surface, self.player.x, self.player.y, 10)
+            for npc in self.npcs:
+                draw_debug_marker(surface, npc.x, npc.y, 8)
+            for visitor in self.visitors:
+                draw_debug_marker(surface, visitor.x, visitor.y, 8)
 
         # Draw UI
         ui_scale = get_ui_scale()
@@ -208,7 +236,7 @@ class LocationScreen(ScreenBase):
             surface.blit(target_text, (int(offset_x + 20), int(offset_y + 45)))
 
         font_help = pygame.font.Font(None, int(16 * ui_scale))
-        help_text = font_help.render("WASD: move, T: target NPC, Enter: talk, L: exit, ESC: pause", True, WHITE)
+        help_text = font_help.render("WASD: move, T/[/]: target NPC, Enter: talk, L: exit, ESC: pause", True, WHITE)
         help_x = int(offset_x + surface.get_width() // 2 - help_text.get_width() // 2)
         help_y = int(offset_y + surface.get_height() - 30)
         surface.blit(help_text, (help_x, help_y))
@@ -280,8 +308,10 @@ class LocationScreen(ScreenBase):
                 dist_to_entrance = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2)
                 if dist_to_entrance <= self.entrance_range:
                     return "exit"
-            elif event.key == pygame.K_t:
-                self._cycle_npc_target()
+            elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
+                self._cycle_npc_target(1)
+            elif event.key == pygame.K_LEFTBRACKET:
+                self._cycle_npc_target(-1)
             elif event.key == pygame.K_RETURN:
                 target_npc = self._get_npc_target()
                 if target_npc:
@@ -308,9 +338,8 @@ class LocationScreen(ScreenBase):
         # Check bounds
         if can_move_func:
             can_move = can_move_func(new_x, new_y)
-        elif self.floor_rect is not None:
-            fx, fy, fw, fh = self.floor_rect
-            can_move = (fx < new_x < fx + fw and fy < new_y < fy + fh)
+        elif self.rooms:
+            can_move = any(fx < new_x < fx + fw and fy < new_y < fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
         else:
             can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
 
