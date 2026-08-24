@@ -2,7 +2,7 @@
 import pygame
 import math
 from constants import DARK_GRAY, YELLOW
-from utils import to_screen
+from utils import get_scale, to_screen
 from world_object import WorldObject
 from autopilot import Autopilot
 
@@ -60,9 +60,32 @@ class Ship(WorldObject):
         # Get local points based on shape
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
         self._draw_rotated_polygon(surface, local_points, self.angle, color)
+        self._draw_windows(surface, ship_size)
 
         if self.thrust > 0.05:
             self._draw_thrusters(surface, ship_size)
+
+    def _draw_windows(self, surface, ship_size):
+        """Draw small viewport/window details at each configured window point.
+
+        Window positions are (x, y) fractions of ship_size, same local space as
+        thrusters. Ships with no "windows" entry simply draw none (unchanged look).
+        """
+        window_points = self.graphics.get("windows", [])
+        if not window_points:
+            return
+
+        window_color = tuple(self.graphics.get("window_color", (200, 230, 255)))
+        rad = math.radians(self.angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        radius = max(1, int(round(ship_size * 0.12 * get_scale())))
+
+        for wx, wy in window_points:
+            lx, ly = wx * ship_size, wy * ship_size
+            world_x = self.x + (lx * cos_a - ly * sin_a)
+            world_y = self.y + (lx * sin_a + ly * cos_a)
+            pygame.draw.circle(surface, window_color, to_screen(world_x, world_y), radius)
 
     def _draw_thrusters(self, surface, ship_size):
         """Draw a triangular flame, pointed backward, at each thruster mount point.

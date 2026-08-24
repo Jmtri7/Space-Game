@@ -2,9 +2,8 @@
   "space_stations": {
     "station_alpha": {
       "name": "Station Alpha",
+      "culture": "vherathi",
       "size": 40,
-      "color": [100, 200, 255],
-      "core_color": [150, 220, 255],
       "rotation_speed": 0.5,
       "landing_distance": 50,
       "shape": "hexapod",
@@ -70,67 +69,28 @@
     }
   },
   "ships": {
-    "fighter": {
+    "shuttle": {
+      "culture": "vherathi",
       "size": 10,
-      "color": [255, 100, 100],
-      "shape": "triangle",
-      "thrusters": [[0, 0.6]]
-    },
-    "explorer": {
-      "size": 15,
-      "color": [100, 100, 150],
-      "shape": "triangle",
-      "thrusters": [[0, 0.6]]
-    },
-    "trader": {
-      "size": 18,
-      "color": [150, 150, 100],
-      "shape": "triangle",
-      "thrusters": [[-0.3, 0.65], [0.3, 0.65]]
-    },
-    "scout": {
-      "size": 12,
-      "color": [100, 200, 100],
-      "shape": "triangle",
-      "thrusters": [[0, 0.6]]
-    },
-    "hauler": {
-      "size": 20,
-      "color": [200, 100, 100],
-      "shape": "triangle",
-      "thrusters": [[-0.35, 0.65], [0, 0.7], [0.35, 0.65]]
-    },
-    "liner": {
-      "size": 30,
-      "color": [100, 150, 200],
       "shape": "rectangle",
-      "thrusters": [[-0.3, 0.7], [0, 0.75], [0.3, 0.7]]
-    },
-    "miner": {
-      "size": 22,
-      "color": [200, 150, 80],
-      "shape": "diamond",
-      "thrusters": [[-0.25, 0.45], [0.25, 0.45]]
-    },
-    "courier": {
-      "size": 8,
-      "color": [200, 200, 100],
-      "shape": "triangle",
-      "thrusters": [[0, 0.6]]
+      "thrusters": [[0, 0.6]],
+      "windows": [[0.1, -0.2]]
     },
     "freighter": {
+      "culture": "vherathi",
       "size": 35,
-      "color": [120, 120, 120],
       "shape": "long_rectangle",
       "thrusters": [[-0.22, 1.0], [-0.08, 1.0], [0.08, 1.0], [0.22, 1.0]],
       "thruster_width": 0.06,
-      "thruster_length": 55
+      "thruster_length": 55,
+      "windows": [[-0.15, -0.75], [0.05, -0.7], [0.2, -0.8]]
     },
     "patrol": {
+      "culture": "vherathi",
       "size": 13,
-      "color": [150, 100, 200],
       "shape": "triangle",
-      "thrusters": [[-0.25, 0.6], [0.25, 0.6]]
+      "thrusters": [[-0.25, 0.6], [0.25, 0.6]],
+      "windows": [[0.1, -0.5]]
     }
   }
 }

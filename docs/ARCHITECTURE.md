@@ -7,8 +7,8 @@ Class hierarchy, entity patterns, and extensibility points for the space game.
 ### World Objects (Position + Drawing)
 ```
 WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
-├── Ship (physics, autopilot, rotation)
-│   └── AIShip (autonomous accelerate/brake wandering)
+├── Ship (physics, rotation; owns an Autopilot via composition)
+│   └── AIShip (picks autopilot mode/target from the pilot's faction+role)
 └── Landable (space station or moon — config decides which)
 
 Person (base — x, y, draw(), get_distance())
@@ -35,6 +35,8 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
 - `Dialogue` — Conversation tree system used by `NPC`
+- `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
+- `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
 
 ## Entity Design Pattern
 
@@ -62,37 +64,72 @@ See [PHYSICS.md](PHYSICS.md#coordinate-system) for coordinate conversion details
 **Base Class: `Ship(WorldObject)`**
 - Stores: `x`, `y`, `angle`, `velocity_x`, `velocity_y`, `thrust`, `space_drag`
 - Physics: `acceleration_magnitude`, `max_velocity`, `rotation_speed`
+- Owns an `Autopilot` (see below) via `self.autopilot = Autopilot(self)`
 - Methods:
-  - `draw(surface, ship_size, color)` — rotated polygon (via `_draw_rotated_polygon`) + thrust flame
-  - `wrap_position()` — screen-edge wrapping (torus topology)
-  - `update()` — runs `update_autopilot()`, then thrust/drag/velocity-cap physics
-  - `update_autopilot()`, `_autopilot_point_and_thrust()`, `_calculate_brake_redirect_angle()`,
-    `_predict_braking_distance_from_stop()` — kinematic autopilot controller
-  - `predict_landing_trajectory()` / `predict_landing_position()` — forward-simulates
-    the autopilot to produce waypoints for the trajectory overlay
+  - `draw(surface, ship_size, color)` — rotated polygon (via `_draw_rotated_polygon`) + thruster flames
+  - `wrap_position()` (inherited from `WorldObject`) — world-edge wrapping (torus topology)
+  - `update()` — runs `self.autopilot.update()`, then thrust/drag/velocity-cap physics
+  - `engage_seek(target)` / `engage_orbit(center_x, center_y, radius)` — thin pass-throughs
+    to the owned `Autopilot`
+  - `autopilot_active` / `autopilot_target` — backward-compatible properties mirroring
+    `self.autopilot.active` / `self.autopilot.target`
+
+**Component: `Autopilot`** (in `autopilot.py`, one per `Ship`, composition not inheritance)
+- Two standardized modes: `"seek"` (approach `target`, arrive once close and slow enough —
+  the unified controller that redirects AND decelerates simultaneously) and `"orbit"`
+  (continuously circle a fixed point at a fixed radius; never arrives)
+- Talks to its ship only through kinematic reads and `turn_left()`/`turn_right()`/
+  `increase_thrust()`/`release_thrust()` — see [PHYSICS.md](PHYSICS.md) for the controller math
 
 **Wrapper: `PlayerController`**
 - Owns a `Ship` instance, translates WASD/arrow keys into `turn_left()`/`turn_right()`/
   `increase_thrust()`/`point_to_reverse_velocity()`/`release_thrust()`
 - Blocks input while `autopilot_active` is true
+- Applies `ship_type` stats (`max_thrust`/`max_velocity`/`rotation_speed`) to its `Ship`
+  at construction, same as `AIShip` does
 
 **Subclass: `AIShip(Ship)`**
-- Reads `acceleration_magnitude`/`max_velocity`/`rotation_speed` from a `ship_type` dict
-  (see `config/ship_types.json`), falling back to defaults if none given
-- Own `update()` implements a simple `"accelerate"` ↔ `"brake"` state machine with
-  randomized timers and heading jitter — does not use the `Ship` autopilot
+- Reads `acceleration_magnitude` (from `ship_type`'s `max_thrust`), `max_velocity`,
+  `rotation_speed` from a `ship_type` dict (see `config/ship_types.json`), falling back
+  to defaults if none given
+- Its `update()` never touches physics directly — it picks an autopilot mode/target each
+  frame (from the pilot's faction/role, via `ROLE_ROUTINES`) and calls `engage_seek()` or
+  `engage_orbit()`, then `super().update()` runs the real `Ship`/`Autopilot` physics
 
-**Extending for new ship types:**
-```python
-class Shuttle(Ship):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.max_velocity = 2.0  # Different specs
+### Adding or Updating a Ship Type
 
-    def update(self):
-        # Custom behavior
-        super().update()  # Physics still applies
-```
+Almost always **data-driven, not a new class** — add an entry to `config/ship_types.json`
+(physics/turning: `max_thrust`, `max_velocity`, `rotation_speed`) and a matching entry in
+`config/graphics.json`'s `"ships"` section (`size`, `color`, `shape`, `thrusters`, optionally
+`thruster_width`/`thruster_length`). Reference the type's key from a story's `space_system.json`
+(`ai_ships[].ship_type`) or `story.json` (`ships.player_type`) — no Python required.
+
+Only subclass `Ship` (like `AIShip` does) when you need genuinely new *behavior*, not new stats.
+
+**Rough low / medium / high bands**, based on the spread across this game's ship roster
+(`shuttle`, `freighter`, `patrol`, plus retired types `fighter`/`explorer`/`trader`/`scout`/
+`hauler`/`liner`/`miner`/`courier` that established the range):
+
+| Stat | Low | Medium | High |
+|---|---|---|---|
+| `max_thrust` (acceleration/frame) | 0.08 – 0.15 | 0.15 – 0.35 | 0.35 – 0.5 |
+| `max_velocity` (units/frame) | 1.5 – 3 | 3 – 5 | 5 – 6.5 |
+| `rotation_speed` (degrees/frame) | 1 – 3 | 3 – 7 | 7 – 10 |
+| `size` (world units) | 8 – 14 | 14 – 24 | 24 – 35 |
+
+A rule of thumb from the existing roster: big/slow cargo ships (`freighter`) pair low thrust +
+low velocity + low rotation + high size; small/agile ships (`patrol`) pair medium-high thrust +
+medium-high velocity + medium-high rotation + low size. Values well outside these ranges will
+still work (nothing enforces them) but will feel very different from the rest of the fleet.
+
+**Culture and material palette:** if a ship (or building — see `Landable`/`LocationScreen`
+below) belongs to an existing culture, set `"culture": "<culture_id>"` in its `graphics.json`/
+`building_types.json` entry instead of hardcoding `color`. `get_graphics_asset()`/
+`get_building_type()` (in `utils.py`) automatically fill in `color` and `core_color`/
+`window_color` from that culture's `metal_color`/`glass_color` in `config/cultures.json`.
+Each culture entry also carries a `theme` field — read it and follow it when designing new
+ships or buildings for that culture, so the whole culture stays visually cohesive. See
+`config/cultures.json` for the currently defined cultures (e.g. the Vherathi Concord).
 
 ## Person Class: NPCs & Drawing
 

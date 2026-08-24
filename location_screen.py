@@ -3,7 +3,7 @@ import pygame
 import math
 import constants
 from constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from utils import get_scale, load_json, to_screen, draw_debug_marker, get_ui_scale, get_ui_offset, set_camera_offset
+from utils import get_scale, load_json, to_screen, draw_debug_marker, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type
 from screen_base import ScreenBase
 
 
@@ -55,6 +55,11 @@ class LocationScreen(ScreenBase):
 
         # Draw structures from config
         for structure in self.structures:
+            building_type_id = structure.get("building_type")
+            if building_type_id:
+                self._draw_culture_building(surface, structure, building_type_id, scale)
+                continue
+
             struct_type = structure.get("type", "rect")
             color = tuple(structure.get("color", [150, 150, 150]))
 
@@ -85,6 +90,44 @@ class LocationScreen(ScreenBase):
                     for y in range(sy, ey, spacing):
                         px, py = to_screen(x, y)
                         pygame.draw.rect(surface, color, (px, py, 15, 15))
+
+    def _draw_culture_building(self, surface, structure, building_type_id, scale):
+        """Draw a building whose hull/window colors come from its type's culture -
+        fully config-driven metal (hull) + glass (windows) material palette.
+
+        `structure` supplies only position ("x"/"y"); shape, size, and window
+        layout all come from the building_type. Anchor point varies by shape:
+        "rect" uses top-left (matching the generic rect structures above),
+        "circle" uses center, "polygon" is whatever the type's local_points
+        were authored relative to (typically ground level).
+        """
+        building_type = get_building_type(building_type_id)
+        metal_color = tuple(building_type.get("color", (150, 150, 150)))
+        glass_color = tuple(building_type.get("window_color", (255, 255, 0)))
+        anchor_x, anchor_y = structure["x"], structure["y"]
+        shape = building_type.get("shape", "rect")
+
+        if shape == "circle":
+            radius = building_type.get("radius", 50)
+            cx, cy = to_screen(anchor_x, anchor_y)
+            pygame.draw.circle(surface, metal_color, (cx, cy), max(1, int(radius * scale)))
+        elif shape == "polygon":
+            local_points = building_type.get("local_points", [])
+            screen_points = [to_screen(anchor_x + lx, anchor_y + ly) for lx, ly in local_points]
+            if len(screen_points) >= 3:
+                pygame.draw.polygon(surface, metal_color, screen_points)
+        else:  # rect
+            width = building_type.get("width", 100)
+            height = building_type.get("height", 100)
+            x1, y1 = to_screen(anchor_x, anchor_y)
+            x2, y2 = to_screen(anchor_x + width, anchor_y + height)
+            pygame.draw.rect(surface, metal_color, (x1, y1, x2 - x1, y2 - y1))
+
+        window_size = building_type.get("window_size", 12)
+        half = max(1, int(window_size * scale / 2))
+        for wx, wy in building_type.get("windows", []):
+            px, py = to_screen(anchor_x + wx, anchor_y + wy)
+            pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
 
         # Draw entrance marker
         ex, ey = to_screen(self.entrance_x, self.entrance_y)

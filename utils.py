@@ -167,11 +167,40 @@ def get_ship_type(ship_type_id):
     return ship_types.get(ship_type_id, {})
 
 
+def get_culture(culture_id):
+    """Load culture properties (material palette, design theme) from config/cultures.json."""
+    cultures = load_json("config/cultures.json") or {}
+    return cultures.get(culture_id, {})
+
+
+def _resolve_culture_palette(asset):
+    """Fill in color/core_color/window_color from the asset's culture, if it
+    declares one and doesn't already set them explicitly. Lets ships,
+    stations, and buildings share one culture's material palette (metal for
+    hull, glass for windows/core) instead of hardcoding colors per asset.
+    """
+    culture_id = asset.get("culture")
+    if culture_id:
+        culture = get_culture(culture_id)
+        asset.setdefault("color", culture.get("metal_color"))
+        asset.setdefault("core_color", culture.get("glass_color"))
+        asset.setdefault("window_color", culture.get("glass_color"))
+    return asset
+
+
 def get_graphics_asset(asset_type, asset_id):
-    """Load graphics asset from config/graphics.json."""
+    """Load graphics asset from config/graphics.json, with culture colors resolved."""
     graphics = load_json("config/graphics.json") or {}
     asset_category = graphics.get(asset_type, {})
-    return asset_category.get(asset_id, {})
+    asset = dict(asset_category.get(asset_id, {}))
+    return _resolve_culture_palette(asset)
+
+
+def get_building_type(building_type_id):
+    """Load building type properties from config/building_types.json, with culture colors resolved."""
+    building_types = load_json("config/building_types.json") or {}
+    asset = dict(building_types.get(building_type_id, {}))
+    return _resolve_culture_palette(asset)
 
 
 def get_pilot(pilot_id):

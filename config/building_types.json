@@ -1,0 +1,29 @@
+{
+  "vherathi_spire": {
+    "name": "Vherathi Spire",
+    "description": "A tapering residential/administrative tower, asymmetric from base to tip.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-55, 0], [65, 0], [35, -300], [-15, -330]],
+    "windows": [[10, -250], [-5, -280], [20, -300], [5, -320]],
+    "window_size": 12
+  },
+  "vherathi_bloompod": {
+    "name": "Vherathi Bloompod",
+    "description": "A rounded, organic communal dwelling, grown rather than built.",
+    "culture": "vherathi",
+    "shape": "circle",
+    "radius": 85,
+    "windows": [[-30, -40], [25, -55], [45, 10], [-50, 15]],
+    "window_size": 14
+  },
+  "vherathi_hall": {
+    "name": "Vherathi Gathering Hall",
+    "description": "A wide, low, asymmetric structure leaning toward one side - markets and meeting spaces.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-140, 0], [160, 0], [130, -100], [-90, -130]],
+    "windows": [[-70, -50], [-40, -70], [-10, -90], [60, -60]],
+    "window_size": 12
+  }
+}
