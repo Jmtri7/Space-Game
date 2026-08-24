@@ -39,7 +39,12 @@ class SpaceScreen(ScreenBase):
         player_ship_type_id = story_meta.get("ships", {}).get("player_type", "explorer")
         player_graphics = get_graphics_asset("ships", player_ship_type_id)
 
-        self.player = PlayerController(GAME_WIDTH // 2, GAME_HEIGHT // 2, space_drag=space_drag, graphics=player_graphics)
+        # Spawn away from map center by default, since that's where a central
+        # star (if the story has one) usually sits.
+        player_start_cfg = self.system_config.get("player_start", {})
+        player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
+        player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
+        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics)
         self.star_field = StarField()
 
         # Load graphics assets for station and moon
