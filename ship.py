@@ -71,15 +71,19 @@ class Ship(WorldObject):
         local space as _get_shape_points (0,0 = center, +y = toward the back).
         Ships without a "thrusters" entry fall back to a single back-center mount.
         The triangle's base sits at the hull mount point; its apex points backward
-        (opposite the ship's facing), like a small exhaust cone.
+        (opposite the ship's facing), like a small exhaust cone. Width (fraction of
+        ship_size) and max length (world units, at full thrust) are both tunable
+        per ship via the "thruster_width"/"thruster_length" graphics fields.
         """
         thruster_points = self.graphics.get("thrusters", [(0, 0.6)])
+        thruster_width = self.graphics.get("thruster_width", 0.15)
+        thruster_length = self.graphics.get("thruster_length", 38)
 
         rad = math.radians(self.angle)
         cos_a = math.cos(rad)
         sin_a = math.sin(rad)
-        flame_length = self.thrust * 30
-        half_width = max(2, ship_size * 0.15)
+        flame_length = self.thrust * thruster_length
+        half_width = max(2, ship_size * thruster_width)
 
         # World-space unit vectors for this ship's current heading: "backward"
         # (opposite the nose) and "right" (perpendicular, for the flame's base).
