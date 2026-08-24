@@ -15,6 +15,21 @@ ARRIVAL_DISTANCE_FLOOR = 8
 ARRIVAL_SPEED_THRESHOLD = 0.1
 
 
+def has_arrived(ship, target):
+    """Whether ship is close and slow enough to a target to call it
+    "arrived" - the single source of truth for that, shared by SeekMode's
+    own arrival check and SpaceScreen's landing-screen transition, so the
+    two can't drift out of sync the way they did before this existed: the
+    screen-level check used to use its own looser distance/speed numbers,
+    so it would win the race and trigger docking well before the ship
+    actually braked down to SeekMode's tighter, intended stopping point."""
+    distance = target.get_distance(ship.x, ship.y)
+    speed = math.sqrt(ship.velocity_x ** 2 + ship.velocity_y ** 2)
+    landing_distance = getattr(target, 'landing_distance', 100)
+    arrival_tolerance = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION)
+    return distance < arrival_tolerance and speed < ARRIVAL_SPEED_THRESHOLD
+
+
 def turn_toward(ship, angle_rad):
     """Rotate the ship one step toward angle_rad (radians). Returns True
     once the ship is aligned with it within 10 degrees."""
@@ -119,17 +134,11 @@ class SeekMode:
         distance = target.get_distance(ship.x, ship.y)
         speed = math.sqrt(ship.velocity_x ** 2 + ship.velocity_y ** 2)
 
-        # Step 1: Landing/arrival condition check
-        # landing_distance is how close a *manual* landing (L key) is allowed
-        # from - generous, since it's sized to the landable itself. Arriving
-        # anywhere in that whole radius and calling it "landed" left the
-        # autopilot stopping visibly off-center (25-50 units out, in testing).
-        # Use a much tighter fraction of it instead, so the autopilot keeps
-        # braking all the way in to (near) the landable's exact middle,
-        # floored so it stays reachable for slow/sluggish ships.
-        landing_distance = getattr(target, 'landing_distance', 100)
-        arrival_tolerance = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION)
-        if distance < arrival_tolerance and speed < ARRIVAL_SPEED_THRESHOLD:
+        # Step 1: Landing/arrival condition check (see has_arrived - tight
+        # enough that the autopilot keeps braking all the way in to (near)
+        # the landable's exact middle, not just its generous manual-landing
+        # radius, floored so it stays reachable for slow/sluggish ships).
+        if has_arrived(ship, target):
             # Arrival, not just a disengage - come to a full stop so the ship
             # doesn't keep drifting on whatever residual speed was left.
             ship.park()

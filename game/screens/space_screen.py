@@ -13,6 +13,7 @@ from game.ui.ui_theme import draw_glass_panel, draw_glow_title
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
+from game.world.autopilot import has_arrived
 from game.world.ai_ship import AIShip
 from game.world.landable import Landable
 from game.world.starfield import StarField
@@ -430,6 +431,29 @@ class SpaceScreen(ScreenBase):
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
+        # Auto-land if autopilot has actually arrived (has_arrived - the same
+        # tight distance/speed SeekMode itself requires to stop). Checked
+        # *before* update_physics() runs this frame's autopilot step: SeekMode
+        # reaching that exact same condition inside update_physics() disengages
+        # and clears autopilot_target itself, so checking after would just see
+        # autopilot_active already False and never trigger the landing-screen
+        # transition at all. This used to check its own looser distance/speed
+        # (full landing_distance, speed<0.4) instead, so it fired well before
+        # the ship actually braked down to SeekMode's intended stopping point -
+        # visibly "giving up" on braking early with a lot of residual speed.
+        if self.player.autopilot_active and self.player.autopilot_target and has_arrived(self.player, self.player.autopilot_target):
+            target = self.player.autopilot_target
+            self.player.park()
+            self.player.autopilot_active = False
+            self.player.autopilot_target = None
+            # Only try to land on landables, not ships
+            if target == self.station:
+                self.landing_target = "station"
+                return "land"
+            elif target == self.moon:
+                self.landing_target = "moon"
+                return "land"
+
         self.update_physics()
 
         # Update camera to follow player
@@ -437,22 +461,6 @@ class SpaceScreen(ScreenBase):
 
         if self.jump_state:
             return  # skip landing checks entirely while jumping
-
-        # Auto-land if autopilot is active and in range
-        if self.player.autopilot_active and self.player.autopilot_target:
-            distance = self.player.autopilot_target.get_distance(self.player.x, self.player.y)
-            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-            # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
-            landing_distance = getattr(self.player.autopilot_target, 'landing_distance', 100)
-            if distance < landing_distance and speed < 0.4:
-                self.player.autopilot_active = False
-                # Only try to land on landables, not ships
-                if self.player.autopilot_target == self.station:
-                    self.landing_target = "station"
-                    return "land"
-                elif self.player.autopilot_target == self.moon:
-                    self.landing_target = "moon"
-                    return "land"
 
         if self._check_landing():
             self.landing_text = 60
