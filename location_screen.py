@@ -102,6 +102,27 @@ class LocationScreen(ScreenBase):
                         px, py = to_screen(x, y)
                         pygame.draw.rect(surface, color, (px, py, 15, 15))
 
+        # Draw NPCs
+        for npc in self.npcs:
+            npc.draw(surface)
+
+        # Draw entrance marker
+        ex, ey = to_screen(self.entrance_x, self.entrance_y)
+        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
+        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
+
+        # Draw player
+        px, py = to_screen(self.player_x, self.player_y)
+        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
+        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
+
+        # Debug marker
+        if constants.DEBUG_MODE:
+            draw_debug_marker(surface, self.player_x, self.player_y, 10)
+
+        # Draw UI
+        self.draw_ui_text(surface, self.ui_label)
+
     def _draw_culture_building(self, surface, structure, building_type_id, scale):
         """Draw a building whose hull/window colors come from its type's culture -
         fully config-driven metal (hull) + glass (windows) material palette.
@@ -139,27 +160,6 @@ class LocationScreen(ScreenBase):
         for wx, wy in building_type.get("windows", []):
             px, py = to_screen(anchor_x + wx, anchor_y + wy)
             pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
-
-        # Draw NPCs
-        for npc in self.npcs:
-            npc.draw(surface)
-
-        # Draw entrance marker
-        ex, ey = to_screen(self.entrance_x, self.entrance_y)
-        pygame.draw.circle(surface, (0, 255, 100), (ex, ey), max(1, int(15 * scale)))
-        pygame.draw.circle(surface, (100, 255, 150), (ex, ey), max(1, int(10 * scale)))
-
-        # Draw player
-        px, py = to_screen(self.player_x, self.player_y)
-        pygame.draw.rect(surface, (200, 100, 100), (px - 6, py, 12, 16))
-        pygame.draw.circle(surface, (255, 150, 150), (px, py - 10), 5)
-
-        # Debug marker
-        if constants.DEBUG_MODE:
-            draw_debug_marker(surface, self.player_x, self.player_y, 10)
-
-        # Draw UI
-        self.draw_ui_text(surface, self.ui_label)
 
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
