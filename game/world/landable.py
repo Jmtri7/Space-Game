@@ -11,6 +11,15 @@ class Landable(WorldObject):
     def __init__(self, x, y, graphics=None, interiors=None):
         super().__init__(x, y, graphics=graphics)
         self.interiors = interiors or {}
+        # Live LocationScreen cache, keyed by interior key ("default" for
+        # stations, "city"/"wilderness" for moons) - populated lazily by
+        # SpaceScreen.get_interior_screen(). Kept here (not constructed
+        # here) since Landable is a world object and shouldn't depend on
+        # game.screens; this just lets the interior's state (NPCs, player
+        # position within it) persist across visits instead of resetting
+        # every time, and lets it keep simulating in the background while
+        # the player is elsewhere.
+        self.interior_screens = {}
 
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
         self.is_station = "rotation_speed" in self.graphics or self.graphics.get("shape") in ["hexapod", "octagon"]

@@ -87,12 +87,23 @@ class LocationScreen(ScreenBase):
         return self.npcs[self.current_npc_target]
 
     def update(self):
-        """Update location - handle movement, camera, and NPCs. NPCs keep
-        living even mid-dialogue - only the player's own movement pauses."""
+        """Full update for the active/foreground location: player movement,
+        camera, and NPCs. Only call this for whichever location the player
+        is actually standing in right now - use update_physics() instead
+        for every other cached location, so it keeps simulating in the
+        background without moving the player's body (they're not there)
+        or fighting the camera for whichever screen actually is active."""
         if not self.active_dialogue:
             keys = pygame.key.get_pressed()
             self._handle_movement(keys)
         self.update_camera()
+        self.update_physics()
+
+    def update_physics(self):
+        """Advance just the NPCs - safe to call on a location that isn't
+        the active screen. NPCs keep living even mid-dialogue in the
+        active location too - only the player's own movement pauses for
+        that."""
         for npc in self.npcs:
             npc.update()
 

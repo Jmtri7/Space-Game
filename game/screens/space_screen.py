@@ -11,6 +11,7 @@ from game.utils import (
 import game.utils as utils
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title
 from game.screens.screen_base import ScreenBase
+from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.ai_ship import AIShip
 from game.world.landable import Landable
@@ -136,6 +137,30 @@ class SpaceScreen(ScreenBase):
             if pilot_name:
                 ship_name = f"{ship_name} ({pilot_name})"
             self.targetable_objects.append((ship_name, ship))
+
+    def get_interior_screen(self, landable, key, world_width, world_height):
+        """Return the persistent LocationScreen for one of landable's
+        interiors (key = "default" for a station, "city"/"wilderness" for
+        the moon), creating and caching it on landable.interior_screens the
+        first time it's visited. Later visits reuse the same instance, so
+        NPCs and the player's position within it persist instead of
+        resetting every time - and it can keep simulating in the
+        background (see update_physics() calls in main.py) while the
+        player is elsewhere. Returns None if the interior isn't configured.
+        """
+        if key in landable.interior_screens:
+            return landable.interior_screens[key]
+
+        interior_config = landable.interiors.get(key)
+        if not interior_config:
+            return None
+
+        if isinstance(interior_config, str):
+            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story)
+        else:
+            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story)
+        landable.interior_screens[key] = screen
+        return screen
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
