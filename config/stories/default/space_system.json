@@ -34,44 +34,40 @@
     "interiors": {
       "default": {
         "label": "Alpha Station Interior",
-        "entrance": {
-          "x": 0.5,
-          "y": 0.85
-        },
         "bar": {
-          "x": 0.5,
-          "y": 0.15
+          "x": 400,
+          "y": 90
         },
         "door": {
-          "x": 0.5,
-          "y": 0.9
+          "x": 400,
+          "y": 540
         },
         "hallway": {
           "narrow_width": 80,
           "wide_width": 200,
-          "transition_y": 0.5
+          "transition_y": 300
         },
         "npcs": [
           {
             "name": "Bartender",
-            "x": 0.5,
-            "y": 0.15,
+            "x": 400,
+            "y": 90,
             "behavior": "bar",
             "greeting": "What'll it be?",
             "dialogue_options": ["Order drink", "Leave"]
           },
           {
             "name": "Traveler",
-            "x": 0.5,
-            "y": 0.4,
+            "x": 400,
+            "y": 240,
             "behavior": "wander",
             "greeting": "Safe travels!",
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
             "name": "Guard",
-            "x": 0.5,
-            "y": 0.9,
+            "x": 400,
+            "y": 540,
             "behavior": "bar",
             "greeting": "Welcome to the station.",
             "dialogue_options": ["Thanks", "Leave"]
@@ -133,23 +129,21 @@
           "y": 200,
           "name": "Landing Zone"
         },
-        "craters": [
-          {"x": 300, "y": 400, "radius": 50},
-          {"x": 800, "y": 600, "radius": 60},
-          {"x": 1200, "y": 500, "radius": 55},
-          {"x": 400, "y": 1000, "radius": 45},
-          {"x": 1300, "y": 1000, "radius": 50},
-          {"x": 600, "y": 200, "radius": 40}
-        ],
-        "rocks": [
-          {"x": 150, "y": 200},
-          {"x": 350, "y": 150},
-          {"x": 650, "y": 300},
-          {"x": 200, "y": 400},
-          {"x": 500, "y": 350},
-          {"x": 900, "y": 450},
-          {"x": 1100, "y": 200},
-          {"x": 1400, "y": 600}
+        "structures": [
+          {"type": "circle", "x": 300, "y": 400, "radius": 50, "color": [90, 85, 80]},
+          {"type": "circle", "x": 800, "y": 600, "radius": 60, "color": [90, 85, 80]},
+          {"type": "circle", "x": 1200, "y": 500, "radius": 55, "color": [90, 85, 80]},
+          {"type": "circle", "x": 400, "y": 1000, "radius": 45, "color": [90, 85, 80]},
+          {"type": "circle", "x": 1300, "y": 1000, "radius": 50, "color": [90, 85, 80]},
+          {"type": "circle", "x": 600, "y": 200, "radius": 40, "color": [90, 85, 80]},
+          {"type": "circle", "x": 150, "y": 200, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 350, "y": 150, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 650, "y": 300, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 200, "y": 400, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 500, "y": 350, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 900, "y": 450, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 1100, "y": 200, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 1400, "y": 600, "radius": 12, "color": [70, 68, 65]}
         ]
       }
     }

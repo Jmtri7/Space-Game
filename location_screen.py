@@ -5,6 +5,7 @@ import constants
 from constants import GAME_WIDTH, GAME_HEIGHT, WHITE
 from utils import get_scale, load_json, to_screen, draw_debug_marker, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type
 from screen_base import ScreenBase
+from npc import NPC
 
 
 class LocationScreen(ScreenBase):
@@ -41,6 +42,16 @@ class LocationScreen(ScreenBase):
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
         self.npcs_config = self.config.get("npcs", [])
+        self.npcs = [
+            NPC(
+                cfg.get("x", 0), cfg.get("y", 0),
+                behavior=cfg.get("behavior", "wander"),
+                name=cfg.get("name", "NPC"),
+                greeting=cfg.get("greeting", "Hello!"),
+                dialogue_options=cfg.get("dialogue_options")
+            )
+            for cfg in self.npcs_config
+        ]
 
     def update(self):
         """Update location - handle movement and camera."""
@@ -128,6 +139,10 @@ class LocationScreen(ScreenBase):
         for wx, wy in building_type.get("windows", []):
             px, py = to_screen(anchor_x + wx, anchor_y + wy)
             pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
+
+        # Draw NPCs
+        for npc in self.npcs:
+            npc.draw(surface)
 
         # Draw entrance marker
         ex, ey = to_screen(self.entrance_x, self.entrance_y)
