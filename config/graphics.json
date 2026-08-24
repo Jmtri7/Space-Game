@@ -123,7 +123,8 @@
       "color": [120, 120, 120],
       "shape": "long_rectangle",
       "thrusters": [[-0.22, 1.0], [-0.08, 1.0], [0.08, 1.0], [0.22, 1.0]],
-      "thruster_width": 0.1
+      "thruster_width": 0.06,
+      "thruster_length": 55
     },
     "patrol": {
       "size": 13,
