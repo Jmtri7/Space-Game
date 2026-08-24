@@ -84,6 +84,14 @@ class PlayerController:
         self.ship.angle = value
 
     @property
+    def thrust(self):
+        return self.ship.thrust
+
+    @thrust.setter
+    def thrust(self, value):
+        self.ship.thrust = value
+
+    @property
     def autopilot_active(self):
         return self.ship.autopilot_active
 
