@@ -199,6 +199,14 @@
       "ship_type": "freighter",
       "pilot": "elena_voss",
       "route": ["station", "moon"]
+    },
+    {
+      "name": "Patrol One",
+      "x": 0.5,
+      "y": 0.1,
+      "ship_type": "patrol",
+      "pilot": "kade_marsh",
+      "route": ["station", "moon"]
     }
   ],
   "asteroids": [

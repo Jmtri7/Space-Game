@@ -95,6 +95,10 @@ class PlayerController:
     def autopilot_target(self, value):
         self.ship.autopilot_target = value
 
+    def engage_seek(self, target):
+        """Delegate to ship's standardized seek-autopilot mode."""
+        self.ship.engage_seek(target)
+
     def predict_landing_trajectory(self, target):
         """Delegate to ship's trajectory prediction."""
         return self.ship.predict_landing_trajectory(target)

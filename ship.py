@@ -1,13 +1,14 @@
-"""Base ship class with physics and autopilot."""
+"""Base ship class with physics and rendering. Autopilot is a separate component."""
 import pygame
 import math
 from constants import DARK_GRAY, YELLOW
-from utils import get_scale, to_screen, get_wrapped_direction
+from utils import get_scale, to_screen
 from world_object import WorldObject
+from autopilot import Autopilot
 
 
 class Ship(WorldObject):
-    """Base ship class with physics and autopilot."""
+    """Base ship class with physics, rendering, and manual controls."""
     def __init__(self, x, y, space_drag=0, graphics=None):
         super().__init__(x, y, graphics=graphics)
         self.angle = 0
@@ -17,9 +18,33 @@ class Ship(WorldObject):
         self.acceleration_magnitude = 0.1
         self.max_velocity = 4.0
         self.rotation_speed = 5
-        self.autopilot_active = False
-        self.autopilot_target = None
         self.space_drag = space_drag
+        self.autopilot = Autopilot(self)
+
+    # --- Backward-compatible views onto the autopilot's state ---
+    @property
+    def autopilot_active(self):
+        return self.autopilot.active
+
+    @autopilot_active.setter
+    def autopilot_active(self, value):
+        self.autopilot.active = value
+
+    @property
+    def autopilot_target(self):
+        return self.autopilot.target
+
+    @autopilot_target.setter
+    def autopilot_target(self, value):
+        self.autopilot.target = value
+
+    def engage_seek(self, target):
+        """Engage autopilot to approach/land on `target`."""
+        self.autopilot.engage_seek(target)
+
+    def engage_orbit(self, center_x, center_y, radius):
+        """Engage autopilot to continuously circle (center_x, center_y) at `radius`."""
+        self.autopilot.engage_orbit(center_x, center_y, radius)
 
     def draw(self, surface, ship_size=None, color=None):
         """Draw ship using graphics asset, with fallback to defaults."""
@@ -134,13 +159,12 @@ class Ship(WorldObject):
     def update(self):
         """Base physics update: apply thrust, velocity cap, and movement."""
         try:
-            self.update_autopilot()
+            self.autopilot.update()
         except Exception as e:
             import traceback
-            print(f"ERROR in update_autopilot: {e}")
+            print(f"ERROR in autopilot update: {e}")
             traceback.print_exc()
-            self.autopilot_active = False
-            self.autopilot_target = None
+            self.autopilot.disengage()
 
         rad = math.radians(self.angle)
         if self.thrust > 0.01:
@@ -163,258 +187,16 @@ class Ship(WorldObject):
 
         self.wrap_position()
 
-    def update_autopilot(self):
-        """Update autopilot - unified approach that redirects AND decelerates simultaneously.
-
-        Chooses acceleration direction that:
-        1. Points toward target (to redirect velocity)
-        2. Points opposite to velocity (to slow down)
-        The blend depends on proximity and speed.
-        """
-        if not self.autopilot_active or not self.autopilot_target:
-            return
-
-        target = self.autopilot_target
-        distance = target.get_distance(self.x, self.y)
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-
-        # Step 1: Landing/arrival condition check
-        # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
-        landing_distance = getattr(self.autopilot_target, 'landing_distance', 100)
-        if distance < landing_distance and speed < 0.4:
-            self.autopilot_active = False
-            self.release_thrust()
-            return
-
-        # Step 2: Decide acceleration strategy
-        braking_distance = self._predict_braking_distance_from_stop(speed)
-        should_brake = distance <= braking_distance and speed > 0.1
-
-        # Step 2b: Check if braking would actually decelerate us
-        if should_brake:
-            # Simulate one frame to check if we'd actually slow down
-            dx, dy = get_wrapped_direction(self.x, self.y, target.x, target.y)
-            target_angle_rad = math.atan2(dx, -dy)
-            accel_angle = self._calculate_brake_redirect_angle(target_angle_rad)
-
-            # Check if aligned enough to thrust
-            accel_angle_deg = math.degrees(accel_angle)
-            current_angle = self.angle % 360
-            target_angle_norm = accel_angle_deg % 360
-            angle_diff = target_angle_norm - current_angle
-            if angle_diff > 180:
-                angle_diff -= 360
-            elif angle_diff < -180:
-                angle_diff += 360
-
-            aligned = abs(angle_diff) < 10
-            if aligned:
-                # Simulate thrust application
-                rad = math.radians(self.angle)
-                test_vx = self.velocity_x + math.sin(rad) * self.acceleration_magnitude
-                test_vy = self.velocity_y - math.cos(rad) * self.acceleration_magnitude
-                test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
-
-                # Stop braking if speed would increase instead of decrease
-                if test_speed > speed:
-                    self.autopilot_active = False
-                    self.release_thrust()
-                    return
-
-        # Step 3: Calculate optimal acceleration direction (accounting for wrapping)
-        dx, dy = get_wrapped_direction(self.x, self.y, target.x, target.y)
-        target_angle = math.atan2(dx, -dy)
-
-        if should_brake:
-            # Blend toward slowing down while redirecting to target
-            accel_angle = self._calculate_brake_redirect_angle(target_angle)
-        else:
-            # Point toward target and accelerate
-            accel_angle = target_angle
-
-        # Step 4: Point and thrust in that direction
-        self._autopilot_point_and_thrust(accel_angle)
-
-    def _predict_braking_distance_from_stop(self, current_speed):
-        """Predict distance needed to stop from current speed.
-
-        Assumes: turn 180 degrees while coasting, then apply reverse thrust until stopped.
-        """
-        if current_speed < 0.1:
-            return 0
-
-        # Time to turn 180 degrees (coasting at current speed)
-        turn_frames = 180 / self.rotation_speed
-        distance_during_turn = current_speed * turn_frames
-
-        # Time to decelerate from current_speed to zero with full reverse thrust
-        decel_per_frame = self.acceleration_magnitude
-        if self.space_drag > 0:
-            decel_per_frame = self.acceleration_magnitude * (1 - self.space_drag)
-
-        decel_frames = 0
-        distance_during_decel = 0
-        v = current_speed
-
-        # Simulate deceleration frame by frame
-        while v > 0.05 and decel_frames < 500:
-            v_avg = (v + max(0, v - decel_per_frame)) / 2.0
-            distance_during_decel += v_avg
-            v = max(0, v - decel_per_frame)
-            decel_frames += 1
-
-        total_distance = distance_during_turn + distance_during_decel
-
-        # Add 10% safety buffer
-        return total_distance * 1.1
-
-    def _calculate_brake_redirect_angle(self, target_angle_rad):
-        """Calculate acceleration direction that blends braking (opposite velocity) with redirect (toward target).
-
-        When braking: accelerate in direction that has both:
-        - Component opposite to velocity (to slow down)
-        - Component toward target (to redirect)
-        """
-        # Calculate velocity angle
-        velocity_angle = math.atan2(self.velocity_x, -self.velocity_y)
-
-        # Calculate reverse velocity angle (opposite direction)
-        reverse_velocity_angle = (velocity_angle + math.pi) % (2 * math.pi)
-
-        # Blend between reverse velocity direction and target direction
-        # This creates a direction that both brakes and redirects
-        angle_diff = target_angle_rad - reverse_velocity_angle
-        # Normalize angle difference
-        while angle_diff > math.pi:
-            angle_diff -= 2 * math.pi
-        while angle_diff < -math.pi:
-            angle_diff += 2 * math.pi
-
-        # Blend: 70% reverse velocity (brake), 30% target (redirect)
-        blended_angle = reverse_velocity_angle + angle_diff * 0.3
-
-        return blended_angle
-
-    def _autopilot_point_and_thrust(self, accel_angle_rad):
-        """Point ship in acceleration direction and apply thrust."""
-        accel_angle_deg = math.degrees(accel_angle_rad)
-        current_angle = self.angle % 360
-        target_angle_norm = accel_angle_deg % 360
-
-        angle_diff = target_angle_norm - current_angle
-        if angle_diff > 180:
-            angle_diff -= 360
-        elif angle_diff < -180:
-            angle_diff += 360
-
-        # Rotate toward acceleration direction
-        if angle_diff < -self.rotation_speed:
-            self.turn_left()
-        elif angle_diff > self.rotation_speed:
-            self.turn_right()
-
-        # If aligned with acceleration direction, apply thrust
-        aligned = abs(angle_diff) < 10
-        if aligned:
-            self.increase_thrust()
-        else:
-            self.release_thrust()
-
     def predict_landing_trajectory(self, target, max_frames=500, sample_rate=5):
         """Predict landing trajectory and return waypoints for visualization.
 
         Returns list of (x, y) positions sampled every sample_rate frames.
         """
-        if not target:
-            return []
-
-        waypoints = [(self.x, self.y)]  # Start with current position
-        sim_x, sim_y = self.x, self.y
-        sim_vx, sim_vy = self.velocity_x, self.velocity_y
-        sim_angle = self.angle
-        sim_thrust = self.thrust
-
-        # Use landing_distance if available (for landables), otherwise use default close distance (for ships)
-        landing_distance = getattr(target, 'landing_distance', 100)
-
-        # Simulate forward frame by frame
-        for frame in range(max_frames):
-            # Sample waypoint BEFORE landing check
-            if frame > 0 and frame % sample_rate == 0:
-                waypoints.append((sim_x, sim_y))
-
-            distance = target.get_distance(sim_x, sim_y)
-            speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
-
-            # Check landing condition
-            if distance < landing_distance and speed < 0.4:
-                return waypoints
-
-            # Braking decision
-            braking_distance = self._predict_braking_distance_from_stop(speed)
-            should_brake = distance <= braking_distance and speed > 0.1
-
-            # Calculate acceleration direction (with wrapping)
-            dx, dy = get_wrapped_direction(sim_x, sim_y, target.x, target.y)
-            target_angle = math.atan2(dx, -dy)
-
-            if should_brake:
-                accel_angle = self._calculate_brake_redirect_angle(target_angle)
-            else:
-                accel_angle = target_angle
-
-            # Point ship
-            accel_angle_deg = math.degrees(accel_angle)
-            current_angle = sim_angle % 360
-            target_angle_norm = accel_angle_deg % 360
-
-            angle_diff = target_angle_norm - current_angle
-            if angle_diff > 180:
-                angle_diff -= 360
-            elif angle_diff < -180:
-                angle_diff += 360
-
-            if angle_diff < -self.rotation_speed:
-                sim_angle = (sim_angle - self.rotation_speed) % 360
-            elif angle_diff > self.rotation_speed:
-                sim_angle = (sim_angle + self.rotation_speed) % 360
-
-            aligned = abs(angle_diff) < 10
-            sim_thrust = self.acceleration_magnitude if aligned else 0
-
-            # Physics update
-            rad = math.radians(sim_angle)
-            if sim_thrust > 0.01:
-                sim_vx += math.sin(rad) * sim_thrust
-                sim_vy -= math.cos(rad) * sim_thrust
-
-                speed = math.sqrt(sim_vx ** 2 + sim_vy ** 2)
-                if speed > self.max_velocity:
-                    scale = self.max_velocity / speed
-                    sim_vx *= scale
-                    sim_vy *= scale
-
-            if self.space_drag > 0:
-                sim_vx *= self.space_drag
-                sim_vy *= self.space_drag
-
-            sim_x += sim_vx
-            sim_y += sim_vy
-
-        return waypoints
+        return self.autopilot.predict_trajectory(target, max_frames, sample_rate)
 
     def predict_landing_position(self, target, max_frames=500):
         """Predict where ship will stop given current autopilot trajectory.
 
-        Simulates autopilot behavior forward in time to determine final position.
         Returns (final_x, final_y, distance_from_target).
         """
-        if not target:
-            return self.x, self.y, 0
-
-        waypoints = self.predict_landing_trajectory(target, max_frames)
-        if waypoints:
-            final_x, final_y = waypoints[-1]
-            distance = target.get_distance(final_x, final_y)
-            return final_x, final_y, distance
-        return self.x, self.y, 0
+        return self.autopilot.predict_position(target, max_frames)

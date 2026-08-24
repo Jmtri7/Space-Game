@@ -139,8 +139,7 @@ class SpaceScreen(ScreenBase):
                     if target_obj and self.current_target is not None:
                         # For AI ships, always engage autopilot to follow them
                         if isinstance(target_obj, AIShip):
-                            self.player.autopilot_active = True
-                            self.player.autopilot_target = target_obj
+                            self.player.engage_seek(target_obj)
                         # For landables (station/moon), check if in landing range
                         else:
                             distance = target_obj.get_distance(self.player.x, self.player.y)
@@ -155,8 +154,7 @@ class SpaceScreen(ScreenBase):
                                     return "land"
                             else:
                                 # Otherwise engage autopilot to approach target
-                                self.player.autopilot_active = True
-                                self.player.autopilot_target = target_obj
+                                self.player.engage_seek(target_obj)
                     else:
                         # No target selected, check if close enough to land manually
                         landing_target = self._check_landing()
