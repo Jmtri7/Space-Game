@@ -67,8 +67,8 @@ See [PHYSICS.md](PHYSICS.md#coordinate-system) for coordinate conversion details
 - Owns an `Autopilot` (see below) via `self.autopilot = Autopilot(self)`
 - Methods:
   - `draw(surface, ship_size, color)` — rotated polygon (via `_draw_rotated_polygon`) + thruster flames
-  - `wrap_position()` (inherited from `WorldObject`) — world-edge wrapping (torus topology)
   - `update()` — runs `self.autopilot.update()`, then thrust/drag/velocity-cap physics
+    (the world is open/unbounded — no screen-wrapping; see PHYSICS.md)
   - `engage_seek(target)` / `engage_orbit(center_x, center_y, radius)` — thin pass-throughs
     to the owned `Autopilot`
   - `autopilot_active` / `autopilot_target` — backward-compatible properties mirroring
@@ -223,9 +223,12 @@ SpaceScreen → LocationSelector → LocationScreen (moon) ←→ PauseMenu
 - Clear contract for what needs persistence
 - Easy to extend when adding new saveable objects
 
-**Why screen-wrapping over boundaries?**
-- Creates infinite space feel with small coordinate system
-- Simple physics (no out-of-bounds checks)
-- Player can explore infinitely without loading new areas
+**Why an open world instead of screen-wrapping?**
+- Ships used to teleport at `GAME_WIDTH`/`GAME_HEIGHT` edges (torus topology); this was
+  removed in favor of a genuinely unbounded world
+- `StarField`/`AsteroidField` generate their content procedurally per-chunk from a seed
+  as the camera approaches, and forget chunks once far behind it — so exploring
+  indefinitely keeps finding new stars/asteroids without pre-generating (or wrapping)
+  a fixed-size field, and without unbounded memory growth. See PHYSICS.md.
 
 See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) for reusable solutions across the codebase.

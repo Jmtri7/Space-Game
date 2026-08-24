@@ -136,10 +136,10 @@ class Ship:  # Base class
         cos_a, sin_a = math.cos(rad), math.sin(rad)
         # ... rotate and draw polygon
     
-    def wrap_position(self):
-        # Shared boundary logic
-        if self.x < 0: self.x = GAME_WIDTH
-        # ...
+    def get_distance(self, target_x, target_y):
+        # Shared range-check logic (this game pulls it up one level further,
+        # into WorldObject, since Landable needs it too - see ARCHITECTURE.md)
+        return math.hypot(target_x - self.x, target_y - self.y)
     
     def update(self):
         # Base physics (child can extend)
@@ -147,7 +147,6 @@ class Ship:  # Base class
         self.velocity_y *= drag
         self.x += self.velocity_x
         self.y += self.velocity_y
-        self.wrap_position()
 
 class Player(Ship):  # Specialized
     def handle_input(self, keys):
@@ -167,7 +166,7 @@ class AIShip(Ship):  # Specialized
 ```
 
 **Why this works:**
-- DRY: No duplicate draw_ship(), wrap_position()
+- DRY: No duplicate draw_ship(), get_distance()
 - Extensible: New ship types inherit for free
 - Polymorphic: Both subclasses work with same interface
 - Testable: Base logic separable from child behavior

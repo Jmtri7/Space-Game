@@ -4,10 +4,13 @@ Core physics simulation and critical coordinate system understanding.
 
 ## Coordinate System (Critical!)
 
-**Game Space:** 800x600 (logical, never changes)
+**Game Space:** `GAME_WIDTH` x `GAME_HEIGHT` (2400x1800, logical, never changes) is the
+camera's reference viewport size — not a hard boundary. The world itself is open and
+unbounded: ships can fly arbitrarily far in any direction with no edge, no wrap.
 - All entity positions and velocities stored here
 - All game logic operates here
-- Wrap-around boundaries at 800x600
+- Station/moon/central star are placed within this nominal area (as fractions of it),
+  but nothing stops a ship from flying past it
 
 **Screen Space:** Variable (scales with window)
 - Only used for rendering
@@ -136,20 +139,28 @@ flame_y = back_y + cos_a * flame_length
 
 ## Collision & Boundary Detection
 
-### Screen Wrapping
+### No World Boundary — Chunk-Streamed Background Instead
+There used to be a `wrap_position()` that teleported ships back to the opposite edge at
+`GAME_WIDTH`/`GAME_HEIGHT` (torus topology). That's gone — ships now fly freely with no
+boundary at all. To still give the player something to see arbitrarily far from the
+start, `StarField` and `AsteroidField` (`starfield.py`/`asteroid_field.py`) generate
+their content procedurally instead of pre-placing it:
+
 ```python
-def wrap_position(self):
-    if self.x < 0:
-        self.x = GAME_WIDTH
-    elif self.x > GAME_WIDTH:
-        self.x = 0
-    if self.y < 0:
-        self.y = GAME_HEIGHT
-    elif self.y > GAME_HEIGHT:
-        self.y = 0
+def _chunk_seed(self, cx, cy):
+    # deterministic per-chunk hash - same (seed, cx, cy) always regenerates
+    # the same content, so revisiting an area looks the same
+    return (self.seed * 73856093) ^ (cx * 19349663) ^ (cy * 83492791)
 ```
 
-**Why game-space bounds?** Objects that go off-screen wrap around. Uses GAME_WIDTH/GAME_HEIGHT, not screen dimensions.
+Each frame, the visible chunk range is computed from the camera position (`utils.camera_offset_x/y`)
+plus a margin; any chunk not yet generated is generated on the spot, and any chunk far
+enough behind the camera is dropped. This keeps memory bounded while letting the player
+explore indefinitely in any direction, and keeps content consistent if they backtrack.
+
+**Why chunk-and-forget instead of one big pre-generated field?** A fixed field either
+has to be huge (wasteful, and still finite) or small (visibly runs out). Generating
+per-chunk on approach means there's no upper bound on how far the player can go.
 
 ### Range Checking
 ```python
@@ -207,8 +218,10 @@ For the current entity count (<10), per-entity physics is fine.
 - ❌ Using front center instead of back center
 - ✅ Average left/right back points for flame origin
 
-**Bug: Objects don't wrap at edges**
-- ❌ Checking against screen dimensions
-- ✅ Use GAME_WIDTH/GAME_HEIGHT in wrap_position()
+**Bug: Chunk-generated content (stars/asteroids) looks different on revisit**
+- ❌ Seeding `random` globally, or including anything non-deterministic (e.g. wall-clock
+  time) in the chunk hash
+- ✅ Use a fresh `random.Random(chunk_seed)` per chunk, with `chunk_seed` derived purely
+  from `(seed, chunk_x, chunk_y)`
 
 See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md#coordinate-conversion) for the coordinate conversion pattern.
