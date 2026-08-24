@@ -17,8 +17,12 @@ class WorldObject:
         dy = target_y - self.y
         return math.sqrt(dx * dx + dy * dy)
 
-    def _draw_rotated_polygon(self, surface, local_points, angle, color):
+    def _draw_rotated_polygon(self, surface, local_points, angle, color, outline_color=None, outline_width=2):
         """Rotate local_points by angle (degrees) around (x, y), draw as a filled polygon.
+
+        If outline_color is given, also stroke the polygon's edge - mainly
+        for ships, so overlapping hulls of similar hue stay visually
+        distinct instead of blending into one shape.
 
         Returns the projected screen-space points, in case the caller needs them
         (e.g. to anchor further drawing like a thrust flame) alongside cos/sin.
@@ -34,4 +38,6 @@ class WorldObject:
             points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
 
         pygame.draw.polygon(surface, color, points)
+        if outline_color:
+            pygame.draw.polygon(surface, outline_color, points, outline_width)
         return points

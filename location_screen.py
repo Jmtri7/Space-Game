@@ -3,14 +3,15 @@ import pygame
 import math
 import constants
 from constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type
+from utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture
 from screen_base import ScreenBase
 from npc import NPC
 
 
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
-    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name=""):
+    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default"):
+        self.story = story  # which story's config/building_types.json etc. to resolve against
         # Load config from file or use inline data
         if config_data is not None:
             self.config = config_data
@@ -38,6 +39,21 @@ class LocationScreen(ScreenBase):
         # Get display properties
         self.ui_label = self.config.get("label", "Location")
         self.bg_color = tuple(self.config.get("background_color", [50, 50, 70]))
+
+        # A "culture" on the interior itself (independent of any exterior asset lookup)
+        # walls become the culture's wall_color and a smaller inset floor rect in
+        # floor_color marks the walkable area, so the room reads distinctly from its
+        # walls instead of one flat fill. Locations with no culture keep the old
+        # flat-background behavior (movement bounded by the full world rect).
+        self.culture_id = self.config.get("culture")
+        self.floor_rect = None
+        self.floor_color = None
+        if self.culture_id:
+            culture = get_culture(self.story, self.culture_id)
+            self.bg_color = tuple(culture.get("wall_color", self.bg_color))
+            self.floor_color = tuple(culture.get("floor_color", self.bg_color))
+            margin = self.config.get("wall_margin", 60)
+            self.floor_rect = (margin, margin, world_width - 2 * margin, world_height - 2 * margin)
 
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
@@ -81,6 +97,14 @@ class LocationScreen(ScreenBase):
         """Draw location from config."""
         surface.fill(self.bg_color)
         scale = get_scale()
+
+        # Walkable floor - an inset rect in the culture's floor_color, so the room
+        # reads as distinct from the surrounding wall_color fill
+        if self.floor_rect is not None:
+            fx, fy, fw, fh = self.floor_rect
+            x1, y1 = to_screen(fx, fy)
+            x2, y2 = to_screen(fx + fw, fy + fh)
+            pygame.draw.rect(surface, self.floor_color, (x1, y1, x2 - x1, y2 - y1))
 
         # Draw structures from config
         for structure in self.structures:
@@ -172,7 +196,7 @@ class LocationScreen(ScreenBase):
         "circle" uses center, "polygon" is whatever the type's local_points
         were authored relative to (typically ground level).
         """
-        building_type = get_building_type(building_type_id)
+        building_type = get_building_type(self.story, building_type_id)
         metal_color = tuple(building_type.get("color", (150, 150, 150)))
         glass_color = tuple(building_type.get("window_color", (255, 255, 0)))
         anchor_x, anchor_y = structure["x"], structure["y"]
@@ -194,11 +218,15 @@ class LocationScreen(ScreenBase):
             x2, y2 = to_screen(anchor_x + width, anchor_y + height)
             pygame.draw.rect(surface, metal_color, (x1, y1, x2 - x1, y2 - y1))
 
+        window_shape = building_type.get("window_shape", "rect")
         window_size = building_type.get("window_size", 12)
         half = max(1, int(window_size * scale / 2))
         for wx, wy in building_type.get("windows", []):
             px, py = to_screen(anchor_x + wx, anchor_y + wy)
-            pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
+            if window_shape == "circle":
+                pygame.draw.circle(surface, glass_color, (px, py), half)
+            else:
+                pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
 
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
@@ -249,6 +277,9 @@ class LocationScreen(ScreenBase):
         # Check bounds
         if can_move_func:
             can_move = can_move_func(new_x, new_y)
+        elif self.floor_rect is not None:
+            fx, fy, fw, fh = self.floor_rect
+            can_move = (fx < new_x < fx + fw and fy < new_y < fy + fh)
         else:
             can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
 

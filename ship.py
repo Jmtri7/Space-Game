@@ -57,9 +57,12 @@ class Ship(WorldObject):
             ship_size = ship_size or 15
             color = color or DARK_GRAY
 
-        # Get local points based on shape
+        # Get local points: an explicit "local_points" list (fractions of
+        # ship_size) always wins, for fully custom silhouettes; otherwise
+        # fall back to a named built-in shape.
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
-        self._draw_rotated_polygon(surface, local_points, self.angle, color)
+        outline_color = tuple(self.graphics.get("outline_color", (20, 18, 25)))
+        self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
         self._draw_windows(surface, ship_size)
 
         if self.thrust > 0.05:
@@ -101,6 +104,7 @@ class Ship(WorldObject):
         thruster_points = self.graphics.get("thrusters", [(0, 0.6)])
         thruster_width = self.graphics.get("thruster_width", 0.15)
         thruster_length = self.graphics.get("thruster_length", 38)
+        thrust_color = tuple(self.graphics.get("thrust_color", YELLOW))
 
         rad = math.radians(self.angle)
         cos_a = math.cos(rad)
@@ -123,10 +127,19 @@ class Ship(WorldObject):
             base_left = to_screen(mount_x + right_x_dir * half_width, mount_y + right_y_dir * half_width)
             base_right = to_screen(mount_x - right_x_dir * half_width, mount_y - right_y_dir * half_width)
 
-            pygame.draw.polygon(surface, YELLOW, [to_screen(tip_x, tip_y), base_left, base_right])
+            pygame.draw.polygon(surface, thrust_color, [to_screen(tip_x, tip_y), base_left, base_right])
 
     def _get_shape_points(self, size, shape):
-        """Get local points for ship shape."""
+        """Get local points for ship shape.
+
+        If the graphics asset defines "local_points" (a list of (x, y)
+        fractions of size, same local space as thrusters/windows), that
+        fully custom silhouette is used instead of a named built-in shape -
+        lets any ship type define its own hull outline purely via config.
+        """
+        if "local_points" in self.graphics:
+            return [(lx * size, ly * size) for lx, ly in self.graphics["local_points"]]
+
         if shape == "rectangle":
             return [
                 (-size * 0.5, -size * 0.6),

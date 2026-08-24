@@ -7,8 +7,10 @@ Save file format, state capture, and restoration logic.
 Saves are stored as JSON files in the `saves/` directory.
 
 **Key principle:** Separate original config from player state.
-- Original config (the story's `space_system.json`) captured as a snapshot
-- Player changes captured in `game_state` within the save file
+- Original config (the current system's `config/stories/{story}/systems/{system_id}.json`)
+  captured as a snapshot
+- Player changes captured in `game_state` within the save file, including which `story`
+  and `system_id` the save belongs to
 - Load = restore config + apply player state
 
 ## File Format
@@ -31,6 +33,8 @@ name is kept, the timestamp lives inside it.
   },
   "station": {},
   "game_state": {
+    "story": "default",
+    "system_id": "sol_alpha",
     "location": "space",
     "player": {
       "x": 250.5,
@@ -60,7 +64,10 @@ always passed as `{}`; when saving from a `LocationScreen` it instead carries
 
 `game_state["location"]` is one of `"space"`, `"station"`, or `"moon"` and drives
 where `LoadMenu` sends you. Station/moon saves also add `game_state["moon_location"]`
-(`"city"` or `"wilderness"`) when relevant.
+(`"city"` or `"wilderness"`) when relevant. `game_state["story"]` and `game_state["system_id"]`
+record which story and which star system within it the save belongs to, so loading
+resolves config from the right place (`config/stories/{story}/...`) and jumps back into
+the right system rather than always the story's starting one.
 
 ## State Capture & Restoration
 
@@ -211,21 +218,29 @@ space-game/
 │   ├── save_Alice - 2026-08-21 1719.json
 │   └── save_First Exploration.json         # Free-text names, not one-per-pilot
 ├── config/
-│   ├── ship_types.json                     # Shared ship physics/stat presets
-│   ├── graphics.json                       # Shared visual assets (ships, stations, moons)
 │   └── stories/
 │       └── default/
 │           ├── story.json                  # Story metadata (title, ship/asset picks)
-│           └── space_system.json           # Station/moon placement, AI ship roster
+│           ├── ship_types.json             # This story's ship physics/stat presets
+│           ├── graphics.json               # This story's visual assets (ships, stations, moons)
+│           ├── cultures.json               # This story's material/design palettes
+│           ├── building_types.json         # This story's building presets
+│           ├── pilots.json                 # This story's AI pilot roster
+│           └── systems/
+│               ├── sol_alpha.json          # Station/moon placement, AI ship roster
+│               └── keplers_reach.json      # A second star system within the same story
 ```
 
-**Note:** Configs under `config/` are never modified by play. Each save captures a
-snapshot of the story's `space_system.json` as `system`, so the save is self-contained
-even if the story config changes later.
+**Note:** Every config file lives entirely under one story's folder — nothing is shared
+between stories, so two stories can define the same ship-type key with completely
+different stats. Configs under `config/` are never modified by play. Each save captures
+a snapshot of the current system's config as `system`, so the save is self-contained even
+if the story config changes later.
 
 ## Save File Lifecycle
 
-1. **On New Game:** System config loaded from `config/stories/{story}/space_system.json`
+1. **On New Game:** System config loaded from
+   `config/stories/{story}/systems/{system_id}.json`
 2. **On Save:** Current game state + config snapshot → `saves/save_{name}.json`
 3. **On Load:** Config + state from save restored to `SpaceScreen` (and a `LocationScreen`
    if the save was made while docked)
