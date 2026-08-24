@@ -1,28 +1,31 @@
 """Base class for all game screens."""
-import pygame
+from abc import ABC, abstractmethod
 
 
-class ScreenBase:
-    """Base class for all game screens (space, station, moon)"""
+class ScreenBase(ABC):
+    """Base class for all game screens (space, station, moon). A real ABC -
+    not just NotImplementedError stubs - so a subclass missing one of these
+    fails at class-definition time (can't be instantiated) instead of only
+    surfacing the gap when that particular method finally gets called."""
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
 
+    @abstractmethod
     def handle_input(self, events):
-        """Process input events. Override in subclass."""
-        raise NotImplementedError
+        """Process input events."""
 
+    @abstractmethod
     def update(self):
-        """Update game logic. Override in subclass."""
-        raise NotImplementedError
+        """Update game logic."""
 
+    @abstractmethod
     def draw(self, surface):
-        """Draw screen. Override in subclass."""
-        raise NotImplementedError
+        """Draw screen."""
 
+    @abstractmethod
     def get_state(self):
-        """Return game state dict for saving. Override in subclass."""
-        raise NotImplementedError
+        """Return game state dict for saving."""
 
+    @abstractmethod
     def restore_state(self, state):
-        """Restore game state from dict. Override in subclass."""
-        raise NotImplementedError
+        """Restore game state from dict."""
