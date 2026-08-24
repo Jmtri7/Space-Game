@@ -154,17 +154,24 @@ def get_culture(culture_id):
 
 
 def _resolve_culture_palette(asset):
-    """Fill in color/core_color/window_color from the asset's culture, if it
-    declares one and doesn't already set them explicitly. Lets ships,
-    stations, and buildings share one culture's material palette (metal for
-    hull, glass for windows/core) instead of hardcoding colors per asset.
+    """Fill in color/core_color/window_color/thrust_color from the asset's
+    culture, if it declares one and doesn't already set them explicitly.
+    Lets ships, stations, and buildings share one culture's material palette
+    (metal for hull, glass for windows/core, a distinct glow for thrust)
+    instead of hardcoding colors per asset.
     """
     culture_id = asset.get("culture")
     if culture_id:
         culture = get_culture(culture_id)
-        asset.setdefault("color", culture.get("metal_color"))
-        asset.setdefault("core_color", culture.get("glass_color"))
-        asset.setdefault("window_color", culture.get("glass_color"))
+        for asset_key, culture_key in (
+            ("color", "metal_color"),
+            ("core_color", "glass_color"),
+            ("window_color", "glass_color"),
+            ("thrust_color", "thrust_color"),
+        ):
+            value = culture.get(culture_key)
+            if value is not None:
+                asset.setdefault(asset_key, value)
     return asset
 
 
