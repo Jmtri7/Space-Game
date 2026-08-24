@@ -1,11 +1,13 @@
 """Dialog for saving games with name input and overwrite selection."""
+import math
 import pygame
 from datetime import datetime
 from constants import WHITE, YELLOW, GRAY
 from utils import (
     get_ui_scale, get_ui_offset, get_font, _center_text_x, _handle_scrolling_input,
-    get_save_files, draw_dialog_box
+    get_save_files
 )
+from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 
 class SaveDialog:
@@ -61,12 +63,12 @@ class SaveDialog:
         offset_x, offset_y = get_ui_offset()
 
         if self.input_mode:
-            draw_dialog_box(surface, offset_x + 800 * scale * 0.1, offset_y + 600 * scale * 0.2, 800 * scale * 0.8, 600 * scale * 0.6)
+            panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.2), int(800 * scale * 0.8), int(600 * scale * 0.6))
+            draw_glass_panel(surface, panel_rect, scale)
             font_title = get_font(int(32 * scale))
             font_text = get_font(int(24 * scale))
 
-            title = font_title.render("Save Name:", True, WHITE)
-            surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + 600 * scale * 0.25)))
+            draw_glow_title(surface, "Save Name:", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.25), color=WHITE, shadow_color=(30, 30, 30))
 
             # Show full filename with save_ prefix and .json extension
             full_filename = f"save_{self.save_name}.json"
@@ -76,28 +78,29 @@ class SaveDialog:
             help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.6)))
         else:
-            draw_dialog_box(surface, offset_x + 800 * scale * 0.1, offset_y + 600 * scale * 0.15, 800 * scale * 0.8, 600 * scale * 0.7)
+            panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.15), int(800 * scale * 0.8), int(600 * scale * 0.7))
+            draw_glass_panel(surface, panel_rect, scale)
             font_title = get_font(int(32 * scale))
             font_text = get_font(int(20 * scale))
 
-            title = font_title.render("Select Save to Overwrite", True, YELLOW)
-            surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + 600 * scale * 0.2)))
+            draw_glow_title(surface, "Select Save to Overwrite", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.2))
 
             if self.scroll_offset > 0:
                 up_indicator = font_text.render("↑ more", True, GRAY)
                 surface.blit(up_indicator, (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.33)))
 
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
             visible_saves = self.existing_saves[self.scroll_offset:self.scroll_offset + self.max_visible]
             for i, save in enumerate(visible_saves):
                 is_selected = (self.scroll_offset + i == self.selected_existing)
                 color = YELLOW if is_selected else GRAY
                 text = font_text.render(save, True, color)
-                text_x = int(offset_x + 800 * scale * 0.15)
+                text_x = _center_text_x(surface, text, offset_x)
                 text_y = int(offset_y + 600 * scale * 0.35 + i * 35)
-                surface.blit(text, (text_x, text_y))
                 if is_selected:
-                    box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
-                    pygame.draw.rect(surface, YELLOW, box_rect, 2)
+                    box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
+                    draw_selection_highlight(surface, box_rect, scale, pulse)
+                surface.blit(text, (text_x, text_y))
 
             if self.scroll_offset + self.max_visible < len(self.existing_saves):
                 down_indicator = font_text.render("↓ more", True, GRAY)

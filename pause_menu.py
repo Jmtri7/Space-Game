@@ -1,8 +1,10 @@
 """Pause menu during gameplay."""
+import math
 import pygame
 import utils
 from constants import YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset
+from utils import get_ui_scale, get_ui_offset, get_font
+from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 
 class PauseMenu:
@@ -39,25 +41,26 @@ class PauseMenu:
         offset_x, offset_y = get_ui_offset()
 
         pygame.draw.rect(surface, (0, 0, 0), (0, 0, utils.screen_width, utils.screen_height))
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + 800 * scale * 0.2), int(offset_y + 600 * scale * 0.3), int(800 * scale * 0.6), int(600 * scale * 0.4)))
+        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.2), int(offset_y + 600 * scale * 0.3), int(800 * scale * 0.6), int(600 * scale * 0.4))
+        draw_glass_panel(surface, panel_rect, scale)
 
-        font_title = pygame.font.Font(None, int(48 * scale))
-        font_option = pygame.font.Font(None, int(32 * scale))
+        font_title = get_font(int(48 * scale))
+        font_option = get_font(int(32 * scale))
 
-        title = font_title.render("PAUSED", True, YELLOW)
-        surface.blit(title, (int(offset_x + 800 * scale // 2 - title.get_width() // 2), int(offset_y + 600 * scale * 0.35)))
+        draw_glow_title(surface, "PAUSED", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.35))
 
+        pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
         for i, option in enumerate(self.options):
-            color = YELLOW if i == self.selected else GRAY
-            text = font_option.render(option, True, color)
-            text_x = int(offset_x + 800 * scale // 2 - text.get_width() // 2)
+            is_selected = i == self.selected
+            text = font_option.render(option, True, YELLOW if is_selected else GRAY)
+            text_x = panel_rect.centerx - text.get_width() // 2
             text_y = int(offset_y + 600 * scale * 0.5 + i * 50)
+            if is_selected:
+                box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
+                draw_selection_highlight(surface, box_rect, scale, pulse)
             surface.blit(text, (text_x, text_y))
-            if i == self.selected:
-                box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
-                pygame.draw.rect(surface, YELLOW, box_rect, 2)
 
         if self.success_timer > 0:
-            font_success = pygame.font.Font(None, int(32 * scale))
+            font_success = get_font(int(32 * scale))
             success_text = font_success.render("Saved!", True, (0, 255, 0))
             surface.blit(success_text, (int(offset_x + 800 * scale * 0.5 - success_text.get_width() // 2), int(offset_y + 600 * scale * 0.15)))

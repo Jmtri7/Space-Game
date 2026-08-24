@@ -1,7 +1,9 @@
 """Dialog for selecting moon landing location."""
+import math
 import pygame
 from constants import YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset, _center_text_x
+from utils import get_ui_scale, get_ui_offset, get_font
+from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 
 class LocationSelector:
@@ -33,21 +35,22 @@ class LocationSelector:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.25), int(800 * scale * 0.7), int(600 * scale * 0.5)))
+        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.25), int(800 * scale * 0.7), int(600 * scale * 0.5))
+        draw_glass_panel(surface, panel_rect, scale)
 
-        font_title = pygame.font.Font(None, int(40 * scale))
-        font_text = pygame.font.Font(None, int(28 * scale))
+        font_title = get_font(int(40 * scale))
+        font_text = get_font(int(28 * scale))
 
-        title = font_title.render("Landing Location", True, YELLOW)
-        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + 600 * scale * 0.3)))
+        draw_glow_title(surface, "Landing Location", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.3))
 
+        pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
         for i, location_key in enumerate(self.location_keys):
             location_label = self.location_labels.get(location_key, location_key.capitalize())
-            color = YELLOW if i == self.selected else GRAY
-            text = font_text.render(location_label, True, color)
-            text_x = int(offset_x + 800 * scale * 0.3)
+            is_selected = i == self.selected
+            text = font_text.render(location_label, True, YELLOW if is_selected else GRAY)
+            text_x = panel_rect.centerx - text.get_width() // 2
             text_y = int(offset_y + 600 * scale * 0.45 + i * 40)
+            if is_selected:
+                box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
+                draw_selection_highlight(surface, box_rect, scale, pulse)
             surface.blit(text, (text_x, text_y))
-            if i == self.selected:
-                box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
-                pygame.draw.rect(surface, YELLOW, box_rect, 2)

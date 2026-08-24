@@ -120,12 +120,6 @@ def handle_menu_navigation(event, current_index, list_length):
     return None
 
 
-def draw_dialog_box(surface, x, y, width, height, color=(40, 40, 60), border_color=(100, 100, 100)):
-    """Draw a dialog box background with border."""
-    pygame.draw.rect(surface, color, (int(x), int(y), int(width), int(height)))
-    pygame.draw.rect(surface, border_color, (int(x), int(y), int(width), int(height)), 2)
-
-
 def load_json(filename):
     """Load JSON file, return None if error."""
     try:

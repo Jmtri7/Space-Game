@@ -123,6 +123,7 @@ def main():
                         delete_confirm_dialog = None
                     elif confirm_action == "quit":
                         running = False
+                    load_menu.draw(screen)
                     if delete_confirm_dialog:
                         delete_confirm_dialog.draw(screen)
                 else:
