@@ -106,10 +106,10 @@ class Ship(WorldObject):
         """Get local points for ship shape."""
         if shape == "rectangle":
             return [
-                (0, -size * 0.7),
-                (-size * 0.4, size * 0.7),
-                (0, size * 0.5),
-                (size * 0.4, size * 0.7),
+                (-size * 0.5, -size * 0.6),
+                (size * 0.5, -size * 0.6),
+                (size * 0.5, size * 0.6),
+                (-size * 0.5, size * 0.6),
             ]
         elif shape == "diamond":
             return [
