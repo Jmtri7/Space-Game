@@ -1,6 +1,6 @@
 """Non-player character with dialogue and behavior."""
-from person import Person
-from dialogue import Dialogue
+from game.world.person import Person
+from game.world.dialogue import Dialogue
 
 
 class NPC(Person):

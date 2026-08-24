@@ -1,10 +1,10 @@
 """Dialog for saving games with name input and overwrite selection."""
 import pygame
 from datetime import datetime
-from constants import WHITE, YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset, get_font, _center_text_x, get_save_files
-from ui_theme import draw_glass_panel, draw_glow_title
-from selectable_list import SelectableList
+from game.constants import WHITE, YELLOW, GRAY
+from game.utils import get_ui_scale, get_ui_offset, get_font, _center_text_x, get_save_files
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.selectable_list import SelectableList
 
 
 class SaveDialog:

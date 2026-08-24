@@ -2,26 +2,26 @@
 import pygame
 import sys
 import os
-import constants
-from constants import (
+import game.constants as constants
+from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
-from utils import (
+from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size
 )
-from player_controller import PlayerController
-from ai_ship import AIShip
-from space_screen import SpaceScreen
-from location_screen import LocationScreen
-from menu import Menu
-from pilot_name_dialog import PilotNameDialog
-from location_selector import LocationSelector
-from pause_menu import PauseMenu
-from save_dialog import SaveDialog
-from confirm_dialog import ConfirmDialog
-from load_menu import LoadMenu
-from story_selector import StorySelector
-from star_map import StarMap
+from game.world.player_controller import PlayerController
+from game.world.ai_ship import AIShip
+from game.screens.space_screen import SpaceScreen
+from game.screens.location_screen import LocationScreen
+from game.ui.menu import Menu
+from game.ui.pilot_name_dialog import PilotNameDialog
+from game.ui.location_selector import LocationSelector
+from game.ui.pause_menu import PauseMenu
+from game.ui.save_dialog import SaveDialog
+from game.ui.confirm_dialog import ConfirmDialog
+from game.ui.load_menu import LoadMenu
+from game.ui.story_selector import StorySelector
+from game.ui.star_map import StarMap
 
 # Initialize pygame and display
 pygame.init()

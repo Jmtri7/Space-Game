@@ -1,11 +1,11 @@
 """Configurable location for station, moon city, and moon wilderness."""
 import pygame
 import math
-import constants
-from constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture
-from screen_base import ScreenBase
-from npc import NPC
+import game.constants as constants
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
+from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture
+from game.screens.screen_base import ScreenBase
+from game.world.npc import NPC
 
 
 class LocationScreen(ScreenBase):

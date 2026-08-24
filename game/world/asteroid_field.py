@@ -1,8 +1,8 @@
 """Infinite, seeded, procedurally generated asteroid field."""
 import random
-import utils
-from constants import GAME_WIDTH, GAME_HEIGHT
-from asteroid import Asteroid
+import game.utils as utils
+from game.constants import GAME_WIDTH, GAME_HEIGHT
+from game.world.asteroid import Asteroid
 
 CHUNK_SIZE = 1200
 ASTEROIDS_PER_CHUNK_RANGE = (1, 3)

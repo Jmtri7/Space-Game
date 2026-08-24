@@ -2,7 +2,7 @@
 and pulsing selection highlights. Utility functions, not a class - see
 CLAUDE.md's One Class Per File rule for why this file is an exception."""
 import pygame
-from constants import YELLOW
+from game.constants import YELLOW
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)

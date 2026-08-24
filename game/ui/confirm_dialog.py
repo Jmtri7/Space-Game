@@ -1,8 +1,8 @@
 """Confirmation dialogs for user actions."""
 import pygame
-from constants import WHITE, YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
-from ui_theme import draw_glass_panel, draw_glow_title
+from game.constants import WHITE, YELLOW, GRAY
+from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title
 
 
 class ConfirmDialog:

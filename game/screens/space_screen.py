@@ -1,21 +1,21 @@
 """Main space exploration screen with ships and landing."""
 import pygame
 import math
-import constants
-from constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
-from utils import (
+import game.constants as constants
+from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
+from game.utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
-import utils
-from screen_base import ScreenBase
-from player_controller import PlayerController
-from ai_ship import AIShip
-from landable import Landable
-from starfield import StarField
-from central_star import CentralStar
-from asteroid_field import AsteroidField
+import game.utils as utils
+from game.screens.screen_base import ScreenBase
+from game.world.player_controller import PlayerController
+from game.world.ai_ship import AIShip
+from game.world.landable import Landable
+from game.world.starfield import StarField
+from game.world.central_star import CentralStar
+from game.world.asteroid_field import AsteroidField
 
 # Jump mechanic tuning
 JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts

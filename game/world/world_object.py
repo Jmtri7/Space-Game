@@ -1,7 +1,7 @@
 """Base class for positioned, drawable objects in the game world."""
 import math
 import pygame
-from utils import to_screen, get_scale
+from game.utils import to_screen, get_scale
 
 
 class WorldObject:

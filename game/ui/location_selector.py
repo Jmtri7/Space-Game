@@ -1,8 +1,8 @@
 """Dialog for selecting moon landing location."""
 import pygame
-from utils import get_ui_scale, get_ui_offset, get_font
-from ui_theme import draw_glass_panel, draw_glow_title
-from selectable_list import SelectableList
+from game.utils import get_ui_scale, get_ui_offset, get_font
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.selectable_list import SelectableList
 
 
 class LocationSelector:

@@ -1,7 +1,7 @@
 """Static central star rendered in the space view."""
 import pygame
-from utils import get_scale, to_screen
-from world_object import WorldObject
+from game.utils import get_scale, to_screen
+from game.world.world_object import WorldObject
 
 
 class CentralStar(WorldObject):

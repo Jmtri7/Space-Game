@@ -128,29 +128,42 @@ python main.py
 
 ## Project Structure
 Per the **One Class Per File** rule above, each class lives in its own
-`snake_case.py` file at the repo root (e.g. `Ship` → `ship.py`, `AIShip` →
-`ai_ship.py`, `SpaceScreen` → `space_screen.py`). There is no `objects.py` or
-`screens.py` grouping file — run `ls *.py` or see
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current, authoritative
-class list and hierarchy diagrams.
+`snake_case.py` file (e.g. `Ship` → `ship.py`, `AIShip` → `ai_ship.py`,
+`SpaceScreen` → `space_screen.py`). There is no `objects.py` or `screens.py`
+grouping file. Python files live under the `game/` package, grouped into
+`game/world/` (physics/entities), `game/screens/` (the two `ScreenBase`
+screens), and `game/ui/` (menus/dialogs) — `game/constants.py` and
+`game/utils.py` sit at the package root since they're shared by all three.
+`main.py` and `run_tests.py` stay at the repo root as entry points. Run
+`ls game/**/*.py` (or see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)) for
+the current, authoritative class list and hierarchy diagrams. Imports are
+absolute and rooted at the package, e.g. `from game.world.ship import Ship`,
+`import game.utils as utils` — never relative imports.
 
 ```
 space-game/
-├── main.py                 # Game loop, screen state machine, pygame initialization
-├── constants.py             # Colors, game dimensions, UI configuration
-├── utils.py                 # Coordinate conversion, rendering helpers, file I/O, camera management
-├── world_object.py          # WorldObject base (position, drawing) — Ship and Landable extend it
-├── ship.py, ai_ship.py, player_controller.py, autopilot.py   # Ship physics, AI behavior, input, flight computer
-├── screen_base.py, space_screen.py, location_screen.py       # ScreenBase and the two concrete screens
-├── menu.py, story_selector.py, pause_menu.py, save_dialog.py, load_menu.py,
-│   confirm_dialog.py, pilot_name_dialog.py, location_selector.py, star_map.py  # Menus/dialogs (not ScreenBase)
-├── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landable.py,
-│   person.py, npc.py, dialogue.py                            # World objects and NPCs
+├── main.py                  # Game loop, screen state machine, pygame initialization
+├── run_tests.py             # Test runner (discovers tests/test_*.py)
+├── game/
+│   ├── constants.py          # Colors, game dimensions, UI configuration
+│   ├── utils.py               # Coordinate conversion, rendering helpers, file I/O, camera management
+│   ├── world/
+│   │   ├── world_object.py    # WorldObject base (position, drawing) — Ship and Landable extend it
+│   │   ├── ship.py, ai_ship.py, player_controller.py, autopilot.py   # Ship physics, AI behavior, input, flight computer
+│   │   └── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landable.py,
+│   │       person.py, npc.py, dialogue.py                            # World objects and NPCs
+│   ├── screens/
+│   │   └── screen_base.py, space_screen.py, location_screen.py       # ScreenBase and the two concrete screens
+│   └── ui/
+│       └── menu.py, menu_backdrop.py, story_selector.py, pause_menu.py, save_dialog.py, load_menu.py,
+│           confirm_dialog.py, pilot_name_dialog.py, location_selector.py, star_map.py,
+│           selectable_list.py, ui_theme.py                           # Menus/dialogs (not ScreenBase) + shared UI styling/widgets
 ├── config/
 │   └── stories/{story}/    # All config is per-story — nothing shared between stories
 │       ├── ship_types.json, graphics.json, cultures.json, building_types.json, pilots.json
 │       └── systems/{system_id}.json  # System layout: station position, AI ships
 ├── saves/                  # Player save files (generated at runtime)
+├── tests/                  # test_*.py, discovered by run_tests.py
 ├── docs/
 │   ├── README.md           # Docs index and systems overview
 │   ├── ARCHITECTURE.md     # Class hierarchy and design patterns (source of truth for structure)

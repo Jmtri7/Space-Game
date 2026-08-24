@@ -1,7 +1,7 @@
 """Player ship controller."""
 import pygame
-from constants import DARK_GRAY
-from ship import Ship
+from game.constants import DARK_GRAY
+from game.world.ship import Ship
 
 
 class PlayerController:

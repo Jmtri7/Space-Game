@@ -2,8 +2,8 @@
 import json
 import os
 import pygame
-import constants
-from constants import (
+import game.constants as constants
+from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
     CAMERA_ZOOM, SAVE_DIR, GREEN
 )
@@ -99,7 +99,7 @@ def get_centered_y(text_height):
 
 def render_help_text(surface, text, y_pos=None, color=(150, 150, 150)):
     """Render help text at bottom of screen or at specified Y position."""
-    from constants import GRAY
+    from game.constants import GRAY
     color = color or GRAY
     font = get_font(int(16 * get_ui_scale()))
     help_text = font.render(text, True, color)

@@ -26,9 +26,9 @@ pygame_mock.init = MagicMock()
 
 sys.modules['pygame'] = pygame_mock
 
-import utils
-from ship import Ship
-from landable import Landable
+import game.utils as utils
+from game.world.ship import Ship
+from game.world.landable import Landable
 
 
 class TestHandleScrollingInput(unittest.TestCase):

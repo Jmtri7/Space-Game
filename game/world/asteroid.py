@@ -1,8 +1,8 @@
 """Small drifting asteroid with constant velocity."""
 import pygame
-from constants import GRAY
-from utils import get_scale, to_screen
-from world_object import WorldObject
+from game.constants import GRAY
+from game.utils import get_scale, to_screen
+from game.world.world_object import WorldObject
 
 
 class Asteroid(WorldObject):

@@ -2,11 +2,11 @@
 import math
 import os
 import pygame
-import utils
-from constants import WHITE, GRAY
-from utils import get_font, render_help_text, handle_menu_navigation, load_json
-from menu_backdrop import MenuBackdrop
-from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+import game.utils as utils
+from game.constants import WHITE, GRAY
+from game.utils import get_font, render_help_text, handle_menu_navigation, load_json
+from game.ui.menu_backdrop import MenuBackdrop
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 TITLE = "SELECT STORY"
 

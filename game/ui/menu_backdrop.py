@@ -4,7 +4,7 @@ flying an elliptical patrol route."""
 import math
 import random
 import pygame
-import utils
+import game.utils as utils
 
 STAR_COLOR = (255, 214, 120)
 PLANET_LIT_COLOR = (90, 140, 200)

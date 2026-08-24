@@ -1,7 +1,7 @@
 """Base class for NPCs and other characters in the game."""
 import pygame
 import math
-from utils import to_screen, get_scale
+from game.utils import to_screen, get_scale
 
 
 class Person:
@@ -24,13 +24,13 @@ class Person:
 
 def to_screen_x(x):
     """Convert world X coordinate to screen space."""
-    from utils import get_scale
+    from game.utils import get_scale
     scale = get_scale()
     return int(round(x * scale))
 
 
 def to_screen_y(y):
     """Convert world Y coordinate to screen space."""
-    from utils import get_scale
+    from game.utils import get_scale
     scale = get_scale()
     return int(round(y * scale))

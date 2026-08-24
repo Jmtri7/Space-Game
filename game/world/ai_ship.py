@@ -1,6 +1,6 @@
 """AI ship whose behavior is chosen by its pilot's faction and role."""
 import random
-from ship import Ship
+from game.world.ship import Ship
 
 # Default routine per role - what the ship does with its autopilot each frame.
 # Roles with no entry here just sit idle (autopilot never engages).

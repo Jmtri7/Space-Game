@@ -1,7 +1,7 @@
 """Galaxy-scale star map overlay: pan around, select a system to jump to."""
 import pygame
-from constants import WHITE, YELLOW, GREEN, GRAY
-from utils import get_ui_scale, get_star_systems
+from game.constants import WHITE, YELLOW, GREEN, GRAY
+from game.utils import get_ui_scale, get_star_systems
 
 
 class StarMap:

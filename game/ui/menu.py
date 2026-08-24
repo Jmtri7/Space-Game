@@ -1,11 +1,11 @@
 """Main menu for game startup, with an animated star system rendered behind it."""
 import math
 import pygame
-import utils
-from constants import WHITE, YELLOW, GRAY
-from utils import get_font, handle_menu_navigation, render_help_text
-from menu_backdrop import MenuBackdrop
-from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+import game.utils as utils
+from game.constants import WHITE, YELLOW, GRAY
+from game.utils import get_font, handle_menu_navigation, render_help_text
+from game.ui.menu_backdrop import MenuBackdrop
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 TITLE = "GALAXY RISE"  # temp title
 

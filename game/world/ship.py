@@ -1,10 +1,10 @@
 """Base ship class with physics and rendering. Autopilot is a separate component."""
 import pygame
 import math
-from constants import DARK_GRAY, YELLOW
-from utils import get_scale, to_screen
-from world_object import WorldObject
-from autopilot import Autopilot
+from game.constants import DARK_GRAY, YELLOW
+from game.utils import get_scale, to_screen
+from game.world.world_object import WorldObject
+from game.world.autopilot import Autopilot
 
 
 class Ship(WorldObject):

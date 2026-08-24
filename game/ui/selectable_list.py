@@ -4,9 +4,9 @@ overwrite list, and LocationSelector so each doesn't hand-roll its own
 scroll/highlight logic (see docs/DESIGN_PATTERNS.md)."""
 import math
 import pygame
-from constants import YELLOW, GRAY
-from utils import _handle_scrolling_input
-from ui_theme import draw_selection_highlight
+from game.constants import YELLOW, GRAY
+from game.utils import _handle_scrolling_input
+from game.ui.ui_theme import draw_selection_highlight
 
 
 class SelectableList:

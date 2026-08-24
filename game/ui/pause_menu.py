@@ -1,10 +1,10 @@
 """Pause menu during gameplay."""
 import math
 import pygame
-import utils
-from constants import YELLOW, GRAY
-from utils import get_ui_scale, get_ui_offset, get_font
-from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+import game.utils as utils
+from game.constants import YELLOW, GRAY
+from game.utils import get_ui_scale, get_ui_offset, get_font
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 
 class PauseMenu:

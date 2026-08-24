@@ -1,9 +1,9 @@
 """Landable space objects (stations and celestial bodies)."""
 import pygame
-import constants
-from constants import GREEN
-from utils import get_scale, to_screen
-from world_object import WorldObject
+import game.constants as constants
+from game.constants import GREEN
+from game.utils import get_scale, to_screen
+from game.world.world_object import WorldObject
 
 
 class Landable(WorldObject):

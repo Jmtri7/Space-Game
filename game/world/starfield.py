@@ -1,9 +1,9 @@
 """Infinite, seeded, procedurally generated star field background."""
 import random
 import pygame
-import utils
-from constants import GAME_WIDTH, GAME_HEIGHT
-from utils import to_screen
+import game.utils as utils
+from game.constants import GAME_WIDTH, GAME_HEIGHT
+from game.utils import to_screen
 
 CHUNK_SIZE = 1200
 STARS_PER_CHUNK_RANGE = (20, 40)
