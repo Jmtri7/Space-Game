@@ -135,11 +135,11 @@ def main():
                             location = game_state.get("location", "space")
 
                             if location == "space":
-                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
                                 game_screen.restore_state(game_state)
                                 current_screen = "game"
                             elif location == "station":
-                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
                                 game_screen.restore_state(game_state)
                                 interior_config = game_screen.station.interiors.get("default")
                                 if interior_config:
@@ -150,7 +150,7 @@ def main():
                                     station_interior.restore_state(game_state)
                                 current_screen = "station"
                             elif location == "moon":
-                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name)
+                                game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
                                 game_screen.restore_state(game_state)
                                 moon_location = game_state.get("moon_location", "city")
                                 interior_config = game_screen.moon.interiors.get(moon_location, game_screen.moon.interiors.get("city"))
@@ -191,7 +191,7 @@ def main():
                         location_selector = LocationSelector(game_screen.moon.interiors)
                         current_screen = "select_location"
                 elif action == "star_map":
-                    star_map = StarMap(game_screen.story, game_screen.selected_system_id)
+                    star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
                     current_screen = "star_map"
                 game_screen.update()
                 game_screen.draw(screen)
@@ -199,7 +199,7 @@ def main():
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
                 if action == "close":
-                    game_screen.selected_system_id = star_map.selected_story_id
+                    game_screen.selected_system_id = star_map.selected_system_id
                     current_screen = "game"
                 # Keep space physics updated in the background (ships keep moving)
                 if game_screen:
@@ -288,6 +288,9 @@ def main():
 
                         # Save new game
                         game_state = {}
+                        if game_screen:
+                            game_state["story"] = game_screen.story
+                            game_state["system_id"] = game_screen.system_id
                         if previous_screen == "moon":
                             game_state = moon_interior.get_state()
                             game_state["location"] = "moon"
@@ -332,6 +335,9 @@ def main():
 
                             # Save new game
                             game_state = {}
+                            if game_screen:
+                                game_state["story"] = game_screen.story
+                                game_state["system_id"] = game_screen.system_id
                             if previous_screen == "moon":
                                 game_state = moon_interior.get_state()
                                 game_state["location"] = "moon"

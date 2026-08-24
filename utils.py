@@ -189,24 +189,29 @@ def get_pilot(pilot_id):
     return pilots.get(pilot_id, {})
 
 
-def get_star_systems():
-    """Discover every story's star system identity by scanning config/stories/*/space_system.json.
+def get_star_systems(story):
+    """Discover every star system belonging to one story, by scanning
+    config/stories/{story}/systems/*.json. Systems only exist within a single
+    story - the Jump mechanic can move a ship between systems in its own
+    story, never into a different story (stories are wholly separate saves).
 
-    Returns {story_id: {"name": ..., "star_map_position": {"x": ..., "y": ...}}}.
+    Returns {system_id: {"name": ..., "star_map_position": {"x": ..., "y": ...}}}.
     This is the single source of truth for the galaxy star map - no separate
-    registry to keep in sync, since a story's space_system.json already
-    declares its own name/position.
+    registry to keep in sync, since each system file already declares its own
+    name/position.
     """
     systems = {}
-    stories_dir = "config/stories"
-    if not os.path.exists(stories_dir):
+    systems_dir = f"config/stories/{story}/systems"
+    if not os.path.exists(systems_dir):
         return systems
-    for story_id in os.listdir(stories_dir):
-        system_file = os.path.join(stories_dir, story_id, "space_system.json")
-        data = load_json(system_file)
+    for filename in os.listdir(systems_dir):
+        if not filename.endswith(".json"):
+            continue
+        system_id = filename[:-len(".json")]
+        data = load_json(os.path.join(systems_dir, filename))
         if data:
-            systems[story_id] = {
-                "name": data.get("name", story_id),
+            systems[system_id] = {
+                "name": data.get("name", system_id),
                 "star_map_position": data.get("star_map_position", {"x": 0, "y": 0})
             }
     return systems

@@ -3,10 +3,7 @@
   "name": "Explorer",
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
-  "assets": {
-    "space_station": "station_alpha",
-    "moon": "moon_silver"
-  },
+  "starting_system": "sol_alpha",
   "ships": {
     "player_type": "shuttle"
   }

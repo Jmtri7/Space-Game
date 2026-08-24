@@ -2,6 +2,8 @@
   "name": "Kepler's Reach",
   "description": "A remote outpost system on the edge of known space",
   "star_map_position": {"x": 400, "y": -250},
+  "station_asset": "station_delta",
+  "moon_asset": "moon_rust",
   "central_star": {
     "x": 0.5,
     "y": 0.5,

@@ -28,32 +28,33 @@ SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
 class SpaceScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
-    def __init__(self, system_config=None, pilot_name="", story="default"):
+    def __init__(self, system_config=None, pilot_name="", story="default", system_id=None):
         super().__init__(pilot_name=pilot_name)
-        self.story = story
+        self.story = story  # fixed for the whole playthrough - stories are wholly separate
 
-        # Load story metadata (ship types, graphics, etc)
+        # Load story metadata (player ship type, starting system, etc)
         story_meta = load_json(f"config/stories/{story}/story.json") or {}
+        self.system_id = system_id or story_meta.get("starting_system", "default")
 
-        # Load config from story directory
-        self.system_config = system_config or load_json(f"config/stories/{story}/space_system.json") or {}
+        # Load config for the current system within this story
+        self.system_config = system_config or load_json(f"config/stories/{story}/systems/{self.system_id}.json") or {}
 
         # Get space system drag (default 0 = no drag)
         space_drag = self.system_config.get("drag", 0)
 
-        # Get player ship type and graphics
+        # Get player ship type and graphics (fixed for the story, not per-system)
         player_ship_type_id = story_meta.get("ships", {}).get("player_type", "shuttle")
         player_ship_type = get_ship_type(player_ship_type_id)
         player_graphics = get_graphics_asset("ships", player_ship_type_id)
 
         # Spawn away from map center by default, since that's where a central
-        # star (if the story has one) usually sits.
+        # star (if the system has one) usually sits.
         player_start_cfg = self.system_config.get("player_start", {})
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
         self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type)
 
-        self._load_system_content(story_meta)
+        self._load_system_content()
 
         self.landing_text = 0
         self.landing_target = None
@@ -63,17 +64,18 @@ class SpaceScreen(ScreenBase):
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
 
-    def _load_system_content(self, story_meta):
+    def _load_system_content(self):
         """(Re)build station/moon/central star/asteroids/AI ships/star field from
         self.system_config. Called at construction, and again after a jump swaps
-        the active system - the player (ship/pilot) is untouched by this."""
+        the active system (within the same story) - the player (ship/pilot) is
+        untouched by this."""
         space_drag = self.system_config.get("drag", 0)
         self.player.ship.space_drag = space_drag
         self.star_field = StarField(seed=self.system_config.get("star_seed", 0))
 
-        # Load graphics assets for station and moon
-        station_asset_id = story_meta.get("assets", {}).get("space_station", "station_alpha")
-        moon_asset_id = story_meta.get("assets", {}).get("moon", "moon_silver")
+        # Load graphics assets for station and moon - each system picks its own
+        station_asset_id = self.system_config.get("station_asset", "station_alpha")
+        moon_asset_id = self.system_config.get("moon_asset", "moon_silver")
 
         station_cfg = self.system_config.get("station", {})
         station_graphics = get_graphics_asset("space_stations", station_asset_id)
@@ -283,15 +285,15 @@ class SpaceScreen(ScreenBase):
             return
         cx, cy = SYSTEM_CENTER
         distance_from_center = math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2)
-        if self.selected_system_id == self.story and distance_from_center < JUMP_SELF_MIN_DISTANCE:
+        if self.selected_system_id == self.system_id and distance_from_center < JUMP_SELF_MIN_DISTANCE:
             self.jump_message_timer = 90  # brief "too close to jump" feedback
             return
         self._begin_jump()
 
     def _begin_jump(self):
         """Point the ship toward the destination system and begin the jump animation."""
-        systems = get_star_systems()
-        origin = systems.get(self.story)
+        systems = get_star_systems(self.story)
+        origin = systems.get(self.system_id)
         destination = systems.get(self.selected_system_id)
         if not origin or not destination:
             return
@@ -343,16 +345,16 @@ class SpaceScreen(ScreenBase):
                 self._complete_jump()
 
     def _complete_jump(self):
-        """Finish the jump: swap systems if the destination differs, then arrive on the outskirts."""
+        """Finish the jump: swap systems (within this story) if the destination differs,
+        then arrive on the outskirts."""
         js = self.jump_state
         heading_rad = math.radians(js["heading"])
         destination = js["destination"]
 
-        if destination != self.story:
-            story_meta = load_json(f"config/stories/{destination}/story.json") or {}
-            self.story = destination
-            self.system_config = load_json(f"config/stories/{destination}/space_system.json") or {}
-            self._load_system_content(story_meta)
+        if destination != self.system_id:
+            self.system_id = destination
+            self.system_config = load_json(f"config/stories/{self.story}/systems/{destination}.json") or {}
+            self._load_system_content()
 
         center_x, center_y = SYSTEM_CENTER
         arrival_x = center_x - math.sin(heading_rad) * JUMP_ARRIVAL_DISTANCE
@@ -488,10 +490,10 @@ class SpaceScreen(ScreenBase):
 
         # Selected jump destination (persists across star map open/close)
         if not self.jump_state and self.selected_system_id:
-            systems = get_star_systems()
+            systems = get_star_systems(self.story)
             selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
             label = f"Jump Target: {selected_name}"
-            if self.selected_system_id == self.story:
+            if self.selected_system_id == self.system_id:
                 label += " (current)"
             ui_scale = get_ui_scale()
             ui_offset_x, ui_offset_y = get_ui_offset()
