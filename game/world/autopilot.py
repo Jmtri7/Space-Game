@@ -7,6 +7,13 @@ polymorphically.
 """
 import math
 
+# Seek-mode arrival tuning: how close (as a fraction of the target's own
+# landing_distance, floored so slow ships can still reach it) and how slow
+# the ship must be to call it "landed" and disengage. See SeekMode.update().
+ARRIVAL_DISTANCE_FRACTION = 0.15
+ARRIVAL_DISTANCE_FLOOR = 8
+ARRIVAL_SPEED_THRESHOLD = 0.1
+
 
 def turn_toward(ship, angle_rad):
     """Rotate the ship one step toward angle_rad (radians). Returns True
@@ -121,14 +128,14 @@ class SeekMode:
         # braking all the way in to (near) the landable's exact middle,
         # floored so it stays reachable for slow/sluggish ships.
         landing_distance = getattr(target, 'landing_distance', 100)
-        arrival_tolerance = max(8, landing_distance * 0.15)
-        if distance < arrival_tolerance and speed < 0.4:
+        arrival_tolerance = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION)
+        if distance < arrival_tolerance and speed < ARRIVAL_SPEED_THRESHOLD:
             autopilot.disengage()
             return
 
         # Step 2: Decide acceleration strategy
         braking_distance = predict_braking_distance_from_stop(ship, speed)
-        should_brake = distance <= braking_distance and speed > 0.1
+        should_brake = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
 
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
