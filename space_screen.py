@@ -6,7 +6,7 @@ from constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
 from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets, draw_landing_prediction, draw_landing_trajectory,
-    get_ship_type, get_graphics_asset
+    get_ship_type, get_graphics_asset, get_pilot
 )
 import utils
 from screen_base import ScreenBase
@@ -14,9 +14,11 @@ from player_controller import PlayerController
 from ai_ship import AIShip
 from landable import Landable
 from starfield import StarField
+from central_star import CentralStar
+from asteroid import Asteroid
 
 
-class GameScreen(ScreenBase):
+class SpaceScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
     def __init__(self, system_config=None, pilot_name="", story="default"):
         super().__init__(pilot_name=pilot_name)
@@ -52,19 +54,44 @@ class GameScreen(ScreenBase):
         moon_graphics = get_graphics_asset("moons", moon_asset_id)
         self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}))
 
+        # Central star (optional, drawn but not landable/targetable)
+        central_star_cfg = self.system_config.get("central_star")
+        if central_star_cfg:
+            self.central_star = CentralStar(GAME_WIDTH * central_star_cfg.get("x", 0.5), GAME_HEIGHT * central_star_cfg.get("y", 0.5), graphics=central_star_cfg)
+        else:
+            self.central_star = None
+
+        # Asteroids: constant-velocity drifters with world wrapping
+        self.asteroids = []
+        for asteroid_cfg in self.system_config.get("asteroids", []):
+            self.asteroids.append(Asteroid(
+                GAME_WIDTH * asteroid_cfg.get("x", 0.5),
+                GAME_HEIGHT * asteroid_cfg.get("y", 0.5),
+                velocity_x=asteroid_cfg.get("vx", 0),
+                velocity_y=asteroid_cfg.get("vy", 0),
+                size=asteroid_cfg.get("size", 4)
+            ))
+
+        # Landables that an AI ship's route config can reference by key
+        landable_lookup = {"station": self.station, "moon": self.moon}
+
         # Load all AI ships from config
         self.ai_ships = []
         for ai_cfg in self.system_config.get("ai_ships", []):
             ship_type_id = ai_cfg.get("ship_type", "trader")
             ship_type = get_ship_type(ship_type_id)
             ship_graphics = get_graphics_asset("ships", ship_type_id)
+            pilot = get_pilot(ai_cfg["pilot"]) if "pilot" in ai_cfg else None
+            route = [landable_lookup[key] for key in ai_cfg.get("route", []) if key in landable_lookup]
             ai_ship = AIShip(
                 GAME_WIDTH * ai_cfg.get("x", 0.75),
                 GAME_HEIGHT * ai_cfg.get("y", 0.1),
                 space_drag=space_drag,
                 ship_type=ship_type,
                 ship_type_id=ship_type_id,
-                graphics=ship_graphics
+                graphics=ship_graphics,
+                pilot=pilot,
+                route=route
             )
             self.ai_ships.append(ai_ship)
 
@@ -85,6 +112,9 @@ class GameScreen(ScreenBase):
             # Use ship type name if available, otherwise use generic label
             ship_type = get_ship_type(ship.ship_type_id)
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
+            pilot_name = ship.pilot.get("name")
+            if pilot_name:
+                ship_name = f"{ship_name} ({pilot_name})"
             self.targetable_objects.append((ship_name, ship))
 
     def handle_input(self, events):
@@ -158,60 +188,28 @@ class GameScreen(ScreenBase):
         return self.targetable_objects[self.current_target][1]
 
     def _draw_target_arrow(self, surface, target):
-        """Draw arrow at screen edge pointing toward target"""
-        # Calculate direction from player to target
-        dx = target.x - self.player.x
-        dy = target.y - self.player.y
+        """Draw an arrow on an imaginary circle around the player's ship, pointing toward the target."""
+        from utils import get_wrapped_direction
+        dx, dy = get_wrapped_direction(self.player.x, self.player.y, target.x, target.y)
         distance = math.sqrt(dx ** 2 + dy ** 2)
 
         if distance == 0:
             return
 
         # Normalize direction
-        angle = math.atan2(dy, dx)
-        dir_x = math.cos(angle)
-        dir_y = math.sin(angle)
+        dir_x = dx / distance
+        dir_y = dy / distance
 
-        # Find arrow position at screen edge
         ui_scale = get_ui_scale()
-        ui_offset_x, ui_offset_y = get_ui_offset()
-        surf_width = surface.get_width()
-        surf_height = surface.get_height()
+        ship_x, ship_y = utils.to_screen(self.player.x, self.player.y)
 
-        # Screen bounds in UI space
-        screen_left = ui_offset_x
-        screen_right = ui_offset_x + surf_width
-        screen_top = ui_offset_y
-        screen_bottom = ui_offset_y + surf_height
-
-        # Start from screen center (player position in UI space)
-        center_x = ui_offset_x + surf_width // 2
-        center_y = ui_offset_y + surf_height // 2
-
-        # Calculate where ray hits screen edge
-        t = 1
-        if dir_x > 0:
-            t = min(t, (screen_right - center_x) / dir_x)
-        elif dir_x < 0:
-            t = min(t, (screen_left - center_x) / dir_x)
-
-        if dir_y > 0:
-            t = min(t, (screen_bottom - center_y) / dir_y)
-        elif dir_y < 0:
-            t = min(t, (screen_top - center_y) / dir_y)
-
-        arrow_x = center_x + dir_x * t
-        arrow_y = center_y + dir_y * t
-
-        # Clamp to screen edges with padding
-        padding = 20
-        arrow_x = max(screen_left + padding, min(screen_right - padding, arrow_x))
-        arrow_y = max(screen_top + padding, min(screen_bottom - padding, arrow_y))
-
-        # Draw arrow pointing toward target
-        arrow_size = 12
+        # Position on the circle around the ship, on the side facing the target
+        radius = 45 * ui_scale
+        arrow_x = ship_x + dir_x * radius
+        arrow_y = ship_y + dir_y * radius
 
         # Arrow head points in direction of target
+        arrow_size = 10 * ui_scale
         tip_x = arrow_x + dir_x * arrow_size
         tip_y = arrow_y + dir_y * arrow_size
 
@@ -224,7 +222,7 @@ class GameScreen(ScreenBase):
         perp_y = dir_x
 
         # Draw arrow as triangle
-        wing_size = 8
+        wing_size = 4 * ui_scale
         wing1_x = tail_x + perp_x * wing_size
         wing1_y = tail_y + perp_y * wing_size
         wing2_x = tail_x - perp_x * wing_size
@@ -253,6 +251,8 @@ class GameScreen(ScreenBase):
         self.moon.update()
         for ai_ship in self.ai_ships:
             ai_ship.update()
+        for asteroid in self.asteroids:
+            asteroid.update()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -285,8 +285,12 @@ class GameScreen(ScreenBase):
     def draw(self, surface):
         surface.fill(BLACK)
         self.star_field.draw(surface)
+        if self.central_star:
+            self.central_star.draw(surface)
         self.station.draw(surface)
         self.moon.draw(surface)
+        for asteroid in self.asteroids:
+            asteroid.draw(surface)
         for ai_ship in self.ai_ships:
             ai_ship.draw(surface)
         self.player.draw(surface)
@@ -298,6 +302,8 @@ class GameScreen(ScreenBase):
             draw_debug_marker(surface, self.moon.x, self.moon.y, 10)
             for ai_ship in self.ai_ships:
                 draw_debug_marker(surface, ai_ship.x, ai_ship.y, 8)
+            for asteroid in self.asteroids:
+                draw_debug_marker(surface, asteroid.x, asteroid.y, 6)
 
             # Draw velocity info
             speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -318,7 +324,7 @@ class GameScreen(ScreenBase):
             target_text = font_target.render(f"Target: {target_name}", True, GREEN)
             surface.blit(target_text, (int(ui_offset_x + 10), int(ui_offset_y + 10)))
 
-            # Draw directional arrow pointing toward target
+            # Draw directional arrow on a circle around the ship, pointing toward target
             self._draw_target_arrow(surface, target_obj)
 
             # Draw predicted landing trajectory (debug visualization)

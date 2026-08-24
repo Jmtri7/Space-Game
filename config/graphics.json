@@ -73,52 +73,62 @@
     "fighter": {
       "size": 10,
       "color": [255, 100, 100],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[0, 0.6]]
     },
     "explorer": {
       "size": 15,
       "color": [100, 100, 150],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[0, 0.6]]
     },
     "trader": {
       "size": 18,
       "color": [150, 150, 100],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[-0.3, 0.65], [0.3, 0.65]]
     },
     "scout": {
       "size": 12,
       "color": [100, 200, 100],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[0, 0.6]]
     },
     "hauler": {
       "size": 20,
       "color": [200, 100, 100],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[-0.35, 0.65], [0, 0.7], [0.35, 0.65]]
     },
     "liner": {
       "size": 30,
       "color": [100, 150, 200],
-      "shape": "rectangle"
+      "shape": "rectangle",
+      "thrusters": [[-0.3, 0.7], [0, 0.75], [0.3, 0.7]]
     },
     "miner": {
       "size": 22,
       "color": [200, 150, 80],
-      "shape": "diamond"
+      "shape": "diamond",
+      "thrusters": [[-0.25, 0.45], [0.25, 0.45]]
     },
     "courier": {
       "size": 8,
       "color": [200, 200, 100],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[0, 0.6]]
     },
     "freighter": {
       "size": 35,
       "color": [120, 120, 120],
-      "shape": "rectangle"
+      "shape": "rectangle",
+      "thrusters": [[-0.35, 0.7], [-0.12, 0.72], [0.12, 0.72], [0.35, 0.7]]
     },
     "patrol": {
       "size": 13,
       "color": [150, 100, 200],
-      "shape": "triangle"
+      "shape": "triangle",
+      "thrusters": [[-0.25, 0.6], [0.25, 0.6]]
     }
   }
 }

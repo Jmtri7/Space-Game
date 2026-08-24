@@ -193,74 +193,13 @@
   },
   "ai_ships": [
     {
-      "name": "Scout One",
-      "x": 0.1,
-      "y": 0.1,
-      "ship_type": "scout",
-      "pilot_type": "explorer"
-    },
-    {
-      "name": "Trader Vessel",
-      "x": 0.3,
-      "y": 0.3,
-      "ship_type": "trader",
-      "pilot_type": "trader"
-    },
-    {
-      "name": "Hauler Prime",
-      "x": 0.5,
-      "y": 0.2,
-      "ship_type": "hauler",
-      "pilot_type": "wander"
-    },
-    {
-      "name": "Luxury Liner",
-      "x": 0.6,
-      "y": 0.7,
-      "ship_type": "liner",
-      "pilot_type": "wander"
-    },
-    {
-      "name": "Patrol One",
-      "x": 0.2,
-      "y": 0.8,
-      "ship_type": "patrol",
-      "pilot_type": "patrol"
-    },
-    {
-      "name": "Fighter Wing",
-      "x": 0.75,
-      "y": 0.35,
-      "ship_type": "fighter",
-      "pilot_type": "wander"
-    },
-    {
-      "name": "Mining Rig",
-      "x": 0.4,
-      "y": 0.6,
-      "ship_type": "miner",
-      "pilot_type": "wander"
-    },
-    {
-      "name": "Courier Express",
-      "x": 0.8,
-      "y": 0.3,
-      "ship_type": "courier",
-      "pilot_type": "explorer"
-    },
-    {
       "name": "Freighter One",
-      "x": 0.15,
+      "x": 0.5,
       "y": 0.5,
       "ship_type": "freighter",
-      "pilot_type": "wander"
+      "pilot": "elena_voss",
+      "route": ["station", "moon"]
     }
-  ],
-  "stars": [
-    {"x": 0.05, "y": 0.1, "size": 2, "color": [255, 255, 200]},
-    {"x": 0.95, "y": 0.05, "size": 3, "color": [255, 240, 150]},
-    {"x": 0.1, "y": 0.9, "size": 2, "color": [255, 255, 200]},
-    {"x": 0.92, "y": 0.92, "size": 3, "color": [255, 240, 150]}
   ],
   "asteroids": [
     {"x": 0.25, "y": 0.4, "vx": 0.3, "vy": 0.1, "size": 4},

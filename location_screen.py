@@ -7,7 +7,7 @@ from utils import get_scale, load_json, to_screen, draw_debug_marker, get_ui_sca
 from screen_base import ScreenBase
 
 
-class Location(ScreenBase):
+class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
     def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name=""):
         # Load config from file or use inline data

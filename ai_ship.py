@@ -1,75 +1,59 @@
-"""AI ship with autonomous behavior."""
-import math
+"""AI ship whose behavior is driven by its pilot's job routine."""
 import random
-from constants import DARK_GRAY
 from ship import Ship
+
+# Maps a pilot's role to the routine that decides its autopilot target each frame.
+# Roles with no entry here just sit idle (autopilot never engages).
+ROLE_ROUTINES = {
+    "freighter_pilot": "shuttle",
+    "patrol_officer": "shuttle",
+    "trader_captain": "shuttle",
+}
 
 
 class AIShip(Ship):
-    """Autonomous AI ship with wandering behavior."""
-    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="trader", graphics=None):
+    """AI-controlled ship. Movement uses the same Ship.update_autopilot() as the
+    player; only the choice of autopilot target is autonomous, driven by the
+    pilot's role."""
+    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="trader", graphics=None, pilot=None, route=None):
         super().__init__(x, y, space_drag=space_drag, graphics=graphics)
         self.ship_type_id = ship_type_id
         self.angle = random.randint(0, 360)
 
         # Apply ship type properties if provided
         if ship_type:
-            self.acceleration_magnitude = ship_type.get("acceleration_magnitude", 0.15)
+            self.acceleration_magnitude = ship_type.get("max_thrust", 0.15)
             self.max_velocity = ship_type.get("max_velocity", 4.0)
             self.rotation_speed = ship_type.get("rotation_speed", 5)
         else:
             self.acceleration_magnitude = 0.15
 
-        self.state = "accelerate"
-        self.state_timer = 0
+        self.pilot = pilot or {}
+        self.route = route or []
+        self.routine = ROLE_ROUTINES.get(self.pilot.get("role"), "idle")
+        self._route_index = 0
+
+        if self.routine == "shuttle" and self.route:
+            self.autopilot_target = self.route[0]
+            self.autopilot_active = True
 
     def update(self):
-        """Update AI ship with autonomous behavior."""
-        self.state_timer -= 1
+        """Let the job routine pick a target, then run standard ship autopilot/physics."""
+        self._run_routine()
+        super().update()
 
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
+    def _run_routine(self):
+        if self.routine == "shuttle":
+            self._run_shuttle_routine()
 
-        if self.state == "accelerate":
-            if self.state_timer <= 0:
-                self.state = "brake"
-                self.state_timer = random.randint(30, 60)
-            else:
-                self.thrust = self.acceleration_magnitude
-                self.angle = (self.angle + random.uniform(-1, 1)) % 360
-
-        elif self.state == "brake":
-            if speed < 0.15:
-                self.state = "accelerate"
-                self.state_timer = random.randint(40, 80)
-                self.angle = random.uniform(0, 360)
-                self.thrust = 0
-                self.velocity_x *= 0.95
-                self.velocity_y *= 0.95
-            else:
-                velocity_angle = math.degrees(math.atan2(self.velocity_x, -self.velocity_y)) % 360
-                target_angle = (velocity_angle + 180) % 360
-                angle_diff = (target_angle - self.angle) % 360
-                if angle_diff > 180:
-                    angle_diff -= 360
-
-                if abs(angle_diff) > 2:
-                    self.angle = (self.angle + angle_diff * 0.1) % 360
-                self.thrust = self.acceleration_magnitude
-
-        rad = math.radians(self.angle)
-        if self.thrust > 0.01:
-            self.velocity_x += math.sin(rad) * self.thrust
-            self.velocity_y -= math.cos(rad) * self.thrust
-
-        # Apply space system drag
-        if self.space_drag > 0:
-            self.velocity_x *= self.space_drag
-            self.velocity_y *= self.space_drag
-
-        self.x += self.velocity_x
-        self.y += self.velocity_y
-
-        self.wrap_position()
+    def _run_shuttle_routine(self):
+        """Ping-pong between the stops in self.route, one at a time."""
+        if not self.route:
+            return
+        if not self.autopilot_active:
+            self._route_index = (self._route_index + 1) % len(self.route)
+            self.autopilot_target = self.route[self._route_index]
+            self.autopilot_active = True
 
     def draw(self, surface):
         """Draw AI ship using graphics asset."""

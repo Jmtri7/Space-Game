@@ -1,17 +1,15 @@
 """Landable space objects (stations and celestial bodies)."""
 import pygame
-import math
 import constants
 from constants import GREEN
 from utils import get_scale, to_screen
+from world_object import WorldObject
 
 
-class Landable:
+class Landable(WorldObject):
     """A landable object in the game world (space station or moon)."""
     def __init__(self, x, y, graphics=None, interiors=None):
-        self.x = x
-        self.y = y
-        self.graphics = graphics or {}
+        super().__init__(x, y, graphics=graphics)
         self.interiors = interiors or {}
 
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
@@ -71,17 +69,7 @@ class Landable:
 
     def _draw_station(self, surface, scale):
         """Draw a rotating space station."""
-        rad = math.radians(self.rotation)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
-
-        points = []
-        for lx, ly in self.local_points:
-            rotated_x = lx * cos_a - ly * sin_a
-            rotated_y = lx * sin_a + ly * cos_a
-            points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
-
-        pygame.draw.polygon(surface, self.color, points)
+        self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color)
         pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
     def _draw_moon(self, surface, scale):
@@ -93,7 +81,3 @@ class Landable:
             crater_y = self.y + crater.get("y", 0)
             crater_radius = crater.get("radius", 4)
             pygame.draw.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))
-
-    def get_distance(self, x, y):
-        """Calculate distance from this object to a point."""
-        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)

@@ -1,0 +1,38 @@
+{
+  "elena_voss": {
+    "name": "Elena Voss",
+    "faction": "Frontier Traders Guild",
+    "role": "freighter_pilot",
+    "personality": "Blunt and unhurried — cares more about the manifest than the view."
+  },
+  "kade_marsh": {
+    "name": "Kade Marsh",
+    "faction": "Sol Federation Navy",
+    "role": "patrol_officer",
+    "personality": "By-the-book and watchful, quick to flag anything out of place."
+  },
+  "priya_nandan": {
+    "name": "Priya Nandan",
+    "faction": "Independent",
+    "role": "trader_captain",
+    "personality": "Chatty and opportunistic, always working an angle."
+  },
+  "oskar_lindqvist": {
+    "name": "Oskar Lindqvist",
+    "faction": "Deeprock Mining Consortium",
+    "role": "mining_foreman",
+    "personality": "Gruff and practical, more comfortable with machinery than people."
+  },
+  "mira_solis": {
+    "name": "Mira Solis",
+    "faction": "Independent",
+    "role": "explorer",
+    "personality": "Restless and curious, always chasing the next horizon."
+  },
+  "dax_okafor": {
+    "name": "Dax Okafor",
+    "faction": "Frontier Traders Guild",
+    "role": "courier_pilot",
+    "personality": "Fast-talking and faster-flying, thrives under a deadline."
+  }
+}

@@ -184,7 +184,7 @@ class AIShip(Ship):  # Specialized
 
 **Implementation:**
 ```python
-class GameScreen:
+class SpaceScreen:
     def get_state(self):
         """Capture current state for saving"""
         return {
@@ -216,7 +216,7 @@ create_save_file(pilot_name, save_name, config, game_screen.get_state())
 
 **In load logic:**
 ```python
-game_screen = GameScreen(config, pilot_name)
+game_screen = SpaceScreen(config, pilot_name)
 game_screen.restore_state(saved_state)
 ```
 
@@ -350,7 +350,7 @@ while running:
     if current_screen == "menu":
         action = menu.handle_input(events)
         if action == "new":
-            game_screen = GameScreen()
+            game_screen = SpaceScreen()
             current_screen = "game"
         elif action == "load":
             load_menu = LoadMenu()

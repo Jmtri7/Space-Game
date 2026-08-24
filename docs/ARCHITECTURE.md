@@ -4,49 +4,53 @@ Class hierarchy, entity patterns, and extensibility points for the space game.
 
 ## Class Hierarchy
 
-### Entity Base Classes
+### World Objects (Position + Drawing)
 ```
-Ship (abstract base)
-├── Player (extends Ship)
-└── AIShip (extends Ship)
+WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
+├── Ship (physics, autopilot, rotation)
+│   └── AIShip (autonomous accelerate/brake wandering)
+└── Landable (space station or moon — config decides which)
 
-Person (abstract base)
-└── NPC (extends Person)
+Person (base — x, y, draw(), get_distance())
+└── NPC (adds behavior, name, Dialogue)
 ```
 
-### Game Screens (State Machine)
+`PlayerController` does **not** subclass `Ship` — it *owns* one (composition) and
+exposes `x`/`y`/`velocity_x`/`velocity_y`/`angle`/`autopilot_active`/`autopilot_target`
+as delegating properties for backward compatibility, plus `handle_input()` for
+WASD/arrow control.
+
+### Screens (State Machine)
 ```
-Screen (implicit interface)
-├── Menu
-├── GameScreen
-├── StationInterior
-├── PauseMenu
-└── LoadMenu, SaveDialog (sub-screens within Pause)
+ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state)
+├── SpaceScreen     — flight & exploration (owns player, AI ships, station, moon)
+└── LocationScreen  — generic interior/exterior location, config-driven
+                       (used for BOTH the station interior and moon locations)
 ```
+Menus and dialogs (`Menu`, `StorySelector`, `PilotNameDialog`, `LoadMenu`,
+`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`) don't extend
+`ScreenBase` — they're simpler `handle_input()`/`draw()` objects driven directly
+by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
-- `SpaceStation` — Static station object in GameScreen
-- `Dialogue` — Conversation tree system
+- `Dialogue` — Conversation tree system used by `NPC`
 
 ## Entity Design Pattern
 
-All entity classes follow this pattern:
+`WorldObject` factors out what `Ship` and `Landable` both need:
 
 ```python
-class Entity:
-    def __init__(self, x, y, ...):
-        # State
+class WorldObject:
+    def __init__(self, x, y, graphics=None):
         self.x, self.y = x, y
-        
-    def update(self):
-        # Physics/behavior each frame
-        
-    def draw(self, surface):
-        # Render to screen-space
-        
-    def get_distance(self, x, y):
-        # Utility for range checks
+        self.graphics = graphics or {}
+
+    def get_distance(self, target_x, target_y):
+        # Shared range-check math
+
+    def _draw_rotated_polygon(self, surface, local_points, angle, color):
+        # Shared rotate-local-points-and-draw-polygon logic
 ```
 
 **Key principle:** Store positions in game-space, convert to screen-space only when drawing.
@@ -55,70 +59,77 @@ See [PHYSICS.md](PHYSICS.md#coordinate-system) for coordinate conversion details
 
 ## Ship Class: Movement & Rotation
 
-**Base Class: Ship**
-- Stores: `x`, `y`, `angle`, `velocity_x`, `velocity_y`, `thrust`
-- Physics: drag, max_velocity, rotation_speed
+**Base Class: `Ship(WorldObject)`**
+- Stores: `x`, `y`, `angle`, `velocity_x`, `velocity_y`, `thrust`, `space_drag`
+- Physics: `acceleration_magnitude`, `max_velocity`, `rotation_speed`
 - Methods:
-  - `draw_ship(surface, size, color)` — Rotated polygon + flame
-  - `wrap_position()` — Screen-edge wrapping
-  - `update()` — Physics simulation (velocity + drag)
+  - `draw(surface, ship_size, color)` — rotated polygon (via `_draw_rotated_polygon`) + thrust flame
+  - `wrap_position()` — screen-edge wrapping (torus topology)
+  - `update()` — runs `update_autopilot()`, then thrust/drag/velocity-cap physics
+  - `update_autopilot()`, `_autopilot_point_and_thrust()`, `_calculate_brake_redirect_angle()`,
+    `_predict_braking_distance_from_stop()` — kinematic autopilot controller
+  - `predict_landing_trajectory()` / `predict_landing_position()` — forward-simulates
+    the autopilot to produce waypoints for the trajectory overlay
 
-**Subclass: Player**
-- Extends `update()` with player input handling
-- Adds `handle_input(keys)` for WASD/arrow controls
+**Wrapper: `PlayerController`**
+- Owns a `Ship` instance, translates WASD/arrow keys into `turn_left()`/`turn_right()`/
+  `increase_thrust()`/`point_to_reverse_velocity()`/`release_thrust()`
+- Blocks input while `autopilot_active` is true
 
-**Subclass: AIShip**
-- Implements autonomous behavior (wander/avoid)
-- Separate `update()` with AI decision-making
+**Subclass: `AIShip(Ship)`**
+- Reads `acceleration_magnitude`/`max_velocity`/`rotation_speed` from a `ship_type` dict
+  (see `config/ship_types.json`), falling back to defaults if none given
+- Own `update()` implements a simple `"accelerate"` ↔ `"brake"` state machine with
+  randomized timers and heading jitter — does not use the `Ship` autopilot
 
 **Extending for new ship types:**
 ```python
 class Shuttle(Ship):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.max_thrust = 0.5  # Different specs
-        
+        self.max_velocity = 2.0  # Different specs
+
     def update(self):
-        # Custom AI behavior
+        # Custom behavior
         super().update()  # Physics still applies
 ```
 
 ## Person Class: NPCs & Drawing
 
-**Base Class: Person**
+**Base Class: `Person`**
 - Stores position and appearance
 - Implements `draw(surface)` — head + body
 - Provides `get_distance(x, y)` for interaction checks
 
-**Subclass: NPC**
-- Adds `behavior` (bar/wander) and `Dialogue` system
-- Movement logic: collision-aware wandering
-- Extends `draw()` to show dialogue prompts
+**Subclass: `NPC(Person)`**
+- Adds `behavior` (bar/wander) and a `Dialogue` instance
+- Loaded per-location from `npcs` entries in the location's config JSON
 
-**Pattern: Behavior Encapsulation**
-- Store behavior as string or enum
-- Use conditional in `update()`:
-  ```python
-  if self.behavior == "bar":
-      self._behavior_bar()
-  elif self.behavior == "wander":
-      self._behavior_wander()
-  ```
+## Landable: Stations & Moons
 
-## Game Screen Responsibility
+**Class: `Landable(WorldObject)`**
+- One class, two visual modes — decided at construction by inspecting `graphics`:
+  `is_station = "rotation_speed" in graphics or graphics.get("shape") in ["hexapod", "octagon"]`
+- Station mode: rotates (`rotation_speed`), drawn as a polygon with a glowing core
+- Moon mode: static circle with craters
+- `landing_distance` — how close the player must get (and how slow) to land
+- `interiors` — dict of location keys → interior config (file path or inline dict),
+  consumed by `LocationScreen` when the player lands
 
-**GameScreen contains:**
-- Player (controlled entity)
-- AIShip (autonomous entity)
-- StarField (visual, procedural)
-- SpaceStation (collision target)
+## SpaceScreen Responsibility
 
-**GameScreen provides:**
-- `update()` — Update all entities each frame
-- `draw()` — Render all entities
-- `handle_input()` — Process player input
-- `get_state()` — Capture state for save [see SAVE_SYSTEM.md](SAVE_SYSTEM.md)
-- `restore_state()` — Restore from save file
+**`SpaceScreen` contains:**
+- `PlayerController` (controlled entity)
+- A list of `AIShip` (autonomous entities, loaded from story config)
+- `StarField` (visual, procedural)
+- Two `Landable` instances: `station` and `moon`
+
+**`SpaceScreen` provides:**
+- `update()` — advance all entity physics, recenter camera, auto-land when autopilot arrives
+- `draw()` — render entities, target brackets/label/arrow, HUD
+- `handle_input()` — targeting (T), landing/autopilot engage (L), pause (ESC)
+- `get_state()` / `restore_state()` — capture/restore player + all AI ships for save
+  [see SAVE_SYSTEM.md](SAVE_SYSTEM.md)
 
 **Why this design:**
 - Clear separation of concerns
@@ -128,44 +139,49 @@ class Shuttle(Ship):
 ## State Machine: Screen Flow
 
 ```
-Menu ↔ LoadMenu
-  ↓
-GameScreen ← → PauseMenu
-  ↓ (land)     ↓ (save)
-  StationInterior ← → SaveDialog
+Menu → StorySelector → PilotNameDialog → SpaceScreen ←→ PauseMenu
+                                              ↓ (land: L)   ↓ (save)
+                            LocationScreen (station) ←→ SaveDialog
+
+SpaceScreen → LocationSelector → LocationScreen (moon) ←→ PauseMenu
 ```
 
 **State transitions via return values:**
-- `handle_input()` returns action string
-- Main loop interprets and transitions screens
-- See [UI_FLOW.md](UI_FLOW.md) for details
+- `handle_input()` returns an action string
+- Main loop (`main.py`) interprets it and transitions `current_screen`
+- See [UI_FLOW.md](UI_FLOW.md) for the full diagram and every state
 
 ## Extensibility Points
 
 ### Adding a New Entity Type
-1. Create class extending `Ship` or `Person`
+1. Create a class extending `Ship`, `Landable`, or `Person`
 2. Override `update()` and/or `draw()`
-3. Add to GameScreen
+3. Add to `SpaceScreen` (or a location's NPC list)
 4. Include in `get_state()`/`restore_state()` if saveable
 
 ### Adding a New Screen
-1. Create class with `handle_input()`, `draw()`, `update()`
-2. Add state string to main loop conditions
-3. Implement transitions via handle_input return values
+1. Create a class with `handle_input()`, `draw()` (and `update()` if it needs one)
+2. Add a `current_screen` string and branch in `main.py`'s loop
+3. Implement transitions via `handle_input()` return values
 
 ### Adding NPC Behaviors
-1. Add behavior name to `station_interior.json`
-2. Implement `_behavior_[name]()` method
-3. Call from `update()` based on behavior enum
+1. Add the behavior name to the location's config JSON (`npcs[].behavior`)
+2. Implement a `_behavior_[name]()` method on `NPC`
+3. Call it from `update()` based on the behavior string
 
 ## Design Decisions
 
-**Why base classes for Ship & Person?**
-- DRY principle: shared movement, drawing, distance logic
-- Polymorphism: both subclasses work with same interface
-- Easy to add variants (Shuttle, Probe, Guard, Merchant, etc.)
+**Why `WorldObject` as a base for `Ship` & `Landable`?**
+- DRY: both needed position, `get_distance()`, and rotate-and-draw-polygon logic
+- Added when the arrow-around-ship HUD feature surfaced the duplication directly
 
-**Why get_state()/restore_state() in GameScreen?**
+**Why one generic `LocationScreen` instead of separate station/moon classes?**
+- Station interior, moon city, and moon wilderness are all "walk around, talk to
+  NPCs, exit near the entrance" — the only difference is config data
+- New locations are added by writing JSON, not new Python classes (see the
+  Data-Driven Configuration pattern in [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md))
+
+**Why `get_state()`/`restore_state()` on every screen?**
 - Centralized state capture for save/load
 - Clear contract for what needs persistence
 - Easy to extend when adding new saveable objects

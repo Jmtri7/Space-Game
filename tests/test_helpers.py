@@ -257,7 +257,7 @@ class TestAutopilotPhysics(unittest.TestCase):
             if debug and frames % 100 == 0:
                 print(f"Frame {frames}: dist={distance:.1f}, speed={speed:.3f}, thrust={ship.thrust:.3f}, angle={ship.angle:.1f}")
 
-            # Game's actual landing condition in GameScreen.update()
+            # Game's actual landing condition in SpaceScreen.update()
             if distance < 150 and speed < 0.5:
                 ship.autopilot_active = False
                 landed = True

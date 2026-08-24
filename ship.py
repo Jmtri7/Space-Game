@@ -1,15 +1,15 @@
 """Base ship class with physics and autopilot."""
 import pygame
 import math
-from constants import DARK_GRAY, YELLOW, GAME_WIDTH, GAME_HEIGHT
-from utils import get_scale, to_screen
+from constants import DARK_GRAY, YELLOW
+from utils import get_scale, to_screen, get_wrapped_direction
+from world_object import WorldObject
 
 
-class Ship:
+class Ship(WorldObject):
     """Base ship class with physics and autopilot."""
     def __init__(self, x, y, space_drag=0, graphics=None):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, graphics=graphics)
         self.angle = 0
         self.velocity_x = 0
         self.velocity_y = 0
@@ -20,7 +20,6 @@ class Ship:
         self.autopilot_active = False
         self.autopilot_target = None
         self.space_drag = space_drag
-        self.graphics = graphics or {}
 
     def draw(self, surface, ship_size=None, color=None):
         """Draw ship using graphics asset, with fallback to defaults."""
@@ -34,30 +33,36 @@ class Ship:
             color = color or DARK_GRAY
 
         scale = get_scale()
-        rad = math.radians(self.angle)
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
 
         # Get local points based on shape
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
-
-        points = []
-        for lx, ly in local_points:
-            rotated_x = lx * cos_a - ly * sin_a
-            rotated_y = lx * sin_a + ly * cos_a
-            points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
-
-        pygame.draw.polygon(surface, color, points)
+        self._draw_rotated_polygon(surface, local_points, self.angle, color)
 
         if self.thrust > 0.05:
-            flame_length = self.thrust * 30
-            mid_back_x = (local_points[1][0] + local_points[2][0]) / 2
-            mid_back_y = (local_points[1][1] + local_points[2][1]) / 2
-            back_x = self.x + (mid_back_x * cos_a - mid_back_y * sin_a)
-            back_y = self.y + (mid_back_x * sin_a + mid_back_y * cos_a)
+            self._draw_thrusters(surface, ship_size, scale)
+
+    def _draw_thrusters(self, surface, ship_size, scale):
+        """Draw a flame at each thruster mount point defined by the ship's graphics.
+
+        Thruster positions are given as (x, y) fractions of ship_size, in the same
+        local space as _get_shape_points (0,0 = center, +y = toward the back).
+        Ships without a "thrusters" entry fall back to a single back-center mount.
+        """
+        thruster_points = self.graphics.get("thrusters", [(0, 0.6)])
+
+        rad = math.radians(self.angle)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        flame_length = self.thrust * 30
+        thickness = max(2, int(round(4 * scale)))
+
+        for tx, ty in thruster_points:
+            lx, ly = tx * ship_size, ty * ship_size
+            back_x = self.x + (lx * cos_a - ly * sin_a)
+            back_y = self.y + (lx * sin_a + ly * cos_a)
             flame_x = back_x - sin_a * flame_length
             flame_y = back_y + cos_a * flame_length
-            pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), max(1, int(2 * scale)))
+            pygame.draw.line(surface, YELLOW, to_screen(back_x, back_y), to_screen(flame_x, flame_y), thickness)
 
     def _get_shape_points(self, size, shape):
         """Get local points for ship shape."""
@@ -81,44 +86,6 @@ class Ship:
                 (-size * 0.6, size * 0.6),
                 (size * 0.6, size * 0.6),
             ]
-
-    def wrap_position(self):
-        """Wrap position at screen edges (torus topology)."""
-        if self.x < 0:
-            self.x = GAME_WIDTH
-        elif self.x > GAME_WIDTH:
-            self.x = 0
-        if self.y < 0:
-            self.y = GAME_HEIGHT
-        elif self.y > GAME_HEIGHT:
-            self.y = 0
-
-    def get_distance(self, target_x, target_y):
-        """Calculate distance to a point (for compatibility with Landables)."""
-        dx = target_x - self.x
-        dy = target_y - self.y
-        return math.sqrt(dx * dx + dy * dy)
-
-    def _get_wrapped_direction(self, target_x, target_y):
-        """Calculate direction to target, accounting for screen wrapping.
-
-        Returns (dx, dy) that represents the shortest path to the target,
-        considering the torus topology of the game world.
-        """
-        dx = target_x - self.x
-        dy = target_y - self.y
-
-        # Check if wrapping around horizontally is shorter
-        if abs(dx) > GAME_WIDTH / 2:
-            # Going the other way (wrapping) is shorter
-            dx = dx - GAME_WIDTH if dx > 0 else dx + GAME_WIDTH
-
-        # Check if wrapping around vertically is shorter
-        if abs(dy) > GAME_HEIGHT / 2:
-            # Going the other way (wrapping) is shorter
-            dy = dy - GAME_HEIGHT if dy > 0 else dy + GAME_HEIGHT
-
-        return dx, dy
 
     def turn_left(self):
         """Rotate ship left."""
@@ -226,7 +193,7 @@ class Ship:
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
             # Simulate one frame to check if we'd actually slow down
-            dx, dy = self._get_wrapped_direction(target.x, target.y)
+            dx, dy = get_wrapped_direction(self.x, self.y, target.x, target.y)
             target_angle_rad = math.atan2(dx, -dy)
             accel_angle = self._calculate_brake_redirect_angle(target_angle_rad)
 
@@ -255,7 +222,7 @@ class Ship:
                     return
 
         # Step 3: Calculate optimal acceleration direction (accounting for wrapping)
-        dx, dy = self._get_wrapped_direction(target.x, target.y)
+        dx, dy = get_wrapped_direction(self.x, self.y, target.x, target.y)
         target_angle = math.atan2(dx, -dy)
 
         if should_brake:
@@ -388,13 +355,7 @@ class Ship:
             should_brake = distance <= braking_distance and speed > 0.1
 
             # Calculate acceleration direction (with wrapping)
-            # Account for torus topology when simulating
-            dx = target.x - sim_x
-            dy = target.y - sim_y
-            if abs(dx) > GAME_WIDTH / 2:
-                dx = dx - GAME_WIDTH if dx > 0 else dx + GAME_WIDTH
-            if abs(dy) > GAME_HEIGHT / 2:
-                dy = dy - GAME_HEIGHT if dy > 0 else dy + GAME_HEIGHT
+            dx, dy = get_wrapped_direction(sim_x, sim_y, target.x, target.y)
             target_angle = math.atan2(dx, -dy)
 
             if should_brake:

@@ -5,197 +5,187 @@ Menu hierarchy, screen transitions, and state management.
 ## Screen State Machine
 
 ```
-                    ┌─────────────────┐
-                    │     MENU        │
-                    │ NEW/LOAD/QUIT   │
-                    └────────┬────────┘
-                    ┌────────┴────────┐
-                    │                 │
-              ┌─────▼──┐         ┌────▼──────┐
-              │  GAME  │         │ LOAD MENU │
-              │ (space)│         │(scrollable)│
-              └────┬───┘         └────┬──────┘
-                   │                  │
-            ┌──────▼──────┐           │
-            │  PAUSE MENU │◄──────────┘
-            │Resume/      │
-            │Save/Quit    │
-            └──────┬──────┘
-                   │
-          ┌────────┼────────┐
-          │                 │
-     ┌────▼────┐      ┌─────▼────────┐
-     │STATION  │      │SAVE DIALOG   │
-     │INTERIOR │      │(scrollable)   │
-     └────┬────┘      └──────────────┘
-          │
-     ┌────▼──────┐
-     │PAUSE MENU │ (from station)
-     └───────────┘
+                          ┌────────────────┐
+                          │      MENU       │
+                          │ NEW/LOAD/QUIT   │
+                          └───────┬─────────┘
+                     ┌────────────┴────────────┐
+              ┌──────▼───────┐           ┌──────▼──────┐
+              │ STORY SELECT │           │  LOAD MENU  │
+              └──────┬───────┘           │(scrollable) │
+              ┌──────▼───────┐           └──────┬──────┘
+              │ PILOT NAME   │                  │
+              └──────┬───────┘                  │
+                     │                          │
+              ┌──────▼──────────────────────────▼──┐
+              │            GAME (SpaceScreen)        │◄───────────┐
+              └───┬───────────────────────────┬─────┘            │
+        (L: land on station)         (L: land on moon)           │
+                  │                           │                   │
+          ┌───────▼────────┐        ┌─────────▼─────────┐         │
+          │ STATION         │        │ LOCATION SELECTOR │         │
+          │ (LocationScreen)│        │ (city/wilderness) │         │
+          └───────┬────────┘        └─────────┬─────────┘         │
+             (L: exit) ─────────────► GAME     │                   │
+                  │                  ┌─────────▼─────────┐         │
+                  │                  │  MOON              │         │
+                  │                  │ (LocationScreen)   │         │
+                  │                  └─────────┬─────────┘         │
+                  │                       (L: exit) ────────────────┘
+                  │                                                │
+        ┌─────────▼────────────────────────────────────────────────▼──┐
+        │                          PAUSE MENU                          │
+        │                    Resume / Save / Quit                     │
+        └───┬───────────────────────────┬───────────────────────┬────┘
+            │                           │                       │
+    ┌───────▼──────┐          ┌─────────▼─────────┐   ┌─────────▼─────────┐
+    │ SAVE DIALOG  │          │ OVERWRITE CONFIRM  │   │  DELETE CONFIRM   │
+    │ (scrollable) │──(D)────►│    (ConfirmDialog)  │   │  (ConfirmDialog)  │
+    └──────────────┘          └────────────────────┘   └────────────────────┘
 ```
+
+`LoadMenu` also has its own delete flow (its own `ConfirmDialog` instance) for
+removing a save directly from the Load screen, independent of the Pause-menu
+Save dialog's delete flow shown above.
 
 ## Screen Descriptions
 
-### Main Menu
+### Main Menu (`Menu`)
 **States:** Showing NEW, LOAD (if saves exist), QUIT
 - LOAD appears dynamically when save files exist
 - Menu recreated each time user returns (refreshes LOAD visibility)
 
-**Inputs:**
-- UP/DOWN or W/S: Navigate
-- Mouse: Move selector by hovering
-- RETURN or CLICK: Select option
+**Transitions:**
+- NEW → `StorySelector`
+- LOAD → `LoadMenu`
+- QUIT → Exit application
+
+### StorySelector
+**Shows:** List of playable stories, scanned from `config/stories/*/story.json`, with each story's description
+
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: cancel
 
 **Transitions:**
-- NEW → GameScreen (fresh game)
-- LOAD → LoadMenu
-- QUIT → Exit application
+- RETURN → `PilotNameDialog` (remembers `selected_story`)
+- ESC → Menu
+
+### PilotNameDialog
+**Shows:** Text entry box for the pilot's name (30 char max)
+
+**Inputs:** Type: add to name · BACKSPACE: delete last char · RETURN: confirm · ESC: cancel
+
+**Transitions:**
+- RETURN (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`
+- ESC → Menu
 
 ### LoadMenu (Scrollable)
 **Shows:** All save files from `saves/` directory, 5 at a time
 
-**Display:**
-- Filename shown in full
-- Current selection highlighted (YELLOW)
-- ↑ more indicator if there are saves above
-- ↓ more indicator if there are saves below
-
-**Inputs:**
-- UP/DOWN or W/S: Navigate (scrolls list when at boundaries)
-- RETURN: Load selected save
-- ESC: Cancel, return to menu
+**Inputs:** UP/DOWN or W/S: navigate (scrolls at boundaries) · RETURN: load · D: delete (opens its own `ConfirmDialog`) · ESC: cancel
 
 **Transitions:**
-- RETURN → GameScreen (with restored state)
+- RETURN → Reads `game_state["location"]` from the save (`"space"` / `"station"` / `"moon"`) and jumps straight to the matching screen with state restored:
+  - `"space"` → `SpaceScreen`
+  - `"station"` → `SpaceScreen` (background) + `LocationScreen` for the station interior
+  - `"moon"` → `SpaceScreen` (background) + `LocationScreen` for the saved moon location
 - ESC → Menu
 
-### GameScreen
-**Shows:** Space view with player ship, AI ships, star field, station
+### GAME — `SpaceScreen`
+**Shows:** Space view with player ship, AI ships, star field, station, moon, target HUD
 
 **Inputs:**
-- LEFT/RIGHT or A/D: Rotate ship
-- UP or W: Thrust forward
-- DOWN or S: Thrust backward
-- L: Land on station (only if within range)
-- ESC: Pause
+- LEFT/RIGHT or A/D: rotate ship
+- UP or W: thrust forward
+- DOWN or S: turn to face reverse velocity
+- T: cycle target (station, moon, each AI ship)
+- L: land (or engage autopilot toward the current target if out of range)
+- ESC: pause
 
 **Transitions:**
-- L (valid) → StationInterior
+- L, close + slow near station → `LocationScreen` (station interior)
+- L, close + slow near moon → `LocationSelector`
 - ESC → PauseMenu
 
-**HUD:**
-- "Press L to land" prompt (appears when near station, within 100 units)
+### LocationSelector
+**Shows:** Moon landing sub-location choices (City / Wilderness), built from the moon's `interiors` config
+
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: cancel (returns to `SpaceScreen`)
+
+**Transitions:**
+- RETURN → `LocationScreen` for the chosen moon location
+- ESC → GAME
+
+### STATION / MOON — `LocationScreen`
+**Shows:** Top-down walkable view of the interior/exterior with NPCs. One generic,
+config-driven class used for both the station interior and every moon location —
+not a station-only or moon-only screen.
+
+**Inputs:**
+- LEFT/RIGHT/UP/DOWN or WASD: move
+- L: exit (only within range of the entrance marker) → back to GAME
+- ESC: pause
+
+While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
+
+**Transitions:**
+- L (near entrance) → GAME
+- ESC → PauseMenu
 
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
 
-**States:**
-- Normal: Menu selectable
-- Saving: SaveDialog overlaid, menu interactions blocked
-- Success: "Saved!" banner at top for 2 seconds
-
-**Inputs:**
-- UP/DOWN or W/S: Navigate
-- RETURN: Select option
-- ESC: Resume game (quick exit)
-
-**Options:**
-- Resume: Return to previous screen (game or station)
-- Save Game: Open SaveDialog
-- Quit to Menu: Return to main menu
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: resume (quick exit)
 
 **Transitions:**
-- Resume → Return to Game/Station
-- Save Game → SaveDialog (state: saving)
-  - On save complete → Pause (state: success)
-  - Success banner → Auto-dismiss after 2 seconds
-- Quit → Menu
+- Resume → back to whichever screen was active (`previous_screen`)
+- Save Game → `SaveDialog`
+- Quit to Menu → Menu
 
 ### SaveDialog (Scrollable)
-**State 1: Choose Pilot (if no existing saves)**
-- Prompt: "Enter Pilot Name:"
-- Shows cursor (|)
-- 30 char max
+**Default name:** pre-filled as `"{pilot_name} - {timestamp}"`
 
-**State 2: Select Existing Save (if pilot has saves)**
-- Shows title: "Select Save to Overwrite"
-- Lists existing saves for that pilot, 5 at a time
-- ↑/↓ more indicators
+**Two modes:**
+- **Input mode** (no existing saves, or after pressing N): type a save name, RETURN to save
+- **List mode** (existing saves present): browse and act on them
 
-**Inputs (Pilot Entry):**
-- Type: Add to name
-- BACKSPACE: Delete last char
-- RETURN: Save with entered name
-- ESC: Cancel
-
-**Inputs (Overwrite):**
-- UP/DOWN or W/S: Navigate (with scrolling)
-- RETURN: Overwrite selected save
-- N: Switch to "Enter new name" mode
-- ESC: Cancel
-
-**Display:**
-- Help text shows available actions
-- Full save filenames when scrolling
+**Inputs (list mode):** UP/DOWN or W/S: navigate (scrolling) · RETURN: overwrite selected → `ConfirmDialog` ("Overwrite Save?") · N: switch to input mode · D: delete selected → `ConfirmDialog` ("Delete Save?") · ESC: cancel
 
 **Transitions:**
-- RETURN (save) → Success state (2s banner) → PauseMenu
+- Save completes → success banner (2s) → PauseMenu
+- Overwrite/Delete confirmed via their `ConfirmDialog` (Y = `"confirm"`, N/ESC = `"cancel"`)
 - ESC → PauseMenu (no save)
-
-### StationInterior
-**Shows:** First-person view of station interior with NPCs
-
-**Inputs:**
-- LEFT/RIGHT or A/D: Move left/right
-- UP or W: Move forward
-- DOWN or S: Move backward
-- T: Talk to nearby NPC (if within 50 units)
-- L: Exit station, return to space
-- ESC: Pause
-
-**HUD:**
-- "WASD/Arrows to move, L to exit, ESC for menu"
-- "Press T to talk" (when NPC nearby)
-- Dialogue box (when talking)
-
-**Transitions:**
-- L → GameScreen
-- ESC → PauseMenu
-
-**Dialogue System:**
-- T opens conversation with nearby NPC
-- UP/DOWN or W/S: Navigate options
-- RETURN or CLICK: Select option
-- ESC: Close dialogue, return to movement
 
 ## Screen-to-Screen Data Flow
 
-### GameScreen → SaveDialog
+### SpaceScreen → SaveDialog
 ```python
 save_dialog = SaveDialog(pilot_name=pilot_name)
 ```
-Passes current pilot name so dialog can show their existing saves.
+Passes current pilot name so the dialog can pre-fill a sensible default save name.
 
 ### SaveDialog → create_save_file
 ```python
 create_save_file(
     pilot_name,
-    save_name,
+    save_description,
     game_screen.system_config,
     {},
     game_screen.get_state()  # Current game state
 )
 ```
-Saves include both original config and current game state.
+Saves the original system config alongside the current game state. Which `get_state()`
+is called depends on `previous_screen` — `game_screen`, `station_interior`, or
+`moon_interior` — and `game_state["location"]` is set accordingly (`"space"` /
+`"station"` / `"moon"`, plus `"moon_location"` for moon saves).
 
-### LoadMenu → GameScreen
+### LoadMenu → SpaceScreen / LocationScreen
 ```python
 save_data = load_save_file(filename)
 pilot_name = save_data.get("pilot_name", "")
-game_screen = GameScreen(save_data.get("system", {}), pilot_name=pilot_name)
+game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name)
 game_screen.restore_state(save_data.get("game_state", {}))
 ```
-Restores both config and player state.
+See [SAVE_SYSTEM.md](SAVE_SYSTEM.md) for the full file format.
 
 ## Menu Lifecycle
 
@@ -210,22 +200,16 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 
 ## State Transitions & Validation
 
-**Valid transitions:**
-- Menu → GameScreen (NEW)
-- Menu → LoadMenu (LOAD)
-- GameScreen → PauseMenu (ESC)
-- GameScreen → StationInterior (L, if near station)
-- StationInterior → PauseMenu (ESC)
-- PauseMenu → GameScreen (Resume from game)
-- PauseMenu → StationInterior (Resume from station)
-- PauseMenu → Menu (Quit)
-- LoadMenu → GameScreen (Load)
-- LoadMenu → Menu (Cancel)
+**Valid transitions (`current_screen` values in `main.py`):**
+`"menu"` → `"story_select"` → `"pilot_name"` → `"game"`
+`"menu"` → `"load"` → `"game"` / `"station"` / `"moon"`
+`"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
+`"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)
 
 **Invalid (prevented by code):**
-- PauseMenu blocks SaveDialog actions until dialog closes
-- Station interior only accessible within landing range
-- Transitions ignore input when dialog is open
+- PauseMenu blocks its own input while `SaveDialog`/`ConfirmDialog` is open
+- `LocationScreen` only exits (`L`) within `entrance_range` of the entrance marker
+- Landing only triggers when both close enough (`landing_distance`) and slow enough (`speed < 0.4`)
 
 ## Input Handling Pattern
 
@@ -246,8 +230,8 @@ Main loop interprets action strings and manages state:
 if current_screen == "menu":
     action = menu.handle_input(events)
     if action == "new":
-        game_screen = GameScreen()
-        current_screen = "game"
+        story_selector = StorySelector()
+        current_screen = "story_select"
     elif action == "load":
         load_menu = LoadMenu()
         current_screen = "load"
