@@ -28,9 +28,7 @@ sys.modules['pygame'] = pygame_mock
 
 import utils
 from ship import Ship
-from player_controller import PlayerController
-from ai_ship import AIShip
-from objects import SpaceStation
+from landable import Landable
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -186,157 +184,128 @@ class TestCenterTextX(unittest.TestCase):
         self.assertIsInstance(result, int)
 
     def test_centers_horizontally(self):
-        """Should center text horizontally"""
+        """Should center text within the UI's 800-unit-wide space (not
+        GAME_WIDTH - _center_text_x uses get_ui_scale(), a separate scale
+        for menus/dialogs, independent of the space camera's zoom)"""
         text = MagicMock()
         text.get_width.return_value = 200
 
         result = utils._center_text_x(None, text)
-        # offset_x=0 + GAME_WIDTH(2400) * scale * 0.5 - text.get_width(200) // 2
-        # Actual scale varies with screen size
-        self.assertGreater(result, 1800)
-        self.assertLess(result, 2000)
+        ui_scale = utils.get_ui_scale()
+        expected = int(800 * ui_scale * 0.5 - 200 // 2)
+        self.assertEqual(result, expected)
 
     def test_respects_offset(self):
-        """Should apply offset_x parameter"""
+        """Should shift the centered position by offset_x"""
         text = MagicMock()
         text.get_width.return_value = 200
 
         result = utils._center_text_x(None, text, offset_x=50)
-        # offset_x(50) + GAME_WIDTH(2400) * scale * 0.5 - text.get_width(200) // 2
-        # Should be roughly 50 more than centered value
-        self.assertGreater(result, 1850)
-        self.assertLess(result, 2050)
+        ui_scale = utils.get_ui_scale()
+        expected = int(50 + 800 * ui_scale * 0.5 - 200 // 2)
+        self.assertEqual(result, expected)
 
 
 class TestAutopilotPhysics(unittest.TestCase):
-    """Test autopilot arrives at target with precise position and velocity"""
+    """Test seek-mode autopilot arrives at a landable with precise position
+    and velocity, using the real Ship/Autopilot/Landable classes and the
+    same engage_seek() + ship.update() flow the game itself drives - not a
+    reimplementation of the landing condition, so this can't drift out of
+    sync with autopilot.py's actual disengage logic."""
 
-    def simulate_autopilot_to_landing(self, ship, target_x, target_y, max_frames=2000, debug=False):
+    def simulate_autopilot_to_landing(self, ship, target_x, target_y, landing_distance=100, max_frames=2000):
         """Simulate ship autopilot from start to landing using real game physics"""
-        ship.autopilot_active = True
-
-        # Use real SpaceStation object like the game does
-        target = SpaceStation(target_x, target_y)
-
-        ship.autopilot_target = target
+        target = Landable(target_x, target_y, graphics={"landing_distance": landing_distance})
         ship.x = 0
         ship.y = 0
         ship.angle = 0
         ship.velocity_x = 0
         ship.velocity_y = 0
         ship.thrust = 0
+        ship.engage_seek(target)
 
         frames = 0
-        landed = False
         min_distance = float('inf')
         oscillated = False  # Did ship overshoot then come back?
-        closest_frame = 0
 
         while ship.autopilot_active and frames < max_frames:
             frames += 1
+            ship.update()  # advances autopilot internally, exactly as the game does
 
-            # Update autopilot control logic - exactly as game does
-            if hasattr(ship, 'update_autopilot'):
-                ship.update_autopilot()
-
-            # Update ship physics
-            ship.update()
-
-            # Check landing condition - exactly as game does it
             distance = target.get_distance(ship.x, ship.y)
-            speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
 
             # Track closest approach and detect oscillation
             if distance < min_distance:
                 min_distance = distance
-                closest_frame = frames
-            elif distance > min_distance + 50 and min_distance < 150:
-                # Ship got close (within 150), then moved away significantly = oscillation
+            elif distance > min_distance + 50 and min_distance < landing_distance + 50:
+                # Ship got close, then moved away significantly = oscillation
                 oscillated = True
 
-            if debug and frames % 100 == 0:
-                print(f"Frame {frames}: dist={distance:.1f}, speed={speed:.3f}, thrust={ship.thrust:.3f}, angle={ship.angle:.1f}")
-
-            # Game's actual landing condition in SpaceScreen.update()
-            if distance < 150 and speed < 0.5:
-                ship.autopilot_active = False
-                landed = True
-                break
-
-        # Return final state
+        # autopilot_active going False (via Autopilot.disengage()) is the
+        # game's own signal that it landed - not a separate distance/speed
+        # check re-guessed here.
+        landed = not ship.autopilot_active
         distance = target.get_distance(ship.x, ship.y)
-        speed = (ship.velocity_x**2 + ship.velocity_y**2)**0.5
+        speed = (ship.velocity_x ** 2 + ship.velocity_y ** 2) ** 0.5
         return {
             'landed': landed,
             'frames': frames,
             'distance': distance,
             'speed': speed,
-            'x': ship.x,
-            'y': ship.y,
             'min_distance': min_distance,
             'oscillated': oscillated,
-            'closest_frame': closest_frame
         }
 
-    def test_autopilot_explorer_lands_precisely(self):
-        """Explorer lands once with smooth approach (no oscillation)"""
+    def test_autopilot_shuttle_lands_precisely(self):
+        """Shuttle (config/stories/default/ship_types.json stats) lands once, no oscillation"""
         ship = Ship(0, 0)
-        ship.acceleration_magnitude = 0.3
-        ship.max_velocity = 4.0
-        ship.drag = 0.98
-        ship.rotation_speed = 5
+        ship.acceleration_magnitude = 0.12
+        ship.max_velocity = 2.0
+        ship.rotation_speed = 4
 
         result = self.simulate_autopilot_to_landing(ship, 500, 0)
 
-        # Ship must land
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
-        # Ship must arrive very close to target
         self.assertLess(result['distance'], 120,
-                        f"Explorer distance {result['distance']:.1f} - should arrive very close to target")
-        # Ship must be nearly stopped
+                        f"Shuttle distance {result['distance']:.1f} - should arrive very close to target")
         self.assertLess(result['speed'], 0.5,
-                        f"Explorer velocity {result['speed']:.3f} - should be nearly stopped")
-        # CRITICAL: Ship must NOT oscillate (come close, go away, come back)
+                        f"Shuttle velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
-                        f"Explorer oscillated - ship should come to stop once, not bounce")
+                        f"Shuttle oscillated - ship should come to stop once, not bounce")
 
-    def test_autopilot_courier_lands_precisely(self):
-        """Courier lands once with smooth approach (no oscillation)"""
+    def test_autopilot_freighter_lands_precisely(self):
+        """Freighter (config/stories/default/ship_types.json stats) lands once, no oscillation"""
         ship = Ship(0, 0)
-        ship.acceleration_magnitude = 0.5
-        ship.max_velocity = 6.5
-        ship.drag = 0.99
-        ship.rotation_speed = 9
+        ship.acceleration_magnitude = 0.1
+        ship.max_velocity = 2.0
+        ship.rotation_speed = 1
 
         result = self.simulate_autopilot_to_landing(ship, 400, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 120,
-                        f"Courier distance {result['distance']:.1f} - should arrive very close to target")
+                        f"Freighter distance {result['distance']:.1f} - should arrive very close to target")
         self.assertLess(result['speed'], 0.5,
-                        f"Courier velocity {result['speed']:.3f} - should be nearly stopped")
-        # Ship must NOT oscillate
+                        f"Freighter velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
-                        f"Courier oscillated - ship should come to stop once, not bounce")
+                        f"Freighter oscillated - ship should come to stop once, not bounce")
 
-    def test_autopilot_hauler_lands_precisely(self):
-        """Hauler lands once with smooth approach (no oscillation)"""
+    def test_autopilot_patrol_lands_precisely(self):
+        """Patrol (config/stories/default/ship_types.json stats) lands once, no oscillation"""
         ship = Ship(0, 0)
-        ship.acceleration_magnitude = 0.15
-        ship.max_velocity = 2.5
-        ship.drag = 0.95
-        ship.rotation_speed = 2
+        ship.acceleration_magnitude = 0.35
+        ship.max_velocity = 5.0
+        ship.rotation_speed = 7
 
         result = self.simulate_autopilot_to_landing(ship, 300, 0)
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 120,
-                        f"Hauler distance {result['distance']:.1f} - should arrive very close to target")
+                        f"Patrol distance {result['distance']:.1f} - should arrive very close to target")
         self.assertLess(result['speed'], 0.5,
-                        f"Hauler velocity {result['speed']:.3f} - should be nearly stopped")
-        # Ship must NOT oscillate
+                        f"Patrol velocity {result['speed']:.3f} - should be nearly stopped")
         self.assertFalse(result['oscillated'],
-                        f"Hauler oscillated - ship should come to stop once, not bounce")
+                        f"Patrol oscillated - ship should come to stop once, not bounce")
 
 
 if __name__ == "__main__":

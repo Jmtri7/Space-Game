@@ -307,20 +307,22 @@ Menu must be recreated when returning from load/save so "LOAD" option appears dy
 python run_tests.py
 ```
 
-**Current test coverage (49 tests):**
+**Current test coverage (21 tests, all in `tests/test_helpers.py`):**
 - Helper functions (18 tests):
-  - `_handle_scrolling_input()` — 12 tests covering up/down navigation, wrapping, scrolling
+  - `_handle_scrolling_input()` — 9 tests covering up/down navigation, wrapping, scrolling
   - `_list_files_by_pattern()` — 6 tests covering file filtering, sorting, directory creation
   - `_center_text_x()` — 3 tests covering horizontal centering and offset handling
-- Physics engine (31 tests):
-  - `update_velocity()` — 4 tests for thrust, drag, speed cap
-  - `update_position()` — 2 tests for movement
-  - `wrap_position()` — 5 tests for screen boundary wrapping
-  - `update_thrust()` — 4 tests for thrust control
-  - `update_angle()` — 5 tests for rotation
-  - `get_distance()` — 4 tests for distance calculation
-  - `can_land()` — 4 tests for landing conditions
-  - `rotate_point()` — 3 tests for point rotation
+- Autopilot physics (3 tests): `TestAutopilotPhysics` drives a real `Ship` through `engage_seek()` +
+  `ship.update()` toward a real `Landable`, using `ship.autopilot_active` (not a reimplemented distance/speed
+  check) as the landing signal - one case per ship_types.json stat preset (shuttle/freighter/patrol), each
+  asserting it lands, arrives close, stops, and doesn't oscillate.
+
+There used to be a `tests/test_physics.py` testing a `game_physics` module (pure-function physics, plus
+screen-wrap behavior) - neither exists in this codebase anymore (physics now lives on `Ship`/`WorldObject`/
+`Autopilot`, and there's no screen-wrapping), so it always failed to import and never actually ran. Deleted
+rather than resurrected, since a parallel `game_physics.py` would just duplicate the real logic. If you add a
+new pure physics helper, prefer testing it as a method on the class that owns it, the way `TestAutopilotPhysics`
+does now, rather than reintroducing a standalone physics module.
 
 **When to add new tests:**
 1. **Before fixing a bug:** Write a test that reproduces the bug, then fix it
