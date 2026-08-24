@@ -12,7 +12,22 @@ All interactive controls and their bindings. **Update this document when adding 
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
 | **T** | Cycle through targetable objects (station, moon, AI ship) |
 | **L** | Land on targeted object or nearby (when in range) |
+| **M** | Open the star map |
+| **J** | Jump to the selected star system (see Star Map below) |
 | **ESC** | Pause menu |
+
+## Star Map (M)
+
+| Control | Action |
+|---------|--------|
+| **Click** a system | Select it as the jump target |
+| **Click + drag** empty space | Pan the map |
+| **M** or **ESC** | Close the map (selection persists) |
+
+Opens centered on your current system. The selected system (if any) is shown
+back in the space view as "Jump Target:", and pressing **J** there starts the
+jump if the target is a different system, or the current one while far enough
+from its center.
 
 ## Station Interior
 

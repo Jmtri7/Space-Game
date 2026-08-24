@@ -1,0 +1,74 @@
+{
+  "name": "Kepler's Reach",
+  "description": "A remote outpost system on the edge of known space",
+  "star_map_position": {"x": 400, "y": -250},
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Kepler",
+    "size": 80,
+    "color": [255, 180, 120]
+  },
+  "player_start": {
+    "x": 0.35,
+    "y": 0.6
+  },
+  "star_seed": 777,
+  "asteroid_seed": 999,
+  "station": {
+    "x": 0.75,
+    "y": 0.25,
+    "interiors": {
+      "default": {
+        "label": "Delta Outpost Interior",
+        "npcs": [
+          {
+            "name": "Quartermaster",
+            "x": 400,
+            "y": 200,
+            "behavior": "wander",
+            "greeting": "Supplies are thin out here, but we make do.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Dockhand",
+            "x": 400,
+            "y": 450,
+            "behavior": "wander",
+            "greeting": "Watch your step, the deck plating's loose.",
+            "dialogue_options": ["Thanks", "Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.2,
+    "y": 0.7,
+    "interiors": {
+      "wilderness": {
+        "label": "Rust Moon Wilderness",
+        "description": "Cratered, rust-red terrain",
+        "entrance": {"x": 200, "y": 200},
+        "structures": [
+          {"type": "circle", "x": 300, "y": 400, "radius": 45, "color": [110, 70, 55]},
+          {"type": "circle", "x": 750, "y": 550, "radius": 55, "color": [110, 70, 55]},
+          {"type": "circle", "x": 500, "y": 900, "radius": 40, "color": [110, 70, 55]},
+          {"type": "circle", "x": 150, "y": 250, "radius": 12, "color": [85, 55, 45]},
+          {"type": "circle", "x": 400, "y": 300, "radius": 12, "color": [85, 55, 45]},
+          {"type": "circle", "x": 650, "y": 200, "radius": 12, "color": [85, 55, 45]}
+        ]
+      }
+    }
+  },
+  "ai_ships": [
+    {
+      "name": "Trader One",
+      "x": 0.65,
+      "y": 0.6,
+      "ship_type": "freighter",
+      "pilot": "priya_nandan",
+      "route": ["station", "moon"]
+    }
+  ]
+}

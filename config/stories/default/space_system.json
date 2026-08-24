@@ -1,6 +1,7 @@
 {
   "name": "Sol Alpha System",
   "description": "A vast star system with multiple stations and automated traffic",
+  "star_map_position": {"x": 0, "y": 0},
   "central_star": {
     "x": 0.5,
     "y": 0.5,

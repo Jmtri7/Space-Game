@@ -189,6 +189,29 @@ def get_pilot(pilot_id):
     return pilots.get(pilot_id, {})
 
 
+def get_star_systems():
+    """Discover every story's star system identity by scanning config/stories/*/space_system.json.
+
+    Returns {story_id: {"name": ..., "star_map_position": {"x": ..., "y": ...}}}.
+    This is the single source of truth for the galaxy star map - no separate
+    registry to keep in sync, since a story's space_system.json already
+    declares its own name/position.
+    """
+    systems = {}
+    stories_dir = "config/stories"
+    if not os.path.exists(stories_dir):
+        return systems
+    for story_id in os.listdir(stories_dir):
+        system_file = os.path.join(stories_dir, story_id, "space_system.json")
+        data = load_json(system_file)
+        if data:
+            systems[story_id] = {
+                "name": data.get("name", story_id),
+                "star_map_position": data.get("star_map_position", {"x": 0, "y": 0})
+            }
+    return systems
+
+
 def _list_files_by_pattern(directory, prefix, suffix):
     """List files matching pattern, sorted reverse alphabetically."""
     files = []

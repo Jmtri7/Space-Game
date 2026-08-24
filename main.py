@@ -21,6 +21,7 @@ from save_dialog import SaveDialog
 from confirm_dialog import ConfirmDialog
 from load_menu import LoadMenu
 from story_selector import StorySelector
+from star_map import StarMap
 
 # Initialize pygame and display
 pygame.init()
@@ -47,6 +48,7 @@ def main():
         delete_confirm_dialog = None
         overwrite_confirm_dialog = None
         load_menu = None
+        star_map = None
         current_screen = "menu"
         previous_screen = None
         running = True
@@ -188,8 +190,21 @@ def main():
                     elif game_screen.landing_target == "moon":
                         location_selector = LocationSelector(game_screen.moon.interiors)
                         current_screen = "select_location"
+                elif action == "star_map":
+                    star_map = StarMap(game_screen.story, game_screen.selected_system_id)
+                    current_screen = "star_map"
                 game_screen.update()
                 game_screen.draw(screen)
+
+            elif current_screen == "star_map":
+                action = star_map.handle_input(events)
+                if action == "close":
+                    game_screen.selected_system_id = star_map.selected_story_id
+                    current_screen = "game"
+                # Keep space physics updated in the background (ships keep moving)
+                if game_screen:
+                    game_screen.update_physics()
+                star_map.draw(screen)
 
             elif current_screen == "station":
                 action = station_interior.handle_input(events)

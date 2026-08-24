@@ -1,0 +1,13 @@
+{
+  "id": "frontier",
+  "name": "Kepler's Reach",
+  "description": "A remote outpost system on the edge of known space.",
+  "difficulty": "normal",
+  "assets": {
+    "space_station": "station_delta",
+    "moon": "moon_rust"
+  },
+  "ships": {
+    "player_type": "shuttle"
+  }
+}

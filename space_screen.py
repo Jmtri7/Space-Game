@@ -6,7 +6,7 @@ from constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, CYAN
 from utils import (
     get_scale, get_offset, get_ui_scale, get_ui_offset, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets,
-    get_ship_type, get_graphics_asset, get_pilot
+    get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
 import utils
 from screen_base import ScreenBase
@@ -17,6 +17,14 @@ from starfield import StarField
 from central_star import CentralStar
 from asteroid_field import AsteroidField
 
+# Jump mechanic tuning
+JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
+JUMP_TRAVEL_FRAMES = 150        # ~2.5s at 60fps of high-speed travel
+JUMP_SPEED = 40                 # world units/frame while traveling
+JUMP_ARRIVAL_DISTANCE = 1400    # world units from system center on arrival
+JUMP_SELF_MIN_DISTANCE = 700    # must be at least this far from center to jump "back"
+SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
+
 
 class SpaceScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
@@ -25,12 +33,10 @@ class SpaceScreen(ScreenBase):
         self.story = story
 
         # Load story metadata (ship types, graphics, etc)
-        story_file = f"config/stories/{story}/story.json"
-        story_meta = load_json(story_file) or {}
+        story_meta = load_json(f"config/stories/{story}/story.json") or {}
 
         # Load config from story directory
-        config_file = f"config/stories/{story}/space_system.json"
-        self.system_config = system_config or load_json(config_file) or {}
+        self.system_config = system_config or load_json(f"config/stories/{story}/space_system.json") or {}
 
         # Get space system drag (default 0 = no drag)
         space_drag = self.system_config.get("drag", 0)
@@ -46,6 +52,23 @@ class SpaceScreen(ScreenBase):
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
         self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type)
+
+        self._load_system_content(story_meta)
+
+        self.landing_text = 0
+        self.landing_target = None
+        self.camera_x = 0
+        self.camera_y = 0
+        self.selected_system_id = None  # Star map selection, for the Jump mechanic
+        self.jump_state = None  # None, or a dict tracking the jump animation
+        self.jump_message_timer = 0  # Transient "too close to jump" feedback
+
+    def _load_system_content(self, story_meta):
+        """(Re)build station/moon/central star/asteroids/AI ships/star field from
+        self.system_config. Called at construction, and again after a jump swaps
+        the active system - the player (ship/pilot) is untouched by this."""
+        space_drag = self.system_config.get("drag", 0)
+        self.player.ship.space_drag = space_drag
         self.star_field = StarField(seed=self.system_config.get("star_seed", 0))
 
         # Load graphics assets for station and moon
@@ -96,11 +119,7 @@ class SpaceScreen(ScreenBase):
         # Keep self.ai_ship for backwards compatibility (first ship if it exists)
         self.ai_ship = self.ai_ships[0] if self.ai_ships else None
 
-        self.landing_text = 0
-        self.landing_target = None
-        self.camera_x = 0
-        self.camera_y = 0
-        self.current_target = None  # For T key targeting
+        self.current_target = None
         self.targetable_objects = [
             ("Station", self.station),
             ("Moon", self.moon),
@@ -159,6 +178,10 @@ class SpaceScreen(ScreenBase):
                         if landing_target:
                             self.landing_target = landing_target
                             return "land"
+                elif event.key == pygame.K_m and not self.jump_state:
+                    return "star_map"
+                elif event.key == pygame.K_j and not self.jump_state:
+                    self._try_jump()
         return None
 
     def _cycle_target(self):
@@ -226,6 +249,21 @@ class SpaceScreen(ScreenBase):
         points = [(tip_x, tip_y), (wing1_x, wing1_y), (wing2_x, wing2_y)]
         pygame.draw.polygon(surface, GREEN, points)
 
+    def _draw_jump_streak(self, surface):
+        """Bright motion-streak lines trailing the ship during high-speed jump travel."""
+        rad = math.radians(self.player.angle)
+        back_x, back_y = -math.sin(rad), math.cos(rad)
+        right_x, right_y = math.cos(rad), math.sin(rad)
+        ship_x, ship_y = self.player.x, self.player.y
+        streak_length = 220
+
+        for offset in (-14, -5, 5, 14):
+            start_x = ship_x + right_x * offset
+            start_y = ship_y + right_y * offset
+            end_x = start_x + back_x * streak_length
+            end_y = start_y + back_y * streak_length
+            pygame.draw.line(surface, CYAN, utils.to_screen(start_x, start_y), utils.to_screen(end_x, end_y), 2)
+
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
@@ -239,14 +277,111 @@ class SpaceScreen(ScreenBase):
 
         return None
 
+    def _try_jump(self):
+        """Validate the current star map selection/distance, then start a jump if valid."""
+        if not self.selected_system_id:
+            return
+        cx, cy = SYSTEM_CENTER
+        distance_from_center = math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2)
+        if self.selected_system_id == self.story and distance_from_center < JUMP_SELF_MIN_DISTANCE:
+            self.jump_message_timer = 90  # brief "too close to jump" feedback
+            return
+        self._begin_jump()
+
+    def _begin_jump(self):
+        """Point the ship toward the destination system and begin the jump animation."""
+        systems = get_star_systems()
+        origin = systems.get(self.story)
+        destination = systems.get(self.selected_system_id)
+        if not origin or not destination:
+            return
+
+        origin_pos = origin["star_map_position"]
+        dest_pos = destination["star_map_position"]
+        dx = dest_pos["x"] - origin_pos["x"]
+        dy = dest_pos["y"] - origin_pos["y"]
+        if dx == 0 and dy == 0:
+            dx = 1  # degenerate guard: jumping to a system at the same map position
+
+        heading = math.degrees(math.atan2(dx, -dy)) % 360
+
+        self.player.autopilot_active = False
+        self.player.autopilot_target = None
+        self.player.thrust = 0
+        self.jump_state = {
+            "phase": "align",
+            "heading": heading,
+            "timer": 0,
+            "destination": self.selected_system_id,
+        }
+
+    def _update_jump(self):
+        """Advance the jump animation by one frame: rotate to heading, then blast forward."""
+        js = self.jump_state
+        ship = self.player.ship
+
+        if js["phase"] == "align":
+            target_angle = js["heading"] % 360
+            current_angle = ship.angle % 360
+            diff = (target_angle - current_angle + 180) % 360 - 180
+            step = ship.rotation_speed * 3  # snappier than normal turning, for a punchy feel
+            if abs(diff) <= step:
+                ship.angle = target_angle
+                js["phase"] = "travel"
+                js["timer"] = 0
+            else:
+                ship.angle = (ship.angle + step * (1 if diff > 0 else -1)) % 360
+
+        elif js["phase"] == "travel":
+            rad = math.radians(ship.angle)
+            ship.velocity_x = math.sin(rad) * JUMP_SPEED
+            ship.velocity_y = -math.cos(rad) * JUMP_SPEED
+            ship.x += ship.velocity_x
+            ship.y += ship.velocity_y
+            js["timer"] += 1
+            if js["timer"] >= JUMP_TRAVEL_FRAMES:
+                self._complete_jump()
+
+    def _complete_jump(self):
+        """Finish the jump: swap systems if the destination differs, then arrive on the outskirts."""
+        js = self.jump_state
+        heading_rad = math.radians(js["heading"])
+        destination = js["destination"]
+
+        if destination != self.story:
+            story_meta = load_json(f"config/stories/{destination}/story.json") or {}
+            self.story = destination
+            self.system_config = load_json(f"config/stories/{destination}/space_system.json") or {}
+            self._load_system_content(story_meta)
+
+        center_x, center_y = SYSTEM_CENTER
+        arrival_x = center_x - math.sin(heading_rad) * JUMP_ARRIVAL_DISTANCE
+        arrival_y = center_y + math.cos(heading_rad) * JUMP_ARRIVAL_DISTANCE
+
+        ship = self.player.ship
+        ship.x, ship.y = arrival_x, arrival_y
+        ship.angle = js["heading"] % 360
+        arrival_speed = ship.max_velocity * 1.6
+        ship.velocity_x = math.sin(heading_rad) * arrival_speed
+        ship.velocity_y = -math.cos(heading_rad) * arrival_speed
+        ship.thrust = 0
+
+        self.jump_state = None
+        self.selected_system_id = None
+
     def update_physics(self):
         """Update physics without camera - used when space is background"""
-        self.player.update()
+        if self.jump_state:
+            self._update_jump()
+        else:
+            self.player.update()
         self.station.update()
         self.moon.update()
         for ai_ship in self.ai_ships:
             ai_ship.update()
         self.asteroid_field.update()
+        if self.jump_message_timer > 0:
+            self.jump_message_timer -= 1
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -254,6 +389,9 @@ class SpaceScreen(ScreenBase):
 
         # Update camera to follow player
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
+
+        if self.jump_state:
+            return  # skip landing checks entirely while jumping
 
         # Auto-land if autopilot is active and in range
         if self.player.autopilot_active and self.player.autopilot_target:
@@ -287,6 +425,8 @@ class SpaceScreen(ScreenBase):
         for ai_ship in self.ai_ships:
             ai_ship.draw(surface)
         self.player.draw(surface)
+        if self.jump_state and self.jump_state["phase"] == "travel":
+            self._draw_jump_streak(surface)
 
         # Debug markers for entity positions
         if constants.DEBUG_MODE:
@@ -320,7 +460,16 @@ class SpaceScreen(ScreenBase):
             # Draw directional arrow on a circle around the ship, pointing toward target
             self._draw_target_arrow(surface, target_obj)
 
-        if self.player.autopilot_active:
+        if self.jump_state:
+            ui_scale = get_ui_scale()
+            font = pygame.font.Font(None, int(24 * ui_scale))
+            phase_label = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
+            jump_text = font.render(phase_label, True, CYAN)
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            jx = int(ui_offset_x + utils.screen_width // 2 - jump_text.get_width() // 2)
+            jy = int(ui_offset_y + utils.screen_height - 60)
+            surface.blit(jump_text, (jx, jy))
+        elif self.player.autopilot_active:
             ui_scale = get_ui_scale()
             font = pygame.font.Font(None, int(24 * ui_scale))
             autopilot_text = font.render("Autopilot engaged - press any key to cancel", True, CYAN)
@@ -337,6 +486,27 @@ class SpaceScreen(ScreenBase):
             land_y = int(ui_offset_y + utils.screen_height - 60)
             surface.blit(land_text, (land_x, land_y))
 
+        # Selected jump destination (persists across star map open/close)
+        if not self.jump_state and self.selected_system_id:
+            systems = get_star_systems()
+            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
+            label = f"Jump Target: {selected_name}"
+            if self.selected_system_id == self.story:
+                label += " (current)"
+            ui_scale = get_ui_scale()
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            font_sel = pygame.font.Font(None, int(20 * ui_scale))
+            sel_text = font_sel.render(label, True, CYAN)
+            surface.blit(sel_text, (int(ui_offset_x + utils.screen_width - sel_text.get_width() - 10), int(ui_offset_y + 10)))
+
+        if self.jump_message_timer > 0:
+            ui_scale = get_ui_scale()
+            ui_offset_x, ui_offset_y = get_ui_offset()
+            font_msg = pygame.font.Font(None, int(20 * ui_scale))
+            msg_text = font_msg.render("Too close to jump - move away from center first", True, YELLOW)
+            mx = int(ui_offset_x + utils.screen_width // 2 - msg_text.get_width() // 2)
+            surface.blit(msg_text, (mx, int(ui_offset_y + 40)))
+
         scale = get_scale()
         offset_x, offset_y = get_offset()
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
@@ -346,7 +516,7 @@ class SpaceScreen(ScreenBase):
         ui_scale = get_ui_scale()
         ui_offset_x, ui_offset_y = get_ui_offset()
         font_help = pygame.font.Font(None, int(16 * ui_scale))
-        help_text = font_help.render("T: target, L: land, ESC: pause", True, WHITE)
+        help_text = font_help.render("T: target, L: land, M: star map, ESC: pause", True, WHITE)
         help_x = int(ui_offset_x + utils.screen_width // 2 - help_text.get_width() // 2)
         help_y = int(ui_offset_y + utils.screen_height - 30)
         surface.blit(help_text, (help_x, help_y))
