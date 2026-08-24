@@ -19,6 +19,7 @@
     },
     "station_delta": {
       "name": "Station Delta",
+      "culture": "drossholt",
       "size": 35,
       "color": [200, 150, 100],
       "core_color": [220, 180, 120],

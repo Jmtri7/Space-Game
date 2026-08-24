@@ -39,6 +39,7 @@
     "interiors": {
       "default": {
         "label": "Alpha Station Interior",
+        "culture": "vherathi",
         "bar": {
           "x": 400,
           "y": 90
@@ -97,6 +98,7 @@
       "city": {
         "label": "Moon City",
         "description": "Lunar metropolitan settlement",
+        "background_color": [150, 150, 150],
         "entrance": {
           "x": 800,
           "y": 800
@@ -129,6 +131,7 @@
       "wilderness": {
         "label": "Moon Wilderness",
         "description": "Natural lunar terrain",
+        "background_color": [150, 150, 150],
         "entrance": {
           "x": 200,
           "y": 200,

@@ -23,6 +23,7 @@
     "interiors": {
       "default": {
         "label": "Delta Outpost Interior",
+        "culture": "drossholt",
         "npcs": [
           {
             "name": "Quartermaster",
@@ -51,6 +52,7 @@
       "wilderness": {
         "label": "Rust Moon Wilderness",
         "description": "Cratered, rust-red terrain",
+        "background_color": [140, 70, 50],
         "entrance": {"x": 200, "y": 200},
         "structures": [
           {"type": "circle", "x": 300, "y": 400, "radius": 45, "color": [110, 70, 55]},
