@@ -13,10 +13,25 @@ class Person:
         self.y = y
         self.name = name
 
+    # Body proportions, all measured up from the feet (self.x/self.y is the
+    # ground position a character is standing at, not their head or
+    # shoulders - matches where collision/arrival distance checks treat
+    # them as being).
+    BODY_WIDTH = 12
+    BODY_HEIGHT = 16
+    NECK_WIDTH = 4
+    NECK_HEIGHT = 3
+    HEAD_RADIUS = 5
+
     def draw(self, surface):
         scale = get_scale()
-        pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - 6, self.y), to_screen_x(12), to_screen_y(16)))
-        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, self.y - 6), max(1, int(5 * scale)))
+        body_top = self.y - self.BODY_HEIGHT
+        neck_top = body_top - self.NECK_HEIGHT
+        head_center_y = neck_top - self.HEAD_RADIUS
+
+        pygame.draw.rect(surface, (200, 100, 100), (*to_screen(self.x - self.BODY_WIDTH / 2, body_top), to_screen_x(self.BODY_WIDTH), to_screen_y(self.BODY_HEIGHT)))
+        pygame.draw.rect(surface, (255, 150, 150), (*to_screen(self.x - self.NECK_WIDTH / 2, neck_top), to_screen_x(self.NECK_WIDTH), to_screen_y(self.NECK_HEIGHT)))
+        pygame.draw.circle(surface, (255, 150, 150), to_screen(self.x, head_center_y), max(1, int(self.HEAD_RADIUS * scale)))
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
