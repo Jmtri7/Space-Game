@@ -20,7 +20,6 @@ class Autopilot:
         self.orbit_center_x = 0
         self.orbit_center_y = 0
         self.orbit_radius = 0
-        self.orbit_angle = 0
 
     def engage_seek(self, target):
         """Engage seek mode: approach `target`, arriving once close and slow enough."""
@@ -34,9 +33,6 @@ class Autopilot:
         self.orbit_center_x = center_x
         self.orbit_center_y = center_y
         self.orbit_radius = radius
-        # Start from the angle the ship is already at, so it eases onto the
-        # circle instead of jumping to an arbitrary point on it.
-        self.orbit_angle = math.atan2(self.ship.y - center_y, self.ship.x - center_x)
         self.target = None
         self.active = True
 
@@ -123,42 +119,55 @@ class Autopilot:
         self._point_and_thrust(accel_angle)
 
     def _update_orbit(self):
-        """Chase a point that continuously sweeps around the orbit circle,
-        actively braking if going faster than the point it's chasing.
+        """Steer along the tangent of the orbit circle at the ship's current
+        position, nudged slightly toward/away from the target radius,
+        braking if going faster than the orbit's target pace.
 
-        The chased point never stops moving, so there's no discrete arrival
-        like seek mode has - but it does need a braking phase: without one,
-        the ship accelerates toward max_velocity (faster than the waypoint),
-        overtakes it, and has to spin around ~180 degrees to re-approach it
-        from ahead every lap. Just cutting thrust once too fast isn't enough
-        either - turning doesn't change velocity, and with no space drag in
-        a system nothing would ever slow the ship back down, so it would
-        coast off in a straight line forever. Braking (like seek mode's
-        braking phase) actually cancels the excess speed regardless of drag.
+        Earlier versions chased a point that swept the circle on its own
+        clock, independent of the ship's actual position, and capped speed
+        by braking (turning to face backward and firing reverse thrust)
+        whenever going too fast. Both produced visible "struggling": the
+        swept point disagreeing with wherever the ship actually was caused
+        constant small heading corrections, and braking meant periodically
+        turning away from the direction of travel.
+
+        This steers from the ship's own live position instead - heading is
+        just the tangent direction (which barely changes frame to frame)
+        plus a small proportional pull back toward the target radius - and
+        never brakes, just always thrusts once aligned. Without an artificial
+        speed cap the ship settles at max_velocity, but that's fine: the
+        tangent+pull heading is a self-correcting centripetal steer (same
+        idea as a car steering into a curve), so it naturally converges to a
+        stable circle at whatever speed it's going, rather than needing to
+        actively regulate speed at all. The settled circle ends up a bit
+        larger than orbit_radius (a faster ship needs a wider turn to hold a
+        circle with a fixed turn rate) - harmless, since it's still centered
+        on the same landables and just orbits them with more clearance.
         """
         if self.orbit_radius <= 0:
             self.ship.release_thrust()
             return
 
-        # How fast the chased point sweeps the circle, in radians/frame - tuned
-        # comfortably under max_velocity so the ship can actually keep pace.
-        linear_speed = 0.6 * self.ship.max_velocity
-        angular_speed = linear_speed / self.orbit_radius
-        self.orbit_angle = (self.orbit_angle + angular_speed) % (2 * math.pi)
+        ship = self.ship
+        dx = ship.x - self.orbit_center_x
+        dy = ship.y - self.orbit_center_y
+        current_radius = math.hypot(dx, dy) or 1
 
-        waypoint_x = self.orbit_center_x + self.orbit_radius * math.cos(self.orbit_angle)
-        waypoint_y = self.orbit_center_y + self.orbit_radius * math.sin(self.orbit_angle)
+        # Tangent direction (perpendicular to the radius vector) is the
+        # heading that traces the circle. Blend in a small pull toward the
+        # target radius, scaled by how far off the current radius is, so
+        # drift gets corrected gradually instead of by re-chasing a point.
+        tangent_dx, tangent_dy = -dy, dx
+        radius_error = (current_radius - self.orbit_radius) / self.orbit_radius
+        pull = max(-0.5, min(0.5, radius_error))
+        combined_dx = tangent_dx - dx * pull
+        combined_dy = tangent_dy - dy * pull
+        target_angle = math.atan2(combined_dx, -combined_dy)
 
-        dx, dy = waypoint_x - self.ship.x, waypoint_y - self.ship.y
-        target_angle = math.atan2(dx, -dy)
-
-        speed = math.sqrt(self.ship.velocity_x ** 2 + self.ship.velocity_y ** 2)
-        if speed > linear_speed:
-            accel_angle = self._calculate_brake_redirect_angle(target_angle)
+        if self._turn_toward(target_angle):
+            ship.increase_thrust()
         else:
-            accel_angle = target_angle
-
-        self._point_and_thrust(accel_angle)
+            ship.release_thrust()
 
     def _predict_braking_distance_from_stop(self, current_speed):
         """Predict distance needed to stop from current_speed.
