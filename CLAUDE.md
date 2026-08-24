@@ -127,73 +127,55 @@ python main.py
 ```
 
 ## Project Structure
+Per the **One Class Per File** rule above, each class lives in its own
+`snake_case.py` file at the repo root (e.g. `Ship` → `ship.py`, `AIShip` →
+`ai_ship.py`, `SpaceScreen` → `space_screen.py`). There is no `objects.py` or
+`screens.py` grouping file — run `ls *.py` or see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current, authoritative
+class list and hierarchy diagrams.
+
 ```
 space-game/
-├── main.py                 # Game loop and initialization
-├── constants.py            # Game config: colors, dimensions, FPS
-├── utils.py                # Rendering, file I/O, coordinate conversion
-├── ship.py                 # Ship, PlayerController, AIShip classes
-├── objects.py              # SpaceStation, Moon, StarField, NPCs, Dialogue
-├── screens.py              # All game screens and UI (GameScreen, Menus, Dialogs, etc.)
+├── main.py                 # Game loop, screen state machine, pygame initialization
+├── constants.py             # Colors, game dimensions, UI configuration
+├── utils.py                 # Coordinate conversion, rendering helpers, file I/O, camera management
+├── world_object.py          # WorldObject base (position, drawing) — Ship and Landable extend it
+├── ship.py, ai_ship.py, player_controller.py, autopilot.py   # Ship physics, AI behavior, input, flight computer
+├── screen_base.py, space_screen.py, location_screen.py       # ScreenBase and the two concrete screens
+├── menu.py, story_selector.py, pause_menu.py, save_dialog.py, load_menu.py,
+│   confirm_dialog.py, pilot_name_dialog.py, location_selector.py, star_map.py  # Menus/dialogs (not ScreenBase)
+├── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landable.py,
+│   person.py, npc.py, dialogue.py                            # World objects and NPCs
 ├── config/
 │   └── stories/{story}/    # All config is per-story — nothing shared between stories
 │       ├── ship_types.json, graphics.json, cultures.json, building_types.json, pilots.json
 │       └── systems/{system_id}.json  # System layout: station position, AI ships
 ├── saves/                  # Player save files (generated at runtime)
 ├── docs/
-│   ├── README.md           # Architecture and systems overview
+│   ├── README.md           # Docs index and systems overview
+│   ├── ARCHITECTURE.md     # Class hierarchy and design patterns (source of truth for structure)
 │   ├── CONTROLS.md         # Keyboard bindings and control documentation
-│   └── DESIGN_PATTERNS.md  # Reusable patterns and best practices
+│   ├── DESIGN_PATTERNS.md  # Reusable patterns and best practices
+│   ├── PHYSICS.md          # Coordinate system and movement physics
+│   ├── SAVE_SYSTEM.md      # Save/load format and flow
+│   └── UI_FLOW.md          # Screen state machine
 └── requirements.txt        # pygame only
 ```
 
-**Module Responsibilities:**
-- **main.py** — Game loop, screen state machine, pygame initialization
-- **constants.py** — Colors, game dimensions, UI configuration
-- **utils.py** — Coordinate conversion, rendering helpers, file I/O, camera management
-- **ship.py** — Ship physics, autopilot logic, player input handling
-- **objects.py** — World objects (station, moon, starfield, NPCs)
-- **screens.py** — All user-facing screens (game, menus, dialogs, interior exploration)
-
 ## Coordinate System
-**Critical:** All game graphics are defined in **game-space** (800x600) and scaled to window size.
-- Game space: 800x600 (fixed logical space)
+**Critical:** All game graphics are defined in **game-space** (2400x1800) and scaled to window size.
+- Game space: 2400x1800 (fixed logical space, see `GAME_WIDTH`/`GAME_HEIGHT` in constants.py)
 - Screen space: Variable based on window resize
 - Conversion functions: `to_screen(x, y)`, `to_screen_x()`, `to_screen_y()`
 - Always use game-space for positions, velocities, etc.
 - Only convert to screen-space when drawing
+- See [docs/PHYSICS.md](docs/PHYSICS.md#coordinate-system) for full details
 
 ## Key Classes & Architecture
-
-### Ships (in ship.py)
-- **Ship** (base class): Position, angle, velocity, thrust, space_drag, rotation
-  - `draw()`: Rotated polygon with thrust flame
-  - `update()`: Physics simulation with autopilot integration
-  - `update_autopilot()`: Kinematic-based autopilot controller
-  - `_predict_braking_distance()`: Predict stopping distance
-  - `_autopilot_approach()`, `_autopilot_brake()`: Autopilot execution
-  - `wrap_position()`: Screen-wrapping at edges (torus topology)
-- **PlayerController**: Owns Ship, handles WASD/arrow input for thrust and rotation
-- **AIShip** (extends Ship): Autonomous behavior (accelerate/brake cycling with random course changes)
-
-### Game Screens (in screens.py)
-- **ScreenBase**: Base class for all screens with `get_state()` and `restore_state()`
-- **GameScreen**: Main space exploration view (player, AI ships, star field, station)
-- **StationInterior**: First-person station interior exploration with NPCs
-- **MoonCity**, **MoonOutdoor**: Lunar location exploration
-- **Menu**: Main menu (NEW/LOAD/QUIT, LOAD appears when saves exist)
-- **PauseMenu**: In-game pause (Resume/Save/Quit)
-- **SaveDialog**, **LoadMenu**: Save file browsing and selection
-- **PilotNameDialog**: Pilot name entry for new games
-- **LocationSelector**: Target selection for autopilot
-
-### World Objects (in objects.py)
-- **SpaceStation**: Rotating space station with landing detection
-- **Moon**: Celestial body with surface and city
-- **StarField**: Procedurally generated background stars
-- **Person** (base): Position, sprite with body and head
-- **NPC** (extends Person): Interactive character with behavior (bar/wander) and dialogue
-- **Dialogue**: Text-based conversation system with options
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full, up-to-date class
+hierarchy (World Objects, Screens, Ship physics, Autopilot) — do not rely on a
+structure snapshot in this file for class details, only for the file-layout
+convention above.
 
 ## Save System
 **Location:** `saves/` directory (auto-created)

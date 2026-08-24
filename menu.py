@@ -1,15 +1,22 @@
-"""Main menu for game startup."""
+"""Main menu for game startup, with an animated star system rendered behind it."""
+import math
 import pygame
 import utils
-from constants import BLACK, WHITE, YELLOW, GRAY
-from utils import get_font, get_centered_x, handle_menu_navigation
+from constants import WHITE, YELLOW, GRAY
+from utils import get_font, handle_menu_navigation, render_help_text
+from menu_backdrop import MenuBackdrop
+from ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+
+TITLE = "GALAXY RISE"  # temp title
 
 
 class Menu:
-    """Main menu for game startup."""
+    """Main menu for game startup. Renders an animated star system (star,
+    planet, station, and a ship flying an orbit) behind the menu items."""
     def __init__(self):
         self.items = ["NEW", "LOAD", "QUIT"]
         self.selected_index = 0
+        self.backdrop = MenuBackdrop()
 
     def handle_input(self, events):
         for event in events:
@@ -40,45 +47,54 @@ class Menu:
                 return item.lower()
         return None
 
-    def _get_item_rect(self, index):
+    def _layout(self):
+        """Shared geometry for the panel and menu items, sized to fit every
+        item so the panel outline never clips the last one."""
         scale = min(utils.screen_width, utils.screen_height) / 600.0
-        y_base = int(200 * scale)
-        y_spacing = int(80 * scale)
-        font_menu = get_font(int(48 * scale))
+        panel_width = int(460 * scale)
+        panel_top = int(20 * scale)
+        title_area = int(90 * scale)
+        y_spacing = int(70 * scale)
+        panel_height = title_area + len(self.items) * y_spacing + int(20 * scale)
+
+        panel_rect = pygame.Rect(0, 0, panel_width, panel_height)
+        panel_rect.centerx = utils.screen_width // 2
+        panel_rect.top = panel_top
+
+        y_base = panel_rect.top + title_area + y_spacing // 2
+        return scale, panel_rect, y_base, y_spacing
+
+    def _get_item_rect(self, index):
+        scale, panel_rect, y_base, y_spacing = self._layout()
+        font_menu = get_font(int(42 * scale))
         text = font_menu.render(self.items[index], True, WHITE)
-        rect = text.get_rect(center=(utils.screen_width // 2, y_base + index * y_spacing))
+        box_width = int(260 * scale)
+        rect = pygame.Rect(0, 0, box_width, text.get_height() + int(24 * scale))
+        rect.center = (panel_rect.centerx, y_base + index * y_spacing)
         return rect
 
     def draw(self, surface):
-        surface.fill(BLACK)
+        self.backdrop.draw(surface)
+        self._draw_panel_and_items(surface)
+        render_help_text(surface, "Up/Down: navigate, Enter: select, Click: select")
 
-        scale = min(utils.screen_width, utils.screen_height) / 600.0
-        font_large = get_font(int(72 * scale))
-        font_menu = get_font(int(48 * scale))
+    def _draw_panel_and_items(self, surface):
+        scale, panel_rect, y_base, y_spacing = self._layout()
+        draw_glass_panel(surface, panel_rect, scale)
 
-        title = font_large.render("MENU", True, WHITE)
-        surface.blit(title, (get_centered_x(title.get_width()), int(50 * scale)))
+        font_large = get_font(int(52 * scale))
+        draw_glow_title(surface, TITLE, font_large, panel_rect.centerx, panel_rect.top + int(20 * scale))
 
-        y_base = int(200 * scale)
-        y_spacing = int(80 * scale)
-
-        # Find max width of all menu items for padding
-        max_width = max(font_menu.render(item, True, WHITE).get_width() for item in self.items)
-        box_padding = int(20 * scale)
-        box_width = max_width + box_padding * 2
+        font_menu = get_font(int(38 * scale))
+        pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
 
         for i, item in enumerate(self.items):
-            color = YELLOW if i == self.selected_index else GRAY
-            text = font_menu.render(item, True, color)
-            y = y_base + i * y_spacing
-            text_x = get_centered_x(text.get_width())
-            surface.blit(text, (text_x, y))
+            rect = self._get_item_rect(i)
+            is_selected = i == self.selected_index
+            text = font_menu.render(item, True, WHITE if is_selected else GRAY)
 
-            if i == self.selected_index:
-                box_x = utils.screen_width // 2 - box_width // 2
-                box_top_padding = int(8 * scale)
-                box_bottom_padding = int((y_spacing - text.get_height()) / 2)
-                box_y = y - box_top_padding
-                box_height = text.get_height() + box_top_padding + box_bottom_padding
-                box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
-                pygame.draw.rect(surface, YELLOW, box_rect, 2)
+            if is_selected:
+                draw_selection_highlight(surface, rect, scale, pulse)
+
+            text_rect = text.get_rect(center=rect.center)
+            surface.blit(text, text_rect)
