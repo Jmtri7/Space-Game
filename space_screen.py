@@ -164,7 +164,7 @@ class SpaceScreen(ScreenBase):
                             distance = target_obj.get_distance(self.player.x, self.player.y)
                             speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
                             # If close and slow enough, land directly
-                            if distance < 150 and speed < 0.4:
+                            if distance < target_obj.landing_distance and speed < 0.4:
                                 if target_obj == self.station:
                                     self.landing_target = "station"
                                     return "land"
