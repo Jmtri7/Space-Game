@@ -34,5 +34,11 @@
     "faction": "Frontier Traders Guild",
     "role": "courier_pilot",
     "personality": "Fast-talking and faster-flying, thrives under a deadline."
+  },
+  "rex_calder": {
+    "name": "Rex Calder",
+    "faction": "The Drossholt Company",
+    "role": "patrol_officer",
+    "personality": "Gruff and territorial, treats every claim boundary like it's already been shot at once."
   }
 }
