@@ -76,26 +76,6 @@ def get_ui_offset():
     return (offset_x, offset_y)
 
 
-def get_wrapped_direction(from_x, from_y, to_x, to_y):
-    """Calculate direction to target, accounting for screen wrapping (torus topology).
-
-    Returns (dx, dy) that represents the shortest path to the target,
-    considering the torus topology of the game world.
-    """
-    dx = to_x - from_x
-    dy = to_y - from_y
-
-    # Check if wrapping around horizontally is shorter
-    if abs(dx) > GAME_WIDTH / 2:
-        dx = dx - GAME_WIDTH if dx > 0 else dx + GAME_WIDTH
-
-    # Check if wrapping around vertically is shorter
-    if abs(dy) > GAME_HEIGHT / 2:
-        dy = dy - GAME_HEIGHT if dy > 0 else dy + GAME_HEIGHT
-
-    return dx, dy
-
-
 # Font cache for efficient font reuse
 _font_cache = {}
 

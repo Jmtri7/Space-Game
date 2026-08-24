@@ -15,7 +15,7 @@ from ai_ship import AIShip
 from landable import Landable
 from starfield import StarField
 from central_star import CentralStar
-from asteroid import Asteroid
+from asteroid_field import AsteroidField
 
 
 class SpaceScreen(ScreenBase):
@@ -46,7 +46,7 @@ class SpaceScreen(ScreenBase):
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
         self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type)
-        self.star_field = StarField()
+        self.star_field = StarField(seed=self.system_config.get("star_seed", 0))
 
         # Load graphics assets for station and moon
         station_asset_id = story_meta.get("assets", {}).get("space_station", "station_alpha")
@@ -67,16 +67,8 @@ class SpaceScreen(ScreenBase):
         else:
             self.central_star = None
 
-        # Asteroids: constant-velocity drifters with world wrapping
-        self.asteroids = []
-        for asteroid_cfg in self.system_config.get("asteroids", []):
-            self.asteroids.append(Asteroid(
-                GAME_WIDTH * asteroid_cfg.get("x", 0.5),
-                GAME_HEIGHT * asteroid_cfg.get("y", 0.5),
-                velocity_x=asteroid_cfg.get("vx", 0),
-                velocity_y=asteroid_cfg.get("vy", 0),
-                size=asteroid_cfg.get("size", 4)
-            ))
+        # Asteroids: infinite, seeded, generated only in chunks near the camera
+        self.asteroid_field = AsteroidField(seed=self.system_config.get("asteroid_seed", 1))
 
         # Landables that an AI ship's route config can reference by key
         landable_lookup = {"station": self.station, "moon": self.moon}
@@ -193,8 +185,7 @@ class SpaceScreen(ScreenBase):
 
     def _draw_target_arrow(self, surface, target):
         """Draw an arrow on an imaginary circle around the player's ship, pointing toward the target."""
-        from utils import get_wrapped_direction
-        dx, dy = get_wrapped_direction(self.player.x, self.player.y, target.x, target.y)
+        dx, dy = target.x - self.player.x, target.y - self.player.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
 
         if distance == 0:
@@ -255,8 +246,7 @@ class SpaceScreen(ScreenBase):
         self.moon.update()
         for ai_ship in self.ai_ships:
             ai_ship.update()
-        for asteroid in self.asteroids:
-            asteroid.update()
+        self.asteroid_field.update()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -293,8 +283,7 @@ class SpaceScreen(ScreenBase):
             self.central_star.draw(surface)
         self.station.draw(surface)
         self.moon.draw(surface)
-        for asteroid in self.asteroids:
-            asteroid.draw(surface)
+        self.asteroid_field.draw(surface)
         for ai_ship in self.ai_ships:
             ai_ship.draw(surface)
         self.player.draw(surface)
@@ -306,7 +295,7 @@ class SpaceScreen(ScreenBase):
             draw_debug_marker(surface, self.moon.x, self.moon.y, 10)
             for ai_ship in self.ai_ships:
                 draw_debug_marker(surface, ai_ship.x, ai_ship.y, 8)
-            for asteroid in self.asteroids:
+            for asteroid in self.asteroid_field.asteroids:
                 draw_debug_marker(surface, asteroid.x, asteroid.y, 6)
 
             # Draw velocity info

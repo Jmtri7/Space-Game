@@ -1,7 +1,6 @@
 """Base class for positioned, drawable objects in the game world."""
 import math
 import pygame
-from constants import GAME_WIDTH, GAME_HEIGHT
 from utils import to_screen
 
 
@@ -17,17 +16,6 @@ class WorldObject:
         dx = target_x - self.x
         dy = target_y - self.y
         return math.sqrt(dx * dx + dy * dy)
-
-    def wrap_position(self):
-        """Wrap position at world edges (torus topology)."""
-        if self.x < 0:
-            self.x = GAME_WIDTH
-        elif self.x > GAME_WIDTH:
-            self.x = 0
-        if self.y < 0:
-            self.y = GAME_HEIGHT
-        elif self.y > GAME_HEIGHT:
-            self.y = 0
 
     def _draw_rotated_polygon(self, surface, local_points, angle, color):
         """Rotate local_points by angle (degrees) around (x, y), draw as a filled polygon.

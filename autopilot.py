@@ -1,6 +1,5 @@
 """Standardized autopilot flight computer, owned by a single Ship."""
 import math
-from utils import get_wrapped_direction
 
 
 class Autopilot:
@@ -82,7 +81,7 @@ class Autopilot:
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
             # Simulate one frame to check if we'd actually slow down
-            dx, dy = get_wrapped_direction(ship.x, ship.y, target.x, target.y)
+            dx, dy = target.x - ship.x, target.y - ship.y
             target_angle_rad = math.atan2(dx, -dy)
             accel_angle = self._calculate_brake_redirect_angle(target_angle_rad)
 
@@ -109,8 +108,8 @@ class Autopilot:
                     self.disengage()
                     return
 
-        # Step 3: Calculate optimal acceleration direction (accounting for wrapping)
-        dx, dy = get_wrapped_direction(ship.x, ship.y, target.x, target.y)
+        # Step 3: Calculate optimal acceleration direction
+        dx, dy = target.x - ship.x, target.y - ship.y
         target_angle = math.atan2(dx, -dy)
 
         if should_brake:
@@ -143,7 +142,7 @@ class Autopilot:
         waypoint_x = self.orbit_center_x + self.orbit_radius * math.cos(self.orbit_angle)
         waypoint_y = self.orbit_center_y + self.orbit_radius * math.sin(self.orbit_angle)
 
-        dx, dy = get_wrapped_direction(self.ship.x, self.ship.y, waypoint_x, waypoint_y)
+        dx, dy = waypoint_x - self.ship.x, waypoint_y - self.ship.y
         target_angle = math.atan2(dx, -dy)
         self._point_and_thrust(target_angle)
 

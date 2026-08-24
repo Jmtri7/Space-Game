@@ -70,8 +70,6 @@ def main():
                     new_width, new_height = event.size
                     set_screen_size(new_width, new_height)
                     screen = pygame.display.set_mode((new_width, new_height), pygame.RESIZABLE)
-                    if game_screen:
-                        game_screen.star_field.generate_stars()
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
 

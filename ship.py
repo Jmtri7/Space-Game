@@ -227,5 +227,3 @@ class Ship(WorldObject):
 
         self.x += self.velocity_x
         self.y += self.velocity_y
-
-        self.wrap_position()
