@@ -1,7 +1,7 @@
 """Confirmation dialogs for user actions."""
 import pygame
-from constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GRAY
-from utils import get_scale, get_offset, _center_text_x
+from constants import WHITE, YELLOW, GRAY
+from utils import get_ui_scale, get_ui_offset, _center_text_x
 
 
 class ConfirmDialog:
@@ -21,18 +21,18 @@ class ConfirmDialog:
         return (None, None)
 
     def draw(self, surface):
-        scale = get_scale()
-        offset_x, offset_y = get_offset()
+        scale = get_ui_scale()
+        offset_x, offset_y = get_ui_offset()
 
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.15), int(offset_y + GAME_HEIGHT * scale * 0.25), int(GAME_WIDTH * scale * 0.7), int(GAME_HEIGHT * scale * 0.5)))
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.25), int(800 * scale * 0.7), int(600 * scale * 0.5)))
         font_title = pygame.font.Font(None, int(32 * scale))
         font_text = pygame.font.Font(None, int(24 * scale))
 
         title = font_title.render(self.title, True, WHITE)
-        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.3)))
+        surface.blit(title, (_center_text_x(surface, title, offset_x), int(offset_y + 600 * scale * 0.3)))
 
         message_text = font_text.render(self.message, True, YELLOW)
-        surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.45)))
+        surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), int(offset_y + 600 * scale * 0.45)))
 
         help_text = font_text.render("Y: Yes   N: No   ESC: Cancel", True, GRAY)
-        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + GAME_HEIGHT * scale * 0.65)))
+        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.65)))

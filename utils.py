@@ -287,6 +287,10 @@ def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
 
 
 def _center_text_x(surface, text, offset_x=0):
-    """Get X position to center text horizontally on screen."""
-    scale = get_scale()
-    return int(offset_x + GAME_WIDTH * scale * 0.5 - text.get_width() // 2)
+    """Get X position to center text horizontally on screen.
+
+    Uses the UI-space scale (window dimensions, not the space camera's zoom) -
+    for menus/dialogs, pair this with get_ui_offset(), not get_offset().
+    """
+    ui_scale = get_ui_scale()
+    return int(offset_x + 800 * ui_scale * 0.5 - text.get_width() // 2)

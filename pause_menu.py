@@ -1,8 +1,8 @@
 """Pause menu during gameplay."""
 import pygame
 import utils
-from constants import GAME_WIDTH, GAME_HEIGHT, YELLOW, GRAY
-from utils import get_scale, get_offset
+from constants import YELLOW, GRAY
+from utils import get_ui_scale, get_ui_offset
 
 
 class PauseMenu:
@@ -35,23 +35,23 @@ class PauseMenu:
         return None
 
     def draw(self, surface):
-        scale = get_scale()
-        offset_x, offset_y = get_offset()
+        scale = get_ui_scale()
+        offset_x, offset_y = get_ui_offset()
 
         pygame.draw.rect(surface, (0, 0, 0), (0, 0, utils.screen_width, utils.screen_height))
-        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + GAME_WIDTH * scale * 0.2), int(offset_y + GAME_HEIGHT * scale * 0.3), int(GAME_WIDTH * scale * 0.6), int(GAME_HEIGHT * scale * 0.4)))
+        pygame.draw.rect(surface, (40, 40, 60), (int(offset_x + 800 * scale * 0.2), int(offset_y + 600 * scale * 0.3), int(800 * scale * 0.6), int(600 * scale * 0.4)))
 
         font_title = pygame.font.Font(None, int(48 * scale))
         font_option = pygame.font.Font(None, int(32 * scale))
 
         title = font_title.render("PAUSED", True, YELLOW)
-        surface.blit(title, (int(offset_x + GAME_WIDTH * scale // 2 - title.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.35)))
+        surface.blit(title, (int(offset_x + 800 * scale // 2 - title.get_width() // 2), int(offset_y + 600 * scale * 0.35)))
 
         for i, option in enumerate(self.options):
             color = YELLOW if i == self.selected else GRAY
             text = font_option.render(option, True, color)
-            text_x = int(offset_x + GAME_WIDTH * scale // 2 - text.get_width() // 2)
-            text_y = int(offset_y + GAME_HEIGHT * scale * 0.5 + i * 50)
+            text_x = int(offset_x + 800 * scale // 2 - text.get_width() // 2)
+            text_y = int(offset_y + 600 * scale * 0.5 + i * 50)
             surface.blit(text, (text_x, text_y))
             if i == self.selected:
                 box_rect = pygame.Rect(text_x - 5, text_y - 2, text.get_width() + 10, text.get_height() + 4)
@@ -60,4 +60,4 @@ class PauseMenu:
         if self.success_timer > 0:
             font_success = pygame.font.Font(None, int(32 * scale))
             success_text = font_success.render("Saved!", True, (0, 255, 0))
-            surface.blit(success_text, (int(offset_x + GAME_WIDTH * scale * 0.5 - success_text.get_width() // 2), int(offset_y + GAME_HEIGHT * scale * 0.15)))
+            surface.blit(success_text, (int(offset_x + 800 * scale * 0.5 - success_text.get_width() // 2), int(offset_y + 600 * scale * 0.15)))
