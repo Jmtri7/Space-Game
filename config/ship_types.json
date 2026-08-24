@@ -1,86 +1,14 @@
 {
-  "fighter": {
-    "name": "Fighter Class",
-    "description": "Agile combat vessel",
-    "max_thrust": 0.45,
-    "max_velocity": 6.0,
-    "drag": 0.99,
-    "rotation_speed": 10,
-    "size": 10,
-    "color": [255, 100, 100],
-    "shape": "triangle"
-  },
-  "explorer": {
-    "name": "Explorer Class",
-    "description": "Balanced ship for general exploration",
-    "max_thrust": 0.3,
-    "max_velocity": 4.0,
-    "drag": 0.98,
-    "rotation_speed": 5,
-    "size": 15,
-    "color": [100, 100, 150]
-  },
-  "trader": {
-    "name": "Trader Class",
-    "description": "Cargo hauler with more mass",
-    "max_thrust": 0.2,
-    "max_velocity": 3.0,
-    "drag": 0.96,
-    "rotation_speed": 3,
-    "size": 18,
-    "color": [150, 150, 100]
-  },
-  "scout": {
-    "name": "Scout Class",
-    "description": "Fast and agile courier",
-    "max_thrust": 0.4,
-    "max_velocity": 5.5,
-    "drag": 0.99,
-    "rotation_speed": 8,
-    "size": 12,
-    "color": [100, 200, 100]
-  },
-  "hauler": {
-    "name": "Hauler Class",
-    "description": "Heavy industrial freighter",
-    "max_thrust": 0.15,
-    "max_velocity": 2.5,
-    "drag": 0.95,
-    "rotation_speed": 2,
-    "size": 20,
-    "color": [200, 100, 100]
-  },
-  "liner": {
-    "name": "Cruise Liner",
-    "description": "Luxury passenger vessel - massive and slow",
-    "max_thrust": 0.08,
-    "max_velocity": 1.5,
-    "drag": 0.94,
-    "rotation_speed": 1,
-    "size": 30,
-    "color": [100, 150, 200],
-    "shape": "rectangle"
-  },
-  "miner": {
-    "name": "Mining Vessel",
-    "description": "Heavy industrial asteroid prospector",
+  "shuttle": {
+    "name": "Shuttle",
+    "description": "Small, slow starter craft",
     "max_thrust": 0.12,
     "max_velocity": 2.0,
-    "drag": 0.95,
-    "rotation_speed": 2,
-    "size": 22,
-    "color": [200, 150, 80],
-    "shape": "diamond"
-  },
-  "courier": {
-    "name": "Express Courier",
-    "description": "Ultra-fast mail and small package carrier",
-    "max_thrust": 0.5,
-    "max_velocity": 6.5,
-    "drag": 0.99,
-    "rotation_speed": 9,
-    "size": 8,
-    "color": [200, 200, 100]
+    "drag": 0.97,
+    "rotation_speed": 4,
+    "size": 10,
+    "color": [130, 160, 200],
+    "shape": "rectangle"
   },
   "freighter": {
     "name": "Bulk Freighter",

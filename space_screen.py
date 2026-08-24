@@ -36,7 +36,8 @@ class SpaceScreen(ScreenBase):
         space_drag = self.system_config.get("drag", 0)
 
         # Get player ship type and graphics
-        player_ship_type_id = story_meta.get("ships", {}).get("player_type", "explorer")
+        player_ship_type_id = story_meta.get("ships", {}).get("player_type", "shuttle")
+        player_ship_type = get_ship_type(player_ship_type_id)
         player_graphics = get_graphics_asset("ships", player_ship_type_id)
 
         # Spawn away from map center by default, since that's where a central
@@ -44,7 +45,7 @@ class SpaceScreen(ScreenBase):
         player_start_cfg = self.system_config.get("player_start", {})
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
-        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics)
+        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type)
         self.star_field = StarField()
 
         # Load graphics assets for station and moon
@@ -83,7 +84,7 @@ class SpaceScreen(ScreenBase):
         # Load all AI ships from config
         self.ai_ships = []
         for ai_cfg in self.system_config.get("ai_ships", []):
-            ship_type_id = ai_cfg.get("ship_type", "trader")
+            ship_type_id = ai_cfg.get("ship_type", "freighter")
             ship_type = get_ship_type(ship_type_id)
             ship_graphics = get_graphics_asset("ships", ship_type_id)
             pilot = get_pilot(ai_cfg["pilot"]) if "pilot" in ai_cfg else None

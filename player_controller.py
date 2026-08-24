@@ -7,8 +7,12 @@ from utils import get_graphics_asset
 
 class PlayerController:
     """Controls the player's ship - owns the ship and handles input."""
-    def __init__(self, x, y, space_drag=0, graphics=None):
+    def __init__(self, x, y, space_drag=0, graphics=None, ship_type=None):
         self.ship = Ship(x, y, space_drag=space_drag, graphics=graphics)
+        if ship_type:
+            self.ship.acceleration_magnitude = ship_type.get("max_thrust", self.ship.acceleration_magnitude)
+            self.ship.max_velocity = ship_type.get("max_velocity", self.ship.max_velocity)
+            self.ship.rotation_speed = ship_type.get("rotation_speed", self.ship.rotation_speed)
 
     def handle_input(self, keys):
         """Handle player keyboard input (blocked during autopilot)."""

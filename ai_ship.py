@@ -22,7 +22,7 @@ class AIShip(Ship):
     autopilot (engage_seek / engage_orbit); only the decision of which mode
     to use, and its target, is autonomous - chosen from the pilot's faction
     and role."""
-    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="trader", graphics=None, pilot=None, route=None):
+    def __init__(self, x, y, space_drag=0, ship_type=None, ship_type_id="freighter", graphics=None, pilot=None, route=None):
         super().__init__(x, y, space_drag=space_drag, graphics=graphics)
         self.ship_type_id = ship_type_id
         self.angle = random.randint(0, 360)

@@ -8,7 +8,6 @@
     "moon": "moon_silver"
   },
   "ships": {
-    "player_type": "explorer",
-    "ai_type": "trader"
+    "player_type": "shuttle"
   }
 }
