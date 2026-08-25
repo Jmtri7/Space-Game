@@ -1,8 +1,12 @@
 """Galaxy-scale star map overlay: pan around, select a system to jump to."""
 import pygame
-from game.constants import WHITE, YELLOW, GREEN, GRAY, CYAN
+from game.constants import WHITE, YELLOW, GREEN, CYAN
 from game.utils import get_ui_scale, get_star_systems
-from game.ui.ui_theme import draw_glass_panel
+from game.ui.ui_theme import draw_glass_panel, draw_controls_pane
+
+# Keyboard pan speed, in star-map-space units/frame (unrelated to ui_scale -
+# see handle_input).
+PAN_SPEED = 10
 
 
 class StarMap:
@@ -29,6 +33,7 @@ class StarMap:
         self.drag_start_mouse = (0, 0)
         self.drag_start_pan = (self.pan_x, self.pan_y)
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
+        self._hud_click_rects = []  # UI panel rects, refreshed each draw()
 
     def handle_input(self, events):
         for event in events:
@@ -36,6 +41,8 @@ class StarMap:
                 if event.key in (pygame.K_ESCAPE, pygame.K_m):
                     return "close"
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                    continue
                 clicked = self._system_at(event.pos)
                 if clicked:
                     self.selected_system_id = clicked
@@ -51,6 +58,21 @@ class StarMap:
                 dy = (event.pos[1] - self.drag_start_mouse[1]) / ui_scale
                 self.pan_x = self.drag_start_pan[0] - dx
                 self.pan_y = self.drag_start_pan[1] - dy
+
+        # Keyboard scrolling - called every frame regardless of events (the
+        # map has no update() of its own; main.py calls handle_input() once
+        # per frame while the map is open), so held keys pan continuously.
+        # Not scaled by ui_scale: pan_x/pan_y live in star-map space, not
+        # screen pixels.
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.pan_x -= PAN_SPEED
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.pan_x += PAN_SPEED
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.pan_y -= PAN_SPEED
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.pan_y += PAN_SPEED
         return None
 
     def _system_at(self, mouse_pos, radius=16):
@@ -66,7 +88,7 @@ class StarMap:
 
         font_label = pygame.font.Font(None, int(20 * ui_scale))
         font_title = pygame.font.Font(None, int(32 * ui_scale))
-        font_help = pygame.font.Font(None, int(16 * ui_scale))
+        font_tag = pygame.font.Font(None, int(16 * ui_scale))
 
         self._screen_positions = {}
         for system_id, sysdata in self.systems.items():
@@ -86,15 +108,29 @@ class StarMap:
                 pygame.draw.circle(surface, GREEN, (sx, sy), max(1, radius + int(9 * ui_scale)), 2)
 
             label = font_label.render(sysdata.get("name", system_id), True, color)
-            surface.blit(label, (sx + int(14 * ui_scale), sy - label.get_height() // 2))
+            label_x = sx + int(14 * ui_scale)
+            surface.blit(label, (label_x, sy - label.get_height() // 2))
+            if is_current:
+                tag = font_tag.render("You are here", True, GREEN)
+                surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
 
         title = font_title.render("Star Map", True, WHITE)
-        surface.blit(title, (20, 20))
+        title_rect = title.get_rect(topleft=(20, 20))
+        surface.blit(title, title_rect)
 
-        help_text = font_help.render("Click a system to select, drag to pan, M/ESC to close", True, GRAY)
-        surface.blit(help_text, (20, surface.get_height() - 30))
+        margin = int(10 * ui_scale)
+        help_items = [
+            ("Click", "Select System"),
+            ("Drag", "Pan Map"),
+            ("WASD/Arrows", "Scroll Map"),
+            ("M/ESC", "Close Map"),
+        ]
+        controls_rect = draw_controls_pane(
+            surface, margin, title_rect.bottom + margin, "Controls", help_items, ui_scale
+        )
 
-        self._draw_selected_panel(surface, ui_scale, font_label)
+        selected_rect = self._draw_selected_panel(surface, ui_scale, font_label)
+        self._hud_click_rects = [rect for rect in (controls_rect, selected_rect) if rect]
 
     def _draw_selected_panel(self, surface, ui_scale, font_label):
         """Top-right panel listing the selected system's station and moon,
@@ -119,3 +155,4 @@ class StarMap:
         draw_glass_panel(surface, panel_rect, ui_scale)
         for i, text in enumerate(rendered):
             surface.blit(text, (panel_rect.x + pad_x, panel_rect.y + pad_y + i * line_height))
+        return panel_rect
