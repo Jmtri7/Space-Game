@@ -5,11 +5,11 @@ import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
 from game.utils import (
     get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
-    draw_debug_marker, draw_target_brackets, get_font,
+    draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
 import game.utils as utils
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -112,6 +112,13 @@ class SpaceScreen(ScreenBase):
         self.selected_system_id = None  # Star map selection, for the Jump mechanic
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
+        # HUD panel rects from the most recently drawn frame - a mouse click
+        # on one of them (minimap, info panel, controls, status) shouldn't
+        # also be interpreted as a click-to-target in the world behind it.
+        # One frame stale by construction (draw() runs after handle_input()
+        # each loop), which is fine since these panels don't move frame to
+        # frame.
+        self._hud_click_rects = []
 
     def _build_system_state(self, system_id, config):
         """Build a SystemState (station/moon/central star/celestial bodies/
@@ -345,7 +352,34 @@ class SpaceScreen(ScreenBase):
                     self._try_jump()
                 elif event.key == pygame.K_p:
                     return "possessions"
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                    self._select_target_at(*to_world(*event.pos))
         return None
+
+    def _select_target_at(self, world_x, world_y):
+        """Target whichever targetable object world_x/world_y falls within
+        (closest one wins on overlap) - the click-to-target counterpart to
+        cycling with []. current_target is always an index into the
+        *filtered* list for whichever mode is active (see _filtered_targets),
+        and a click has no mode of its own, so it infers one from what was
+        actually clicked and switches target_mode_index to match before
+        resolving the index, rather than requiring the player to already be
+        in the right mode for whatever they click on."""
+        best_obj, best_dist = None, None
+        for _, obj in self.targetable_objects:
+            radius = obj.ship.size if isinstance(obj, Character) else getattr(obj, "size", 20)
+            distance = math.sqrt((obj.x - world_x) ** 2 + (obj.y - world_y) ** 2)
+            if distance <= radius + 12 and (best_dist is None or distance < best_dist):
+                best_obj, best_dist = obj, distance
+        if best_obj is None:
+            return
+        mode = "SHIPS" if isinstance(best_obj, Character) else "LANDABLES" if isinstance(best_obj, Landable) else "MISC"
+        self.target_mode_index = TARGET_MODES.index(mode)
+        for i, (_, obj) in enumerate(self._filtered_targets()):
+            if obj is best_obj:
+                self.current_target = i
+                return
 
     def _filtered_targets(self):
         """targetable_objects narrowed to the current target mode - SHIPS
@@ -730,10 +764,7 @@ class SpaceScreen(ScreenBase):
         which is why the jump target panel was rendering off-screen.
         """
         ui_scale = get_ui_scale()
-        font_body = get_font(int(18 * ui_scale))
-        pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
         margin = int(10 * ui_scale)
-        line_height = int(22 * ui_scale)
 
         # --- Top-right: minimap, then targeting info (incl. jump target)
         # stacked directly below it.
@@ -783,14 +814,7 @@ class SpaceScreen(ScreenBase):
         else:
             lines.append(("Jump Target: None", GRAY))
 
-        rendered = [font_body.render(text, True, color) for text, color in lines]
-        panel_width = max(text.get_width() for text in rendered) + pad_x * 2
-        panel_height = pad_y * 2 + line_height * len(rendered)
-        info_rect = pygame.Rect(0, 0, panel_width, panel_height)
-        info_rect.topright = (utils.screen_width - margin, minimap_rect.bottom + margin)
-        draw_glass_panel(surface, info_rect, ui_scale)
-        for i, text in enumerate(rendered):
-            surface.blit(text, (info_rect.x + pad_x, info_rect.y + pad_y + i * line_height))
+        info_rect = draw_info_panel(surface, lines, ui_scale, (utils.screen_width - margin, minimap_rect.bottom + margin))
 
         # --- Top-left: control-help pane (shared design with LocationScreen's -
         # see draw_controls_pane).
@@ -801,8 +825,9 @@ class SpaceScreen(ScreenBase):
             ("[", "Previous Target"),
             ("M", "Star Map"),
             ("P", "View Possessions"),
+            ("Click", "Target Object"),
         ]
-        draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
+        controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
 
         # --- Top-center: transient "too close to jump" warning ---
         if self.jump_message_timer > 0:
@@ -838,7 +863,12 @@ class SpaceScreen(ScreenBase):
             if target_obj:
                 status_lines.append(("Press Space for Autopilot", GREEN))
 
-        draw_status_pane(surface, status_lines, ui_scale)
+        status_rect = draw_status_pane(surface, status_lines, ui_scale)
+
+        # Cached for handle_input()'s mouse-click targeting, so a click on
+        # any of these panels doesn't also register as a click-to-target in
+        # the world behind them (see _hud_click_rects' own comment).
+        self._hud_click_rects = [rect for rect in (minimap_rect, info_rect, controls_rect, status_rect) if rect]
 
     def get_state(self):
         state = {

@@ -2,9 +2,10 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, RED
-from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_controls_pane, draw_status_pane
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, RED, GRAY
+from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
+import game.utils as utils
+from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
@@ -50,7 +51,7 @@ class LocationScreen(ScreenBase):
         self.interior_key = None
         self.world_width = world_width
         self.world_height = world_height
-        self.speed = 3
+        self.speed = 2.5
         self.entrance_x = start_x  # Where player enters
         self.entrance_y = start_y
         self.entrance_range = 50  # How close to entrance to exit
@@ -244,6 +245,20 @@ class LocationScreen(ScreenBase):
             return None
         return people[self.current_npc_target]
 
+    def _auto_target_nearby_npc(self):
+        """Auto-target whoever the player has just walked within talk_range
+        of, if nothing is targeted yet (closest one wins, if more than
+        one) - so walking up to someone to talk doesn't also require
+        manually cycling target with []/[. Never overrides an existing
+        target (e.g. one picked by cycling), and never re-targets on its
+        own once cleared by walking away - see _cycle_npc_target for the
+        only other way current_npc_target changes."""
+        if self.current_npc_target is not None:
+            return
+        in_range = [(i, person) for i, person in enumerate(self._targetable_people()) if person.get_distance(self.player.x, self.player.y) <= self.talk_range]
+        if in_range:
+            self.current_npc_target = min(in_range, key=lambda item: item[1].get_distance(self.player.x, self.player.y))[0]
+
     def update(self):
         """Full update for the active/foreground location: player movement,
         camera, and NPCs. Only call this for whichever location the player
@@ -254,6 +269,7 @@ class LocationScreen(ScreenBase):
         if not self.active_dialogue:
             keys = pygame.key.get_pressed()
             self._handle_movement(keys)
+            self._auto_target_nearby_npc()
         self.update_camera()
         self.update_physics()
 
@@ -349,30 +365,35 @@ class LocationScreen(ScreenBase):
 
         # Draw UI
         ui_scale = get_ui_scale()
-        offset_x, offset_y = get_ui_offset()
+        control_margin = int(10 * ui_scale)
 
-        # Location name + NPC target, top-center - top-left is reserved for
-        # the control-reference pane below, matching SpaceScreen's layout.
-        font_label = pygame.font.Font(None, int(24 * ui_scale))
+        # Top-center title pane - same glass-panel look as the Controls/
+        # status panes, anchored to the real screen edge like they are.
+        font_label = get_font(int(24 * ui_scale))
         label_text = font_label.render(self.ui_label, True, WHITE)
-        label_x = int(offset_x + surface.get_width() // 2 - label_text.get_width() // 2)
-        label_y = int(offset_y + 20)
-        surface.blit(label_text, (label_x, label_y))
-        if target_npc:
-            font_target = pygame.font.Font(None, int(20 * ui_scale))
-            target_text = font_target.render(f"Target: {target_npc.name}", True, (100, 255, 100))
-            target_x = int(offset_x + surface.get_width() // 2 - target_text.get_width() // 2)
-            surface.blit(target_text, (target_x, label_y + label_text.get_height() + int(5 * ui_scale)))
+        label_pad_x, label_pad_y = int(16 * ui_scale), int(8 * ui_scale)
+        label_rect = pygame.Rect(0, 0, label_text.get_width() + label_pad_x * 2, label_text.get_height() + label_pad_y * 2)
+        label_rect.midtop = (utils.screen_width // 2, control_margin)
+        draw_glass_panel(surface, label_rect, ui_scale)
+        surface.blit(label_text, (label_rect.centerx - label_text.get_width() // 2, label_rect.y + label_pad_y))
 
-        font_credits = pygame.font.Font(None, int(24 * ui_scale))
-        credits_text = font_credits.render(f"Credits: {self.player.possessions.credits}", True, (255, 220, 100))
-        surface.blit(credits_text, (int(offset_x + surface.get_width() - credits_text.get_width() - 20), int(offset_y + 20)))
+        # Top-right targeting/credits pane (see draw_info_panel) - same
+        # design as SpaceScreen's own info panel, minus the speed/mode
+        # lines that don't apply while on foot.
+        info_lines = [(f"Credits: {self.player.possessions.credits}", (255, 220, 100))]
+        if target_npc:
+            distance = target_npc.get_distance(self.player.x, self.player.y)
+            info_lines.append(("Target:", GREEN))
+            info_lines.append((f"  Distance: {distance:.0f}", GREEN))
+            info_lines.append((f"  {target_npc.name}", GREEN))
+        else:
+            info_lines.append(("Target: None", GRAY))
+        draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
 
         # Top-left control-reference pane - same design as SpaceScreen's
         # (see draw_controls_pane), with the controls that apply here.
         # Anchored to the real screen corner (not get_ui_offset()'s
         # letterboxed 800x600 canvas), matching SpaceScreen's own pane.
-        control_margin = int(10 * ui_scale)
         help_items = [
             ("ESC", "Pause"),
             ("W/A/S/D", "Move"),

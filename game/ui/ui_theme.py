@@ -73,6 +73,27 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
     return rect
 
 
+def draw_info_panel(surface, lines, ui_scale, topright):
+    """Draw a top-right-anchored glass panel of aligned (text, color) lines -
+    the ship-status/targeting readout style SpaceScreen's HUD uses and
+    interior locations now share for their own credits/target readout.
+    `lines` is a list of (text, color) tuples; `topright` is the (x, y)
+    screen point for the panel's own top-right corner. Returns the drawn rect.
+    """
+    font = get_font(int(18 * ui_scale))
+    pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+    line_height = int(22 * ui_scale)
+    rendered = [font.render(text, True, color) for text, color in lines]
+    panel_width = max(text.get_width() for text in rendered) + pad_x * 2
+    panel_height = pad_y * 2 + line_height * len(rendered)
+    rect = pygame.Rect(0, 0, panel_width, panel_height)
+    rect.topright = topright
+    draw_glass_panel(surface, rect, ui_scale)
+    for i, text in enumerate(rendered):
+        surface.blit(text, (rect.x + pad_x, rect.y + pad_y + i * line_height))
+    return rect
+
+
 def draw_status_pane(surface, status_lines, ui_scale):
     """Draw a bottom-center glass panel of stacked, colored status lines -
     transient "you can do X now" prompts (landing, jumping, autopilot,

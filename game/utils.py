@@ -48,6 +48,14 @@ class Camera:
         y_camera = y - self.offset_y
         return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
 
+    def to_world(self, sx, sy):
+        """Convert screen coordinates back to world coordinates - the
+        inverse of to_screen(), used to resolve a mouse click's screen
+        position to the world position it points at (e.g. click-to-target)."""
+        scale = self.get_scale()
+        offset_x, offset_y = self.get_world_offset()
+        return ((sx - offset_x) / scale + self.offset_x, (sy - offset_y) / scale + self.offset_y)
+
     def to_screen_x(self, x):
         """Convert world X coordinate to screen space."""
         return int(round(x * self.get_scale()))
@@ -119,6 +127,11 @@ def get_offset():
 def to_screen(x, y):
     """Convert world coordinates to screen coordinates."""
     return _camera.to_screen(x, y)
+
+
+def to_world(x, y):
+    """Convert screen coordinates back to world coordinates (inverse of to_screen)."""
+    return _camera.to_world(x, y)
 
 
 def to_screen_x(x):
