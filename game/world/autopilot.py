@@ -37,9 +37,14 @@ BRAKING_SAFETY_BUFFER = 1.0       # multiplier on predict_braking_distance_from_
 # failed to converge in one trial). 10 stays the tightest and fastest.
 BRAKE_ALIGNMENT_THRESHOLD_DEG = 10
 STALL_BAILOUT_FACTOR = 1.5        # see SeekMode's "would increase speed" bailout
-# Don't commit to a retrograde braking burn while velocity is still this far
-# off from the direction to the target - see Step 2's comment.
-MAX_BRAKE_COMMIT_MISALIGNMENT_DEG = 45
+# Below this, the sideways (cross-track) component of velocity is treated as
+# already gone - see SeekMode's cross-track-kill phase. Values from 0.7 up
+# through at least 2.0 all tested identically (this only matters right at
+# the noise floor); much lower (0.15) caused the phase to flicker on/off on
+# harmless discretization jitter near zero, which - before that flicker was
+# made sticky below - cost real frames swinging the heading back and forth
+# for no reason.
+CROSS_TRACK_KILL_THRESHOLD = 1.0
 # Watchdog: force an arrival after this many frames of active seeking,
 # regardless of precision. Found one narrow case (a slow-turning ship with
 # velocity ~120 degrees off-target at close range) where the un-stick/
@@ -97,9 +102,18 @@ def point_and_thrust(ship, accel_angle_rad, alignment_threshold_deg=10):
         ship.release_thrust()
 
 
+def opposing_angle(vx, vy):
+    """Direction that opposes a given vector - thrusting this way cancels
+    it. Used both for a full retrograde burn (see retrograde_angle) and, on
+    its own, to cancel just the cross-track component of velocity in
+    SeekMode's cross-track-kill phase."""
+    vector_angle = math.atan2(vx, -vy)
+    return (vector_angle + math.pi) % (2 * math.pi)
+
+
 def retrograde_angle(ship):
     """Direction directly opposite the ship's current velocity - a pure
-    braking burn, no redirect blended in.
+    braking burn.
 
     An earlier version blended in some redirect-toward-target (30%) on top
     of this, meant to correct for velocity that had drifted off the line to
@@ -113,10 +127,27 @@ def retrograde_angle(ship):
     matches what predict_braking_distance_from_stop already assumes (turn
     to face away from travel, then reverse-thrust) and, confirmed by
     simulation across a spread of approach angles/distances, stops in a
-    straight line with no pass-by at all.
+    straight line with no pass-by at all *when velocity is already pointed
+    roughly at the target* - see SeekMode's cross-track-kill phase for what
+    handles it when that's not true.
     """
-    velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
-    return (velocity_angle + math.pi) % (2 * math.pi)
+    return opposing_angle(ship.velocity_x, ship.velocity_y)
+
+
+def velocity_components(ship, target, distance):
+    """Split the ship's velocity into (along, perp_x, perp_y) relative to
+    the straight line to target: along is the signed speed closing on the
+    target (positive = approaching), and (perp_x, perp_y) is whatever
+    velocity is left once that's removed - the sideways drift a pure
+    retrograde burn can't fix because it isn't pointed anywhere near
+    target."""
+    if distance < 1e-6:
+        return 0.0, 0.0, 0.0
+    ux, uy = (target.x - ship.x) / distance, (target.y - ship.y) / distance
+    along = ship.velocity_x * ux + ship.velocity_y * uy
+    perp_x = ship.velocity_x - along * ux
+    perp_y = ship.velocity_y - along * uy
+    return along, perp_x, perp_y
 
 
 def predict_braking_distance_from_stop(ship, current_speed):
@@ -166,6 +197,8 @@ class SeekMode:
         # Sticky once True - see Step 2's comment for why this can't just be
         # recomputed fresh every frame.
         self.braking = False
+        # Sticky once True (only meaningful while braking) - see Step 2a.
+        self.cross_track_done = True
         self.frames = 0  # see MAX_SEEK_FRAMES
 
     def update(self, autopilot):
@@ -201,27 +234,37 @@ class SeekMode:
         # in front of the target. That whipsawed the nose back and forth for
         # dozens of frames with the engine off, instead of ever holding a
         # heading long enough to actually thrust.
-        #
-        # Only commit while velocity is already reasonably pointed at the
-        # target (within MAX_BRAKE_COMMIT_MISALIGNMENT_DEG). Retrograde
-        # thrust cancels whatever velocity currently exists - if most of
-        # that velocity is sideways (e.g. the ship was already moving fast
-        # in some unrelated direction when it targeted the landable),
-        # braking immediately just freezes that sideways drift in place
-        # instead of correcting it, stopping the ship well off to the side
-        # on the very first attempt. Holding off lets the normal point-at-
-        # target approach (below) cancel the sideways component first.
         if not self.braking:
             braking_distance = predict_braking_distance_from_stop(ship, speed)
-            would_commit = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
-            if would_commit:
-                dx, dy = target.x - ship.x, target.y - ship.y
-                target_angle = math.atan2(dx, -dy)
-                velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
-                misalignment = math.degrees(target_angle - velocity_angle)
-                misalignment = abs((misalignment + 180) % 360 - 180)
-                self.braking = misalignment <= MAX_BRAKE_COMMIT_MISALIGNMENT_DEG
+            self.braking = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+            if self.braking:
+                self.cross_track_done = False  # fresh commit - give it one cross-track check
         should_brake = self.braking
+
+        # Step 2a: cross-track kill. Retrograde thrust only cancels
+        # whatever velocity currently exists - if most of it is sideways
+        # (e.g. the ship was already moving fast in some unrelated
+        # direction when it targeted the landable), braking immediately
+        # just freezes that sideways drift in place instead of correcting
+        # it, stopping the ship well off to the side on the very first
+        # attempt (up to ~360 units off, measured). Null the cross-track
+        # component first so the retrograde burn below is left with
+        # velocity that's actually pointed at the target - the same
+        # straight-line stop it was already proven to deliver.
+        #
+        # Sticky per commitment (self.cross_track_done), same reasoning as
+        # self.braking above: recomputed fresh every frame, tiny
+        # discretization jitter right at CROSS_TRACK_KILL_THRESHOLD flickers
+        # this on and off, each flip costing a full heading swing for no
+        # reason. One check per commitment is enough - if it passes, this
+        # phase never runs again until the next fresh commit (e.g. after an
+        # un-stick).
+        if should_brake and not self.cross_track_done:
+            along, perp_x, perp_y = velocity_components(ship, target, distance)
+            if math.hypot(perp_x, perp_y) > CROSS_TRACK_KILL_THRESHOLD:
+                point_and_thrust(ship, opposing_angle(perp_x, perp_y), BRAKE_ALIGNMENT_THRESHOLD_DEG)
+                return
+            self.cross_track_done = True
 
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
