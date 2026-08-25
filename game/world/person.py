@@ -34,17 +34,17 @@ class Person:
     # darkest). An outfit (see self.outfit) recolors the oval/polygon and
     # adds a thick helmet ring around the head, but never changes this
     # shape - see draw().
-    FOOT_RADIUS_X = 7       # feet oval - wider than tall
+    FOOT_RADIUS_X = 5.5      # feet oval - wider than tall
     FOOT_RADIUS_Y = 4
     FOOT_OVERLAP = 2         # how far the torso sinks into the top of the feet oval
     BODY_HEIGHT = 13         # torso height, shoulders to (pre-overlap) base
     SHOULDER_HALF_WIDTH = 7  # torso half-width at the (rounded) shoulders
-    BASE_HALF_WIDTH = 5.5    # torso half-width at the base - a bit less than the feet oval
+    BASE_HALF_WIDTH = 4.5    # torso half-width at the base - a bit less than the feet oval
     SHOULDER_RADIUS = 3.5    # rounding radius of each shoulder corner
     SHOULDER_SEGMENTS = 4    # polygon segments approximating each shoulder's curve
-    HEAD_RADIUS = 6.5        # slightly large, so it overlaps the shoulders below
-    HEAD_OVERLAP = 2         # how far the head sinks between the shoulders
-    HELMET_THICKNESS = 2.5   # ring width of a helmet, when outfitted
+    HEAD_RADIUS = 5.5        # slightly large, so it overlaps the shoulders below
+    HEAD_OVERLAP = 0.5       # how far the head sinks between the shoulders
+    HELMET_THICKNESS = 3.5   # ring width of a helmet, when outfitted
 
     SKIN_COLOR = (225, 180, 145)  # torso tone; head/feet are shaded from this
 
