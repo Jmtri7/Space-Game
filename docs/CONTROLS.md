@@ -12,7 +12,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
 | **T** or **]** | Cycle forward through targetable objects in the current target mode |
 | **[** | Cycle backward through targetable objects in the current target mode |
-| **Tab** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → ALL (station, moon, AI ships, celestial bodies, star) |
+| **Tab** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |

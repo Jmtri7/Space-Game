@@ -34,9 +34,10 @@ MINIMAP_SIZE = 170     # px, before ui_scale
 MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 
 # Targeting modes - cycled with Tab, filters what T/[/] can select.
-# "ALL" is last/default so a fresh screen keeps the original un-filtered
-# cycling behavior until the player opts into narrowing it down.
-TARGET_MODES = ["SHIPS", "LANDABLES", "ALL"]
+# "MISC" covers everything that's neither a ship nor a landable (celestial
+# bodies, the central star). LANDABLES is the default since finding and
+# landing on the station is the first thing a new pilot needs to target.
+TARGET_MODES = ["SHIPS", "LANDABLES", "MISC"]
 
 
 class SpaceScreen(ScreenBase):
@@ -161,7 +162,7 @@ class SpaceScreen(ScreenBase):
         self.ai_ship = self.ai_ships[0] if self.ai_ships else None
 
         self.current_target = None
-        self.target_mode_index = len(TARGET_MODES) - 1  # "ALL"
+        self.target_mode_index = TARGET_MODES.index("LANDABLES")
         self.targetable_objects = [
             (self.station.name, self.station),
             (self.moon.name, self.moon),
@@ -170,14 +171,12 @@ class SpaceScreen(ScreenBase):
             self.targetable_objects.append((self.central_star.name, self.central_star))
         for body in self.celestial_bodies:
             self.targetable_objects.append((body.name, body))
-        # Add all AI ships to targetable objects
+        # Add all AI ships to targetable objects. Pilot name is shown
+        # separately in the HUD (Character.person.name), not folded into
+        # this label, so it stays just the ship type.
         for i, ship in enumerate(self.ai_ships):
-            # Use ship type name if available, otherwise use generic label
             ship_type = get_ship_type(self.story, ship.ship_type_id)
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
-            pilot_name = ship.person.name
-            if pilot_name:
-                ship_name = f"{ship_name} ({pilot_name})"
             self.targetable_objects.append((ship_name, ship))
 
     def get_interior_screen(self, landable, key, world_width, world_height):
@@ -300,16 +299,16 @@ class SpaceScreen(ScreenBase):
 
     def _filtered_targets(self):
         """targetable_objects narrowed to the current target mode - SHIPS
-        (AI ships only), LANDABLES (station/moon only), or ALL (everything,
-        the original unfiltered list). current_target is always an index
-        into *this* list, not the master one, so switching modes changes
-        what index 0 means."""
+        (AI ships only), LANDABLES (station/moon only), or MISC (everything
+        else - celestial bodies, the central star). current_target is
+        always an index into *this* list, not the master one, so switching
+        modes changes what index 0 means."""
         mode = TARGET_MODES[self.target_mode_index]
         if mode == "SHIPS":
             return [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
         elif mode == "LANDABLES":
             return [entry for entry in self.targetable_objects if isinstance(entry[1], Landable)]
-        return self.targetable_objects
+        return [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, Landable))]
 
     def _cycle_target(self, direction=1):
         """Cycle through targetable objects in the current target mode - direction=1 for T/], -1 for [."""
@@ -681,8 +680,9 @@ class SpaceScreen(ScreenBase):
         ]
         if target_obj and target_name:
             distance = self.player.get_distance(target_obj.x, target_obj.y)
-            lines.append((f"Target: {target_name}", GREEN))
+            lines.append(("Target:", GREEN))
             lines.append((f"  Distance: {distance:.0f}", GREEN))
+            lines.append((f"  {target_name}", GREEN))
             # Ships show their pilot; landables (station/moon) list what's
             # inside them so the player can see where they'll end up before
             # committing to land; other bodies show a hazard note if any -
