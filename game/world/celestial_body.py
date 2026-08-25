@@ -31,6 +31,28 @@ class CelestialBody(WorldObject):
         if self.has_ring:
             ring_rect = pygame.Rect(0, 0, radius * 3, int(radius * 1.1))
             ring_rect.center = center
-            pygame.draw.ellipse(surface, self.ring_color, ring_rect, max(1, int(radius * 0.18)))
+            ring_width = max(1, int(radius * 0.18))
+            # Far half first (behind the planet) - the near half is drawn
+            # again after the planet's disk, so the ring wraps around it
+            # realistically instead of the whole ring sitting flatly behind
+            # a fully opaque planet.
+            self._draw_ring_half(surface, ring_rect, ring_width, top_half=True)
 
         pygame.draw.circle(surface, self.color, center, radius)
+
+        if self.has_ring:
+            self._draw_ring_half(surface, ring_rect, ring_width, top_half=False)
+
+    def _draw_ring_half(self, surface, ring_rect, ring_width, top_half):
+        """Draw only the top (far side, behind the planet) or bottom (near
+        side, in front of the planet) half of the ring ellipse, via a clip
+        rect over half of its bounding box."""
+        half_height = ring_rect.height // 2 + 1
+        if top_half:
+            clip = pygame.Rect(ring_rect.left, ring_rect.top, ring_rect.width, half_height)
+        else:
+            clip = pygame.Rect(ring_rect.left, ring_rect.centery, ring_rect.width, half_height)
+        previous_clip = surface.get_clip()
+        surface.set_clip(previous_clip.clip(clip))
+        pygame.draw.ellipse(surface, self.ring_color, ring_rect, ring_width)
+        surface.set_clip(previous_clip)
