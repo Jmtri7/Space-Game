@@ -12,7 +12,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
 | **T** or **]** | Cycle forward through targetable objects (station, moon, AI ship, celestial bodies, star) |
 | **[** | Cycle backward through targetable objects |
-| **L** | Land on targeted object or nearby (when in range) |
+| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) |
+| **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |

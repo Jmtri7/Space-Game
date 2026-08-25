@@ -29,6 +29,10 @@ JUMP_ARRIVAL_DISTANCE = 1400    # world units from system center on arrival
 JUMP_SELF_MIN_DISTANCE = 700    # must be at least this far from center to jump "back"
 SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
+# Minimap tuning
+MINIMAP_SIZE = 170     # px, before ui_scale
+MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
+
 
 class SpaceScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
@@ -251,33 +255,33 @@ class SpaceScreen(ScreenBase):
                 elif event.key == pygame.K_LEFTBRACKET:
                     self._cycle_target(-1)
                 elif event.key == pygame.K_l:
-                    # If target is selected
+                    # Land only - never engages autopilot (see K_SPACE below
+                    # for that). If a landable is targeted and already in
+                    # range, land on it directly; otherwise fall back to a
+                    # pure proximity check, which also covers an AI ship
+                    # being targeted or nothing being targeted at all.
+                    target_obj = self._get_target_object()
+                    if target_obj and self.current_target is not None and not isinstance(target_obj, Character):
+                        distance = target_obj.get_distance(self.player.x, self.player.y)
+                        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+                        if distance < target_obj.landing_distance and speed < 0.4:
+                            if target_obj == self.station:
+                                self.landing_target = "station"
+                                return "land"
+                            elif target_obj == self.moon:
+                                self.landing_target = "moon"
+                                return "land"
+                    landing_target = self._check_landing()
+                    if landing_target:
+                        self.landing_target = landing_target
+                        return "land"
+                elif event.key == pygame.K_SPACE:
+                    # Engage autopilot toward the current target - follows an
+                    # AI ship, or approaches a landable from any range (L
+                    # only lands once you're already close).
                     target_obj = self._get_target_object()
                     if target_obj and self.current_target is not None:
-                        # For AI ships, always engage autopilot to follow them
-                        if isinstance(target_obj, Character):
-                            self.player.engage_seek(target_obj)
-                        # For landables (station/moon), check if in landing range
-                        else:
-                            distance = target_obj.get_distance(self.player.x, self.player.y)
-                            speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-                            # If close and slow enough, land directly
-                            if distance < target_obj.landing_distance and speed < 0.4:
-                                if target_obj == self.station:
-                                    self.landing_target = "station"
-                                    return "land"
-                                elif target_obj == self.moon:
-                                    self.landing_target = "moon"
-                                    return "land"
-                            else:
-                                # Otherwise engage autopilot to approach target
-                                self.player.engage_seek(target_obj)
-                    else:
-                        # No target selected, check if close enough to land manually
-                        landing_target = self._check_landing()
-                        if landing_target:
-                            self.landing_target = landing_target
-                            return "land"
+                        self.player.engage_seek(target_obj)
                 elif event.key == pygame.K_m and not self.jump_state:
                     return "star_map"
                 elif event.key == pygame.K_j and not self.jump_state:
@@ -364,6 +368,56 @@ class SpaceScreen(ScreenBase):
             end_x = start_x + back_x * streak_length
             end_y = start_y + back_y * streak_length
             pygame.draw.line(surface, CYAN, utils.to_screen(start_x, start_y), utils.to_screen(end_x, end_y), 2)
+
+    def _draw_minimap(self, surface, target_obj):
+        """Square radar in the top-right corner: player stays centered, every
+        other system object is plotted as a point at its true relative
+        position/color, scaled down to MINIMAP_RANGE world units per half-width.
+        Objects beyond that range simply don't appear - this is a local radar,
+        not the galaxy-scale StarMap (M key), so it never needs to pan/zoom.
+        Returns its rect so the HUD can stack the jump-target panel below it.
+        """
+        ui_scale = get_ui_scale()
+        size = int(MINIMAP_SIZE * ui_scale)
+        margin = int(10 * ui_scale)
+        rect = pygame.Rect(0, 0, size, size)
+        rect.topright = (utils.screen_width - margin, margin)
+
+        draw_glass_panel(surface, rect, ui_scale)
+
+        px_per_unit = (size / 2) / MINIMAP_RANGE
+
+        def project(x, y):
+            return rect.centerx + (x - self.player.x) * px_per_unit, rect.centery + (y - self.player.y) * px_per_unit
+
+        # (object, dot color, dot radius in px) - central star/celestial
+        # bodies only included if this system actually has them.
+        points = []
+        if self.central_star:
+            points.append((self.central_star, (255, 220, 80), 3))
+        points.append((self.station, WHITE, 3))
+        points.append((self.moon, (180, 180, 200), 3))
+        for body in self.celestial_bodies:
+            points.append((body, (100, 160, 255), 2))
+        for ai_ship in self.ai_ships:
+            points.append((ai_ship, GREEN, 2))
+
+        for obj, color, radius in points:
+            sx, sy = project(obj.x, obj.y)
+            if rect.left <= sx <= rect.right and rect.top <= sy <= rect.bottom:
+                r = max(1, int(radius * ui_scale))
+                pygame.draw.circle(surface, color, (int(sx), int(sy)), r)
+                if obj is target_obj:
+                    pygame.draw.circle(surface, YELLOW, (int(sx), int(sy)), r + int(4 * ui_scale), 1)
+
+        # Player is always exactly centered, drawn last so it stays on top.
+        pygame.draw.circle(surface, CYAN, rect.center, max(2, int(3 * ui_scale)))
+
+        font_label = get_font(int(14 * ui_scale))
+        label = font_label.render("System Map", True, GRAY)
+        surface.blit(label, (rect.x + int(6 * ui_scale), rect.y + int(4 * ui_scale)))
+
+        return rect
 
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -611,7 +665,9 @@ class SpaceScreen(ScreenBase):
         for i, text in enumerate(rendered):
             surface.blit(text, (status_rect.x + pad_x, status_rect.y + pad_y + i * line_height))
 
-        # --- Top-right: jump target panel (persists across star map open/close) ---
+        # --- Top-right: minimap, then jump target panel stacked below it ---
+        minimap_rect = self._draw_minimap(surface, target_obj)
+
         if not self.jump_state and self.selected_system_id:
             systems = get_star_systems(self.story)
             selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
@@ -620,7 +676,7 @@ class SpaceScreen(ScreenBase):
                 label += " (current)"
             label_text = font_body.render(label, True, CYAN)
             jump_rect = pygame.Rect(0, 0, label_text.get_width() + pad_x * 2, label_text.get_height() + pad_y * 2)
-            jump_rect.topright = (utils.screen_width - margin, margin)
+            jump_rect.topright = (utils.screen_width - margin, minimap_rect.bottom + margin)
             draw_glass_panel(surface, jump_rect, ui_scale)
             surface.blit(label_text, (jump_rect.x + pad_x, jump_rect.y + pad_y))
 
@@ -636,7 +692,7 @@ class SpaceScreen(ScreenBase):
         # --- Bottom-center: a control-help bar (always) with the current
         # status (autopilot/landing/jump - mutually exclusive) as its own
         # panel directly above, so the two never crowd into one another.
-        help_text = font_body.render("T/[/]: target, L: land, M: star map, ESC: pause", True, WHITE)
+        help_text = font_body.render("T/[/]: target, Space: autopilot, L: land, M: star map, ESC: pause", True, WHITE)
         help_rect = pygame.Rect(0, 0, help_text.get_width() + pad_x * 2, help_text.get_height() + pad_y * 2)
         help_rect.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
         draw_glass_panel(surface, help_rect, ui_scale)

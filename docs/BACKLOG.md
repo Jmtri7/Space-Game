@@ -32,7 +32,6 @@ higher priority.
 - [ ] Quick save.
 - [ ] AI walking pathfinding.
 - [ ] Cultural station interiors; round rooms.
-- [ ] System minimap.
 - [ ] Options for star/asteroid seeds.
 - [ ] Add metrics for game performance.
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame already handles that.
