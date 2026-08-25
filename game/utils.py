@@ -188,7 +188,7 @@ def handle_menu_navigation(event, current_index, list_length):
 def load_json(filename):
     """Load JSON file, return None if error."""
     try:
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding='utf-8') as f:
             return json.load(f)
     except:
         return None
@@ -196,8 +196,8 @@ def load_json(filename):
 
 def save_json(filename, data):
     """Save data to JSON file."""
-    with open(filename, 'w') as f:
-        json.dump(data, f, indent=2)
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 def get_ship_type(story, ship_type_id):
