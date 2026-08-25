@@ -822,7 +822,16 @@ class TestMultiSystemSimulation(unittest.TestCase):
         background_ship = game_screen.systems["keplers_reach"].ai_ships[0]
         before = (background_ship.x, background_ship.y)
 
-        for _ in range(120):
+        # ai_ships[0] here is a drossholt_freighter (rotation_speed 1 deg/frame -
+        # see ship_types.json), and Character.for_ai_pilot gives every AI ship a
+        # random starting facing (character.py). SeekMode doesn't thrust until
+        # it's turned within 10 degrees of its target heading, so a worst-case
+        # starting angle (~180 degrees off) needs up to 171 frames of pure
+        # turning before the ship moves at all - confirmed by sweeping every
+        # starting angle 0-360 against this same rotation_speed. 120 frames
+        # made this flaky (~1 in 4) purely on the random starting angle; 250
+        # comfortably clears the proven worst case.
+        for _ in range(250):
             game_screen.update_physics()
 
         self.assertNotEqual((background_ship.x, background_ship.y), before,
