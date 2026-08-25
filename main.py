@@ -412,6 +412,7 @@ def main():
 
             elif current_screen == "pause":
                 pause_menu.update()
+                dialog_was_open = bool(delete_confirm_dialog or overwrite_confirm_dialog or save_dialog)
 
                 if delete_confirm_dialog:
                     dialog_action, filename = delete_confirm_dialog.handle_input(events)
@@ -481,7 +482,7 @@ def main():
                     elif dialog_action == "delete":
                         delete_confirm_dialog = ConfirmDialog("Delete Save?", save_name[:50], context_data=save_name)
 
-                if not save_dialog and not delete_confirm_dialog and not overwrite_confirm_dialog:
+                if not dialog_was_open:
                     action = pause_menu.handle_input(events)
                     if action == "resume":
                         current_screen = previous_screen
