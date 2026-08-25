@@ -14,7 +14,6 @@ higher priority.
 - [ ] ⭐ Overwriting a save returns to the menu with a "saved" message, but creating a new save doesn't.
 - [ ] ⭐ Saving while jumping and then loading gets you stuck in the jump temporarily.
 - [ ] ⭐ Can talk to people from far away (no proximity check on dialogue).
-- [ ] Credits are shown in the middle of the targeting info (overlapping/misplaced UI).
 - [ ] Exit menus don't tell how to close them.
 - [ ] Weird characters in Elena Voss's dialogue.
 - [ ] No indication of when you're close enough to use an exit.

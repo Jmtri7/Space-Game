@@ -676,10 +676,15 @@ class SpaceScreen(ScreenBase):
         mode_label = TARGET_MODES[self.target_mode_index]
         if target_obj and target_name:
             distance = self.player.get_distance(target_obj.x, target_obj.y)
-            target_line, target_color = f"Target [{mode_label}]: {target_name} ({distance:.0f})", GREEN
+            target_line, target_color = f"Target: {target_name} ({distance:.0f})", GREEN
         else:
-            target_line, target_color = f"Target [{mode_label}]: None", GRAY
-        lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color), (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100))]
+            target_line, target_color = "Target: None", GRAY
+        lines = [
+            (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100)),
+            (f"Speed: {speed:.2f}", WHITE),
+            (f"Mode: {mode_label}", WHITE),
+            (target_line, target_color),
+        ]
         # Landables (station/moon) list what's inside them, right under the
         # target line - lets the player see where they'll end up before
         # committing to land.
