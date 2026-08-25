@@ -44,7 +44,7 @@ STALL_BAILOUT_FACTOR = 1.5        # see SeekMode's "would increase speed" bailou
 # harmless discretization jitter near zero, which - before that flicker was
 # made sticky below - cost real frames swinging the heading back and forth
 # for no reason.
-CROSS_TRACK_KILL_THRESHOLD = 1.0
+CROSS_TRACK_KILL_THRESHOLD = 0.7
 # Watchdog: force an arrival after this many frames of active seeking,
 # regardless of precision. Found one narrow case (a slow-turning ship with
 # velocity ~120 degrees off-target at close range) where the un-stick/
@@ -268,46 +268,49 @@ class SeekMode:
 
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
-            # Simulate one frame to check if we'd actually slow down
-            accel_angle = retrograde_angle(ship)
+            # Below has_arrived's own speed threshold, retrograde_angle is
+            # unreliable (atan2 of a near-zero vector barely means anything),
+            # and there's not much velocity left worth precisely cancelling
+            # anyway - decide accept-or-resume immediately instead of first
+            # requiring alignment to a target that can jitter unpredictably
+            # at speeds this low. Without this, a ship could spin in place
+            # for a long stretch: neither the thrust-would-help check below
+            # nor the bailout it guards can run without "aligned" being true
+            # first, and at speeds this low "aligned" might not happen again
+            # for a while by chance (measured: ~150 wasted frames in one
+            # traced case, spinning with the engine off and no progress).
+            if speed < ARRIVAL_SPEED_THRESHOLD:
+                if self._accept_or_resume(ship, autopilot, target, distance):
+                    return
+                should_brake = self.braking
+            else:
+                # Simulate one frame to check if we'd actually slow down
+                accel_angle = retrograde_angle(ship)
 
-            # Check if aligned enough to thrust
-            accel_angle_deg = math.degrees(accel_angle)
-            current_angle = ship.angle % 360
-            target_angle_norm = accel_angle_deg % 360
-            angle_diff = target_angle_norm - current_angle
-            if angle_diff > 180:
-                angle_diff -= 360
-            elif angle_diff < -180:
-                angle_diff += 360
+                # Check if aligned enough to thrust
+                accel_angle_deg = math.degrees(accel_angle)
+                current_angle = ship.angle % 360
+                target_angle_norm = accel_angle_deg % 360
+                angle_diff = target_angle_norm - current_angle
+                if angle_diff > 180:
+                    angle_diff -= 360
+                elif angle_diff < -180:
+                    angle_diff += 360
 
-            aligned = abs(angle_diff) < BRAKE_ALIGNMENT_THRESHOLD_DEG
-            if aligned:
-                # Simulate thrust application
-                rad = math.radians(ship.angle)
-                test_vx = ship.velocity_x + math.sin(rad) * ship.acceleration_magnitude
-                test_vy = ship.velocity_y - math.cos(rad) * ship.acceleration_magnitude
-                test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
+                aligned = abs(angle_diff) < BRAKE_ALIGNMENT_THRESHOLD_DEG
+                if aligned:
+                    # Simulate thrust application
+                    rad = math.radians(ship.angle)
+                    test_vx = ship.velocity_x + math.sin(rad) * ship.acceleration_magnitude
+                    test_vy = ship.velocity_y - math.cos(rad) * ship.acceleration_magnitude
+                    test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
 
-                # Speed would increase instead of decrease - retrograde
-                # thrust isn't productive anymore. Close to the target,
-                # that's functionally an arrival, so park and stop.
-                # Farther out it means braking stalled early (retrograde_angle
-                # gets noisy right as velocity approaches zero, since atan2 of
-                # a near-zero vector is barely defined) - un-commit rather
-                # than parking mid-flight, so the ship resumes closing the
-                # remaining distance instead of getting stranded there
-                # forever (sticky self.braking would otherwise never
-                # reconsider once it stalls out like this).
-                if test_speed > speed:
-                    landing_distance = getattr(target, 'landing_distance', 100)
-                    close_enough = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION) * STALL_BAILOUT_FACTOR
-                    if distance < close_enough:
-                        ship.park()
-                        autopilot.disengage()
-                        return
-                    self.braking = False
-                    should_brake = False
+                    # Speed would increase instead of decrease - retrograde
+                    # thrust isn't productive anymore.
+                    if test_speed > speed:
+                        if self._accept_or_resume(ship, autopilot, target, distance):
+                            return
+                        should_brake = self.braking
 
         # Step 3: Calculate optimal acceleration direction
         if should_brake:
@@ -319,6 +322,25 @@ class SeekMode:
         # Point toward target and accelerate
         dx, dy = target.x - ship.x, target.y - ship.y
         point_and_thrust(ship, math.atan2(dx, -dy))
+
+    def _accept_or_resume(self, ship, autopilot, target, distance):
+        """Called once braking has stopped being productive at low speed
+        (see Step 2b). Close enough to the target, that's functionally an
+        arrival - park and stop. Farther out, un-commit from braking rather
+        than parking mid-flight, so the ship resumes closing the remaining
+        distance instead of getting stranded there forever (sticky
+        self.braking would otherwise never reconsider once it stalls out
+        like this). Returns True if it parked (caller should return
+        immediately); False if it un-stuck (caller should keep going using
+        the now-updated self.braking)."""
+        landing_distance = getattr(target, 'landing_distance', 100)
+        close_enough = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION) * STALL_BAILOUT_FACTOR
+        if distance < close_enough:
+            ship.park()
+            autopilot.disengage()
+            return True
+        self.braking = False
+        return False
 
 
 class OrbitMode:
