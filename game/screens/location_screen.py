@@ -290,33 +290,8 @@ class LocationScreen(ScreenBase):
                 label_surf = font_room_label.render(room["label"], True, (200, 200, 210))
                 surface.blit(label_surf, label_pos)
 
-        # Draw structures from config
-        for structure in self.structures:
-            building_type_id = structure.get("building_type")
-            if building_type_id:
-                self._draw_culture_building(surface, structure, building_type_id, scale)
-                continue
-
-            struct_type = structure.get("type", "rect")
-            color = tuple(structure.get("color", [150, 150, 150]))
-
-            if struct_type == "rect":
-                x, y, w, h = structure["x"], structure["y"], structure["width"], structure["height"]
-                x1, y1 = to_screen(x, y)
-                x2, y2 = to_screen(x + w, y + h)
-                pygame.draw.rect(surface, color, (x1, y1, x2 - x1, y2 - y1))
-
-            elif struct_type == "circle":
-                x, y, r = structure["x"], structure["y"], structure.get("radius", 50)
-                cx, cy = to_screen(x, y)
-                pygame.draw.circle(surface, color, (cx, cy), max(1, int(r * scale)))
-
-            elif struct_type == "polygon":
-                points = [(p["x"], p["y"]) for p in structure["points"]]
-                screen_points = [to_screen(x, y) for x, y in points]
-                pygame.draw.polygon(surface, color, screen_points)
-
-        # Draw windows/details from config
+        # Draw windows/details from config - flat wall decoration, drawn
+        # before structures/people so it never has to compete for depth.
         for detail in self.config.get("details", []):
             detail_type = detail.get("type", "window")
             color = tuple(detail.get("color", [255, 255, 0]))
@@ -328,13 +303,21 @@ class LocationScreen(ScreenBase):
                         px, py = to_screen(x, y)
                         pygame.draw.rect(surface, color, (px, py, 15, 15))
 
-        # Draw NPCs
-        for character in self.npcs:
-            character.person.draw(surface)
-
-        # Draw visiting AI pilots (see self.visitors)
-        for visitor in self.visitors:
-            visitor.draw(surface)
+        # Structures, NPCs, visiting pilots, and the player all have real
+        # height and can occlude one another, so they're drawn together in
+        # a single back-to-front pass (painter's algorithm) sorted by each
+        # one's own ground-level depth, rather than as separate fixed
+        # layers - otherwise a person standing "in front of" a tall
+        # building (closer to the camera, larger depth) would still be
+        # drawn behind it just because structures used to be one earlier,
+        # unconditional loop.
+        drawables = [(self._structure_depth(structure), self._make_structure_drawer(structure, scale)) for structure in self.structures]
+        drawables += [(character.person.y, character.person.draw) for character in self.npcs]
+        drawables += [(visitor.y, visitor.draw) for visitor in self.visitors]
+        drawables.append((self.player.y, self.player.draw))
+        drawables.sort(key=lambda item: item[0])
+        for _, draw_fn in drawables:
+            draw_fn(surface)
 
         # Highlight and label the targeted NPC
         target_npc = self._get_npc_target()
@@ -354,9 +337,6 @@ class LocationScreen(ScreenBase):
         ring_color = YELLOW if in_entrance_range else (0, 255, 100)
         pygame.draw.ellipse(surface, fill_color, pad_rect)
         pygame.draw.ellipse(surface, ring_color, pad_rect, max(1, int(2 * scale)))
-
-        # Draw player
-        self.player.draw(surface)
 
         # Debug markers
         if constants.DEBUG_MODE:
@@ -437,6 +417,62 @@ class LocationScreen(ScreenBase):
                 pygame.draw.circle(surface, glass_color, (px, py), half)
             else:
                 pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
+
+    def _structure_depth(self, structure):
+        """Y-sort key for a structure: the ground-level depth a walking
+        person's own y (feet position) should be compared against in
+        draw()'s back-to-front pass, so tall features occlude correctly
+        against whoever's standing in front of or behind them."""
+        building_type_id = structure.get("building_type")
+        if building_type_id:
+            building_type = get_building_type(self.story, building_type_id)
+            if building_type.get("shape", "rect") == "rect":
+                return structure["y"] + building_type.get("height", 100)
+            return structure["y"]  # circle: center; polygon: ground-level anchor
+
+        struct_type = structure.get("type", "rect")
+        if struct_type == "rect":
+            return structure["y"] + structure["height"]
+        if struct_type == "polygon":
+            return max(p["y"] for p in structure["points"])
+        return structure["y"]  # circle
+
+    def _make_structure_drawer(self, structure, scale):
+        """Bind one structure's draw call so draw() can sort it alongside
+        NPCs/visitors/the player and invoke it in back-to-front order."""
+        building_type_id = structure.get("building_type")
+        if building_type_id:
+            return lambda surface: self._draw_culture_building(surface, structure, building_type_id, scale)
+
+        struct_type = structure.get("type", "rect")
+        color = tuple(structure.get("color", [150, 150, 150]))
+
+        if struct_type == "rect":
+            x, y, w, h = structure["x"], structure["y"], structure["width"], structure["height"]
+
+            def draw_rect(surface):
+                x1, y1 = to_screen(x, y)
+                x2, y2 = to_screen(x + w, y + h)
+                pygame.draw.rect(surface, color, (x1, y1, x2 - x1, y2 - y1))
+            return draw_rect
+
+        if struct_type == "circle":
+            x, y, r = structure["x"], structure["y"], structure.get("radius", 50)
+
+            def draw_circle(surface):
+                cx, cy = to_screen(x, y)
+                pygame.draw.circle(surface, color, (cx, cy), max(1, int(r * scale)))
+            return draw_circle
+
+        if struct_type == "polygon":
+            points = [(p["x"], p["y"]) for p in structure["points"]]
+
+            def draw_polygon(surface):
+                screen_points = [to_screen(px, py) for px, py in points]
+                pygame.draw.polygon(surface, color, screen_points)
+            return draw_polygon
+
+        return lambda surface: None
 
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""

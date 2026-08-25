@@ -495,6 +495,58 @@ moon_city = MoonCity(config=save_data["city_config"], pilot_name=pilot_name)
 
 ---
 
+## Pattern: Y-Sorted Draw Order (Painter's Algorithm)
+
+**Problem:** In a top-down view where some objects have real height (buildings,
+structures) and others walk around among them (NPCs, the player), drawing them
+in separate fixed layers (all structures, then all people) is wrong whenever
+one has to occlude the other - a person "in front of" a tall structure should
+draw on top of it, and one "behind" it should draw underneath, but a fixed
+layer order can only ever pick one of those, globally, for every position.
+
+**Solution:** Collect everything that has height into one list, each paired
+with its own ground-level depth (typically a person's feet position, or a
+structure's base/front edge - not its center or top), sort that list by
+depth, and draw in that order every frame. Purely flat/ground-level things
+(floor tiles, wall decals, room labels) don't need this - they never occlude
+anyone and can stay in their own earlier, unsorted pass.
+
+**Implementation:** (`LocationScreen.draw()`, `_structure_depth()`)
+```python
+def _structure_depth(self, structure):
+    # ... return the structure's own base/front-edge y, not its top or center
+
+def draw(self, surface):
+    # flat/ground layers first (floor, wall decals) - never need sorting
+    drawables = [(self._structure_depth(s), self._make_structure_drawer(s, scale)) for s in self.structures]
+    drawables += [(character.person.y, character.person.draw) for character in self.npcs]
+    drawables.append((self.player.y, self.player.draw))
+    drawables.sort(key=lambda item: item[0])
+    for _, draw_fn in drawables:
+        draw_fn(surface)
+```
+
+**Why this works:**
+- One sort replaces having to special-case every pairwise "is A in front of
+  B?" relationship
+- Depth key is just "how close to the camera" (larger y = closer, in a
+  standard top-down screen-space y-axis) - the same idea `get_distance()`
+  already uses for proximity checks, just applied to draw order instead
+- Rebuilt fresh every frame from current positions, so it's automatically
+  correct as things move - no manual re-layering needed
+
+**Benefits:**
+- Correct occlusion for any layout, without hand-authoring z-order per object
+- New tall structure types (or new character types) just need a depth key,
+  not a new fixed layer to slot into the right place by hand
+
+**Use case:** Any 2D top-down scene mixing static tall scenery with moving
+characters - the same idea generalizes to any renderer with a fixed camera
+angle and objects of varying height (isometric games use exactly this,
+usually called Y-sorting).
+
+---
+
 ## Contributing Patterns
 
 When you discover a reusable solution:
