@@ -43,10 +43,14 @@ class Person:
     SHOULDER_RADIUS = 3.5    # rounding radius of each shoulder corner
     SHOULDER_SEGMENTS = 4    # polygon segments approximating each shoulder's curve
     HEAD_RADIUS = 5.5        # slightly large, so it overlaps the shoulders below
-    HEAD_OVERLAP = 0.5       # how far the head sinks between the shoulders
+    HEAD_OVERLAP = 0.1       # how far the head sinks between the shoulders
     HELMET_THICKNESS = 3.5   # ring width of a helmet, when outfitted
+    EYE_RADIUS = 0.8
+    EYE_OFFSET_X = 2.2       # each eye's distance from center
+    EYE_OFFSET_Y = 0.5       # slightly below head center
 
     SKIN_COLOR = (225, 180, 145)  # torso tone; head/feet are shaded from this
+    EYE_COLOR = (40, 30, 30)
 
     @staticmethod
     def _shade(color, amount):
@@ -98,6 +102,10 @@ class Person:
         if helmet_color:
             pygame.draw.circle(surface, helmet_color, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS) * scale)))
         pygame.draw.circle(surface, head_color, to_screen(self.x, head_center_y), max(1, int(self.HEAD_RADIUS * scale)))
+        eye_y = head_center_y + self.EYE_OFFSET_Y
+        eye_radius_px = max(1, int(self.EYE_RADIUS * scale))
+        pygame.draw.circle(surface, self.EYE_COLOR, to_screen(self.x - self.EYE_OFFSET_X, eye_y), eye_radius_px)
+        pygame.draw.circle(surface, self.EYE_COLOR, to_screen(self.x + self.EYE_OFFSET_X, eye_y), eye_radius_px)
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
