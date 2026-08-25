@@ -674,25 +674,31 @@ class SpaceScreen(ScreenBase):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         target_name = self._get_target_name()
         mode_label = TARGET_MODES[self.target_mode_index]
-        if target_obj and target_name:
-            distance = self.player.get_distance(target_obj.x, target_obj.y)
-            target_line, target_color = f"Target: {target_name} ({distance:.0f})", GREEN
-        else:
-            target_line, target_color = "Target: None", GRAY
         lines = [
             (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100)),
             (f"Speed: {speed:.2f}", WHITE),
             (f"Mode: {mode_label}", WHITE),
-            (target_line, target_color),
         ]
-        # Landables (station/moon) list what's inside them, right under the
-        # target line - lets the player see where they'll end up before
-        # committing to land.
-        if isinstance(target_obj, Landable):
-            for label in target_obj.get_interior_labels():
-                lines.append((f"  - {label}", GRAY))
-        elif target_obj and getattr(target_obj, "hazardous", False):
-            lines.append(("  Hazardous - not landable", YELLOW))
+        if target_obj and target_name:
+            distance = self.player.get_distance(target_obj.x, target_obj.y)
+            lines.append((f"Target: {target_name}", GREEN))
+            lines.append((f"  Distance: {distance:.0f}", GREEN))
+            # Ships show their pilot; landables (station/moon) list what's
+            # inside them so the player can see where they'll end up before
+            # committing to land; other bodies show a hazard note if any -
+            # these are mutually exclusive categories of targetable_objects.
+            if isinstance(target_obj, Character):
+                pilot_name = target_obj.person.name
+                if pilot_name:
+                    lines.append((f"  Pilot: {pilot_name}", GREEN))
+            elif isinstance(target_obj, Landable):
+                lines.append(("  Locations:", GREEN))
+                for label in target_obj.get_interior_labels():
+                    lines.append((f"    - {label}", GRAY))
+            elif getattr(target_obj, "hazardous", False):
+                lines.append(("  Hazardous - not landable", YELLOW))
+        else:
+            lines.append(("Target: None", GRAY))
 
         line_height = int(22 * ui_scale)
         rendered = [font_body.render(text, True, color) for text, color in lines]
