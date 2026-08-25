@@ -38,6 +38,7 @@ from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATER
 from game.world.character import Character
 from game.ui.selectable_list import SelectableList
 from game.screens.space_screen import SpaceScreen
+from main import build_save_game_state
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -687,6 +688,76 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         for _ in range(200):
             screen.update_physics()
         self.assertNotEqual((wanderer.x, wanderer.y), before)
+
+
+class TestBuildSaveGameState(unittest.TestCase):
+    """Regression test: a save made while docked at a station/moon (in
+    ANY system other than the story's starting one) used to always reload
+    into the starting system - game_state["story"]/["system_id"] were set
+    on an empty dict, then immediately discarded when the station/moon
+    branch reassigned game_state from get_state(). build_save_game_state()
+    centralizes this so story/system_id always land on the dict actually
+    passed to create_save_file()."""
+
+    def test_station_save_keeps_story_and_system_id(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
+        station_interior = game_screen.get_interior_screen(game_screen.station, "default", 800, 600)
+        game_state, system_config_snapshot = build_save_game_state(game_screen, "station", station_interior, None)
+        self.assertEqual(game_state["location"], "station")
+        self.assertEqual(game_state["story"], "default")
+        self.assertEqual(game_state["system_id"], "keplers_reach")
+        self.assertEqual(system_config_snapshot, {})
+
+    def test_moon_save_keeps_story_and_system_id(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
+        moon_interior = game_screen.get_interior_screen(game_screen.moon, "wilderness", 1600, 1600)
+        game_state, system_config_snapshot = build_save_game_state(game_screen, "moon", None, moon_interior)
+        self.assertEqual(game_state["location"], "moon")
+        self.assertEqual(game_state["moon_location"], "wilderness")
+        self.assertEqual(game_state["story"], "default")
+        self.assertEqual(game_state["system_id"], "keplers_reach")
+
+    def test_space_save_keeps_story_system_id_and_system_config(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
+        game_state, system_config_snapshot = build_save_game_state(game_screen, "game", None, None)
+        self.assertEqual(game_state["location"], "space")
+        self.assertEqual(game_state["system_id"], "keplers_reach")
+        self.assertIs(system_config_snapshot, game_screen.system_config)
+
+
+class TestLocationScreenTouchingRoomBoundary(unittest.TestCase):
+    """Regression test: two touching rooms (e.g. Entrance Hall y:300-600 and
+    Bar y:0-300, sharing the line y=300) both used strict "<" bounds, so a
+    step that landed exactly on the shared boundary was invalid in *both*
+    rooms at once - an invisible wall stranding the player one step short,
+    for roughly a third of all positions (everything is integer-valued and
+    speed is a fixed 3, so this isn't a rare float-precision fluke)."""
+
+    def _make_two_room_screen(self):
+        config = {
+            "label": "Test", "culture": None,
+            "rooms": [
+                {"label": "Hall", "rect": [360, 300, 80, 300]},
+                {"label": "Bar", "rect": [300, 0, 200, 300]},
+            ],
+            "npcs": [],
+        }
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        # rooms only populate when a culture is set (see LocationScreen.__init__) -
+        # set them directly to exercise the bounds check in isolation.
+        screen.rooms = config["rooms"]
+        return screen
+
+    def test_can_cross_from_hall_into_bar_at_every_starting_y(self):
+        screen = self._make_two_room_screen()
+        for start_y in range(301, 400):
+            screen.player.x, screen.player.y = 400, start_y
+            for _ in range(60):
+                keys = {pygame_mock.K_UP: True, pygame_mock.K_w: False, pygame_mock.K_DOWN: False, pygame_mock.K_s: False, pygame_mock.K_LEFT: False, pygame_mock.K_a: False, pygame_mock.K_RIGHT: False, pygame_mock.K_d: False}
+                screen._handle_movement(keys)
+                if screen.player.y <= 250:
+                    break
+            self.assertLessEqual(screen.player.y, 300, f"Got stuck at y={screen.player.y} starting from y={start_y}")
 
 
 class TestSpaceScreenShipTypePersistence(unittest.TestCase):

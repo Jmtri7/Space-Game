@@ -503,7 +503,15 @@ class LocationScreen(ScreenBase):
         if can_move_func:
             can_move = can_move_func(new_x, new_y)
         elif self.rooms:
-            can_move = any(fx < new_x < fx + fw and fy < new_y < fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
+            # Inclusive bounds (<=), not strict (<) - two touching rooms
+            # (e.g. Entrance Hall/Bar sharing the line y=300) must both
+            # accept landing exactly on that shared boundary, or a step
+            # that lands exactly there (all coordinates here are integers
+            # and speed is a fixed 3, so this isn't a rare float fluke -
+            # roughly a third of all positions hit it) is invalid in both
+            # rooms at once and the player gets stuck one step short of an
+            # invisible wall, unable to cross at all.
+            can_move = any(fx <= new_x <= fx + fw and fy <= new_y <= fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
         else:
             can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
 

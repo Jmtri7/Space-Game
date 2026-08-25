@@ -32,6 +32,43 @@ pygame.display.set_caption("Space Game")
 clock = pygame.time.Clock()
 
 
+def build_save_game_state(game_screen, previous_screen, station_interior, moon_interior):
+    """Build the (game_state, system_config_snapshot) pair for
+    create_save_file(), from whichever screen was active when Save was
+    chosen. Centralized here (used by both the overwrite and new-save
+    branches in the pause menu) specifically so "story"/"system_id" always
+    land on the *final* dict - each call site used to set them on an empty
+    dict and then immediately discard it by reassigning game_state from
+    get_state() for a station/moon save, so a save made anywhere but open
+    space silently forgot which system it was in and always reloaded into
+    the story's starting one."""
+    if previous_screen == "moon":
+        game_state = moon_interior.get_state()
+        game_state["location"] = "moon"
+        # Determine moon location type from config file path or label
+        if moon_interior.config_file and "moon_city" in moon_interior.config_file:
+            game_state["moon_location"] = "city"
+        elif moon_interior.config.get("label", "").lower().find("city") >= 0:
+            game_state["moon_location"] = "city"
+        else:
+            game_state["moon_location"] = "wilderness"
+        system_config_snapshot = {}
+    elif previous_screen == "station":
+        game_state = station_interior.get_state()
+        game_state["location"] = "station"
+        game_state["station_location"] = station_interior.interior_key or "default"
+        system_config_snapshot = {}
+    else:  # previous_screen == "game" or None
+        game_state = game_screen.get_state()
+        game_state["location"] = "space"
+        system_config_snapshot = game_screen.system_config
+
+    if game_screen:
+        game_state["story"] = game_screen.story
+        game_state["system_id"] = game_screen.system_id
+    return game_state, system_config_snapshot
+
+
 def update_background_locations(game_screen, active_location):
     """Keep every cached station/moon interior's NPCs simulating even while
     the player isn't there - active_location (whichever LocationScreen the
@@ -370,30 +407,8 @@ def main():
                             pass
 
                         # Save new game
-                        game_state = {}
-                        if game_screen:
-                            game_state["story"] = game_screen.story
-                            game_state["system_id"] = game_screen.system_id
-                        if previous_screen == "moon":
-                            game_state = moon_interior.get_state()
-                            game_state["location"] = "moon"
-                            # Determine moon location type from config file path or label
-                            if moon_interior.config_file and "moon_city" in moon_interior.config_file:
-                                game_state["moon_location"] = "city"
-                            elif moon_interior.config.get("label", "").lower().find("city") >= 0:
-                                game_state["moon_location"] = "city"
-                            else:
-                                game_state["moon_location"] = "wilderness"
-                            create_save_file(pilot_name, save_description, {}, {}, game_state)
-                        elif previous_screen == "station":
-                            game_state = station_interior.get_state()
-                            game_state["location"] = "station"
-                            game_state["station_location"] = station_interior.interior_key or "default"
-                            create_save_file(pilot_name, save_description, {}, {}, game_state)
-                        else:  # previous_screen == "game" or None
-                            game_state = game_screen.get_state()
-                            game_state["location"] = "space"
-                            create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
+                        game_state, system_config_snapshot = build_save_game_state(game_screen, previous_screen, station_interior, moon_interior)
+                        create_save_file(pilot_name, save_description, system_config_snapshot, {}, game_state)
                         pause_menu.success_timer = 120
                         overwrite_confirm_dialog = None
                     elif dialog_action == "cancel":
@@ -418,30 +433,8 @@ def main():
                                     station_interior.pilot_name = pilot_name
 
                             # Save new game
-                            game_state = {}
-                            if game_screen:
-                                game_state["story"] = game_screen.story
-                                game_state["system_id"] = game_screen.system_id
-                            if previous_screen == "moon":
-                                game_state = moon_interior.get_state()
-                                game_state["location"] = "moon"
-                                # Determine moon location type from config file path or label
-                                if moon_interior.config_file and "moon_city" in moon_interior.config_file:
-                                    game_state["moon_location"] = "city"
-                                elif moon_interior.config.get("label", "").lower().find("city") >= 0:
-                                    game_state["moon_location"] = "city"
-                                else:
-                                    game_state["moon_location"] = "wilderness"
-                                create_save_file(pilot_name, save_description, {}, {}, game_state)
-                            elif previous_screen == "station":
-                                game_state = station_interior.get_state()
-                                game_state["location"] = "station"
-                                game_state["station_location"] = station_interior.interior_key or "default"
-                                create_save_file(pilot_name, save_description, {}, {}, game_state)
-                            else:  # previous_screen == "game" or None
-                                game_state = game_screen.get_state()
-                                game_state["location"] = "space"
-                                create_save_file(pilot_name, save_description, game_screen.system_config, {}, game_state)
+                            game_state, system_config_snapshot = build_save_game_state(game_screen, previous_screen, station_interior, moon_interior)
+                            create_save_file(pilot_name, save_description, system_config_snapshot, {}, game_state)
                             pause_menu.success_timer = 120
                             save_dialog = None
                     elif dialog_action == "cancel":
