@@ -40,5 +40,11 @@
     "faction": "The Drossholt Company",
     "role": "patrol_officer",
     "personality": "Gruff and territorial, treats every claim boundary like it's already been shot at once."
+  },
+  "juno_vale": {
+    "name": "Juno Vale",
+    "faction": "The Vherathi Concord",
+    "role": "explorer",
+    "personality": "Never stays anywhere long, already thinking about whatever's over the next horizon."
   }
 }

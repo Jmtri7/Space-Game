@@ -60,8 +60,9 @@ name is kept, the timestamp lives inside it.
       "owned_ships": ["shuttle"],
       "loans": [{"lender": "Station Credit Union", "principal": 1200}]
     },
-    "ai_ships": [
-      {
+    "ai_ships": {
+      "Elena Voss": {
+        "system_id": "sol_alpha",
         "x": 600.0,
         "y": 180.0,
         "angle": 180,
@@ -69,7 +70,7 @@ name is kept, the timestamp lives inside it.
         "velocity_y": 0.5,
         "thrust": 0.2
       }
-    ]
+    }
   }
 }
 ```
@@ -144,12 +145,21 @@ def get_state(self):
         },
         "possessions": self.player.person.possessions.get_state(),
     }
-    if self.ai_ships:
-        state["ai_ships"] = [
-            {"x": s.x, "y": s.y, "angle": s.angle,
-             "velocity_x": s.velocity_x, "velocity_y": s.velocity_y, "thrust": s.thrust}
-            for s in self.ai_ships
-        ]
+    # Every AI ship in every system this story defines (self.systems, not
+    # just self.system_id) - keyed by pilot name rather than by list index,
+    # since a migratory pilot (ExplorerRoutine) can be in a different
+    # system, and a different position in that system's list, than when it
+    # was last saved.
+    ai_ships = {}
+    for sid, sys_state in self.systems.items():
+        for s in sys_state.ai_ships:
+            if s.person.name:
+                ai_ships[s.person.name] = {
+                    "system_id": sid, "x": s.x, "y": s.y, "angle": s.angle,
+                    "velocity_x": s.velocity_x, "velocity_y": s.velocity_y, "thrust": s.thrust
+                }
+    if ai_ships:
+        state["ai_ships"] = ai_ships
     return state
 ```
 
@@ -166,8 +176,14 @@ def get_state(self):
 **What's captured:**
 - Player position, angle, velocity, thrust (space) or just x/y (locations)
 - Credits, owned ship type IDs, and loans (`possessions` - space or locations)
-- Every AI ship's position, angle, velocity, thrust — as a list, in ship order
-- Station/moon position (implicitly, via the `system` config snapshot)
+- Every AI ship, in every system the story defines — position, angle,
+  velocity, thrust, and which system it's currently in — keyed by pilot
+  name, not list order (see `get_state()` above for why)
+- Station/moon position (implicitly, via the `system` config snapshot -
+  only for `self.system_id`, the system the save was actually made in;
+  every other system's station/moon position comes back from its own
+  config file fresh, same as it always has, since that's static per-system
+  data and never changes during play)
 
 **What's NOT captured:**
 - Star field (deterministic, regenerated)
@@ -181,9 +197,15 @@ def get_state(self):
 game_screen.restore_state(save_data.get("game_state", {}))
 ```
 This restores `player` ship fields with `.get(key, default)` fallback,
-restores `possessions` (via `restore_possessions()`, below), then loops
-`state["ai_ships"]` and restores each by index into `self.ai_ships` (extra
-saved ships beyond the current story's count are ignored).
+restores `possessions` (via `restore_possessions()`, below), then - if
+`state["ai_ships"]` is the current dict-keyed-by-pilot-name format - walks
+every AI ship in every system, looks each one up by `person.name`, restores
+its kinematics, and migrates it into a different system's `ai_ships` list
+if `saved["system_id"]` says it had moved. A save written before this
+format existed stored `ai_ships` as a plain list instead; that old shape is
+deliberately left alone rather than guessed at (there's no reliable way to
+match its entries back to today's ships once any of them may have
+migrated) - every AI ship in an old save just starts fresh instead.
 
 **For a `"station"`/`"moon"` save, do NOT call `restore_state()`** - its
 `player` handling assumes ship-position semantics that don't apply (see the

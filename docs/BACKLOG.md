@@ -32,8 +32,6 @@ higher priority.
 - [ ] Options for star/asteroid seeds.
 - [ ] Add metrics for game performance.
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame already handles that.
-- [ ] Make sure all systems are simulated (not just the current one).
-- [ ] Allow NPCs to jump between systems.
 - [ ] Indicate when reaching the edge of the star map.
 - [ ] Star map zoom.
 - [ ] Animals.
@@ -64,3 +62,4 @@ higher priority.
 - [ ] More ways to make money.
 - [ ] More interior decorations, like roads.
 - [ ] Multiple owned ships.
+- [ ] Guidance for agents on creating a new story from scratch, and on assisting a user who wants help creating one.

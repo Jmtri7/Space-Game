@@ -326,6 +326,13 @@
       "ship_type": "patrol",
       "pilot": "kade_marsh",
       "route": ["station", "moon"]
+    },
+    {
+      "name": "Explorer One",
+      "x": 0.5,
+      "y": 0.5,
+      "ship_type": "shuttle",
+      "pilot": "juno_vale"
     }
   ]
 }

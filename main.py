@@ -88,13 +88,19 @@ def update_background_locations(game_screen, active_location):
     the player isn't there - active_location (whichever LocationScreen the
     player is actually standing in right now, or None if they're in space)
     is skipped here since it already gets a full update() from its own
-    branch below, including player movement and the camera."""
+    branch below, including player movement and the camera.
+
+    Spans every system the story defines (see SpaceScreen.systems), not
+    just the one currently active - a station/moon interior in a system the
+    player isn't even in right now still keeps its NPCs simulating, exactly
+    like game_screen.update_physics() already does for AI ships in space."""
     if not game_screen:
         return
-    for landable in (game_screen.station, game_screen.moon):
-        for interior in landable.interior_screens.values():
-            if interior is not active_location:
-                interior.update_physics()
+    for system_state in game_screen.systems.values():
+        for landable in (system_state.station, system_state.moon):
+            for interior in landable.interior_screens.values():
+                if interior is not active_location:
+                    interior.update_physics()
 
 
 def main():

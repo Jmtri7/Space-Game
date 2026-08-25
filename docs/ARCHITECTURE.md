@@ -189,8 +189,8 @@ a `role` string and the `Routine` that role picks. This is the *one*
 mechanism behind every non-player character in the game:
 
 - **AI ship pilots** (`ship` set): built via `Character.for_ai_pilot(...)`
-  from `SpaceScreen._load_system_content()`. Role comes from `pilots.json`
-  (`freighter_pilot`, `patrol_officer`, ...).
+  from `SpaceScreen._build_system_state()`. Role comes from `pilots.json`
+  (`freighter_pilot`, `patrol_officer`, `explorer`, ...).
 - **Station/moon NPCs** (`ship=None`): built inline by `LocationScreen`.
   Role comes from each `npcs[]` entry's `"role"` in the location's config
   (`bartender`, `guard`, `resident`, ...), defaulting to `"resident"` if
@@ -205,6 +205,7 @@ that routine flies a ship or just moves a body around a room:
 | `DockRoutine` | `dock_routine.py` | Yes | `freighter_pilot` - fly to a stop, walk in, talk, walk out, repeat |
 | `ShuttleRoutine` | `shuttle_routine.py` | Yes | `trader_captain` - ping-pong stops, instant turnaround |
 | `OrbitRoutine` | `orbit_routine.py` | Yes | `patrol_officer` - circle a fixed point forever |
+| `ExplorerRoutine` | `explorer_routine.py` | Yes | `explorer` - jump to a random *other* system, orbit something there a while, repeat |
 | `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
@@ -222,6 +223,16 @@ steps the ship's physics and mirrors `person.x/y` to it - unless
 `self.ashore` is `True`, meaning `DockRoutine` currently has the person
 walking around a station/moon interior independent of the (parked) ship.
 
+`ExplorerRoutine` needs `character.systems` (the same `system_id ->
+SystemState` dict `SpaceScreen` owns, passed straight through by
+`Character.for_ai_pilot(systems=..., system_id=...)`) and
+`character.system_id` (which system's `SystemState.ai_ships` list
+currently holds it) to travel: "jumping" is just removing itself from one
+system's list and appending to another's, then repositioning - see
+`explorer_routine.py` and "Multi-System Simulation" below for why that's
+enough (every system reuses the same game-space coordinates, and only the
+active one is ever drawn/given a camera).
+
 ## Landable: Stations & Moons
 
 **Class: `Landable(WorldObject)`**
@@ -236,22 +247,60 @@ walking around a station/moon interior independent of the (parked) ship.
 ## SpaceScreen Responsibility
 
 **`SpaceScreen` contains:**
-- `PlayerController` (controlled entity)
-- A list of `Character` (autonomous ship-flying entities, loaded from story config)
-- `StarField` (visual, procedural)
-- Two `Landable` instances: `station` and `moon`
+- `PlayerController` (controlled entity, the only thing not scoped to one system)
+- `self.systems`: `system_id -> SystemState` for *every* system the story
+  defines (see "Multi-System Simulation" below) - `self.station`, `.moon`,
+  `.ai_ships`, `.central_star`, `.celestial_bodies`, `.star_field`, and
+  `.asteroid_field` are just aliases onto `self.systems[self.system_id]`'s
+  own objects, kept in sync by `_activate_system()`
 
 **`SpaceScreen` provides:**
 - `update()` — advance all entity physics, recenter camera, auto-land when autopilot arrives
 - `draw()` — render entities, target brackets/label/arrow, HUD
 - `handle_input()` — targeting (T), landing/autopilot engage (L), pause (ESC)
-- `get_state()` / `restore_state()` — capture/restore player + all AI ships for save
-  [see SAVE_SYSTEM.md](SAVE_SYSTEM.md)
+- `get_state()` / `restore_state()` — capture/restore player + every AI ship
+  in every system for save [see SAVE_SYSTEM.md](SAVE_SYSTEM.md)
 
 **Why this design:**
 - Clear separation of concerns
 - Easy to pause/resume game state
 - Simple to add new entity types (extend and add to update/draw)
+
+## Multi-System Simulation
+
+**Class: `SystemState`** (`game/world/system_state.py`) - one system's
+`station`, `moon`, `central_star`, `celestial_bodies`, and `ai_ships`.
+`SpaceScreen._build_system_state()` builds one for every system the story
+defines (`get_star_systems()` scans `config/stories/{story}/systems/*.json`)
+at construction, and `self.systems` keeps every one of them alive - and
+ticking - for the rest of the session, not just whichever system is
+currently active:
+
+- `SpaceScreen.update_physics()` calls `SystemState.update_physics()` for
+  *every* system each frame (station/moon rotation, celestial bodies, AI
+  ship pilots) - so a freighter's route or a patrol's orbit keeps advancing
+  in a system the player has jumped away from, exactly like
+  `main.py`'s `update_background_locations()` already did for a station/
+  moon interior's NPCs.
+- `AsteroidField`/`StarField` are the one exception - both live on
+  `SystemState` (so a revisited system doesn't reset its scenery) but only
+  the *active* system's copies get an `update()` call, since both are
+  purely decorative and driven by the camera (`AsteroidField.update()`
+  reads `utils.camera_offset_x/y` to decide which chunks to spawn), which
+  only ever reflects the active system.
+- Jumping (`SpaceScreen._complete_jump()`) never rebuilds anything anymore
+  - it just calls `_activate_system(destination_id)`, which re-points every
+  alias above at the destination's already-built, already-simulating
+  `SystemState`.
+- `ExplorerRoutine` is the one thing that moves a `Character` *between*
+  systems - it removes the character from its current system's
+  `SystemState.ai_ships` and appends it to another's (see "Character: AI
+  Pilots & NPCs" above). This is enough on its own because every system
+  reuses the same game-space coordinate range (`GAME_WIDTH`/`GAME_HEIGHT`),
+  and only the system whose objects are currently aliased onto
+  `SpaceScreen` is ever drawn or given a camera - a `Character` sitting in
+  a different system's list is simply inert and invisible until the player
+  actually jumps there.
 
 ## State Machine: Screen Flow
 

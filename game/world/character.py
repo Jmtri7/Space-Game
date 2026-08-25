@@ -12,6 +12,7 @@ from game.world.possessions import Possessions
 from game.world.dock_routine import DockRoutine
 from game.world.shuttle_routine import ShuttleRoutine
 from game.world.orbit_routine import OrbitRoutine
+from game.world.explorer_routine import ExplorerRoutine
 from game.world.idle_routine import IdleRoutine
 from game.world.wander_routine import WanderRoutine
 from game.world.stationary_routine import StationaryRoutine
@@ -28,6 +29,7 @@ ROLE_ROUTINES = {
     "freighter_pilot": DockRoutine,
     "trader_captain": ShuttleRoutine,
     "patrol_officer": OrbitRoutine,
+    "explorer": ExplorerRoutine,
     "bartender": StationaryRoutine,
     "guard": StationaryRoutine,
     "ship_salesman": StationaryRoutine,
@@ -50,7 +52,7 @@ class Character:
     what they do with either. The player is not one of these (see
     PlayerController); this is for every AI-driven character - ship pilots
     and non-piloting station/moon residents alike."""
-    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None):
+    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None):
         self.person = person
         self.ship = ship
         self.role = role
@@ -63,6 +65,15 @@ class Character:
         # needs to "find" the location it's already standing in.
         self.get_interior_screen = get_interior_screen
         self.ship_type_id = ship_type_id
+        # system_id -> SystemState (see SpaceScreen.systems) and which one
+        # this character currently belongs to - only set for ship-flying
+        # characters that can travel between systems (ExplorerRoutine).
+        # systems is the *same* dict object SpaceScreen owns, so migrating
+        # a character (removing it from one SystemState.ai_ships and
+        # appending it to another's) is immediately visible everywhere,
+        # with no separate sync step needed.
+        self.systems = systems
+        self.system_id = system_id
         # Only meaningful when self.ship is set: False = aboard and
         # mirrored to the ship's position each frame; True = a routine
         # (DockRoutine) has them walking around a station/moon interior
@@ -74,7 +85,7 @@ class Character:
         self.routine.start(self)
 
     @classmethod
-    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None):
+    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None, systems=None, system_id=None):
         """Build the Character for an AI-flown ship: a Ship configured from
         ship_type, a Person seeded with the pilot's starting credits/ship
         and flavor dialogue, and the role-driven routine that flies it."""
@@ -96,7 +107,7 @@ class Character:
         # personality line in pilots.json rather than a generic greeting.
         person.dialogue = Dialogue.from_flat(pilot.get("name", "Pilot"), pilot.get("personality", "..."), ["Nod", "Leave"])
 
-        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id)
+        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/

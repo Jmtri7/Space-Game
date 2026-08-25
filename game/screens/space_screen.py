@@ -20,6 +20,7 @@ from game.world.starfield import StarField
 from game.world.central_star import CentralStar
 from game.world.celestial_body import CelestialBody
 from game.world.asteroid_field import AsteroidField
+from game.world.system_state import SystemState
 
 # Jump mechanic tuning
 JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
@@ -85,7 +86,24 @@ class SpaceScreen(ScreenBase):
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
         self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name, outfit=get_graphics_asset(self.story, "outfits", "space_suit"))
 
-        self._load_system_content()
+        # Every system this story defines gets built and kept simulating for
+        # the whole session - not just whichever one the player currently
+        # occupies (see SystemState, update_physics() below, and main.py's
+        # update_background_locations(), which now walks every system's
+        # cached interiors the same way it already did for the current
+        # one). get_star_systems() discovers them all from
+        # config/stories/{story}/systems/*.json; self.system_id is added
+        # explicitly in case a save/story references one that scan somehow
+        # missed, so activating it below can never KeyError.
+        self.systems = {}
+        self.system_configs = {}
+        system_ids = set(get_star_systems(self.story).keys())
+        system_ids.add(self.system_id)
+        for sid in system_ids:
+            config = self.system_config if sid == self.system_id else (load_json(f"config/stories/{story}/systems/{sid}.json") or {})
+            self.system_configs[sid] = config
+            self.systems[sid] = self._build_system_state(sid, config)
+        self._activate_system(self.system_id)
 
         self.landing_text = 0
         self.landing_target = None
@@ -95,51 +113,53 @@ class SpaceScreen(ScreenBase):
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
 
-    def _load_system_content(self):
-        """(Re)build station/moon/central star/asteroids/AI ships/star field from
-        self.system_config. Called at construction, and again after a jump swaps
-        the active system (within the same story) - the player (ship/pilot) is
-        untouched by this."""
-        space_drag = self.system_config.get("drag", 0)
-        self.player.ship.space_drag = space_drag
-        self.star_field = StarField(seed=self.system_config.get("star_seed", 0))
+    def _build_system_state(self, system_id, config):
+        """Build a SystemState (station/moon/central star/celestial bodies/
+        AI ships) from one system's static config - called once per system
+        the story defines (see self.systems), so every system exists and
+        keeps simulating for the rest of the session, not just whichever
+        one is active. Asteroid/star fields are built here too, but live on
+        SystemState only as scenery kept alive between visits - see
+        SystemState's docstring for why only the active system's copies
+        ever get their own update() call."""
+        space_drag = config.get("drag", 0)
 
-        # Load graphics assets for station and moon - each system picks its own
-        station_asset_id = self.system_config.get("station_asset", "station_alpha")
-        moon_asset_id = self.system_config.get("moon_asset", "moon_silver")
+        station_asset_id = config.get("station_asset", "station_alpha")
+        moon_asset_id = config.get("moon_asset", "moon_silver")
 
-        station_cfg = self.system_config.get("station", {})
+        station_cfg = config.get("station", {})
         station_graphics = get_graphics_asset(self.story, "space_stations", station_asset_id)
-        self.station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}), name=station_cfg.get("name", "Station"))
+        station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}), name=station_cfg.get("name", "Station"))
 
-        moon_cfg = self.system_config.get("moon", {})
+        moon_cfg = config.get("moon", {})
         moon_graphics = get_graphics_asset(self.story, "moons", moon_asset_id)
-        self.moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}), name=moon_cfg.get("name", "Moon"))
+        moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}), name=moon_cfg.get("name", "Moon"))
 
         # Central star (optional, drawn but not landable/targetable)
-        central_star_cfg = self.system_config.get("central_star")
-        if central_star_cfg:
-            self.central_star = CentralStar(GAME_WIDTH * central_star_cfg.get("x", 0.5), GAME_HEIGHT * central_star_cfg.get("y", 0.5), graphics=central_star_cfg)
-        else:
-            self.central_star = None
+        central_star_cfg = config.get("central_star")
+        central_star = CentralStar(GAME_WIDTH * central_star_cfg.get("x", 0.5), GAME_HEIGHT * central_star_cfg.get("y", 0.5), graphics=central_star_cfg) if central_star_cfg else None
 
         # Non-landable planets/ice balls/gas giants - just scenery to fly near,
         # never something you can dock at (see CelestialBody.hazardous, used
         # by the HUD's targeting note).
-        self.celestial_bodies = [
+        celestial_bodies = [
             CelestialBody(GAME_WIDTH * body_cfg.get("x", 0.5), GAME_HEIGHT * body_cfg.get("y", 0.5), graphics=body_cfg)
-            for body_cfg in self.system_config.get("celestial_bodies", [])
+            for body_cfg in config.get("celestial_bodies", [])
         ]
 
-        # Asteroids: infinite, seeded, generated only in chunks near the camera
-        self.asteroid_field = AsteroidField(seed=self.system_config.get("asteroid_seed", 1))
+        state = SystemState(station, moon, central_star, celestial_bodies, ai_ships=[], space_drag=space_drag)
+        state.star_field = StarField(seed=config.get("star_seed", 0))
+        state.asteroid_field = AsteroidField(seed=config.get("asteroid_seed", 1))
+        # Registered before AI ships are built below (not after) because
+        # Character.__init__ runs its routine's start() synchronously -
+        # ExplorerRoutine's needs to find this very system already in
+        # self.systems the moment the first explorer is constructed.
+        self.systems[system_id] = state
 
         # Landables that an AI ship's route config can reference by key
-        landable_lookup = {"station": self.station, "moon": self.moon}
+        landable_lookup = {"station": station, "moon": moon}
 
-        # Load all AI ships from config
-        self.ai_ships = []
-        for ai_cfg in self.system_config.get("ai_ships", []):
+        for ai_cfg in config.get("ai_ships", []):
             ship_type_id = ai_cfg.get("ship_type", "freighter")
             ship_type = get_ship_type(self.story, ship_type_id)
             ship_graphics = get_graphics_asset(self.story, "ships", ship_type_id)
@@ -155,12 +175,35 @@ class SpaceScreen(ScreenBase):
                 route=route,
                 get_interior_screen=self.get_interior_screen,
                 space_drag=space_drag,
-                outfit=get_graphics_asset(self.story, "outfits", "space_suit")
+                outfit=get_graphics_asset(self.story, "outfits", "space_suit"),
+                systems=self.systems,
+                system_id=system_id
             )
-            self.ai_ships.append(ai_ship)
+            state.ai_ships.append(ai_ship)
 
+        return state
+
+    def _activate_system(self, system_id):
+        """Point every per-system alias (station/moon/ai_ships/...) at the
+        already-built SystemState for system_id - called at construction
+        and again after a jump completes. Never rebuilds anything (every
+        system is built once, in _build_system_state, and kept alive for
+        the whole session), and never touches the player except to
+        re-apply the destination's own space drag."""
+        self.system_id = system_id
+        self.system_config = self.system_configs[system_id]
+        state = self.systems[system_id]
+        self.player.ship.space_drag = state.space_drag
+
+        self.station = state.station
+        self.moon = state.moon
+        self.central_star = state.central_star
+        self.celestial_bodies = state.celestial_bodies
+        self.star_field = state.star_field
+        self.asteroid_field = state.asteroid_field
+        self.ai_ships = state.ai_ships
         # Keep self.ai_ship for backwards compatibility (first ship if it exists)
-        self.ai_ship = self.ai_ships[0] if self.ai_ships else None
+        self.ai_ship = state.ai_ships[0] if state.ai_ships else None
 
         self.current_target = None
         self.target_mode_index = TARGET_MODES.index("LANDABLES")
@@ -537,9 +580,7 @@ class SpaceScreen(ScreenBase):
         destination = js["destination"]
 
         if destination != self.system_id:
-            self.system_id = destination
-            self.system_config = load_json(f"config/stories/{self.story}/systems/{destination}.json") or {}
-            self._load_system_content()
+            self._activate_system(destination)
 
         center_x, center_y = SYSTEM_CENTER
         arrival_x = center_x - math.sin(heading_rad) * JUMP_ARRIVAL_DISTANCE
@@ -557,17 +598,23 @@ class SpaceScreen(ScreenBase):
         self.selected_system_id = None
 
     def update_physics(self):
-        """Update physics without camera - used when space is background"""
+        """Update physics without camera - used when space is background.
+
+        Every system this story defines gets its station/moon/celestial
+        bodies/AI ships advanced every frame - not just self.system_id, the
+        one actually being flown in right now (see SystemState) - so
+        traffic elsewhere keeps moving and NPCs at a station/moon the
+        player isn't currently visiting keep going about their routine
+        (main.py's update_background_locations() already does the
+        equivalent for cached interiors). The asteroid/star fields are the
+        one exception, kept to just the active system - both are pure,
+        camera-driven decoration (see SystemState's docstring)."""
         if self.jump_state:
             self._update_jump()
         else:
             self.player.update()
-        self.station.update()
-        self.moon.update()
-        for body in self.celestial_bodies:
-            body.update()
-        for ai_ship in self.ai_ships:
-            ai_ship.update()
+        for state in self.systems.values():
+            state.update_physics()
         self.asteroid_field.update()
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
@@ -774,18 +821,31 @@ class SpaceScreen(ScreenBase):
             },
             "possessions": self.player.person.possessions.get_state(),
         }
-        # Save all AI ships
-        if self.ai_ships:
-            state["ai_ships"] = []
-            for ai_ship in self.ai_ships:
-                state["ai_ships"].append({
+        # Every AI ship in every system (not just self.system_id) - keyed by
+        # pilot name rather than a per-system list index, since a
+        # ExplorerRoutine-driven pilot can migrate to a different system
+        # between saves, which a positional index can't survive (the list
+        # it "belongs to" at load time may not be the one it was saved
+        # from, and may not even be the same length). Ships with no pilot
+        # name (ai_ships config entries with no "pilot" key) aren't
+        # individually saveable this way and are skipped - same as never
+        # being restorable at all before this, just now explicit about it.
+        ai_ships = {}
+        for sid, sys_state in self.systems.items():
+            for ai_ship in sys_state.ai_ships:
+                if not ai_ship.person.name:
+                    continue
+                ai_ships[ai_ship.person.name] = {
+                    "system_id": sid,
                     "x": ai_ship.x,
                     "y": ai_ship.y,
                     "angle": ai_ship.angle,
                     "velocity_x": ai_ship.velocity_x,
                     "velocity_y": ai_ship.velocity_y,
                     "thrust": ai_ship.thrust
-                })
+                }
+        if ai_ships:
+            state["ai_ships"] = ai_ships
         return state
 
     def restore_possessions(self, state):
@@ -827,13 +887,34 @@ class SpaceScreen(ScreenBase):
             self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
             self.player.thrust = player_state.get("thrust", self.player.thrust)
         self.restore_possessions(state)
-        # Restore all AI ships
-        if "ai_ships" in state:
-            for i, ai_state in enumerate(state["ai_ships"]):
-                if i < len(self.ai_ships):
-                    self.ai_ships[i].x = ai_state.get("x", self.ai_ships[i].x)
-                    self.ai_ships[i].y = ai_state.get("y", self.ai_ships[i].y)
-                    self.ai_ships[i].angle = ai_state.get("angle", self.ai_ships[i].angle)
-                    self.ai_ships[i].velocity_x = ai_state.get("velocity_x", self.ai_ships[i].velocity_x)
-                    self.ai_ships[i].velocity_y = ai_state.get("velocity_y", self.ai_ships[i].velocity_y)
-                    self.ai_ships[i].thrust = ai_state.get("thrust", self.ai_ships[i].thrust)
+        # Restore every AI ship in every system, keyed by pilot name (see
+        # get_state()) - older saves stored this as a plain per-system list
+        # instead (isinstance check below), which this deliberately does
+        # NOT try to interpret: there's no reliable way to match its
+        # entries back to today's ships once any of them may have migrated
+        # between systems, so an old-format save just leaves every AI ship
+        # at its freshly-built default rather than guessing wrong.
+        saved_ai_ships = state.get("ai_ships")
+        if isinstance(saved_ai_ships, dict):
+            migrations = []
+            for sid, sys_state in self.systems.items():
+                for ai_ship in sys_state.ai_ships:
+                    saved = saved_ai_ships.get(ai_ship.person.name)
+                    if not saved:
+                        continue
+                    ai_ship.x = saved.get("x", ai_ship.x)
+                    ai_ship.y = saved.get("y", ai_ship.y)
+                    ai_ship.angle = saved.get("angle", ai_ship.angle)
+                    ai_ship.velocity_x = saved.get("velocity_x", ai_ship.velocity_x)
+                    ai_ship.velocity_y = saved.get("velocity_y", ai_ship.velocity_y)
+                    ai_ship.thrust = saved.get("thrust", ai_ship.thrust)
+                    dest_sid = saved.get("system_id", sid)
+                    if dest_sid != sid and dest_sid in self.systems:
+                        migrations.append((ai_ship, sys_state, dest_sid))
+            # Applied after the scan above, not during it - moving a ship
+            # out of sys_state.ai_ships while that same list is mid-iteration
+            # would skip whichever ship shifts into the removed slot.
+            for ai_ship, origin_state, dest_sid in migrations:
+                origin_state.ai_ships.remove(ai_ship)
+                self.systems[dest_sid].ai_ships.append(ai_ship)
+                ai_ship.system_id = dest_sid

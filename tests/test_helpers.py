@@ -37,6 +37,7 @@ from game.world.dialogue import Dialogue
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.character import Character
+from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.screens.space_screen import SpaceScreen
@@ -749,6 +750,127 @@ class TestCharacterAIPilotDialogue(unittest.TestCase):
         self.assertTrue(dialogue.choose(0))
 
 
+class TestExplorerRoutine(unittest.TestCase):
+    """ExplorerRoutine migrates a Character between two SystemState.ai_ships
+    lists and orbits something in whichever system it currently occupies -
+    the mechanism the "Allow NPCs to jump between systems" backlog item and
+    multi-system simulation both rely on."""
+
+    @staticmethod
+    def _make_system(offset_x, offset_y):
+        station = Landable(offset_x, offset_y, graphics={}, interiors={})
+        moon = Landable(offset_x + 500, offset_y, graphics={}, interiors={})
+        return SystemState(station, moon, central_star=None, celestial_bodies=[], ai_ships=[])
+
+    def test_starts_by_orbiting_something_in_its_home_system(self):
+        systems = {"a": self._make_system(0, 0), "b": self._make_system(1000, 1000)}
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="shuttle", graphics=None,
+            pilot={"name": "Juno Vale", "role": "explorer"}, route=[],
+            get_interior_screen=None, systems=systems, system_id="a",
+        )
+        systems["a"].ai_ships.append(character)  # mimics _build_system_state's own append after construction
+
+        self.assertEqual(character.system_id, "a")
+        self.assertTrue(character.autopilot_active, "Should already be orbiting something in its home system")
+
+    def test_migrates_to_another_system_once_its_timer_expires(self):
+        systems = {"a": self._make_system(0, 0), "b": self._make_system(1000, 1000)}
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="shuttle", graphics=None,
+            pilot={"name": "Juno Vale", "role": "explorer"}, route=[],
+            get_interior_screen=None, systems=systems, system_id="a",
+        )
+        systems["a"].ai_ships.append(character)
+
+        character.routine._timer = 1  # force the next run() to migrate
+        character.routine.run(character)
+
+        self.assertEqual(character.system_id, "b", "Only system 'b' exists as an 'other' system to jump to")
+        self.assertNotIn(character, systems["a"].ai_ships)
+        self.assertIn(character, systems["b"].ai_ships)
+        self.assertTrue(character.autopilot_active, "Should be orbiting something in the new system")
+
+    def test_single_system_story_just_keeps_orbiting_at_home(self):
+        """No "other" system to jump to - should orbit again in the same
+        system rather than erroring or vanishing from every list."""
+        systems = {"a": self._make_system(0, 0)}
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="shuttle", graphics=None,
+            pilot={"name": "Juno Vale", "role": "explorer"}, route=[],
+            get_interior_screen=None, systems=systems, system_id="a",
+        )
+        systems["a"].ai_ships.append(character)
+
+        character.routine._timer = 1
+        character.routine.run(character)
+
+        self.assertEqual(character.system_id, "a")
+        self.assertIn(character, systems["a"].ai_ships)
+        self.assertEqual(len(systems["a"].ai_ships), 1, "Must not be duplicated into the list")
+
+
+class TestMultiSystemSimulation(unittest.TestCase):
+    """Regression coverage for simulating every system a story defines, not
+    just whichever one the player currently occupies (see SystemState and
+    SpaceScreen.systems) - previously, a system the player wasn't in didn't
+    exist as live objects at all until re-visited, which reset its AI ships
+    back to their config-file spawn points every time."""
+
+    def test_background_system_ai_ships_keep_moving(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        background_ship = game_screen.systems["keplers_reach"].ai_ships[0]
+        before = (background_ship.x, background_ship.y)
+
+        for _ in range(120):
+            game_screen.update_physics()
+
+        self.assertNotEqual((background_ship.x, background_ship.y), before,
+                             "AI ship in a system the player isn't in should still be moving")
+
+    def test_jumping_does_not_rebuild_the_destination_system(self):
+        """Jumping used to reload the destination system's config from
+        scratch (_load_system_content), discarding any progress its AI
+        ships had already made while simulating in the background."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        destination_state = game_screen.systems["keplers_reach"]
+        for _ in range(120):
+            game_screen.update_physics()
+        moved_position = (destination_state.ai_ships[0].x, destination_state.ai_ships[0].y)
+
+        game_screen.selected_system_id = "keplers_reach"
+        game_screen._begin_jump()
+        game_screen._complete_jump()
+
+        self.assertIs(game_screen.systems["keplers_reach"], destination_state,
+                       "Must reuse the same SystemState, not rebuild a fresh one")
+        self.assertEqual((game_screen.ai_ships[0].x, game_screen.ai_ships[0].y), moved_position)
+
+    def test_save_restore_round_trip_survives_a_migrated_ai_ship(self):
+        """get_state()/restore_state() key ai_ships by pilot name and record
+        which system each is in (see SAVE_SYSTEM.md) specifically so an
+        ExplorerRoutine-driven pilot's system can round-trip through a save
+        - a plain per-system list index can't survive it moving lists."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        explorer = next(s for s in game_screen.systems["sol_alpha"].ai_ships if s.person.name == "Juno Vale")
+        # Simulate it having wandered off to the other system already.
+        game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
+        game_screen.systems["keplers_reach"].ai_ships.append(explorer)
+        explorer.system_id = "keplers_reach"
+        explorer.x, explorer.y = 4242, 1337
+
+        state = game_screen.get_state()
+        self.assertEqual(state["ai_ships"]["Juno Vale"]["system_id"], "keplers_reach")
+
+        fresh = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        fresh.restore_state(state)
+
+        self.assertNotIn(explorer.person.name, [s.person.name for s in fresh.systems["sol_alpha"].ai_ships])
+        restored = next(s for s in fresh.systems["keplers_reach"].ai_ships if s.person.name == "Juno Vale")
+        self.assertEqual((restored.x, restored.y), (4242, 1337))
+        self.assertEqual(restored.system_id, "keplers_reach")
+
+
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
     """Regression test: every other NPC in the room kept wandering around
     even while the player was mid-conversation with one of them - only the
@@ -843,17 +965,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.0.0")
+        self.assertEqual(game_screen.story_version, "1.1.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.0.0")
+        self.assertEqual(game_state["story_version"], "1.1.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.0.0")
+            warn_if_story_version_mismatch("default", "1.1.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -861,7 +983,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.0.0", captured.getvalue())
+        self.assertIn("1.1.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
