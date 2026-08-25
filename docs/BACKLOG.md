@@ -11,17 +11,9 @@ higher priority.
 
 ## Bugs
 
-- [ ] ⭐ Overwriting a save returns to the menu with a "saved" message, but creating a new save doesn't.
-- [ ] ⭐ Saving while jumping and then loading gets you stuck in the jump temporarily.
-- [ ] ⭐ Can talk to people from far away (no proximity check on dialogue).
-- [ ] Exit menus don't tell how to close them.
-- [ ] Weird characters in Elena Voss's dialogue.
-- [ ] No indication of when you're close enough to use an exit.
-- [ ] Interior features should draw back-to-front (currently wrong draw order/layering).
-- [ ] Able to turn while jumping (should probably be locked out).
-- [ ] Targeting square should re-size / re-position to fit its target.
-- [ ] Gas giant ring is drawn entirely behind the planet (should show in front on the near side).
-- [ ] Empty main load menu doesn't tell how to close it.
+None currently open - the last batch (save/jump/dialogue-proximity/exit-menu/
+encoding/draw-order/targeting/ring/load-menu fixes) was cleared out together;
+see git history around that time for the individual commits.
 
 ## Features / Ideas
 
