@@ -27,8 +27,6 @@ higher priority.
 ## Features / Ideas
 
 - [ ] Should single-destination exits still require choosing? Current answer: yes.
-- [ ] More autopilot/targeting controls — e.g. landable worlds maybe shouldn't be targeted by
-      default; separate targeting modes for ships vs. landable worlds.
 - [ ] Quick save.
 - [ ] AI walking pathfinding.
 - [ ] Cultural station interiors; round rooms.

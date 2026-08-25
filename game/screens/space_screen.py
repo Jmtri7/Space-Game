@@ -33,6 +33,11 @@ SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 MINIMAP_SIZE = 170     # px, before ui_scale
 MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 
+# Targeting modes - cycled with Tab, filters what T/[/] can select.
+# "ALL" is last/default so a fresh screen keeps the original un-filtered
+# cycling behavior until the player opts into narrowing it down.
+TARGET_MODES = ["SHIPS", "LANDABLES", "ALL"]
+
 
 class SpaceScreen(ScreenBase):
     """Main space exploration screen with ships and landing."""
@@ -156,6 +161,7 @@ class SpaceScreen(ScreenBase):
         self.ai_ship = self.ai_ships[0] if self.ai_ships else None
 
         self.current_target = None
+        self.target_mode_index = len(TARGET_MODES) - 1  # "ALL"
         self.targetable_objects = [
             (self.station.name, self.station),
             (self.moon.name, self.moon),
@@ -254,6 +260,8 @@ class SpaceScreen(ScreenBase):
                     self._cycle_target(1)
                 elif event.key == pygame.K_LEFTBRACKET:
                     self._cycle_target(-1)
+                elif event.key == pygame.K_TAB:
+                    self._cycle_target_mode()
                 elif event.key == pygame.K_l:
                     # Land only - never engages autopilot (see K_SPACE below
                     # for that). If a landable is targeted and already in
@@ -290,26 +298,50 @@ class SpaceScreen(ScreenBase):
                     return "possessions"
         return None
 
+    def _filtered_targets(self):
+        """targetable_objects narrowed to the current target mode - SHIPS
+        (AI ships only), LANDABLES (station/moon only), or ALL (everything,
+        the original unfiltered list). current_target is always an index
+        into *this* list, not the master one, so switching modes changes
+        what index 0 means."""
+        mode = TARGET_MODES[self.target_mode_index]
+        if mode == "SHIPS":
+            return [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
+        elif mode == "LANDABLES":
+            return [entry for entry in self.targetable_objects if isinstance(entry[1], Landable)]
+        return self.targetable_objects
+
     def _cycle_target(self, direction=1):
-        """Cycle through targetable objects - direction=1 for T/], -1 for [."""
-        if not self.targetable_objects:
+        """Cycle through targetable objects in the current target mode - direction=1 for T/], -1 for [."""
+        filtered = self._filtered_targets()
+        if not filtered:
             return
         if self.current_target is None:
             self.current_target = 0
         else:
-            self.current_target = (self.current_target + direction) % len(self.targetable_objects)
+            self.current_target = (self.current_target + direction) % len(filtered)
+
+    def _cycle_target_mode(self):
+        """Switch which category T/[/] cycles through (Tab). Immediately
+        selects the first object in the new category - empty if this
+        system has none - so the mode switch itself gives feedback instead
+        of leaving a stale target from the old category selected."""
+        self.target_mode_index = (self.target_mode_index + 1) % len(TARGET_MODES)
+        self.current_target = 0 if self._filtered_targets() else None
 
     def _get_target_name(self):
         """Get the name of the current target"""
-        if self.current_target is None or self.current_target >= len(self.targetable_objects):
+        filtered = self._filtered_targets()
+        if self.current_target is None or self.current_target >= len(filtered):
             return None
-        return self.targetable_objects[self.current_target][0]
+        return filtered[self.current_target][0]
 
     def _get_target_object(self):
         """Get the current target object"""
-        if self.current_target is None or self.current_target >= len(self.targetable_objects):
+        filtered = self._filtered_targets()
+        if self.current_target is None or self.current_target >= len(filtered):
             return None
-        return self.targetable_objects[self.current_target][1]
+        return filtered[self.current_target][1]
 
     def _draw_target_arrow(self, surface, target):
         """Draw an arrow on an imaginary circle around the player's ship, pointing toward the target."""
@@ -641,11 +673,12 @@ class SpaceScreen(ScreenBase):
         # toggled - only its selected/deselected color changes.
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         target_name = self._get_target_name()
+        mode_label = TARGET_MODES[self.target_mode_index]
         if target_obj and target_name:
             distance = self.player.get_distance(target_obj.x, target_obj.y)
-            target_line, target_color = f"Target: {target_name} ({distance:.0f})", GREEN
+            target_line, target_color = f"Target [{mode_label}]: {target_name} ({distance:.0f})", GREEN
         else:
-            target_line, target_color = "Target: None", GRAY
+            target_line, target_color = f"Target [{mode_label}]: None", GRAY
         lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color), (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100))]
         # Landables (station/moon) list what's inside them, right under the
         # target line - lets the player see where they'll end up before
@@ -692,7 +725,7 @@ class SpaceScreen(ScreenBase):
         # --- Bottom-center: a control-help bar (always) with the current
         # status (autopilot/landing/jump - mutually exclusive) as its own
         # panel directly above, so the two never crowd into one another.
-        help_text = font_body.render("T/[/]: target, Space: autopilot, L: land, M: star map, ESC: pause", True, WHITE)
+        help_text = font_body.render("T/[/]: target, Tab: target mode, Space: autopilot, L: land, M: star map, ESC: pause", True, WHITE)
         help_rect = pygame.Rect(0, 0, help_text.get_width() + pad_x * 2, help_text.get_height() + pad_y * 2)
         help_rect.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
         draw_glass_panel(surface, help_rect, ui_scale)
