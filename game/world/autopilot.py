@@ -45,6 +45,31 @@ STALL_BAILOUT_FACTOR = 1.5        # see SeekMode's "would increase speed" bailou
 # made sticky below - cost real frames swinging the heading back and forth
 # for no reason.
 CROSS_TRACK_KILL_THRESHOLD = 0.7
+# Turn-radius speed cap: a fast, slow-turning ship (patrol) that's still
+# carrying a lot of speed at an angle when it gets close to the target can
+# enter a stable pursuit-curve loop instead of converging - always turning
+# toward the target's current bearing but never tightly enough to actually
+# close on it, so it just circles at a fixed range forever (classic
+# pursuit-curve failure: the angular tracking rate required exceeds the
+# ship's turn rate). distance * radians(rotation_speed) is roughly how far
+# the ship's own turn rate could still redirect it per frame at the current
+# range - above that (scaled by the margin below), it's carrying more speed
+# than it can still correct with, so Step 2 treats it as a braking case
+# instead of continuing to accelerate toward the target.
+#
+# First attempt compared speed to this cap directly as its own fresh check
+# in Step 3, every frame. Broke the same way "The sticky-decision pitfall"
+# (see AUTOPILOT_TESTING.md) describes: right at the cap boundary, distance
+# itself oscillates a few units per frame (the ship is mid-circle), so the
+# raw comparison flickered true/false and swung the heading between
+# retrograde and point-at-target every single frame - 56 direction
+# reversals in one traced trial, worse than the bug it was meant to fix.
+# Folding it into Step 2's commit decision instead - already sticky - fixed
+# it: 0/216 bad in a dedicated close-range pursuit sweep (was 16/216 under
+# the along-track-gated commit alone, patrol only), no new jitter, and
+# faster to land besides (mean 126.7 frames vs. 340.4) since it stops
+# circling instead of grinding out MAX_SEEK_FRAMES.
+APPROACH_TURN_SPEED_MARGIN = 0.5
 # Watchdog: force an arrival after this many frames of active seeking,
 # regardless of precision. Found one narrow case (a slow-turning ship with
 # velocity ~120 degrees off-target at close range) where the un-stick/
@@ -243,11 +268,17 @@ class SeekMode:
         # expensive cross-track correction it didn't have the along-track
         # progress to afford yet, instead of just letting the normal
         # point-at-target approach build real closing speed first.
+        # Second commit trigger, alongside the braking-distance one above:
+        # speed exceeding what this ship's own turn rate could still redirect
+        # at the current range (see APPROACH_TURN_SPEED_MARGIN) - catches a
+        # fast, slow-turning ship stuck circling the target instead of
+        # closing on it.
         if not self.braking:
             along, _, _ = velocity_components(ship, target, distance)
             along_speed = max(0, along)
             braking_distance = predict_braking_distance_from_stop(ship, along_speed)
-            self.braking = distance <= braking_distance and along_speed > ARRIVAL_SPEED_THRESHOLD
+            turn_cap = distance * math.radians(ship.rotation_speed) * APPROACH_TURN_SPEED_MARGIN
+            self.braking = (distance <= braking_distance and along_speed > ARRIVAL_SPEED_THRESHOLD) or speed > turn_cap
             if self.braking:
                 self.cross_track_done = False  # fresh commit - give it one cross-track check
         should_brake = self.braking
