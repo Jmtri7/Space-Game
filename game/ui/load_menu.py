@@ -39,6 +39,9 @@ class LoadMenu:
         if not self.list.items:
             no_saves = font_save.render("No saves found", True, GRAY)
             surface.blit(no_saves, (_center_text_x(surface, no_saves, offset_x), int(offset_y + 600 * scale * 0.5)))
+
+            help_text = font_save.render("ESC: cancel", True, GRAY)
+            surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.75)))
         else:
             self.list.draw(surface, font_save, panel_rect.centerx, int(offset_y + 600 * scale * 0.35), int(40 * scale), scale)
 
