@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture
+from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type
 from game.screens.screen_base import ScreenBase
 from game.world.npc import NPC
 from game.world.player_character import PlayerCharacter
@@ -11,7 +11,7 @@ from game.world.player_character import PlayerCharacter
 
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
-    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default"):
+    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
         # Load config from file or use inline data
         if config_data is not None:
@@ -28,7 +28,23 @@ class LocationScreen(ScreenBase):
         super().__init__(pilot_name=pilot_name)
 
         # Initialize walkable area properties
-        self.player = PlayerCharacter(start_x, start_y, name=pilot_name)
+        # player_possessions, if given, is the player's one real Possessions
+        # object (see SpaceScreen.get_interior_screen) - shared by reference
+        # so a purchase made here is instantly visible everywhere else the
+        # player's possessions are read (space HUD, other interiors, saves).
+        # Falls back to a fresh empty one (via Person's own default) when
+        # constructed standalone, e.g. in tests.
+        self.player = PlayerCharacter(start_x, start_y, name=pilot_name, possessions=player_possessions)
+        # Called with a ship_type_id right after a successful "buy_ship:"
+        # dialogue action - lets SpaceScreen (which owns the real flyable
+        # ship) configure it, without LocationScreen importing game.screens
+        # (see get_interior_screen callable injection on AIShip for the
+        # same one-directional-dependency idiom).
+        self.on_ship_purchased = on_ship_purchased
+        # Which key in the landable's interiors dict this is (e.g.
+        # "dormitory", "default") - set by SpaceScreen.get_interior_screen;
+        # None when constructed standalone (e.g. in tests).
+        self.interior_key = None
         self.world_width = world_width
         self.world_height = world_height
         self.speed = 3
@@ -82,7 +98,8 @@ class LocationScreen(ScreenBase):
                 behavior=cfg.get("behavior", "wander"),
                 name=cfg.get("name", "NPC"),
                 greeting=cfg.get("greeting", "Hello!"),
-                dialogue_options=cfg.get("dialogue_options")
+                dialogue_options=cfg.get("dialogue_options"),
+                dialogue_tree=cfg.get("dialogue_tree")
             )
             for cfg in self.npcs_config
         ]
@@ -107,6 +124,85 @@ class LocationScreen(ScreenBase):
         if self.return_to_ship:
             options.append("ship")
         return options
+
+    @property
+    def ship_available(self):
+        """Whether the player actually has a ship to board right now - not
+        just whether this location's exit is configured to offer one.
+        False until a "buy_ship:" dialogue action has run (see
+        _apply_dialogue_action)."""
+        return bool(self.player.possessions.owned_ships)
+
+    def get_available_exit_options(self):
+        """get_exit_options() minus "ship" when there's no ship to actually
+        board yet - used to decide whether L can exit immediately or needs
+        to open ExitMenu so the player can see *why* nothing happened."""
+        options = self.get_exit_options()
+        if not self.ship_available:
+            options = [option for option in options if option != "ship"]
+        return options
+
+    def get_exit_disabled_reasons(self):
+        """{key: reason} for exit options this location's config offers but
+        aren't usable right now - currently just "ship" with no ship owned
+        yet. Passed to ExitMenu so it's shown, dim, instead of silently
+        missing."""
+        if "ship" in self.get_exit_options() and not self.ship_available:
+            return {"ship": "no ship docked here"}
+        return {}
+
+    def _option_blocked_reason(self, option):
+        """Why a dialogue option's "action" can't be taken right now, or
+        None if it's fine. Options with no action are never blocked."""
+        action = option.get("action")
+        if not action:
+            return None
+        if action.startswith("buy_ship:"):
+            ship_type_id = action.split(":", 1)[1]
+            cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
+            if not self.player.possessions.can_afford(cost):
+                return "not enough credits"
+        elif action == "take_loan" and self.player.possessions.loans:
+            return "already have a loan"
+        return None
+
+    def _apply_dialogue_action(self, action):
+        """Perform the game-state effect of a dialogue option's "action"
+        tag - called once it's confirmed not blocked (see
+        _option_blocked_reason), right before Dialogue.choose() advances to
+        the option's response node."""
+        if action.startswith("buy_ship:"):
+            ship_type_id = action.split(":", 1)[1]
+            cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
+            self.player.possessions.spend(cost)
+            self.player.possessions.add_ship(ship_type_id)
+            if self.on_ship_purchased:
+                self.on_ship_purchased(ship_type_id)
+        elif action == "take_loan":
+            loan_amount = get_ship_type(self.story, "shuttle").get("cost", 0)
+            self.player.possessions.take_loan("Station Credit Union", loan_amount)
+
+    def _first_selectable_option(self, options):
+        """Index of the first option _option_blocked_reason doesn't block -
+        used whenever the selection needs to (re)start (opening a
+        conversation, arriving at a new node) so it's never pre-highlighted
+        on an option the player can't actually take."""
+        for i, option in enumerate(options):
+            if not self._option_blocked_reason(option):
+                return i
+        return 0  # every option blocked - nothing better to land on
+
+    def _next_selectable_option(self, options, current, direction):
+        """Index reached by moving `current` by `direction` (+1/-1, with
+        wraparound), skipping any option _option_blocked_reason blocks -
+        the cursor should never be able to land on (and thus Enter-confirm)
+        one, matching how a blocked option is drawn (dim, not selectable)."""
+        index = current
+        for _ in range(len(options)):
+            index = (index + direction) % len(options)
+            if not self._option_blocked_reason(options[index]):
+                return index
+        return current  # every option blocked - stay put
 
     def _targetable_people(self):
         """NPCs plus any visiting AI pilots currently in this location -
@@ -146,9 +242,13 @@ class LocationScreen(ScreenBase):
 
     def update_physics(self):
         """Advance just the NPCs - safe to call on a location that isn't
-        the active screen. NPCs keep living even mid-dialogue in the
-        active location too - only the player's own movement pauses for
-        that."""
+        the active screen. Paused while a conversation is open here
+        (active_dialogue) - talking to one NPC shouldn't leave every other
+        NPC in the room still visibly wandering around, any more than the
+        player's own movement does. Other cached locations never have a
+        conversation open, so this only ever actually pauses the active one."""
+        if self.active_dialogue:
+            return
         for npc in self.npcs:
             npc.update()
 
@@ -255,15 +355,19 @@ class LocationScreen(ScreenBase):
             target_text = font_target.render(f"Target: {target_npc.name}", True, (100, 255, 100))
             surface.blit(target_text, (int(offset_x + 20), int(offset_y + 45)))
 
+        font_credits = pygame.font.Font(None, int(24 * ui_scale))
+        credits_text = font_credits.render(f"Credits: {self.player.possessions.credits}", True, (255, 220, 100))
+        surface.blit(credits_text, (int(offset_x + surface.get_width() - credits_text.get_width() - 20), int(offset_y + 20)))
+
         font_help = pygame.font.Font(None, int(16 * ui_scale))
-        help_text = font_help.render("WASD: move, T/[/]: target NPC, Enter: talk, L: exit, ESC: pause", True, WHITE)
+        help_text = font_help.render("WASD: move, T/[/]: target NPC, Enter: talk, L: exit, P: possessions, ESC: pause", True, WHITE)
         help_x = int(offset_x + surface.get_width() // 2 - help_text.get_width() // 2)
         help_y = int(offset_y + surface.get_height() - 30)
         surface.blit(help_text, (help_x, help_y))
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
-            self.active_dialogue.draw(surface, ui_scale)
+            self.active_dialogue.draw(surface, ui_scale, status_fn=self._option_blocked_reason)
 
     def _draw_culture_building(self, surface, structure, building_type_id, scale):
         """Draw a building whose hull/window colors come from its type's culture -
@@ -315,11 +419,22 @@ class LocationScreen(ScreenBase):
 
             if self.active_dialogue:
                 # While talking, input drives the dialogue box instead of movement
+                options = self.active_dialogue.current_options()
                 if event.key in (pygame.K_UP, pygame.K_w):
-                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option - 1) % len(self.active_dialogue.options)
+                    self.active_dialogue.selected_option = self._next_selectable_option(options, self.active_dialogue.selected_option, -1)
                 elif event.key in (pygame.K_DOWN, pygame.K_s):
-                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option + 1) % len(self.active_dialogue.options)
-                elif event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+                    self.active_dialogue.selected_option = self._next_selectable_option(options, self.active_dialogue.selected_option, 1)
+                elif event.key == pygame.K_RETURN:
+                    option = options[self.active_dialogue.selected_option]
+                    if not self._option_blocked_reason(option):
+                        action = option.get("action")
+                        if action:
+                            self._apply_dialogue_action(action)
+                        if self.active_dialogue.choose(self.active_dialogue.selected_option):
+                            self.active_dialogue = None
+                        else:
+                            self.active_dialogue.selected_option = self._first_selectable_option(self.active_dialogue.current_options())
+                elif event.key == pygame.K_ESCAPE:
                     self.active_dialogue = None
                 continue
 
@@ -328,12 +443,17 @@ class LocationScreen(ScreenBase):
                 dist_to_entrance = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2)
                 if dist_to_entrance <= self.entrance_range:
                     options = self.get_exit_options()
-                    if len(options) > 1:
-                        # More than one place this exit leads - let the
-                        # player pick instead of guessing for them.
-                        return "exit_menu"
-                    elif len(options) == 1:
+                    available = self.get_available_exit_options()
+                    if options and len(available) == len(options) and len(options) == 1:
+                        # Exactly one destination, and it's actually usable
+                        # right now - go straight there.
                         return "exit" if options[0] == "ship" else f"exit_to:{options[0]}"
+                    elif options:
+                        # More than one destination, or the only one isn't
+                        # usable yet (e.g. no ship docked) - open the menu
+                        # either way, so an unusable option is still visible
+                        # with its reason instead of L silently doing nothing.
+                        return "exit_menu"
             elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
                 self._cycle_npc_target(1)
             elif event.key == pygame.K_LEFTBRACKET:
@@ -341,8 +461,14 @@ class LocationScreen(ScreenBase):
             elif event.key == pygame.K_RETURN:
                 target_npc = self._get_npc_target()
                 if target_npc:
-                    target_npc.dialogue.selected_option = 0
+                    # Always start a fresh conversation at the root node -
+                    # otherwise leaving mid-tree (ESC) and talking again
+                    # would silently resume wherever it was left off.
+                    target_npc.dialogue.current_node = target_npc.dialogue.root
+                    target_npc.dialogue.selected_option = self._first_selectable_option(target_npc.dialogue.current_options())
                     self.active_dialogue = target_npc.dialogue
+            elif event.key == pygame.K_p:
+                return "possessions"
             elif event.key == pygame.K_ESCAPE:
                 return "pause"
         return None
@@ -392,13 +518,17 @@ class LocationScreen(ScreenBase):
             "player": {
                 "x": self.player.x,
                 "y": self.player.y
-            }
+            },
+            "possessions": self.player.possessions.get_state(),
         }
 
     def restore_state(self, state):
         """Restore player position state for locations"""
-        if not state or "player" not in state:
+        if not state:
             return
-        player_state = state["player"]
-        self.player.x = player_state.get("x", self.player.x)
-        self.player.y = player_state.get("y", self.player.y)
+        if "player" in state:
+            player_state = state["player"]
+            self.player.x = player_state.get("x", self.player.x)
+            self.player.y = player_state.get("y", self.player.y)
+        if "possessions" in state:
+            self.player.possessions.restore_from(state["possessions"])

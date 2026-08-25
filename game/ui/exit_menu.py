@@ -11,14 +11,24 @@ from game.ui.selectable_list import SelectableList
 class ExitMenu:
     """Dialog for choosing a destination when an interior's exit leads to
     more than one place."""
-    def __init__(self, options, interiors):
+    def __init__(self, options, interiors, disabled_reasons=None):
         # options: LocationScreen.get_exit_options() - connected_locations
         # keys plus "ship" if return_to_ship is set.
         # interiors: the landable's own interiors dict, used only to look
         # up a friendly label for each connected location key.
+        # disabled_reasons: {key: reason} for options offered by config but
+        # not currently usable (e.g. "ship" with no ship actually owned) -
+        # shown dim with the reason, not selectable.
         self.options = options
         self.interiors = interiors
+        self.disabled_reasons = disabled_reasons or {}
         self.list = SelectableList(options, max_visible=max(1, len(options)))
+        # Never start pre-selected on a disabled entry.
+        if options and self.disabled_reasons.get(self.list.current()):
+            for i, option in enumerate(options):
+                if not self.disabled_reasons.get(option):
+                    self.list.selected = i
+                    break
 
     def _label(self, key):
         if key == "ship":
@@ -32,9 +42,11 @@ class ExitMenu:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                    self.list.handle_key(event.key)
+                    self.list.handle_key(event.key, disabled_fn=self.disabled_reasons.get)
                 elif event.key == pygame.K_RETURN:
-                    return self.list.current()
+                    current = self.list.current()
+                    if current not in self.disabled_reasons:
+                        return current
                 elif event.key == pygame.K_ESCAPE:
                     return "cancel"
         return None
@@ -51,4 +63,4 @@ class ExitMenu:
 
         draw_glow_title(surface, "Where To?", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.3))
 
-        self.list.draw(surface, font_text, panel_rect.centerx, int(offset_y + 600 * scale * 0.45), int(40 * scale), scale, label_fn=self._label)
+        self.list.draw(surface, font_text, panel_rect.centerx, int(offset_y + 600 * scale * 0.45), int(40 * scale), scale, label_fn=self._label, disabled_fn=self.disabled_reasons.get)

@@ -31,8 +31,12 @@ import game.utils as utils
 from game.world.ship import Ship
 from game.world.landable import Landable
 from game.world.person import Person
+from game.world.possessions import Possessions
+from game.world.dialogue import Dialogue
 from game.screens.location_screen import LocationScreen
-from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE
+from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
+from game.world.ai_ship import AIShip
+from game.ui.selectable_list import SelectableList
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -419,6 +423,335 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         self.assertEqual(visited_history, {"city", "wilderness"},
                           "Should have visited both connected locations before leaving")
         self.assertFalse(ai_ship.pilot_ashore)
+
+    def test_multi_hop_graph_routes_through_a_middle_node_to_ship(self):
+        """Regression test for the station's concourse/spaceport layout:
+        "ship" isn't directly reachable from the room a freighter lands in
+        (only the spaceport offers it), so the routine must hop through
+        whichever connected location the role's preference names, not
+        wander into an unrelated dead end first."""
+        hub = SimpleNamespace(get_exit_options=lambda: ["dead_end", "spaceport"])
+        docks = SimpleNamespace(get_exit_options=lambda: ["hub", "ship"])
+        routine = DockRoutine(route=[])
+        routine._location = hub
+        routine._visited_this_stop = {"hub"}
+        ai_ship = self._make_ai_ship(role="freighter_pilot")
+
+        self.assertIn("spaceport", ROLE_EXIT_PREFERENCE["freighter_pilot"])
+        choice = routine._choose_exit(ai_ship)
+        self.assertEqual(choice, "spaceport", "Should route toward the preferred middle node, not the dead end")
+
+        routine._location = docks
+        routine._visited_this_stop.add("spaceport")
+        self.assertEqual(routine._choose_exit(ai_ship), "ship")
+
+    def test_safety_cap_forces_reboard_when_ship_is_never_reachable(self):
+        """If nothing ever leads to "ship" (a misconfigured or future
+        role/graph combination this feature hasn't been tuned for), the
+        MAX_LATERAL_HOPS cap must still force a reboard rather than wander
+        forever - this is what actually caught the corridor<->dormitory
+        ping-pong during development, before ROLE_EXIT_PREFERENCE routed
+        freighter_pilot through the spaceport."""
+        room_a = SimpleNamespace(get_exit_options=lambda: ["room_b"])
+        room_b = SimpleNamespace(get_exit_options=lambda: ["room_a"])
+        rooms = {"room_a": room_a, "room_b": room_b}
+
+        routine = DockRoutine(route=[])
+        routine._location = room_a
+        routine._visited_this_stop = {"room_a"}
+        ai_ship = self._make_ai_ship(role="patrol_officer")  # no ROLE_EXIT_PREFERENCE entry
+
+        current_key = "room_a"
+        for _ in range(MAX_LATERAL_HOPS + 5):
+            choice = routine._choose_exit(ai_ship)
+            if choice == "ship":
+                break
+            current_key = choice
+            routine._location = rooms[current_key]
+            routine._visited_this_stop.add(current_key)
+        else:
+            self.fail(f"never forced a reboard within {MAX_LATERAL_HOPS + 5} hops")
+        self.assertLessEqual(len(routine._visited_this_stop), MAX_LATERAL_HOPS + 1)
+
+
+class TestPossessions(unittest.TestCase):
+    """Test Possessions - credits/ships/loans, composed onto every Person
+    (see game/world/person.py), not just the player."""
+
+    def test_starts_empty(self):
+        possessions = Possessions()
+        self.assertEqual(possessions.credits, 0)
+        self.assertEqual(possessions.owned_ships, [])
+        self.assertEqual(possessions.loans, [])
+
+    def test_can_afford_and_spend(self):
+        possessions = Possessions(credits=1200)
+        self.assertTrue(possessions.can_afford(1200))
+        self.assertFalse(possessions.can_afford(1201))
+        possessions.spend(1200)
+        self.assertEqual(possessions.credits, 0)
+
+    def test_add_ship(self):
+        possessions = Possessions()
+        possessions.add_ship("shuttle")
+        self.assertEqual(possessions.owned_ships, ["shuttle"])
+
+    def test_take_loan_adds_credits_and_records_loan(self):
+        possessions = Possessions()
+        possessions.take_loan("Station Credit Union", 1200)
+        self.assertEqual(possessions.credits, 1200)
+        self.assertEqual(possessions.loans, [{"lender": "Station Credit Union", "principal": 1200}])
+
+    def test_get_state_roundtrips_through_from_state(self):
+        possessions = Possessions(credits=300, owned_ships=["shuttle"], loans=[{"lender": "X", "principal": 100}])
+        restored = Possessions.from_state(possessions.get_state())
+        self.assertEqual(restored.credits, 300)
+        self.assertEqual(restored.owned_ships, ["shuttle"])
+        self.assertEqual(restored.loans, [{"lender": "X", "principal": 100}])
+
+    def test_restore_from_mutates_in_place(self):
+        """restore_from() must update the existing object, not replace it -
+        every screen holding a reference to the player's one Possessions
+        (see SpaceScreen.get_interior_screen) depends on that identity
+        staying the same across a load."""
+        possessions = Possessions(credits=50)
+        same_object = possessions
+        possessions.restore_from({"credits": 900, "owned_ships": ["patrol"], "loans": []})
+        self.assertIs(possessions, same_object)
+        self.assertEqual(possessions.credits, 900)
+        self.assertEqual(possessions.owned_ships, ["patrol"])
+
+
+class TestDialogue(unittest.TestCase):
+    """Test Dialogue's conversation tree - both the backward-compatible
+    flat shape (from_flat) and real branching."""
+
+    def test_from_flat_every_option_closes(self):
+        """Matches the old flat greeting+options behavior exactly - any
+        option chosen just ends the conversation."""
+        dialogue = Dialogue.from_flat("Guard", "Welcome.", ["Thanks", "Leave"])
+        self.assertEqual(dialogue.current_text(), "Welcome.")
+        self.assertEqual([o["label"] for o in dialogue.current_options()], ["Thanks", "Leave"])
+        self.assertTrue(dialogue.choose(0))
+        self.assertTrue(dialogue.choose(1))
+
+    def test_tree_advances_to_next_node(self):
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "What'll it be?", "options": [
+                {"label": "Order a drink", "next": "drink"},
+                {"label": "Leave", "next": None},
+            ]},
+            "drink": {"text": "Cheers.", "options": [
+                {"label": "Thanks", "next": None},
+            ]},
+        })
+        closed = dialogue.choose(0)
+        self.assertFalse(closed)
+        self.assertEqual(dialogue.current_node, "drink")
+        self.assertEqual(dialogue.current_text(), "Cheers.")
+        self.assertTrue(dialogue.choose(0))
+
+    def test_tree_can_loop_back_to_an_earlier_node(self):
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "What'll it be?", "options": [{"label": "Chat", "next": "chat"}]},
+            "chat": {"text": "...", "options": [{"label": "Back", "next": "start"}]},
+        })
+        dialogue.choose(0)
+        dialogue.choose(0)
+        self.assertEqual(dialogue.current_node, "start")
+
+
+class _FakeFont:
+    """Stand-in for pygame.font.Font in wrap-width tests - width is just
+    character count, so expected wrap points are exact and don't depend on
+    real font metrics (pygame is mocked in this whole test module anyway)."""
+    def size(self, text):
+        return (len(text), 10)
+
+
+class TestWrapText(unittest.TestCase):
+    """Test utils._wrap_text() - shared by StorySelector and Dialogue (see
+    Dialogue.draw()) so long NPC lines wrap inside their box instead of
+    running off the edge."""
+
+    def test_short_text_stays_one_line(self):
+        self.assertEqual(utils._wrap_text(_FakeFont(), "Hello there", 100), ["Hello there"])
+
+    def test_wraps_at_max_width(self):
+        lines = utils._wrap_text(_FakeFont(), "one two three four", 8)
+        self.assertGreater(len(lines), 1)
+        for line in lines:
+            self.assertLessEqual(len(line), 8)
+        self.assertEqual(" ".join(lines), "one two three four")
+
+    def test_single_long_word_is_not_split(self):
+        """A word longer than max_width on its own still isn't broken mid-word."""
+        self.assertEqual(utils._wrap_text(_FakeFont(), "supercalifragilistic", 5), ["supercalifragilistic"])
+
+
+class TestAIShipPilotDialogue(unittest.TestCase):
+    """Regression test: talking to a visiting AI pilot (e.g. Elena Voss)
+    while docked crashed the game - ai_ship.py still built pilot_person's
+    Dialogue with the old flat (name, [greeting], options) constructor
+    after Dialogue became a tree (nodes dict + root), so current_text()
+    indexed a list with a string key and raised."""
+
+    def test_pilot_dialogue_is_usable(self):
+        ship = AIShip(0, 0, pilot={"name": "Elena Voss", "personality": "Blunt and unhurried."})
+        dialogue = ship.pilot_person.dialogue
+        self.assertEqual(dialogue.current_text(), "Blunt and unhurried.")
+        self.assertEqual([o["label"] for o in dialogue.current_options()], ["Nod", "Leave"])
+        self.assertTrue(dialogue.choose(0))
+
+
+class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
+    """Regression test: every other NPC in the room kept wandering around
+    even while the player was mid-conversation with one of them - only the
+    player's own movement paused. update_physics() must freeze every NPC
+    in the location while active_dialogue is open, not just the one being
+    talked to."""
+
+    def test_npcs_freeze_while_a_dialogue_is_open(self):
+        config = {
+            "label": "Test Room",
+            "npcs": [
+                {"name": "Talker", "x": 100, "y": 100, "behavior": "wander"},
+                {"name": "Bystander", "x": 200, "y": 200, "behavior": "wander"},
+            ],
+        }
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        talker = next(npc for npc in screen.npcs if npc.name == "Talker")
+        bystander = next(npc for npc in screen.npcs if npc.name == "Bystander")
+
+        screen.active_dialogue = talker.dialogue
+        before = (bystander.x, bystander.y)
+        for _ in range(50):
+            screen.update_physics()
+        self.assertEqual((bystander.x, bystander.y), before)
+
+    def test_npcs_move_normally_with_no_dialogue_open(self):
+        config = {
+            "label": "Test Room",
+            "npcs": [{"name": "Wanderer", "x": 100, "y": 100, "behavior": "wander"}],
+        }
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        wanderer = screen.npcs[0]
+        before = (wanderer.x, wanderer.y)
+        for _ in range(200):
+            screen.update_physics()
+        self.assertNotEqual((wanderer.x, wanderer.y), before)
+
+
+class TestLocationScreenEconomy(unittest.TestCase):
+    """Test LocationScreen's ship-ownership-gated exit and dialogue-action
+    gating - the mechanisms behind the spaceport's disabled "Return to
+    Ship" option and the salesman/loan-officer purchase flow."""
+
+    def _make_screen(self, connected_locations=None, return_to_ship=True, credits=0, owned_ships=None, loans=None):
+        possessions = Possessions(credits=credits, owned_ships=owned_ships or [], loans=loans or [])
+        config = {"label": "Spaceport", "connected_locations": connected_locations or [], "return_to_ship": return_to_ship}
+        return LocationScreen(config_data=config, world_width=800, world_height=600, player_possessions=possessions)
+
+    def test_ship_unavailable_without_a_ship(self):
+        screen = self._make_screen(return_to_ship=True)
+        self.assertFalse(screen.ship_available)
+        self.assertEqual(screen.get_available_exit_options(), [])
+        self.assertEqual(screen.get_exit_disabled_reasons(), {"ship": "no ship docked here"})
+
+    def test_ship_available_once_owned(self):
+        screen = self._make_screen(return_to_ship=True, owned_ships=["shuttle"])
+        self.assertTrue(screen.ship_available)
+        self.assertEqual(screen.get_available_exit_options(), ["ship"])
+        self.assertEqual(screen.get_exit_disabled_reasons(), {})
+
+    def test_connected_location_exit_unaffected_by_ship_ownership(self):
+        screen = self._make_screen(connected_locations=["default"], return_to_ship=False)
+        self.assertEqual(screen.get_available_exit_options(), ["default"])
+        self.assertEqual(screen.get_exit_disabled_reasons(), {})
+
+    def test_buy_ship_blocked_when_unaffordable(self):
+        screen = self._make_screen(credits=0)
+        option = {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"}
+        self.assertEqual(screen._option_blocked_reason(option), "not enough credits")
+
+    def test_buy_ship_allowed_when_affordable(self):
+        screen = self._make_screen(credits=1200)
+        option = {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"}
+        self.assertIsNone(screen._option_blocked_reason(option))
+        screen._apply_dialogue_action("buy_ship:shuttle")
+        self.assertEqual(screen.player.possessions.credits, 0)
+        self.assertEqual(screen.player.possessions.owned_ships, ["shuttle"])
+
+    def test_buy_ship_calls_on_ship_purchased_callback(self):
+        possessions = Possessions(credits=1200)
+        config = {"label": "Spaceport"}
+        purchased = []
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600, player_possessions=possessions, on_ship_purchased=purchased.append)
+        screen._apply_dialogue_action("buy_ship:shuttle")
+        self.assertEqual(purchased, ["shuttle"])
+
+    def test_take_loan_blocked_if_already_taken(self):
+        screen = self._make_screen(loans=[{"lender": "X", "principal": 1200}])
+        option = {"label": "Take loan", "action": "take_loan"}
+        self.assertEqual(screen._option_blocked_reason(option), "already have a loan")
+
+    def test_take_loan_grants_shuttle_cost(self):
+        screen = self._make_screen()
+        screen._apply_dialogue_action("take_loan")
+        self.assertEqual(screen.player.possessions.credits, 1200)
+        self.assertEqual(len(screen.player.possessions.loans), 1)
+
+    def test_navigation_skips_blocked_dialogue_options(self):
+        """Regression test: the cursor used to be able to move onto (and
+        then Enter-confirm) a dialogue option that was drawn dim/blocked -
+        e.g. cycling DOWN past an unaffordable ship onto a second
+        unaffordable ship. _next_selectable_option must skip it."""
+        screen = self._make_screen(credits=0)
+        options = [
+            {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"},
+            {"label": "Patrol - 3500cr", "action": "buy_ship:patrol"},
+            {"label": "Leave"},
+        ]
+        # Both ships are unaffordable at 0 credits - DOWN from "Leave"
+        # should wrap straight back to "Leave" itself, never landing on
+        # either blocked option.
+        self.assertEqual(screen._next_selectable_option(options, 2, 1), 2)
+        # First selectable when nothing is affordable is "Leave" (index 2).
+        self.assertEqual(screen._first_selectable_option(options), 2)
+
+    def test_navigation_lands_on_the_one_affordable_option(self):
+        screen = self._make_screen(credits=1200)
+        options = [
+            {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"},
+            {"label": "Patrol - 3500cr", "action": "buy_ship:patrol"},
+            {"label": "Leave"},
+        ]
+        self.assertEqual(screen._first_selectable_option(options), 0)
+        # DOWN from Shuttle should skip the unaffordable Patrol and land on Leave.
+        self.assertEqual(screen._next_selectable_option(options, 0, 1), 2)
+
+
+class TestSelectableListDisabledNavigation(unittest.TestCase):
+    """Test SelectableList.handle_key()'s disabled_fn skip - the same
+    "can't navigate onto a disabled entry" fix applied to ExitMenu."""
+
+    def test_skips_disabled_entry_when_moving_down(self):
+        selectable = SelectableList(["a", "b", "c"], max_visible=3)
+        selectable.selected = 0
+        selectable.handle_key(pygame_mock.K_DOWN, disabled_fn=lambda item: "blocked" if item == "b" else None)
+        self.assertEqual(selectable.current(), "c")
+
+    def test_skips_disabled_entry_when_moving_up(self):
+        selectable = SelectableList(["a", "b", "c"], max_visible=3)
+        selectable.selected = 2
+        selectable.handle_key(pygame_mock.K_UP, disabled_fn=lambda item: "blocked" if item == "b" else None)
+        self.assertEqual(selectable.current(), "a")
+
+    def test_all_disabled_does_not_hang(self):
+        selectable = SelectableList(["a", "b"], max_visible=2)
+        selectable.selected = 0
+        selectable.handle_key(pygame_mock.K_DOWN, disabled_fn=lambda item: "blocked")
+        # Never enters an infinite loop - capped at len(items) steps.
 
 
 if __name__ == "__main__":

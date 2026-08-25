@@ -4,28 +4,11 @@ import os
 import pygame
 import game.utils as utils
 from game.constants import WHITE, GRAY
-from game.utils import get_font, render_help_text, handle_menu_navigation, load_json
+from game.utils import get_font, render_help_text, handle_menu_navigation, load_json, _wrap_text
 from game.ui.menu_backdrop import MenuBackdrop
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
 
 TITLE = "SELECT STORY"
-
-
-def _wrap_text(font, text, max_width):
-    """Word-wrap text into lines that each fit within max_width."""
-    words = text.split(" ")
-    lines = []
-    current = ""
-    for word in words:
-        candidate = f"{current} {word}".strip()
-        if current and font.size(candidate)[0] > max_width:
-            lines.append(current)
-            current = word
-        else:
-            current = candidate
-    if current:
-        lines.append(current)
-    return lines
 
 
 class StorySelector:

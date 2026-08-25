@@ -2,16 +2,21 @@
 import pygame
 import math
 from game.utils import to_screen, to_screen_x, to_screen_y, get_scale
+from game.world.possessions import Possessions
 
 
 class Person:
     """Base class for anyone with a position and a body - the player's own
     walking self (see PlayerCharacter), NPCs, and a ship's pilot all share
     this identity regardless of whether they currently have a ship."""
-    def __init__(self, x, y, name=""):
+    def __init__(self, x, y, name="", possessions=None):
         self.x = x
         self.y = y
         self.name = name
+        # Every character - player, NPC, or AI pilot - owns their own
+        # credits/ships/loans, not just the player. Most NPCs never touch
+        # this, but it means "who owns what" is never a player-only concept.
+        self.possessions = possessions or Possessions()
 
     # Body proportions, all measured up from the feet (self.x/self.y is the
     # ground position a character is standing at, not their head or

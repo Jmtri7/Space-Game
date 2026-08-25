@@ -37,13 +37,66 @@
       [-16, -12]
     ],
     "interiors": {
+      "dormitory": {
+        "label": "Your Dormitory",
+        "culture": "vherathi",
+        "entrance": {"x": 400, "y": 460},
+        "connected_locations": ["corridor"],
+        "return_to_ship": false,
+        "rooms": [
+          {"label": "Your Room", "rect": [200, 100, 400, 400]}
+        ],
+        "npcs": [
+          {
+            "name": "Mira Osei",
+            "x": 350,
+            "y": 200,
+            "behavior": "wander",
+            "greeting": "Rough shift. Try not to wake me on your way out.",
+            "dialogue_options": ["Sorry", "Leave"]
+          }
+        ]
+      },
+      "corridor": {
+        "label": "Dormitory Corridor",
+        "culture": "vherathi",
+        "entrance": {"x": 400, "y": 300},
+        "connected_locations": ["dormitory", "default"],
+        "return_to_ship": false,
+        "rooms": [
+          {"label": "Corridor", "rect": [100, 250, 600, 100]},
+          {"label": "Dorm 2A", "rect": [150, 200, 80, 50]},
+          {"label": "Dorm 2B", "rect": [370, 200, 80, 50]},
+          {"label": "Dorm 2C", "rect": [590, 350, 80, 50]}
+        ],
+        "npcs": [
+          {
+            "name": "Renna Kade",
+            "x": 250,
+            "y": 300,
+            "behavior": "wander",
+            "greeting": "Morning. Or whatever hour the station clock says it is.",
+            "dialogue_options": ["Morning", "Leave"]
+          },
+          {
+            "name": "Toma Idrisi",
+            "x": 550,
+            "y": 300,
+            "behavior": "wander",
+            "greeting": "Concourse is that way if you're looking for the bar.",
+            "dialogue_options": ["Thanks", "Leave"]
+          }
+        ]
+      },
       "default": {
-        "label": "Alpha Station Interior",
+        "label": "Alpha Station Concourse",
         "culture": "vherathi",
         "entrance": {
           "x": 400,
           "y": 560
         },
+        "connected_locations": ["corridor", "spaceport", "loan_office"],
+        "return_to_ship": false,
         "rooms": [
           {"label": "Entrance Hall", "rect": [360, 300, 80, 300]},
           {"label": "Bar", "rect": [300, 0, 200, 300]}
@@ -54,8 +107,33 @@
             "x": 400,
             "y": 90,
             "behavior": "bar",
-            "greeting": "What'll it be?",
-            "dialogue_options": ["Order drink", "Leave"]
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "What'll it be?",
+                  "options": [
+                    {"label": "Order a drink", "next": "drink"},
+                    {"label": "Ask about the station", "next": "about_station"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "drink": {
+                  "text": "One synth-ale, on the house for a new face. Cheers.",
+                  "options": [
+                    {"label": "Thanks", "next": "start"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "about_station": {
+                  "text": "Dormitories are back up the corridor. Spaceport and loan office are just off this concourse, if you're looking to get your own ship.",
+                  "options": [
+                    {"label": "Good to know", "next": "start"},
+                    {"label": "Leave", "next": null}
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Traveler",
@@ -72,6 +150,80 @@
             "behavior": "bar",
             "greeting": "Welcome to the station.",
             "dialogue_options": ["Thanks", "Leave"]
+          }
+        ]
+      },
+      "spaceport": {
+        "label": "Alpha Station Spaceport",
+        "culture": "vherathi",
+        "entrance": {"x": 400, "y": 460},
+        "connected_locations": ["default"],
+        "return_to_ship": true,
+        "rooms": [
+          {"label": "Docking Bay", "rect": [150, 100, 500, 400]}
+        ],
+        "npcs": [
+          {
+            "name": "Dax Renner",
+            "x": 400,
+            "y": 250,
+            "behavior": "bar",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "Looking for a ship? I've got three in dock.",
+                  "options": [
+                    {"label": "Shuttle - 1200cr", "next": "bought", "action": "buy_ship:shuttle"},
+                    {"label": "Patrol Corvette - 3500cr", "next": "bought", "action": "buy_ship:patrol"},
+                    {"label": "Bulk Freighter - 4500cr", "next": "bought", "action": "buy_ship:freighter"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "bought": {
+                  "text": "Pleasure doing business. She's docked right outside - the exit here will take you straight to her.",
+                  "options": [
+                    {"label": "Leave", "next": null}
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "loan_office": {
+        "label": "Station Credit Union",
+        "culture": "vherathi",
+        "entrance": {"x": 400, "y": 460},
+        "connected_locations": ["default"],
+        "return_to_ship": false,
+        "rooms": [
+          {"label": "Loan Office", "rect": [250, 150, 300, 350]}
+        ],
+        "npcs": [
+          {
+            "name": "Petra Voss",
+            "x": 400,
+            "y": 250,
+            "behavior": "bar",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "First loan's on the station - enough to get you off the ground, no more.",
+                  "options": [
+                    {"label": "Take loan - 1200cr", "next": "loaned", "action": "take_loan"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "loaned": {
+                  "text": "Approved. Don't make me regret it.",
+                  "options": [
+                    {"label": "Thanks", "next": null}
+                  ]
+                }
+              }
+            }
           }
         ]
       }

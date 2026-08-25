@@ -7,7 +7,8 @@
     "rotation_speed": 4,
     "size": 10,
     "color": [130, 160, 200],
-    "shape": "rectangle"
+    "shape": "rectangle",
+    "cost": 1200
   },
   "freighter": {
     "name": "Bulk Freighter",
@@ -17,7 +18,8 @@
     "rotation_speed": 1,
     "size": 35,
     "color": [120, 120, 120],
-    "shape": "long_rectangle"
+    "shape": "long_rectangle",
+    "cost": 4500
   },
   "patrol": {
     "name": "Patrol Corvette",
@@ -26,7 +28,8 @@
     "max_velocity": 5.0,
     "rotation_speed": 7,
     "size": 13,
-    "color": [150, 100, 200]
+    "color": [150, 100, 200],
+    "cost": 3500
   },
   "drossholt_freighter": {
     "name": "Drossholt Hauler",
@@ -36,7 +39,8 @@
     "rotation_speed": 1,
     "size": 35,
     "color": [200, 150, 100],
-    "shape": "long_rectangle"
+    "shape": "long_rectangle",
+    "cost": 4500
   },
   "drossholt_patrol": {
     "name": "Drossholt Cutter",
@@ -46,6 +50,7 @@
     "rotation_speed": 7,
     "size": 13,
     "color": [200, 150, 100],
-    "shape": "rectangle"
+    "shape": "rectangle",
+    "cost": 3500
   }
 }

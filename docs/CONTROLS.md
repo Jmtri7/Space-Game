@@ -15,6 +15,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **L** | Land on targeted object or nearby (when in range) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
+| **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **ESC** | Pause menu |
 
 ## Star Map (M)
@@ -39,7 +40,12 @@ from its center.
 | **[** | Cycle backward through targetable NPCs |
 | **Enter** | Talk to targeted NPC |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
+| **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **ESC** | Pause menu |
+
+Station interiors include the dormitory, corridor, concourse ("default"),
+spaceport, and loan office - see [ARCHITECTURE.md](ARCHITECTURE.md) for how
+they're connected.
 
 ## Moon Interior (City & Wilderness)
 
@@ -49,9 +55,35 @@ from its center.
 | **T** or **]** / **[** | Cycle through targetable NPCs, forward/backward (City only) |
 | **Enter** | Talk to targeted NPC |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
+| **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **ESC** | Pause menu |
 
+## Dialogue
+
+| Control | Action |
+|---------|--------|
+| **W/↑** or **S/↓** | Navigate options |
+| **Enter** | Choose selected option - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
+| **ESC** | Close the conversation immediately |
+
+Most NPCs offer a flat greeting plus a couple of closing options ("Thanks" /
+"Leave"). A few (e.g. the Bartender, the spaceport's ship salesman, the loan
+officer) run a real branching conversation - some options lead to another
+line of dialogue instead of closing, and some perform an action (buying a
+ship, taking a loan) that's shown dim with a reason instead of selectable
+when you can't currently take it (not enough credits, already have a loan).
+See `game/world/dialogue.py`.
+
 ## Menus
+
+### Possessions Menu (P)
+| Control | Action |
+|---------|--------|
+| **P** or **ESC** | Close |
+
+Read-only: credits, owned ships, and outstanding loans. Opens from space, a
+station interior, or a moon interior, over whichever screen it was opened
+from.
 
 ### Main Menu
 | Control | Action |

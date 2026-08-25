@@ -16,6 +16,7 @@ from game.ui.menu import Menu
 from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.location_selector import LocationSelector
 from game.ui.exit_menu import ExitMenu
+from game.ui.possessions_menu import PossessionsMenu
 from game.ui.pause_menu import PauseMenu
 from game.ui.save_dialog import SaveDialog
 from game.ui.confirm_dialog import ConfirmDialog
@@ -59,6 +60,8 @@ def main():
         exit_menu = None
         exit_menu_landable = None  # game_screen.station or game_screen.moon - whichever this exit_menu is for
         exit_menu_return_screen = None  # "station" or "moon" - where ESC/cancel goes back to
+        possessions_menu = None
+        possessions_return_screen = None  # "game" / "station" / "moon" - where P/ESC closes back to
         pilot_name_dialog = None
         pause_menu = PauseMenu()
         save_dialog = None
@@ -119,7 +122,10 @@ def main():
                 if result and result != "cancel":
                     pilot_name = result
                     game_screen = SpaceScreen(pilot_name=pilot_name, story=selected_story)
-                    current_screen = "game"
+                    # New pilots start ship-less, in their dormitory room -
+                    # not out in space with a ship already assigned.
+                    station_interior = game_screen.get_interior_screen(game_screen.station, "dormitory", 800, 600)
+                    current_screen = "station"
                 elif result == "cancel":
                     current_screen = "menu"
                 pilot_name_dialog.draw(screen)
@@ -159,7 +165,10 @@ def main():
                             elif location == "station":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
                                 game_screen.restore_state(game_state)
-                                station_interior = game_screen.get_interior_screen(game_screen.station, "default", 800, 600)
+                                station_location = game_state.get("station_location", "default")
+                                if station_location not in game_screen.station.interiors:
+                                    station_location = "default"
+                                station_interior = game_screen.get_interior_screen(game_screen.station, station_location, 800, 600)
                                 if station_interior:
                                     station_interior.restore_state(game_state)
                                 current_screen = "station"
@@ -198,6 +207,10 @@ def main():
                 elif action == "star_map":
                     star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
                     current_screen = "star_map"
+                elif action == "possessions":
+                    possessions_menu = PossessionsMenu(game_screen.player.person.possessions, story=game_screen.story)
+                    possessions_return_screen = "game"
+                    current_screen = "possessions"
                 game_screen.update()
                 game_screen.draw(screen)
                 update_background_locations(game_screen, None)
@@ -223,19 +236,28 @@ def main():
                 elif action == "exit":
                     current_screen = "game"
                 elif action == "exit_menu":
-                    exit_menu = ExitMenu(station_interior.get_exit_options(), game_screen.station.interiors)
+                    exit_menu = ExitMenu(station_interior.get_exit_options(), game_screen.station.interiors, disabled_reasons=station_interior.get_exit_disabled_reasons())
                     exit_menu_landable = game_screen.station
                     exit_menu_return_screen = "station"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
                     station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1], 800, 600)
-                # Keep space physics updated while docked (but not camera)
-                if game_screen:
+                elif action == "possessions":
+                    possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story)
+                    possessions_return_screen = "station"
+                    current_screen = "possessions"
+                # Keep space physics updated while docked (but not camera) -
+                # except while a conversation is open, which should pause
+                # the rest of the world like any other modal menu (matches
+                # ExitMenu/PossessionsMenu/PauseMenu).
+                talking = bool(station_interior and station_interior.active_dialogue)
+                if game_screen and not talking:
                     game_screen.update_physics()
                 if station_interior:
                     station_interior.update()
                     station_interior.draw(screen)
-                update_background_locations(game_screen, station_interior)
+                if not talking:
+                    update_background_locations(game_screen, station_interior)
 
             elif current_screen == "select_location":
                 location_key = location_selector.handle_input(events)
@@ -261,10 +283,25 @@ def main():
                     else:
                         moon_interior = interior
                     current_screen = exit_menu_return_screen
-                # Keep space physics updated while the menu is open
-                if game_screen:
-                    game_screen.update_physics()
+                # A modal menu, like PauseMenu - the rest of the world
+                # (space physics, other cached interiors) stays frozen
+                # while it's open.
                 exit_menu.draw(screen)
+
+            elif current_screen == "possessions":
+                action = possessions_menu.handle_input(events)
+                if action == "close":
+                    current_screen = possessions_return_screen
+                # A modal menu, like PauseMenu - the world stays frozen
+                # while it's open. Draw whichever screen this was opened
+                # over, then the overlay on top - same idea as PauseMenu below.
+                if possessions_return_screen == "game" and game_screen:
+                    game_screen.draw(screen)
+                elif possessions_return_screen == "station" and station_interior:
+                    station_interior.draw(screen)
+                elif possessions_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen)
+                possessions_menu.draw(screen)
 
             elif current_screen == "moon":
                 action = moon_interior.handle_input(events)
@@ -276,19 +313,27 @@ def main():
                     previous_screen = "moon"
                     current_screen = "pause"
                 elif action == "exit_menu":
-                    exit_menu = ExitMenu(moon_interior.get_exit_options(), game_screen.moon.interiors)
+                    exit_menu = ExitMenu(moon_interior.get_exit_options(), game_screen.moon.interiors, disabled_reasons=moon_interior.get_exit_disabled_reasons())
                     exit_menu_landable = game_screen.moon
                     exit_menu_return_screen = "moon"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1], 1600, 1600)
-                # Keep space physics updated while on moon (but not camera)
-                if game_screen:
+                elif action == "possessions":
+                    possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story)
+                    possessions_return_screen = "moon"
+                    current_screen = "possessions"
+                # Keep space physics updated while on moon (but not camera) -
+                # except while a conversation is open, which should pause
+                # the rest of the world like any other modal menu.
+                talking = bool(moon_interior and moon_interior.active_dialogue)
+                if game_screen and not talking:
                     game_screen.update_physics()
                 if moon_interior:
                     moon_interior.update()
                     moon_interior.draw(screen)
-                update_background_locations(game_screen, moon_interior)
+                if not talking:
+                    update_background_locations(game_screen, moon_interior)
 
             elif current_screen == "pause":
                 pause_menu.update()
@@ -344,6 +389,7 @@ def main():
                         elif previous_screen == "station":
                             game_state = station_interior.get_state()
                             game_state["location"] = "station"
+                            game_state["station_location"] = station_interior.interior_key or "default"
                             create_save_file(pilot_name, save_description, {}, {}, game_state)
                         else:  # previous_screen == "game" or None
                             game_state = game_screen.get_state()
@@ -391,6 +437,7 @@ def main():
                             elif previous_screen == "station":
                                 game_state = station_interior.get_state()
                                 game_state["location"] = "station"
+                                game_state["station_location"] = station_interior.interior_key or "default"
                                 create_save_file(pilot_name, save_description, {}, {}, game_state)
                             else:  # previous_screen == "game" or None
                                 game_state = game_screen.get_state()

@@ -82,7 +82,7 @@ below) - the player picks "Return to Ship" (→ GAME) or a connected location
 **Inputs:** Type: add to name · BACKSPACE: delete last char · RETURN: confirm · ESC: cancel
 
 **Transitions:**
-- RETURN (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`
+- RETURN (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`, then straight into `"station"` at the `"dormitory"` interior (0 credits, no ship - see the station layout under STATION / MOON below) rather than `"game"`
 - ESC → Menu
 
 ### LoadMenu (Scrollable)
@@ -127,34 +127,78 @@ below) - the player picks "Return to Ship" (→ GAME) or a connected location
 config-driven class used for both the station interior and every moon location —
 not a station-only or moon-only screen.
 
+The station's `interiors` now form a small connected graph, not just one
+room: `dormitory` (new game starts here, no `return_to_ship`) ↔ `corridor`
+↔ `default` (the concourse - kept as that key so `DockRoutine`'s station
+lookup needs no changes) ↔ `spaceport` (ship salesman, `return_to_ship:
+true` but disabled until a ship is owned - see `ship_available` below) /
+`loan_office` (loan officer). See `config/stories/default/systems/
+sol_alpha.json`.
+
 **Inputs:**
 - LEFT/RIGHT/UP/DOWN or WASD: move
-- L: exit (only within range of the entrance marker) - see `get_exit_options()`:
-  - Exactly one destination configured → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
-  - More than one → opens `ExitMenu`
+- L: exit (only within range of the entrance marker) - see `get_available_exit_options()`:
+  - Exactly one destination *and it's actually usable* → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
+  - More than one configured, or the only one isn't usable yet (e.g. "ship" with no ship owned) → opens `ExitMenu`, so an unusable option is still visible with its reason instead of L doing nothing
+- Enter (with an NPC targeted): talk - opens that NPC's `Dialogue` (see below)
+- P: `PossessionsMenu`
 - ESC: pause
 
 While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
 
 **Transitions:**
-- L (near entrance, single destination) → GAME or a connected location's `LocationScreen`
-- L (near entrance, multiple destinations) → `ExitMenu`
+- L (near entrance, single usable destination) → GAME or a connected location's `LocationScreen`
+- L (near entrance, multiple destinations, or the only one isn't usable) → `ExitMenu`
+- Enter (NPC targeted) → that NPC's `Dialogue`, always restarted at its root node
+- P → `PossessionsMenu`
 - ESC → PauseMenu
+
+### Dialogue
+**Shows:** A conversation tree (`game/world/dialogue.py`) - most NPCs are a
+single node with closing options only ("Thanks"/"Leave", built via
+`Dialogue.from_flat`); a few (Bartender, the spaceport's salesman, the loan
+officer) have a real `dialogue_tree` in config where an option's `"next"`
+leads to another node instead of closing. An option can also carry an
+`"action"` (`"buy_ship:<ship_type_id>"`, `"take_loan"`) applied by
+`LocationScreen` right before advancing - this is how buying a ship or
+taking a loan works, no separate shop UI. An action option unaffordable or
+otherwise blocked (`LocationScreen._option_blocked_reason`) renders dim
+with the reason and can't be selected.
+
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: choose (advance, close, or apply an action then advance/close) · ESC: close immediately
+
+**Transitions:**
+- RETURN on a closing option (`"next": null`) → dialogue closes
+- RETURN on a branching option → advances to that node, dialogue stays open
+- ESC → dialogue closes immediately, wherever it was in the tree
 
 ### ExitMenu
 **Shows:** The destinations offered by the current location's exit - each
 `connected_locations` key (labeled from that sibling interior's own
-`"label"`) plus "Return to Ship" if `return_to_ship` allows it. Only ever
-shown when there's more than one option; AI pilots (`DockRoutine`) pick
-from this same option list automatically via `ROLE_EXIT_PREFERENCE`
-instead of getting a menu.
+`"label"`) plus "Return to Ship" if `return_to_ship` allows it. Shown
+whenever there's more than one configured option, or the single option
+isn't currently usable (e.g. "ship" with `get_exit_disabled_reasons()`
+returning `{"ship": "no ship docked here"}` - the spaceport before a
+purchase). Disabled entries render dim with their reason and can't be
+selected. AI pilots (`DockRoutine`) pick from this same option list
+automatically via `ROLE_EXIT_PREFERENCE` instead of getting a menu.
 
-**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: cancel (stay in the current location)
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: select (no-op on a disabled entry) · ESC: cancel (stay in the current location)
 
 **Transitions:**
 - RETURN on "Return to Ship" → GAME
 - RETURN on a connected location → that location's `LocationScreen` (still `"station"`/`"moon"`)
 - ESC → back to the location the menu was opened from
+
+### PossessionsMenu
+**Shows:** Read-only credits, owned ships, and loans - `game/ui/
+possessions_menu.py`. Opened over whichever screen it was opened from
+(space, station, or moon), which is redrawn underneath it.
+
+**Inputs:** P or ESC: close
+
+**Transitions:**
+- P or ESC → back to whichever screen opened it (`possessions_return_screen` in `main.py`)
 
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
@@ -201,7 +245,10 @@ create_save_file(
 Saves the original system config alongside the current game state. Which `get_state()`
 is called depends on `previous_screen` — `game_screen`, `station_interior`, or
 `moon_interior` — and `game_state["location"]` is set accordingly (`"space"` /
-`"station"` / `"moon"`, plus `"moon_location"` for moon saves).
+`"station"` / `"moon"`, plus `"station_location"` / `"moon_location"` for
+which interior). Both `SpaceScreen.get_state()` and `LocationScreen.get_state()`
+also include `"possessions"` (credits/owned ships/loans) - see
+[SAVE_SYSTEM.md](SAVE_SYSTEM.md).
 
 ### LoadMenu → SpaceScreen / LocationScreen
 ```python
@@ -226,17 +273,19 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 ## State Transitions & Validation
 
 **Valid transitions (`current_screen` values in `main.py`):**
-`"menu"` → `"story_select"` → `"pilot_name"` → `"game"`
-`"menu"` → `"load"` → `"game"` / `"station"` / `"moon"`
+`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` (dormitory - new pilots start here, ship-less)
+`"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
-`"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
+`"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
+`"game"` / `"station"` / `"moon"` → `"possessions"` (P) → back to whichever of the three it came from
 `"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)
 
 **Invalid (prevented by code):**
 - PauseMenu blocks its own input while `SaveDialog`/`ConfirmDialog` is open
 - `LocationScreen` only exits (`L`) within `entrance_range` of the entrance marker
-- `ExitMenu` only appears when `get_exit_options()` has more than one entry; with zero or one it's skipped entirely (no-op or immediate exit)
+- `ExitMenu` only appears when `get_exit_options()` has more than one entry, or the single entry isn't usable (`get_exit_disabled_reasons()`); with exactly one usable entry it's skipped (immediate exit)
 - Landing only triggers when both close enough (`landing_distance`) and slow enough (`speed < 0.4`)
+- A dialogue option with a blocked `"action"` (`LocationScreen._option_blocked_reason`) can't be selected - RETURN on it is a no-op
 
 ## Input Handling Pattern
 

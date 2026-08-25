@@ -7,12 +7,19 @@ from game.world.dialogue import Dialogue
 
 class NPC(Person):
     """Non-player character with dialogue and behavior."""
-    def __init__(self, x, y, behavior="wander", name="NPC", greeting="Hello!", dialogue_options=None, wander_radius=40):
+    def __init__(self, x, y, behavior="wander", name="NPC", greeting="Hello!", dialogue_options=None, dialogue_tree=None, wander_radius=40):
         super().__init__(x, y, name=name)
         self.behavior = behavior
         self.greeting = greeting
         self.dialogue_options = dialogue_options or ["Talk", "Leave"]
-        self.dialogue = Dialogue(name, [greeting], self.dialogue_options)
+        # A config-provided dialogue_tree ({"root": ..., "nodes": {...}})
+        # opts this NPC into a real branching conversation (see
+        # game/world/dialogue.py); everyone else keeps the old flat
+        # greeting+options shape via Dialogue.from_flat().
+        if dialogue_tree:
+            self.dialogue = Dialogue(name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))
+        else:
+            self.dialogue = Dialogue.from_flat(name, greeting, self.dialogue_options)
 
         # Wander state - only meaningful for behavior="wander", but harmless
         # to always have (keeps __init__ simple, avoids a special case).

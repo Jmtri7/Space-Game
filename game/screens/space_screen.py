@@ -171,11 +171,32 @@ class SpaceScreen(ScreenBase):
             return None
 
         if isinstance(interior_config, str):
-            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story)
+            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased)
         else:
-            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story)
+            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased)
+        # Which interiors key this is (e.g. "dormitory", "default"/concourse,
+        # "spaceport") - lets save/load record exactly which station room
+        # the player was in, not just "station" (see main.py's
+        # game_state["station_location"]).
+        screen.interior_key = key
         landable.interior_screens[key] = screen
         return screen
+
+    def _on_ship_purchased(self, ship_type_id):
+        """Configure the player's real ship to match a newly bought type,
+        and park it right at the station - so it's "docked outside" exactly
+        as a salesman's dialogue would say, ready the moment the player
+        boards through the spaceport's exit. Reapplies the same stat block
+        __init__ applies from story.json's starting ship, just triggered by
+        a purchase instead of game start."""
+        ship_type = get_ship_type(self.story, ship_type_id)
+        graphics = get_graphics_asset(self.story, "ships", ship_type_id)
+        self.player.ship.acceleration_magnitude = ship_type.get("max_thrust", self.player.ship.acceleration_magnitude)
+        self.player.ship.max_velocity = ship_type.get("max_velocity", self.player.ship.max_velocity)
+        self.player.ship.rotation_speed = ship_type.get("rotation_speed", self.player.ship.rotation_speed)
+        self.player.ship.graphics = graphics
+        self.player.x, self.player.y = self.station.x, self.station.y
+        self.player.park()
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
@@ -227,6 +248,8 @@ class SpaceScreen(ScreenBase):
                     return "star_map"
                 elif event.key == pygame.K_j and not self.jump_state:
                     self._try_jump()
+                elif event.key == pygame.K_p:
+                    return "possessions"
         return None
 
     def _cycle_target(self, direction=1):
@@ -535,7 +558,7 @@ class SpaceScreen(ScreenBase):
             target_line, target_color = f"Target: {target_name} ({distance:.0f})", GREEN
         else:
             target_line, target_color = "Target: None", GRAY
-        lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color)]
+        lines = [(f"Speed: {speed:.2f}", WHITE), (target_line, target_color), (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100))]
         # Landables (station/moon) list what's inside them, right under the
         # target line - lets the player see where they'll end up before
         # committing to land.
@@ -613,7 +636,8 @@ class SpaceScreen(ScreenBase):
                 "velocity_x": self.player.velocity_x,
                 "velocity_y": self.player.velocity_y,
                 "thrust": self.player.thrust
-            }
+            },
+            "possessions": self.player.person.possessions.get_state(),
         }
         # Save all AI ships
         if self.ai_ships:
@@ -640,6 +664,8 @@ class SpaceScreen(ScreenBase):
             self.player.velocity_x = player_state.get("velocity_x", self.player.velocity_x)
             self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
             self.player.thrust = player_state.get("thrust", self.player.thrust)
+        if "possessions" in state:
+            self.player.person.possessions.restore_from(state["possessions"])
         # Restore all AI ships
         if "ai_ships" in state:
             for i, ai_state in enumerate(state["ai_ships"]):

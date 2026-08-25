@@ -16,3 +16,6 @@ saves/
 # Runtime logs from launching the game for manual verification
 game_stdout.log
 game_stderr.log
+
+# Crash dump written by main.py's top-level exception handler
+error.txt

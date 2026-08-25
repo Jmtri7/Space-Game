@@ -393,3 +393,22 @@ def _center_text_x(surface, text, offset_x=0):
     """
     ui_scale = get_ui_scale()
     return int(offset_x + 800 * ui_scale * 0.5 - text.get_width() // 2)
+
+
+def _wrap_text(font, text, max_width):
+    """Word-wrap text into lines that each fit within max_width - shared by
+    anything drawing free-form config text (story descriptions, dialogue) so
+    it never runs past its box instead of hand-rolling this per screen."""
+    words = text.split(" ")
+    lines = []
+    current = ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if current and font.size(candidate)[0] > max_width:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines

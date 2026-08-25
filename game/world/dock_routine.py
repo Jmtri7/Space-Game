@@ -13,10 +13,24 @@ TALK_FRAMES = 180        # ~3 seconds at 60fps
 # checked in order, first one actually offered wins. Roles with no entry
 # here fall back to DEFAULT_EXIT_PREFERENCE, i.e. they head straight back
 # to the ship exactly like before connected_locations existed.
+#
+# "spaceport" is here because the station's "default"/concourse interior no
+# longer offers "ship" directly (only the spaceport does, gated on the
+# player owning one) - a freighter pilot landing at the concourse needs an
+# explicit route through the spaceport, not just a preference that happens
+# to be offered at the current stop.
 ROLE_EXIT_PREFERENCE = {
-    "freighter_pilot": ["wilderness", "city", "ship"],
+    "freighter_pilot": ["wilderness", "spaceport", "city", "ship"],
 }
 DEFAULT_EXIT_PREFERENCE = ["ship"]
+
+# Hard cap on lateral hops within one stop, regardless of role/preference/
+# graph shape - guarantees _choose_exit always eventually reboards even if
+# a future role's preference list never matches anything reachable from
+# where it actually is (see the corridor<->dormitory ping-pong this caught
+# during development, before ROLE_EXIT_PREFERENCE routed through the
+# spaceport). Larger than any real station/moon graph's location count.
+MAX_LATERAL_HOPS = 8
 
 
 class DockRoutine:
@@ -94,14 +108,25 @@ class DockRoutine:
         option that's actually offered here AND not already visited this
         stop wins (the visited check is what keeps two locations that each
         prefer the other from ping-ponging forever instead of ever
-        reboarding). Falls back to "ship" once every preference is either
-        unavailable or already visited."""
+        reboarding).
+
+        If no preference applies, keeps exploring an unvisited connected
+        location rather than immediately reboarding, so a multi-hop layout
+        (e.g. the station's dormitory/corridor/concourse/spaceport graph)
+        still makes forward progress. "ship" is always returned - even if
+        it isn't actually one of this location's exit options - once
+        MAX_LATERAL_HOPS is hit or there's nothing unvisited left to try;
+        run() reboards unconditionally on "ship", so this is always a safe
+        way to give up and fly off rather than wander forever."""
         options = self._location.get_exit_options()
+        if len(self._visited_this_stop) >= MAX_LATERAL_HOPS:
+            return "ship"
         role = ai_ship.pilot.get("role")
         for preferred in ROLE_EXIT_PREFERENCE.get(role, DEFAULT_EXIT_PREFERENCE):
             if preferred in options and (preferred == "ship" or preferred not in self._visited_this_stop):
                 return preferred
-        return "ship" if "ship" in options else (options[0] if options else "ship")
+        unvisited = [option for option in options if option not in self._visited_this_stop]
+        return unvisited[0] if unvisited else "ship"
 
     def _move_to_connected_location(self, ai_ship, key):
         """Walk the pilot laterally into a connected interior at the same

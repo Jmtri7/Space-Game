@@ -44,6 +44,11 @@ name is kept, the timestamp lives inside it.
       "velocity_y": -0.5,
       "thrust": 0.15
     },
+    "possessions": {
+      "credits": 0,
+      "owned_ships": ["shuttle"],
+      "loans": [{"lender": "Station Credit Union", "principal": 1200}]
+    },
     "ai_ships": [
       {
         "x": 600.0,
@@ -63,11 +68,25 @@ always passed as `{}`; when saving from a `LocationScreen` it instead carries
 `station_interior.station_config` for a station save.
 
 `game_state["location"]` is one of `"space"`, `"station"`, or `"moon"` and drives
-where `LoadMenu` sends you. Station/moon saves also add `game_state["moon_location"]`
-(`"city"` or `"wilderness"`) when relevant. `game_state["story"]` and `game_state["system_id"]`
+where `LoadMenu` sends you. Station saves add `game_state["station_location"]`
+(e.g. `"dormitory"`, `"default"`, `"spaceport"` - whichever interior key the
+player was actually in) and moon saves add `game_state["moon_location"]`
+(`"city"` or `"wilderness"`), falling back to `"default"`/`"city"` respectively
+if the key is missing or no longer valid. `game_state["story"]` and `game_state["system_id"]`
 record which story and which star system within it the save belongs to, so loading
 resolves config from the right place (`config/stories/{story}/...`) and jumps back into
 the right system rather than always the story's starting one.
+
+`game_state["possessions"]` (credits, owned ship type IDs, loans) is written by
+*both* `SpaceScreen.get_state()` and `LocationScreen.get_state()` - whichever one
+actually runs for a given save, since the entire pre-ship-ownership part of the
+game (dormitory, corridor, concourse, spaceport, loan office) happens inside
+`LocationScreen`, not `SpaceScreen`. `SpaceScreen.restore_state()` is called on
+every load path regardless of which side wrote it (see `main.py`'s load
+handling), so a single `possessions` key covers all three `location` values.
+`Possessions.restore_from()` mutates the existing object in place rather than
+replacing it, since the player's one real `Possessions` is shared by reference
+across `SpaceScreen` and every cached `LocationScreen` (see ARCHITECTURE.md).
 
 ## State Capture & Restoration
 
@@ -84,7 +103,8 @@ def get_state(self):
             "velocity_x": self.player.velocity_x,
             "velocity_y": self.player.velocity_y,
             "thrust": self.player.thrust
-        }
+        },
+        "possessions": self.player.person.possessions.get_state(),
     }
     if self.ai_ships:
         state["ai_ships"] = [
@@ -95,14 +115,19 @@ def get_state(self):
     return state
 ```
 
-`LocationScreen.get_state()` is far simpler — it only tracks the player's walking position:
+`LocationScreen.get_state()` is far simpler — it only tracks the player's walking
+position, plus the same `possessions` key:
 ```python
 def get_state(self):
-    return {"player": {"x": self.player_x, "y": self.player_y}}
+    return {
+        "player": {"x": self.player.x, "y": self.player.y},
+        "possessions": self.player.possessions.get_state(),
+    }
 ```
 
 **What's captured:**
 - Player position, angle, velocity, thrust (space) or just x/y (locations)
+- Credits, owned ship type IDs, and loans (`possessions` - space or locations)
 - Every AI ship's position, angle, velocity, thrust — as a list, in ship order
 - Station/moon position (implicitly, via the `system` config snapshot)
 
@@ -119,10 +144,12 @@ game_screen.restore_state(save_data.get("game_state", {}))
 ```
 
 **In `SpaceScreen`:** restores `player` fields with `.get(key, default)` fallback,
-then loops `state["ai_ships"]` and restores each by index into `self.ai_ships`
-(extra saved ships beyond the current story's count are ignored).
+restores `possessions` (mutates the existing `Possessions` object in place - see
+above), then loops `state["ai_ships"]` and restores each by index into
+`self.ai_ships` (extra saved ships beyond the current story's count are ignored).
 
-**In `LocationScreen`:** restores just `player_x`/`player_y`.
+**In `LocationScreen`:** restores the player's x/y and `possessions` (same
+in-place mutation).
 
 **Graceful fallback:** `.get(key, default)` means missing properties use current values.
 

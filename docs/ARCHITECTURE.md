@@ -11,9 +11,15 @@ WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
 │   └── AIShip (picks autopilot mode/target from the pilot's faction+role)
 └── Landable (space station or moon — config decides which)
 
-Person (base — x, y, draw(), get_distance())
+Person (base — x, y, draw(), get_distance(), owns a Possessions)
 └── NPC (adds behavior, name, Dialogue)
 ```
+Every `Person` — the player's own body (`PlayerCharacter`/`PlayerController.person`),
+every `NPC`, and an `AIShip`'s `pilot_person` — owns a `Possessions` (credits,
+owned ships, loans) by composition, not just the player. The player's one real
+`Possessions` object is shared by reference across `SpaceScreen` and every
+`LocationScreen` (see `SpaceScreen.get_interior_screen`'s `player_possessions`
+injection) so a purchase in one location is instantly visible everywhere else.
 
 `PlayerController` does **not** subclass `Ship` — it *owns* one (composition) and
 exposes `x`/`y`/`velocity_x`/`velocity_y`/`angle`/`autopilot_active`/`autopilot_target`
@@ -28,13 +34,20 @@ ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state
                        (used for BOTH the station interior and moon locations)
 ```
 Menus and dialogs (`Menu`, `StorySelector`, `PilotNameDialog`, `LoadMenu`,
-`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`, `ExitMenu`) don't extend
+`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`, `ExitMenu`,
+`PossessionsMenu`) don't extend
 `ScreenBase` — they're simpler `handle_input()`/`draw()` objects driven directly
 by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
-- `Dialogue` — Conversation tree system used by `NPC`
+- `Dialogue` — Conversation tree used by `NPC`: nodes of text + options, each
+  option either advancing to another node, closing (`"next": null`), or - for
+  a few commerce-flavored NPCs - carrying an `"action"` (`"buy_ship:<id>"`,
+  `"take_loan"`) that `LocationScreen` applies against the player's
+  `Possessions`. `Dialogue.from_flat()` builds the simple one-node shape most
+  NPCs still use.
+- `Possessions` — credits/owned ships/loans, composed onto every `Person`
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
 - `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
 
@@ -178,12 +191,18 @@ the currently defined cultures (e.g. the Vherathi Concord).
 ## State Machine: Screen Flow
 
 ```
-Menu → StorySelector → PilotNameDialog → SpaceScreen ←→ PauseMenu
-                                              ↓ (land: L)   ↓ (save)
-                            LocationScreen (station) ←→ SaveDialog
+Menu → StorySelector → PilotNameDialog → LocationScreen (station: dormitory)
+                                              ↓ (walk the connected-location graph, L)
+                            LocationScreen (station: corridor/concourse/spaceport/loan_office) ←→ PauseMenu
+                                              ↓ (buy a ship at the spaceport, then L: board) ↓ (save)
+                                          SpaceScreen ←→ SaveDialog
+                                              ↓ (land: L)
+                            LocationScreen (station) ←→ PauseMenu
 
 SpaceScreen → LocationSelector → LocationScreen (moon) ←→ PauseMenu
 ```
+A new pilot never sees `SpaceScreen` at all until they own a ship - see
+`main.py`'s `"pilot_name"` handler and `LocationScreen.ship_available`.
 
 **State transitions via return values:**
 - `handle_input()` returns an action string

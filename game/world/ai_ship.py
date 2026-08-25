@@ -4,6 +4,11 @@ from game.world.ship import Ship
 from game.world.person import Person
 from game.world.dialogue import Dialogue
 from game.world.dock_routine import DockRoutine
+from game.world.possessions import Possessions
+
+# Starting credits for an AI pilot's Possessions - flavor/future-proofing
+# (nothing spends this yet), not tuned gameplay balance.
+AI_PILOT_STARTING_CREDITS = 500
 
 
 class ShuttleRoutine:
@@ -102,14 +107,17 @@ class AIShip(Ship):
             self.acceleration_magnitude = 0.15
 
         self.pilot = pilot or {}
-        self.pilot_person = Person(x, y, name=self.pilot.get("name", ""))
+        # Linked to an economy like any other character (see Person) - they
+        # already "own" the ship they're flying, and start with some
+        # walking-around money, even though nothing spends it yet.
+        self.pilot_person = Person(x, y, name=self.pilot.get("name", ""), possessions=Possessions(credits=AI_PILOT_STARTING_CREDITS, owned_ships=[ship_type_id]))
         # Lets the player target/talk to this pilot while they're walking
         # around a station/moon interior (see LocationScreen.visitors) the
         # same way they would an NPC - flavored from the pilot's own
         # personality line in pilots.json rather than a generic greeting.
-        self.pilot_person.dialogue = Dialogue(
+        self.pilot_person.dialogue = Dialogue.from_flat(
             self.pilot.get("name", "Pilot"),
-            [self.pilot.get("personality", "...")],
+            self.pilot.get("personality", "..."),
             ["Nod", "Leave"]
         )
         self.pilot_ashore = False  # True while DockRoutine has the pilot walking around a station/moon
