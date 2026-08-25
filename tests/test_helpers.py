@@ -909,6 +909,51 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         self.assertNotEqual((wanderer.x, wanderer.y), before)
 
 
+class TestLocationScreenClickTargeting(unittest.TestCase):
+    """Test LocationScreen._select_person_target_at() - click-to-target for
+    NPCs/visitors on foot, the interior counterpart to SpaceScreen's own
+    click-to-target over ships/landables."""
+
+    def _make_screen(self):
+        config = {
+            "label": "Test Room",
+            "npcs": [
+                {"name": "Near", "x": 100, "y": 100, "role": "resident"},
+                {"name": "Far", "x": 500, "y": 500, "role": "resident"},
+            ],
+        }
+        return LocationScreen(config_data=config, world_width=800, world_height=600)
+
+    def test_click_on_a_person_targets_them(self):
+        screen = self._make_screen()
+        screen._select_person_target_at(105, 100)
+        self.assertEqual(screen._get_npc_target().name, "Near")
+
+    def test_click_on_empty_space_leaves_target_unset(self):
+        screen = self._make_screen()
+        screen._select_person_target_at(300, 300)
+        self.assertIsNone(screen._get_npc_target())
+
+    def test_closest_person_wins_when_two_are_both_in_click_range(self):
+        config = {
+            "label": "Test Room",
+            "npcs": [
+                {"name": "Closer", "x": 100, "y": 100, "role": "resident"},
+                {"name": "Farther", "x": 120, "y": 100, "role": "resident"},
+            ],
+        }
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        screen._select_person_target_at(105, 100)
+        self.assertEqual(screen._get_npc_target().name, "Closer")
+
+    def test_click_replaces_an_existing_target(self):
+        screen = self._make_screen()
+        screen._select_person_target_at(105, 100)
+        self.assertEqual(screen._get_npc_target().name, "Near")
+        screen._select_person_target_at(505, 500)
+        self.assertEqual(screen._get_npc_target().name, "Far")
+
+
 class TestBuildSaveGameState(unittest.TestCase):
     """Regression test: a save made while docked at a station/moon (in
     ANY system other than the story's starting one) used to always reload

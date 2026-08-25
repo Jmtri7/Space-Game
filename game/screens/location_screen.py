@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, RED, GRAY
-from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
+from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
 import game.utils as utils
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel
 from game.screens.screen_base import ScreenBase
@@ -131,6 +131,11 @@ class LocationScreen(ScreenBase):
         self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
+        # HUD panel rects from the most recently drawn frame - see draw()'s
+        # own comment on where this is populated; empty until the first
+        # draw() call (e.g. a LocationScreen used in a test without ever
+        # drawing), so a click can't be wrongly excluded before then.
+        self._hud_click_rects = []
 
         # AI pilots (Person, not NPC - no dialogue/behavior, just a body)
         # currently walking around inside this interior on a docking errand
@@ -368,6 +373,22 @@ class LocationScreen(ScreenBase):
             return None
         return people[self.current_npc_target]
 
+    def _select_person_target_at(self, world_x, world_y):
+        """Target whichever targetable person (see _targetable_people)
+        world_x/world_y falls within (closest one wins on overlap) - the
+        click-to-target counterpart to cycling with []. Mirrors
+        SpaceScreen._select_target_at, but over people on foot instead of
+        ships/landables, and with a fixed click radius since Person has no
+        drawn "size" of its own."""
+        people = self._targetable_people()
+        best_index, best_dist = None, None
+        for i, person in enumerate(people):
+            distance = person.get_distance(world_x, world_y)
+            if distance <= 32 and (best_dist is None or distance < best_dist):
+                best_index, best_dist = i, distance
+        if best_index is not None:
+            self.current_npc_target = best_index
+
     def _auto_target_nearby_npc(self):
         """Auto-target whoever the player has just walked within talk_range
         of, if nothing is targeted yet (closest one wins, if more than
@@ -528,7 +549,7 @@ class LocationScreen(ScreenBase):
             info_lines.append((f"  {target_npc.name}", GREEN))
         else:
             info_lines.append(("Target: None", GRAY))
-        draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
+        info_rect = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
 
         # Top-left control-reference pane - same design as SpaceScreen's
         # (see draw_controls_pane), with the controls that apply here.
@@ -539,9 +560,10 @@ class LocationScreen(ScreenBase):
             ("WASD/Arrows", "Move"),
             ("]", "Next Target"),
             ("[", "Previous Target"),
+            ("Click", "Target Person"),
             ("P", "View Possessions"),
         ]
-        draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
+        controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
 
         # Bottom-center status pane (see draw_status_pane) - entrance and
         # talk prompts are independent of each other and can both be true
@@ -554,7 +576,12 @@ class LocationScreen(ScreenBase):
                 status_lines.append(("Press T to talk", GREEN))
             else:
                 status_lines.append(("Approach target to talk", RED))
-        draw_status_pane(surface, status_lines, ui_scale)
+        status_rect = draw_status_pane(surface, status_lines, ui_scale)
+
+        # Cached for handle_input()'s mouse-click targeting, so a click on
+        # any of these panels doesn't also register as a click-to-target in
+        # the world behind them (see SpaceScreen._hud_click_rects).
+        self._hud_click_rects = [rect for rect in (label_rect, info_rect, controls_rect, status_rect) if rect]
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
@@ -661,6 +688,11 @@ class LocationScreen(ScreenBase):
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                    self._select_person_target_at(*to_world(*event.pos))
+                continue
+
             if event.type != pygame.KEYDOWN:
                 continue
 

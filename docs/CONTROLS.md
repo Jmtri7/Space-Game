@@ -41,6 +41,7 @@ from its center.
 | **W/A/S/D** or **Arrow Keys** | Move around |
 | **]** | Cycle forward through targetable NPCs |
 | **[** | Cycle backward through targetable NPCs |
+| **Click** a person | Target them directly |
 | **T** | Talk to targeted NPC (must be in range) |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
@@ -56,6 +57,7 @@ they're connected.
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
 | **]** / **[** | Cycle through targetable NPCs, forward/backward (City only) |
+| **Click** a person | Target them directly |
 | **T** | Talk to targeted NPC (must be in range) |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |

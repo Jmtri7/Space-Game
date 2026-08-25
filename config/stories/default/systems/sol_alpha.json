@@ -38,7 +38,7 @@
     ],
     "interiors": {
       "dormitory": {
-        "label": "Your Dormitory",
+        "label": "My Dormitory",
         "culture": "vherathi",
         "entrance": {"x": 400, "y": 460},
         "connected_locations": ["corridor"],
