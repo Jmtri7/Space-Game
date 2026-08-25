@@ -7,7 +7,7 @@ from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
 from game.utils import (
-    load_save_file, create_save_file, set_camera_offset, set_screen_size
+    load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json
 )
 from game.world.player_controller import PlayerController
 from game.screens.space_screen import SpaceScreen
@@ -65,7 +65,22 @@ def build_save_game_state(game_screen, previous_screen, station_interior, moon_i
     if game_screen:
         game_state["story"] = game_screen.story
         game_state["system_id"] = game_screen.system_id
+        game_state["story_version"] = game_screen.story_version
     return game_state, system_config_snapshot
+
+
+def warn_if_story_version_mismatch(story, saved_version):
+    """Print a warning if a save's story_version doesn't match the current
+    story.json's version - the story's config or this game's state-
+    handling code may have changed since the save was made, in a way that
+    changes what the saved state means (see CLAUDE.md's "Save Compatibility
+    & Story Versioning" section). Never blocks loading - just surfaces the
+    risk so a stale save behaving oddly isn't a total mystery."""
+    current_version = (load_json(f"config/stories/{story}/story.json") or {}).get("version", "0.0.0")
+    if saved_version is None:
+        print(f"WARNING: this save predates story versioning (story '{story}' is now at version {current_version}) - it may not load correctly if the story's config or save format has changed since.", file=sys.stderr)
+    elif saved_version != current_version:
+        print(f"WARNING: this save was made with story '{story}' version {saved_version}, but the current version is {current_version} - it may not load correctly if the story's config or save format has changed.", file=sys.stderr)
 
 
 def update_background_locations(game_screen, active_location):
@@ -192,6 +207,7 @@ def main():
                             pilot_name = save_data.get("pilot_name", "")
                             game_state = save_data.get("game_state", {})
                             location = game_state.get("location", "space")
+                            warn_if_story_version_mismatch(game_state.get("story", "default"), game_state.get("story_version"))
 
                             if location == "space":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))

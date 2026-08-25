@@ -13,6 +13,16 @@ Saves are stored as JSON files in the `saves/` directory.
   and `system_id` the save belongs to
 - Load = restore config + apply player state
 
+**What belongs in a save vs. what doesn't:** anything that *doesn't* change during
+play (room layouts, ship stats, dialogue trees, ship prices, NPC rosters) lives only
+in the story's config and is read fresh at load time - never duplicate it into a save.
+Anything that *does* change during play (position, credits, owned ships, loans, which
+interior, AI ship state, ...) is mutable state and **must** be captured/restored (see
+"Extending State Persistence" below) - and whenever a change makes something new
+mutable, the save format has to grow to capture it in the same change. See
+[CLAUDE.md](../CLAUDE.md)'s "Save Compatibility & Story Versioning" section for the
+full discipline, including when a change needs to warn the user before it's made.
+
 ## File Format
 
 **Filename:** `save_{name}.json`, where `name` is whatever the player typed/accepted
@@ -34,6 +44,7 @@ name is kept, the timestamp lives inside it.
   "station": {},
   "game_state": {
     "story": "default",
+    "story_version": "1.0.0",
     "system_id": "sol_alpha",
     "location": "space",
     "player": {
@@ -84,6 +95,14 @@ than always the story's starting one - built by `main.py`'s
 `build_save_game_state()`, which exists specifically because both save call
 sites used to set these on a dict that then got discarded (see git history
 for the "system not restored" bug).
+
+`game_state["story_version"]` records `SpaceScreen.story_version` (from
+`story.json`'s own `"version"` field) at save time. On load, `main.py`'s
+`warn_if_story_version_mismatch()` compares it against the story's *current*
+version and prints a warning (never blocks loading) if they differ, or if the
+save predates versioning entirely (no `story_version` key). Bump a story's
+`"version"` whenever a change would make an existing save's stored values mean
+something different once reloaded - see CLAUDE.md for the full criteria.
 
 `game_state["possessions"]` (credits, owned ship type IDs, loans) is written by
 *both* `SpaceScreen.get_state()` and `LocationScreen.get_state()` - whichever one
@@ -277,6 +296,14 @@ When adding a new saveable entity:
 
 3. **It flows through automatically** — `create_save_file()` just serializes whatever
    `get_state()` returns; no changes needed there.
+
+4. **Consider whether this changes what an existing save means.** Adding a brand-new
+   key is safe on its own (`.get(key, default)` handles a save that predates it). But
+   if you're also changing a *default*, *renaming/repurposing* an existing key,
+   changing *which coordinate space or class* a stored value feeds into, or changing
+   *detection logic* a stored value depends on (all real bugs this project has
+   actually shipped - see CLAUDE.md), warn the user about it up front and bump the
+   relevant story's `"version"` in its `story.json`.
 
 ## Directory Structure
 

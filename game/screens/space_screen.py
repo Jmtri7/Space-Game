@@ -39,6 +39,13 @@ class SpaceScreen(ScreenBase):
         # Load story metadata (player ship type, starting system, etc)
         story_meta = load_json(f"config/stories/{story}/story.json") or {}
         self.system_id = system_id or story_meta.get("starting_system", "default")
+        # Recorded into every save (see main.py's build_save_game_state) so
+        # a save always knows which version of the story it was made
+        # against - bump story.json's "version" whenever a change to that
+        # story's config or this game's state-handling code would make an
+        # existing save behave differently once reloaded (see CLAUDE.md's
+        # "Save Compatibility & Story Versioning" section).
+        self.story_version = story_meta.get("version", "0.0.0")
 
         # Load config for the current system within this story
         self.system_config = system_config or load_json(f"config/stories/{story}/systems/{self.system_id}.json") or {}

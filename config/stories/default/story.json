@@ -1,5 +1,6 @@
 {
   "id": "default",
+  "version": "1.0.0",
   "name": "Explorer",
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",

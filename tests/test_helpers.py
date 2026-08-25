@@ -1,6 +1,7 @@
 """Unit tests for helper functions extracted from main.py"""
 import sys
 import os
+import io
 import tempfile
 import shutil
 import unittest
@@ -38,7 +39,7 @@ from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATER
 from game.world.character import Character
 from game.ui.selectable_list import SelectableList
 from game.screens.space_screen import SpaceScreen
-from main import build_save_game_state
+from main import build_save_game_state, warn_if_story_version_mismatch
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -735,6 +736,45 @@ class TestBuildSaveGameState(unittest.TestCase):
         self.assertEqual(game_state["location"], "space")
         self.assertEqual(game_state["system_id"], "keplers_reach")
         self.assertIs(system_config_snapshot, game_screen.system_config)
+
+
+class TestStoryVersioning(unittest.TestCase):
+    """Test story_version round-tripping through a save and the load-time
+    mismatch warning (see CLAUDE.md's "Save Compatibility & Story
+    Versioning" section) - never blocks loading, just surfaces the risk
+    that a save's story config or this game's state-handling code has
+    changed since the save was made."""
+
+    def test_space_screen_reads_story_version_from_story_json(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self.assertEqual(game_screen.story_version, "1.0.0")
+
+    def test_build_save_game_state_records_story_version(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_state, _ = build_save_game_state(game_screen, "game", None, None)
+        self.assertEqual(game_state["story_version"], "1.0.0")
+
+    def test_matching_version_prints_no_warning(self):
+        captured = io.StringIO()
+        with patch("sys.stderr", captured):
+            warn_if_story_version_mismatch("default", "1.0.0")
+        self.assertEqual(captured.getvalue(), "")
+
+    def test_mismatched_version_warns(self):
+        captured = io.StringIO()
+        with patch("sys.stderr", captured):
+            warn_if_story_version_mismatch("default", "0.9.0")
+        self.assertIn("0.9.0", captured.getvalue())
+        self.assertIn("1.0.0", captured.getvalue())
+
+    def test_missing_version_warns(self):
+        """A save made before story versioning existed has no
+        story_version key at all - still worth flagging, not silently
+        treated as compatible."""
+        captured = io.StringIO()
+        with patch("sys.stderr", captured):
+            warn_if_story_version_mismatch("default", None)
+        self.assertNotEqual(captured.getvalue(), "")
 
 
 class TestLocationScreenTouchingRoomBoundary(unittest.TestCase):

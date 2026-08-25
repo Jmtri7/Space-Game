@@ -32,6 +32,47 @@ other file, so reverting is always `git show <commit>:game/world/autopilot.py >
 game/world/autopilot.py`. See the version history table in AUTOPILOT_TESTING.md for which
 commit is which.
 
+## For Agents: Save Compatibility & Story Versioning
+
+**Read [docs/SAVE_SYSTEM.md](docs/SAVE_SYSTEM.md) before changing anything a save file
+depends on** - the story/save split below has already caused three separate real bugs
+in one session (system not restored, moon location misdetected, ship scattered to the
+wrong space coordinates on load) purely from getting this discipline wrong.
+
+**The split:** a save references a story (and system) by ID (`game_state["story"]`,
+`["system_id"]`) - anything that *doesn't* change during play (room layouts, ship
+stats, dialogue trees, prices, NPC rosters) is read fresh from that story's config at
+load time, never duplicated into the save. Anything that *does* change during play
+(player position, credits, owned ships, loans, which interior, AI ship state, ...) is
+**mutable state** and must be captured by `get_state()`/restored by `restore_state()`
+(or the narrower `restore_possessions()` - see SAVE_SYSTEM.md for when each applies)
+and documented in SAVE_SYSTEM.md's save-format description.
+
+**Whenever a change makes something mutable that wasn't before** (a new kind of
+possession, a new interior graph, a new field that can now vary) - update
+`get_state()`/`restore_state()` in the same change, and update SAVE_SYSTEM.md's
+documented format alongside it. Don't let a save silently stop capturing something
+the player can now actually change.
+
+**Warn the user, explicitly and up front, whenever a change you're making could
+change what an *existing* save file means once reloaded** - not just "I added a new
+field" (that's normal, `.get(key, default)` handles it), but anything that changes
+how an *already-stored* value gets interpreted: renaming/repurposing a save key,
+changing a default fallback, changing which class/coordinate-space a stored value
+feeds into, or changing detection logic that a save's stored value depends on. Don't
+discover this after the fact - say so before you make the change, the same way you'd
+flag any other user-facing behavior change.
+
+**Story versioning:** `story.json` has a `"version"` field (semver-ish, e.g.
+`"1.0.0"`), recorded into every save as `game_state["story_version"]`
+(`SpaceScreen.story_version`, set by `build_save_game_state()` in `main.py`).
+Loading warns (via `main.py`'s `warn_if_story_version_mismatch()`, non-blocking - it
+never refuses to load) whenever a save's recorded version doesn't match the story's
+current one, or predates versioning entirely (no `story_version` key at all). Bump a
+story's version whenever you make a change that fits the warning criteria above -
+that's what actually gives the warning teeth instead of it silently staying accurate
+by accident.
+
 ## For Agents: Pattern Recognition & Contributions
 
 **Read this:** When implementing features or fixes, watch for opportunities to **generalize solutions into reusable patterns**. If you notice:
