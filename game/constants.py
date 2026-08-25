@@ -24,6 +24,7 @@ YELLOW = (255, 255, 0)
 DARK_GRAY = (60, 60, 60)
 GREEN = (0, 255, 0)
 CYAN = (0, 255, 255)
+RED = (255, 60, 60)
 
 # Debug mode
 DEBUG_MODE = False  # Press ` (backtick) to toggle

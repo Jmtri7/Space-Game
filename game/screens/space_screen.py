@@ -2,7 +2,7 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN
+from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
 from game.utils import (
     get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets, get_font,
@@ -801,11 +801,11 @@ class SpaceScreen(ScreenBase):
         # leave visible blank space before the colon column.
         help_title = "Controls"
         help_items = [
+            ("ESC", "Pause"),
+            ("T", "Target Mode"),
             ("]", "Next Target"),
             ("[", "Previous Target"),
-            ("T", "Target Mode"),
             ("M", "Star Map"),
-            ("ESC", "Pause"),
         ]
         title_rendered = font_body.render(help_title, True, WHITE)
         key_rendered = [font_body.render(key, True, WHITE) for key, _ in help_items]
@@ -853,16 +853,21 @@ class SpaceScreen(ScreenBase):
         status_lines = []
         if self.jump_state:
             status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
-            status_lines = [(status_text, CYAN)]
+            status_lines = [(status_text, GREEN)]
         elif self.player.autopilot_active:
-            status_lines = [("Autopilot engaged - press any key to cancel", CYAN)]
+            status_lines = [("Autopilot engaged - press any key to cancel", GREEN)]
         else:
             if self.landing_text > 0:
-                status_lines.append(("Press L to Land", YELLOW))
+                status_lines.append(("Press L to Land", GREEN))
+            elif speed >= 0.4 and (
+                self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
+                or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
+            ):
+                status_lines.append(("Slow down to land", RED))
             if self.selected_system_id:
-                status_lines.append(("Press J to Jump", CYAN))
+                status_lines.append(("Press J to Jump", GREEN))
             if target_obj:
-                status_lines.append(("Press Space for Autopilot", CYAN))
+                status_lines.append(("Press Space for Autopilot", GREEN))
 
         if status_lines:
             font_status = get_font(int(22 * ui_scale))
