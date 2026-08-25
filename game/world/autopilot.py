@@ -13,7 +13,20 @@ import math
 ARRIVAL_DISTANCE_FRACTION = 0.15
 ARRIVAL_DISTANCE_FLOOR = 8
 ARRIVAL_SPEED_THRESHOLD = 0.1
-BRAKING_SAFETY_BUFFER = 1.1       # margin added on top of predict_braking_distance_from_stop's raw estimate
+BRAKING_SAFETY_BUFFER = 1.0       # multiplier on predict_braking_distance_from_stop's raw estimate - used to
+# be 1.1, meant as a safety margin against the model underestimating. It
+# never worked as one: the margin only inflated *when should_brake commits*,
+# not the actual turn+decel maneuver that runs afterward (governed purely by
+# rotation_speed/acceleration_magnitude), so the maneuver always consumed
+# only the raw estimate and left the buffered portion completely unspent -
+# the ship parked short by roughly that amount instead of gaining any real
+# margin. Confirmed independent of landing_distance (identical shortfall
+# regardless of target size) and directly responsible for the "brakes, stops
+# short, has to turn around and creep the rest of the way" pattern. 1.0
+# eliminates it (0 turnarounds for the player's own ship, shuttle) without
+# reintroducing overshoot; pushing below 1.0 does reduce the slow-turning
+# freighter's remaining turnarounds further but starts causing real overshoot
+# and even stranding past ~0.9 - not worth that risk for how far it goes.
 # Alignment needed before thrust fires while braking (see point_and_thrust).
 # Tried widening this past the 10 degrees used everywhere else, on the
 # theory that thrust could start partway through the turn-to-face-backward
@@ -70,10 +83,38 @@ def point_and_thrust(ship, accel_angle_rad, alignment_threshold_deg=10):
         ship.release_thrust()
 
 
+def retrograde_angle(ship):
+    """Direction directly opposite the ship's current velocity - a pure
+    braking burn, no redirect blended in.
+
+    An earlier version blended in some redirect-toward-target (30%) on top
+    of this, meant to correct for velocity that had drifted off the line to
+    the target. In practice it did the opposite: since the ship's heading
+    already tracks the target closely by the time braking starts (Step 3's
+    non-braking approach continuously points at the target), that 30% pull
+    fought the braking heading it was supposed to reach every frame instead
+    of ever settling on it, so alignment (and thus real thrust) kept getting
+    delayed - long enough that the ship coasted straight through the target
+    before finally braking, then had to loop back around. Pure retrograde
+    matches what predict_braking_distance_from_stop already assumes (turn
+    to face away from travel, then reverse-thrust) and, confirmed by
+    simulation across a spread of approach angles/distances, stops in a
+    straight line with no pass-by at all.
+    """
+    velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
+    return (velocity_angle + math.pi) % (2 * math.pi)
+
+
 def predict_braking_distance_from_stop(ship, current_speed):
     """Predict distance needed to stop from current_speed.
 
     Assumes: turn 180 degrees while coasting, then apply reverse thrust until stopped.
+    (Tried using the ship's actual current heading instead of a flat 180 -
+    had zero effect in practice, since the moment this is re-evaluated after
+    an un-stick is always right as the ship finishes turning to face the
+    *target* to accelerate again, which by definition leaves it ~180 degrees
+    from retrograde regardless of how that heading was computed. Reverted -
+    not worth the extra complexity for no measured benefit.)
     """
     if current_speed < 0.1:
         return 0
@@ -101,28 +142,6 @@ def predict_braking_distance_from_stop(ship, current_speed):
     total_distance = distance_during_turn + distance_during_decel
 
     return total_distance * BRAKING_SAFETY_BUFFER
-
-
-def retrograde_angle(ship):
-    """Direction directly opposite the ship's current velocity - a pure
-    braking burn, no redirect blended in.
-
-    An earlier version blended in some redirect-toward-target (30%) on top
-    of this, meant to correct for velocity that had drifted off the line to
-    the target. In practice it did the opposite: since the ship's heading
-    already tracks the target closely by the time braking starts (Step 3's
-    non-braking approach continuously points at the target), that 30% pull
-    fought the braking heading it was supposed to reach every frame instead
-    of ever settling on it, so alignment (and thus real thrust) kept getting
-    delayed - long enough that the ship coasted straight through the target
-    before finally braking, then had to loop back around. Pure retrograde
-    matches what predict_braking_distance_from_stop already assumes (turn
-    to face away from travel, then reverse-thrust) and, confirmed by
-    simulation across a spread of approach angles/distances, stops in a
-    straight line with no pass-by at all.
-    """
-    velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
-    return (velocity_angle + math.pi) % (2 * math.pi)
 
 
 class SeekMode:
