@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
-from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type
+from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
@@ -36,7 +36,7 @@ class LocationScreen(ScreenBase):
         # player's possessions are read (space HUD, other interiors, saves).
         # Falls back to a fresh empty one (via Person's own default) when
         # constructed standalone, e.g. in tests.
-        self.player = PlayerCharacter(start_x, start_y, name=pilot_name, possessions=player_possessions)
+        self.player = PlayerCharacter(start_x, start_y, name=pilot_name, possessions=player_possessions, outfit=get_graphics_asset(self.story, "outfits", "space_suit"))
         # Called with a ship_type_id right after a successful "buy_ship:"
         # dialogue action - lets SpaceScreen (which owns the real flyable
         # ship) configure it, without LocationScreen importing game.screens
@@ -114,7 +114,10 @@ class LocationScreen(ScreenBase):
         stay put (see game/world/character.py's ROLE_ROUTINES) - the same
         role->routine mechanism AI ship pilots use, just never flying
         anything."""
-        person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"))
+        # "outfit" is per-NPC-config, defaulting to space_suit like everyone
+        # else - lets a future NPC config opt into a different graphics.json
+        # outfit entry without any drawing-code changes.
+        person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"), outfit=get_graphics_asset(self.story, "outfits", cfg.get("outfit", "space_suit")))
         dialogue_tree = cfg.get("dialogue_tree")
         if dialogue_tree:
             person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))

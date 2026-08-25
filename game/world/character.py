@@ -74,7 +74,7 @@ class Character:
         self.routine.start(self)
 
     @classmethod
-    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0):
+    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None):
         """Build the Character for an AI-flown ship: a Ship configured from
         ship_type, a Person seeded with the pilot's starting credits/ship
         and flavor dialogue, and the role-driven routine that flies it."""
@@ -89,7 +89,7 @@ class Character:
         # Linked to an economy like any other character (see Person) - they
         # already "own" the ship they're flying, and start with some
         # walking-around money, even though nothing spends it yet.
-        person = Person(x, y, name=pilot.get("name", ""), possessions=Possessions(credits=AI_PILOT_STARTING_CREDITS, owned_ships=[ship_type_id]))
+        person = Person(x, y, name=pilot.get("name", ""), possessions=Possessions(credits=AI_PILOT_STARTING_CREDITS, owned_ships=[ship_type_id]), outfit=outfit)
         # Lets the player target/talk to this pilot while they're walking
         # around a station/moon interior (see LocationScreen.visitors) the
         # same way they would an NPC - flavored from the pilot's own

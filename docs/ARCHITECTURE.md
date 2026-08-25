@@ -163,9 +163,18 @@ the currently defined cultures (e.g. the Vherathi Concord).
 ## Person Class: Bodies & Drawing
 
 **Base Class: `Person`**
-- Stores position, appearance, and a `Possessions`
-- Implements `draw(surface)` — head + body
+- Stores position, appearance, an `outfit`, and a `Possessions`
+- Implements `draw(surface)` — head + body, with the outfit's helmet/suit/
+  boot colors (if any) drawn over the shared body shape
 - Provides `get_distance(x, y)` for interaction checks
+
+`outfit` is a resolved `graphics.json` "outfits" asset (see
+`get_graphics_asset(story, "outfits", outfit_id)`), same pattern as ship/
+station graphics. Every `Person` today is built with `"space_suit"`
+(`SpaceScreen`/`LocationScreen` resolve it and pass it in); a bare `Person`
+with no outfit just shows the plain body colors. Adding a new outfit is a
+new `graphics.json` entry plus whatever picks its id per-character (e.g.
+an NPC config's `"outfit"` field) - no drawing-code changes needed.
 
 `Person` itself has no behavior/role concept - that lives on `Character`
 (see below), which owns a `Person` rather than subclassing it. Local NPCs

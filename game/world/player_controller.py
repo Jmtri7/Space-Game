@@ -12,9 +12,9 @@ class PlayerController:
     while flying (mirrored to the ship's position each frame, not drawn
     separately - see LocationScreen/PlayerCharacter for the player's walking
     body once they land)."""
-    def __init__(self, x, y, space_drag=0, graphics=None, ship_type=None, pilot_name=""):
+    def __init__(self, x, y, space_drag=0, graphics=None, ship_type=None, pilot_name="", outfit=None):
         self.ship = Ship(x, y, space_drag=space_drag, graphics=graphics)
-        self.person = Person(x, y, name=pilot_name)
+        self.person = Person(x, y, name=pilot_name, outfit=outfit)
         if ship_type:
             self.ship.acceleration_magnitude = ship_type.get("max_thrust", self.ship.acceleration_magnitude)
             self.ship.max_velocity = ship_type.get("max_velocity", self.ship.max_velocity)

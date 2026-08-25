@@ -40,7 +40,6 @@ higher priority.
 - [ ] Hailing other ships.
 - [ ] Better jumping animation.
 - [ ] Different asteroid types and quantities.
-- [ ] Better people graphics.
 - [ ] Unified buying/selling menus for ships, ship outfitting, and personal items.
 - [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
 - [ ] Multiple exits with different options.
@@ -49,7 +48,7 @@ higher priority.
 - [ ] Missions and conversations with consequences.
 - [ ] Picking up and dropping items.
 - [ ] More texture for interior grounds and ships.
-- [ ] Cultural and role-based clothing for people.
+- [ ] Cultural and role-based clothing for people (space_suit is the only outfit so far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.
 - [ ] Better jump graphics.
 - [ ] Asteroid mining.

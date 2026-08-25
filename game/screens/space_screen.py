@@ -83,7 +83,7 @@ class SpaceScreen(ScreenBase):
         player_start_cfg = self.system_config.get("player_start", {})
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
-        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name)
+        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name, outfit=get_graphics_asset(self.story, "outfits", "space_suit"))
 
         self._load_system_content()
 
@@ -154,7 +154,8 @@ class SpaceScreen(ScreenBase):
                 pilot=pilot,
                 route=route,
                 get_interior_screen=self.get_interior_screen,
-                space_drag=space_drag
+                space_drag=space_drag,
+                outfit=get_graphics_asset(self.story, "outfits", "space_suit")
             )
             self.ai_ships.append(ai_ship)
 
