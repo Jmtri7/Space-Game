@@ -27,12 +27,15 @@ All interactive controls and their bindings. **Update this document when adding 
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
+| **W/A/S/D** or **Arrow Keys** | Scroll the map |
 | **M** or **ESC** | Close the map (selection persists) |
 
-Opens centered on your current system. The selected system (if any) is shown
-back in the space view as "Jump Target:", and pressing **J** there starts the
-jump if the target is a different system, or the current one while far enough
-from its center.
+Opens centered on your current system, with a "You are here" tag next to it.
+A Controls pane (top-left) and the selected system's station/moon panel
+(top-right) share the same look as the space view's HUD. The selected
+system (if any) is shown back in the space view as "Jump Target:", and
+pressing **J** there starts the jump if the target is a different system, or
+the current one while far enough from its center.
 
 ## Station Interior
 
