@@ -198,6 +198,17 @@ Recorded here and in code comments in `autopilot.py`:
   exactly the regime where this decision matters most. Magnitude has no such ambiguity - it
   directly measures the physical quantity that matters (how much sideways motion actually
   remains), independent of scale.
+- **Turn-radius speed cap as its own independent per-frame check in Step 3** (V6b's first
+  draft), instead of folding it into Step 2's existing sticky commit. Same shape as the
+  sticky-decision pitfall above, just in a new spot: right at the cap boundary, `distance`
+  itself oscillates a few units per frame while the ship is mid-circle, so the raw
+  `speed > turn_cap` comparison flickered true/false and swung the heading between retrograde
+  and point-at-target every single frame - 56 direction reversals in one traced trial (patrol,
+  100-unit range, 60-degree velocity offset, max speed), worse than the pursuit-curve stall it
+  was meant to fix. The eventual fix reused the already-sticky `self.braking` flag instead of
+  adding a second, independently-flippable decision - see "The sticky-decision pitfall" above:
+  *any* new decision point needs to ask this question before shipping, not just the first one
+  that got bitten by it.
 
 ## Version history and how to revert surgically
 
@@ -218,7 +229,8 @@ python run_tests.py   # confirm it's still green, then restart the game per the 
 | **V2** — Alignment-Gated Retrograde Braking | `f1a289c` | V1 + won't commit to a retrograde burn until velocity is already within 45° of the target direction; lets the normal point-at-target approach cancel any sideways drift first. Fixes the "stops off to the side" bug by *waiting it out*. |
 | **V3** — Two-Phase (Cross-Track then Retrograde) Braking | `ed4cfe1` | Replaces V2's wait-and-see gate with an active correction: decomposes velocity into along-track/cross-track components on commit, burns to null the cross-track part first (sticky, one check per commitment), *then* switches to the proven pure-retrograde burn. Fixes the same bug by *actively correcting* instead of waiting. |
 | **V4** — Two-Phase Braking, Immediate Low-Speed Bailout | `4a51a2e` | V3 + skips the alignment-gated "would braking still help" check once speed drops below `ARRIVAL_SPEED_THRESHOLD`, going straight to accept-or-resume instead. Fixes a spin-stall: below that speed, `retrograde_angle` is noisy (atan2 of a near-zero vector), and both the thrust-would-help check and the un-stick bailout it guards required alignment first - so a ship could spin chasing a jittering target for a long stretch (measured: ~150 wasted frames in one traced case) before either escaping by chance or hitting the `MAX_SEEK_FRAMES` watchdog. |
-| **V5** — Along-Track-Gated Commit | `db07c2e` (current) | Gates the braking commit decision (`predict_braking_distance_from_stop`'s input) on along-track speed - the component actually closing on the target - instead of total speed. Total speed dominated by sideways drift made the model commit to braking on a schedule that assumed all of it was useful, leaving cross-track-kill to correct almost an entire velocity vector from a standing start. Root-cause fix for "stops off to the side": freighter's mean lateral miss at first stop dropped from 96.2 to 58.6 units (max 582.1 -> 422.3), patrol's worst along-track shortfall from 313.6 to 8.6. One accepted regression: 3/648 in the wide angled sweep (all patrol at 100-unit point-blank range) land ~78 units off instead of within tolerance - patrol doesn't currently run this code in real gameplay. |
+| **V5** — Along-Track-Gated Commit | `db07c2e` | Gates the braking commit decision (`predict_braking_distance_from_stop`'s input) on along-track speed - the component actually closing on the target - instead of total speed. Total speed dominated by sideways drift made the model commit to braking on a schedule that assumed all of it was useful, leaving cross-track-kill to correct almost an entire velocity vector from a standing start. Root-cause fix for "stops off to the side": freighter's mean lateral miss at first stop dropped from 96.2 to 58.6 units (max 582.1 -> 422.3), patrol's worst along-track shortfall from 313.6 to 8.6. One accepted regression: 3/648 in the wide angled sweep (all patrol at 100-unit point-blank range) land ~78 units off instead of within tolerance - patrol doesn't currently run this code in real gameplay. |
+| **V6b** — Turn-Radius-Gated Commit (current) | `538e921` | Adds a second Step 2 commit trigger alongside V5's along-track one: speed exceeding `distance * radians(rotation_speed) * 0.5`, a rough gauge of how far the ship's own turn rate could still redirect it at the current range. Fixes a pursuit-curve failure unique to patrol: a fast, slow-turning ship close to the target but still carrying speed at an angle could get stuck always turning toward the target's current bearing without ever closing the gap - a stable circling loop, not a bug that resolves itself given more frames. Close-range pursuit sweep (216 trials, 80-150 unit range): patrol's bad-trial rate 16/216 -> 0/216, mean landing time 340.4 -> 126.7 frames. Shuttle unaffected (never reaches its own cap in testing). Freighter: genuine mixed trade-off, not a clean win - mean/overshoot-count improve slightly, but max lateral miss at first stop grows (308.1 -> 458.7) since its very slow turn rate (1 deg/frame) gives it a tiny cap that now commits it to braking earlier than the along-track model alone would have; still 0/312 failures either way. A first attempt implemented the same cap as an independent per-frame check in Step 3 instead of folding it into Step 2's sticky commit - see "Rejected approaches" below. |
 
 ## V2 vs. V3, in detail
 
@@ -263,6 +275,37 @@ trials total across all three ships, looser bad-thresholds) showed V3 at 0/648 b
 sweep under-represents the at-rest and moderate-velocity cases where freighter's V3 costs show
 up. This is itself the lesson: **battery composition changes the story - always compare
 against the same battery, and prefer the more comprehensive one when the numbers disagree.**
+
+## V4 vs. V5 vs. V6b on close-range patrol - no version dominates every metric
+
+A dedicated close-range pursuit sweep (216 trials/ship: distances 80-150, 3 approach angles, 6
+velocity-offset angles, 3 speed fractions - see `battery.py`-style scenario generation, not yet
+folded into an automated test) exists specifically because the standard battery's minimum
+pre-existing-velocity distance (200) doesn't reach the regime patrol's pursuit-curve stall lives
+in. Patrol numbers only, since shuttle/freighter are unaffected by every version compared here:
+
+| Version | Mean frames | Max frames | Bad | Overshoot events | Lateral miss (mean/max) |
+|---|---|---|---|---|---|
+| V3 | 121.1 | 209 | 0/216 | 61/216 | 37.5 / 178.4 |
+| V4 | **107.4** | **197** | 0/216 | **56/216** | 38.4 / 183.9 |
+| V5 | 340.4 | 3001* | **16/216** | 112/216 | 33.3 / 178.1 |
+| V6b | 126.7 | 249 | 0/216 | 91/216 | 40.0 / 185.0 |
+
+\* watchdog engaged - V5 is the only version in this sweep that ever needs it.
+
+**Read plainly: V4 is the best performer in this specific sweep, on every column.** V5's
+along-track-gated commit (which fixed the broader "stops off to the side" lateral-miss problem
+documented above, at moderate range) came at the cost of *introducing* the pursuit-curve stall
+close-in - 16/216 bad, something neither V3 nor V4 had at all. V6b's turn-radius cap patches
+that specific regression back to 0/216 bad, but does not recover V4's raw close-range
+performance (126.7 vs. 107.4 mean frames, 91 vs. 56 overshoot events) - it's a smaller, real cap
+on top of a control law that's still fundamentally spending extra time on the cross-track/
+along-track machinery V4 doesn't have.
+
+No version tested so far has V4's close-range tightness *and* V5's lateral-miss fix *and* zero
+regressions everywhere at once. If close-range patrol performance ever matters enough in real
+gameplay to chase further (it doesn't reachably today - see the ship-stats table above), that
+gap is the next thing to close, not a regression to silently accept.
 
 ## If you change this next
 
