@@ -9,3 +9,6 @@ build/
 .venv/
 venv/
 .DS_Store
+
+# Player save files - local progress, never committed
+saves/
