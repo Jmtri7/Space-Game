@@ -118,6 +118,18 @@ slow divergence would otherwise go unnoticed.
   above `MAX_SEEK_FRAMES`) and count any trial that hits the cap without `autopilot_active`
   going False, plus any that "land" but leave the ship far from center or still moving fast
   (session threshold: final distance > 20 units, or final speed > 0.05).
+- **First-stop miss, decomposed into along-track vs. lateral**: aggregate "final distance"
+  numbers can hide a bad first attempt that a later un-stick/re-approach cycle happens to
+  correct - which is exactly what a player sees as "sometimes it stops off to the side,
+  sometimes it stops short," even when the *eventual* landing looks fine in the aggregate
+  data. To see it: track the first frame where speed drops below `ARRIVAL_SPEED_THRESHOLD`
+  after having genuinely been in flight (not the trivial at-rest frame 0), take the miss
+  vector (ship position minus target position) at that frame, and project it onto the
+  straight line from the scenario's start position to the target: the along-axis component is
+  how far short (negative) or overshot (positive) the first stop was: the perpendicular
+  component is how far off to the side. This is what found the V4 spin-stall - the aggregate
+  "final distance" numbers for that scenario looked fine (V3 already converged eventually),
+  and only decomposing the *first* stop surfaced the wasted detour that got there.
 
 ### What the battery covers that `test_helpers.py` doesn't
 
@@ -175,6 +187,17 @@ Recorded here and in code comments in `autopilot.py`:
   check even though it's making zero progress toward the target, so it never thrusts to
   correct course at all. If you build a speed-based throttle, gate it on the *along-track*
   velocity component specifically, not total speed.
+- **Using the angle between current and desired velocity for `CROSS_TRACK_KILL_THRESHOLD`**,
+  instead of the cross-track velocity's raw magnitude. Tested at 5/10/20/30 degrees - even the
+  loosest still left 17/48 angled trials bad (magnitude-based gets 0/648 on the larger
+  equivalent sweep), and the tightest (5 degrees) was outright catastrophic: freighter's
+  at-rest mean time nearly tripled (829.6 -> 2204.6 frames) with a 672-unit overshoot, patrol
+  spiked to a 7692-unit miss. Same root problem as the throttle above: an angle can't tell a
+  meaningful sideways drift at real speed apart from noise at near-zero speed (the same
+  `retrograde_angle` instability V4 works around elsewhere), so it's systematically wrong in
+  exactly the regime where this decision matters most. Magnitude has no such ambiguity - it
+  directly measures the physical quantity that matters (how much sideways motion actually
+  remains), independent of scale.
 
 ## Version history and how to revert surgically
 
@@ -193,7 +216,8 @@ python run_tests.py   # confirm it's still green, then restart the game per the 
 | Pre-session | `98818fe` and earlier | Blended retrograde: 70% opposite-velocity + 30% redirect-toward-target while braking. Never converged cleanly - fought its own heading every frame. |
 | **V1** — Sticky Pure Retrograde, No Buffer | `2c14277` | Pure retrograde burn (no redirect blend) once committed, *sticky* commitment (doesn't re-evaluate should-I-brake every frame), no safety buffer on the braking-distance estimate. Fixed the old blend's flip-flopping and a separate "brakes early, stops short" bug. Still vulnerable to stopping off to the side if velocity wasn't already pointed at the target when it committed. |
 | **V2** — Alignment-Gated Retrograde Braking | `f1a289c` | V1 + won't commit to a retrograde burn until velocity is already within 45° of the target direction; lets the normal point-at-target approach cancel any sideways drift first. Fixes the "stops off to the side" bug by *waiting it out*. |
-| **V3** — Two-Phase (Cross-Track then Retrograde) Braking | `ed4cfe1` (current) | Replaces V2's wait-and-see gate with an active correction: decomposes velocity into along-track/cross-track components on commit, burns to null the cross-track part first (sticky, one check per commitment), *then* switches to the proven pure-retrograde burn. Fixes the same bug by *actively correcting* instead of waiting. |
+| **V3** — Two-Phase (Cross-Track then Retrograde) Braking | `ed4cfe1` | Replaces V2's wait-and-see gate with an active correction: decomposes velocity into along-track/cross-track components on commit, burns to null the cross-track part first (sticky, one check per commitment), *then* switches to the proven pure-retrograde burn. Fixes the same bug by *actively correcting* instead of waiting. |
+| **V4** — Two-Phase Braking, Immediate Low-Speed Bailout | `4a51a2e` (current) | V3 + skips the alignment-gated "would braking still help" check once speed drops below `ARRIVAL_SPEED_THRESHOLD`, going straight to accept-or-resume instead. Fixes a spin-stall: below that speed, `retrograde_angle` is noisy (atan2 of a near-zero vector), and both the thrust-would-help check and the un-stick bailout it guards required alignment first - so a ship could spin chasing a jittering target for a long stretch (measured: ~150 wasted frames in one traced case) before either escaping by chance or hitting the `MAX_SEEK_FRAMES` watchdog. |
 
 ## V2 vs. V3, in detail
 
