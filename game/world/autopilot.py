@@ -234,9 +234,20 @@ class SeekMode:
         # in front of the target. That whipsawed the nose back and forth for
         # dozens of frames with the engine off, instead of ever holding a
         # heading long enough to actually thrust.
+        #
+        # Gated on along-track speed (the component actually closing on the
+        # target), not total speed - predict_braking_distance_from_stop's
+        # whole model assumes the speed it's given is usefully pointed at
+        # the target, which isn't true when most of it is sideways drift.
+        # Committing off total speed there let the ship commit to an early,
+        # expensive cross-track correction it didn't have the along-track
+        # progress to afford yet, instead of just letting the normal
+        # point-at-target approach build real closing speed first.
         if not self.braking:
-            braking_distance = predict_braking_distance_from_stop(ship, speed)
-            self.braking = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+            along, _, _ = velocity_components(ship, target, distance)
+            along_speed = max(0, along)
+            braking_distance = predict_braking_distance_from_stop(ship, along_speed)
+            self.braking = distance <= braking_distance and along_speed > ARRIVAL_SPEED_THRESHOLD
             if self.braking:
                 self.cross_track_done = False  # fresh commit - give it one cross-track check
         should_brake = self.braking
