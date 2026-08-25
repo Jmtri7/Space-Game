@@ -821,6 +821,8 @@ class SpaceScreen(ScreenBase):
             },
             "possessions": self.player.person.possessions.get_state(),
         }
+        if self.jump_state:
+            state["jump_state"] = dict(self.jump_state)
         # Every AI ship in every system (not just self.system_id) - keyed by
         # pilot name rather than a per-system list index, since a
         # ExplorerRoutine-driven pilot can migrate to a different system
@@ -886,6 +888,13 @@ class SpaceScreen(ScreenBase):
             self.player.velocity_x = player_state.get("velocity_x", self.player.velocity_x)
             self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
             self.player.thrust = player_state.get("thrust", self.player.thrust)
+        saved_jump = state.get("jump_state")
+        # Resume an in-progress jump exactly where it left off, rather than
+        # leaving the huge jump-speed velocity above with no jump_state to
+        # ever bring it back down - previously the ship was left flying at
+        # JUMP_SPEED indefinitely (space has no drag), uncontrollable until
+        # the player applied thrust and the velocity cap silently clamped it.
+        self.jump_state = dict(saved_jump) if saved_jump else None
         self.restore_possessions(state)
         # Restore every AI ship in every system, keyed by pilot name (see
         # get_state()) - older saves stored this as a plain per-system list

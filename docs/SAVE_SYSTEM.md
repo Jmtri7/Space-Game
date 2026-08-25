@@ -60,6 +60,12 @@ name is kept, the timestamp lives inside it.
       "owned_ships": ["shuttle"],
       "loans": [{"lender": "Station Credit Union", "principal": 1200}]
     },
+    "jump_state": {
+      "phase": "travel",
+      "heading": 137.0,
+      "timer": 42,
+      "destination": "kepler_reach"
+    },
     "ai_ships": {
       "Elena Voss": {
         "system_id": "sol_alpha",
@@ -145,6 +151,8 @@ def get_state(self):
         },
         "possessions": self.player.person.possessions.get_state(),
     }
+    if self.jump_state:
+        state["jump_state"] = dict(self.jump_state)
     # Every AI ship in every system this story defines (self.systems, not
     # just self.system_id) - keyed by pilot name rather than by list index,
     # since a migratory pilot (ExplorerRoutine) can be in a different
@@ -176,6 +184,13 @@ def get_state(self):
 **What's captured:**
 - Player position, angle, velocity, thrust (space) or just x/y (locations)
 - Credits, owned ship type IDs, and loans (`possessions` - space or locations)
+- `jump_state` (space only, when a jump is in progress) - phase (`"align"`/
+  `"travel"`), heading, elapsed timer, and destination system ID. Without this,
+  a save made mid-jump would restore the ship's huge jump-speed velocity (via
+  `player`) but drop the `jump_state` that's supposed to eventually bring it
+  back down via `_complete_jump()` - since space has no drag, the ship would
+  otherwise fly at `JUMP_SPEED` indefinitely and be uncontrollable until the
+  player applied thrust and the velocity cap happened to clamp it back down.
 - Every AI ship, in every system the story defines — position, angle,
   velocity, thrust, and which system it's currently in — keyed by pilot
   name, not list order (see `get_state()` above for why)
@@ -197,7 +212,9 @@ def get_state(self):
 game_screen.restore_state(save_data.get("game_state", {}))
 ```
 This restores `player` ship fields with `.get(key, default)` fallback,
-restores `possessions` (via `restore_possessions()`, below), then - if
+restores `jump_state` verbatim (or clears it if absent, so a save made outside
+a jump doesn't inherit a stale one), restores `possessions` (via
+`restore_possessions()`, below), then - if
 `state["ai_ships"]` is the current dict-keyed-by-pilot-name format - walks
 every AI ship in every system, looks each one up by `person.name`, restores
 its kinematics, and migrates it into a different system's `ai_ships` list
