@@ -5,7 +5,9 @@ import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
 from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type
 from game.screens.screen_base import ScreenBase
-from game.world.npc import NPC
+from game.world.character import Character
+from game.world.person import Person
+from game.world.dialogue import Dialogue
 from game.world.player_character import PlayerCharacter
 
 
@@ -92,17 +94,7 @@ class LocationScreen(ScreenBase):
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
         self.npcs_config = self.config.get("npcs", [])
-        self.npcs = [
-            NPC(
-                cfg.get("x", 0), cfg.get("y", 0),
-                behavior=cfg.get("behavior", "wander"),
-                name=cfg.get("name", "NPC"),
-                greeting=cfg.get("greeting", "Hello!"),
-                dialogue_options=cfg.get("dialogue_options"),
-                dialogue_tree=cfg.get("dialogue_tree")
-            )
-            for cfg in self.npcs_config
-        ]
+        self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
 
@@ -113,6 +105,22 @@ class LocationScreen(ScreenBase):
         # room with, even while docked at a different station than the
         # player happens to be standing in.
         self.visitors = []
+
+    def _build_local_character(self, cfg):
+        """Build one config-driven local resident: a Person (with a
+        Dialogue - a real tree if the config provides one, otherwise the
+        flat greeting+options shape) wrapped in a Character with no ship.
+        Their role picks the routine that decides whether they wander or
+        stay put (see game/world/character.py's ROLE_ROUTINES) - the same
+        role->routine mechanism AI ship pilots use, just never flying
+        anything."""
+        person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"))
+        dialogue_tree = cfg.get("dialogue_tree")
+        if dialogue_tree:
+            person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))
+        else:
+            person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
+        return Character(person, role=cfg.get("role", "resident"))
 
     def get_exit_options(self):
         """Ordered destinations available through this location's exit:
@@ -206,8 +214,12 @@ class LocationScreen(ScreenBase):
 
     def _targetable_people(self):
         """NPCs plus any visiting AI pilots currently in this location -
-        anyone the player can target/talk to with T/Enter."""
-        return self.npcs + self.visitors
+        anyone the player can target/talk to with T/Enter. self.npcs holds
+        Character wrappers (see _build_local_character); self.visitors are
+        already bare Person objects (the *same* Character.person a visiting
+        pilot's AIShip-successor tracks in SpaceScreen.ai_ships - never
+        wrapped a second time here)."""
+        return [character.person for character in self.npcs] + self.visitors
 
     def _cycle_npc_target(self, direction=1):
         """Cycle through targetable NPCs and visiting pilots - direction=1
@@ -249,8 +261,8 @@ class LocationScreen(ScreenBase):
         conversation open, so this only ever actually pauses the active one."""
         if self.active_dialogue:
             return
-        for npc in self.npcs:
-            npc.update()
+        for character in self.npcs:
+            character.update()
 
     def draw(self, surface):
         """Draw location from config."""
@@ -313,8 +325,8 @@ class LocationScreen(ScreenBase):
                         pygame.draw.rect(surface, color, (px, py, 15, 15))
 
         # Draw NPCs
-        for npc in self.npcs:
-            npc.draw(surface)
+        for character in self.npcs:
+            character.person.draw(surface)
 
         # Draw visiting AI pilots (see self.visitors)
         for visitor in self.visitors:
@@ -341,8 +353,8 @@ class LocationScreen(ScreenBase):
         # Debug markers
         if constants.DEBUG_MODE:
             draw_debug_marker(surface, self.player.x, self.player.y, 10)
-            for npc in self.npcs:
-                draw_debug_marker(surface, npc.x, npc.y, 8)
+            for character in self.npcs:
+                draw_debug_marker(surface, character.person.x, character.person.y, 8)
             for visitor in self.visitors:
                 draw_debug_marker(surface, visitor.x, visitor.y, 8)
 

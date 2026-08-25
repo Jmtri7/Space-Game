@@ -10,7 +10,6 @@ from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size
 )
 from game.world.player_controller import PlayerController
-from game.world.ai_ship import AIShip
 from game.screens.space_screen import SpaceScreen
 from game.ui.menu import Menu
 from game.ui.pilot_name_dialog import PilotNameDialog

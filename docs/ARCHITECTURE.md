@@ -8,23 +8,32 @@ Class hierarchy, entity patterns, and extensibility points for the space game.
 ```
 WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
 ├── Ship (physics, rotation; owns an Autopilot via composition)
-│   └── AIShip (picks autopilot mode/target from the pilot's faction+role)
 └── Landable (space station or moon — config decides which)
 
 Person (base — x, y, draw(), get_distance(), owns a Possessions)
-└── NPC (adds behavior, name, Dialogue)
 ```
+There is no `AIShip`/`NPC` subclass anymore - every non-player character
+(ship-flying or not) is a `Character` (`game/world/character.py`), which
+*composes* a `Person` and, optionally, a `Ship` - it never inherits `Ship`,
+exactly like `PlayerController` already didn't. A `Character` with no ship
+(any station/moon NPC) is just a body with a role; one with a ship (an AI
+pilot) is that same body plus the ship it flies. See "Character: AI Pilots
+& NPCs" below.
+
 Every `Person` — the player's own body (`PlayerCharacter`/`PlayerController.person`),
-every `NPC`, and an `AIShip`'s `pilot_person` — owns a `Possessions` (credits,
-owned ships, loans) by composition, not just the player. The player's one real
-`Possessions` object is shared by reference across `SpaceScreen` and every
-`LocationScreen` (see `SpaceScreen.get_interior_screen`'s `player_possessions`
-injection) so a purchase in one location is instantly visible everywhere else.
+every `Character`'s `person`, and an AI pilot's `Character.person` — owns a
+`Possessions` (credits, owned ships, loans) by composition, not just the
+player. The player's one real `Possessions` object is shared by reference
+across `SpaceScreen` and every `LocationScreen` (see
+`SpaceScreen.get_interior_screen`'s `player_possessions` injection) so a
+purchase in one location is instantly visible everywhere else.
 
 `PlayerController` does **not** subclass `Ship` — it *owns* one (composition) and
 exposes `x`/`y`/`velocity_x`/`velocity_y`/`angle`/`autopilot_active`/`autopilot_target`
 as delegating properties for backward compatibility, plus `handle_input()` for
-WASD/arrow control.
+WASD/arrow control. `Character` mirrors this exact property list (only
+meaningful when it has a ship) so both duck-type as a flyable ship the same
+way for `SpaceScreen`/autopilot code.
 
 ### Screens (State Machine)
 ```
@@ -99,15 +108,18 @@ See [PHYSICS.md](PHYSICS.md#coordinate-system) for coordinate conversion details
   `increase_thrust()`/`point_to_reverse_velocity()`/`release_thrust()`
 - Blocks input while `autopilot_active` is true
 - Applies `ship_type` stats (`max_thrust`/`max_velocity`/`rotation_speed`) to its `Ship`
-  at construction, same as `AIShip` does
+  at construction, same as `Character.for_ai_pilot()` does
 
-**Subclass: `AIShip(Ship)`**
-- Reads `acceleration_magnitude` (from `ship_type`'s `max_thrust`), `max_velocity`,
-  `rotation_speed` from a `ship_type` dict (see `config/stories/{story}/ship_types.json`),
-  falling back to defaults if none given
-- Its `update()` never touches physics directly — it picks an autopilot mode/target each
-  frame (from the pilot's faction/role, via `ROLE_ROUTINES`) and calls `engage_seek()` or
-  `engage_orbit()`, then `super().update()` runs the real `Ship`/`Autopilot` physics
+**Composition: `Character`** (`game/world/character.py`) — see the full
+section below; the AI-pilot equivalent of `PlayerController`. Built via
+`Character.for_ai_pilot(...)`, which reads `acceleration_magnitude` (from
+`ship_type`'s `max_thrust`), `max_velocity`, `rotation_speed` from a
+`ship_type` dict (see `config/stories/{story}/ship_types.json`), falling
+back to defaults if none given. Its `update()` never touches ship physics
+directly — it runs the role's routine each frame (from `ROLE_ROUTINES`,
+keyed by the pilot's role, with `FACTION_ROUTINE_OVERRIDES` checked first),
+which calls `engage_seek()`/`engage_orbit()` (delegated to the owned
+`Ship`), then `self.ship.update()` runs the real `Ship`/`Autopilot` physics.
 
 ### Adding or Updating a Ship Type
 
@@ -118,7 +130,9 @@ section (`size`, `color`, `shape`, `thrusters`, optionally `thruster_width`/`thr
 Reference the type's key from one of the story's `systems/{system_id}.json` files
 (`ai_ships[].ship_type`) or `story.json` (`ships.player_type`) — no Python required.
 
-Only subclass `Ship` (like `AIShip` does) when you need genuinely new *behavior*, not new stats.
+Only subclass `Ship` when you need genuinely new *behavior*, not new stats -
+and prefer composing one onto a `Character`/`PlayerController`-style wrapper
+(as both already do) over subclassing it at all.
 
 **Rough low / medium / high bands**, based on the spread across this game's ship roster
 (`shuttle`, `freighter`, `patrol`, plus retired types `fighter`/`explorer`/`trader`/`scout`/
@@ -146,16 +160,58 @@ below) belongs to an existing culture, set `"culture": "<culture_id>"` in its `g
 so the whole culture stays visually cohesive. See `config/stories/default/cultures.json` for
 the currently defined cultures (e.g. the Vherathi Concord).
 
-## Person Class: NPCs & Drawing
+## Person Class: Bodies & Drawing
 
 **Base Class: `Person`**
-- Stores position and appearance
+- Stores position, appearance, and a `Possessions`
 - Implements `draw(surface)` — head + body
 - Provides `get_distance(x, y)` for interaction checks
 
-**Subclass: `NPC(Person)`**
-- Adds `behavior` (bar/wander) and a `Dialogue` instance
-- Loaded per-location from `npcs` entries in the location's config JSON
+`Person` itself has no behavior/role concept - that lives on `Character`
+(see below), which owns a `Person` rather than subclassing it. Local NPCs
+are built by `LocationScreen._build_local_character()`: a `Person` (with a
+`Dialogue` attached), wrapped in a `Character` with `ship=None`.
+
+## Character: AI Pilots & NPCs
+
+**Class: `Character`** (`game/world/character.py`) - composes a `person`
+(`Person`, always) and an optional `ship` (`Ship`, only for AI pilots), plus
+a `role` string and the `Routine` that role picks. This is the *one*
+mechanism behind every non-player character in the game:
+
+- **AI ship pilots** (`ship` set): built via `Character.for_ai_pilot(...)`
+  from `SpaceScreen._load_system_content()`. Role comes from `pilots.json`
+  (`freighter_pilot`, `patrol_officer`, ...).
+- **Station/moon NPCs** (`ship=None`): built inline by `LocationScreen`.
+  Role comes from each `npcs[]` entry's `"role"` in the location's config
+  (`bartender`, `guard`, `resident`, ...), defaulting to `"resident"` if
+  omitted.
+
+`ROLE_ROUTINES` (in `character.py`) maps every role, ship-flying or not, to
+a `Routine` class - the same table, the same lookup, regardless of whether
+that routine flies a ship or just moves a body around a room:
+
+| Routine | File | Needs a ship? | Used by |
+|---|---|---|---|
+| `DockRoutine` | `dock_routine.py` | Yes | `freighter_pilot` - fly to a stop, walk in, talk, walk out, repeat |
+| `ShuttleRoutine` | `shuttle_routine.py` | Yes | `trader_captain` - ping-pong stops, instant turnaround |
+| `OrbitRoutine` | `orbit_routine.py` | Yes | `patrol_officer` - circle a fixed point forever |
+| `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |
+| `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
+| `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
+
+Every `Routine` implements the same two methods regardless of which table
+row it's in: `start(character)` (once, at construction) and
+`run(character)` (every frame). A ship-flying routine calls
+`character.engage_seek(...)`/`character.autopilot_active` (delegated to
+`character.ship`); a local routine only ever touches `character.person.x/y`
+directly - never both, since a `Character` only ever gets one *kind* of
+routine (whichever its role maps to).
+
+`Character.update()` runs the routine, then (only if `self.ship` is set)
+steps the ship's physics and mirrors `person.x/y` to it - unless
+`self.ashore` is `True`, meaning `DockRoutine` currently has the person
+walking around a station/moon interior independent of the (parked) ship.
 
 ## Landable: Stations & Moons
 
@@ -172,7 +228,7 @@ the currently defined cultures (e.g. the Vherathi Concord).
 
 **`SpaceScreen` contains:**
 - `PlayerController` (controlled entity)
-- A list of `AIShip` (autonomous entities, loaded from story config)
+- A list of `Character` (autonomous ship-flying entities, loaded from story config)
 - `StarField` (visual, procedural)
 - Two `Landable` instances: `station` and `moon`
 
@@ -212,7 +268,8 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
 ## Extensibility Points
 
 ### Adding a New Entity Type
-1. Create a class extending `Ship`, `Landable`, or `Person`
+1. Create a class extending `Ship`, `Landable`, or `Person` - or, for a new
+   *character*, prefer a new `Routine` (see below) over a new class
 2. Override `update()` and/or `draw()`
 3. Add to `SpaceScreen` (or a location's NPC list)
 4. Include in `get_state()`/`restore_state()` if saveable
@@ -222,10 +279,16 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
 2. Add a `current_screen` string and branch in `main.py`'s loop
 3. Implement transitions via `handle_input()` return values
 
-### Adding NPC Behaviors
-1. Add the behavior name to the location's config JSON (`npcs[].behavior`)
-2. Implement a `_behavior_[name]()` method on `NPC`
-3. Call it from `update()` based on the behavior string
+### Adding a New Role/Routine (AI pilot or NPC)
+1. Create a `Routine` class (own file, one class per file) with
+   `__init__(self, route)`, `start(self, character)`, `run(self, character)`
+   - reach through `character.ship`-delegated methods (`engage_seek`, etc.)
+   for ship-flying behavior, or `character.person.x/y` directly for local
+   (no-ship) behavior - never both in the same routine
+2. Register it in `ROLE_ROUTINES` (`game/world/character.py`), keyed by the
+   role string
+3. Set `"role": "<name>"` on the relevant `pilots.json` entry (ship-flying)
+   or the location config's `npcs[]` entry (local) - no other code changes needed
 
 ## Design Decisions
 

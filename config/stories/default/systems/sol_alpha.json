@@ -51,7 +51,7 @@
             "name": "Mira Osei",
             "x": 350,
             "y": 200,
-            "behavior": "wander",
+            "role": "roommate",
             "greeting": "Rough shift. Try not to wake me on your way out.",
             "dialogue_options": ["Sorry", "Leave"]
           }
@@ -74,7 +74,7 @@
             "name": "Renna Kade",
             "x": 250,
             "y": 300,
-            "behavior": "wander",
+            "role": "resident",
             "greeting": "Morning. Or whatever hour the station clock says it is.",
             "dialogue_options": ["Morning", "Leave"]
           },
@@ -82,7 +82,7 @@
             "name": "Toma Idrisi",
             "x": 550,
             "y": 300,
-            "behavior": "wander",
+            "role": "resident",
             "greeting": "Concourse is that way if you're looking for the bar.",
             "dialogue_options": ["Thanks", "Leave"]
           }
@@ -106,7 +106,7 @@
             "name": "Bartender",
             "x": 400,
             "y": 90,
-            "behavior": "bar",
+            "role": "bartender",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
@@ -139,7 +139,7 @@
             "name": "Traveler",
             "x": 400,
             "y": 240,
-            "behavior": "wander",
+            "role": "traveler",
             "greeting": "Safe travels!",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -147,7 +147,7 @@
             "name": "Guard",
             "x": 400,
             "y": 540,
-            "behavior": "bar",
+            "role": "guard",
             "greeting": "Welcome to the station.",
             "dialogue_options": ["Thanks", "Leave"]
           }
@@ -167,7 +167,7 @@
             "name": "Dax Renner",
             "x": 400,
             "y": 250,
-            "behavior": "bar",
+            "role": "ship_salesman",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
@@ -205,7 +205,7 @@
             "name": "Petra Voss",
             "x": 400,
             "y": 250,
-            "behavior": "bar",
+            "role": "loan_officer",
             "dialogue_tree": {
               "root": "start",
               "nodes": {

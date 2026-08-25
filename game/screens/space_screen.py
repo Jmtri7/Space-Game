@@ -14,7 +14,7 @@ from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.autopilot import has_arrived
-from game.world.ai_ship import AIShip
+from game.world.character import Character
 from game.world.landable import Landable
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
@@ -118,16 +118,16 @@ class SpaceScreen(ScreenBase):
             ship_graphics = get_graphics_asset(self.story, "ships", ship_type_id)
             pilot = get_pilot(self.story, ai_cfg["pilot"]) if "pilot" in ai_cfg else None
             route = [landable_lookup[key] for key in ai_cfg.get("route", []) if key in landable_lookup]
-            ai_ship = AIShip(
+            ai_ship = Character.for_ai_pilot(
                 GAME_WIDTH * ai_cfg.get("x", 0.75),
                 GAME_HEIGHT * ai_cfg.get("y", 0.1),
-                space_drag=space_drag,
                 ship_type=ship_type,
                 ship_type_id=ship_type_id,
                 graphics=ship_graphics,
                 pilot=pilot,
                 route=route,
-                get_interior_screen=self.get_interior_screen
+                get_interior_screen=self.get_interior_screen,
+                space_drag=space_drag
             )
             self.ai_ships.append(ai_ship)
 
@@ -148,7 +148,7 @@ class SpaceScreen(ScreenBase):
             # Use ship type name if available, otherwise use generic label
             ship_type = get_ship_type(self.story, ship.ship_type_id)
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
-            pilot_name = ship.pilot.get("name")
+            pilot_name = ship.person.name
             if pilot_name:
                 ship_name = f"{ship_name} ({pilot_name})"
             self.targetable_objects.append((ship_name, ship))
@@ -221,7 +221,7 @@ class SpaceScreen(ScreenBase):
                     target_obj = self._get_target_object()
                     if target_obj and self.current_target is not None:
                         # For AI ships, always engage autopilot to follow them
-                        if isinstance(target_obj, AIShip):
+                        if isinstance(target_obj, Character):
                             self.player.engage_seek(target_obj)
                         # For landables (station/moon), check if in landing range
                         else:

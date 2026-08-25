@@ -250,7 +250,7 @@ Recorded here and in code comments in `autopilot.py`:
 ## Version history and how to revert surgically
 
 Changes to this file should touch *only* `SeekMode`'s `update()` method and its immediately
-adjacent helpers/constants - never `ship.py`, `player_controller.py`, `ai_ship.py`, or any
+adjacent helpers/constants - never `ship.py`, `player_controller.py`, `character.py`, or any
 screen. That keeps reverting to a known-good version a single-file operation:
 
 ```bash

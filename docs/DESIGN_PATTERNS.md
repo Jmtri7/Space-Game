@@ -117,61 +117,112 @@ if speed > max_velocity:
 
 ## Pattern: Base Class for Reusable Entity Logic
 
-**Problem:** Multiple entity types (Player, AIShip) duplicate drawing and physics.
+**Problem:** Multiple entity types (`Ship`, `Landable`) duplicate position/
+distance/rotate-and-draw-polygon logic.
 
-**Solution:** Extract shared logic into abstract base class.
+**Solution:** Extract shared logic into a base class (`WorldObject`), same
+idea as any base class — see `game/world/world_object.py`.
 
-**Implementation:**
+**Use case:** Multiple entity types sharing core *physical-object*
+functionality (position, drawing).
+
+---
+
+## Pattern: Compose, Don't Inherit, for "Who Flies It"
+
+**Problem:** The player, AI ship pilots, and station/moon NPCs all need a
+walking-around body (`Person`); only some of them also fly a `Ship`. An
+earlier version of this game gave AI ships their own `Ship` subclass
+(`AIShip(Ship)`) with a `Person` bolted on the side - which put the player
+and AI pilots in *opposite* class shapes (`PlayerController` owns a `Ship`;
+`AIShip` **is** one), and gave NPCs (no ship at all) no relationship to
+either.
+
+**Solution:** Nobody inherits `Ship`. `PlayerController` and `Character`
+(`game/world/character.py`) both *compose* one - `self.ship` - alongside a
+`self.person` (`Person`), with delegating properties (`x`/`y`/`velocity_x`/
+`angle`/`engage_seek()`/...) so the rest of the game can duck-type either
+one as a flyable ship without caring which it is. A `Character` with
+`ship=None` (any station/moon NPC) is just a body with a role - not a
+degenerate case, the normal one.
+
 ```python
-class Ship:  # Base class
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-        self.velocity_x = self.velocity_y = 0
-        self.thrust = 0
-        self.angle = 0
-    
-    def draw_ship(self, surface, color=GRAY):
-        # Shared drawing logic
-        rad = math.radians(self.angle)
-        cos_a, sin_a = math.cos(rad), math.sin(rad)
-        # ... rotate and draw polygon
-    
-    def get_distance(self, target_x, target_y):
-        # Shared range-check logic (this game pulls it up one level further,
-        # into WorldObject, since Landable needs it too - see ARCHITECTURE.md)
-        return math.hypot(target_x - self.x, target_y - self.y)
-    
-    def update(self):
-        # Base physics (child can extend)
-        self.velocity_x *= drag
-        self.velocity_y *= drag
-        self.x += self.velocity_x
-        self.y += self.velocity_y
+class Character:
+    def __init__(self, person, ship=None, role=None, ...):
+        self.person = person
+        self.ship = ship            # None for a local NPC
+        self.routine = ROLE_ROUTINES.get(role, IdleRoutine)(route)
 
-class Player(Ship):  # Specialized
-    def handle_input(self, keys):
-        # Player-specific input
-        if keys[UP]: self.thrust = min(self.thrust + 0.02, max_thrust)
-    
-    def update(self):
-        # Call base physics
-        super().update()
+    @property
+    def x(self):
+        return self.ship.x          # only ever called when self.ship is set
+    # ... same delegating-property set PlayerController already has
 
-class AIShip(Ship):  # Specialized
     def update(self):
-        # AI behavior
-        self._behavior_wander()
-        # Then base physics
-        super().update()
+        self.routine.run(self)
+        if self.ship:
+            self.ship.update()
 ```
 
 **Why this works:**
-- DRY: No duplicate draw_ship(), get_distance()
-- Extensible: New ship types inherit for free
-- Polymorphic: Both subclasses work with same interface
-- Testable: Base logic separable from child behavior
+- One ownership shape (compose a `Ship`+`Person`) for every character,
+  instead of two incompatible ones
+- A routine (see the next pattern) never needs to know or check whether its
+  `Character` has a ship - it just calls the methods its own kind of
+  behavior needs, and a `Character` only ever gets *one* kind of routine
+- Adding a new kind of character (a shopkeeper, a second kind of ship) never
+  means picking a base class to inherit - just which pieces to compose
 
-**Use case:** Multiple entity types sharing core functionality.
+**Use case:** Any time two-or-more entity "roles" overlap partially (some
+fly, some don't; some have dialogue, some don't) - composition lets each
+piece (body, ship, role) vary independently instead of forcing every
+combination into its own subclass.
+
+---
+
+## Pattern: Role → Routine Registry
+
+**Problem:** "What does this character do on its own" (fly a route, dock
+and walk around, wander a room, stand still) needs to vary by role/job, for
+*every* character, not just ship-flying ones - without an `if role ==
+"..."` chain re-checked every frame.
+
+**Solution:** A dict from role string to a `Routine` class, all implementing
+the same two-method interface, looked up once at construction:
+
+```python
+ROLE_ROUTINES = {
+    "freighter_pilot": DockRoutine,     # ship-flying
+    "patrol_officer": OrbitRoutine,     # ship-flying
+    "bartender": StationaryRoutine,     # local, no ship
+    "resident": WanderRoutine,          # local, no ship
+}
+
+class Character:
+    def __init__(self, person, ship=None, role=None, route=None, ...):
+        self.routine = ROLE_ROUTINES.get(role, IdleRoutine)(route or [])
+        self.routine.start(self)
+
+    def update(self):
+        self.routine.run(self)
+        ...
+```
+
+Every `Routine` (`start(character)`, `run(character)`) lives in its own
+file (see `game/world/dock_routine.py`, `wander_routine.py`, etc.) and reads
+either `character.ship`'s delegated methods or `character.person.x/y`
+directly - never both, since a role only ever maps to one kind.
+
+**Why this works:**
+- Adding a new job is data (`"role": "..."` in config) + one small class +
+  one registry entry - never a new `if` branch in an existing `update()`
+- The exact same mechanism serves AI ship pilots and local NPCs, so a
+  future "walks to work then flies home" role isn't a special case, just a
+  routine that does both
+
+**Use case:** Any entity whose autonomous behavior should be chosen by a
+config-driven category (job, faction, difficulty tier) rather than its
+Python class.
 
 ---
 

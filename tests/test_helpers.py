@@ -35,7 +35,7 @@ from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
-from game.world.ai_ship import AIShip
+from game.world.character import Character
 from game.ui.selectable_list import SelectableList
 
 
@@ -347,7 +347,7 @@ class TestDockRoutineExitChoice(unittest.TestCase):
     keypress."""
 
     def _make_ai_ship(self, role):
-        return SimpleNamespace(pilot={"role": role}, pilot_person=Person(0, 0))
+        return SimpleNamespace(role=role, person=Person(0, 0))
 
     def test_unconfigured_role_always_returns_to_ship(self):
         """A role with no ROLE_EXIT_PREFERENCE entry falls back to
@@ -396,9 +396,9 @@ class TestDockRoutineExitChoice(unittest.TestCase):
             return interior_cache[cache_key]
 
         ai_ship = SimpleNamespace(
-            pilot={"role": "freighter_pilot"},
-            pilot_person=Person(0, 0),
-            pilot_ashore=False,
+            role="freighter_pilot",
+            person=Person(0, 0),
+            ashore=False,
             get_interior_screen=get_interior_screen,
             autopilot_active=False,
             engage_seek=lambda target: None,
@@ -422,7 +422,49 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         self.assertEqual(routine.phase, "flying", "Routine got stuck instead of reboarding")
         self.assertEqual(visited_history, {"city", "wilderness"},
                           "Should have visited both connected locations before leaving")
-        self.assertFalse(ai_ship.pilot_ashore)
+        self.assertFalse(ai_ship.ashore)
+
+    def test_full_stop_with_a_real_character_not_a_fake(self):
+        """Same scenario as test_full_stop_visits_every_connected_location_
+        then_reboards, but built through the real Character.for_ai_pilot()
+        factory (real Ship, real Person, real Possessions/Dialogue) instead
+        of a SimpleNamespace fake - proves the composed Character actually
+        duck-types as a ship (engage_seek/autopilot_active) and as a body
+        (person.x/y) well enough for DockRoutine to drive both ends of it."""
+        city_config = {"label": "City", "connected_locations": ["wilderness"], "npcs": []}
+        wilderness_config = {"label": "Wilderness", "connected_locations": ["city"], "npcs": []}
+        stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
+
+        interior_cache = {}
+        def get_interior_screen(landable, key, world_width, world_height):
+            cache_key = (id(landable), key)
+            if cache_key not in interior_cache:
+                config = landable.interiors.get(key)
+                if not config:
+                    return None
+                interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
+            return interior_cache[cache_key]
+
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="freighter",
+            graphics=None, pilot={"name": "Elena Voss", "role": "freighter_pilot"},
+            route=[stop], get_interior_screen=get_interior_screen,
+        )
+        self.assertIsInstance(character.routine, DockRoutine)
+        character.routine.route = [stop]
+        character.routine._route_index = 0
+        character.routine._begin_walking_in(character)
+
+        frames = 0
+        while character.routine.phase != "flying" and frames < 2000:
+            character.routine.run(character)
+            frames += 1
+
+        self.assertEqual(character.routine.phase, "flying", "Routine got stuck instead of reboarding")
+        self.assertFalse(character.ashore)
+        # The ship itself never moved (it's parked, waiting) - only the
+        # person walked around on foot.
+        self.assertEqual((character.ship.x, character.ship.y), (0, 0))
 
     def test_multi_hop_graph_routes_through_a_middle_node_to_ship(self):
         """Regression test for the station's concourse/spaceport layout:
@@ -589,16 +631,20 @@ class TestWrapText(unittest.TestCase):
         self.assertEqual(utils._wrap_text(_FakeFont(), "supercalifragilistic", 5), ["supercalifragilistic"])
 
 
-class TestAIShipPilotDialogue(unittest.TestCase):
+class TestCharacterAIPilotDialogue(unittest.TestCase):
     """Regression test: talking to a visiting AI pilot (e.g. Elena Voss)
-    while docked crashed the game - ai_ship.py still built pilot_person's
-    Dialogue with the old flat (name, [greeting], options) constructor
-    after Dialogue became a tree (nodes dict + root), so current_text()
-    indexed a list with a string key and raised."""
+    while docked crashed the game - the pilot's Dialogue was once built
+    with the old flat (name, [greeting], options) constructor after
+    Dialogue became a tree, so current_text() indexed a list with a string
+    key and raised. Character.for_ai_pilot() is the sole builder now."""
 
     def test_pilot_dialogue_is_usable(self):
-        ship = AIShip(0, 0, pilot={"name": "Elena Voss", "personality": "Blunt and unhurried."})
-        dialogue = ship.pilot_person.dialogue
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="freighter", graphics=None,
+            pilot={"name": "Elena Voss", "personality": "Blunt and unhurried."},
+            route=[], get_interior_screen=None,
+        )
+        dialogue = character.person.dialogue
         self.assertEqual(dialogue.current_text(), "Blunt and unhurried.")
         self.assertEqual([o["label"] for o in dialogue.current_options()], ["Nod", "Leave"])
         self.assertTrue(dialogue.choose(0))
@@ -615,27 +661,27 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         config = {
             "label": "Test Room",
             "npcs": [
-                {"name": "Talker", "x": 100, "y": 100, "behavior": "wander"},
-                {"name": "Bystander", "x": 200, "y": 200, "behavior": "wander"},
+                {"name": "Talker", "x": 100, "y": 100, "role": "resident"},
+                {"name": "Bystander", "x": 200, "y": 200, "role": "resident"},
             ],
         }
         screen = LocationScreen(config_data=config, world_width=800, world_height=600)
-        talker = next(npc for npc in screen.npcs if npc.name == "Talker")
-        bystander = next(npc for npc in screen.npcs if npc.name == "Bystander")
+        talker = next(character for character in screen.npcs if character.person.name == "Talker")
+        bystander = next(character for character in screen.npcs if character.person.name == "Bystander")
 
-        screen.active_dialogue = talker.dialogue
-        before = (bystander.x, bystander.y)
+        screen.active_dialogue = talker.person.dialogue
+        before = (bystander.person.x, bystander.person.y)
         for _ in range(50):
             screen.update_physics()
-        self.assertEqual((bystander.x, bystander.y), before)
+        self.assertEqual((bystander.person.x, bystander.person.y), before)
 
     def test_npcs_move_normally_with_no_dialogue_open(self):
         config = {
             "label": "Test Room",
-            "npcs": [{"name": "Wanderer", "x": 100, "y": 100, "behavior": "wander"}],
+            "npcs": [{"name": "Wanderer", "x": 100, "y": 100, "role": "resident"}],
         }
         screen = LocationScreen(config_data=config, world_width=800, world_height=600)
-        wanderer = screen.npcs[0]
+        wanderer = screen.npcs[0].person
         before = (wanderer.x, wanderer.y)
         for _ in range(200):
             screen.update_physics()
