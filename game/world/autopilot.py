@@ -13,6 +13,17 @@ import math
 ARRIVAL_DISTANCE_FRACTION = 0.15
 ARRIVAL_DISTANCE_FLOOR = 8
 ARRIVAL_SPEED_THRESHOLD = 0.1
+BRAKING_SAFETY_BUFFER = 1.1       # margin added on top of predict_braking_distance_from_stop's raw estimate
+# Alignment needed before thrust fires while braking (see point_and_thrust).
+# Tried widening this past the 10 degrees used everywhere else, on the
+# theory that thrust could start partway through the turn-to-face-backward
+# instead of waiting for it to finish and save some of that coast time.
+# Simulation disproved it: thrust fired that far off pure retrograde has a
+# real sideways component too, which needs correcting afterward - net
+# slower (45 degrees), then unstable (60 introduced overshoot, 90 outright
+# failed to converge in one trial). 10 stays the tightest and fastest.
+BRAKE_ALIGNMENT_THRESHOLD_DEG = 10
+STALL_BAILOUT_FACTOR = 1.5        # see SeekMode's "would increase speed" bailout
 
 
 def has_arrived(ship, target):
@@ -30,9 +41,9 @@ def has_arrived(ship, target):
     return distance < arrival_tolerance and speed < ARRIVAL_SPEED_THRESHOLD
 
 
-def turn_toward(ship, angle_rad):
+def turn_toward(ship, angle_rad, alignment_threshold_deg=10):
     """Rotate the ship one step toward angle_rad (radians). Returns True
-    once the ship is aligned with it within 10 degrees."""
+    once the ship is aligned with it within alignment_threshold_deg."""
     angle_deg = math.degrees(angle_rad)
     current_angle = ship.angle % 360
     target_angle_norm = angle_deg % 360
@@ -48,12 +59,12 @@ def turn_toward(ship, angle_rad):
     elif angle_diff > ship.rotation_speed:
         ship.turn_right()
 
-    return abs(angle_diff) < 10
+    return abs(angle_diff) < alignment_threshold_deg
 
 
-def point_and_thrust(ship, accel_angle_rad):
+def point_and_thrust(ship, accel_angle_rad, alignment_threshold_deg=10):
     """Point ship in acceleration direction and apply thrust once aligned."""
-    if turn_toward(ship, accel_angle_rad):
+    if turn_toward(ship, accel_angle_rad, alignment_threshold_deg):
         ship.increase_thrust()
     else:
         ship.release_thrust()
@@ -89,8 +100,7 @@ def predict_braking_distance_from_stop(ship, current_speed):
 
     total_distance = distance_during_turn + distance_during_decel
 
-    # Add 10% safety buffer
-    return total_distance * 1.1
+    return total_distance * BRAKING_SAFETY_BUFFER
 
 
 def retrograde_angle(ship):
@@ -120,6 +130,9 @@ class SeekMode:
     controller that redirects AND decelerates simultaneously."""
     def __init__(self, target):
         self.target = target
+        # Sticky once True - see Step 2's comment for why this can't just be
+        # recomputed fresh every frame.
+        self.braking = False
 
     def update(self, autopilot):
         """Approach self.target, redirecting and decelerating simultaneously."""
@@ -139,9 +152,21 @@ class SeekMode:
             autopilot.disengage()
             return
 
-        # Step 2: Decide acceleration strategy
-        braking_distance = predict_braking_distance_from_stop(ship, speed)
-        should_brake = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+        # Step 2: Decide acceleration strategy. Once committed to braking,
+        # stay committed for the rest of this approach rather than
+        # recomputing the condition fresh every frame - right near arrival,
+        # small frame-to-frame changes in distance/speed made it flicker
+        # true/false repeatedly (predicted stopping distance and actual
+        # distance both shrinking in step, straddling each other), and each
+        # flip swings the heading between retrograde and point-at-target -
+        # nearly opposite directions once the ship's basically sitting still
+        # in front of the target. That whipsawed the nose back and forth for
+        # dozens of frames with the engine off, instead of ever holding a
+        # heading long enough to actually thrust.
+        if not self.braking:
+            braking_distance = predict_braking_distance_from_stop(ship, speed)
+            self.braking = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+        should_brake = self.braking
 
         # Step 2b: Check if braking would actually decelerate us
         if should_brake:
@@ -158,7 +183,7 @@ class SeekMode:
             elif angle_diff < -180:
                 angle_diff += 360
 
-            aligned = abs(angle_diff) < 10
+            aligned = abs(angle_diff) < BRAKE_ALIGNMENT_THRESHOLD_DEG
             if aligned:
                 # Simulate thrust application
                 rad = math.radians(ship.angle)
@@ -166,27 +191,36 @@ class SeekMode:
                 test_vy = ship.velocity_y - math.cos(rad) * ship.acceleration_magnitude
                 test_speed = math.sqrt(test_vx ** 2 + test_vy ** 2)
 
-                # Stop braking if speed would increase instead of decrease.
-                # This only fires once already within braking_distance of the
-                # target (should_brake), so it's functionally an arrival too
-                # (confirmed by simulation: fires around ~2 units out at low
-                # residual speed) - park so it doesn't drift on whatever
-                # speed was left when braking stopped being productive.
+                # Speed would increase instead of decrease - retrograde
+                # thrust isn't productive anymore. Close to the target,
+                # that's functionally an arrival, so park and stop.
+                # Farther out it means braking stalled early (retrograde_angle
+                # gets noisy right as velocity approaches zero, since atan2 of
+                # a near-zero vector is barely defined) - un-commit rather
+                # than parking mid-flight, so the ship resumes closing the
+                # remaining distance instead of getting stranded there
+                # forever (sticky self.braking would otherwise never
+                # reconsider once it stalls out like this).
                 if test_speed > speed:
-                    ship.park()
-                    autopilot.disengage()
-                    return
+                    landing_distance = getattr(target, 'landing_distance', 100)
+                    close_enough = max(ARRIVAL_DISTANCE_FLOOR, landing_distance * ARRIVAL_DISTANCE_FRACTION) * STALL_BAILOUT_FACTOR
+                    if distance < close_enough:
+                        ship.park()
+                        autopilot.disengage()
+                        return
+                    self.braking = False
+                    should_brake = False
 
         # Step 3: Calculate optimal acceleration direction
         if should_brake:
-            accel_angle = retrograde_angle(ship)
-        else:
-            # Point toward target and accelerate
-            dx, dy = target.x - ship.x, target.y - ship.y
-            accel_angle = math.atan2(dx, -dy)
+            # Wider alignment threshold than the approach phase - see
+            # BRAKE_ALIGNMENT_THRESHOLD_DEG.
+            point_and_thrust(ship, retrograde_angle(ship), BRAKE_ALIGNMENT_THRESHOLD_DEG)
+            return
 
-        # Step 4: Point and thrust in that direction
-        point_and_thrust(ship, accel_angle)
+        # Point toward target and accelerate
+        dx, dy = target.x - ship.x, target.y - ship.y
+        point_and_thrust(ship, math.atan2(dx, -dy))
 
 
 class OrbitMode:
