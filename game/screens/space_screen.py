@@ -305,11 +305,11 @@ class SpaceScreen(ScreenBase):
 
                 if event.key == pygame.K_ESCAPE:
                     return "pause"
-                elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
+                elif event.key == pygame.K_RIGHTBRACKET:
                     self._cycle_target(1)
                 elif event.key == pygame.K_LEFTBRACKET:
                     self._cycle_target(-1)
-                elif event.key == pygame.K_TAB:
+                elif event.key == pygame.K_t:
                     self._cycle_target_mode()
                 elif event.key == pygame.K_l:
                     # Land only - never engages autopilot (see K_SPACE below
@@ -801,11 +801,9 @@ class SpaceScreen(ScreenBase):
         # leave visible blank space before the colon column.
         help_title = "Controls"
         help_items = [
-            ("T / ]", "Next Target"),
+            ("]", "Next Target"),
             ("[", "Previous Target"),
-            ("Tab", "Target Mode"),
-            ("Space", "Autopilot"),
-            ("L", "Land"),
+            ("T", "Target Mode"),
             ("M", "Star Map"),
             ("ESC", "Pause"),
         ]
@@ -846,30 +844,39 @@ class SpaceScreen(ScreenBase):
                 color=YELLOW, shadow_color=(60, 45, 10)
             )
 
-        # --- Bottom-center: current status (autopilot/landing/jump -
-        # mutually exclusive), standalone now that the control-help bar
-        # that used to anchor it has moved to the left pane.
-        status_text, status_color = None, None
+        # --- Bottom-center: current status. Being mid-jump or having
+        # autopilot engaged are exclusive committed states (almost any key
+        # cancels/doesn't apply), but the land/jump/autopilot *availability*
+        # prompts are independent of each other and can all be true at
+        # once, so they stack as separate lines in one panel instead of
+        # being mutually exclusive.
+        status_lines = []
         if self.jump_state:
             status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
-            status_color = CYAN
+            status_lines = [(status_text, CYAN)]
         elif self.player.autopilot_active:
-            status_text = "Autopilot engaged - press any key to cancel"
-            status_color = CYAN
-        elif self.landing_text > 0:
-            status_text = "Press L to land"
-            status_color = YELLOW
-        elif self.selected_system_id:
-            status_text = "Press J to Jump"
-            status_color = CYAN
+            status_lines = [("Autopilot engaged - press any key to cancel", CYAN)]
+        else:
+            if self.landing_text > 0:
+                status_lines.append(("Press L to Land", YELLOW))
+            if self.selected_system_id:
+                status_lines.append(("Press J to Jump", CYAN))
+            if target_obj:
+                status_lines.append(("Press Space for Autopilot", CYAN))
 
-        if status_text:
+        if status_lines:
             font_status = get_font(int(22 * ui_scale))
-            status_render = font_status.render(status_text, True, status_color)
-            status_panel = pygame.Rect(0, 0, status_render.get_width() + pad_x * 2, status_render.get_height() + pad_y * 2)
+            status_rendered = [font_status.render(text, True, color) for text, color in status_lines]
+            status_line_height = status_rendered[0].get_height() + int(4 * ui_scale)
+            status_width = max(text.get_width() for text in status_rendered) + pad_x * 2
+            status_height = pad_y * 2 + status_line_height * len(status_rendered) - int(4 * ui_scale)
+            status_panel = pygame.Rect(0, 0, status_width, status_height)
             status_panel.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
             draw_glass_panel(surface, status_panel, ui_scale)
-            surface.blit(status_render, (status_panel.x + pad_x, status_panel.y + pad_y))
+            for i, text in enumerate(status_rendered):
+                text_x = status_panel.centerx - text.get_width() // 2
+                text_y = status_panel.y + pad_y + i * status_line_height
+                surface.blit(text, (text_x, text_y))
 
     def get_state(self):
         state = {
