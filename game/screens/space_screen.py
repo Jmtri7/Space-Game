@@ -9,7 +9,7 @@ from game.utils import (
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems
 )
 import game.utils as utils
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -838,19 +838,7 @@ class SpaceScreen(ScreenBase):
             if target_obj:
                 status_lines.append(("Press Space for Autopilot", GREEN))
 
-        if status_lines:
-            font_status = get_font(int(22 * ui_scale))
-            status_rendered = [font_status.render(text, True, color) for text, color in status_lines]
-            status_line_height = status_rendered[0].get_height() + int(4 * ui_scale)
-            status_width = max(text.get_width() for text in status_rendered) + pad_x * 2
-            status_height = pad_y * 2 + status_line_height * len(status_rendered) - int(4 * ui_scale)
-            status_panel = pygame.Rect(0, 0, status_width, status_height)
-            status_panel.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
-            draw_glass_panel(surface, status_panel, ui_scale)
-            for i, text in enumerate(status_rendered):
-                text_x = status_panel.centerx - text.get_width() // 2
-                text_y = status_panel.y + pad_y + i * status_line_height
-                surface.blit(text, (text_x, text_y))
+        draw_status_pane(surface, status_lines, ui_scale)
 
     def get_state(self):
         state = {

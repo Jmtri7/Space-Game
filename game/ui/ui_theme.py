@@ -4,6 +4,7 @@ CLAUDE.md's One Class Per File rule for why this file is an exception."""
 import pygame
 from game.constants import YELLOW, WHITE
 from game.utils import get_font
+import game.utils as utils
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
@@ -70,6 +71,38 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
         surface.blit(colon_rendered, (colon_x, row_y))
         surface.blit(desc_text, (desc_x, row_y))
     return rect
+
+
+def draw_status_pane(surface, status_lines, ui_scale):
+    """Draw a bottom-center glass panel of stacked, colored status lines -
+    transient "you can do X now" prompts (landing, jumping, autopilot,
+    talking to an NPC...) that are each independently true or false and so
+    stack as separate lines in one panel rather than being mutually
+    exclusive. `status_lines` is a list of (text, color) tuples; drawing is
+    skipped entirely (returns None) when there's nothing to show, so the
+    panel doesn't flash an empty box. Anchored to the real screen edges
+    (utils.screen_width/height), not get_ui_offset(), matching the rest of
+    the space/interior HUD - see SpaceScreen._draw_hud's docstring for why.
+    Shared by the space view and interior locations so their status panes
+    look and behave identically.
+    """
+    if not status_lines:
+        return None
+    font_status = get_font(int(22 * ui_scale))
+    pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+    margin = int(10 * ui_scale)
+    status_rendered = [font_status.render(text, True, color) for text, color in status_lines]
+    status_line_height = status_rendered[0].get_height() + int(4 * ui_scale)
+    status_width = max(text.get_width() for text in status_rendered) + pad_x * 2
+    status_height = pad_y * 2 + status_line_height * len(status_rendered) - int(4 * ui_scale)
+    status_panel = pygame.Rect(0, 0, status_width, status_height)
+    status_panel.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
+    draw_glass_panel(surface, status_panel, ui_scale)
+    for i, text in enumerate(status_rendered):
+        text_x = status_panel.centerx - text.get_width() // 2
+        text_y = status_panel.y + pad_y + i * status_line_height
+        surface.blit(text, (text_x, text_y))
+    return status_panel
 
 
 def draw_selection_highlight(surface, rect, scale, pulse):

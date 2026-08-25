@@ -2,9 +2,9 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, RED
 from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_controls_pane
+from game.ui.ui_theme import draw_controls_pane, draw_status_pane
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
@@ -219,7 +219,7 @@ class LocationScreen(ScreenBase):
 
     def _targetable_people(self):
         """NPCs plus any visiting AI pilots currently in this location -
-        anyone the player can target/talk to with T/Enter. self.npcs holds
+        anyone the player can target with []/talk to with T. self.npcs holds
         Character wrappers (see _build_local_character); self.visitors are
         already bare Person objects (the *same* Character.person a visiting
         pilot's AIShip-successor tracks in SpaceScreen.ai_ships - never
@@ -228,7 +228,7 @@ class LocationScreen(ScreenBase):
 
     def _cycle_npc_target(self, direction=1):
         """Cycle through targetable NPCs and visiting pilots - direction=1
-        for T/], -1 for [."""
+        for ], -1 for [."""
         people = self._targetable_people()
         if not people:
             return
@@ -370,24 +370,30 @@ class LocationScreen(ScreenBase):
 
         # Top-left control-reference pane - same design as SpaceScreen's
         # (see draw_controls_pane), with the controls that apply here.
+        # Anchored to the real screen corner (not get_ui_offset()'s
+        # letterboxed 800x600 canvas), matching SpaceScreen's own pane.
         control_margin = int(10 * ui_scale)
         help_items = [
             ("ESC", "Pause"),
             ("W/A/S/D", "Move"),
-            ("T / ]", "Next Target"),
+            ("]", "Next Target"),
             ("[", "Previous Target"),
-            ("Enter", "Talk"),
-            ("L", "Exit"),
             ("P", "View Possessions"),
         ]
-        draw_controls_pane(surface, int(offset_x + control_margin), int(offset_y + control_margin), "Controls", help_items, ui_scale)
+        draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
 
-        prompt_y = int(offset_y + surface.get_height() - 30)
+        # Bottom-center status pane (see draw_status_pane) - entrance and
+        # talk prompts are independent of each other and can both be true
+        # at once, so they stack as separate lines in one panel.
+        status_lines = []
         if in_entrance_range:
-            font_prompt = pygame.font.Font(None, int(20 * ui_scale))
-            prompt_text = font_prompt.render("Press L to exit", True, YELLOW)
-            prompt_x = int(offset_x + surface.get_width() // 2 - prompt_text.get_width() // 2)
-            surface.blit(prompt_text, (prompt_x, prompt_y))
+            status_lines.append(("Press L to enter portal", GREEN))
+        if target_npc:
+            if target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
+                status_lines.append(("Press T to talk", GREEN))
+            else:
+                status_lines.append(("Approach target to talk", RED))
+        draw_status_pane(surface, status_lines, ui_scale)
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
@@ -534,11 +540,11 @@ class LocationScreen(ScreenBase):
                         # either way, so an unusable option is still visible
                         # with its reason instead of L silently doing nothing.
                         return "exit_menu"
-            elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
+            elif event.key == pygame.K_RIGHTBRACKET:
                 self._cycle_npc_target(1)
             elif event.key == pygame.K_LEFTBRACKET:
                 self._cycle_npc_target(-1)
-            elif event.key == pygame.K_RETURN:
+            elif event.key == pygame.K_t:
                 target_npc = self._get_npc_target()
                 if target_npc and target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
                     # Always start a fresh conversation at the root node -
