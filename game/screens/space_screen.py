@@ -182,19 +182,27 @@ class SpaceScreen(ScreenBase):
         landable.interior_screens[key] = screen
         return screen
 
-    def _on_ship_purchased(self, ship_type_id):
-        """Configure the player's real ship to match a newly bought type,
-        and park it right at the station - so it's "docked outside" exactly
-        as a salesman's dialogue would say, ready the moment the player
-        boards through the spaceport's exit. Reapplies the same stat block
-        __init__ applies from story.json's starting ship, just triggered by
-        a purchase instead of game start."""
+    def _apply_ship_type(self, ship_type_id):
+        """Configure the player's real ship's stats/graphics to match
+        ship_type_id - reapplies the same stat block __init__ applies from
+        story.json's starting ship. Used both right after a purchase and
+        (via restore_state) after loading a save, since __init__ always
+        starts the player's placeholder Ship from story.json's default
+        type - a save must re-equip whatever was actually last bought,
+        or a save/load round-trip would silently revert to that default."""
         ship_type = get_ship_type(self.story, ship_type_id)
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
         self.player.ship.acceleration_magnitude = ship_type.get("max_thrust", self.player.ship.acceleration_magnitude)
         self.player.ship.max_velocity = ship_type.get("max_velocity", self.player.ship.max_velocity)
         self.player.ship.rotation_speed = ship_type.get("rotation_speed", self.player.ship.rotation_speed)
         self.player.ship.graphics = graphics
+
+    def _on_ship_purchased(self, ship_type_id):
+        """Configure the player's real ship to match a newly bought type,
+        and park it right at the station - so it's "docked outside" exactly
+        as a salesman's dialogue would say, ready the moment the player
+        boards through the spaceport's exit."""
+        self._apply_ship_type(ship_type_id)
         self.player.x, self.player.y = self.station.x, self.station.y
         self.player.park()
 
@@ -666,6 +674,15 @@ class SpaceScreen(ScreenBase):
             self.player.thrust = player_state.get("thrust", self.player.thrust)
         if "possessions" in state:
             self.player.person.possessions.restore_from(state["possessions"])
+            # __init__ always starts the player's Ship from story.json's
+            # default type, regardless of what was actually bought before
+            # saving - re-equip whichever ship they most recently bought
+            # (last entry in owned_ships), or the ship visibly reverts to
+            # that default (e.g. showing a Patrol when a Shuttle was
+            # actually purchased) even though possessions itself is correct.
+            owned_ships = self.player.person.possessions.owned_ships
+            if owned_ships:
+                self._apply_ship_type(owned_ships[-1])
         # Restore all AI ships
         if "ai_ships" in state:
             for i, ai_state in enumerate(state["ai_ships"]):

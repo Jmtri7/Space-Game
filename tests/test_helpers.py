@@ -37,6 +37,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.character import Character
 from game.ui.selectable_list import SelectableList
+from game.screens.space_screen import SpaceScreen
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -686,6 +687,43 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         for _ in range(200):
             screen.update_physics()
         self.assertNotEqual((wanderer.x, wanderer.y), before)
+
+
+class TestSpaceScreenShipTypePersistence(unittest.TestCase):
+    """Regression test: SpaceScreen.__init__() always starts the player's
+    Ship from story.json's default player_type - after buying a ship and
+    saving, loading the save (a fresh SpaceScreen + restore_state()) used
+    to silently revert the player back to that story default instead of
+    whatever they'd actually bought, even though Possessions itself
+    restored correctly."""
+
+    def test_restore_state_reequips_the_last_purchased_ship(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport", 800, 600)
+        spaceport._apply_dialogue_action("buy_ship:shuttle")
+        self.assertEqual(game_screen.player.ship.graphics.get("size"), 10)  # shuttle's configured size
+
+        state = game_screen.get_state()
+
+        fresh = SpaceScreen(pilot_name="Test", story="default")
+        fresh.restore_state(state)
+        self.assertEqual(fresh.player.ship.graphics.get("size"), 10,
+                          "Loading a save must re-equip the bought ship, not story.json's starting default")
+
+    def test_restore_state_from_a_docked_location_save_also_reequips(self):
+        """The station/moon save path builds game_state from
+        LocationScreen.get_state() (no top-level "player"/"ai_ships" keys),
+        not SpaceScreen.get_state() - restore_state() must still pick up
+        "possessions" from it and re-equip accordingly."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport", 800, 600)
+        spaceport._apply_dialogue_action("buy_ship:shuttle")
+
+        docked_state = spaceport.get_state()  # {"player": {...}, "possessions": {...}} - no ai_ships key
+
+        fresh = SpaceScreen(pilot_name="Test", story="default")
+        fresh.restore_state(docked_state)
+        self.assertEqual(fresh.player.ship.graphics.get("size"), 10)
 
 
 class TestLocationScreenEconomy(unittest.TestCase):

@@ -148,6 +148,14 @@ restores `possessions` (mutates the existing `Possessions` object in place - see
 above), then loops `state["ai_ships"]` and restores each by index into
 `self.ai_ships` (extra saved ships beyond the current story's count are ignored).
 
+Restoring `possessions` also re-equips the player's actual `Ship` (stats +
+graphics) to whichever type is last in `owned_ships` - `SpaceScreen.__init__`
+always starts the player's `Ship` from `story.json`'s `player_type` default
+(there's no other sensible placeholder before anything's been bought), so
+without this, loading a save would silently put the player back in that
+default ship instead of whatever they'd actually purchased. See
+`SpaceScreen._apply_ship_type()`, shared with `_on_ship_purchased()`.
+
 **In `LocationScreen`:** restores the player's x/y and `possessions` (same
 in-place mutation).
 
