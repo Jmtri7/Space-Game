@@ -536,7 +536,7 @@ class LocationScreen(ScreenBase):
         # letterboxed 800x600 canvas), matching SpaceScreen's own pane.
         help_items = [
             ("ESC", "Pause"),
-            ("W/A/S/D", "Move"),
+            ("WASD/Arrows", "Move"),
             ("]", "Next Target"),
             ("[", "Previous Target"),
             ("P", "View Possessions"),
