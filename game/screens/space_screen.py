@@ -830,6 +830,7 @@ class SpaceScreen(ScreenBase):
         # see draw_controls_pane).
         help_items = [
             ("ESC", "Pause"),
+            ("WASD/Arrows", "Thrust/Turn"),
             ("T", "Target Mode"),
             ("]", "Next Target"),
             ("[", "Previous Target"),
