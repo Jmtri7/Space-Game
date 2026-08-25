@@ -8,6 +8,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 - **[CONTROLS.md](CONTROLS.md)** — All keyboard bindings and player controls
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — Class hierarchy, entity design, base classes
 - **[PHYSICS.md](PHYSICS.md)** — Coordinate systems, movement, collision
+- **[AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md)** ⚠️ — Required testing protocol before changing `SeekMode`/`OrbitMode`
 - **[SAVE_SYSTEM.md](SAVE_SYSTEM.md)** — Persistence, state management, file format
 - **[UI_FLOW.md](UI_FLOW.md)** — Menu state machine, screen transitions
 - **[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)** — Reusable solutions and architectural decisions
@@ -22,6 +23,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 
 ### Fixing Bugs
 - Physics issues → [PHYSICS.md](PHYSICS.md)
+- Autopilot/`SeekMode`/`OrbitMode` changes → [AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md) first, always
 - State/save problems → [SAVE_SYSTEM.md](SAVE_SYSTEM.md)
 - UI/menu bugs → [UI_FLOW.md](UI_FLOW.md)
 - Coordinate system issues → [PHYSICS.md](PHYSICS.md#coordinate-system)

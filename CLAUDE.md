@@ -17,6 +17,21 @@ A pygame-based space exploration game with procedurally generated star fields, A
 
 This ensures players can discover controls, agents know where to look, and conflicts are avoided.
 
+## For Agents: Autopilot & Physics Routine Changes
+
+**⚠️ Read [docs/AUTOPILOT_TESTING.md](docs/AUTOPILOT_TESTING.md) before changing `SeekMode`,
+`OrbitMode`, or their shared helpers in `game/world/autopilot.py`.** This code has a real
+history of regressions that looked fine in a quick manual test and weren't - warn the user
+up front that you'll validate against the documented battery (headless simulation across all
+three ship types, both at-rest and pre-existing-velocity scenarios) before calling any change
+done, not just fly it once and report success.
+
+Known-good versions are preserved by commit specifically so they can be restored surgically -
+every change so far has touched only `SeekMode.update()` and its immediate helpers, never any
+other file, so reverting is always `git show <commit>:game/world/autopilot.py >
+game/world/autopilot.py`. See the version history table in AUTOPILOT_TESTING.md for which
+commit is which.
+
 ## For Agents: Pattern Recognition & Contributions
 
 **Read this:** When implementing features or fixes, watch for opportunities to **generalize solutions into reusable patterns**. If you notice:
