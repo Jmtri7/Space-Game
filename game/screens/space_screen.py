@@ -287,7 +287,13 @@ class SpaceScreen(ScreenBase):
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
-        self.player.handle_input(keys)
+        # Manual rotation/thrust are locked out during a jump - _update_jump()
+        # drives the ship's angle (align phase) and reads it straight back
+        # into velocity every frame (travel phase, see _update_jump()), so a
+        # held turn key during travel would otherwise silently steer the
+        # jump off its heading instead of it being a fixed, committed course.
+        if not self.jump_state:
+            self.player.handle_input(keys)
 
         for event in events:
             if event.type == pygame.KEYDOWN:
