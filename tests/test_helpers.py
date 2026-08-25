@@ -838,5 +838,34 @@ class TestSelectableListDisabledNavigation(unittest.TestCase):
         # Never enters an infinite loop - capped at len(items) steps.
 
 
+class TestSelectableListItemsShrink(unittest.TestCase):
+    """Regression test: SaveDialog crashed (IndexError in current()) when
+    deleting the last-selected save shrank the list out from under a
+    SelectableList whose `selected` index wasn't updated to match - e.g.
+    deleting save 3 of 3 left `selected == 2` pointing past the new 2-item
+    list. SaveDialog's existing_saves setter reassigns `.list.items`
+    directly (see game/ui/save_dialog.py), so the fix has to live in
+    SelectableList itself, not in whoever mutates it."""
+
+    def test_current_does_not_crash_when_items_shrink_past_selected(self):
+        selectable = SelectableList(["save1", "save2", "save3"], max_visible=5)
+        selectable.selected = 2  # "save3" was selected
+        selectable.items = ["save1", "save2"]  # save3 deleted - list shrinks
+        self.assertEqual(selectable.current(), "save2")
+        self.assertEqual(selectable.selected, 1)
+
+    def test_current_returns_none_when_items_becomes_empty(self):
+        selectable = SelectableList(["save1"], max_visible=5)
+        selectable.selected = 0
+        selectable.items = []  # the only save deleted
+        self.assertIsNone(selectable.current())
+
+    def test_draw_does_not_crash_when_items_shrink_past_selected(self):
+        selectable = SelectableList(["save1", "save2", "save3"], max_visible=5)
+        selectable.selected = 2
+        selectable.items = ["save1", "save2"]
+        selectable.draw(MagicMock(), MagicMock(), 0, 0, 20, 1.0)  # must not raise
+
+
 if __name__ == "__main__":
     unittest.main()

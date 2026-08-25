@@ -19,6 +19,19 @@ class SelectableList:
         self.selected = 0
         self.scroll_offset = 0
 
+    def _clamp_selected(self):
+        """Keep `selected`/`scroll_offset` valid even if `.items` was
+        reassigned to a shorter list from outside (e.g. SaveDialog
+        refreshing its list after deleting the currently-selected save) -
+        without this, a stale `selected` past the new end indexes out of
+        range instead of just landing on the last remaining item."""
+        if not self.items:
+            self.selected = 0
+            self.scroll_offset = 0
+            return
+        self.selected = max(0, min(self.selected, len(self.items) - 1))
+        self.scroll_offset = max(0, min(self.scroll_offset, max(0, len(self.items) - self.max_visible)))
+
     def handle_key(self, key, disabled_fn=None):
         """Update selection/scroll for an UP/DOWN/W/S keypress.
 
@@ -27,6 +40,7 @@ class SelectableList:
         possible to navigate onto (and thus confirm) one, matching draw()'s
         dim/unselectable rendering. Capped at len(items) steps so a list
         that's entirely disabled can't spin forever."""
+        self._clamp_selected()
         self.selected, self.scroll_offset = _handle_scrolling_input(
             key, self.selected, self.items, self.scroll_offset, self.max_visible)
         if not disabled_fn:
@@ -39,6 +53,7 @@ class SelectableList:
 
     def current(self):
         """The currently selected item, or None if the list is empty."""
+        self._clamp_selected()
         return self.items[self.selected] if self.items else None
 
     def draw(self, surface, font, center_x, start_y, line_height, scale, label_fn=str, disabled_fn=None):
@@ -46,6 +61,7 @@ class SelectableList:
         drawn dim with its reason appended, never in the normal selected/
         unselected colors - used for options the player can't currently
         take (e.g. can't afford, already own one)."""
+        self._clamp_selected()
         if not self.items:
             return
 
