@@ -352,6 +352,18 @@ class TestDockRoutineExitChoice(unittest.TestCase):
     def _make_ai_ship(self, role):
         return SimpleNamespace(role=role, person=Person(0, 0))
 
+    def _register_test_role(self, role, preference):
+        """Register a throwaway role -> preference entry in the real
+        ROLE_EXIT_PREFERENCE dict for the duration of one test, so
+        "does a role that prefers multiple connected locations behave
+        correctly" can be tested as a general mechanism, independent of
+        whatever the real game's freighter_pilot preference happens to be
+        tuned to right now (see the "wilderness" flavor removed after it
+        caused a visiting pilot to visibly glitch in and out of an empty
+        room - the mechanism itself was never the problem)."""
+        ROLE_EXIT_PREFERENCE[role] = preference
+        self.addCleanup(ROLE_EXIT_PREFERENCE.pop, role, None)
+
     def test_unconfigured_role_always_returns_to_ship(self):
         """A role with no ROLE_EXIT_PREFERENCE entry falls back to
         DEFAULT_EXIT_PREFERENCE - reboards immediately, exactly like every
@@ -362,28 +374,32 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         self.assertEqual(routine._choose_exit(ai_ship), "ship")
 
     def test_configured_role_prefers_connected_location(self):
+        self._register_test_role("test_multi_stop_role", ["wilderness", "ship"])
         routine = DockRoutine(route=[])
         routine._location = SimpleNamespace(get_exit_options=lambda: ["wilderness", "ship"])
-        ai_ship = self._make_ai_ship(role="freighter_pilot")
-        self.assertEqual(ROLE_EXIT_PREFERENCE["freighter_pilot"][0], "wilderness")
+        ai_ship = self._make_ai_ship(role="test_multi_stop_role")
         self.assertEqual(routine._choose_exit(ai_ship), "wilderness")
 
     def test_already_visited_location_is_skipped(self):
         """Regression test: a role preferring both connected locations
         must not pick one it already visited this stop, or it would
         ping-pong between them forever and never reboard."""
+        self._register_test_role("test_multi_stop_role", ["city", "ship"])
         routine = DockRoutine(route=[])
         routine._location = SimpleNamespace(get_exit_options=lambda: ["city", "ship"])
         routine._visited_this_stop = {"city"}
-        ai_ship = self._make_ai_ship(role="freighter_pilot")
+        ai_ship = self._make_ai_ship(role="test_multi_stop_role")
         self.assertEqual(routine._choose_exit(ai_ship), "ship")
 
     def test_full_stop_visits_every_connected_location_then_reboards(self):
-        """End-to-end regression test for the ping-pong bug: a freighter
-        pilot landing at a stop with two locations that each connect back
-        to the other should visit both once, then reboard - never loop
-        forever - using the real phase machine (run()), not a
-        reimplementation of it."""
+        """End-to-end regression test for the ping-pong bug: a pilot whose
+        role prefers both of two locations that each connect back to the
+        other should visit both once, then reboard - never loop forever -
+        using the real phase machine (run()), not a reimplementation of it.
+        Uses a throwaway test role rather than the real freighter_pilot
+        (see _register_test_role) - whether the mechanism terminates
+        correctly shouldn't depend on the game's current flavor tuning."""
+        self._register_test_role("test_multi_stop_role", ["wilderness", "city", "ship"])
         city_config = {"label": "City", "connected_locations": ["wilderness"], "npcs": []}
         wilderness_config = {"label": "Wilderness", "connected_locations": ["city"], "npcs": []}
         stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
@@ -399,7 +415,7 @@ class TestDockRoutineExitChoice(unittest.TestCase):
             return interior_cache[cache_key]
 
         ai_ship = SimpleNamespace(
-            role="freighter_pilot",
+            role="test_multi_stop_role",
             person=Person(0, 0),
             ashore=False,
             get_interior_screen=get_interior_screen,
@@ -517,6 +533,36 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         else:
             self.fail(f"never forced a reboard within {MAX_LATERAL_HOPS + 5} hops")
         self.assertLessEqual(len(routine._visited_this_stop), MAX_LATERAL_HOPS + 1)
+
+
+class TestFreighterPilotDoesNotDetourIntoEmptyWilderness(unittest.TestCase):
+    """Regression test: freighter_pilot's exit preference used to include
+    "wilderness", so a freighter landing at the moon would visit city, then
+    detour into wilderness (which has no NPC at all) just to stand at its
+    entrance for a few seconds before reboarding. If the player happened to
+    be looking at wilderness at that moment (having landed there themselves
+    while the pilot was in city), the pilot appeared to glitch into
+    existence at the entrance and vanish moments later. The real game's
+    ROLE_EXIT_PREFERENCE must never route freighter_pilot into wilderness."""
+
+    def test_elena_voss_visits_only_city_then_reboards(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        elena_ship = next(s for s in game_screen.ai_ships if s.person.name == "Elena Voss")
+        routine = elena_ship.routine
+        routine.route = [game_screen.moon]
+        routine._route_index = 0
+        routine._begin_walking_in(elena_ship)
+
+        visited_wilderness = False
+        frames = 0
+        while routine.phase != "flying" and frames < 3000:
+            if routine._location is not None and routine._location.interior_key == "wilderness":
+                visited_wilderness = True
+            routine.run(elena_ship)
+            frames += 1
+
+        self.assertEqual(routine.phase, "flying")
+        self.assertFalse(visited_wilderness, "Freighter pilot should never detour into the empty wilderness")
 
 
 class TestDockRoutineRespectsWalls(unittest.TestCase):

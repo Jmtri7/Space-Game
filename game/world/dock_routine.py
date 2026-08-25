@@ -20,8 +20,17 @@ TALK_FRAMES = 180        # ~3 seconds at 60fps
 # player owning one) - a freighter pilot landing at the concourse needs an
 # explicit route through the spaceport, not just a preference that happens
 # to be offered at the current stop.
+#
+# Deliberately does NOT include "wilderness"/"city" - an earlier version
+# had freighter_pilot detour into the moon's other location before
+# reboarding, but wilderness has no NPC to visit at all, so the pilot just
+# stood at its entrance for a few seconds doing nothing - and if the player
+# happened to be looking at wilderness at that moment (having landed there
+# themselves while the pilot was in city), it looked exactly like the pilot
+# glitching in and out of existence. Only detour toward a location that
+# actually has something in it (like the spaceport).
 ROLE_EXIT_PREFERENCE = {
-    "freighter_pilot": ["wilderness", "spaceport", "city", "ship"],
+    "freighter_pilot": ["spaceport", "ship"],
 }
 DEFAULT_EXIT_PREFERENCE = ["ship"]
 
