@@ -793,10 +793,12 @@ class SpaceScreen(ScreenBase):
             surface.blit(text, (info_rect.x + pad_x, info_rect.y + pad_y + i * line_height))
 
         # --- Top-left: control-help pane, one control per line, same text
-        # size as the targeting info panel (font_body). Key and description
-        # are rendered as separate columns (rather than one padded string)
-        # so the colons line up visually despite the default pygame font
-        # not being monospace - space-padding a single string wouldn't.
+        # size as the targeting info panel (font_body). Key, colon, and
+        # description are each rendered as separate fixed-x columns (rather
+        # than one padded string) so the colons line up despite the default
+        # pygame font not being monospace - space-padding a single string
+        # wouldn't. Keys are left-aligned at the margin, so shorter keys
+        # leave visible blank space before the colon column.
         help_title = "Controls"
         help_items = [
             ("T / ]", "Next Target"),
@@ -828,9 +830,10 @@ class SpaceScreen(ScreenBase):
         surface.blit(title_rendered, (help_rect.x + pad_x, help_rect.y + pad_y))
         colon_x = help_rect.x + pad_x + key_column_width + colon_gap
         desc_x = help_rect.x + pad_x + desc_x_offset
+        key_x = help_rect.x + pad_x
         for i, (key_text, desc_text) in enumerate(zip(key_rendered, desc_rendered)):
             row_y = help_rect.y + pad_y + (i + 2) * line_height
-            surface.blit(key_text, (colon_x - key_text.get_width(), row_y))
+            surface.blit(key_text, (key_x, row_y))
             surface.blit(colon_rendered, (colon_x, row_y))
             surface.blit(desc_text, (desc_x, row_y))
 
