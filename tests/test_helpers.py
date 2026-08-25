@@ -519,6 +519,55 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         self.assertLessEqual(len(routine._visited_this_stop), MAX_LATERAL_HOPS + 1)
 
 
+class TestDockRoutineRespectsWalls(unittest.TestCase):
+    """Regression test: DockRoutine._step_toward() moved a visiting pilot
+    in a dead-straight line toward their destination with no collision
+    checking at all, unlike the player's own movement - reproducibly
+    visible with Kepler's Reach's real station config (confirmed by
+    simulating the old unconstrained formula: the pilot spent real frames
+    outside every valid room on the way to the bartender). Fixed by giving
+    _step_toward the same LocationScreen.can_move_to() wall-sliding check
+    the player's movement already uses."""
+
+    def _make_l_shaped_screen(self):
+        """Two rooms forming an L: a straight line from the entrance to
+        the NPC crosses empty space outside both, but a route that goes
+        down the vertical corridor then across the horizontal one stays
+        inside the union the whole way - exactly what wall-sliding should
+        produce and straight-line movement can't."""
+        config = {
+            "label": "L-Shaped Test Room", "culture": None,
+            "rooms": [
+                {"label": "Vertical", "rect": [50, 50, 100, 500]},
+                {"label": "Horizontal", "rect": [50, 450, 500, 100]},
+            ],
+            "npcs": [{"name": "Target", "x": 500, "y": 500, "role": "resident"}],
+        }
+        screen = LocationScreen(config_data=config, world_width=600, world_height=600)
+        screen.rooms = config["rooms"]  # bypass culture-gated room population, see other tests
+        screen.entrance_x, screen.entrance_y = 100, 100
+        return screen
+
+    def test_pilot_never_leaves_the_walkable_area_walking_an_l_shaped_room(self):
+        location = self._make_l_shaped_screen()
+        ai_ship = SimpleNamespace(pilot_person=Person(100, 100))
+        routine = DockRoutine(route=[])
+        routine._location = location
+        routine._destination = (500, 500)  # the NPC, in the far corner of the L
+
+        frames = 0
+        while frames < 500:
+            if routine._step_toward(ai_ship.pilot_person):
+                break
+            self.assertTrue(
+                location.can_move_to(ai_ship.pilot_person.x, ai_ship.pilot_person.y),
+                f"Pilot left the walkable area at ({ai_ship.pilot_person.x}, {ai_ship.pilot_person.y})",
+            )
+            frames += 1
+        else:
+            self.fail("Pilot never arrived within 500 frames")
+
+
 class TestPossessions(unittest.TestCase):
     """Test Possessions - credits/ships/loans, composed onto every Person
     (see game/world/person.py), not just the player."""

@@ -346,7 +346,16 @@ def main():
                     current_screen = exit_menu_return_screen
                 # A modal menu, like PauseMenu - the rest of the world
                 # (space physics, other cached interiors) stays frozen
-                # while it's open.
+                # while it's open. Redraw whichever interior it was opened
+                # over first - ExitMenu only paints a centered panel, not a
+                # full-screen fill, so skipping this left the *previous*
+                # frame's interior (e.g. the spaceport, Dax Renner and all)
+                # visible behind the menu instead of the one actually being
+                # left, which looked exactly like an NPC in two rooms at once.
+                if exit_menu_return_screen == "station" and station_interior:
+                    station_interior.draw(screen)
+                elif exit_menu_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen)
                 exit_menu.draw(screen)
 
             elif current_screen == "possessions":

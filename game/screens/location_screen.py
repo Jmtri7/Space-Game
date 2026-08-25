@@ -500,24 +500,29 @@ class LocationScreen(ScreenBase):
             new_x += self.speed
 
         # Check bounds
-        if can_move_func:
-            can_move = can_move_func(new_x, new_y)
-        elif self.rooms:
+        can_move = can_move_func(new_x, new_y) if can_move_func else self.can_move_to(new_x, new_y)
+
+        if can_move:
+            self.player.x = new_x
+            self.player.y = new_y
+
+    def can_move_to(self, x, y):
+        """Whether (x, y) is inside this location's walkable area - the
+        default bounds check _handle_movement uses for the player, exposed
+        so anyone else moving a body around this location (e.g. DockRoutine
+        walking a visiting pilot to an NPC) can respect the same walls
+        instead of clipping straight through them."""
+        if self.rooms:
             # Inclusive bounds (<=), not strict (<) - two touching rooms
             # (e.g. Entrance Hall/Bar sharing the line y=300) must both
             # accept landing exactly on that shared boundary, or a step
             # that lands exactly there (all coordinates here are integers
             # and speed is a fixed 3, so this isn't a rare float fluke -
             # roughly a third of all positions hit it) is invalid in both
-            # rooms at once and the player gets stuck one step short of an
-            # invisible wall, unable to cross at all.
-            can_move = any(fx <= new_x <= fx + fw and fy <= new_y <= fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
-        else:
-            can_move = (0 < new_x < self.world_width and 0 < new_y < self.world_height)
-
-        if can_move:
-            self.player.x = new_x
-            self.player.y = new_y
+            # rooms at once and whoever's moving gets stuck one step short
+            # of an invisible wall, unable to cross at all.
+            return any(fx <= x <= fx + fw and fy <= y <= fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
+        return 0 < x < self.world_width and 0 < y < self.world_height
 
     def update_camera(self):
         """Update global camera to follow player"""

@@ -159,14 +159,22 @@ class DockRoutine:
         self.phase = "walking_in"
 
     def _step_toward(self, person):
-        """Move person one step toward self._destination. Returns True once arrived."""
+        """Move person one step toward self._destination, respecting
+        self._location's walls (wall-sliding: try the full diagonal step,
+        then each axis alone, so a wall corner deflects the walk instead of
+        the pilot clipping straight through it) - the same walkable-area
+        check the player's own movement uses (LocationScreen.can_move_to).
+        Returns True once arrived."""
         dx, dy = self._destination[0] - person.x, self._destination[1] - person.y
         dist = math.hypot(dx, dy)
         if dist <= ARRIVAL_DISTANCE:
             return True
         step = min(WALK_SPEED, dist)
-        person.x += dx / dist * step
-        person.y += dy / dist * step
+        step_x, step_y = dx / dist * step, dy / dist * step
+        for candidate_x, candidate_y in ((person.x + step_x, person.y + step_y), (person.x + step_x, person.y), (person.x, person.y + step_y)):
+            if self._location.can_move_to(candidate_x, candidate_y):
+                person.x, person.y = candidate_x, candidate_y
+                break
         return False
 
     def _reboard(self, character):
