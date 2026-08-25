@@ -36,6 +36,15 @@ class LocationScreen(ScreenBase):
         self.entrance_y = start_y
         self.entrance_range = 50  # How close to entrance to exit
 
+        # Where the entrance leads: any sibling interior keys (within the
+        # same landable's "interiors" dict) reachable on foot from here,
+        # plus whether leaving also offers "back to the ship" at all. A
+        # location with no connected_locations and the return_to_ship
+        # default of True behaves exactly as before - a single, immediate
+        # exit back to space.
+        self.connected_locations = self.config.get("connected_locations", [])
+        self.return_to_ship = self.config.get("return_to_ship", True)
+
         # Get display properties
         self.ui_label = self.config.get("label", "Location")
         self.bg_color = tuple(self.config.get("background_color", [50, 50, 70]))
@@ -87,6 +96,17 @@ class LocationScreen(ScreenBase):
         # room with, even while docked at a different station than the
         # player happens to be standing in.
         self.visitors = []
+
+    def get_exit_options(self):
+        """Ordered destinations available through this location's exit:
+        each connected_locations key (in config order), then "ship" last
+        if return_to_ship allows it. Used both to drive the player's exit
+        menu and by AI routines (see DockRoutine) choosing where to go
+        next - same list, same meaning, for both."""
+        options = list(self.connected_locations)
+        if self.return_to_ship:
+            options.append("ship")
+        return options
 
     def _targetable_people(self):
         """NPCs plus any visiting AI pilots currently in this location -
@@ -307,7 +327,13 @@ class LocationScreen(ScreenBase):
                 # Only allow exit if near entrance
                 dist_to_entrance = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2)
                 if dist_to_entrance <= self.entrance_range:
-                    return "exit"
+                    options = self.get_exit_options()
+                    if len(options) > 1:
+                        # More than one place this exit leads - let the
+                        # player pick instead of guessing for them.
+                        return "exit_menu"
+                    elif len(options) == 1:
+                        return "exit" if options[0] == "ship" else f"exit_to:{options[0]}"
             elif event.key in (pygame.K_t, pygame.K_RIGHTBRACKET):
                 self._cycle_npc_target(1)
             elif event.key == pygame.K_LEFTBRACKET:

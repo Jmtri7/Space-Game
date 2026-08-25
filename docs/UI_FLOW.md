@@ -48,6 +48,13 @@ Menu hierarchy, screen transitions, and state management.
 removing a save directly from the Load screen, independent of the Pause-menu
 Save dialog's delete flow shown above.
 
+The diagram above shows the simple case where a `LocationScreen`'s exit
+(`L` near the entrance) leads to only one place, and so acts immediately.
+When its config's `connected_locations` and/or `return_to_ship` add up to
+more than one destination, `L` instead opens `ExitMenu` (see STATION / MOON
+below) - the player picks "Return to Ship" (→ GAME) or a connected location
+(→ that location's own `LocationScreen`, staying in `"station"`/`"moon"`).
+
 ## Screen Descriptions
 
 ### Main Menu (`Menu`)
@@ -122,14 +129,32 @@ not a station-only or moon-only screen.
 
 **Inputs:**
 - LEFT/RIGHT/UP/DOWN or WASD: move
-- L: exit (only within range of the entrance marker) → back to GAME
+- L: exit (only within range of the entrance marker) - see `get_exit_options()`:
+  - Exactly one destination configured → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
+  - More than one → opens `ExitMenu`
 - ESC: pause
 
 While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
 
 **Transitions:**
-- L (near entrance) → GAME
+- L (near entrance, single destination) → GAME or a connected location's `LocationScreen`
+- L (near entrance, multiple destinations) → `ExitMenu`
 - ESC → PauseMenu
+
+### ExitMenu
+**Shows:** The destinations offered by the current location's exit - each
+`connected_locations` key (labeled from that sibling interior's own
+`"label"`) plus "Return to Ship" if `return_to_ship` allows it. Only ever
+shown when there's more than one option; AI pilots (`DockRoutine`) pick
+from this same option list automatically via `ROLE_EXIT_PREFERENCE`
+instead of getting a menu.
+
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: cancel (stay in the current location)
+
+**Transitions:**
+- RETURN on "Return to Ship" → GAME
+- RETURN on a connected location → that location's `LocationScreen` (still `"station"`/`"moon"`)
+- ESC → back to the location the menu was opened from
 
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
@@ -204,11 +229,13 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 `"menu"` → `"story_select"` → `"pilot_name"` → `"game"`
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"`
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
+`"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
 `"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)
 
 **Invalid (prevented by code):**
 - PauseMenu blocks its own input while `SaveDialog`/`ConfirmDialog` is open
 - `LocationScreen` only exits (`L`) within `entrance_range` of the entrance marker
+- `ExitMenu` only appears when `get_exit_options()` has more than one entry; with zero or one it's skipped entirely (no-op or immediate exit)
 - Landing only triggers when both close enough (`landing_distance`) and slow enough (`speed < 0.4`)
 
 ## Input Handling Pattern

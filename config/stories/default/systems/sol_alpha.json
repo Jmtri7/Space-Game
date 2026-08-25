@@ -94,6 +94,7 @@
         "label": "Moon City",
         "description": "Lunar metropolitan settlement",
         "background_color": [150, 150, 150],
+        "connected_locations": ["wilderness"],
         "entrance": {
           "x": 800,
           "y": 800
@@ -127,6 +128,7 @@
         "label": "Moon Wilderness",
         "description": "Natural lunar terrain",
         "background_color": [150, 150, 150],
+        "connected_locations": ["city"],
         "entrance": {
           "x": 200,
           "y": 200,

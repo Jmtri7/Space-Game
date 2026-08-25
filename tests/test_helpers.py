@@ -4,6 +4,7 @@ import os
 import tempfile
 import shutil
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch, MagicMock, PropertyMock
 
 # Add parent directory to path to import modules
@@ -29,6 +30,9 @@ sys.modules['pygame'] = pygame_mock
 import game.utils as utils
 from game.world.ship import Ship
 from game.world.landable import Landable
+from game.world.person import Person
+from game.screens.location_screen import LocationScreen
+from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -306,6 +310,115 @@ class TestAutopilotPhysics(unittest.TestCase):
                         f"Patrol velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
                         f"Patrol oscillated - ship should come to stop once, not bounce")
+
+
+class TestLocationExitOptions(unittest.TestCase):
+    """Test LocationScreen.get_exit_options() - the config-driven list of
+    where an interior's exit leads (connected_locations plus "ship"),
+    consumed by both the player's exit menu and DockRoutine's AI choice."""
+
+    def test_no_config_defaults_to_ship_only(self):
+        """A location with no connected_locations/return_to_ship in its
+        config behaves exactly like before this feature existed - a single
+        immediate exit back to the ship."""
+        screen = LocationScreen(config_data={"label": "Station"}, world_width=800, world_height=600)
+        self.assertEqual(screen.get_exit_options(), ["ship"])
+
+    def test_connected_locations_come_before_ship(self):
+        screen = LocationScreen(config_data={
+            "label": "City", "connected_locations": ["wilderness"],
+        }, world_width=1600, world_height=1600)
+        self.assertEqual(screen.get_exit_options(), ["wilderness", "ship"])
+
+    def test_return_to_ship_false_omits_ship(self):
+        screen = LocationScreen(config_data={
+            "label": "Wilderness", "connected_locations": ["city"], "return_to_ship": False,
+        }, world_width=1600, world_height=1600)
+        self.assertEqual(screen.get_exit_options(), ["city"])
+
+
+class TestDockRoutineExitChoice(unittest.TestCase):
+    """Test DockRoutine._choose_exit() - the AI-pilot equivalent of the
+    player's exit menu, driven by ROLE_EXIT_PREFERENCE instead of a
+    keypress."""
+
+    def _make_ai_ship(self, role):
+        return SimpleNamespace(pilot={"role": role}, pilot_person=Person(0, 0))
+
+    def test_unconfigured_role_always_returns_to_ship(self):
+        """A role with no ROLE_EXIT_PREFERENCE entry falls back to
+        DEFAULT_EXIT_PREFERENCE - reboards immediately, exactly like every
+        pilot did before connected_locations existed."""
+        routine = DockRoutine(route=[])
+        routine._location = SimpleNamespace(get_exit_options=lambda: ["wilderness", "ship"])
+        ai_ship = self._make_ai_ship(role="patrol_officer")
+        self.assertEqual(routine._choose_exit(ai_ship), "ship")
+
+    def test_configured_role_prefers_connected_location(self):
+        routine = DockRoutine(route=[])
+        routine._location = SimpleNamespace(get_exit_options=lambda: ["wilderness", "ship"])
+        ai_ship = self._make_ai_ship(role="freighter_pilot")
+        self.assertEqual(ROLE_EXIT_PREFERENCE["freighter_pilot"][0], "wilderness")
+        self.assertEqual(routine._choose_exit(ai_ship), "wilderness")
+
+    def test_already_visited_location_is_skipped(self):
+        """Regression test: a role preferring both connected locations
+        must not pick one it already visited this stop, or it would
+        ping-pong between them forever and never reboard."""
+        routine = DockRoutine(route=[])
+        routine._location = SimpleNamespace(get_exit_options=lambda: ["city", "ship"])
+        routine._visited_this_stop = {"city"}
+        ai_ship = self._make_ai_ship(role="freighter_pilot")
+        self.assertEqual(routine._choose_exit(ai_ship), "ship")
+
+    def test_full_stop_visits_every_connected_location_then_reboards(self):
+        """End-to-end regression test for the ping-pong bug: a freighter
+        pilot landing at a stop with two locations that each connect back
+        to the other should visit both once, then reboard - never loop
+        forever - using the real phase machine (run()), not a
+        reimplementation of it."""
+        city_config = {"label": "City", "connected_locations": ["wilderness"], "npcs": []}
+        wilderness_config = {"label": "Wilderness", "connected_locations": ["city"], "npcs": []}
+        stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
+
+        interior_cache = {}
+        def get_interior_screen(landable, key, world_width, world_height):
+            cache_key = (id(landable), key)
+            if cache_key not in interior_cache:
+                config = landable.interiors.get(key)
+                if not config:
+                    return None
+                interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
+            return interior_cache[cache_key]
+
+        ai_ship = SimpleNamespace(
+            pilot={"role": "freighter_pilot"},
+            pilot_person=Person(0, 0),
+            pilot_ashore=False,
+            get_interior_screen=get_interior_screen,
+            autopilot_active=False,
+            engage_seek=lambda target: None,
+        )
+
+        routine = DockRoutine(route=[stop])
+        routine._begin_walking_in(ai_ship)
+
+        # _visited_this_stop is cleared by _reboard() once the routine
+        # actually leaves (so the *next* stop starts with a clean slate) -
+        # so the only way to observe "did it visit both first" is to
+        # accumulate it frame by frame, not just check its state after
+        # the loop exits.
+        frames = 0
+        visited_history = set()
+        while routine.phase != "flying" and frames < 2000:
+            visited_history |= routine._visited_this_stop
+            routine.run(ai_ship)
+            frames += 1
+
+        self.assertEqual(routine.phase, "flying", "Routine got stuck instead of reboarding")
+        self.assertEqual(visited_history, {"city", "wilderness"},
+                          "Should have visited both connected locations before leaving")
+        self.assertFalse(ai_ship.pilot_ashore)
 
 
 if __name__ == "__main__":

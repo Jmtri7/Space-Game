@@ -15,6 +15,7 @@ from game.screens.space_screen import SpaceScreen
 from game.ui.menu import Menu
 from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.location_selector import LocationSelector
+from game.ui.exit_menu import ExitMenu
 from game.ui.pause_menu import PauseMenu
 from game.ui.save_dialog import SaveDialog
 from game.ui.confirm_dialog import ConfirmDialog
@@ -55,6 +56,9 @@ def main():
         station_interior = None
         moon_interior = None
         location_selector = None
+        exit_menu = None
+        exit_menu_landable = None  # game_screen.station or game_screen.moon - whichever this exit_menu is for
+        exit_menu_return_screen = None  # "station" or "moon" - where ESC/cancel goes back to
         pilot_name_dialog = None
         pause_menu = PauseMenu()
         save_dialog = None
@@ -218,6 +222,13 @@ def main():
                     current_screen = "pause"
                 elif action == "exit":
                     current_screen = "game"
+                elif action == "exit_menu":
+                    exit_menu = ExitMenu(station_interior.get_exit_options(), game_screen.station.interiors)
+                    exit_menu_landable = game_screen.station
+                    exit_menu_return_screen = "station"
+                    current_screen = "exit_menu"
+                elif action and action.startswith("exit_to:"):
+                    station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1], 800, 600)
                 # Keep space physics updated while docked (but not camera)
                 if game_screen:
                     game_screen.update_physics()
@@ -235,6 +246,26 @@ def main():
                     current_screen = "game"
                 location_selector.draw(screen)
 
+            elif current_screen == "exit_menu":
+                choice = exit_menu.handle_input(events)
+                if choice == "ship":
+                    current_screen = "game"
+                elif choice == "cancel":
+                    current_screen = exit_menu_return_screen
+                elif choice:
+                    is_station = exit_menu_landable is game_screen.station
+                    world_width, world_height = (800, 600) if is_station else (1600, 1600)
+                    interior = game_screen.get_interior_screen(exit_menu_landable, choice, world_width, world_height)
+                    if is_station:
+                        station_interior = interior
+                    else:
+                        moon_interior = interior
+                    current_screen = exit_menu_return_screen
+                # Keep space physics updated while the menu is open
+                if game_screen:
+                    game_screen.update_physics()
+                exit_menu.draw(screen)
+
             elif current_screen == "moon":
                 action = moon_interior.handle_input(events)
                 if action == "quit":
@@ -244,6 +275,13 @@ def main():
                 elif action == "pause":
                     previous_screen = "moon"
                     current_screen = "pause"
+                elif action == "exit_menu":
+                    exit_menu = ExitMenu(moon_interior.get_exit_options(), game_screen.moon.interiors)
+                    exit_menu_landable = game_screen.moon
+                    exit_menu_return_screen = "moon"
+                    current_screen = "exit_menu"
+                elif action and action.startswith("exit_to:"):
+                    moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1], 1600, 1600)
                 # Keep space physics updated while on moon (but not camera)
                 if game_screen:
                     game_screen.update_physics()

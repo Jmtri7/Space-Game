@@ -12,3 +12,7 @@ venv/
 
 # Player save files - local progress, never committed
 saves/
+
+# Runtime logs from launching the game for manual verification
+game_stdout.log
+game_stderr.log

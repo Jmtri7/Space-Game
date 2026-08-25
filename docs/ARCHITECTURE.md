@@ -28,7 +28,7 @@ ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state
                        (used for BOTH the station interior and moon locations)
 ```
 Menus and dialogs (`Menu`, `StorySelector`, `PilotNameDialog`, `LoadMenu`,
-`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`) don't extend
+`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`, `ExitMenu`) don't extend
 `ScreenBase` — they're simpler `handle_input()`/`draw()` objects driven directly
 by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 

@@ -38,7 +38,7 @@ from its center.
 | **T** or **]** | Cycle forward through targetable NPCs |
 | **[** | Cycle backward through targetable NPCs |
 | **Enter** | Talk to targeted NPC |
-| **L** | Exit station, return to space |
+| **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **ESC** | Pause menu |
 
 ## Moon Interior (City & Wilderness)
@@ -48,7 +48,7 @@ from its center.
 | **W/A/S/D** or **Arrow Keys** | Move around |
 | **T** or **]** / **[** | Cycle through targetable NPCs, forward/backward (City only) |
 | **Enter** | Talk to targeted NPC |
-| **L** | Exit moon, return to space |
+| **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **ESC** | Pause menu |
 
 ## Menus
@@ -75,6 +75,19 @@ from its center.
 | **W/↑** or **S/↓** | Navigate options |
 | **Enter** | Select option |
 | **ESC** | Resume game |
+
+### Exit Menu (interior location, when the entrance leads to more than one place)
+| Control | Action |
+|---------|--------|
+| **W/↑** or **S/↓** | Navigate destinations |
+| **Enter** | Go to selected destination (a connected location, or "Return to Ship") |
+| **ESC** | Cancel, stay put |
+
+Shown instead of leaving immediately when a location's config lists
+`connected_locations` (other interiors reachable on foot from this one,
+e.g. Moon City ↔ Wilderness) and/or sets `return_to_ship`. AI pilots
+(see `DockRoutine`) pick a destination from the same option list
+automatically, based on their role, instead of getting this menu.
 
 ## Debug Controls
 
