@@ -31,7 +31,7 @@ JUMP_SELF_MIN_DISTANCE = 700    # must be at least this far from center to jump 
 SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
 # Minimap tuning
-MINIMAP_SIZE = 170     # px, before ui_scale
+MINIMAP_SIZE = 240     # px, before ui_scale
 MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 
 # Targeting modes - cycled with Tab, filters what T/[/] can select.
@@ -704,9 +704,9 @@ class SpaceScreen(ScreenBase):
         self._draw_hud(surface, target_obj)
 
     def _draw_hud(self, surface, target_obj):
-        """Ship status, targeting, jump-target, and status-message overlays -
-        styled with the same glass-panel look as the menus (ui_theme.py)
-        instead of each being its own ad-hoc text blit.
+        """Ship status, targeting, jump-target, help, and status-message
+        overlays - styled with the same glass-panel look as the menus
+        (ui_theme.py) instead of each being its own ad-hoc text blit.
 
         Anchored directly to the real screen edges (0/screen_width/
         screen_height), not get_ui_offset() - that offset centers the
@@ -719,11 +719,16 @@ class SpaceScreen(ScreenBase):
         font_body = get_font(int(18 * ui_scale))
         pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
         margin = int(10 * ui_scale)
+        line_height = int(22 * ui_scale)
 
-        # --- Top-left: ship status panel (speed, plus target if any).
-        # Always both lines (a placeholder "None" target line rather than
-        # omitting it) so the panel doesn't resize every time targeting is
-        # toggled - only its selected/deselected color changes.
+        # --- Top-right: minimap, then targeting info (incl. jump target)
+        # stacked directly below it.
+        minimap_rect = self._draw_minimap(surface, target_obj)
+
+        # Always every line (placeholder "None" for target/jump target
+        # rather than omitting them) so the panel doesn't resize or
+        # appear/disappear as targeting and jump selection change - only
+        # colors change.
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         target_name = self._get_target_name()
         mode_label = TARGET_MODES[self.target_mode_index]
@@ -754,29 +759,42 @@ class SpaceScreen(ScreenBase):
         else:
             lines.append(("Target: None", GRAY))
 
-        line_height = int(22 * ui_scale)
+        if self.selected_system_id:
+            systems = get_star_systems(self.story)
+            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
+            jump_label = selected_name
+            if self.selected_system_id == self.system_id:
+                jump_label += " (current)"
+            lines.append((f"Jump Target: {jump_label}", CYAN))
+        else:
+            lines.append(("Jump Target: None", GRAY))
+
         rendered = [font_body.render(text, True, color) for text, color in lines]
         panel_width = max(text.get_width() for text in rendered) + pad_x * 2
         panel_height = pad_y * 2 + line_height * len(rendered)
-        status_rect = pygame.Rect(margin, margin, panel_width, panel_height)
-        draw_glass_panel(surface, status_rect, ui_scale)
+        info_rect = pygame.Rect(0, 0, panel_width, panel_height)
+        info_rect.topright = (utils.screen_width - margin, minimap_rect.bottom + margin)
+        draw_glass_panel(surface, info_rect, ui_scale)
         for i, text in enumerate(rendered):
-            surface.blit(text, (status_rect.x + pad_x, status_rect.y + pad_y + i * line_height))
+            surface.blit(text, (info_rect.x + pad_x, info_rect.y + pad_y + i * line_height))
 
-        # --- Top-right: minimap, then jump target panel stacked below it ---
-        minimap_rect = self._draw_minimap(surface, target_obj)
-
-        if not self.jump_state and self.selected_system_id:
-            systems = get_star_systems(self.story)
-            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
-            label = f"Jump Target: {selected_name}"
-            if self.selected_system_id == self.system_id:
-                label += " (current)"
-            label_text = font_body.render(label, True, CYAN)
-            jump_rect = pygame.Rect(0, 0, label_text.get_width() + pad_x * 2, label_text.get_height() + pad_y * 2)
-            jump_rect.topright = (utils.screen_width - margin, minimap_rect.bottom + margin)
-            draw_glass_panel(surface, jump_rect, ui_scale)
-            surface.blit(label_text, (jump_rect.x + pad_x, jump_rect.y + pad_y))
+        # --- Top-left: control-help pane, one control per line, same text
+        # size as the targeting info panel (font_body).
+        help_lines = [
+            "T/[/]: target",
+            "Tab: target mode",
+            "Space: autopilot",
+            "L: land",
+            "M: star map",
+            "ESC: pause",
+        ]
+        help_rendered = [font_body.render(text, True, WHITE) for text in help_lines]
+        help_panel_width = max(text.get_width() for text in help_rendered) + pad_x * 2
+        help_panel_height = pad_y * 2 + line_height * len(help_rendered)
+        help_rect = pygame.Rect(margin, margin, help_panel_width, help_panel_height)
+        draw_glass_panel(surface, help_rect, ui_scale)
+        for i, text in enumerate(help_rendered):
+            surface.blit(text, (help_rect.x + pad_x, help_rect.y + pad_y + i * line_height))
 
         # --- Top-center: transient "too close to jump" warning ---
         if self.jump_message_timer > 0:
@@ -787,15 +805,9 @@ class SpaceScreen(ScreenBase):
                 color=YELLOW, shadow_color=(60, 45, 10)
             )
 
-        # --- Bottom-center: a control-help bar (always) with the current
-        # status (autopilot/landing/jump - mutually exclusive) as its own
-        # panel directly above, so the two never crowd into one another.
-        help_text = font_body.render("T/[/]: target, Tab: target mode, Space: autopilot, L: land, M: star map, ESC: pause", True, WHITE)
-        help_rect = pygame.Rect(0, 0, help_text.get_width() + pad_x * 2, help_text.get_height() + pad_y * 2)
-        help_rect.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
-        draw_glass_panel(surface, help_rect, ui_scale)
-        surface.blit(help_text, (help_rect.x + pad_x, help_rect.y + pad_y))
-
+        # --- Bottom-center: current status (autopilot/landing/jump -
+        # mutually exclusive), standalone now that the control-help bar
+        # that used to anchor it has moved to the left pane.
         status_text, status_color = None, None
         if self.jump_state:
             status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
@@ -811,7 +823,7 @@ class SpaceScreen(ScreenBase):
             font_status = get_font(int(22 * ui_scale))
             status_render = font_status.render(status_text, True, status_color)
             status_panel = pygame.Rect(0, 0, status_render.get_width() + pad_x * 2, status_render.get_height() + pad_y * 2)
-            status_panel.midbottom = (utils.screen_width // 2, help_rect.top - int(8 * ui_scale))
+            status_panel.midbottom = (utils.screen_width // 2, utils.screen_height - margin)
             draw_glass_panel(surface, status_panel, ui_scale)
             surface.blit(status_render, (status_panel.x + pad_x, status_panel.y + pad_y))
 
