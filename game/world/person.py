@@ -28,55 +28,76 @@ class Person:
     # Body proportions, all measured up from the feet (self.x/self.y is the
     # ground position a character is standing at, not their head or
     # shoulders - matches where collision/arrival distance checks treat
-    # them as being).
-    BODY_WIDTH = 12
-    BODY_HEIGHT = 16
-    SHIRT_FRACTION = 0.6  # top portion of the body that's shirt vs legs
-    BOOT_FRACTION = 0.4  # bottom portion of the legs that's boots, when suited
-    ARM_WIDTH = 3
-    ARM_HEIGHT = 10
-    NECK_WIDTH = 4
-    NECK_HEIGHT = 3
-    HEAD_RADIUS = 5
-    HELMET_RADIUS = 6
+    # them as being). The bare body is just three shapes - a foot oval, a
+    # tapering rounded-shoulder torso polygon, and a head circle - shaded
+    # from one skin tone as if lit from above (head lightest, feet
+    # darkest). An outfit (see self.outfit) recolors the oval/polygon and
+    # adds a thick helmet ring around the head, but never changes this
+    # shape - see draw().
+    FOOT_RADIUS_X = 7       # feet oval - wider than tall
+    FOOT_RADIUS_Y = 4
+    FOOT_OVERLAP = 2         # how far the torso sinks into the top of the feet oval
+    BODY_HEIGHT = 13         # torso height, shoulders to (pre-overlap) base
+    SHOULDER_HALF_WIDTH = 7  # torso half-width at the (rounded) shoulders
+    BASE_HALF_WIDTH = 5.5    # torso half-width at the base - a bit less than the feet oval
+    SHOULDER_RADIUS = 3.5    # rounding radius of each shoulder corner
+    SHOULDER_SEGMENTS = 4    # polygon segments approximating each shoulder's curve
+    HEAD_RADIUS = 6.5        # slightly large, so it overlaps the shoulders below
+    HEAD_OVERLAP = 2         # how far the head sinks between the shoulders
+    HELMET_THICKNESS = 2.5   # ring width of a helmet, when outfitted
 
-    SHIRT_COLOR = (150, 110, 70)
-    LEGS_COLOR = (100, 70, 45)
-    SKIN_COLOR = (230, 180, 140)
+    SKIN_COLOR = (225, 180, 145)  # torso tone; head/feet are shaded from this
+
+    @staticmethod
+    def _shade(color, amount):
+        """Nudge a color's channels by amount (+lighter/-darker), clamped."""
+        return tuple(max(0, min(255, c + amount)) for c in color)
+
+    def _shoulder_arc(self, cx, cy, start_deg, end_deg):
+        """Points tracing one rounded shoulder corner, center (cx, cy),
+        sweeping from start_deg to end_deg (0=right, 90=down, 180=left,
+        270=up - screen convention, y grows downward)."""
+        points = []
+        for i in range(self.SHOULDER_SEGMENTS + 1):
+            t = start_deg + (end_deg - start_deg) * i / self.SHOULDER_SEGMENTS
+            rad = math.radians(t)
+            points.append((cx + self.SHOULDER_RADIUS * math.cos(rad), cy + self.SHOULDER_RADIUS * math.sin(rad)))
+        return points
+
+    def _torso_points(self, body_top_y, body_bottom_y):
+        """The symmetric, round-shouldered, tapering torso polygon: left
+        shoulder arc, right shoulder arc, then straight down to the (base,
+        narrower) bottom corners - which sit hidden under the feet oval's
+        overlap, so they don't need rounding too."""
+        left_center = (self.x - self.SHOULDER_HALF_WIDTH + self.SHOULDER_RADIUS, body_top_y + self.SHOULDER_RADIUS)
+        right_center = (self.x + self.SHOULDER_HALF_WIDTH - self.SHOULDER_RADIUS, body_top_y + self.SHOULDER_RADIUS)
+        points = self._shoulder_arc(*left_center, 180, 270)
+        points += self._shoulder_arc(*right_center, 270, 360)
+        points.append((self.x + self.BASE_HALF_WIDTH, body_bottom_y))
+        points.append((self.x - self.BASE_HALF_WIDTH, body_bottom_y))
+        return points
 
     def draw(self, surface):
         scale = get_scale()
-        body_top = self.y - self.BODY_HEIGHT
-        shirt_height = self.BODY_HEIGHT * self.SHIRT_FRACTION
-        legs_top = body_top + shirt_height
-        legs_height = self.BODY_HEIGHT - shirt_height
-        neck_top = body_top - self.NECK_HEIGHT
-        head_center_y = neck_top - self.HEAD_RADIUS
+        feet_top_y = self.y - self.FOOT_RADIUS_Y * 2
+        body_bottom_y = feet_top_y + self.FOOT_OVERLAP
+        body_top_y = body_bottom_y - self.BODY_HEIGHT
+        head_center_y = body_top_y - self.HEAD_RADIUS + self.HEAD_OVERLAP
 
-        # An outfit overrides the shared body's colors and adds a helmet;
-        # bare (self.outfit == {}) falls back to the plain body colors.
-        suit_color = self.outfit.get("suit_color", self.SHIRT_COLOR)
-        boot_color = self.outfit.get("boot_color", self.LEGS_COLOR)
+        # An outfit recolors the feet/torso shapes exactly as-is (no shape
+        # change) and adds a helmet ring; bare (self.outfit == {}) falls
+        # back to the shaded skin tones.
+        feet_color = self.outfit.get("boot_color", self._shade(self.SKIN_COLOR, -35))
+        torso_color = self.outfit.get("suit_color", self.SKIN_COLOR)
         helmet_color = self.outfit.get("helmet_color")
+        head_color = self._shade(self.SKIN_COLOR, 30)
 
-        # Legs (boots at the bottom, if suited), then arms flanking the
-        # torso, then the shirt on top - simple rects/circles throughout,
-        # just enough shapes to read as a person rather than a single block.
+        pygame.draw.ellipse(surface, feet_color, (*to_screen(self.x - self.FOOT_RADIUS_X, feet_top_y), to_screen_x(self.FOOT_RADIUS_X * 2), to_screen_y(self.FOOT_RADIUS_Y * 2)))
+        torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y)]
+        pygame.draw.polygon(surface, torso_color, torso_points)
         if helmet_color:
-            boot_height = legs_height * self.BOOT_FRACTION
-            pygame.draw.rect(surface, suit_color, (*to_screen(self.x - self.BODY_WIDTH / 2, legs_top), to_screen_x(self.BODY_WIDTH), to_screen_y(legs_height - boot_height)))
-            pygame.draw.rect(surface, boot_color, (*to_screen(self.x - self.BODY_WIDTH / 2, legs_top + legs_height - boot_height), to_screen_x(self.BODY_WIDTH), to_screen_y(boot_height)))
-        else:
-            pygame.draw.rect(surface, boot_color, (*to_screen(self.x - self.BODY_WIDTH / 2, legs_top), to_screen_x(self.BODY_WIDTH), to_screen_y(legs_height)))
-        pygame.draw.rect(surface, suit_color, (*to_screen(self.x - self.BODY_WIDTH / 2 - self.ARM_WIDTH, body_top), to_screen_x(self.ARM_WIDTH), to_screen_y(self.ARM_HEIGHT)))
-        pygame.draw.rect(surface, suit_color, (*to_screen(self.x + self.BODY_WIDTH / 2, body_top), to_screen_x(self.ARM_WIDTH), to_screen_y(self.ARM_HEIGHT)))
-        pygame.draw.rect(surface, suit_color, (*to_screen(self.x - self.BODY_WIDTH / 2, body_top), to_screen_x(self.BODY_WIDTH), to_screen_y(shirt_height)))
-        # A sealed helmet covers the neck too (suit_color collar); bare-headed
-        # shows a strip of skin between shirt and head instead.
-        pygame.draw.rect(surface, suit_color if helmet_color else self.SKIN_COLOR, (*to_screen(self.x - self.NECK_WIDTH / 2, neck_top), to_screen_x(self.NECK_WIDTH), to_screen_y(self.NECK_HEIGHT)))
-        if helmet_color:
-            pygame.draw.circle(surface, helmet_color, to_screen(self.x, head_center_y), max(1, int(self.HELMET_RADIUS * scale)))
-        pygame.draw.circle(surface, self.SKIN_COLOR, to_screen(self.x, head_center_y), max(1, int(self.HEAD_RADIUS * scale)))
+            pygame.draw.circle(surface, helmet_color, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS) * scale)))
+        pygame.draw.circle(surface, head_color, to_screen(self.x, head_center_y), max(1, int(self.HEAD_RADIUS * scale)))
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)

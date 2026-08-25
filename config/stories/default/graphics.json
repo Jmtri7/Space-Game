@@ -72,7 +72,7 @@
   "outfits": {
     "space_suit": {
       "helmet_color": [150, 150, 155],
-      "suit_color": [120, 25, 35],
+      "suit_color": [90, 90, 96],
       "boot_color": [25, 25, 28]
     }
   },
