@@ -3,7 +3,8 @@ leads to more than one place - shown to the player instead of LocationScreen
 immediately exiting, whenever get_exit_options() returns more than one
 option (see docs/CONTROLS.md#exit-menu)."""
 import pygame
-from game.utils import get_ui_scale, get_ui_offset, get_font
+from game.constants import GRAY
+from game.utils import get_ui_scale, get_ui_offset, get_font, _center_text_x
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title
 from game.ui.selectable_list import SelectableList
 
@@ -64,3 +65,6 @@ class ExitMenu:
         draw_glow_title(surface, "Where To?", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.3))
 
         self.list.draw(surface, font_text, panel_rect.centerx, int(offset_y + 600 * scale * 0.45), int(40 * scale), scale, label_fn=self._label, disabled_fn=self.disabled_reasons.get)
+
+        help_text = font_text.render("Enter: select, ESC: cancel", True, GRAY)
+        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.68)))
