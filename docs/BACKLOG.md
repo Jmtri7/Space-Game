@@ -32,7 +32,6 @@ see git history around that time for the individual commits.
 - [ ] Different asteroid types and quantities.
 - [ ] Unified buying/selling menus for ships, ship outfitting, and personal items.
 - [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
-- [ ] Multiple exits with different options.
 - [ ] Buying and selling ships and items.
 - [ ] Enterable buildings in cities.
 - [ ] Missions and conversations with consequences.

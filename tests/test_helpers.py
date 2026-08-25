@@ -371,14 +371,14 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         DEFAULT_EXIT_PREFERENCE - reboards immediately, exactly like every
         pilot did before connected_locations existed."""
         routine = DockRoutine(route=[])
-        routine._location = SimpleNamespace(get_exit_options=lambda: ["wilderness", "ship"])
+        routine._location = SimpleNamespace(all_exit_options=lambda: ["wilderness", "ship"])
         ai_ship = self._make_ai_ship(role="patrol_officer")
         self.assertEqual(routine._choose_exit(ai_ship), "ship")
 
     def test_configured_role_prefers_connected_location(self):
         self._register_test_role("test_multi_stop_role", ["wilderness", "ship"])
         routine = DockRoutine(route=[])
-        routine._location = SimpleNamespace(get_exit_options=lambda: ["wilderness", "ship"])
+        routine._location = SimpleNamespace(all_exit_options=lambda: ["wilderness", "ship"])
         ai_ship = self._make_ai_ship(role="test_multi_stop_role")
         self.assertEqual(routine._choose_exit(ai_ship), "wilderness")
 
@@ -388,7 +388,7 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         ping-pong between them forever and never reboard."""
         self._register_test_role("test_multi_stop_role", ["city", "ship"])
         routine = DockRoutine(route=[])
-        routine._location = SimpleNamespace(get_exit_options=lambda: ["city", "ship"])
+        routine._location = SimpleNamespace(all_exit_options=lambda: ["city", "ship"])
         routine._visited_this_stop = {"city"}
         ai_ship = self._make_ai_ship(role="test_multi_stop_role")
         self.assertEqual(routine._choose_exit(ai_ship), "ship")
@@ -493,8 +493,8 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         (only the spaceport offers it), so the routine must hop through
         whichever connected location the role's preference names, not
         wander into an unrelated dead end first."""
-        hub = SimpleNamespace(get_exit_options=lambda: ["dead_end", "spaceport"])
-        docks = SimpleNamespace(get_exit_options=lambda: ["hub", "ship"])
+        hub = SimpleNamespace(all_exit_options=lambda: ["dead_end", "spaceport"])
+        docks = SimpleNamespace(all_exit_options=lambda: ["hub", "ship"])
         routine = DockRoutine(route=[])
         routine._location = hub
         routine._visited_this_stop = {"hub"}
@@ -515,8 +515,8 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         forever - this is what actually caught the corridor<->dormitory
         ping-pong during development, before ROLE_EXIT_PREFERENCE routed
         freighter_pilot through the spaceport."""
-        room_a = SimpleNamespace(get_exit_options=lambda: ["room_b"])
-        room_b = SimpleNamespace(get_exit_options=lambda: ["room_a"])
+        room_a = SimpleNamespace(all_exit_options=lambda: ["room_b"])
+        room_b = SimpleNamespace(all_exit_options=lambda: ["room_a"])
         rooms = {"room_a": room_a, "room_b": room_b}
 
         routine = DockRoutine(route=[])

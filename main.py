@@ -307,7 +307,9 @@ def main():
                     exit_menu_return_screen = "station"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
+                    origin_key = station_interior.interior_key
                     station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1], 800, 600)
+                    station_interior.arrive_from(origin_key)
                 elif action == "possessions":
                     possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story)
                     possessions_return_screen = "station"
@@ -329,6 +331,7 @@ def main():
                 location_key = location_selector.handle_input(events)
                 if location_key and location_key in location_selector.interior_configs:
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, location_key, 1600, 1600)
+                    moon_interior.arrive_from("ship")
                     current_screen = "moon"
                 elif location_key == "cancel":
                     current_screen = "game"
@@ -343,7 +346,9 @@ def main():
                 elif choice:
                     is_station = exit_menu_landable is game_screen.station
                     world_width, world_height = (800, 600) if is_station else (1600, 1600)
+                    origin_key = (station_interior if is_station else moon_interior).interior_key
                     interior = game_screen.get_interior_screen(exit_menu_landable, choice, world_width, world_height)
+                    interior.arrive_from(origin_key)
                     if is_station:
                         station_interior = interior
                     else:
@@ -393,7 +398,9 @@ def main():
                     exit_menu_return_screen = "moon"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
+                    origin_key = moon_interior.interior_key
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1], 1600, 1600)
+                    moon_interior.arrive_from(origin_key)
                 elif action == "possessions":
                     possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story)
                     possessions_return_screen = "moon"

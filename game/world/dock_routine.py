@@ -4,13 +4,13 @@ of the same engage_seek()/park() plumbing ShuttleRoutine uses for pure
 fly-only shuttling."""
 import math
 
-WALK_SPEED = 3          # world units/frame - matches LocationScreen's player walk speed
+WALK_SPEED = 2.5         # world units/frame - matches LocationScreen's player walk speed
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
 
 # Which destination a character's role prefers when their current
-# location's exit leads to more than one place (see
-# LocationScreen.get_exit_options) - checked in order, first one actually
+# location has more than one reachable place across all its portals (see
+# LocationScreen.all_exit_options) - checked in order, first one actually
 # offered wins. Roles with no entry here fall back to
 # DEFAULT_EXIT_PREFERENCE, i.e. they head straight back to the ship exactly
 # like before connected_locations existed.
@@ -79,7 +79,8 @@ class DockRoutine:
             self._talk_timer -= 1
             if self._talk_timer <= 0:
                 self._pending_exit = self._choose_exit(character)
-                self._destination = (self._location.entrance_x, self._location.entrance_y)
+                exit_portal = self._location.portal_for(self._pending_exit)
+                self._destination = (exit_portal["x"], exit_portal["y"])
                 self.phase = "walking_out"
         elif self.phase == "walking_out":
             if self._step_toward(character.person):
@@ -128,7 +129,7 @@ class DockRoutine:
         MAX_LATERAL_HOPS is hit or there's nothing unvisited left to try;
         run() reboards unconditionally on "ship", so this is always a safe
         way to give up and fly off rather than wander forever."""
-        options = self._location.get_exit_options()
+        options = self._location.all_exit_options()
         if len(self._visited_this_stop) >= MAX_LATERAL_HOPS:
             return "ship"
         for preferred in ROLE_EXIT_PREFERENCE.get(character.role, DEFAULT_EXIT_PREFERENCE):
@@ -148,23 +149,28 @@ class DockRoutine:
             return
 
         old_location = self._location
+        origin_key = old_location.interior_key
         if character.person in old_location.visitors:
             old_location.visitors.remove(character.person)
         self._visited_this_stop.add(key)
-        self._enter_location(character, new_location)
+        self._enter_location(character, new_location, origin_key=origin_key)
 
-    def _enter_location(self, character, location):
-        """Place the character at a location's entrance, register them as a
-        visitor, and head for its first NPC (or just stand at the entrance
-        if it has none). Shared by both arriving at a stop for the first
-        time and walking laterally into a connected location."""
+    def _enter_location(self, character, location, origin_key=None):
+        """Place the character at a location's portal, register them as a
+        visitor, and head for its first NPC (or just stand at the portal if
+        it has none). Shared by both arriving at a stop for the first time
+        (origin_key=None - no "coming from" to match, so portal_for() falls
+        back to the location's first/primary portal) and walking laterally
+        into a connected location (origin_key = the location just left, so
+        they arrive next to the specific portal leading back to it - see
+        LocationScreen.portal_for/arrive_from)."""
         self._location = location
-        character.person.x = location.entrance_x
-        character.person.y = location.entrance_y
+        portal = location.portal_for(origin_key)
+        character.person.x, character.person.y = portal["x"], portal["y"]
         location.visitors.append(character.person)
 
         target_npc = location.npcs[0].person if location.npcs else None
-        self._destination = (target_npc.x, target_npc.y) if target_npc else (location.entrance_x, location.entrance_y)
+        self._destination = (target_npc.x, target_npc.y) if target_npc else (character.person.x, character.person.y)
         self.phase = "walking_in"
 
     def _step_toward(self, person):

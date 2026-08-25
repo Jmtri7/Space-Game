@@ -60,9 +60,10 @@
       "corridor": {
         "label": "Dormitory Corridor",
         "culture": "vherathi",
-        "entrance": {"x": 400, "y": 300},
-        "connected_locations": ["dormitory", "default"],
-        "return_to_ship": false,
+        "portals": [
+          {"x": 150, "y": 300, "connected_locations": ["dormitory"]},
+          {"x": 650, "y": 300, "connected_locations": ["default"]}
+        ],
         "rooms": [
           {"label": "Corridor", "rect": [100, 250, 600, 100]},
           {"label": "Dorm 2A", "rect": [150, 200, 80, 50]},
@@ -91,15 +92,16 @@
       "default": {
         "label": "Alpha Station Concourse",
         "culture": "vherathi",
-        "entrance": {
-          "x": 400,
-          "y": 560
-        },
-        "connected_locations": ["corridor", "spaceport", "loan_office"],
-        "return_to_ship": false,
+        "portals": [
+          {"x": 400, "y": 560, "connected_locations": ["corridor"]},
+          {"x": 620, "y": 420, "connected_locations": ["spaceport"]},
+          {"x": 180, "y": 420, "connected_locations": ["loan_office"]}
+        ],
         "rooms": [
           {"label": "Entrance Hall", "rect": [360, 300, 80, 300]},
-          {"label": "Bar", "rect": [300, 0, 200, 300]}
+          {"label": "Bar", "rect": [300, 0, 200, 300]},
+          {"label": "West Passage", "rect": [160, 380, 200, 80]},
+          {"label": "East Passage", "rect": [440, 380, 200, 80]}
         ],
         "npcs": [
           {

@@ -24,9 +24,38 @@ class LocationScreen(ScreenBase):
         else:
             self.config_file = config_file
             self.config = load_json(config_file) or {}
-        entrance_cfg = self.config.get("entrance", {})
-        start_x = entrance_cfg.get("x", world_width // 2)
-        start_y = entrance_cfg.get("y", world_height - 80)
+
+        # Portals: each is {"x", "y", "connected_locations", "return_to_ship"} -
+        # one per physical doorway out of this location, so a junction with
+        # several real destinations gets several distinct portals instead of
+        # one spot serving all of them (see docs/BACKLOG.md's "Multiple
+        # exits with different options" and portal_for()/arrive_from()
+        # below for why: so stepping back through the specific portal you
+        # arrived from always leads back the way you came, instead of
+        # re-presenting every destination this location has). A config with
+        # just one exit keeps using the older flat "entrance"/
+        # "connected_locations"/"return_to_ship" keys, normalized into a
+        # single-item list here so the rest of the class never needs to
+        # know which style a given config used.
+        portals_cfg = self.config.get("portals")
+        if portals_cfg:
+            self.portals = [
+                {
+                    "x": portal["x"], "y": portal["y"],
+                    "connected_locations": portal.get("connected_locations", []),
+                    "return_to_ship": portal.get("return_to_ship", False),
+                }
+                for portal in portals_cfg
+            ]
+        else:
+            entrance_cfg = self.config.get("entrance", {})
+            self.portals = [{
+                "x": entrance_cfg.get("x", world_width // 2),
+                "y": entrance_cfg.get("y", world_height - 80),
+                "connected_locations": self.config.get("connected_locations", []),
+                "return_to_ship": self.config.get("return_to_ship", True),
+            }]
+        start_x, start_y = self.portals[0]["x"], self.portals[0]["y"]
 
         # Initialize ScreenBase
         super().__init__(pilot_name=pilot_name)
@@ -52,19 +81,15 @@ class LocationScreen(ScreenBase):
         self.world_width = world_width
         self.world_height = world_height
         self.speed = 2.5
-        self.entrance_x = start_x  # Where player enters
-        self.entrance_y = start_y
-        self.entrance_range = 50  # How close to entrance to exit
+        self.entrance_range = 50  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
-
-        # Where the entrance leads: any sibling interior keys (within the
-        # same landable's "interiors" dict) reachable on foot from here,
-        # plus whether leaving also offers "back to the ship" at all. A
-        # location with no connected_locations and the return_to_ship
-        # default of True behaves exactly as before - a single, immediate
-        # exit back to space.
-        self.connected_locations = self.config.get("connected_locations", [])
-        self.return_to_ship = self.config.get("return_to_ship", True)
+        # Cached by handle_input() when L opens the exit menu, so
+        # get_exit_options()/get_available_exit_options()/
+        # get_exit_disabled_reasons() (called later, from main.py, once the
+        # menu is already up) act on the same portal the player actually
+        # pressed L next to - the player can't move while the menu is open,
+        # but this avoids relying on that indirectly.
+        self._active_portal = None
 
         # Get display properties
         self.ui_label = self.config.get("label", "Location")
@@ -128,15 +153,45 @@ class LocationScreen(ScreenBase):
             person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
         return Character(person, role=cfg.get("role", "resident"))
 
-    def get_exit_options(self):
-        """Ordered destinations available through this location's exit:
-        each connected_locations key (in config order), then "ship" last
-        if return_to_ship allows it. Used both to drive the player's exit
-        menu and by AI routines (see DockRoutine) choosing where to go
-        next - same list, same meaning, for both."""
-        options = list(self.connected_locations)
-        if self.return_to_ship:
+    def _resolve_portal(self, portal):
+        """Which portal get_exit_options() and friends should act on when
+        the caller didn't pass one explicitly: whichever portal L was just
+        pressed next to (_active_portal, set by handle_input - main.py
+        calls these after the fact, once ExitMenu is already up), falling
+        back to whatever the player is currently standing next to (for
+        direct calls, e.g. from tests), and finally this location's first
+        portal (so these never crash even called with no portal in range -
+        e.g. a fresh LocationScreen in a test, which starts standing
+        exactly on its own first portal anyway)."""
+        return portal or self._active_portal or self._nearby_portal() or self.portals[0]
+
+    def get_exit_options(self, portal=None):
+        """Ordered destinations available through one portal (see
+        self.portals - defaults to _resolve_portal()): each of its
+        connected_locations keys (in config order), then "ship" last if
+        that portal's return_to_ship allows it. Used both to drive the
+        player's exit menu and by AI routines (see DockRoutine) choosing
+        where to go next - same list, same meaning, for both."""
+        portal = self._resolve_portal(portal)
+        options = list(portal["connected_locations"])
+        if portal["return_to_ship"]:
             options.append("ship")
+        return options
+
+    def all_exit_options(self):
+        """Every destination reachable from this location via *any* of its
+        portals (see self.portals), deduplicated but order-preserving.
+        Unlike get_exit_options(), which is scoped to one specific portal
+        (the player is always standing at a particular one when L opens
+        the exit menu), this is for DockRoutine: an AI pilot decides where
+        to go next while still talking to an NPC, nowhere near a portal
+        yet, so it needs to know what's reachable at all before walking to
+        whichever portal actually leads there (see portal_for)."""
+        options = []
+        for portal in self.portals:
+            for option in self.get_exit_options(portal):
+                if option not in options:
+                    options.append(option)
         return options
 
     @property
@@ -147,23 +202,60 @@ class LocationScreen(ScreenBase):
         _apply_dialogue_action)."""
         return bool(self.player.possessions.owned_ships)
 
-    def get_available_exit_options(self):
+    def get_available_exit_options(self, portal=None):
         """get_exit_options() minus "ship" when there's no ship to actually
         board yet - used to decide whether L can exit immediately or needs
         to open ExitMenu so the player can see *why* nothing happened."""
-        options = self.get_exit_options()
+        options = self.get_exit_options(portal)
         if not self.ship_available:
             options = [option for option in options if option != "ship"]
         return options
 
-    def get_exit_disabled_reasons(self):
+    def get_exit_disabled_reasons(self, portal=None):
         """{key: reason} for exit options this location's config offers but
         aren't usable right now - currently just "ship" with no ship owned
         yet. Passed to ExitMenu so it's shown, dim, instead of silently
         missing."""
-        if "ship" in self.get_exit_options() and not self.ship_available:
+        if "ship" in self.get_exit_options(portal) and not self.ship_available:
             return {"ship": "no ship docked here"}
         return {}
+
+    def portal_for(self, key):
+        """The portal (see self.portals) associated with `key` - either a
+        connected location's interior key, or "ship" for a portal that
+        leads back to the ship. Used both to find where to arrive when
+        entering from `key` (see arrive_from, and DockRoutine's own use for
+        AI pilots) and where to walk to when heading toward `key` - the
+        same physical portal serves both directions of one connection.
+        Falls back to this location's first/primary portal when no portal
+        singles out `key` (a fresh arrival with no "from" context passes
+        key=None, which never matches any portal on purpose)."""
+        for portal in self.portals:
+            if key == "ship" and portal["return_to_ship"]:
+                return portal
+            if key in portal["connected_locations"]:
+                return portal
+        return self.portals[0]
+
+    def arrive_from(self, origin_key):
+        """Place the player at whichever portal leads back to origin_key
+        (an interior key, or "ship") - called whenever the player enters
+        this (persistent, cached) location via a portal transition, so they
+        appear next to the door they actually walked through instead of
+        wherever they happened to be left the last time they visited this
+        location."""
+        portal = self.portal_for(origin_key)
+        self.player.x, self.player.y = portal["x"], portal["y"]
+
+    def _nearby_portal(self):
+        """Whichever portal (see self.portals) the player is currently
+        close enough to use, or None - the nearest one, if somehow more
+        than one is in range at once (portals are laid out with enough
+        space between them that this shouldn't normally happen)."""
+        in_range = [p for p in self.portals if math.sqrt((self.player.x - p["x"]) ** 2 + (self.player.y - p["y"]) ** 2) <= self.entrance_range]
+        if not in_range:
+            return None
+        return min(in_range, key=lambda p: (self.player.x - p["x"]) ** 2 + (self.player.y - p["y"]) ** 2)
 
     def _option_blocked_reason(self, option):
         """Why a dialogue option's "action" can't be taken right now, or
@@ -320,6 +412,29 @@ class LocationScreen(ScreenBase):
                         px, py = to_screen(x, y)
                         pygame.draw.rect(surface, color, (px, py, 15, 15))
 
+        # Portal pads - flat floor rings, one per doorway out of this
+        # location (see self.portals). Ground-level decoration, not a 3D
+        # object with height, so it's drawn here with the floor/windows -
+        # unconditionally *before* the structures/NPCs/player depth-sorted
+        # pass below - rather than in that pass, so a portal never visually
+        # sits on top of someone standing on it just because their feet
+        # happen to have a lower Y (a portal at the *bottom* of a room, a
+        # very common layout, would otherwise almost always win that sort
+        # against anyone standing on it). Brightens once the player is
+        # close enough for L to actually use it, so proximity isn't a
+        # guessing game.
+        active_portal = self._nearby_portal()
+        for portal in self.portals:
+            px, py = to_screen(portal["x"], portal["y"])
+            pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
+            pad_rect = pygame.Rect(0, 0, pad_w, pad_h)
+            pad_rect.center = (px, py)
+            is_active = portal is active_portal
+            fill_color = (180, 255, 210) if is_active else (100, 255, 150)
+            ring_color = YELLOW if is_active else (0, 255, 100)
+            pygame.draw.ellipse(surface, fill_color, pad_rect)
+            pygame.draw.ellipse(surface, ring_color, pad_rect, max(1, int(2 * scale)))
+
         # Structures, NPCs, visiting pilots, and the player all have real
         # height and can occlude one another, so they're drawn together in
         # a single back-to-front pass (painter's algorithm) sorted by each
@@ -340,20 +455,6 @@ class LocationScreen(ScreenBase):
         target_npc = self._get_npc_target()
         if target_npc:
             draw_target_brackets(surface, target_npc.x, target_npc.y, size=25)
-
-        # Draw entrance marker - a flat floor ring rather than a tall ball,
-        # so a character standing on it (feet at its center) doesn't get
-        # visually swallowed by it. Brightens once the player is close
-        # enough for L to actually work, so proximity isn't a guessing game.
-        in_entrance_range = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2) <= self.entrance_range
-        ex, ey = to_screen(self.entrance_x, self.entrance_y)
-        pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
-        pad_rect = pygame.Rect(0, 0, pad_w, pad_h)
-        pad_rect.center = (ex, ey)
-        fill_color = (180, 255, 210) if in_entrance_range else (100, 255, 150)
-        ring_color = YELLOW if in_entrance_range else (0, 255, 100)
-        pygame.draw.ellipse(surface, fill_color, pad_rect)
-        pygame.draw.ellipse(surface, ring_color, pad_rect, max(1, int(2 * scale)))
 
         # Debug markers
         if constants.DEBUG_MODE:
@@ -407,7 +508,7 @@ class LocationScreen(ScreenBase):
         # talk prompts are independent of each other and can both be true
         # at once, so they stack as separate lines in one panel.
         status_lines = []
-        if in_entrance_range:
+        if active_portal:
             status_lines.append(("Press L to enter portal", GREEN))
         if target_npc:
             if target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
@@ -546,11 +647,14 @@ class LocationScreen(ScreenBase):
                 continue
 
             if event.key == pygame.K_l:
-                # Only allow exit if near entrance
-                dist_to_entrance = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2)
-                if dist_to_entrance <= self.entrance_range:
-                    options = self.get_exit_options()
-                    available = self.get_available_exit_options()
+                # Only allow exit if near a portal (see self.portals) -
+                # whichever one is closest, if the player somehow got two
+                # in range at once.
+                portal = self._nearby_portal()
+                if portal:
+                    self._active_portal = portal
+                    options = self.get_exit_options(portal)
+                    available = self.get_available_exit_options(portal)
                     if options and len(available) == len(options) and len(options) == 1:
                         # Exactly one destination, and it's actually usable
                         # right now - go straight there.

@@ -49,11 +49,13 @@ removing a save directly from the Load screen, independent of the Pause-menu
 Save dialog's delete flow shown above.
 
 The diagram above shows the simple case where a `LocationScreen`'s exit
-(`L` near the entrance) leads to only one place, and so acts immediately.
-When its config's `connected_locations` and/or `return_to_ship` add up to
-more than one destination, `L` instead opens `ExitMenu` (see STATION / MOON
-below) - the player picks "Return to Ship" (→ GAME) or a connected location
-(→ that location's own `LocationScreen`, staying in `"station"`/`"moon"`).
+(`L` near a portal) leads to only one place, and so acts immediately. A
+location can have more than one portal (see STATION / MOON below); when
+the one the player is standing next to has `connected_locations` and/or
+`return_to_ship` adding up to more than one destination, `L` instead opens
+`ExitMenu` - the player picks "Return to Ship" (→ GAME) or a connected
+location (→ that location's own `LocationScreen`, staying in
+`"station"`/`"moon"`).
 
 ## Screen Descriptions
 
@@ -135,21 +137,32 @@ true` but disabled until a ship is owned - see `ship_available` below) /
 `loan_office` (loan officer). See `config/stories/default/systems/
 sol_alpha.json`.
 
+A location can have more than one **portal** (`LocationScreen.portals`) -
+a junction with several real destinations (like the concourse, which
+connects to the corridor, spaceport, and loan office) gets one physically
+distinct portal per destination instead of a single spot that offers all
+of them, so walking back through the specific portal you arrived from
+always leads back the way you came (`LocationScreen.arrive_from()`/
+`portal_for()`) rather than re-presenting every destination the location
+has. A config with only one exit still uses the older flat `"entrance"`/
+`"connected_locations"`/`"return_to_ship"` keys, normalized into a
+single-item portal list internally.
+
 **Inputs:**
 - LEFT/RIGHT/UP/DOWN or WASD: move
-- L: exit (only within range of the entrance marker) - see `get_available_exit_options()`:
+- L: exit (only within range of a portal) - see `get_available_exit_options()`, scoped to whichever portal is nearest:
   - Exactly one destination *and it's actually usable* → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
   - More than one configured, or the only one isn't usable yet (e.g. "ship" with no ship owned) → opens `ExitMenu`, so an unusable option is still visible with its reason instead of L doing nothing
-- Enter (with an NPC targeted): talk - opens that NPC's `Dialogue` (see below)
+- T (with an NPC targeted, in range): talk - opens that NPC's `Dialogue` (see below)
 - P: `PossessionsMenu`
 - ESC: pause
 
 While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
 
 **Transitions:**
-- L (near entrance, single usable destination) → GAME or a connected location's `LocationScreen`
-- L (near entrance, multiple destinations, or the only one isn't usable) → `ExitMenu`
-- Enter (NPC targeted) → that NPC's `Dialogue`, always restarted at its root node
+- L (near a portal, single usable destination) → GAME or a connected location's `LocationScreen`
+- L (near a portal, multiple destinations, or the only one isn't usable) → `ExitMenu`
+- T (NPC targeted, in range) → that NPC's `Dialogue`, always restarted at its root node
 - P → `PossessionsMenu`
 - ESC → PauseMenu
 
@@ -282,7 +295,7 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 
 **Invalid (prevented by code):**
 - PauseMenu blocks its own input while `SaveDialog`/`ConfirmDialog` is open
-- `LocationScreen` only exits (`L`) within `entrance_range` of the entrance marker
+- `LocationScreen` only exits (`L`) within `entrance_range` of a portal
 - `ExitMenu` only appears when `get_exit_options()` has more than one entry, or the single entry isn't usable (`get_exit_disabled_reasons()`); with exactly one usable entry it's skipped (immediate exit)
 - Landing only triggers when both close enough (`landing_distance`) and slow enough (`speed < 0.4`)
 - A dialogue option with a blocked `"action"` (`LocationScreen._option_blocked_reason`) can't be selected - RETURN on it is a no-op
