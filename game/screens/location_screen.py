@@ -2,7 +2,7 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW
 from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
@@ -343,13 +343,17 @@ class LocationScreen(ScreenBase):
 
         # Draw entrance marker - a flat floor ring rather than a tall ball,
         # so a character standing on it (feet at its center) doesn't get
-        # visually swallowed by it.
+        # visually swallowed by it. Brightens once the player is close
+        # enough for L to actually work, so proximity isn't a guessing game.
+        in_entrance_range = math.sqrt((self.player.x - self.entrance_x) ** 2 + (self.player.y - self.entrance_y) ** 2) <= self.entrance_range
         ex, ey = to_screen(self.entrance_x, self.entrance_y)
         pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
         pad_rect = pygame.Rect(0, 0, pad_w, pad_h)
         pad_rect.center = (ex, ey)
-        pygame.draw.ellipse(surface, (100, 255, 150), pad_rect)
-        pygame.draw.ellipse(surface, (0, 255, 100), pad_rect, max(1, int(2 * scale)))
+        fill_color = (180, 255, 210) if in_entrance_range else (100, 255, 150)
+        ring_color = YELLOW if in_entrance_range else (0, 255, 100)
+        pygame.draw.ellipse(surface, fill_color, pad_rect)
+        pygame.draw.ellipse(surface, ring_color, pad_rect, max(1, int(2 * scale)))
 
         # Draw player
         self.player.draw(surface)
@@ -380,6 +384,13 @@ class LocationScreen(ScreenBase):
         help_x = int(offset_x + surface.get_width() // 2 - help_text.get_width() // 2)
         help_y = int(offset_y + surface.get_height() - 30)
         surface.blit(help_text, (help_x, help_y))
+
+        if in_entrance_range:
+            font_prompt = pygame.font.Font(None, int(20 * ui_scale))
+            prompt_text = font_prompt.render("Press L to exit", True, YELLOW)
+            prompt_x = int(offset_x + surface.get_width() // 2 - prompt_text.get_width() // 2)
+            prompt_y = help_y - prompt_text.get_height() - int(4 * ui_scale)
+            surface.blit(prompt_text, (prompt_x, prompt_y))
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
