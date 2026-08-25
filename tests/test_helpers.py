@@ -38,6 +38,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.character import Character
 from game.ui.selectable_list import SelectableList
+from game.ui.save_dialog import SaveDialog
 from game.screens.space_screen import SpaceScreen
 from main import build_save_game_state, warn_if_story_version_mismatch
 
@@ -1114,6 +1115,91 @@ class TestSelectableListItemsShrink(unittest.TestCase):
         selectable.selected = 2
         selectable.items = ["save1", "save2"]
         selectable.draw(MagicMock(), MagicMock(), 0, 0, 20, 1.0)  # must not raise
+
+
+class TestCreateSaveFileNameCollision(unittest.TestCase):
+    """Regression test: the pre-populated save name only has minute
+    resolution, so two new saves made within the same minute used to collide
+    on the same filename and the second silently clobbered the first.
+    create_save_file() should now append " (2)", " (3)", etc. instead."""
+
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.patcher = patch.object(utils, "SAVE_DIR", self.test_dir)
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
+        shutil.rmtree(self.test_dir)
+
+    def test_second_save_with_same_name_gets_suffixed(self):
+        path1 = utils.create_save_file("Pilot", "2026-08-25 1430", {}, {})
+        path2 = utils.create_save_file("Pilot", "2026-08-25 1430", {}, {})
+
+        self.assertNotEqual(path1, path2)
+        self.assertTrue(os.path.exists(path1))
+        self.assertTrue(os.path.exists(path2))
+        self.assertIn("(2)", path2)
+
+    def test_third_save_with_same_name_increments_again(self):
+        utils.create_save_file("Pilot", "clash", {}, {})
+        utils.create_save_file("Pilot", "clash", {}, {})
+        path3 = utils.create_save_file("Pilot", "clash", {}, {})
+
+        self.assertIn("(3)", path3)
+
+    def test_unique_name_is_not_suffixed(self):
+        path = utils.create_save_file("Pilot", "unique_name", {}, {})
+        self.assertTrue(path.endswith("save_unique_name.json"))
+
+    def test_overwrite_flow_is_unaffected_since_old_file_is_deleted_first(self):
+        """Mirrors main.py's overwrite path: delete the old file, then
+        create_save_file() with the same name reuses it rather than
+        appending a suffix."""
+        path1 = utils.create_save_file("Pilot", "existing", {}, {})
+        os.remove(path1)
+        path2 = utils.create_save_file("Pilot", "existing", {}, {})
+        self.assertEqual(path1, path2)
+
+
+class TestSaveDialogNewSaveKey(unittest.TestCase):
+    """Regression test: pressing N to start a new save emits both a KEYDOWN
+    and a TEXTINPUT("n") event in the same pygame frame. handle_input() used
+    to process the KEYDOWN (switching into input_mode) and then the
+    TEXTINPUT from the very same keypress, appending a stray "n" to the
+    pre-populated save name. See game/ui/save_dialog.py's _suppress_next_text."""
+
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_pressing_n_does_not_append_n_to_save_name(self):
+        dialog = SaveDialog(pilot_name="Test")
+        dialog.list.items = ["existing_save"]
+        dialog.input_mode = False
+        name_before = dialog.save_name
+
+        events = [
+            self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n),
+            self._event(pygame_mock.TEXTINPUT, text="n"),
+        ]
+        dialog.handle_input(events)
+
+        self.assertTrue(dialog.input_mode)
+        self.assertEqual(dialog.save_name, name_before)
+
+    def test_textinput_still_works_after_the_suppressed_one(self):
+        dialog = SaveDialog(pilot_name="Test")
+        dialog.list.items = ["existing_save"]
+        dialog.input_mode = False
+
+        dialog.handle_input([
+            self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n),
+            self._event(pygame_mock.TEXTINPUT, text="n"),
+        ])
+        name_after_n = dialog.save_name
+        dialog.handle_input([self._event(pygame_mock.TEXTINPUT, text="x")])
+
+        self.assertEqual(dialog.save_name, name_after_n + "x")
 
 
 if __name__ == "__main__":

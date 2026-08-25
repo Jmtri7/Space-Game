@@ -308,17 +308,30 @@ def get_save_files():
 
 
 def create_save_file(pilot_name, name, system_data, station_data, game_state=None):
-    """Create and save a game save file."""
+    """Create and save a game save file.
+
+    The default save name only has minute resolution, so two new saves made
+    within the same minute would otherwise collide on the same filename and
+    the second save would silently clobber the first. If `name` is already
+    taken, append " (2)", " (3)", etc. until it isn't. Callers that intend to
+    overwrite an existing save (the pause menu's overwrite-confirm flow)
+    delete the old file first, so this never fires for a real overwrite.
+    """
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
+    unique_name = name
+    suffix = 2
+    while os.path.exists(f"{SAVE_DIR}/save_{unique_name}.json"):
+        unique_name = f"{name} ({suffix})"
+        suffix += 1
     save_data = {
         "pilot_name": pilot_name,
-        "name": name,
+        "name": unique_name,
         "system": system_data,
         "station": station_data,
         "game_state": game_state or {}
     }
-    if not os.path.exists(SAVE_DIR):
-        os.makedirs(SAVE_DIR)
-    filename = f"{SAVE_DIR}/save_{name}.json"
+    filename = f"{SAVE_DIR}/save_{unique_name}.json"
     save_json(filename, save_data)
     return filename
 

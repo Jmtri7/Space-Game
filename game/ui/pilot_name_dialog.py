@@ -9,15 +9,19 @@ class PilotNameDialog:
     """Dialog for entering pilot name when starting a new game."""
     def __init__(self):
         self.pilot_name = ""
+        # Let held keys (Backspace, letters) auto-repeat while typing a name.
+        pygame.key.set_repeat(400, 40)
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and self.pilot_name:
+                    pygame.key.set_repeat()
                     return self.pilot_name
                 elif event.key == pygame.K_BACKSPACE:
                     self.pilot_name = self.pilot_name[:-1]
                 elif event.key == pygame.K_ESCAPE:
+                    pygame.key.set_repeat()
                     return "cancel"
             elif event.type == pygame.TEXTINPUT:
                 if len(self.pilot_name) < 30:

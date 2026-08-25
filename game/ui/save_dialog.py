@@ -17,6 +17,13 @@ class SaveDialog:
         self.success_timer = 0
         self.list = SelectableList(self._get_all_saves(), max_visible=5)
         self.input_mode = not self.list.items
+        self._suppress_next_text = False
+        if self.input_mode:
+            # Let held keys (Backspace, letters) auto-repeat while typing a name.
+            # Disabled again whenever the dialog leaves input mode or closes, so
+            # it doesn't also make held keys repeat in the overwrite-list view
+            # (e.g. holding D there must never delete more than one save).
+            pygame.key.set_repeat(400, 40)
 
     def _get_all_saves(self):
         return get_save_files()
@@ -36,10 +43,12 @@ class SaveDialog:
                 if self.input_mode:
                     if event.key == pygame.K_RETURN and self.save_name:
                         self.success_timer = 120
+                        pygame.key.set_repeat()
                         return ("save", self.save_name)
                     elif event.key == pygame.K_BACKSPACE:
                         self.save_name = self.save_name[:-1]
                     elif event.key == pygame.K_ESCAPE:
+                        pygame.key.set_repeat()
                         return ("cancel", None)
                 else:
                     if event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
@@ -53,8 +62,14 @@ class SaveDialog:
                     elif event.key == pygame.K_n:
                         self.input_mode = True
                         # Keep the pre-populated save name (don't clear it)
+                        # Pygame also emits a TEXTINPUT("n") alongside this KEYDOWN;
+                        # suppress it so "n" doesn't get appended to save_name.
+                        self._suppress_next_text = True
+                        pygame.key.set_repeat(400, 40)
             elif event.type == pygame.TEXTINPUT:
-                if self.input_mode and len(self.save_name) < 30:
+                if self._suppress_next_text:
+                    self._suppress_next_text = False
+                elif self.input_mode and len(self.save_name) < 30:
                     self.save_name += event.text
         return (None, None)
 

@@ -281,11 +281,10 @@ def main():
                 if action == "close":
                     game_screen.selected_system_id = star_map.selected_system_id
                     current_screen = "game"
-                # Keep space physics updated in the background (ships keep moving)
-                if game_screen:
-                    game_screen.update_physics()
+                # Unlike docking at the station/moon, opening the jump map
+                # fully pauses the simulation (matches PauseMenu) - no
+                # update_physics()/update_background_locations() here.
                 star_map.draw(screen)
-                update_background_locations(game_screen, None)
 
             elif current_screen == "station":
                 action = station_interior.handle_input(events)
