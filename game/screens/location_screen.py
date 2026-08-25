@@ -53,6 +53,7 @@ class LocationScreen(ScreenBase):
         self.entrance_x = start_x  # Where player enters
         self.entrance_y = start_y
         self.entrance_range = 50  # How close to entrance to exit
+        self.talk_range = 60  # How close to an NPC/pilot to start a conversation
 
         # Where the entrance leads: any sibling interior keys (within the
         # same landable's "interiors" dict) reachable on foot from here,
@@ -475,7 +476,7 @@ class LocationScreen(ScreenBase):
                 self._cycle_npc_target(-1)
             elif event.key == pygame.K_RETURN:
                 target_npc = self._get_npc_target()
-                if target_npc:
+                if target_npc and target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
                     # Always start a fresh conversation at the root node -
                     # otherwise leaving mid-tree (ESC) and talking again
                     # would silently resume wherever it was left off.
