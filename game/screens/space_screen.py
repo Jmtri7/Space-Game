@@ -247,10 +247,20 @@ class SpaceScreen(ScreenBase):
         if not interior_config:
             return None
 
+        # Display name for every sibling interior this location's portals
+        # might connect to (see LocationScreen._display_name) - built from
+        # landable.interiors directly rather than lazily inside
+        # LocationScreen, since that dict (and any config files it points
+        # to) belongs to the landable, not to any one interior within it.
+        location_labels = {}
+        for sibling_key, sibling_config in landable.interiors.items():
+            sibling_config = load_json(sibling_config) if isinstance(sibling_config, str) else sibling_config
+            location_labels[sibling_key] = (sibling_config or {}).get("label", sibling_key)
+
         if isinstance(interior_config, str):
-            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased)
+            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
         else:
-            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased)
+            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
         # Which interiors key this is (e.g. "dormitory", "default"/concourse,
         # "spaceport") - lets save/load record exactly which station room
         # the player was in, not just "station" (see main.py's

@@ -15,8 +15,14 @@ from game.world.player_character import PlayerCharacter
 
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
-    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None):
+    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
+        # {interior_key: display label} for every sibling interior at the
+        # same landable (see SpaceScreen.get_interior_screen) - used only to
+        # render portal labels (see _display_name/_portal_label), so a
+        # LocationScreen built without one (e.g. directly in a test) just
+        # falls back to prettified keys instead of failing.
+        self.location_labels = location_labels or {}
         # Load config from file or use inline data
         if config_data is not None:
             self.config = config_data
@@ -81,7 +87,7 @@ class LocationScreen(ScreenBase):
         self.world_width = world_width
         self.world_height = world_height
         self.speed = 2.5
-        self.entrance_range = 50  # How close to a portal to use it
+        self.entrance_range = 35  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
         # Cached by handle_input() when L opens the exit menu, so
         # get_exit_options()/get_available_exit_options()/
@@ -246,6 +252,31 @@ class LocationScreen(ScreenBase):
         location."""
         portal = self.portal_for(origin_key)
         self.player.x, self.player.y = portal["x"], portal["y"]
+
+    def _display_name(self, key):
+        """Human-readable label for a connected_locations key or "ship" -
+        used to label portals in-world (see _portal_label) now that a
+        single-destination portal no longer opens a menu that would
+        otherwise be the only place its destination's name showed up.
+        Prefers the sibling interior's own configured "label" (see
+        self.location_labels, built by SpaceScreen.get_interior_screen),
+        falling back to a prettified version of the key itself (e.g.
+        "loan_office" -> "Loan Office") when there's no sibling label to
+        borrow - e.g. "ship", or a LocationScreen built standalone."""
+        if key == "ship":
+            return "Ship"
+        return self.location_labels.get(key) or key.replace("_", " ").title()
+
+    def _portal_label(self, portal):
+        """Display text for one portal: the destination(s) it leads to,
+        joined with "/" for a portal that offers more than one (a menu
+        still opens for those - the label is just a preview of what's in
+        it, same as a single-destination portal's label is now the only
+        preview it gets since L skips straight past its menu)."""
+        names = [self._display_name(key) for key in portal["connected_locations"]]
+        if portal["return_to_ship"]:
+            names.append(self._display_name("ship"))
+        return " / ".join(names)
 
     def _nearby_portal(self):
         """Whichever portal (see self.portals) the player is currently
@@ -424,6 +455,7 @@ class LocationScreen(ScreenBase):
         # close enough for L to actually use it, so proximity isn't a
         # guessing game.
         active_portal = self._nearby_portal()
+        font_portal_label = pygame.font.Font(None, max(10, int(15 * scale)))
         for portal in self.portals:
             px, py = to_screen(portal["x"], portal["y"])
             pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
@@ -434,6 +466,13 @@ class LocationScreen(ScreenBase):
             ring_color = YELLOW if is_active else (0, 255, 100)
             pygame.draw.ellipse(surface, fill_color, pad_rect)
             pygame.draw.ellipse(surface, ring_color, pad_rect, max(1, int(2 * scale)))
+
+            # Destination label, always visible (not just in range) - same
+            # idea as room labels above - so a single-destination portal's
+            # menu-free L press is never a guess about where it leads.
+            label_surf = font_portal_label.render(self._portal_label(portal), True, ring_color)
+            label_rect = label_surf.get_rect(midtop=(px, pad_rect.bottom + 2))
+            surface.blit(label_surf, label_rect)
 
         # Structures, NPCs, visiting pilots, and the player all have real
         # height and can occlude one another, so they're drawn together in

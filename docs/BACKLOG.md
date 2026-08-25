@@ -17,7 +17,6 @@ see git history around that time for the individual commits.
 
 ## Features / Ideas
 
-- [ ] Should single-destination exits still require choosing? Current answer: yes.
 - [ ] Quick save.
 - [ ] AI walking pathfinding.
 - [ ] Cultural station interiors; round rooms.
