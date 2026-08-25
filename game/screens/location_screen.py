@@ -4,6 +4,7 @@ import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW
 from game.utils import get_scale, load_json, to_screen, draw_debug_marker, draw_target_brackets, get_ui_scale, get_ui_offset, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
+from game.ui.ui_theme import draw_controls_pane
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
@@ -349,27 +350,43 @@ class LocationScreen(ScreenBase):
         # Draw UI
         ui_scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
-        self.draw_ui_text(surface, self.ui_label, scale=ui_scale)
+
+        # Location name + NPC target, top-center - top-left is reserved for
+        # the control-reference pane below, matching SpaceScreen's layout.
+        font_label = pygame.font.Font(None, int(24 * ui_scale))
+        label_text = font_label.render(self.ui_label, True, WHITE)
+        label_x = int(offset_x + surface.get_width() // 2 - label_text.get_width() // 2)
+        label_y = int(offset_y + 20)
+        surface.blit(label_text, (label_x, label_y))
         if target_npc:
             font_target = pygame.font.Font(None, int(20 * ui_scale))
             target_text = font_target.render(f"Target: {target_npc.name}", True, (100, 255, 100))
-            surface.blit(target_text, (int(offset_x + 20), int(offset_y + 45)))
+            target_x = int(offset_x + surface.get_width() // 2 - target_text.get_width() // 2)
+            surface.blit(target_text, (target_x, label_y + label_text.get_height() + int(5 * ui_scale)))
 
         font_credits = pygame.font.Font(None, int(24 * ui_scale))
         credits_text = font_credits.render(f"Credits: {self.player.possessions.credits}", True, (255, 220, 100))
         surface.blit(credits_text, (int(offset_x + surface.get_width() - credits_text.get_width() - 20), int(offset_y + 20)))
 
-        font_help = pygame.font.Font(None, int(16 * ui_scale))
-        help_text = font_help.render("WASD: move, T/[/]: target NPC, Enter: talk, L: exit, P: possessions, ESC: pause", True, WHITE)
-        help_x = int(offset_x + surface.get_width() // 2 - help_text.get_width() // 2)
-        help_y = int(offset_y + surface.get_height() - 30)
-        surface.blit(help_text, (help_x, help_y))
+        # Top-left control-reference pane - same design as SpaceScreen's
+        # (see draw_controls_pane), with the controls that apply here.
+        control_margin = int(10 * ui_scale)
+        help_items = [
+            ("ESC", "Pause"),
+            ("W/A/S/D", "Move"),
+            ("T / ]", "Next Target"),
+            ("[", "Previous Target"),
+            ("Enter", "Talk"),
+            ("L", "Exit"),
+            ("P", "View Possessions"),
+        ]
+        draw_controls_pane(surface, int(offset_x + control_margin), int(offset_y + control_margin), "Controls", help_items, ui_scale)
 
+        prompt_y = int(offset_y + surface.get_height() - 30)
         if in_entrance_range:
             font_prompt = pygame.font.Font(None, int(20 * ui_scale))
             prompt_text = font_prompt.render("Press L to exit", True, YELLOW)
             prompt_x = int(offset_x + surface.get_width() // 2 - prompt_text.get_width() // 2)
-            prompt_y = help_y - prompt_text.get_height() - int(4 * ui_scale)
             surface.blit(prompt_text, (prompt_x, prompt_y))
 
         # Draw active dialogue box on top of everything
@@ -578,15 +595,6 @@ class LocationScreen(ScreenBase):
     def update_camera(self):
         """Update global camera to follow player"""
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
-
-    def draw_ui_text(self, surface, text, scale=None):
-        """Draw UI text that stays on screen (not camera-affected)"""
-        if scale is None:
-            scale = get_ui_scale()
-        offset_x, offset_y = get_ui_offset()
-        font = pygame.font.Font(None, int(24 * scale))
-        ui_text = font.render(text, True, WHITE)
-        surface.blit(ui_text, (int(offset_x + 20), int(offset_y + 20)))
 
     def get_state(self):
         """Save player position state for locations"""
