@@ -53,10 +53,20 @@ class SpaceScreen(ScreenBase):
         # Get space system drag (default 0 = no drag)
         space_drag = self.system_config.get("drag", 0)
 
-        # Get player ship type and graphics (fixed for the story, not per-system)
-        player_ship_type_id = story_meta.get("ships", {}).get("player_type", "shuttle")
-        player_ship_type = get_ship_type(self.story, player_ship_type_id)
-        player_graphics = get_graphics_asset(self.story, "ships", player_ship_type_id)
+        # Placeholder ship stats/graphics for self.player before any ship is
+        # actually owned - PlayerController always needs a Ship object to
+        # exist, but a new pilot starts in the dormitory with none, and
+        # this placeholder is never flown or even rendered until one is
+        # bought (see _apply_ship_type()/_on_ship_purchased(), which
+        # reconfigure it for real at that point). "player_type" should
+        # normally stay null for that reason - a non-null value here does
+        # NOT actually grant the player a starting ship (LocationScreen.
+        # ship_available is driven entirely by Possessions.owned_ships,
+        # which starts empty regardless), it would just be misleading
+        # placeholder stats nobody sees.
+        player_ship_type_id = story_meta.get("ships", {}).get("player_type")
+        player_ship_type = get_ship_type(self.story, player_ship_type_id) if player_ship_type_id else None
+        player_graphics = get_graphics_asset(self.story, "ships", player_ship_type_id) if player_ship_type_id else None
 
         # Spawn away from map center by default, since that's where a central
         # star (if the system has one) usually sits.

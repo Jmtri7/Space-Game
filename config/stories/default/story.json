@@ -6,6 +6,6 @@
   "difficulty": "normal",
   "starting_system": "sol_alpha",
   "ships": {
-    "player_type": "shuttle"
+    "player_type": null
   }
 }
