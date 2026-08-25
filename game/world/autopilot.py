@@ -37,6 +37,20 @@ BRAKING_SAFETY_BUFFER = 1.0       # multiplier on predict_braking_distance_from_
 # failed to converge in one trial). 10 stays the tightest and fastest.
 BRAKE_ALIGNMENT_THRESHOLD_DEG = 10
 STALL_BAILOUT_FACTOR = 1.5        # see SeekMode's "would increase speed" bailout
+# Don't commit to a retrograde braking burn while velocity is still this far
+# off from the direction to the target - see Step 2's comment.
+MAX_BRAKE_COMMIT_MISALIGNMENT_DEG = 45
+# Watchdog: force an arrival after this many frames of active seeking,
+# regardless of precision. Found one narrow case (a slow-turning ship with
+# velocity ~120 degrees off-target at close range) where the un-stick/
+# re-commit cycle settles into a stable loop that never quite lines up
+# "close" and "slow" on the same frame - a preexisting risk in that cycle,
+# not something introduced by the misalignment gate above (reproduces at
+# every gate value tried, including with the gate disabled). Better to
+# park somewhere imprecise than fly forever; comfortably above the
+# slowest normal landing observed in testing (freighter, under 2000
+# frames) while still bounding worst case to ~50 seconds instead of never.
+MAX_SEEK_FRAMES = 3000
 
 
 def has_arrived(ship, target):
@@ -152,6 +166,7 @@ class SeekMode:
         # Sticky once True - see Step 2's comment for why this can't just be
         # recomputed fresh every frame.
         self.braking = False
+        self.frames = 0  # see MAX_SEEK_FRAMES
 
     def update(self, autopilot):
         """Approach self.target, redirecting and decelerating simultaneously."""
@@ -164,7 +179,11 @@ class SeekMode:
         # enough that the autopilot keeps braking all the way in to (near)
         # the landable's exact middle, not just its generous manual-landing
         # radius, floored so it stays reachable for slow/sluggish ships).
-        if has_arrived(ship, target):
+        # The watchdog is checked alongside it: a real arrival is always
+        # preferred, but past MAX_SEEK_FRAMES, stop wherever we are rather
+        # than risk looping forever (see MAX_SEEK_FRAMES).
+        self.frames += 1
+        if has_arrived(ship, target) or self.frames > MAX_SEEK_FRAMES:
             # Arrival, not just a disengage - come to a full stop so the ship
             # doesn't keep drifting on whatever residual speed was left.
             ship.park()
@@ -182,9 +201,26 @@ class SeekMode:
         # in front of the target. That whipsawed the nose back and forth for
         # dozens of frames with the engine off, instead of ever holding a
         # heading long enough to actually thrust.
+        #
+        # Only commit while velocity is already reasonably pointed at the
+        # target (within MAX_BRAKE_COMMIT_MISALIGNMENT_DEG). Retrograde
+        # thrust cancels whatever velocity currently exists - if most of
+        # that velocity is sideways (e.g. the ship was already moving fast
+        # in some unrelated direction when it targeted the landable),
+        # braking immediately just freezes that sideways drift in place
+        # instead of correcting it, stopping the ship well off to the side
+        # on the very first attempt. Holding off lets the normal point-at-
+        # target approach (below) cancel the sideways component first.
         if not self.braking:
             braking_distance = predict_braking_distance_from_stop(ship, speed)
-            self.braking = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+            would_commit = distance <= braking_distance and speed > ARRIVAL_SPEED_THRESHOLD
+            if would_commit:
+                dx, dy = target.x - ship.x, target.y - ship.y
+                target_angle = math.atan2(dx, -dy)
+                velocity_angle = math.atan2(ship.velocity_x, -ship.velocity_y)
+                misalignment = math.degrees(target_angle - velocity_angle)
+                misalignment = abs((misalignment + 180) % 360 - 180)
+                self.braking = misalignment <= MAX_BRAKE_COMMIT_MISALIGNMENT_DEG
         should_brake = self.braking
 
         # Step 2b: Check if braking would actually decelerate us
