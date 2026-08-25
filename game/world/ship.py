@@ -46,6 +46,15 @@ class Ship(WorldObject):
         """Engage autopilot to continuously circle (center_x, center_y) at `radius`."""
         self.autopilot.engage_orbit(center_x, center_y, radius)
 
+    @property
+    def size(self):
+        """World-space radius draw() actually renders at - graphics-provided
+        size if this ship has graphics, else the same 15-unit default draw()
+        falls back to. Mirrors draw()'s own ship_size resolution so callers
+        (e.g. target brackets) can size themselves to fit without
+        duplicating that fallback logic."""
+        return self.graphics.get("size", 15) if self.graphics else 15
+
     def draw(self, surface, ship_size=None, color=None):
         """Draw ship using graphics asset, with fallback to defaults."""
         # Use graphics asset if available, otherwise use parameters

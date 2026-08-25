@@ -392,6 +392,20 @@ class SpaceScreen(ScreenBase):
             return None
         return filtered[self.current_target][1]
 
+    def _target_bracket_size(self, target_obj):
+        """Screen-pixel bracket half-width that actually hugs target_obj's
+        own drawn radius, instead of one fixed size for every target
+        regardless of how big it is on screen - a station (~120px radius)
+        and a central star (~300px) both used to get the same tiny 40px
+        brackets, leaving the brackets floating deep inside the target
+        instead of framing it. Character (AI ships) wrap a Ship, whose
+        actual drawn size is Ship.size (see draw()'s own ship_size
+        resolution); everything else (Landable, CelestialBody, CentralStar)
+        already exposes its drawn radius directly as `.size`."""
+        world_radius = target_obj.ship.size if isinstance(target_obj, Character) else getattr(target_obj, "size", 20)
+        padding = 12
+        return int(world_radius * get_scale()) + padding
+
     def _draw_target_arrow(self, surface, target):
         """Draw an arrow on an imaginary circle around the player's ship, pointing toward the target."""
         dx, dy = target.x - self.player.x, target.y - self.player.y
@@ -693,7 +707,7 @@ class SpaceScreen(ScreenBase):
         # the HUD overlay (status panels, messages, help text).
         target_obj = self._get_target_object()
         if target_obj:
-            draw_target_brackets(surface, target_obj.x, target_obj.y)
+            draw_target_brackets(surface, target_obj.x, target_obj.y, size=self._target_bracket_size(target_obj))
             self._draw_target_arrow(surface, target_obj)
 
         scale = get_scale()
