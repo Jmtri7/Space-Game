@@ -793,22 +793,46 @@ class SpaceScreen(ScreenBase):
             surface.blit(text, (info_rect.x + pad_x, info_rect.y + pad_y + i * line_height))
 
         # --- Top-left: control-help pane, one control per line, same text
-        # size as the targeting info panel (font_body).
-        help_lines = [
-            "T/[/]: target",
-            "Tab: target mode",
-            "Space: autopilot",
-            "L: land",
-            "M: star map",
-            "ESC: pause",
+        # size as the targeting info panel (font_body). Key and description
+        # are rendered as separate columns (rather than one padded string)
+        # so the colons line up visually despite the default pygame font
+        # not being monospace - space-padding a single string wouldn't.
+        help_title = "Controls"
+        help_items = [
+            ("T / ]", "Next Target"),
+            ("[", "Previous Target"),
+            ("Tab", "Target Mode"),
+            ("Space", "Autopilot"),
+            ("L", "Land"),
+            ("M", "Star Map"),
+            ("ESC", "Pause"),
         ]
-        help_rendered = [font_body.render(text, True, WHITE) for text in help_lines]
-        help_panel_width = max(text.get_width() for text in help_rendered) + pad_x * 2
-        help_panel_height = pad_y * 2 + line_height * len(help_rendered)
+        title_rendered = font_body.render(help_title, True, WHITE)
+        key_rendered = [font_body.render(key, True, WHITE) for key, _ in help_items]
+        desc_rendered = [font_body.render(desc, True, WHITE) for _, desc in help_items]
+        colon_rendered = font_body.render(":", True, WHITE)
+        key_column_width = max(text.get_width() for text in key_rendered)
+        colon_gap = int(6 * ui_scale)
+        desc_gap = int(8 * ui_scale)
+        desc_x_offset = key_column_width + colon_gap + colon_rendered.get_width() + desc_gap
+
+        help_panel_width = max(
+            title_rendered.get_width(),
+            desc_x_offset + max(text.get_width() for text in desc_rendered),
+        ) + pad_x * 2
+        # Title line, then a blank line's worth of gap, then one line per control.
+        help_panel_height = pad_y * 2 + line_height * (len(help_items) + 2)
         help_rect = pygame.Rect(margin, margin, help_panel_width, help_panel_height)
         draw_glass_panel(surface, help_rect, ui_scale)
-        for i, text in enumerate(help_rendered):
-            surface.blit(text, (help_rect.x + pad_x, help_rect.y + pad_y + i * line_height))
+
+        surface.blit(title_rendered, (help_rect.x + pad_x, help_rect.y + pad_y))
+        colon_x = help_rect.x + pad_x + key_column_width + colon_gap
+        desc_x = help_rect.x + pad_x + desc_x_offset
+        for i, (key_text, desc_text) in enumerate(zip(key_rendered, desc_rendered)):
+            row_y = help_rect.y + pad_y + (i + 2) * line_height
+            surface.blit(key_text, (colon_x - key_text.get_width(), row_y))
+            surface.blit(colon_rendered, (colon_x, row_y))
+            surface.blit(desc_text, (desc_x, row_y))
 
         # --- Top-center: transient "too close to jump" warning ---
         if self.jump_message_timer > 0:
@@ -832,6 +856,9 @@ class SpaceScreen(ScreenBase):
         elif self.landing_text > 0:
             status_text = "Press L to land"
             status_color = YELLOW
+        elif self.selected_system_id:
+            status_text = "Press J to Jump"
+            status_color = CYAN
 
         if status_text:
             font_status = get_font(int(22 * ui_scale))
