@@ -276,31 +276,42 @@ sweep under-represents the at-rest and moderate-velocity cases where freighter's
 up. This is itself the lesson: **battery composition changes the story - always compare
 against the same battery, and prefer the more comprehensive one when the numbers disagree.**
 
-## V4 vs. V5 vs. V6b on close-range patrol - no version dominates every metric
+## V4 vs. V5 vs. V6b on close range - no version dominates every metric, and it's not patrol-only
 
 A dedicated close-range pursuit sweep (216 trials/ship: distances 80-150, 3 approach angles, 6
 velocity-offset angles, 3 speed fractions - see `battery.py`-style scenario generation, not yet
 folded into an automated test) exists specifically because the standard battery's minimum
 pre-existing-velocity distance (200) doesn't reach the regime patrol's pursuit-curve stall lives
-in. Patrol numbers only, since shuttle/freighter are unaffected by every version compared here:
+in. An earlier draft of this section only tabulated patrol and claimed shuttle/freighter were
+"unaffected" - that was wrong; all three ships show the same shape, just less severely than
+patrol's headline 16/216 bad:
 
-| Version | Mean frames | Max frames | Bad | Overshoot events | Lateral miss (mean/max) |
-|---|---|---|---|---|---|
-| V3 | 121.1 | 209 | 0/216 | 61/216 | 37.5 / 178.4 |
-| V4 | **107.4** | **197** | 0/216 | **56/216** | 38.4 / 183.9 |
-| V5 | 340.4 | 3001* | **16/216** | 112/216 | 33.3 / 178.1 |
-| V6b | 126.7 | 249 | 0/216 | 91/216 | 40.0 / 185.0 |
+| Ship | Version | Mean frames | Max frames | Bad | Overshoot events | Lateral miss (mean/max) |
+|---|---|---|---|---|---|---|
+| shuttle | V4 | **156.7** | 223 | 0/216 | **4/216** | 34.3 / 130.3 |
+| shuttle | V5 | 163.4 | 223 | 0/216 | 53/216 | 31.2 / 100.8 |
+| shuttle | V6b | 163.3 | 223 | 0/216 | 53/216 | 31.3 / 100.8 |
+| freighter | V4 | **504.3** | **1166** | 0/216 | **91/216** | 105.0 / 417.3 |
+| freighter | V5 | 625.7 | 2376 | 0/216 | 127/216 | 109.0 / 413.5 |
+| freighter | V6b | 542.8 | 2376 | 0/216 | 104/216 | 109.4 / 417.3 |
+| patrol | V3 | 121.1 | 209 | 0/216 | 61/216 | 37.5 / 178.4 |
+| patrol | V4 | **107.4** | **197** | 0/216 | **56/216** | 38.4 / 183.9 |
+| patrol | V5 | 340.4 | 3001* | **16/216** | 112/216 | 33.3 / 178.1 |
+| patrol | V6b | 126.7 | 249 | 0/216 | 91/216 | 40.0 / 185.0 |
 
-\* watchdog engaged - V5 is the only version in this sweep that ever needs it.
+\* watchdog engaged - patrol V5 is the only row in this sweep that ever needs it.
 
-**Read plainly: V4 is the best performer in this specific sweep, on every column.** V5's
+**Read plainly: V4 is the best performer in this sweep for every ship, on every column.** V5's
 along-track-gated commit (which fixed the broader "stops off to the side" lateral-miss problem
-documented above, at moderate range) came at the cost of *introducing* the pursuit-curve stall
-close-in - 16/216 bad, something neither V3 nor V4 had at all. V6b's turn-radius cap patches
-that specific regression back to 0/216 bad, but does not recover V4's raw close-range
-performance (126.7 vs. 107.4 mean frames, 91 vs. 56 overshoot events) - it's a smaller, real cap
-on top of a control law that's still fundamentally spending extra time on the cross-track/
-along-track machinery V4 doesn't have.
+documented above, at moderate range) made close-range overshoot events *worse across the board*
+- not just patrol's pursuit-curve stall (16/216 bad, something neither V3 nor V4 had at all):
+shuttle's overshoot-event rate jumps over 13x (4/216 -> 53/216), freighter's mean frames get 24%
+slower (504.3 -> 625.7). V6b's turn-radius cap patches patrol's specific bad-trial regression
+back to 0/216 and recovers freighter's mean partway (625.7 -> 542.8), but touches shuttle's
+overshoot regression not at all (53/216 either way) and doesn't fully recover freighter's either
+(104/216 vs. V4's 91/216). None of this crosses into "bad" for shuttle/freighter in any version
+(0/216 throughout) - which is exactly why it stayed invisible until this table was actually
+built out per-ship instead of assumed.
 
 No version tested so far has V4's close-range tightness *and* V5's lateral-miss fix *and* zero
 regressions everywhere at once. If close-range patrol performance ever matters enough in real
