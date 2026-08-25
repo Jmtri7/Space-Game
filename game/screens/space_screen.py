@@ -203,7 +203,16 @@ class SpaceScreen(ScreenBase):
         as a salesman's dialogue would say, ready the moment the player
         boards through the spaceport's exit."""
         self._apply_ship_type(ship_type_id)
-        self.player.x, self.player.y = self.station.x, self.station.y
+        self.park_at(self.station)
+
+    def park_at(self, landable):
+        """Position the player's ship at `landable`'s own space position
+        and stop it - used both right after a purchase and when loading
+        directly into a station/moon save (no actual flight/landing
+        happened this session, so the ship has to be placed there
+        explicitly rather than restored from a save - see
+        restore_possessions() and main.py's load handling)."""
+        self.player.x, self.player.y = landable.x, landable.y
         self.player.park()
 
     def handle_input(self, events):
@@ -661,7 +670,34 @@ class SpaceScreen(ScreenBase):
                 })
         return state
 
+    def restore_possessions(self, state):
+        """Restore just the player's possessions (and re-equip whichever
+        ship type that implies). Split out from restore_state() because
+        state["player"] means something different depending on where a
+        save was made: for a "space" save it's the ship's own position/
+        velocity (handled by restore_state()); for a "station"/"moon" save
+        it's the *LocationScreen's* walking position instead - a totally
+        different coordinate space that main.py must never feed to the
+        ship-position half of restore_state() (see park_at(), used
+        alongside this one for station/moon loads)."""
+        if not state or "possessions" not in state:
+            return
+        self.player.person.possessions.restore_from(state["possessions"])
+        # __init__ always starts the player's Ship from story.json's
+        # default type, regardless of what was actually bought before
+        # saving - re-equip whichever ship they most recently bought
+        # (last entry in owned_ships), or the ship visibly reverts to
+        # that default (e.g. showing a Patrol when a Shuttle was
+        # actually purchased) even though possessions itself is correct.
+        owned_ships = self.player.person.possessions.owned_ships
+        if owned_ships:
+            self._apply_ship_type(owned_ships[-1])
+
     def restore_state(self, state):
+        """Full restore for a "space" save - ship position/velocity,
+        possessions, and every AI ship. Do NOT use this for a "station"/
+        "moon" save; use restore_possessions() + park_at() instead (see
+        restore_possessions() for why)."""
         if not state:
             return
         if "player" in state:
@@ -672,17 +708,7 @@ class SpaceScreen(ScreenBase):
             self.player.velocity_x = player_state.get("velocity_x", self.player.velocity_x)
             self.player.velocity_y = player_state.get("velocity_y", self.player.velocity_y)
             self.player.thrust = player_state.get("thrust", self.player.thrust)
-        if "possessions" in state:
-            self.player.person.possessions.restore_from(state["possessions"])
-            # __init__ always starts the player's Ship from story.json's
-            # default type, regardless of what was actually bought before
-            # saving - re-equip whichever ship they most recently bought
-            # (last entry in owned_ships), or the ship visibly reverts to
-            # that default (e.g. showing a Patrol when a Shuttle was
-            # actually purchased) even though possessions itself is correct.
-            owned_ships = self.player.person.possessions.owned_ships
-            if owned_ships:
-                self._apply_ship_type(owned_ships[-1])
+        self.restore_possessions(state)
         # Restore all AI ships
         if "ai_ships" in state:
             for i, ai_state in enumerate(state["ai_ships"]):

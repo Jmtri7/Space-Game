@@ -69,24 +69,43 @@ always passed as `{}`; when saving from a `LocationScreen` it instead carries
 
 `game_state["location"]` is one of `"space"`, `"station"`, or `"moon"` and drives
 where `LoadMenu` sends you. Station saves add `game_state["station_location"]`
-(e.g. `"dormitory"`, `"default"`, `"spaceport"` - whichever interior key the
-player was actually in) and moon saves add `game_state["moon_location"]`
-(`"city"` or `"wilderness"`), falling back to `"default"`/`"city"` respectively
-if the key is missing or no longer valid. `game_state["story"]` and `game_state["system_id"]`
-record which story and which star system within it the save belongs to, so loading
-resolves config from the right place (`config/stories/{story}/...`) and jumps back into
-the right system rather than always the story's starting one.
+and moon saves add `game_state["moon_location"]` - both read straight from
+`LocationScreen.interior_key` (set by `SpaceScreen.get_interior_screen()` -
+which key this actually is in the landable's own `interiors` config), falling
+back to `"default"`/`"city"` respectively if the key is missing or no longer
+valid. **Do not** re-derive this from a label/config-file text guess (e.g.
+"does the label contain the word 'city'") - a real bug shipped exactly that
+way, since not every story names its interiors so obligingly (Kepler's Reach's
+moon city interior is labeled "Rust Moon Settlement"). `game_state["story"]`
+and `game_state["system_id"]` record which story and which star system within
+it the save belongs to, so loading resolves config from the right place
+(`config/stories/{story}/...`) and jumps back into the right system rather
+than always the story's starting one - built by `main.py`'s
+`build_save_game_state()`, which exists specifically because both save call
+sites used to set these on a dict that then got discarded (see git history
+for the "system not restored" bug).
 
 `game_state["possessions"]` (credits, owned ship type IDs, loans) is written by
 *both* `SpaceScreen.get_state()` and `LocationScreen.get_state()` - whichever one
 actually runs for a given save, since the entire pre-ship-ownership part of the
 game (dormitory, corridor, concourse, spaceport, loan office) happens inside
-`LocationScreen`, not `SpaceScreen`. `SpaceScreen.restore_state()` is called on
-every load path regardless of which side wrote it (see `main.py`'s load
-handling), so a single `possessions` key covers all three `location` values.
-`Possessions.restore_from()` mutates the existing object in place rather than
-replacing it, since the player's one real `Possessions` is shared by reference
-across `SpaceScreen` and every cached `LocationScreen` (see ARCHITECTURE.md).
+`LocationScreen`, not `SpaceScreen`. Restoring it always goes through
+`SpaceScreen.restore_possessions()` (see "Restoring State" below) regardless of
+which side wrote it, so a single `possessions` key covers all three `location`
+values. `Possessions.restore_from()` mutates the existing object in place
+rather than replacing it, since the player's one real `Possessions` is shared
+by reference across `SpaceScreen` and every cached `LocationScreen` (see
+ARCHITECTURE.md).
+
+**`game_state["player"]` means two different things depending on `location`,
+and this matters a great deal for restoring it correctly (see below):** for a
+`"space"` save it's `SpaceScreen`'s own ship position/velocity/angle/thrust;
+for a `"station"`/`"moon"` save it's `LocationScreen`'s own local walking
+position instead - a completely different, much smaller-scale coordinate
+system with no relationship to where the ship actually is parked in space. A
+real bug shipped from conflating these: loading directly into a station/moon
+save fed the interior's local x/y into the ship's space x/y, scattering the
+ship to an arbitrary point in space instead of docking it at the landable.
 
 ## State Capture & Restoration
 
@@ -136,17 +155,31 @@ def get_state(self):
 - Landing prompt visibility (transient UI state)
 - NPC positions in a location (reset on entry)
 
-### Restoring State: `restore_state()`
+### Restoring State: `restore_state()` / `restore_possessions()` + `park_at()`
 
-Called in the main loop after loading:
+**For a `"space"` save**, called in the main loop after loading:
 ```python
 game_screen.restore_state(save_data.get("game_state", {}))
 ```
+This restores `player` ship fields with `.get(key, default)` fallback,
+restores `possessions` (via `restore_possessions()`, below), then loops
+`state["ai_ships"]` and restores each by index into `self.ai_ships` (extra
+saved ships beyond the current story's count are ignored).
 
-**In `SpaceScreen`:** restores `player` fields with `.get(key, default)` fallback,
-restores `possessions` (mutates the existing `Possessions` object in place - see
-above), then loops `state["ai_ships"]` and restores each by index into
-`self.ai_ships` (extra saved ships beyond the current story's count are ignored).
+**For a `"station"`/`"moon"` save, do NOT call `restore_state()`** - its
+`player` handling assumes ship-position semantics that don't apply (see the
+`game_state["player"]` note above). `main.py`'s load handling instead calls:
+```python
+game_screen.restore_possessions(game_state)  # credits/ships/loans only, no position
+game_screen.park_at(game_screen.station)     # or .moon - docks the ship there explicitly
+```
+`restore_possessions()` is the part of the old `restore_state()` that's safe
+to reuse regardless of where the save came from - it only ever reads
+`state["possessions"]`, never `state["player"]`. `park_at(landable)` puts the
+ship exactly at that landable's own space position with zero velocity, since
+no actual flight/landing happened this session to put it there - the same
+thing `_on_ship_purchased()` already needed to do right after a purchase, so
+it calls `park_at()` too.
 
 Restoring `possessions` also re-equips the player's actual `Ship` (stats +
 graphics) to whichever type is last in `owned_ships` - `SpaceScreen.__init__`

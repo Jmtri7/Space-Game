@@ -717,6 +717,18 @@ class TestBuildSaveGameState(unittest.TestCase):
         self.assertEqual(game_state["story"], "default")
         self.assertEqual(game_state["system_id"], "keplers_reach")
 
+    def test_moon_save_uses_interior_key_not_label_text(self):
+        """Regression test: moon_location used to be guessed from whether
+        the interior's own label text contained the word "city" - Kepler's
+        Reach's city interior is labeled "Rust Moon Settlement", which
+        doesn't, so saving there was misdetected as "wilderness" and
+        loading put the player in the wrong moon location entirely."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
+        city_interior = game_screen.get_interior_screen(game_screen.moon, "city", 1600, 1600)
+        self.assertNotIn("city", city_interior.ui_label.lower())  # the actual label has no "city" in it
+        game_state, _ = build_save_game_state(game_screen, "moon", None, city_interior)
+        self.assertEqual(game_state["moon_location"], "city")
+
     def test_space_save_keeps_story_system_id_and_system_config(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
         game_state, system_config_snapshot = build_save_game_state(game_screen, "game", None, None)
@@ -781,11 +793,12 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
         self.assertEqual(fresh.player.ship.graphics.get("size"), 10,
                           "Loading a save must re-equip the bought ship, not story.json's starting default")
 
-    def test_restore_state_from_a_docked_location_save_also_reequips(self):
-        """The station/moon save path builds game_state from
-        LocationScreen.get_state() (no top-level "player"/"ai_ships" keys),
-        not SpaceScreen.get_state() - restore_state() must still pick up
-        "possessions" from it and re-equip accordingly."""
+    def test_restore_possessions_from_a_docked_location_save_also_reequips(self):
+        """The station/moon load path calls restore_possessions() (not
+        restore_state() - see its docstring for why: state["player"] there
+        is the LocationScreen's own walking position, not the ship's space
+        position) - it must still pick up "possessions" and re-equip
+        accordingly."""
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport", 800, 600)
         spaceport._apply_dialogue_action("buy_ship:shuttle")
@@ -793,8 +806,38 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
         docked_state = spaceport.get_state()  # {"player": {...}, "possessions": {...}} - no ai_ships key
 
         fresh = SpaceScreen(pilot_name="Test", story="default")
-        fresh.restore_state(docked_state)
+        fresh.restore_possessions(docked_state)
         self.assertEqual(fresh.player.ship.graphics.get("size"), 10)
+
+
+class TestSpaceScreenParkAt(unittest.TestCase):
+    """Regression test: loading directly into a station/moon save used to
+    call the full restore_state(), which fed the LocationScreen's own
+    walking-position dict (game_state["player"]) into the ship's x/y as if
+    it were the ship's space position - scattering the ship to wherever
+    that (unrelated, much smaller-scale) interior coordinate happened to
+    be instead of docking it at the landable. main.py now calls
+    restore_possessions() + park_at() for station/moon loads instead."""
+
+    def test_park_at_places_the_ship_exactly_on_the_landable(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
+        game_screen.park_at(game_screen.moon)
+        self.assertEqual((game_screen.player.x, game_screen.player.y), (game_screen.moon.x, game_screen.moon.y))
+        self.assertEqual((game_screen.player.velocity_x, game_screen.player.velocity_y), (0, 0))
+
+    def test_restore_possessions_does_not_touch_ship_position(self):
+        """The whole point of the split: restore_possessions() must never
+        read a "player" key at all, so a caller can safely follow it with
+        park_at() without the interior's walking-position dict clobbering
+        the ship's space position first."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        original_position = (game_screen.player.x, game_screen.player.y)
+        # An interior-shaped state - x/y here mean a LocationScreen's local
+        # walking position, wildly different scale from ship space coords.
+        interior_shaped_state = {"player": {"x": 800, "y": 800}, "possessions": {"credits": 500, "owned_ships": [], "loans": []}}
+        game_screen.restore_possessions(interior_shaped_state)
+        self.assertEqual((game_screen.player.x, game_screen.player.y), original_position)
+        self.assertEqual(game_screen.player.person.possessions.credits, 500)
 
 
 class TestLocationScreenEconomy(unittest.TestCase):

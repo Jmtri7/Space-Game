@@ -45,13 +45,12 @@ def build_save_game_state(game_screen, previous_screen, station_interior, moon_i
     if previous_screen == "moon":
         game_state = moon_interior.get_state()
         game_state["location"] = "moon"
-        # Determine moon location type from config file path or label
-        if moon_interior.config_file and "moon_city" in moon_interior.config_file:
-            game_state["moon_location"] = "city"
-        elif moon_interior.config.get("label", "").lower().find("city") >= 0:
-            game_state["moon_location"] = "city"
-        else:
-            game_state["moon_location"] = "wilderness"
+        # interior_key (set by SpaceScreen.get_interior_screen) is which
+        # key this actually is in the moon's own interiors config - not a
+        # guess from its label text, which used to misdetect any city
+        # interior whose label didn't literally contain the word "city"
+        # (e.g. Kepler's Reach's "Rust Moon Settlement") as "wilderness".
+        game_state["moon_location"] = moon_interior.interior_key or "city"
         system_config_snapshot = {}
     elif previous_screen == "station":
         game_state = station_interior.get_state()
@@ -200,7 +199,16 @@ def main():
                                 current_screen = "game"
                             elif location == "station":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
-                                game_screen.restore_state(game_state)
+                                # NOT restore_state() - game_state["player"]
+                                # here is the LocationScreen's own walking
+                                # position, not the ship's space position;
+                                # feeding it to restore_state() scattered the
+                                # ship to whatever that interior coordinate
+                                # happened to be instead of docking it at the
+                                # station. park_at() puts the ship where the
+                                # fiction says it actually is - docked.
+                                game_screen.restore_possessions(game_state)
+                                game_screen.park_at(game_screen.station)
                                 station_location = game_state.get("station_location", "default")
                                 if station_location not in game_screen.station.interiors:
                                     station_location = "default"
@@ -210,7 +218,8 @@ def main():
                                 current_screen = "station"
                             elif location == "moon":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
-                                game_screen.restore_state(game_state)
+                                game_screen.restore_possessions(game_state)  # see the station branch above for why not restore_state()
+                                game_screen.park_at(game_screen.moon)
                                 moon_location = game_state.get("moon_location", "city")
                                 if moon_location not in game_screen.moon.interiors:
                                     moon_location = "city"
