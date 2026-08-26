@@ -6,7 +6,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
 
@@ -174,12 +174,16 @@ class ShipBrowserMenu:
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
+        # Top-left Controls pane, same spot/style as the base screen's own
+        # (see LocationScreen.draw's draw_hud=False / SpaceScreen's).
         # Hidden while a purchase confirmation is up - ConfirmDialog draws
-        # its own "Y: Yes  N: No  ESC: Cancel" help text, and this menu's
-        # own browse/buy controls don't apply until that's resolved.
+        # its own Y/N/ESC controls pane in that same spot instead, since
+        # this menu's own browse/buy controls don't apply until that's
+        # resolved (see ConfirmDialog.draw).
+        margin = int(10 * scale)
         if not self.confirm:
-            help_text = font_info.render("Arrows/Click: browse, Enter: buy, ESC: close", True, (150, 150, 150))
-            surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+            help_items = [("Arrows/Click", "Browse"), ("Enter", "Buy"), ("ESC", "Close")]
+            draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)
 
         if self.message_timer > 0:
             self.message_timer -= 1

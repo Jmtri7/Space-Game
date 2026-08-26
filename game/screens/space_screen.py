@@ -791,7 +791,11 @@ class SpaceScreen(ScreenBase):
         else:
             self.landing_text = max(0, self.landing_text - 1)
 
-    def draw(self, surface):
+    def draw(self, surface, draw_hud=True):
+        """draw_hud=False skips the top-left Controls pane and bottom
+        status pane - see LocationScreen.draw's docstring for why (used
+        the same way here, when this screen is only being redrawn as the
+        backdrop for a modal menu on top of it)."""
         surface.fill(BLACK)
         self.star_field.draw(surface)
         if self.central_star:
@@ -829,9 +833,9 @@ class SpaceScreen(ScreenBase):
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
-        self._draw_hud(surface, target_obj)
+        self._draw_hud(surface, target_obj, draw_hud=draw_hud)
 
-    def _draw_hud(self, surface, target_obj):
+    def _draw_hud(self, surface, target_obj, draw_hud=True):
         """Ship status, targeting, jump-target, help, and status-message
         overlays - styled with the same glass-panel look as the menus
         (ui_theme.py) instead of each being its own ad-hoc text blit.
@@ -897,18 +901,22 @@ class SpaceScreen(ScreenBase):
         info_rect = draw_info_panel(surface, lines, ui_scale, (utils.screen_width - margin, minimap_rect.bottom + margin))
 
         # --- Top-left: control-help pane (shared design with LocationScreen's -
-        # see draw_controls_pane).
-        help_items = [
-            ("ESC", "Pause"),
-            ("WASD/Arrows", "Thrust/Turn"),
-            ("T", "Target Mode"),
-            ("]", "Next Target"),
-            ("[", "Previous Target"),
-            ("M", "Star Map"),
-            ("P", "View Possessions"),
-            ("Click", "Target Object"),
-        ]
-        controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
+        # see draw_controls_pane). Skipped (draw_hud=False) whenever a modal
+        # menu on top of this screen is showing its own controls pane in
+        # the same spot instead.
+        controls_rect = None
+        if draw_hud:
+            help_items = [
+                ("ESC", "Pause"),
+                ("WASD/Arrows", "Thrust/Turn"),
+                ("T", "Target Mode"),
+                ("]", "Next Target"),
+                ("[", "Previous Target"),
+                ("M", "Star Map"),
+                ("P", "View Possessions"),
+                ("Click", "Target Object"),
+            ]
+            controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
 
         # --- Top-center: transient "too close to jump" warning ---
         if self.jump_message_timer > 0:
@@ -925,26 +933,28 @@ class SpaceScreen(ScreenBase):
         # prompts are independent of each other and can all be true at
         # once, so they stack as separate lines in one panel instead of
         # being mutually exclusive.
-        status_lines = []
-        if self.jump_state:
-            status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
-            status_lines = [(status_text, GREEN)]
-        elif self.player.autopilot_active:
-            status_lines = [("Autopilot engaged - press any key to cancel", GREEN)]
-        else:
-            if self.landing_text > 0:
-                status_lines.append(("Press L to Land", GREEN))
-            elif speed >= 0.4 and (
-                self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
-                or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
-            ):
-                status_lines.append(("Slow down to land", RED))
-            if self.selected_system_id:
-                status_lines.append(("Press J to Jump", GREEN))
-            if target_obj:
-                status_lines.append(("Press Space for Autopilot", GREEN))
+        status_rect = None
+        if draw_hud:
+            status_lines = []
+            if self.jump_state:
+                status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
+                status_lines = [(status_text, GREEN)]
+            elif self.player.autopilot_active:
+                status_lines = [("Autopilot engaged - press any key to cancel", GREEN)]
+            else:
+                if self.landing_text > 0:
+                    status_lines.append(("Press L to Land", GREEN))
+                elif speed >= 0.4 and (
+                    self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
+                    or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
+                ):
+                    status_lines.append(("Slow down to land", RED))
+                if self.selected_system_id:
+                    status_lines.append(("Press J to Jump", GREEN))
+                if target_obj:
+                    status_lines.append(("Press Space for Autopilot", GREEN))
 
-        status_rect = draw_status_pane(surface, status_lines, ui_scale)
+            status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in

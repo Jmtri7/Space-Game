@@ -491,8 +491,15 @@ class LocationScreen(ScreenBase):
         for character in self.npcs:
             character.update()
 
-    def draw(self, surface):
-        """Draw location from config."""
+    def draw(self, surface, draw_hud=True):
+        """Draw location from config. draw_hud=False skips the top-left
+        Controls pane and bottom status pane (e.g. "Press T to talk to
+        X") - used when this location is only being redrawn as the
+        backdrop for a modal menu on top of it (shop/possessions/exit
+        menu - see main.py), whose own controls pane takes that same
+        top-left spot instead, and whose "Press T"-style status prompt
+        would otherwise be both wrong (not actually pressable right now)
+        and visually colliding with the menu's own bottom help text."""
         surface.fill(self.bg_color)
         scale = get_scale()
 
@@ -637,25 +644,41 @@ class LocationScreen(ScreenBase):
         # (see draw_controls_pane), with the controls that apply here.
         # Anchored to the real screen corner (not get_ui_offset()'s
         # letterboxed 800x600 canvas), matching SpaceScreen's own pane.
-        help_items = [
-            ("ESC", "Pause"),
-            ("WASD/Arrows", "Move"),
-            ("]", "Next Target"),
-            ("[", "Previous Target"),
-            ("Click", "Target Person"),
-            ("P", "View Possessions"),
-        ]
-        controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
+        # Skipped (draw_hud=False) whenever a modal menu on top of this
+        # location is showing its own controls pane in the same spot -
+        # and swapped for the dialogue's own controls while active_dialogue
+        # is set, since none of the normal move/target controls apply
+        # while a conversation has input focus (see handle_input).
+        controls_rect = None
+        if self.active_dialogue:
+            help_items = [("W/S or Up/Down", "Navigate"), ("Enter", "Choose"), ("ESC", "Close")]
+            controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
+        elif draw_hud:
+            help_items = [
+                ("ESC", "Pause"),
+                ("WASD/Arrows", "Move"),
+                ("]", "Next Target"),
+                ("[", "Previous Target"),
+                ("Click", "Target Person"),
+                ("P", "View Possessions"),
+            ]
+            controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
 
         # Bottom-center status pane (see draw_status_pane) - entrance and
         # talk prompts are independent of each other and can both be true
-        # at once, so they stack as separate lines in one panel.
-        status_lines = []
-        if active_portal:
-            status_lines.append(("Press L to enter portal", GREEN))
-        if closest_npc:
-            status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
-        status_rect = draw_status_pane(surface, status_lines, ui_scale)
+        # at once, so they stack as separate lines in one panel. Skipped
+        # (draw_hud=False, or while active_dialogue is set) for the same
+        # reason as the Controls pane above - "Press T to talk" isn't
+        # actually actionable while a modal menu or conversation has input
+        # focus.
+        status_rect = None
+        if draw_hud and not self.active_dialogue:
+            status_lines = []
+            if active_portal:
+                status_lines.append(("Press L to enter portal", GREEN))
+            if closest_npc:
+                status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
+            status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in

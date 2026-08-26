@@ -9,7 +9,7 @@ from game.constants import YELLOW, GRAY, GREEN, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
 from game.ui.ui_theme import (
     draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
-    draw_purchase_message, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
+    draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
 )
 from game.ui.selectable_list import SelectableList
 from game.ui.icon_grid import IconGrid
@@ -323,9 +323,10 @@ class OutfittingMenu:
 
         # Taller than a plain price-list panel would need - the Buy tab's
         # cells now carry owned-count/slot/fit info on top of name+cost
-        # (see _draw_buy_cell), and the Install tab's help text is a
-        # multi-line block instead of one line (see _help_lines).
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.06), int(800 * scale * 0.84), int(600 * scale * 0.90))
+        # (see _draw_buy_cell). Help text lives in the top-left Controls
+        # pane now (see draw()'s end), not in this panel, so it no longer
+        # needs extra room at the bottom for that.
+        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.08), int(800 * scale * 0.84), int(600 * scale * 0.84))
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(32 * scale))
@@ -355,27 +356,27 @@ class OutfittingMenu:
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        help_lines = self._help_lines()
-        font_help = get_font(int(15 * scale))
-        help_line_height = int(17 * scale)
-        help_top = panel_rect.bottom - int(12 * scale) - help_line_height * len(help_lines)
-        for i, line in enumerate(help_lines):
-            text = font_help.render(line, True, (150, 150, 150))
-            surface.blit(text, (panel_rect.x + int(20 * scale), help_top + i * help_line_height))
+        # Top-left Controls pane, same spot/style as the base screen's own
+        # (see LocationScreen.draw's draw_hud=False / SpaceScreen's) -
+        # replaces the base screen's controls pane in that exact spot
+        # rather than adding a separate help block inside this panel.
+        margin = int(10 * scale)
+        draw_controls_pane(surface, margin, margin, "Controls", self._help_items(), scale)
 
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, help_top - int(6 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(20 * scale), scale)
 
         if self.dragging_outfit:
             drag_text = font_text.render(self._resolve(self.dragging_outfit).get("name", self.dragging_outfit), True, WHITE)
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
 
-    def _help_lines(self):
-        """Bottom-of-panel help text - a short block rather than one line,
-        since the Install tab has both a mouse (drag-and-drop) and a
-        keyboard way to change selections and install/uninstall, and both
-        need spelling out (see CLAUDE.md's Menu Help Text rule).
+    def _help_items(self):
+        """(key, description) rows for the top-left Controls pane (see
+        draw_controls_pane) - varies by tab since the Install tab has both
+        a mouse (drag-and-drop) and a keyboard way to change selections
+        and install/uninstall, and both need spelling out (see CLAUDE.md's
+        Menu Help Text rule).
 
         While the compatible-outfit picker popup is open, this replaces
         the outer tab's help entirely - the picker is its own small modal
@@ -383,18 +384,22 @@ class OutfittingMenu:
         (drag-and-drop, Tab to switch tabs, browsing the grid) don't apply
         until it's dismissed, so showing them underneath was just clutter."""
         if self.picker is not None:
-            return ["Up/Down: navigate", "Enter: install into the focused slot", "ESC: cancel"]
+            return [("Up/Down", "Navigate"), ("Enter", "Install into slot"), ("ESC", "Cancel")]
         if self.tab == "buy":
             return [
-                "Tab/Click tab: Switch Buy/Install",
-                "Arrows/Click: browse, Enter: buy",
-                "ESC: close",
+                ("Tab/Click tab", "Buy/Install"),
+                ("Arrows/Click", "Browse"),
+                ("Enter", "Buy"),
+                ("ESC", "Close"),
             ]
         return [
-            "Tab/Click tab: Switch Buy/Install",
-            "Mouse: drag a spare outfit onto a slot to install it, or drag an installed slot out to uninstall",
-            "Keys: click, or Left/Right to switch Slots/Spares, Up/Down to navigate, Enter to install/uninstall",
-            "ESC: close (cancels an open install picker first, if one is open)",
+            ("Tab/Click tab", "Buy/Install"),
+            ("Mouse drag", "Install/uninstall a slot"),
+            ("Click", "Select a slot or spare"),
+            ("Left/Right", "Switch Slots/Spares"),
+            ("Up/Down", "Navigate"),
+            ("Enter", "Install/uninstall focused slot"),
+            ("ESC", "Close (or cancel picker)"),
         ]
 
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):

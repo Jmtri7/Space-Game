@@ -1,8 +1,8 @@
 """Confirmation dialogs for user actions."""
 import pygame
-from game.constants import WHITE, YELLOW, GRAY
+from game.constants import WHITE, YELLOW
 from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
 
 
 class ConfirmDialog:
@@ -36,5 +36,9 @@ class ConfirmDialog:
         message_text = font_text.render(self.message, True, YELLOW)
         surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), int(offset_y + 600 * scale * 0.45)))
 
-        help_text = font_text.render("Y: Yes   N: No   ESC: Cancel", True, GRAY)
-        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.65)))
+        # Top-left Controls pane, same spot/style every other menu uses -
+        # takes over whatever was there (the menu underneath this
+        # confirmation, or the base screen) since Y/N/ESC is the only
+        # thing actually pressable right now.
+        margin = int(10 * scale)
+        draw_controls_pane(surface, margin, margin, "Controls", [("Y", "Yes"), ("N", "No"), ("ESC", "Cancel")], scale)

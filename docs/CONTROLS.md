@@ -99,6 +99,15 @@ See `game/world/dialogue.py`.
 
 ## Menus
 
+Every menu below that opens over the space view or an interior location
+(Possessions, Shop, Shipyard, Outfitting, the Exit Menu, and Yes/No
+confirmations) shows its own controls in the same top-left "Controls" pane
+that screen normally uses (see `draw_controls_pane` in `game/ui/ui_theme.py`)
+- it takes over that exact spot rather than adding a separate help line of
+its own, and the base screen's own Controls pane and bottom status prompt
+(e.g. "Press T to talk to X") are hidden while any of these is open, since
+neither is actually usable until the menu closes.
+
 ### Possessions Menu (P)
 | Control | Action |
 |---------|--------|
@@ -152,9 +161,9 @@ ship type's graphics define any (see `windows` in `graphics.json`'s ship
 entries). Browsing the grid (arrow keys or clicking a ship) is never blocked
 by affordability and never opens the purchase confirmation by itself - only
 Enter does that; the confirmation is still Yes/No/ESC only, no click. While
-it's open, this menu's own "Arrows/Click: browse..." help line is hidden -
-only the confirmation's own Y/N/ESC help applies until you resolve it. A
-confirmed purchase shows a brief fading "Bought 1 `<ship>`" confirmation.
+it's open, this menu's own Controls pane is replaced by the confirmation's
+Y/N/ESC one, in the same top-left spot, until you resolve it. A confirmed
+purchase shows a brief fading "Bought 1 `<ship>`" confirmation.
 Replaces the old dialogue-tree ship purchase for any NPC whose config uses a
 `"shop"` block instead of a `dialogue_tree` with `buy_ship:<id>` options (the
 spaceport's ship salesman now works this way).
@@ -188,9 +197,9 @@ slot type on the Install tab. A successful buy shows a brief fading
 "Bought 1 `<outfit>`" confirmation.
 
 While the Install tab's compatible-outfit picker popup is open (after
-pressing Enter on an empty slot), this menu's help text switches to just the
-picker's own controls (Up/Down, Enter, ESC) - the Buy/Install tab's normal
-controls don't apply until the picker is dismissed.
+pressing Enter on an empty slot), this menu's Controls pane switches to just
+the picker's own controls (Up/Down, Enter, ESC) - the Buy/Install tab's
+normal controls don't apply until the picker is dismissed.
 
 Install shows a diagram of the current ship's slots - an occupied slot draws
 that outfit's own icon inside it (plus its name below) - next to a grid of

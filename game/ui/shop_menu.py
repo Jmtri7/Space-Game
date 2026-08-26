@@ -8,7 +8,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 
 DEFAULT_SELL_MULTIPLIER = 0.6
@@ -180,8 +180,14 @@ class ShopMenu:
             down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
-        help_text = font_info.render("Tab/Click tab: Buy/Sell, Arrows/Click: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))
-        surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+        # Top-left Controls pane - same real-screen-corner spot/style as
+        # the base screen's own (see LocationScreen.draw's draw_hud=False /
+        # SpaceScreen's), which this menu is always shown on top of, so its
+        # controls take over that exact spot instead of a separate line
+        # tucked into this panel's own corner.
+        margin = int(10 * scale)
+        help_items = [("Tab/Click", "Buy/Sell tab"), ("Arrows/Click", "Browse"), ("Enter", "Transact 1"), ("ESC", "Close")]
+        draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)
 
         if self.message_timer > 0:
             self.message_timer -= 1

@@ -3,9 +3,8 @@ leads to more than one place - shown to the player instead of LocationScreen
 immediately exiting, whenever get_exit_options() returns more than one
 option (see docs/CONTROLS.md#exit-menu)."""
 import pygame
-from game.constants import GRAY
-from game.utils import get_ui_scale, get_ui_offset, get_font, _center_text_x
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.utils import get_ui_scale, get_ui_offset, get_font
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
 from game.ui.selectable_list import SelectableList
 
 
@@ -66,5 +65,10 @@ class ExitMenu:
 
         self.list.draw(surface, font_text, panel_rect.centerx, int(offset_y + 600 * scale * 0.45), int(40 * scale), scale, label_fn=self._label, disabled_fn=self.disabled_reasons.get)
 
-        help_text = font_text.render("Enter: select, ESC: cancel", True, GRAY)
-        surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.68)))
+        # Top-left Controls pane - same spot/style as the location screen's
+        # own (see LocationScreen.draw's draw_hud=False), which this menu
+        # is always shown on top of, so its controls take over that exact
+        # spot instead of the (now-inapplicable) ones that were there.
+        margin = int(10 * scale)
+        help_items = [("W/S", "Navigate"), ("Enter", "Select"), ("ESC", "Cancel")]
+        draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)

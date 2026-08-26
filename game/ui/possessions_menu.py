@@ -2,7 +2,7 @@
 items, and ship outfits."""
 import pygame
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_ship_outfit, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
 
 
 class PossessionsMenu:
@@ -95,5 +95,8 @@ class PossessionsMenu:
         spare_lines = [(get_ship_outfit(self.story, oid).get("name", oid), (220, 200, 255)) for oid in self.possessions.owned_outfits]
         self._draw_section(surface, font_section, font_text, right_x, y, line_height, scale, "Spare Outfits", spare_lines)
 
-        close_text = font_text.render("P or ESC: close", True, (150, 150, 150))
-        surface.blit(close_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(28 * scale)))
+        # Top-left Controls pane - same spot/style as the base screen's own
+        # (see LocationScreen.draw's draw_hud=False / SpaceScreen's), which
+        # this menu is always shown on top of.
+        margin = int(10 * scale)
+        draw_controls_pane(surface, margin, margin, "Controls", [("P/ESC", "Close")], scale)

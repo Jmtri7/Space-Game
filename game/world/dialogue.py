@@ -105,6 +105,3 @@ class Dialogue:
                 label = f"> {option['label']}"
             text = font_text.render(label, True, color)
             surface.blit(text, (box_x + text_x_margin + int(10 * scale), options_top + i * option_line_height))
-
-        close_text = font_text.render("Press ESC to close", True, (150, 150, 150))
-        surface.blit(close_text, (box_x + text_x_margin, box_y + box_height - int(30 * scale)))

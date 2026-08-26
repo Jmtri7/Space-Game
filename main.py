@@ -393,9 +393,9 @@ def main():
                 # visible behind the menu instead of the one actually being
                 # left, which looked exactly like an NPC in two rooms at once.
                 if exit_menu_return_screen == "station" and station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw(screen, draw_hud=False)
                 elif exit_menu_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen)
+                    moon_interior.draw(screen, draw_hud=False)
                 exit_menu.draw(screen)
 
             elif current_screen == "possessions":
@@ -406,11 +406,11 @@ def main():
                 # while it's open. Draw whichever screen this was opened
                 # over, then the overlay on top - same idea as PauseMenu below.
                 if possessions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen)
+                    game_screen.draw(screen, draw_hud=False)
                 elif possessions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw(screen, draw_hud=False)
                 elif possessions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen)
+                    moon_interior.draw(screen, draw_hud=False)
                 possessions_menu.draw(screen)
 
             elif current_screen == "shop":
@@ -421,9 +421,9 @@ def main():
                 # stays frozen while it's open. Draw whichever screen this
                 # was opened over, then the overlay on top.
                 if shop_return_screen == "station" and station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw(screen, draw_hud=False)
                 elif shop_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen)
+                    moon_interior.draw(screen, draw_hud=False)
                 shop_menu.draw(screen)
 
             elif current_screen == "moon":
@@ -546,10 +546,14 @@ def main():
                         current_screen = "menu"
                         menu = Menu()
 
+                # draw_hud=False since PauseMenu.draw() immediately fills
+                # the whole screen black anyway - this is just to keep
+                # camera-follow/animation state current, not for the HUD
+                # to actually be seen.
                 if previous_screen == "game" and game_screen:
-                    game_screen.draw(screen)
+                    game_screen.draw(screen, draw_hud=False)
                 elif previous_screen == "station" and station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw(screen, draw_hud=False)
 
                 pause_menu.draw(screen)
 
