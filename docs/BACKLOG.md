@@ -11,9 +11,19 @@ higher priority.
 
 ## Bugs
 
-None currently open - the last batch (save/jump/dialogue-proximity/exit-menu/
-encoding/draw-order/targeting/ring/load-menu fixes) was cleared out together;
-see git history around that time for the individual commits.
+- [ ] ⭐ Elena Voss (NPC) gets stuck — likely the same root cause as the "AI walking
+      pathfinding" feature below, but flagging as a concrete repro to fix against.
+- [ ] ⭐ Building collision missing — player/NPCs can walk through buildings.
+- [ ] ⭐ NPC facing/heading is ambiguous — hard to tell which direction an NPC is
+      oriented or about to move.
+- [ ] ⭐ Helmet graphic is the same shade of gray as the ground, hard to distinguish.
+- [ ] ⭐ Flaky test: the "should still be moving" background AI-ship test in
+      `tests/test_helpers.py` intermittently fails because the routine driving that
+      ship (likely `ExplorerRoutine` in `game/world/routine.py`) can produce a
+      zero-net-movement frame by chance. Determine whether the zero-movement frame
+      is legitimate (fix the test to check across multiple frames) or a routine bug
+      (fix the routine). Rerun `python run_tests.py` 10+ times after the fix to
+      confirm the flake is gone.
 
 ## Features / Ideas
 
@@ -53,3 +63,16 @@ see git history around that time for the individual commits.
 - [ ] More interior decorations, like roads.
 - [ ] Multiple owned ships.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a user who wants help creating one.
+- [ ] Planet descriptions (icy, rocky, gas giant, etc.).
+- [ ] Reasons to visit hazardous worlds.
+- [ ] Events and procedural generation as you travel around systems.
+- [ ] System minimap (local-system view during flight, distinct from the interstellar star map).
+- [ ] Minimap: bigger title text.
+- [ ] Minimap: click a target to select it.
+- [ ] Autopilot should indicate what it's currently doing (e.g. "approaching", "braking").
+- [ ] Conversations should show help text (e.g. "Enter: continue, ESC: exit") like other menus.
+- [ ] No useless NPCs — each one should reveal something about the game's features or story.
+- [ ] Consider mouse-based movement/control support.
+- [ ] NPCs stop wandering if the player moves close to or targets them.
+- [ ] Jump completed message.
+- [ ] Advice/hint to jump if the player drifts too far from the system.
