@@ -3,9 +3,9 @@ import math
 import pygame
 import game.utils as utils
 from game.constants import WHITE, YELLOW, GRAY
-from game.utils import get_font, handle_menu_navigation, render_help_text
+from game.utils import get_font, handle_menu_navigation
 from game.ui.menu_backdrop import MenuBackdrop
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight, draw_controls_pane
 
 TITLE = "GALAXY RISE"  # temp title
 
@@ -76,7 +76,10 @@ class Menu:
     def draw(self, surface):
         self.backdrop.draw(surface)
         self._draw_panel_and_items(surface)
-        render_help_text(surface, "Up/Down: navigate, Enter: select, Click: select")
+        scale, _, _, _ = self._layout()
+        margin = int(10 * scale)
+        help_items = [("Up/Down", "Navigate"), ("Enter", "Select"), ("Click", "Select")]
+        draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)
 
     def _draw_panel_and_items(self, surface):
         scale, panel_rect, y_base, y_spacing = self._layout()

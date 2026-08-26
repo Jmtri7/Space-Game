@@ -58,6 +58,12 @@ class Character:
         self.person = person
         self.ship = ship
         self.role = role
+        # Mirrored onto the person itself (not just kept here on Character)
+        # so anything holding just a bare Person - LocationScreen.visitors,
+        # for instance, which never keeps the Character wrapper around - can
+        # still show a name/role label without a back-reference to this
+        # Character (see LocationScreen._role_label).
+        person.role = role
         self.route = route or []
         # Bound LocationScreen.can_move_to, if this character lives inside
         # one (see LocationScreen._build_local_character) - lets a routine

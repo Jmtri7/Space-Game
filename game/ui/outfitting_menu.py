@@ -5,9 +5,12 @@ build_shop_menu), the same way ShopMenu/ShipBrowserMenu are."""
 import functools
 import math
 import pygame
-from game.constants import YELLOW, GRAY, GREEN, RED, WHITE
+from game.constants import YELLOW, GRAY, GREEN, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon, draw_shop_cell
+from game.ui.ui_theme import (
+    draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
+    draw_purchase_message, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
+)
 from game.ui.selectable_list import SelectableList
 from game.ui.icon_grid import IconGrid
 
@@ -55,25 +58,40 @@ class OutfittingMenu:
         self.slots = get_ship_type(story, ship_type_id).get("slots", []) if ship_type_id else []
         self.focus_column = "slots"  # "slots" or "owned"
         self.slot_focus = 0
-        self.owned_list = SelectableList(list(possessions.owned_outfits), max_visible=6)
+        # A single-column IconGrid rather than SelectableList - reads as a
+        # small grid of icons (matching the Buy tab) instead of plain text
+        # rows, while keeping Up/Down navigation identical to a 1D list
+        # (see docs/DESIGN_PATTERNS.md's "2D Grid Sibling" - columns=1 just
+        # means Left/Right, which this menu never sends it, never comes up).
+        self.owned_grid = IconGrid(list(possessions.owned_outfits), columns=1, max_rows=6)
         self.picker = None  # SelectableList of compatible outfits while choosing one for the focused slot
 
-        # Drag-and-drop state (mouse). _slot_rects/_owned_item_rects are
-        # filled in by draw() each frame (screen-space, same "cache during
-        # draw, hit-test next frame" idiom SpaceScreen._hud_click_rects
-        # uses) so handle_input's mouse events can hit-test against them.
+        # Drag-and-drop state (mouse). _slot_rects is filled in by draw()
+        # each frame (screen-space, same "cache during draw, hit-test next
+        # frame" idiom SpaceScreen._hud_click_rects uses); owned_grid keeps
+        # its own equivalent cache (see IconGrid.last_rects/index_at).
         self.dragging_outfit = None
         self.drag_source = None  # ("owned",) or ("slot", slot_id)
         self.drag_pos = (0, 0)
         self.hover_slot = None
         self._slot_rects = {}
-        self._owned_item_rects = []
+        # Screen-space rects for the Buy/Install tab labels, cached by
+        # draw() each frame - same idiom as _slot_rects, lets a click tell
+        # whether a tab label was hit before falling through to grid/slot
+        # hit-testing.
+        self._buy_tab_rect = None
+        self._install_tab_rect = None
+        # Transient "Bought 1 X" confirmation (see draw_purchase_message) -
+        # message_timer counts down once per draw() call while > 0, since
+        # nothing calls an OutfittingMenu.update() each frame.
+        self.message = None
+        self.message_timer = 0
 
     def _resolve(self, outfit_id):
         return get_ship_outfit(self.story, outfit_id)
 
-    def _refresh_owned_list(self):
-        self.owned_list.items = list(self.possessions.owned_outfits)
+    def _refresh_owned_grid(self):
+        self.owned_grid.items = list(self.possessions.owned_outfits)
 
     def _compatible_owned_outfits(self, slot_type):
         return [oid for oid in self.possessions.owned_outfits if self._resolve(oid).get("slot_type") == slot_type]
@@ -83,6 +101,29 @@ class OutfittingMenu:
         if not self.possessions.can_afford(cost):
             return "not enough credits"
         return None
+
+    def _owned_count(self, outfit_id):
+        """Total units of outfit_id this character owns - spares
+        (owned_outfits) plus however many are currently installed on the
+        flown ship - so buying a second one you already have equipped still
+        reads as "Own: 2", not "Own: 0"."""
+        spare = self.possessions.owned_outfits.count(outfit_id)
+        installed = list(self.possessions.installed_outfits.values()).count(outfit_id)
+        return spare + installed
+
+    def _fit_status(self, outfit_id, slot_type):
+        """(text, color) describing whether outfit_id fits the ship
+        currently being outfitted, for the Buy tab's cell - independent of
+        _buy_disabled_reason (affordability), since an outfit can be fully
+        affordable and still not fit any slot this ship has."""
+        if not self.ship_type_id:
+            return "No ship yet", GRAY
+        matching_slots = [slot for slot in self.slots if slot["type"] == slot_type]
+        if not matching_slots:
+            return "Doesn't fit your ship", DISABLED_TEXT_COLOR
+        if any(self.possessions.installed_outfits.get(slot["id"]) == outfit_id for slot in matching_slots):
+            return "Equipped", GREEN
+        return "Fits your ship", (140, 220, 140)
 
     def _icon_for(self, outfit_id):
         """(icon_shape, icon_color) for an outfit - its own config wins if
@@ -99,23 +140,42 @@ class OutfittingMenu:
         outfit = self._resolve(outfit_id)
         return f"{outfit.get('name', outfit_id)} ({outfit.get('slot_type', '?')})"
 
+    def _draw_owned_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
+        """cell_draw_fn for owned_grid (see IconGrid.draw) - an icon plus
+        name/slot-type label per row, replacing the old plain-text
+        SelectableList so a spare outfit reads (and drags) the same visual
+        way whether it's in a slot or still in this list."""
+        is_focused_here = is_selected and self.focus_column == "owned"
+        if is_focused_here:
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
+            draw_selection_highlight(surface, rect, scale, pulse)
+        icon_shape, icon_color = self._icon_for(outfit_id)
+        icon_size = int(rect.height * 0.38)
+        icon_cx = rect.x + int(rect.height * 0.5)
+        draw_item_icon(surface, icon_cx, rect.centery, icon_size, icon_shape, icon_color)
+        font = get_font(int(16 * scale))
+        label = font.render(self._owned_label(outfit_id), True, WHITE if is_focused_here else GRAY)
+        surface.blit(label, (rect.x + int(rect.height * 0.9), rect.centery - label.get_height() // 2))
+
     def _buy_outfit(self, outfit_id):
         if self._buy_disabled_reason(outfit_id):
             return
         cost = self._resolve(outfit_id).get("cost", 0)
         self.possessions.spend(cost)
         self.possessions.add_outfit(outfit_id)
-        self._refresh_owned_list()
+        self._refresh_owned_grid()
+        self.message = f"Bought 1 {self._resolve(outfit_id).get('name', outfit_id)}"
+        self.message_timer = PURCHASE_MESSAGE_FRAMES
 
     def _install(self, slot_id, outfit_id):
         self.possessions.install_outfit(slot_id, outfit_id)
-        self._refresh_owned_list()
+        self._refresh_owned_grid()
         if self.on_outfits_changed:
             self.on_outfits_changed()
 
     def _uninstall(self, slot_id):
         if self.possessions.uninstall_outfit(slot_id) is not None:
-            self._refresh_owned_list()
+            self._refresh_owned_grid()
             if self.on_outfits_changed:
                 self.on_outfits_changed()
 
@@ -168,12 +228,12 @@ class OutfittingMenu:
                 if self.focus_column == "slots":
                     self.slot_focus = (self.slot_focus - 1) % len(self.slots)
                 else:
-                    self.owned_list.handle_key(pygame.K_UP)
+                    self.owned_grid.handle_key(pygame.K_UP)
             elif key in (pygame.K_DOWN, pygame.K_s) and self.slots:
                 if self.focus_column == "slots":
                     self.slot_focus = (self.slot_focus + 1) % len(self.slots)
                 else:
-                    self.owned_list.handle_key(pygame.K_DOWN)
+                    self.owned_grid.handle_key(pygame.K_DOWN)
             elif key == pygame.K_RETURN and self.focus_column == "slots" and self.slots:
                 slot = self.slots[self.slot_focus]
                 installed = self.possessions.installed_outfits.get(slot["id"])
@@ -192,20 +252,51 @@ class OutfittingMenu:
         return None
 
     def _handle_mouse_down(self, pos):
-        for slot_id, rect in self._slot_rects.items():
-            if rect.collidepoint(pos):
-                outfit_id = self.possessions.installed_outfits.get(slot_id)
+        """Click routing for both tabs: tab labels always work first; a
+        picker popup (keyboard/ESC only) swallows clicks underneath it so
+        one doesn't accidentally start a drag through it; the Buy grid
+        clicks-to-buy (mirroring Enter); the Install tab's slots/owned grid
+        both move keyboard focus to whatever was clicked and - if it's
+        occupied - start a drag, so a plain click-and-release just selects
+        (matches _handle_drop's "dropped back where it came from" no-op)
+        while a click-and-drag installs/uninstalls."""
+        if self._buy_tab_rect and self._buy_tab_rect.collidepoint(pos):
+            self.tab = "buy"
+            return
+        if self._install_tab_rect and self._install_tab_rect.collidepoint(pos):
+            self.tab = "install"
+            return
+        if self.picker is not None:
+            return
+
+        if self.tab == "buy":
+            index = self.buy_grid.index_at(pos)
+            if index is not None:
+                self.buy_grid.selected = index
+                outfit_id = self.buy_grid.current()
+                if outfit_id:
+                    self._buy_outfit(outfit_id)
+            return
+
+        for i, slot in enumerate(self.slots):
+            rect = self._slot_rects.get(slot["id"])
+            if rect and rect.collidepoint(pos):
+                self.focus_column = "slots"
+                self.slot_focus = i
+                outfit_id = self.possessions.installed_outfits.get(slot["id"])
                 if outfit_id:
                     self.dragging_outfit = outfit_id
-                    self.drag_source = ("slot", slot_id)
+                    self.drag_source = ("slot", slot["id"])
                     self.drag_pos = pos
                 return
-        for outfit_id, rect in self._owned_item_rects:
-            if rect.collidepoint(pos):
-                self.dragging_outfit = outfit_id
-                self.drag_source = ("owned",)
-                self.drag_pos = pos
-                return
+        index = self.owned_grid.index_at(pos)
+        if index is not None:
+            self.focus_column = "owned"
+            self.owned_grid.selected = index
+            outfit_id = self.owned_grid.items[index]
+            self.dragging_outfit = outfit_id
+            self.drag_source = ("owned",)
+            self.drag_pos = pos
 
     def _handle_drop(self, pos):
         outfit_id = self.dragging_outfit
@@ -230,7 +321,11 @@ class OutfittingMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.08), int(800 * scale * 0.84), int(600 * scale * 0.84))
+        # Taller than a plain price-list panel would need - the Buy tab's
+        # cells now carry owned-count/slot/fit info on top of name+cost
+        # (see _draw_buy_cell), and the Install tab's help text is a
+        # multi-line block instead of one line (see _help_lines).
+        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.06), int(800 * scale * 0.84), int(600 * scale * 0.90))
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(32 * scale))
@@ -247,6 +342,8 @@ class OutfittingMenu:
         tabs_x = panel_rect.centerx - (tabs_text.get_width() + tabs_text2.get_width()) // 2
         surface.blit(tabs_text, (tabs_x, y))
         surface.blit(tabs_text2, (tabs_x + tabs_text.get_width(), y))
+        self._buy_tab_rect = pygame.Rect(tabs_x, y, tabs_text.get_width(), tabs_text.get_height())
+        self._install_tab_rect = pygame.Rect(tabs_x + tabs_text.get_width(), y, tabs_text2.get_width(), tabs_text2.get_height())
         y += int(36 * scale)
 
         credits_text = font_info.render(f"Credits: {self.possessions.credits}", True, (255, 220, 100))
@@ -258,12 +355,39 @@ class OutfittingMenu:
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        help_text = font_info.render("Tab: Buy/Install, ESC: close", True, (150, 150, 150))
-        surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+        help_lines = self._help_lines()
+        font_help = get_font(int(15 * scale))
+        help_line_height = int(17 * scale)
+        help_top = panel_rect.bottom - int(12 * scale) - help_line_height * len(help_lines)
+        for i, line in enumerate(help_lines):
+            text = font_help.render(line, True, (150, 150, 150))
+            surface.blit(text, (panel_rect.x + int(20 * scale), help_top + i * help_line_height))
+
+        if self.message_timer > 0:
+            self.message_timer -= 1
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, help_top - int(6 * scale), scale)
 
         if self.dragging_outfit:
             drag_text = font_text.render(self._resolve(self.dragging_outfit).get("name", self.dragging_outfit), True, WHITE)
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
+
+    def _help_lines(self):
+        """Bottom-of-panel help text - a short block rather than one line,
+        since the Install tab has both a mouse (drag-and-drop) and a
+        keyboard way to change selections and install/uninstall, and both
+        need spelling out (see CLAUDE.md's Menu Help Text rule)."""
+        if self.tab == "buy":
+            return [
+                "Tab/Click tab: Switch Buy/Install",
+                "Arrows/Click item: browse, Enter/Click item: buy",
+                "ESC: close",
+            ]
+        return [
+            "Tab/Click tab: Switch Buy/Install",
+            "Mouse: drag a spare outfit onto a slot to install it, or drag an installed slot out to uninstall",
+            "Keys: click, or Left/Right to switch Slots/Spares, Up/Down to navigate, Enter to install/uninstall",
+            "ESC: close (cancels an open install picker first, if one is open)",
+        ]
 
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
         grid = self.buy_grid
@@ -274,7 +398,7 @@ class OutfittingMenu:
 
         gap = int(14 * scale)
         cell_width = (panel_rect.width - int(60 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
-        cell_height = int(130 * scale)
+        cell_height = int(148 * scale)
         grid_left = panel_rect.centerx - (cell_width * GRID_COLUMNS + gap * (GRID_COLUMNS - 1)) // 2
 
         draw_cell = functools.partial(self._draw_buy_cell, scale=scale)
@@ -286,11 +410,43 @@ class OutfittingMenu:
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
     def _draw_buy_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
+        """Bespoke cell layout (not the shared ui_theme.draw_shop_cell) -
+        outfits need more info per cell than a plain price: how many you
+        already own (spares + installed), which slot type they use, and
+        whether your current ship can actually fit one."""
         outfit = self._resolve(outfit_id)
         icon_shape, icon_color = self._icon_for(outfit_id)
-        icon_fn = functools.partial(draw_item_icon, icon_shape=icon_shape, icon_color=icon_color)
-        detail = f"{outfit.get('cost', 0)}cr"
-        draw_shop_cell(surface, rect, is_selected, reason, icon_fn, outfit.get("name", outfit_id), detail, scale)
+
+        if is_selected:
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
+            draw_selection_highlight(surface, rect, scale, pulse)
+
+        icon_cy = rect.y + int(rect.height * 0.15)
+        icon_size = int(rect.height * 0.12)
+        draw_item_icon(surface, rect.centerx, icon_cy, icon_size, icon_shape, icon_color)
+
+        font_name = get_font(int(18 * scale))
+        font_detail = get_font(int(14 * scale))
+        name_color = DISABLED_TEXT_COLOR if reason else (WHITE if is_selected else GRAY)
+        cost_color = DISABLED_TEXT_COLOR if reason else YELLOW
+
+        name_text = font_name.render(outfit.get("name", outfit_id), True, name_color)
+        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.28)))
+
+        cost_text = font_detail.render(f"{outfit.get('cost', 0)}cr", True, cost_color)
+        surface.blit(cost_text, (rect.centerx - cost_text.get_width() // 2, rect.y + int(rect.height * 0.44)))
+
+        slot_type = outfit.get("slot_type", "?")
+        own_text = font_detail.render(f"Own: {self._owned_count(outfit_id)}   Slot: {slot_type}", True, GRAY)
+        surface.blit(own_text, (rect.centerx - own_text.get_width() // 2, rect.y + int(rect.height * 0.58)))
+
+        fit_text, fit_color = self._fit_status(outfit_id, slot_type)
+        fit_rendered = font_detail.render(fit_text, True, DISABLED_TEXT_COLOR if reason else fit_color)
+        surface.blit(fit_rendered, (rect.centerx - fit_rendered.get_width() // 2, rect.y + int(rect.height * 0.72)))
+
+        if reason:
+            reason_text = font_detail.render(f"({reason})", True, DISABLED_TEXT_COLOR)
+            surface.blit(reason_text, (rect.centerx - reason_text.get_width() // 2, rect.y + int(rect.height * 0.87)))
 
     def _draw_install_tab(self, surface, panel_rect, y, scale, font_text, font_info):
         if not self.ship_type_id:
@@ -321,7 +477,12 @@ class OutfittingMenu:
                 draw_selection_highlight(surface, rect.inflate(int(6 * scale), int(6 * scale)), scale, pulse)
 
             installed_id = self.possessions.installed_outfits.get(slot["id"])
-            label = self._resolve(installed_id).get("name", installed_id) if installed_id else f"({slot['type']})"
+            if installed_id:
+                icon_shape, icon_color = self._icon_for(installed_id)
+                draw_item_icon(surface, rect.centerx, rect.centery, int(radius * 0.7), icon_shape, icon_color)
+                label = self._resolve(installed_id).get("name", installed_id)
+            else:
+                label = f"({slot['type']})"
             label_text = font_info.render(label, True, WHITE if installed_id else GRAY)
             surface.blit(label_text, (rect.centerx - label_text.get_width() // 2, rect.bottom + int(4 * scale)))
 
@@ -329,18 +490,21 @@ class OutfittingMenu:
         owned_title = font_info.render("Spare Outfits", True, YELLOW if self.focus_column == "owned" else GRAY)
         surface.blit(owned_title, (owned_x - owned_title.get_width() // 2, y))
 
-        self._refresh_owned_list()
-        owned_list_top = y + int(36 * scale)
-        line_height = int(30 * scale)
-        self.owned_list.draw(surface, font_text, owned_x, owned_list_top, line_height, scale, label_fn=self._owned_label)
-
-        self._owned_item_rects = []
-        visible = self.owned_list.items[self.owned_list.scroll_offset:self.owned_list.scroll_offset + self.owned_list.max_visible]
-        for i, outfit_id in enumerate(visible):
-            label_text = font_text.render(self._owned_label(outfit_id), True, WHITE)
-            row_y = owned_list_top + i * line_height
-            rect = pygame.Rect(owned_x - label_text.get_width() // 2 - int(10 * scale), row_y - int(4 * scale), label_text.get_width() + int(20 * scale), label_text.get_height() + int(8 * scale))
-            self._owned_item_rects.append((outfit_id, rect))
+        self._refresh_owned_grid()
+        owned_grid_top = y + int(36 * scale)
+        gap = int(8 * scale)
+        cell_width = int(min(220 * scale, panel_rect.width * 0.22))
+        cell_height = int(34 * scale)
+        if self.owned_grid.has_more_above:
+            up_indicator = font_info.render("↑ more", True, GRAY)
+            surface.blit(up_indicator, (owned_x - up_indicator.get_width() // 2, owned_grid_top))
+            owned_grid_top += int(18 * scale)
+        draw_owned_cell = functools.partial(self._draw_owned_cell, scale=scale)
+        self.owned_grid.draw(surface, (owned_x - cell_width // 2, owned_grid_top), cell_width, cell_height, gap, draw_owned_cell)
+        owned_grid_bottom = owned_grid_top + cell_height * self.owned_grid.max_rows + gap * (self.owned_grid.max_rows - 1)
+        if self.owned_grid.has_more_below:
+            down_indicator = font_info.render("↓ more", True, GRAY)
+            surface.blit(down_indicator, (owned_x - down_indicator.get_width() // 2, owned_grid_bottom + int(4 * scale)))
 
         if self.picker is not None:
             picker_rect = pygame.Rect(panel_rect.centerx - int(150 * scale), panel_rect.centery - int(100 * scale), int(300 * scale), int(200 * scale))

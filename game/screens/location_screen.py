@@ -2,7 +2,7 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, RED, GRAY
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
 import game.utils as utils
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel
@@ -21,6 +21,11 @@ TESTING_LOAN_AMOUNT = 100_000
 
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
+
+    # Game-space units above a person's feet (self.y) their floating name/
+    # role label is anchored to - clears the head/helmet drawn by Person.draw().
+    LABEL_HEIGHT_ABOVE = 38
+
     def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
         # {interior_key: display label} for every sibling interior at the
@@ -420,19 +425,44 @@ class LocationScreen(ScreenBase):
         if best_index is not None:
             self.current_npc_target = best_index
 
-    def _auto_target_nearby_npc(self):
-        """Auto-target whoever the player has just walked within talk_range
-        of, if nothing is targeted yet (closest one wins, if more than
-        one) - so walking up to someone to talk doesn't also require
-        manually cycling target with []/[. Never overrides an existing
-        target (e.g. one picked by cycling), and never re-targets on its
-        own once cleared by walking away - see _cycle_npc_target for the
-        only other way current_npc_target changes."""
-        if self.current_npc_target is not None:
-            return
-        in_range = [(i, person) for i, person in enumerate(self._targetable_people()) if person.get_distance(self.player.x, self.player.y) <= self.talk_range]
-        if in_range:
-            self.current_npc_target = min(in_range, key=lambda item: item[1].get_distance(self.player.x, self.player.y))[0]
+    def _closest_person_in_range(self):
+        """The closest targetable person within talk_range of the player, or
+        None. This is deliberately independent of current_npc_target/
+        _get_npc_target (manual []/click targeting) - walking up to someone
+        no longer targets them, it just makes them talkable: T always talks
+        to whoever this returns, and draw() labels their name/role above
+        their head, regardless of what (if anything) is manually targeted."""
+        in_range = [person for person in self._targetable_people() if person.get_distance(self.player.x, self.player.y) <= self.talk_range]
+        if not in_range:
+            return None
+        return min(in_range, key=lambda person: person.get_distance(self.player.x, self.player.y))
+
+    def _role_label(self, person):
+        """Human-readable role for a name/role label (e.g. "outfitter" ->
+        "Outfitter"), or None if this person has no role (e.g. the player -
+        see Character.__init__, which is the only place person.role is set)."""
+        role = getattr(person, "role", None)
+        return role.replace("_", " ").title() if role else None
+
+    def _draw_person_label(self, surface, person, ui_scale):
+        """Floating name (and role, if any) centered just above person's
+        head - used both for whoever's currently close enough to talk to
+        (see _closest_person_in_range) and for a manually cycled/clicked
+        target, so "who is this" is answered in-world without needing to
+        check the info panel."""
+        anchor_x, anchor_y = to_screen(person.x, person.y - self.LABEL_HEIGHT_ABOVE)
+        bottom_y = anchor_y
+        role_label = self._role_label(person)
+        if role_label:
+            font_role = get_font(int(13 * ui_scale))
+            role_surf = font_role.render(role_label, True, GRAY)
+            role_rect = role_surf.get_rect(midbottom=(anchor_x, bottom_y))
+            surface.blit(role_surf, role_rect)
+            bottom_y = role_rect.top - 1
+        font_name = get_font(int(16 * ui_scale))
+        name_surf = font_name.render(person.name, True, WHITE)
+        name_rect = name_surf.get_rect(midbottom=(anchor_x, bottom_y))
+        surface.blit(name_surf, name_rect)
 
     def update(self):
         """Full update for the active/foreground location: player movement,
@@ -444,7 +474,6 @@ class LocationScreen(ScreenBase):
         if not self.active_dialogue:
             keys = pygame.key.get_pressed()
             self._handle_movement(keys)
-            self._auto_target_nearby_npc()
         self.update_camera()
         self.update_physics()
 
@@ -542,10 +571,23 @@ class LocationScreen(ScreenBase):
         for _, draw_fn in drawables:
             draw_fn(surface)
 
-        # Highlight and label the targeted NPC
+        # Highlight the manually targeted NPC (see _cycle_npc_target/
+        # _select_person_target_at - unrelated to who's talkable right now)
+        # and float a name/role label over both it and whoever's closest
+        # enough to actually talk to (see _closest_person_in_range) - the
+        # same person, most of the time, but not always (e.g. you cycled
+        # target to someone across the room).
         target_npc = self._get_npc_target()
+        closest_npc = self._closest_person_in_range()
         if target_npc:
             draw_target_brackets(surface, target_npc.x, target_npc.y, size=25)
+        label_ui_scale = get_ui_scale()
+        labeled = set()
+        if closest_npc:
+            self._draw_person_label(surface, closest_npc, label_ui_scale)
+            labeled.add(id(closest_npc))
+        if target_npc and id(target_npc) not in labeled:
+            self._draw_person_label(surface, target_npc, label_ui_scale)
 
         # Debug markers
         if constants.DEBUG_MODE:
@@ -582,6 +624,9 @@ class LocationScreen(ScreenBase):
             info_lines.append(("Target:", GREEN))
             info_lines.append((f"  Distance: {distance:.0f}", GREEN))
             info_lines.append((f"  {target_npc.name}", GREEN))
+            target_role = self._role_label(target_npc)
+            if target_role:
+                info_lines.append((f"  {target_role}", GREEN))
         else:
             info_lines.append(("Target: None", GRAY))
         info_rect = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
@@ -606,11 +651,8 @@ class LocationScreen(ScreenBase):
         status_lines = []
         if active_portal:
             status_lines.append(("Press L to enter portal", GREEN))
-        if target_npc:
-            if target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
-                status_lines.append(("Press T to talk", GREEN))
-            else:
-                status_lines.append(("Approach target to talk", RED))
+        if closest_npc:
+            status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
         status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
@@ -814,17 +856,25 @@ class LocationScreen(ScreenBase):
             elif event.key == pygame.K_LEFTBRACKET:
                 self._cycle_npc_target(-1)
             elif event.key == pygame.K_t:
-                target_npc = self._get_npc_target()
-                if target_npc and target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
-                    if target_npc.shop:
-                        self.active_shop = target_npc.shop
+                # T always talks to whoever's closest in range (see
+                # _closest_person_in_range) - independent of any manually
+                # cycled/clicked target (current_npc_target), which is only
+                # for viewing info at a distance now.
+                nearest = self._closest_person_in_range()
+                if nearest:
+                    # getattr, not nearest.shop: a visiting AI pilot (see
+                    # Character.for_ai_pilot) never gets a .shop attribute at
+                    # all, unlike a local NPC (_build_local_character) - only
+                    # the latter can ever be a shop.
+                    if getattr(nearest, "shop", None):
+                        self.active_shop = nearest.shop
                         return "shop"
                     # Always start a fresh conversation at the root node -
                     # otherwise leaving mid-tree (ESC) and talking again
                     # would silently resume wherever it was left off.
-                    target_npc.dialogue.current_node = target_npc.dialogue.root
-                    target_npc.dialogue.selected_option = self._first_selectable_option(target_npc.dialogue.current_options())
-                    self.active_dialogue = target_npc.dialogue
+                    nearest.dialogue.current_node = nearest.dialogue.root
+                    nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options())
+                    self.active_dialogue = nearest.dialogue
             elif event.key == pygame.K_p:
                 return "possessions"
             elif event.key == pygame.K_ESCAPE:

@@ -22,6 +22,12 @@ class IconGrid:
         self.max_rows = max_rows
         self.selected = 0
         self.scroll_row = 0
+        # {item_index: pygame.Rect}, screen space, for whichever cells were
+        # visible the last time draw() ran - lets a caller hit-test a mouse
+        # click against exactly what's currently on screen (see index_at),
+        # the same "cache during draw, hit-test next frame" idiom
+        # OutfittingMenu's own _slot_rects/_owned_item_rects already use.
+        self.last_rects = {}
 
     def _clamp(self):
         if not self.items:
@@ -83,6 +89,7 @@ class IconGrid:
         which item/selection state goes in it. disabled_fn(item) -> reason
         string or None, same contract as SelectableList."""
         self._clamp()
+        self.last_rects = {}
         if not self.items:
             return
         x0, y0 = top_left
@@ -93,6 +100,16 @@ class IconGrid:
             row = (i - start_index) // self.columns
             col = (i - start_index) % self.columns
             rect = pygame.Rect(x0 + col * (cell_width + gap), y0 + row * (cell_height + gap), cell_width, cell_height)
+            self.last_rects[i] = rect
             is_selected = (i == self.selected)
             reason = disabled_fn(item) if disabled_fn else None
             cell_draw_fn(surface, rect, item, is_selected, reason)
+
+    def index_at(self, pos):
+        """Item index whose cell (from the most recent draw()) contains
+        screen point pos, or None - lets a caller translate a mouse click
+        into a grid selection, the same way handle_key() does for arrows."""
+        for index, rect in self.last_rects.items():
+            if rect.collidepoint(pos):
+                return index
+        return None

@@ -8,7 +8,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 
 DEFAULT_SELL_MULTIPLIER = 0.6
@@ -35,6 +35,18 @@ class ShopMenu:
         self.mode = "buy"  # "buy" or "sell"
         self.buy_list = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
         self.sell_list = IconGrid(self._owned_ids(), columns=GRID_COLUMNS, max_rows=GRID_ROWS)
+        # Transient "Bought 1 X" confirmation (see draw_purchase_message) -
+        # message_timer counts down once per draw() call while > 0, since
+        # nothing calls a ShopMenu.update() each frame (see main.py's screen
+        # loop - only handle_input()/draw() are called on the active shop).
+        self.message = None
+        self.message_timer = 0
+        # Screen-space rects for the Buy/Sell tab labels, cached by draw()
+        # each frame (same "cache during draw, hit-test next frame" idiom
+        # OutfittingMenu's _slot_rects uses) so handle_input's mouse click
+        # can tell whether a tab label was clicked.
+        self._buy_tab_rect = None
+        self._sell_tab_rect = None
 
     def _resolve(self, item_id):
         return get_commodity(self.story, item_id) if self.category == "commodities" else get_item(self.story, item_id)
@@ -58,6 +70,9 @@ class ShopMenu:
 
     def handle_input(self, events):
         for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self._handle_click(event.pos)
+                continue
             if event.type != pygame.KEYDOWN:
                 continue
             if event.key == pygame.K_ESCAPE:
@@ -75,6 +90,26 @@ class ShopMenu:
                     self._transact(item_id)
         return None
 
+    def _handle_click(self, pos):
+        """Click equivalent of Tab (on a tab label) or of moving the cursor
+        to a grid cell and pressing Enter (on an item) - a click both
+        selects the cell and immediately transacts it, mirroring how
+        clicking a Menu item both selects and activates it."""
+        if self._buy_tab_rect and self._buy_tab_rect.collidepoint(pos):
+            self.mode = "buy"
+            return
+        if self._sell_tab_rect and self._sell_tab_rect.collidepoint(pos):
+            self.mode = "sell"
+            return
+        grid = self._current_list()
+        index = grid.index_at(pos)
+        if index is None:
+            return
+        grid.selected = index
+        item_id = grid.current()
+        if item_id:
+            self._transact(item_id)
+
     def _transact(self, item_id):
         if self.mode == "buy":
             if self._buy_disabled_reason(item_id):
@@ -85,6 +120,8 @@ class ShopMenu:
                 self.possessions.add_cargo(item_id, 1)
             else:
                 self.possessions.add_item(item_id, 1)
+            self.message = f"Bought 1 {self._resolve(item_id).get('name', item_id)}"
+            self.message_timer = PURCHASE_MESSAGE_FRAMES
         else:
             sell_price = int(self._resolve(item_id).get("base_price", 0) * self.sell_multiplier)
             self.possessions.earn(sell_price)
@@ -122,6 +159,8 @@ class ShopMenu:
         tabs_x = panel_rect.centerx - (tabs_text.get_width() + tabs_text2.get_width()) // 2
         surface.blit(tabs_text, (tabs_x, y))
         surface.blit(tabs_text2, (tabs_x + tabs_text.get_width(), y))
+        self._buy_tab_rect = pygame.Rect(tabs_x, y, tabs_text.get_width(), tabs_text.get_height())
+        self._sell_tab_rect = pygame.Rect(tabs_x + tabs_text.get_width(), y, tabs_text2.get_width(), tabs_text2.get_height())
         y += int(36 * scale)
 
         grid = self._current_list()
@@ -144,8 +183,12 @@ class ShopMenu:
             down_indicator = font_info.render("↓ more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
-        help_text = font_info.render("Tab: Buy/Sell, Arrows: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))
+        help_text = font_info.render("Tab/Click tab: Buy/Sell, Click/Enter: transact 1, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+
+        if self.message_timer > 0:
+            self.message_timer -= 1
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
 
     def _draw_cell(self, surface, rect, item_id, is_selected, reason, scale):
         """cell_draw_fn for the buy/sell IconGrid - an icon, the item's

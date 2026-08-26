@@ -6,7 +6,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
 
@@ -45,6 +45,11 @@ class ShipBrowserMenu:
         self.on_buy = on_buy
         self.grid = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
         self.confirm = None  # ConfirmDialog while a purchase is pending confirmation
+        # Transient "Bought 1 X" confirmation (see draw_purchase_message) -
+        # message_timer counts down once per draw() call while > 0, since
+        # nothing calls a ShipBrowserMenu.update() each frame.
+        self.message = None
+        self.message_timer = 0
 
     def _disabled_reason(self, ship_type_id):
         cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
@@ -57,12 +62,20 @@ class ShipBrowserMenu:
             action, ship_type_id = self.confirm.handle_input(events)
             if action == "confirm":
                 self.on_buy(ship_type_id)
+                self.message = f"Bought 1 {get_ship_type(self.story, ship_type_id).get('name', ship_type_id)}"
+                self.message_timer = PURCHASE_MESSAGE_FRAMES
                 self.confirm = None
             elif action == "cancel":
                 self.confirm = None
             return None
 
         for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                index = self.grid.index_at(event.pos)
+                if index is not None:
+                    self.grid.selected = index
+                    self._open_confirm(self.grid.current())
+                continue
             if event.type != pygame.KEYDOWN:
                 continue
             if event.key == pygame.K_ESCAPE:
@@ -75,15 +88,20 @@ class ShipBrowserMenu:
                 # affordability.
                 self.grid.handle_key(event.key)
             elif event.key == pygame.K_RETURN:
-                ship_type_id = self.grid.current()
-                if ship_type_id and not self._disabled_reason(ship_type_id):
-                    ship_type = get_ship_type(self.story, ship_type_id)
-                    self.confirm = ConfirmDialog(
-                        f"Buy {ship_type.get('name', ship_type_id)}?",
-                        f"{ship_type.get('cost', 0)}cr",
-                        context_data=ship_type_id,
-                    )
+                self._open_confirm(self.grid.current())
         return None
+
+    def _open_confirm(self, ship_type_id):
+        """Open the Yes/No purchase confirmation for ship_type_id - shared
+        by Enter and a grid click, same as clicking a Menu item is
+        equivalent to selecting it then pressing Enter."""
+        if ship_type_id and not self._disabled_reason(ship_type_id):
+            ship_type = get_ship_type(self.story, ship_type_id)
+            self.confirm = ConfirmDialog(
+                f"Buy {ship_type.get('name', ship_type_id)}?",
+                f"{ship_type.get('cost', 0)}cr",
+                context_data=ship_type_id,
+            )
 
     def draw(self, surface):
         scale = get_ui_scale()
@@ -149,8 +167,12 @@ class ShipBrowserMenu:
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
-        help_text = font_info.render("Arrows: browse, Enter: buy, ESC: close", True, (150, 150, 150))
+        help_text = font_info.render("Arrows/Click: browse, Enter/Click: buy, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+
+        if self.message_timer > 0:
+            self.message_timer -= 1
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
 
         if self.confirm:
             self.confirm.draw(surface)

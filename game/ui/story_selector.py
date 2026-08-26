@@ -4,9 +4,9 @@ import os
 import pygame
 import game.utils as utils
 from game.constants import WHITE, GRAY
-from game.utils import get_font, render_help_text, handle_menu_navigation, load_json, _wrap_text
+from game.utils import get_font, handle_menu_navigation, load_json, _wrap_text
 from game.ui.menu_backdrop import MenuBackdrop
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight, draw_controls_pane
 
 TITLE = "SELECT STORY"
 
@@ -108,4 +108,6 @@ class StorySelector:
 
             row_top += row_height
 
-        render_help_text(surface, "Up/Down: select, Enter: play, ESC: cancel")
+        margin = int(10 * scale)
+        help_items = [("Up/Down", "Select"), ("Enter", "Play"), ("ESC", "Cancel")]
+        draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)

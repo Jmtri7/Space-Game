@@ -42,10 +42,10 @@ the current one while far enough from its center.
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **]** | Cycle forward through targetable NPCs |
+| **]** | Cycle forward through targetable NPCs (for viewing info at a distance - see below) |
 | **[** | Cycle backward through targetable NPCs |
 | **Click** a person | Target them directly |
-| **T** | Talk to targeted NPC (must be in range) |
+| **T** | Talk to the closest NPC/pilot in range - always the nearest one, regardless of any manually cycled/clicked target |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **ESC** | Pause menu |
@@ -54,14 +54,29 @@ Station interiors include the dormitory, corridor, concourse ("default"),
 spaceport, and loan office - see [ARCHITECTURE.md](ARCHITECTURE.md) for how
 they're connected.
 
+### NPC Targeting vs. Talking
+
+Walking within range of someone no longer targets them - it just makes them
+talkable. Whoever's currently closest to the player (within `talk_range`)
+gets their name and role floated above their head, and the bottom status
+pane shows "Press T to talk to `<name>`"; that prompt disappears entirely
+when no one's close enough (there's no "approach target to talk" message
+anymore). **T always talks to that closest person.**
+
+`]`/`[`/click-targeting (see the table above) is a separate, purely
+informational selection - it highlights whoever you've picked with bracket
+corners and shows their name/role in the top-right info panel, even from
+across the room, but has no effect on what T does. It's for looking someone
+up at a distance, not for choosing who to talk to.
+
 ## Moon Interior (City & Wilderness)
 
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **]** / **[** | Cycle through targetable NPCs, forward/backward (City only) |
+| **]** / **[** | Cycle through targetable NPCs, forward/backward (City only, for viewing info at a distance - see above) |
 | **Click** a person | Target them directly |
-| **T** | Talk to targeted NPC (must be in range) |
+| **T** | Talk to the closest NPC/pilot in range - see "NPC Targeting vs. Talking" above |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **ESC** | Pause menu |
@@ -98,9 +113,9 @@ opened from.
 ### Shop Menu (T, on an NPC with a shop)
 | Control | Action |
 |---------|--------|
-| **Tab** | Switch between Buy and Sell |
+| **Tab** or **Click** a tab | Switch between Buy and Sell |
 | **Arrow keys** or **W/S** | Browse the item grid |
-| **Enter** | Buy/sell one unit of the selected item |
+| **Enter**, or **Click** an item | Buy/sell one unit of the selected item |
 | **ESC** | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
@@ -110,16 +125,20 @@ carrying in that category, at a fraction of its price. Both are shown as a
 grid of icons with the item's name and its price (Buy) or quantity held and
 sell price (Sell) - see `icon_shape`/`icon_color` in those two config files;
 an item with neither just gets a plain default crate icon. Browsing the grid
-is never blocked by affordability - only Enter (the actual purchase) is. A
+is never blocked by affordability - only Enter/clicking an item (the actual
+purchase) is. Clicking an item both selects and transacts it in one click,
+the same way clicking a Main Menu option both selects and activates it. A
 commodities shop also shows your ship's cargo hold usage, and blocks
-purchases past capacity. Personal items aren't capacity-limited. Ships and
-ship outfits get their own dedicated menus rather than this one.
+purchases past capacity. Personal items aren't capacity-limited. A successful
+buy shows a brief fading "Bought 1 `<item>`" confirmation near the bottom of
+the panel. Ships and ship outfits get their own dedicated menus rather than
+this one.
 
 ### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
 | Control | Action |
 |---------|--------|
 | **Arrow keys** or **W/S** | Browse the ship grid |
-| **Enter** | Confirm purchase (opens a Yes/No confirmation) |
+| **Enter**, or **Click** a ship | Confirm purchase (opens a Yes/No confirmation) |
 | **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
 | **ESC** | Close (when nothing is pending confirmation) |
 
@@ -132,7 +151,9 @@ rotates and cycles its thrusters on/off, and draws window portholes when the
 ship type's graphics define any (see `windows` in `graphics.json`'s ship
 entries). Browsing the grid is never blocked by affordability - you can
 always preview every ship in stock, including ones you can't afford yet;
-only Enter (opening the buy confirmation) is gated on cost. Replaces the old
+only Enter/clicking a ship (opening the buy confirmation) is gated on cost -
+the Yes/No confirmation itself is still keyboard-only. A confirmed purchase
+shows a brief fading "Bought 1 `<ship>`" confirmation. Replaces the old
 dialogue-tree ship purchase for any NPC whose config uses a `"shop"` block
 instead of a `dialogue_tree` with `buy_ship:<id>` options (the spaceport's
 ship salesman now works this way).
@@ -140,32 +161,55 @@ ship salesman now works this way).
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |
 |---------|--------|
-| **Tab** | Switch between Buy and Install |
+| **Tab** or **Click** a tab | Switch between Buy and Install |
 | **Arrow keys** or **W/S** (Buy tab) | Browse the outfit grid |
-| **Enter** (Buy tab) | Buy the selected outfit |
+| **Enter**, or **Click** an outfit (Buy tab) | Buy the selected outfit |
 | **Mouse drag** (Install tab) | Drag a spare outfit onto a slot to equip it, or drag an installed slot back out to unequip |
-| **←/→** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits list |
-| **W/↑** or **S/↓** (Install tab) | Navigate the focused column, or a list |
+| **Click** a slot or spare outfit (Install tab, no drag) | Move keyboard focus there without installing/uninstalling |
+| **Left/Right** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits grid |
+| **W/↑** or **S/↓** (Install tab) | Navigate the focused column |
 | **Enter** on an empty focused slot | Open a list of compatible spare outfits to install |
 | **Enter** on an occupied focused slot | Uninstall it back to spares |
 | **ESC** | Close (cancels an open install picker first, if one is open) |
 
-Buy shows the shop's stock as a grid of icons with name and cost - a weapon/
-engine/shield/utility outfit gets a default icon for its slot type unless its
-own config sets an `icon_shape`/`icon_color` (see `SLOT_ICON_SHAPES` in
-`game/ui/outfitting_menu.py`). Browsing is never blocked by affordability;
-only Enter (the purchase) is. Buying adds outfits to your spares
-(`owned_outfits`) - they aren't equipped until installed into a matching slot
-type on the Install tab's diagram of your current ship. Installing/
-uninstalling takes effect immediately - thrust, max velocity, rotation, and
-cargo capacity all update right away, not just after a reload.
+Buy shows the shop's stock as a grid of icons - a weapon/engine/shield/
+utility outfit gets a default icon for its slot type unless its own config
+sets an `icon_shape`/`icon_color` (see `SLOT_ICON_SHAPES` in
+`game/ui/outfitting_menu.py`). Each cell also shows how many you already own
+(spares plus whatever's currently installed), which slot type it uses, and
+whether your current ship can actually fit one - "Fits your ship", "Equipped"
+(you already have one mounted), "Doesn't fit your ship" (no slot of that
+type), or "No ship yet" if you don't own a ship at all. Browsing is never
+blocked by affordability; only Enter/clicking an outfit (the purchase) is,
+same click-both-selects-and-buys behavior as the Shop Menu. Buying adds
+outfits to your spares (`owned_outfits`) - they aren't equipped until
+installed into a matching slot type on the Install tab. A successful buy
+shows a brief fading "Bought 1 `<outfit>`" confirmation.
+
+Install shows a diagram of the current ship's slots - an occupied slot draws
+that outfit's own icon inside it (plus its name below) - next to a grid of
+your spare (uninstalled) outfits, each shown as an icon with its name/slot
+type. Installing/uninstalling takes effect immediately - thrust, max
+velocity, rotation, and cargo capacity all update right away, not just after
+a reload.
 
 ### Main Menu
 | Control | Action |
 |---------|--------|
 | **W/↑** or **S/↓** | Navigate options |
 | **Enter** | Select option |
-| **ESC** | Cancel (only on submenus) |
+| **Click** an option | Select it |
+
+### Story Selector
+| Control | Action |
+|---------|--------|
+| **W/↑** or **S/↓** | Select a story |
+| **Enter** | Play the selected story |
+| **ESC** | Cancel, back to Main Menu |
+
+Both the Main Menu and Story Selector show their controls in the same
+top-left Controls pane every other screen uses (see `draw_controls_pane` in
+`game/ui/ui_theme.py`) rather than a single line of help text at the bottom.
 
 ### Save/Load Dialogs
 | Control | Action |

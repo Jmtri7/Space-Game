@@ -129,6 +129,27 @@ def draw_status_pane(surface, status_lines, ui_scale):
     return status_panel
 
 
+PURCHASE_MESSAGE_FRAMES = 90  # ~1.5s at 60fps before a "Bought 1 X" message starts fading
+PURCHASE_MESSAGE_FADE_FRAMES = 30  # ~0.5s fade-out once the timer drops into this range
+
+
+def draw_purchase_message(surface, message, timer, center_x, bottom_y, scale):
+    """Draw a transient "Bought 1 X" confirmation, centered at (center_x,
+    bottom_y) with its bottom edge there, fading out over its last
+    PURCHASE_MESSAGE_FADE_FRAMES of `timer` - shared by ShopMenu/
+    ShipBrowserMenu/OutfittingMenu so every purchase gets the same feedback.
+    Does nothing if timer <= 0 (the caller is expected to count `timer`
+    down once per frame, e.g. inside its own draw(), and stop passing a
+    message once it hits 0)."""
+    if timer <= 0 or not message:
+        return
+    alpha = 255 if timer > PURCHASE_MESSAGE_FADE_FRAMES else int(255 * timer / PURCHASE_MESSAGE_FADE_FRAMES)
+    font = get_font(int(22 * scale))
+    text = font.render(message, True, (120, 255, 140))
+    text.set_alpha(alpha)
+    surface.blit(text, (center_x - text.get_width() // 2, bottom_y - text.get_height()))
+
+
 def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, thrust=0):
     """Draw a ship's shape directly in screen pixels, centered on
     (center_x, center_y) - used by ShipBrowserMenu's preview panel and
