@@ -123,6 +123,24 @@ selected. Replaces the old dialogue-tree ship purchase for any NPC whose
 config uses a `"shop"` block instead of a `dialogue_tree` with
 `buy_ship:<id>` options (the spaceport's ship salesman now works this way).
 
+### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
+| Control | Action |
+|---------|--------|
+| **←/→** | Switch between Buy and Install |
+| **Mouse drag** (Install tab) | Drag a spare outfit onto a slot to equip it, or drag an installed slot back out to unequip |
+| **Tab** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits list |
+| **W/↑** or **S/↓** | Navigate the focused column, or a list |
+| **Enter** on an empty focused slot | Open a list of compatible spare outfits to install |
+| **Enter** on an occupied focused slot | Uninstall it back to spares |
+| **Enter** (Buy tab) | Buy the selected outfit |
+| **ESC** | Close (cancels an open install picker first, if one is open) |
+
+Buy adds outfits to your spares (`owned_outfits`) - they aren't equipped
+until installed into a matching slot type (weapon/engine/shield/utility) on
+the Install tab's diagram of your current ship. Installing/uninstalling
+takes effect immediately - thrust, max velocity, rotation, and cargo
+capacity all update right away, not just after a reload.
+
 ### Main Menu
 | Control | Action |
 |---------|--------|

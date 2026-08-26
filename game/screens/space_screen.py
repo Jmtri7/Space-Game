@@ -293,6 +293,17 @@ class SpaceScreen(ScreenBase):
         outfits = [get_ship_outfit(self.story, outfit_id) for outfit_id in installed.values()]
         self.player.ship.apply_outfits(outfits)
 
+    def reapply_outfits(self):
+        """Re-apply the current ship's installed outfit stat modifiers -
+        call after any outfit equip/unequip (OutfittingMenu, via main.py's
+        build_shop_menu) so thrust/velocity/cargo capacity update
+        immediately instead of only on the next save/load. Just re-runs
+        _apply_ship_type on whatever ship is currently flown, since that
+        already re-reads installed_outfits every time (see there)."""
+        owned_ships = self.player.person.possessions.owned_ships
+        if owned_ships:
+            self._apply_ship_type(owned_ships[-1])
+
     def _on_ship_purchased(self, ship_type_id):
         """Configure the player's real ship to match a newly bought type,
         and park it right at the station - so it's "docked outside" exactly

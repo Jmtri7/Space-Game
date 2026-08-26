@@ -547,6 +547,71 @@ usually called Y-sorting).
 
 ---
 
+## Pattern: Config-Driven Screen Dispatch ("shop" NPCs)
+
+**Problem:** Several different screen classes need to open from the same
+trigger (talking to an NPC), where which class opens depends on what that
+NPC is configured to do - a ship salesman needs a ship browser, a
+quartermaster needs a commodities list, an outfitter needs a slot diagram.
+Hardcoding "if this NPC's name is X, open Y" doesn't scale, and cramming
+every case into one mega-menu class fights each screen's very different
+layout needs.
+
+**Solution:** Give the NPC config one key naming *what kind* of interaction
+this is (`"shop": {"type": "commodities"|"items"|"ships"|"outfits", ...}`),
+checked before falling back to the default interaction (`Dialogue`). A
+single small dispatcher function picks the concrete screen class from that
+`type`, so the call site (the input handler that reacts to "talk to this
+NPC") never needs to know the full set of possible screens - only that
+"shop config present" means "ask the dispatcher."
+
+**Implementation:** (`LocationScreen._build_local_character`, `handle_input`;
+`main.py`'s `build_shop_menu`)
+```python
+# NPC config: a "shop" key instead of (or alongside) a dialogue_tree
+{"name": "Reeve Katic", "role": "outfitter",
+ "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner"]}}
+
+# Attached to the NPC's Person at build time, like dialogue is:
+person.shop = cfg.get("shop")
+
+# Checked first when the player interacts (T) - shop bypasses Dialogue
+# entirely rather than being folded into it:
+if target_npc.shop:
+    self.active_shop = target_npc.shop
+    return "shop"
+
+# One dispatcher picks the concrete screen class by "type":
+def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed):
+    shop_type = shop_config.get("type")
+    if shop_type == "ships":
+        return ShipBrowserMenu(possessions, story, shop_config, on_buy=buy_ship_fn)
+    if shop_type == "outfits":
+        ship_type_id = possessions.owned_ships[-1] if possessions.owned_ships else None
+        return OutfittingMenu(possessions, story, shop_config, ship_type_id, on_outfits_changed=on_outfits_changed)
+    return ShopMenu(possessions, story, shop_config, cargo_capacity=cargo_capacity)
+```
+
+**Why this works:**
+- The NPC config only declares *intent* ("I sell outfits"), not *how* to
+  render that - the dispatcher owns the type→class mapping in one place, so
+  adding a fifth shop type later is a one-line addition there, not a change
+  scattered across every place an NPC can be talked to.
+- Every resulting screen still shares the same underlying UI building
+  blocks (`SelectableList`, `ui_theme`'s panel/title helpers, `ConfirmDialog`)
+  even though each is its own class - config-driven dispatch picks the
+  *class*, it doesn't force one mega-class with an internal mode switch for
+  every possible shape of shop.
+- Matches the "Role → Routine Registry" pattern above (a config string key
+  looked up in a small mapping to pick behavior) applied one layer up, to
+  picking a screen instead of a routine.
+
+**Use case:** Any place a single trigger (NPC interaction, a world object,
+a menu option) needs to open one of several purpose-built screens depending
+on config, without the trigger's own code needing to know about all of them.
+
+---
+
 ## Contributing Patterns
 
 When you discover a reusable solution:

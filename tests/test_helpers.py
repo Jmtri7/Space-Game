@@ -45,6 +45,7 @@ from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
+from game.ui.outfitting_menu import OutfittingMenu
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
 
@@ -1152,6 +1153,100 @@ class TestShipBrowserMenu(unittest.TestCase):
     def test_escape_closes(self):
         import pygame as mocked_pygame
         menu = ShipBrowserMenu(Possessions(), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
+        self.assertEqual(result, "close")
+
+
+class TestOutfittingMenu(unittest.TestCase):
+    """Test OutfittingMenu's keyboard-driven equip/unequip and slot/type
+    filtering against the real "default" story's patrol ship type (slots:
+    weapon_1/weapon, utility_1/utility) and ship_outfits.json (laser_cannon/
+    weapon, afterburner/engine, cargo_expansion/utility). Mouse drag-and-
+    drop itself isn't tested here - see CLAUDE.md's "don't test UI
+    rendering" and the plan's note that the underlying Possessions.
+    install_outfit/uninstall_outfit swap logic is already covered by
+    TestPossessionsInventory; this class only covers the menu's own
+    slot-focus/filtering/callback logic."""
+
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_compatible_owned_outfits_filters_by_slot_type(self):
+        possessions = Possessions(owned_outfits=["laser_cannon", "afterburner"])
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
+        self.assertEqual(menu._compatible_owned_outfits("weapon"), ["laser_cannon"])
+        self.assertEqual(menu._compatible_owned_outfits("engine"), ["afterburner"])
+        self.assertEqual(menu._compatible_owned_outfits("shield"), [])
+
+    def test_enter_on_empty_slot_opens_picker_filtered_to_compatible_outfits(self):
+        import pygame as mocked_pygame
+        possessions = Possessions(owned_outfits=["laser_cannon", "afterburner"])
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
+        menu.slot_focus = 0  # weapon_1, per ship_types.json's patrol entry
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertIsNotNone(menu.picker)
+        self.assertEqual(menu.picker.items, ["laser_cannon"])
+
+    def test_picker_enter_installs_and_calls_outfits_changed_callback(self):
+        import pygame as mocked_pygame
+        changed = []
+        possessions = Possessions(owned_outfits=["laser_cannon"])
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol", on_outfits_changed=lambda: changed.append(True))
+        menu.slot_focus = 0
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertEqual(possessions.installed_outfits, {"weapon_1": "laser_cannon"})
+        self.assertEqual(possessions.owned_outfits, [])
+        self.assertEqual(changed, [True])
+
+    def test_enter_on_occupied_slot_uninstalls_and_calls_callback(self):
+        import pygame as mocked_pygame
+        changed = []
+        possessions = Possessions(installed_outfits={"weapon_1": "laser_cannon"})
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol", on_outfits_changed=lambda: changed.append(True))
+        menu.slot_focus = 0
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertEqual(possessions.installed_outfits, {})
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+        self.assertEqual(changed, [True])
+
+    def test_enter_on_empty_slot_with_no_compatible_outfits_does_not_open_picker(self):
+        import pygame as mocked_pygame
+        possessions = Possessions(owned_outfits=["afterburner"])  # engine, not weapon
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
+        menu.slot_focus = 0  # weapon_1
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertIsNone(menu.picker)
+
+    def test_buying_an_outfit_spends_credits_and_adds_to_owned(self):
+        possessions = Possessions(credits=1000)
+        menu = OutfittingMenu(possessions, "default", {"stock": ["laser_cannon"]}, None)
+        menu._buy_outfit("laser_cannon")
+        self.assertEqual(possessions.credits, 200)  # 1000 - 800cr
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+
+    def test_tab_switches_focus_column(self):
+        import pygame as mocked_pygame
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
+        self.assertEqual(menu.focus_column, "slots")
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
+        self.assertEqual(menu.focus_column, "owned")
+
+    def test_left_right_switches_buy_install_tab(self):
+        import pygame as mocked_pygame
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
+        self.assertEqual(menu.tab, "install")
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
+        self.assertEqual(menu.tab, "buy")
+
+    def test_no_ship_defaults_to_buy_tab(self):
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, None)
+        self.assertEqual(menu.tab, "buy")
+        self.assertEqual(menu.slots, [])
+
+    def test_escape_closes(self):
+        import pygame as mocked_pygame
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
         result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
         self.assertEqual(result, "close")
 

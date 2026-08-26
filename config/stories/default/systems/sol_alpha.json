@@ -172,6 +172,14 @@
             "role": "ship_salesman",
             "greeting": "Looking for a ship? I've got three in dock.",
             "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
+          },
+          {
+            "name": "Reeve Katic",
+            "x": 480,
+            "y": 320,
+            "role": "outfitter",
+            "greeting": "Need to fit your ship out with something new?",
+            "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
           }
         ]
       },

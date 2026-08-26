@@ -252,6 +252,31 @@ Y/N or ESC: confirm/cancel the pending purchase · ESC: close (no purchase pendi
 **Transitions:**
 - ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
+### OutfittingMenu
+**Shows:** Buy and install ship outfits - `game/ui/outfitting_menu.py`.
+Opened like `ShopMenu`/`ShipBrowserMenu` (T on a `"shop"` NPC), for
+`"type": "outfits"` - `main.py`'s `build_shop_menu()` dispatches here,
+passing the current ship type (`possessions.owned_ships[-1]`, or `None` if
+no ship is owned yet) and `game_screen.reapply_outfits` as the
+stats-refresh callback. Buy tab: a `ShopMenu`-style list, but purchases add
+to `possessions.owned_outfits` (spare, uninstalled) rather than equipping.
+Install tab: a diagram of the current ship's `slots` (from
+`ship_types.json`) plus the spare-outfits list; drag a spare onto a
+matching-type slot to equip (or drag an installed one out to unequip), or
+use the keyboard fallback (Tab: switch focus column, arrows: navigate,
+Enter: open a compatible-outfit picker on an empty focused slot, or
+uninstall directly on an occupied one). Every equip/uninstall calls
+`on_outfits_changed`, which re-runs `SpaceScreen._apply_ship_type` so the
+flown ship's stats update immediately - see `SpaceScreen.reapply_outfits`.
+
+**Inputs:** LEFT/RIGHT: switch Buy/Install · (Install tab) TAB: switch
+focus column · UP/DOWN or W/S: navigate · RETURN: buy (Buy tab) / open
+picker or uninstall (Install tab, depending on slot state) · mouse drag:
+equip/unequip directly · ESC: close (or cancel an open picker first)
+
+**Transitions:**
+- ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
+
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
 
