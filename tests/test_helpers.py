@@ -44,6 +44,7 @@ from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.ui.shop_menu import ShopMenu
+from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
 
@@ -1110,6 +1111,51 @@ class TestShopMenu(unittest.TestCase):
         self.assertEqual(possessions.cargo, {"ore": 1})
 
 
+class TestShipBrowserMenu(unittest.TestCase):
+    """Test ShipBrowserMenu against the real "default" story's ship_types.json
+    (shuttle costs 1200cr) - the on_buy callback is the injection point that
+    lets this menu perform the same mutation as LocationScreen.buy_ship()
+    without owning Possessions/on_ship_purchased itself."""
+
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_enter_opens_a_confirm_dialog_instead_of_buying_immediately(self):
+        import pygame as mocked_pygame
+        bought = []
+        possessions = Possessions(credits=1200)
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertIsNotNone(menu.confirm)
+        self.assertEqual(bought, [])  # not yet - still waiting on confirmation
+        self.assertEqual(possessions.credits, 1200)
+
+    def test_confirming_calls_on_buy_with_the_selected_ship_type(self):
+        import pygame as mocked_pygame
+        bought = []
+        possessions = Possessions(credits=1200)
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_y)])
+        self.assertEqual(bought, ["shuttle"])
+        self.assertIsNone(menu.confirm)
+
+    def test_cannot_afford_blocks_enter_from_opening_confirm(self):
+        import pygame as mocked_pygame
+        bought = []
+        possessions = Possessions(credits=0)
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertIsNone(menu.confirm)
+        self.assertEqual(bought, [])
+
+    def test_escape_closes(self):
+        import pygame as mocked_pygame
+        menu = ShipBrowserMenu(Possessions(), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
+        self.assertEqual(result, "close")
+
+
 class TestDialogue(unittest.TestCase):
     """Test Dialogue's conversation tree - both the backward-compatible
     flat shape (from_flat) and real branching."""
@@ -1724,6 +1770,16 @@ class TestLocationScreenEconomy(unittest.TestCase):
         option = {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"}
         self.assertIsNone(screen._option_blocked_reason(option))
         screen._apply_dialogue_action("buy_ship:shuttle")
+        self.assertEqual(screen.player.possessions.credits, 0)
+        self.assertEqual(screen.player.possessions.owned_ships, ["shuttle"])
+
+    def test_buy_ship_method_can_be_called_directly(self):
+        """buy_ship() is the public entry point ShipBrowserMenu calls (via
+        main.py's build_shop_menu) - _apply_dialogue_action's "buy_ship:"
+        branch is just a thin wrapper around it, so both purchase paths
+        share one mutation."""
+        screen = self._make_screen(credits=1200)
+        screen.buy_ship("shuttle")
         self.assertEqual(screen.player.possessions.credits, 0)
         self.assertEqual(screen.player.possessions.owned_ships, ["shuttle"])
 

@@ -1,10 +1,12 @@
 """Shared visual helpers for menu-style screens: glass panels, glow titles,
 and pulsing selection highlights. Utility functions, not a class - see
 CLAUDE.md's One Class Per File rule for why this file is an exception."""
+import math
 import pygame
 from game.constants import YELLOW, WHITE
 from game.utils import get_font
 import game.utils as utils
+from game.world.ship import Ship
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
@@ -124,6 +126,35 @@ def draw_status_pane(surface, status_lines, ui_scale):
         text_y = status_panel.y + pad_y + i * status_line_height
         surface.blit(text, (text_x, text_y))
     return status_panel
+
+
+def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics):
+    """Draw a ship's shape directly in screen pixels, centered on
+    (center_x, center_y) - used by ShipBrowserMenu's preview panel and
+    OutfittingMenu's diagram. Ship.draw() goes through to_screen()/
+    get_scale() (the world camera), the wrong coordinate space for a UI
+    panel sized via get_ui_scale()/get_ui_offset() - this reuses
+    Ship._get_shape_points() (via a throwaway Ship instance whose .draw()
+    is never called - only shape resolution is needed) so a custom
+    local_points silhouette vs. a named built-in shape can't drift out of
+    sync with how the real ship renders in space. Always drawn at a fixed
+    "nose up" orientation (no rotation), which is what angle=0 already
+    renders as - see Ship._draw_rotated_polygon's rotation math."""
+    ship = Ship(0, 0, graphics=graphics)
+    shape = graphics.get("shape", "triangle")
+    local_points = ship._get_shape_points(pixel_size, shape)
+    color = tuple(graphics.get("color", (150, 150, 150)))
+    outline_color = tuple(graphics.get("outline_color", (20, 18, 25)))
+
+    margin = 2
+    outline_points = []
+    for lx, ly in local_points:
+        dist = math.hypot(lx, ly) or 1
+        outline_points.append((center_x + lx * (dist + margin) / dist, center_y + ly * (dist + margin) / dist))
+    points = [(center_x + lx, center_y + ly) for lx, ly in local_points]
+
+    pygame.draw.polygon(surface, outline_color, outline_points)
+    pygame.draw.polygon(surface, color, points)
 
 
 def draw_selection_highlight(surface, rect, scale, pulse):

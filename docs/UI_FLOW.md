@@ -233,6 +233,25 @@ RETURN: buy/sell one unit of the selected item · ESC: close
 **Transitions:**
 - ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
+### ShipBrowserMenu
+**Shows:** Ship-buying with a live preview - `game/ui/ship_browser_menu.py`.
+Opened the same way as `ShopMenu` (T on an NPC with a `"shop"` config), but
+for `"type": "ships"` - `main.py`'s `build_shop_menu()` dispatches to this
+instead of `ShopMenu` based on the shop config's `type`. Left: the shop's
+stock ship-type ids. Right: a live preview (`ui_theme.draw_ship_glyph`) and
+stat readout for whichever is selected. Enter opens a `ConfirmDialog`;
+confirming calls the injected `on_buy` callback, which `main.py` wires to
+`LocationScreen.buy_ship()` - the same mutation the old `"buy_ship:<id>"`
+dialogue action performed (spend, `add_ship`, `on_ship_purchased`
+callback), now shared by both purchase paths. The spaceport's ship salesman
+(`sol_alpha.json`'s Dax Renner) uses this instead of a `dialogue_tree`.
+
+**Inputs:** UP/DOWN or W/S: navigate · RETURN: open purchase confirmation ·
+Y/N or ESC: confirm/cancel the pending purchase · ESC: close (no purchase pending)
+
+**Transitions:**
+- ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
+
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
 

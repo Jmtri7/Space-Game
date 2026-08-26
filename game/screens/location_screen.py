@@ -325,15 +325,22 @@ class LocationScreen(ScreenBase):
         _option_blocked_reason), right before Dialogue.choose() advances to
         the option's response node."""
         if action.startswith("buy_ship:"):
-            ship_type_id = action.split(":", 1)[1]
-            cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
-            self.player.possessions.spend(cost)
-            self.player.possessions.add_ship(ship_type_id)
-            if self.on_ship_purchased:
-                self.on_ship_purchased(ship_type_id)
+            self.buy_ship(action.split(":", 1)[1])
         elif action == "take_loan":
             loan_amount = get_ship_type(self.story, "shuttle").get("cost", 0)
             self.player.possessions.take_loan("Station Credit Union", loan_amount)
+
+    def buy_ship(self, ship_type_id):
+        """Spend credits, add the ship to possessions, and let SpaceScreen
+        (which owns the real flyable ship) configure it - shared by the
+        dialogue-driven "buy_ship:" action and ShipBrowserMenu (via main.py's
+        build_shop_menu), so both purchase paths perform the exact same
+        mutation."""
+        cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
+        self.player.possessions.spend(cost)
+        self.player.possessions.add_ship(ship_type_id)
+        if self.on_ship_purchased:
+            self.on_ship_purchased(ship_type_id)
 
     def _first_selectable_option(self, options):
         """Index of the first option _option_blocked_reason doesn't block -

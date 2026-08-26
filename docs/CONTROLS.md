@@ -109,6 +109,20 @@ also shows your ship's cargo hold usage, and blocks purchases past capacity.
 Personal items aren't capacity-limited. Ships and ship outfits get their own
 dedicated menus rather than this one.
 
+### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
+| Control | Action |
+|---------|--------|
+| **W/↑** or **S/↓** | Navigate ship list |
+| **Enter** | Confirm purchase (opens a Yes/No confirmation) |
+| **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
+| **ESC** | Close (when nothing is pending confirmation) |
+
+Shows the shop's stock ship types with a live preview and stat readout
+(thrust, max velocity, rotation, cargo capacity, cost) for whichever is
+selected. Replaces the old dialogue-tree ship purchase for any NPC whose
+config uses a `"shop"` block instead of a `dialogue_tree` with
+`buy_ship:<id>` options (the spaceport's ship salesman now works this way).
+
 ### Main Menu
 | Control | Action |
 |---------|--------|

@@ -170,26 +170,8 @@
             "x": 400,
             "y": 250,
             "role": "ship_salesman",
-            "dialogue_tree": {
-              "root": "start",
-              "nodes": {
-                "start": {
-                  "text": "Looking for a ship? I've got three in dock.",
-                  "options": [
-                    {"label": "Shuttle - 1200cr", "next": "bought", "action": "buy_ship:shuttle"},
-                    {"label": "Patrol Corvette - 3500cr", "next": "bought", "action": "buy_ship:patrol"},
-                    {"label": "Bulk Freighter - 4500cr", "next": "bought", "action": "buy_ship:freighter"},
-                    {"label": "Leave", "next": null}
-                  ]
-                },
-                "bought": {
-                  "text": "Pleasure doing business. She's docked right outside - the exit here will take you straight to her.",
-                  "options": [
-                    {"label": "Leave", "next": null}
-                  ]
-                }
-              }
-            }
+            "greeting": "Looking for a ship? I've got three in dock.",
+            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
           }
         ]
       },
