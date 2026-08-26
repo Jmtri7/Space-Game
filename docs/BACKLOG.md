@@ -10,65 +10,142 @@ noticed clearly/hit directly, or a feature specifically called out in discussion
 general ideas) — treat them as slightly higher-confidence/interest, not necessarily
 higher priority.
 
-## Features / Ideas
+Grouped by the type of gameplay each item belongs to, so related work is easy to find
+together. Bug items stay in whichever category their affected system belongs to
+(marked with a leading "Bug:") rather than being split into a separate list.
+
+## Controls & UI
 
 - [ ] Quick save.
-- [ ] Cultural station interiors; round rooms.
-- [ ] Options for star/asteroid seeds.
-- [ ] Add metrics for game performance.
-- [ ] Check whether rendering is skipped when not applicable, or whether pygame already handles that.
+- [ ] Minimap: bigger title text.
+- [ ] Minimap: click a target to select it.
+- [ ] ⭐ Make the player icon on the minimap more obvious than the others.
+- [ ] ⭐ Hover text on the minimap when the mouse is over a point, showing what it is.
+- [ ] ⭐ Make credits amount display consistent with other UI texts.
+- [ ] ⭐ Control pane: separate space movement controls (WASD / ARROWS) by whether
+      they're for turning, thrusting, or facing reverse.
+- [ ] ⭐ Some selling-menu controls (like the ship menu) don't mention that you can use
+      the mouse.
+- [ ] Conversations should show help text (e.g. "Enter: continue, ESC: exit") like
+      other menus.
+- [ ] Consider mouse-based movement/control support.
+- [ ] Rotate camera.
+
+## Navigation & Flight
+
 - [ ] Indicate when reaching the edge of the star map.
 - [ ] Star map zoom.
-- [ ] Animals.
-- [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats, distress calls, trade offers) once ships aren't just physics objects.
-- [ ] Better jumping animation.
-- [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
-- [ ] Enterable buildings in cities.
-- [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist, so branching stakes is a natural next layer.
-- [ ] Picking up and dropping items.
-- [ ] More texture for interior grounds and ships.
-- [ ] Cultural and role-based clothing for people (space_suit is the only outfit so far - see graphics.json's "outfits" section and Person.outfit).
-- [ ] More systems with unique concepts.
-- [ ] Better jump graphics.
-- [ ] ⭐ Asteroid mining — pairs naturally with the existing asteroid fields and "different asteroid types" idea; gives the economy a real gameplay loop instead of just trading.
-- [ ] Hunting.
-- [ ] ⭐ Procedurally generated outdoor areas, with a way to find the exit — biggest single expansion of explorable space beyond stations.
+- [ ] System minimap (local-system view during flight, distinct from the interstellar
+      star map).
+- [ ] Autopilot should indicate what it's currently doing (e.g. "approaching",
+      "braking").
+- [ ] Jump completed message.
+- [ ] Advice/hint to jump if the player drifts too far from the system.
+
+## Missions, Dialogue & NPCs
+
+- [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats,
+      distress calls, trade offers) once ships aren't just physics objects.
+- [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist,
+      so branching stakes is a natural next layer.
 - [ ] ⭐ Unlockable conversation options — ties into missions/consequences above.
+- [ ] ⭐ Add missions/events tracked through stages and completable over time, whose
+      stages introduce triggers like hidden conversation options, or NPCs/objects that
+      weren't there before. Add a mission log to view unlocked stages of active and
+      completed missions.
+- [ ] ⭐ One-way hailing from NPCs: they can send messages that pop up on screen in the
+      space view, but you have to hail them back to have an actual conversation.
+- [ ] ⭐ Tutorial mission on first launch with a ship: an NPC flying in the system
+      hails you, explains how to change targeting mode and target/hail them, then
+      walks you through a mission (with viewable stages) that teaches the basic
+      controls — turn, thrust, fly, brake, autopilot — and how to jump back to the
+      system center when you drift too far.
 - [ ] Relationships.
-- [ ] ⭐ Factions — combined with crime/war, would turn the sandbox into a living political map; cultures/roles already exist as a foundation.
+- [ ] More roles.
+- [ ] No useless NPCs — each one should reveal something about the game's features or
+      story.
+- [ ] NPCs stop wandering if the player moves close to or targets them.
+- [ ] ⭐ Bug: target isn't officially cleared when an NPC exits the interior, so a new
+      target isn't chosen when walking close again.
+- [ ] ⭐ Derelict ships / distress beacons — a drifting AI ship with no pilot response
+      you can board, loot, or tow; combines the existing AI ship, interior, and
+      item-pickup ideas into one encounter type.
+- [ ] ⭐ Escort/wingman contracts — hire or be hired to fly alongside another AI ship
+      to a destination; reuses existing autopilot and multi-AI-ship work.
+
+## Combat, Crime & Factions
+
+- [ ] ⭐ Factions — combined with crime/war, would turn the sandbox into a living
+      political map; cultures/roles already exist as a foundation.
 - [ ] Combat.
 - [ ] ⭐ Crime — see factions.
 - [ ] ⭐ War — see factions.
-- [ ] More roles.
-- [ ] More ways to make money.
-- [ ] More interior decorations, like roads.
+- [ ] ⭐ Bounty hunting board — a station terminal listing wanted ships/NPCs with a
+      reward, feeding off factions/crime once those exist.
+- [ ] ⭐ AI ships flying in formations.
+
+## Ships & Customization
+
 - [ ] Multiple owned ships.
-- [ ] Guidance for agents on creating a new story from scratch, and on assisting a user who wants help creating one.
+- [ ] Bug/gap: what happens when you buy a second ship? (multiple owned ships behavior
+      is undefined — see above.)
+- [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
+      ship" feel more personal, especially once multiple owned ships exist.
+- [ ] Make all outfits usable (not just cosmetic/inert).
+- [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
+- [ ] Graphic for ship thrusters so they're visible when turned off.
+
+## Economy & Trading
+
+- [ ] ⭐ Sell all button.
+- [ ] Picking up and dropping items.
+- [ ] ⭐ Asteroid mining — pairs naturally with the existing asteroid fields and
+      "different asteroid types" idea; gives the economy a real gameplay loop instead
+      of just trading.
+- [ ] More ways to make money.
+- [ ] Make some commodities usable for various purposes (not just tradeable).
+- [ ] Distinct buy and sell multipliers per good, dependent on various factors
+      (supply/demand, faction, location, etc.).
+- [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers
+      scans/hails from patrol ships if caught; a light crime mechanic that doesn't
+      need the full Crime system first.
+- [ ] Bug: you can spend your loan on a laser cannon and then be stuck (no way to
+      recover/pay it back).
+
+## Stations, Interiors & World Building
+
+- [ ] Cultural station interiors; round rooms.
+- [ ] Better station interior designs (e.g. dorm rooms are currently just short
+      halls).
+- [ ] Enterable buildings in cities.
+- [ ] More interior decorations, like roads.
+- [ ] Cultural and role-based clothing for people (space_suit is the only outfit so
+      far - see graphics.json's "outfits" section and Person.outfit).
+- [ ] More systems with unique concepts.
+- [ ] Bug: characters added to a story don't show up in old saves.
+
+## Exploration & World Content
+
+- [ ] Options for star/asteroid seeds.
+- [ ] Animals.
+- [ ] Hunting.
+- [ ] ⭐ Procedurally generated outdoor areas, with a way to find the exit — biggest
+      single expansion of explorable space beyond stations.
 - [ ] Planet descriptions (icy, rocky, gas giant, etc.).
 - [ ] Reasons to visit hazardous worlds.
 - [ ] Events and procedural generation as you travel around systems.
-- [ ] System minimap (local-system view during flight, distinct from the interstellar star map).
-- [ ] Minimap: bigger title text.
-- [ ] Minimap: click a target to select it.
-- [ ] Autopilot should indicate what it's currently doing (e.g. "approaching", "braking").
-- [ ] Conversations should show help text (e.g. "Enter: continue, ESC: exit") like other menus.
-- [ ] No useless NPCs — each one should reveal something about the game's features or story.
-- [ ] Consider mouse-based movement/control support.
-- [ ] NPCs stop wandering if the player moves close to or targets them.
-- [ ] Jump completed message.
-- [ ] Advice/hint to jump if the player drifts too far from the system.
-- [ ] ⭐ Derelict ships / distress beacons — a drifting AI ship with no pilot response you can board, loot, or tow; combines the existing AI ship, interior, and item-pickup ideas into one encounter type.
-- [ ] ⭐ Bounty hunting board — a station terminal listing wanted ships/NPCs with a reward, feeding off factions/crime once those exist.
-- [ ] ⭐ Escort/wingman contracts — hire or be hired to fly alongside another AI ship to a destination; reuses existing autopilot and multi-AI-ship work.
-- [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers scans/hails from patrol ships if caught; a light crime mechanic that doesn't need the full Crime system first.
-- [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your ship" feel more personal, especially once multiple owned ships exist.
-- [ ] ⭐ AI ships flying in formations.
-- [ ] Bug: you can spend your loan on a laser cannon and then be stuck (no way to recover/pay it back).
-- [ ] Bug/gap: what happens when you buy a second ship? (multiple owned ships behavior is undefined — see existing "Multiple owned ships" item.)
-- [ ] Rotate camera.
-- [ ] Graphic for ship thrusters so they're visible when turned off.
-- [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
-- [ ] Make all outfits usable (not just cosmetic/inert).
-- [ ] Make some commodities usable for various purposes (not just tradeable).
-- [ ] Bug: characters added to a story don't show up in old saves.
-- [ ] Distinct buy and sell multipliers per good, dependent on various factors (supply/demand, faction, location, etc.).
+
+## Graphics & Visual Polish
+
+- [ ] ⭐ Get rid of jump lines.
+- [ ] Better jumping animation.
+- [ ] Better jump graphics.
+- [ ] More texture for interior grounds and ships.
+
+## Meta, Tooling & Performance
+
+- [ ] Add metrics for game performance.
+- [ ] Check whether rendering is skipped when not applicable, or whether pygame
+      already handles that.
+- [ ] Guidance for agents on creating a new story from scratch, and on assisting a
+      user who wants help creating one.
