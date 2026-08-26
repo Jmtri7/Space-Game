@@ -54,6 +54,22 @@ possession, a new interior graph, a new field that can now vary) - update
 documented format alongside it. Don't let a save silently stop capturing something
 the player can now actually change.
 
+**When adding a new persistent/named entity** (a new AI ship pilot, a new
+character with saveable state, or anything else `get_state()`/`restore_state()`
+matches by name or ID) - check what happens when an *old* save (made before that
+entity existed) loads it, don't just assume "new content" is automatically safe
+because it's additive. Station/moon NPCs are the easy case: they're pure story
+config, rebuilt fresh from `npcs` every time a location loads and never referenced
+by a save at all, so a new one just appears regardless of which save you're
+loading. AI ship pilots are the case that actually needs checking: `SpaceScreen.
+get_state()`'s `ai_ships` dict is keyed by pilot name, and `restore_state()` uses
+that name to reposition an existing ship - a new pilot with no matching save entry
+just starts fresh from its config position (fine), but *renaming* an existing
+pilot silently orphans its old save entry instead of erroring, so the ship quietly
+resets to its config default instead of restoring where the player actually left
+it. Load (or construct, in a test) an old-shaped save state after this kind of
+change and confirm the actual outcome, rather than assuming it away.
+
 **Warn the user, explicitly and up front, whenever a change you're making could
 change what an *existing* save file means once reloaded** - not just "I added a new
 field" (that's normal, `.get(key, default)` handles it), but anything that changes
