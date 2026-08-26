@@ -22,7 +22,6 @@ higher priority.
 - [ ] Animals.
 - [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats, distress calls, trade offers) once ships aren't just physics objects.
 - [ ] Better jumping animation.
-- [ ] Different asteroid types and quantities.
 - [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
 - [ ] Enterable buildings in cities.
 - [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist, so branching stakes is a natural next layer.

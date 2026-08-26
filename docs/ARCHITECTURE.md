@@ -368,9 +368,12 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
 **Why an open world instead of screen-wrapping?**
 - Ships used to teleport at `GAME_WIDTH`/`GAME_HEIGHT` edges (torus topology); this was
   removed in favor of a genuinely unbounded world
-- `StarField`/`AsteroidField` generate their content procedurally per-chunk from a seed
-  as the camera approaches, and forget chunks once far behind it — so exploring
-  indefinitely keeps finding new stars/asteroids without pre-generating (or wrapping)
-  a fixed-size field, and without unbounded memory growth. See PHYSICS.md.
+- `StarField`/`AsteroidField` generate their content procedurally per-chunk as the
+  camera approaches, and forget chunks once far behind it — so exploring indefinitely
+  keeps finding new stars/asteroids without pre-generating (or wrapping) a fixed-size
+  field, and without unbounded memory growth. `StarField` reseeds each chunk
+  deterministically by position so backtracking looks the same; `AsteroidField`
+  deliberately does not, so a chunk you leave and come back to has different asteroids
+  (see `AsteroidField`'s docstring in `asteroid_field.py` and PHYSICS.md).
 
 See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) for reusable solutions across the codebase.

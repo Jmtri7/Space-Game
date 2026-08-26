@@ -219,6 +219,16 @@ def get_ship_type(story, ship_type_id):
     return ship_types.get(ship_type_id, {})
 
 
+def get_asteroid_type(story, asteroid_type_id):
+    """Load asteroid type properties (shape/color/jaggedness/spin) from
+    config/stories/{story}/asteroid_types.json. Mirrors get_ship_type -
+    a shared per-story table of visual/physical identities, while which
+    types appear in a given system (and at what size/frequency) is a
+    per-system choice (see systems/*.json's "asteroid_field" block)."""
+    asteroid_types = load_json(f"config/stories/{story}/asteroid_types.json") or {}
+    return asteroid_types.get(asteroid_type_id, {})
+
+
 def get_culture(story, culture_id):
     """Load culture properties (material palette, design theme) from
     config/stories/{story}/cultures.json."""

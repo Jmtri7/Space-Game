@@ -144,19 +144,26 @@ There used to be a `wrap_position()` that teleported ships back to the opposite 
 `GAME_WIDTH`/`GAME_HEIGHT` (torus topology). That's gone — ships now fly freely with no
 boundary at all. To still give the player something to see arbitrarily far from the
 start, `StarField` and `AsteroidField` (`starfield.py`/`asteroid_field.py`) generate
-their content procedurally instead of pre-placing it:
+their content procedurally instead of pre-placing it. Each frame, the visible chunk
+range is computed from the camera position (`utils.camera_offset_x/y`) plus a margin;
+any chunk not yet generated is generated on the spot, and any chunk far enough behind
+the camera is dropped. This keeps memory bounded while letting the player explore
+indefinitely in any direction.
+
+The two fields differ deliberately in *how* a chunk gets (re)generated:
 
 ```python
+# StarField: deterministic per-chunk hash - same (seed, cx, cy) always
+# regenerates the same stars, so backtracking looks consistent.
 def _chunk_seed(self, cx, cy):
-    # deterministic per-chunk hash - same (seed, cx, cy) always regenerates
-    # the same content, so revisiting an area looks the same
     return (self.seed * 73856093) ^ (cx * 19349663) ^ (cy * 83492791)
-```
 
-Each frame, the visible chunk range is computed from the camera position (`utils.camera_offset_x/y`)
-plus a margin; any chunk not yet generated is generated on the spot, and any chunk far
-enough behind the camera is dropped. This keeps memory bounded while letting the player
-explore indefinitely in any direction, and keeps content consistent if they backtrack.
+# AsteroidField: one random.Random advances continuously across every
+# chunk it ever generates (never reseeded by position), so a chunk that
+# gets unloaded and later revisited rolls fresh asteroids instead of
+# replaying the same ones - asteroids are meant to feel different each
+# time you come back, stars aren't.
+```
 
 **Why chunk-and-forget instead of one big pre-generated field?** A fixed field either
 has to be huge (wasteful, and still finite) or small (visibly runs out). Generating
@@ -219,10 +226,12 @@ For the current entity count (<10), per-entity physics is fine.
 - ❌ Using front center instead of back center
 - ✅ Average left/right back points for flame origin
 
-**Bug: Chunk-generated content (stars/asteroids) looks different on revisit**
+**Bug: Star chunks look different on revisit**
 - ❌ Seeding `random` globally, or including anything non-deterministic (e.g. wall-clock
   time) in the chunk hash
 - ✅ Use a fresh `random.Random(chunk_seed)` per chunk, with `chunk_seed` derived purely
   from `(seed, chunk_x, chunk_y)`
+- Note: this rule is `StarField`-only. `AsteroidField` intentionally does the opposite -
+  see "No World Boundary" above - so don't "fix" asteroids back into determinism.
 
 See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md#coordinate-conversion) for the coordinate conversion pattern.

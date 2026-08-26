@@ -16,7 +16,13 @@
     "y": 0.6
   },
   "star_seed": 777,
-  "asteroid_seed": 999,
+  "asteroid_field": {
+    "per_chunk_range": [2, 4],
+    "types": [
+      {"type": "gray_rock", "weight": 1, "size_range": [3, 6], "speed_range": [0.05, 0.3]},
+      {"type": "brown_rock", "weight": 2, "size_range": [4, 12], "speed_range": [0.1, 0.35]}
+    ]
+  },
   "station": {
     "x": 0.75,
     "y": 0.25,

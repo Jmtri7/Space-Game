@@ -41,6 +41,7 @@ from game.world.indoor_pathfinder import IndoorPathfinder
 from game.world.character import Character
 from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
+from game.world.asteroid_field import AsteroidField
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.ui.shop_menu import ShopMenu
@@ -326,6 +327,62 @@ class TestAutopilotPhysics(unittest.TestCase):
                         f"Patrol velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
                         f"Patrol oscillated - ship should come to stop once, not bounce")
+
+
+class TestAsteroidField(unittest.TestCase):
+    """Test AsteroidField's weighted type selection, per-type size/speed
+    ranges, spin behavior, and revisit-produces-different-content -
+    the pieces of PHYSICS.md's asteroid-specific non-determinism rule
+    (see AsteroidField's own docstring) that would silently regress this
+    back into StarField-style position-determinism if broken."""
+
+    def _types(self):
+        return [
+            {"graphics": {"shape": "round", "color": [150, 150, 150]},
+             "weight": 1, "size_range": (3, 6), "speed_range": (0, 0.3)},
+            {"graphics": {"shape": "jagged", "color": [120, 85, 55], "vertex_count_range": (7, 11),
+                          "jaggedness": 0.35, "spin_speed_range": (1.0, 1.0)},
+             "weight": 1, "size_range": (5, 10), "speed_range": (0, 0.3)},
+        ]
+
+    def test_generate_chunk_respects_size_and_speed_ranges(self):
+        field = AsteroidField(types=self._types(), per_chunk_range=(20, 20), seed=1)
+        asteroids = field._generate_chunk(0, 0)
+        self.assertEqual(len(asteroids), 20)
+        for asteroid in asteroids:
+            self.assertGreaterEqual(asteroid.size, 3)
+            self.assertLessEqual(asteroid.size, 10)
+            speed = (asteroid.velocity_x ** 2 + asteroid.velocity_y ** 2) ** 0.5
+            self.assertLessEqual(speed, 0.3 + 1e-9)
+
+    def test_generate_chunk_produces_both_configured_types(self):
+        field = AsteroidField(types=self._types(), per_chunk_range=(200, 200), seed=2)
+        shapes = {asteroid.shape for asteroid in field._generate_chunk(0, 0)}
+        self.assertEqual(shapes, {"round", "jagged"})
+
+    def test_jagged_asteroid_spins_round_does_not(self):
+        field = AsteroidField(types=self._types(), per_chunk_range=(30, 30), seed=3)
+        asteroids = field._generate_chunk(0, 0)
+        jagged = [a for a in asteroids if a.shape == "jagged"]
+        round_ones = [a for a in asteroids if a.shape == "round"]
+        self.assertTrue(jagged and round_ones, "expected both shapes among 30 asteroids")
+
+        for asteroid in jagged:
+            start_angle = asteroid.angle
+            asteroid.update()
+            self.assertNotEqual(asteroid.angle, start_angle)
+        for asteroid in round_ones:
+            asteroid.update()
+            self.assertEqual(asteroid.angle, 0)
+
+    def test_revisiting_unloaded_chunk_generates_different_asteroids(self):
+        """Same chunk key, generated twice in a row (simulating leave-and-return
+        after CHUNK_KEEP_RADIUS drops it) - should NOT reproduce the same
+        asteroids, unlike StarField's deterministic-by-position chunks."""
+        field = AsteroidField(types=self._types(), per_chunk_range=(3, 3), seed=4)
+        first = [(round(a.x, 3), round(a.y, 3), a.shape) for a in field._generate_chunk(0, 0)]
+        second = [(round(a.x, 3), round(a.y, 3), a.shape) for a in field._generate_chunk(0, 0)]
+        self.assertNotEqual(first, second)
 
 
 class TestLocationExitOptions(unittest.TestCase):

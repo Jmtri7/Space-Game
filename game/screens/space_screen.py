@@ -6,7 +6,8 @@ from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN,
 from game.utils import (
     get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
-    get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit
+    get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
+    get_asteroid_type
 )
 import game.utils as utils
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel
@@ -120,6 +121,26 @@ class SpaceScreen(ScreenBase):
         # frame.
         self._hud_click_rects = []
 
+    def _build_asteroid_types(self, config):
+        """Resolve a system's "asteroid_field.types" entries (each just a
+        {"type": asteroid_types.json id, "weight": ..., "size_range": ...,
+        "speed_range": ...}) into the fully-populated list AsteroidField
+        expects - looking up each "type" id's shape/color/jaggedness/spin
+        from the story's shared asteroid_types.json, same split as ship_type
+        id -> ship_types.json for AI ships above. Falls back to a single
+        default gray/round type if the system defines no "asteroid_field"
+        block at all, so existing system configs keep working unchanged."""
+        type_entries = config.get("asteroid_field", {}).get("types", [{"type": "gray_rock", "weight": 1}])
+        types = []
+        for entry in type_entries:
+            resolved = {"graphics": get_asteroid_type(self.story, entry.get("type", "gray_rock")), "weight": entry.get("weight", 1)}
+            if "size_range" in entry:
+                resolved["size_range"] = entry["size_range"]
+            if "speed_range" in entry:
+                resolved["speed_range"] = entry["speed_range"]
+            types.append(resolved)
+        return types
+
     def _build_system_state(self, system_id, config):
         """Build a SystemState (station/moon/central star/celestial bodies/
         AI ships) from one system's static config - called once per system
@@ -156,7 +177,13 @@ class SpaceScreen(ScreenBase):
 
         state = SystemState(station, moon, central_star, celestial_bodies, ai_ships=[], space_drag=space_drag)
         state.star_field = StarField(seed=config.get("star_seed", 0))
-        state.asteroid_field = AsteroidField(seed=config.get("asteroid_seed", 1))
+        # No seed passed - unlike StarField, AsteroidField is meant to look
+        # different every time (see its docstring), including the very
+        # first chunks generated at game start, not just on revisit.
+        state.asteroid_field = AsteroidField(
+            types=self._build_asteroid_types(config),
+            per_chunk_range=config.get("asteroid_field", {}).get("per_chunk_range", (1, 3)),
+        )
         # Registered before AI ships are built below (not after) because
         # Character.__init__ runs its routine's start() synchronously -
         # ExplorerRoutine's needs to find this very system already in
