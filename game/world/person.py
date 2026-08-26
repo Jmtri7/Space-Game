@@ -52,12 +52,20 @@ class Person:
     SKIN_COLOR = (225, 180, 145)  # torso tone; head/feet are shaded from this
     EYE_COLOR = (40, 30, 30)
 
+    # Same technique as WorldObject._draw_rotated_polygon uses for ships: a
+    # dark silhouette drawn slightly larger, underneath each shape, so the
+    # body reads as distinct from similarly-toned ground/terrain instead of
+    # blending into it (see docs/BACKLOG.md's helmet-vs-ground item). Same
+    # near-black tone as ships' default outline_color for visual consistency.
+    OUTLINE_COLOR = (20, 18, 25)
+    OUTLINE_WIDTH = 2  # screen pixels
+
     @staticmethod
     def _shade(color, amount):
         """Nudge a color's channels by amount (+lighter/-darker), clamped."""
         return tuple(max(0, min(255, c + amount)) for c in color)
 
-    def _shoulder_arc(self, cx, cy, start_deg, end_deg):
+    def _shoulder_arc(self, cx, cy, start_deg, end_deg, radius):
         """Points tracing one rounded shoulder corner, center (cx, cy),
         sweeping from start_deg to end_deg (0=right, 90=down, 180=left,
         270=up - screen convention, y grows downward)."""
@@ -65,20 +73,28 @@ class Person:
         for i in range(self.SHOULDER_SEGMENTS + 1):
             t = start_deg + (end_deg - start_deg) * i / self.SHOULDER_SEGMENTS
             rad = math.radians(t)
-            points.append((cx + self.SHOULDER_RADIUS * math.cos(rad), cy + self.SHOULDER_RADIUS * math.sin(rad)))
+            points.append((cx + radius * math.cos(rad), cy + radius * math.sin(rad)))
         return points
 
-    def _torso_points(self, body_top_y, body_bottom_y):
+    def _torso_points(self, body_top_y, body_bottom_y, margin=0):
         """The symmetric, round-shouldered, tapering torso polygon: left
         shoulder arc, right shoulder arc, then straight down to the (base,
         narrower) bottom corners - which sit hidden under the feet oval's
-        overlap, so they don't need rounding too."""
-        left_center = (self.x - self.SHOULDER_HALF_WIDTH + self.SHOULDER_RADIUS, body_top_y + self.SHOULDER_RADIUS)
-        right_center = (self.x + self.SHOULDER_HALF_WIDTH - self.SHOULDER_RADIUS, body_top_y + self.SHOULDER_RADIUS)
-        points = self._shoulder_arc(*left_center, 180, 270)
-        points += self._shoulder_arc(*right_center, 270, 360)
-        points.append((self.x + self.BASE_HALF_WIDTH, body_bottom_y))
-        points.append((self.x - self.BASE_HALF_WIDTH, body_bottom_y))
+        overlap, so they don't need rounding too.
+
+        margin (game-space units) grows every dimension outward, for tracing
+        an outline silhouette rather than the torso itself - see OUTLINE_COLOR."""
+        shoulder_half_width = self.SHOULDER_HALF_WIDTH + margin
+        base_half_width = self.BASE_HALF_WIDTH + margin
+        shoulder_radius = self.SHOULDER_RADIUS + margin
+        top_y = body_top_y - margin
+        bottom_y = body_bottom_y + margin
+        left_center = (self.x - shoulder_half_width + shoulder_radius, top_y + shoulder_radius)
+        right_center = (self.x + shoulder_half_width - shoulder_radius, top_y + shoulder_radius)
+        points = self._shoulder_arc(*left_center, 180, 270, shoulder_radius)
+        points += self._shoulder_arc(*right_center, 270, 360, shoulder_radius)
+        points.append((self.x + base_half_width, bottom_y))
+        points.append((self.x - base_half_width, bottom_y))
         return points
 
     def draw(self, surface):
@@ -96,11 +112,21 @@ class Person:
         helmet_color = self.outfit.get("helmet_color")
         head_color = self._shade(self.SKIN_COLOR, 30)
 
+        margin = self.OUTLINE_WIDTH / scale
+
+        pygame.draw.ellipse(surface, self.OUTLINE_COLOR, (*to_screen(self.x - self.FOOT_RADIUS_X - margin, feet_top_y - margin), to_screen_x((self.FOOT_RADIUS_X + margin) * 2), to_screen_y((self.FOOT_RADIUS_Y + margin) * 2)))
         pygame.draw.ellipse(surface, feet_color, (*to_screen(self.x - self.FOOT_RADIUS_X, feet_top_y), to_screen_x(self.FOOT_RADIUS_X * 2), to_screen_y(self.FOOT_RADIUS_Y * 2)))
+
+        outline_torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y, margin=margin)]
+        pygame.draw.polygon(surface, self.OUTLINE_COLOR, outline_torso_points)
         torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y)]
         pygame.draw.polygon(surface, torso_color, torso_points)
+
         if helmet_color:
+            pygame.draw.circle(surface, self.OUTLINE_COLOR, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS + margin) * scale)))
             pygame.draw.circle(surface, helmet_color, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS) * scale)))
+        else:
+            pygame.draw.circle(surface, self.OUTLINE_COLOR, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + margin) * scale)))
         pygame.draw.circle(surface, head_color, to_screen(self.x, head_center_y), max(1, int(self.HEAD_RADIUS * scale)))
         eye_y = head_center_y + self.EYE_OFFSET_Y
         eye_radius_px = max(1, int(self.EYE_RADIUS * scale))

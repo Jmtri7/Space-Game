@@ -13,7 +13,6 @@ higher priority.
 
 - [ ] ⭐ NPC facing/heading is ambiguous — hard to tell which direction an NPC is
       oriented or about to move.
-- [ ] ⭐ Helmet graphic is the same shade of gray as the ground, hard to distinguish.
 - [ ] ⭐ Flaky test: the "should still be moving" background AI-ship test in
       `tests/test_helpers.py` intermittently fails because the routine driving that
       ship (likely `ExplorerRoutine` in `game/world/routine.py`) can produce a
