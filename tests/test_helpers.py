@@ -496,22 +496,44 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         """Regression test for the station's concourse/spaceport layout:
         "ship" isn't directly reachable from the room a freighter lands in
         (only the spaceport offers it), so the routine must hop through
-        whichever connected location the role's preference names, not
-        wander into an unrelated dead end first."""
-        hub = SimpleNamespace(all_exit_options=lambda: ["dead_end", "spaceport"])
-        docks = SimpleNamespace(all_exit_options=lambda: ["hub", "ship"])
-        routine = DockRoutine(route=[])
-        routine._location = hub
+        whichever connected location actually leads to the ship - found by
+        searching the interiors graph (Landable.interior_adjacency /
+        get_ship_entry_key, resolved via TOWARD_SHIP), not wander into an
+        unrelated dead end first."""
+        hub_config = {"label": "Hub", "connected_locations": ["dead_end", "spaceport"], "return_to_ship": False, "npcs": []}
+        dead_end_config = {"label": "Dead End", "connected_locations": ["hub"], "return_to_ship": False, "npcs": []}
+        spaceport_config = {"label": "Spaceport", "connected_locations": ["hub"], "return_to_ship": True, "npcs": []}
+        stop = Landable(0, 0, graphics={}, interiors={
+            "hub": hub_config, "dead_end": dead_end_config, "spaceport": spaceport_config,
+        })
+        routine = DockRoutine(route=[stop])
+        routine._location = SimpleNamespace(interior_key="hub", all_exit_options=lambda: ["dead_end", "spaceport"])
         routine._visited_this_stop = {"hub"}
         ai_ship = self._make_ai_ship(role="freighter_pilot")
 
-        self.assertIn("spaceport", ROLE_EXIT_PREFERENCE["freighter_pilot"])
         choice = routine._choose_exit(ai_ship)
-        self.assertEqual(choice, "spaceport", "Should route toward the preferred middle node, not the dead end")
+        self.assertEqual(choice, "spaceport", "Should route toward the room that leads to the ship, not the dead end")
 
-        routine._location = docks
+        routine._location = SimpleNamespace(interior_key="spaceport", all_exit_options=lambda: ["hub", "ship"])
         routine._visited_this_stop.add("spaceport")
         self.assertEqual(routine._choose_exit(ai_ship), "ship")
+
+    def test_routes_to_the_ship_room_regardless_of_its_name(self):
+        """The room that leads back to the ship isn't necessarily called
+        "spaceport" - a different station could name it anything, as long
+        as its own return_to_ship is set (Landable.get_ship_entry_key).
+        Routing has to key off that, not a literal string - this is the
+        scenario that would have failed under the old hardcoded
+        ROLE_EXIT_PREFERENCE = ["spaceport", "ship"]."""
+        hub_config = {"label": "Hub", "connected_locations": ["docking_bay"], "return_to_ship": False, "npcs": []}
+        docking_bay_config = {"label": "Docking Bay", "connected_locations": ["hub"], "return_to_ship": True, "npcs": []}
+        stop = Landable(0, 0, graphics={}, interiors={"hub": hub_config, "docking_bay": docking_bay_config})
+        routine = DockRoutine(route=[stop])
+        routine._location = SimpleNamespace(interior_key="hub", all_exit_options=lambda: ["docking_bay"])
+        routine._visited_this_stop = {"hub"}
+        ai_ship = self._make_ai_ship(role="freighter_pilot")
+
+        self.assertEqual(routine._choose_exit(ai_ship), "docking_bay")
 
     def test_safety_cap_forces_reboard_when_ship_is_never_reachable(self):
         """If nothing ever leads to "ship" (a misconfigured or future

@@ -3,6 +3,7 @@ errand, then fly to the next stop - a small phase machine layered on top
 of the same engage_seek()/park() plumbing ShuttleRoutine uses for pure
 fly-only shuttling."""
 import math
+from collections import deque
 
 from game.constants import WALKING_SPEED
 from game.world.indoor_pathfinder import IndoorPathfinder
@@ -11,6 +12,16 @@ WALK_SPEED = WALKING_SPEED  # same pace as LocationScreen's player (see constant
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
 
+# Sentinel usable inside a ROLE_EXIT_PREFERENCE list: resolves at each
+# stop to the next hop along the shortest path (see _next_hop_toward_ship,
+# which searches Landable.interior_adjacency) toward whichever interior
+# actually leads back to the ship (Landable.get_ship_entry_key) - not a
+# literal interior key, since that room's name is specific to one story's
+# layout (sol_alpha calls it "spaceport"; nothing requires another story
+# to). Resolves to None (no candidate) once already standing in that
+# room, since "ship" itself is reachable there directly.
+TOWARD_SHIP = "toward_ship"
+
 # Which destination a character's role prefers when their current
 # location has more than one reachable place across all its portals (see
 # LocationScreen.all_exit_options) - checked in order, first one actually
@@ -18,11 +29,11 @@ TALK_FRAMES = 180        # ~3 seconds at 60fps
 # DEFAULT_EXIT_PREFERENCE, i.e. they head straight back to the ship exactly
 # like before connected_locations existed.
 #
-# "spaceport" is here because the station's "default"/concourse interior no
-# longer offers "ship" directly (only the spaceport does, gated on the
-# player owning one) - a freighter pilot landing at the concourse needs an
-# explicit route through the spaceport, not just a preference that happens
-# to be offered at the current stop.
+# TOWARD_SHIP is here because a station's landing room doesn't always
+# offer "ship" directly (e.g. sol_alpha's concourse doesn't - only its
+# spaceport does, gated on the player owning one) - a freighter pilot
+# landing somewhere else needs an explicit route to wherever does, not
+# just a preference that happens to be offered at the current stop.
 #
 # Deliberately does NOT include "wilderness"/"city" - an earlier version
 # had freighter_pilot detour into the moon's other location before
@@ -31,9 +42,9 @@ TALK_FRAMES = 180        # ~3 seconds at 60fps
 # happened to be looking at wilderness at that moment (having landed there
 # themselves while the pilot was in city), it looked exactly like the pilot
 # glitching in and out of existence. Only detour toward a location that
-# actually has something in it (like the spaceport).
+# actually has something in it (like TOWARD_SHIP's target usually does).
 ROLE_EXIT_PREFERENCE = {
-    "freighter_pilot": ["spaceport", "ship"],
+    "freighter_pilot": [TOWARD_SHIP, "ship"],
 }
 DEFAULT_EXIT_PREFERENCE = ["ship"]
 
@@ -144,10 +155,41 @@ class DockRoutine:
         if len(self._visited_this_stop) >= MAX_LATERAL_HOPS:
             return "ship"
         for preferred in ROLE_EXIT_PREFERENCE.get(character.role, DEFAULT_EXIT_PREFERENCE):
-            if preferred in options and (preferred == "ship" or preferred not in self._visited_this_stop):
-                return preferred
+            candidate = self._next_hop_toward_ship() if preferred == TOWARD_SHIP else preferred
+            if candidate and candidate in options and (candidate == "ship" or candidate not in self._visited_this_stop):
+                return candidate
         unvisited = [option for option in options if option not in self._visited_this_stop]
         return unvisited[0] if unvisited else "ship"
+
+    def _next_hop_toward_ship(self):
+        """Resolve TOWARD_SHIP: a breadth-first search of the current
+        stop's interior graph (Landable.interior_adjacency) from the room
+        we're standing in toward whichever room actually leads back to the
+        ship (Landable.get_ship_entry_key), returning just the first hop -
+        or None if we're already there (nothing to route to) or no path
+        exists. Only fetches self.route[self._route_index] when actually
+        needed, so a role/test that never resolves TOWARD_SHIP (the common
+        case - DEFAULT_EXIT_PREFERENCE never does) doesn't require a real
+        route to be set up."""
+        stop = self.route[self._route_index]
+        start = self._location.interior_key
+        target = stop.get_ship_entry_key()
+        if start == target:
+            return None
+        graph = stop.interior_adjacency()
+        came_from = {start: None}
+        frontier = deque([start])
+        while frontier:
+            node = frontier.popleft()
+            if node == target:
+                while came_from[node] != start:
+                    node = came_from[node]
+                return node
+            for neighbor in graph.get(node, []):
+                if neighbor not in came_from:
+                    came_from[neighbor] = node
+                    frontier.append(neighbor)
+        return None
 
     def _move_to_connected_location(self, character, key):
         """Walk the character laterally into a connected interior at the

@@ -88,6 +88,27 @@ class Landable(WorldObject):
                 return key
         return "default"
 
+    def interior_adjacency(self):
+        """{interior_key: [connected interior keys]} for every interior in
+        self.interiors - the graph of which rooms connect to which, read
+        straight from each interior's own raw connected_locations
+        (portals-list style: the union across all its portals). Lets a
+        role's routine (DockRoutine) plan a multi-hop route to a specific
+        room - e.g. wherever get_ship_entry_key() says the ship actually
+        is - by searching this graph, instead of hardcoding the name of
+        whichever room happens to lead there in one particular story."""
+        graph = {}
+        for key, config in self.interiors.items():
+            config = load_json(config) if isinstance(config, str) else config
+            if not config:
+                continue
+            portals = config.get("portals")
+            if portals:
+                graph[key] = [loc for portal in portals for loc in portal.get("connected_locations", [])]
+            else:
+                graph[key] = list(config.get("connected_locations", []))
+        return graph
+
     def get_interior_labels(self):
         """Display label for each configured interior (station's "default",
         or a moon's "city"/"wilderness"), for the targeting HUD and any
