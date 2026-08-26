@@ -162,7 +162,7 @@ class ShopMenu:
 
         grid = self._current_list()
         if grid.has_more_above:
-            up_indicator = font_info.render("↑ more", True, GRAY)
+            up_indicator = font_info.render("^ more", True, GRAY)
             surface.blit(up_indicator, (panel_rect.centerx - up_indicator.get_width() // 2, y))
         y += int(18 * scale)
 
@@ -177,7 +177,7 @@ class ShopMenu:
 
         grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
         if grid.has_more_below:
-            down_indicator = font_info.render("↓ more", True, GRAY)
+            down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
         help_text = font_info.render("Tab/Click tab: Buy/Sell, Arrows/Click: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))

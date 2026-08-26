@@ -68,7 +68,7 @@ class SelectableList:
         pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
 
         if self.scroll_offset > 0:
-            up_indicator = font.render("↑ more", True, GRAY)
+            up_indicator = font.render("^ more", True, GRAY)
             surface.blit(up_indicator, (center_x - up_indicator.get_width() // 2, int(start_y - line_height)))
 
         visible = self.items[self.scroll_offset:self.scroll_offset + self.max_visible]
@@ -94,6 +94,6 @@ class SelectableList:
             surface.blit(text, (text_x, text_y))
 
         if self.scroll_offset + self.max_visible < len(self.items):
-            down_indicator = font.render("↓ more", True, GRAY)
+            down_indicator = font.render("v more", True, GRAY)
             down_y = int(start_y + self.max_visible * line_height)
             surface.blit(down_indicator, (center_x - down_indicator.get_width() // 2, down_y))

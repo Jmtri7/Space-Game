@@ -315,7 +315,7 @@ class ScrollableMenu:
     def draw(self, surface):
         # Show scroll indicator if not at top
         if self.scroll_offset > 0:
-            draw_text(surface, "↑ more")
+            draw_text(surface, "^ more")
         
         # Show visible items
         visible = self.items[self.scroll_offset:self.scroll_offset + self.max_visible]
@@ -325,7 +325,7 @@ class ScrollableMenu:
         
         # Show scroll indicator if not at bottom
         if self.scroll_offset + self.max_visible < len(self.items):
-            draw_text(surface, "↓ more")
+            draw_text(surface, "v more")
 ```
 
 **Why this works:**

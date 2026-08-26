@@ -400,7 +400,7 @@ class OutfittingMenu:
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
         grid = self.buy_grid
         if grid.has_more_above:
-            up_indicator = font_info.render("↑ more", True, GRAY)
+            up_indicator = font_info.render("^ more", True, GRAY)
             surface.blit(up_indicator, (panel_rect.centerx - up_indicator.get_width() // 2, y))
         y += int(18 * scale)
 
@@ -414,7 +414,7 @@ class OutfittingMenu:
 
         grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
         if grid.has_more_below:
-            down_indicator = font_info.render("↓ more", True, GRAY)
+            down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
     def _draw_buy_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
@@ -504,14 +504,14 @@ class OutfittingMenu:
         cell_width = int(min(220 * scale, panel_rect.width * 0.22))
         cell_height = int(34 * scale)
         if self.owned_grid.has_more_above:
-            up_indicator = font_info.render("↑ more", True, GRAY)
+            up_indicator = font_info.render("^ more", True, GRAY)
             surface.blit(up_indicator, (owned_x - up_indicator.get_width() // 2, owned_grid_top))
             owned_grid_top += int(18 * scale)
         draw_owned_cell = functools.partial(self._draw_owned_cell, scale=scale)
         self.owned_grid.draw(surface, (owned_x - cell_width // 2, owned_grid_top), cell_width, cell_height, gap, draw_owned_cell)
         owned_grid_bottom = owned_grid_top + cell_height * self.owned_grid.max_rows + gap * (self.owned_grid.max_rows - 1)
         if self.owned_grid.has_more_below:
-            down_indicator = font_info.render("↓ more", True, GRAY)
+            down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (owned_x - down_indicator.get_width() // 2, owned_grid_bottom + int(4 * scale)))
 
         if self.picker is not None:
