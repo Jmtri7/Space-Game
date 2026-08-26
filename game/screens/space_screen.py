@@ -6,7 +6,7 @@ from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN,
 from game.utils import (
     get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
-    get_ship_type, get_graphics_asset, get_pilot, get_star_systems
+    get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit
 )
 import game.utils as utils
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel
@@ -286,6 +286,12 @@ class SpaceScreen(ScreenBase):
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
         self.player.ship.apply_ship_type(ship_type)
         self.player.ship.graphics = graphics
+        # Re-apply installed outfits' stat modifiers on top of the fresh base
+        # stats - covers both the purchase path (_on_ship_purchased) and the
+        # load path (restore_possessions), since both funnel through here.
+        installed = self.player.person.possessions.installed_outfits
+        outfits = [get_ship_outfit(self.story, outfit_id) for outfit_id in installed.values()]
+        self.player.ship.apply_outfits(outfits)
 
     def _on_ship_purchased(self, ship_type_id):
         """Configure the player's real ship to match a newly bought type,

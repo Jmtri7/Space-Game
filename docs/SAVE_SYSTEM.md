@@ -58,7 +58,11 @@ name is kept, the timestamp lives inside it.
     "possessions": {
       "credits": 0,
       "owned_ships": ["shuttle"],
-      "loans": [{"lender": "Station Credit Union", "principal": 1200}]
+      "loans": [{"lender": "Station Credit Union", "principal": 1200}],
+      "owned_outfits": ["afterburner"],
+      "installed_outfits": {"weapon_1": "laser_cannon"},
+      "cargo": {"ore": 5},
+      "items": {"repair_kit": 1}
     },
     "jump_state": {
       "phase": "travel",
@@ -122,6 +126,28 @@ values. `Possessions.restore_from()` mutates the existing object in place
 rather than replacing it, since the player's one real `Possessions` is shared
 by reference across `SpaceScreen` and every cached `LocationScreen` (see
 ARCHITECTURE.md).
+
+`owned_outfits` (spare, uninstalled ship equipment) and `installed_outfits`
+(`{slot_id: outfit_id}`) are a separate concept from `cargo`/`items` and from
+`Person.outfit` (the unrelated cosmetic space-suit asset in `graphics.json`) -
+see `game/world/possessions.py`. **`installed_outfits` describes whichever
+ship is currently flown, not a specific owned ship instance** - like
+`owned_ships`, there's no per-ship identity in this data model yet (buying a
+new ship just makes it the active one, per `SpaceScreen.restore_possessions()`
+re-equipping `owned_ships[-1]`). If "own multiple ships and switch between
+them" is ever built, `installed_outfits` will need to move from a flat map on
+`Possessions` to something keyed per owned ship - this is a known, deliberate
+gap, not an oversight. `SpaceScreen._apply_ship_type()` re-applies
+`installed_outfits`' stat modifiers (via `Ship.apply_outfits()`) every time it
+runs, so a loaded save's outfitted ship keeps its bonuses instead of reverting
+to the bare ship type's base stats.
+
+`cargo` (`{commodity_id: quantity}`) is capped by the ship's own
+`cargo_capacity` (set from `ship_types.json`, boosted by any installed
+utility outfit that modifies it) - `Possessions` itself doesn't know about
+capacity or enforce it; that check happens wherever a purchase is made.
+`items` (`{item_id: quantity}`) is a player-carried personal inventory and is
+never capacity-limited.
 
 **`game_state["player"]` means two different things depending on `location`,
 and this matters a great deal for restoring it correctly (see below):** for a

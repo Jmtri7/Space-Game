@@ -19,6 +19,7 @@ class Ship(WorldObject):
         self.max_velocity = 4.0
         self.rotation_speed = 5
         self.space_drag = space_drag
+        self.cargo_capacity = 0
         self.autopilot = Autopilot(self)
 
     # --- Backward-compatible views onto the autopilot's state ---
@@ -54,6 +55,27 @@ class Ship(WorldObject):
         self.acceleration_magnitude = ship_type.get("max_thrust", self.acceleration_magnitude)
         self.max_velocity = ship_type.get("max_velocity", self.max_velocity)
         self.rotation_speed = ship_type.get("rotation_speed", self.rotation_speed)
+        self.cargo_capacity = ship_type.get("cargo_capacity", self.cargo_capacity)
+
+    def apply_outfits(self, outfits):
+        """Add each installed outfit's stat_modifiers on top of whatever
+        apply_ship_type() just set - additive, same "missing fields don't
+        zero anything out" contract as apply_ship_type. Called after
+        apply_ship_type() any time the ship's base type or its installed
+        outfits change (purchase, load, equip/unequip), so a reloaded or
+        re-outfitted ship never silently reverts to un-outfitted stats."""
+        for outfit in outfits:
+            if not outfit:
+                continue
+            modifiers = outfit.get("stat_modifiers", {})
+            if "max_thrust" in modifiers:
+                self.acceleration_magnitude += modifiers["max_thrust"]
+            if "max_velocity" in modifiers:
+                self.max_velocity += modifiers["max_velocity"]
+            if "rotation_speed" in modifiers:
+                self.rotation_speed += modifiers["rotation_speed"]
+            if "cargo_capacity" in modifiers:
+                self.cargo_capacity += modifiers["cargo_capacity"]
 
     def engage_seek(self, target):
         """Engage autopilot to approach/land on `target`."""

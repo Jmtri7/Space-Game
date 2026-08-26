@@ -271,6 +271,26 @@ def get_pilot(story, pilot_id):
     return pilots.get(pilot_id, {})
 
 
+def get_ship_outfit(story, outfit_id):
+    """Load ship outfit properties from config/stories/{story}/ship_outfits.json.
+    Distinct from graphics.json's "outfits" section (Person's cosmetic
+    space-suit asset) - this is ship equipment (weapons/engines/shields/utility)."""
+    ship_outfits = load_json(f"config/stories/{story}/ship_outfits.json") or {}
+    return ship_outfits.get(outfit_id, {})
+
+
+def get_commodity(story, commodity_id):
+    """Load commodity properties from config/stories/{story}/commodities.json."""
+    commodities = load_json(f"config/stories/{story}/commodities.json") or {}
+    return commodities.get(commodity_id, {})
+
+
+def get_item(story, item_id):
+    """Load personal item properties from config/stories/{story}/items.json."""
+    items = load_json(f"config/stories/{story}/items.json") or {}
+    return items.get(item_id, {})
+
+
 def get_star_systems(story):
     """Discover every star system belonging to one story, by scanning
     config/stories/{story}/systems/*.json. Systems only exist within a single

@@ -1,0 +1,20 @@
+{
+  "repair_kit": {
+    "name": "Repair Kit",
+    "description": "Portable hull patch kit for emergency repairs",
+    "base_price": 150,
+    "category": "tool"
+  },
+  "medkit": {
+    "name": "Medkit",
+    "description": "Personal first-aid supplies",
+    "base_price": 60,
+    "category": "consumable"
+  },
+  "star_chart": {
+    "name": "Star Chart",
+    "description": "Archived navigation data for nearby systems",
+    "base_price": 200,
+    "category": "tool"
+  }
+}

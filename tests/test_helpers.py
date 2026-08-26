@@ -915,6 +915,125 @@ class TestPossessions(unittest.TestCase):
         self.assertEqual(possessions.owned_ships, ["patrol"])
 
 
+class TestPossessionsInventory(unittest.TestCase):
+    """Test Possessions' cargo/items/outfit tracking - added alongside the
+    inventory/buying-selling/outfitting feature. Cargo capacity itself lives
+    on Ship, not here (Possessions stays config-free per the story/save
+    split), so these tests only cover the plain-data bookkeeping."""
+
+    def test_cargo_add_and_remove(self):
+        possessions = Possessions()
+        possessions.add_cargo("ore", 5)
+        possessions.add_cargo("ore", 3)
+        self.assertEqual(possessions.cargo["ore"], 8)
+        self.assertEqual(possessions.cargo_quantity_total(), 8)
+        possessions.remove_cargo("ore", 3)
+        self.assertEqual(possessions.cargo["ore"], 5)
+
+    def test_remove_cargo_down_to_zero_drops_the_key(self):
+        possessions = Possessions()
+        possessions.add_cargo("ore", 5)
+        possessions.remove_cargo("ore", 5)
+        self.assertNotIn("ore", possessions.cargo)
+
+    def test_items_are_independent_of_cargo(self):
+        possessions = Possessions()
+        possessions.add_item("repair_kit", 1)
+        possessions.add_cargo("ore", 5)
+        self.assertEqual(possessions.items, {"repair_kit": 1})
+        self.assertEqual(possessions.cargo, {"ore": 5})
+
+    def test_add_outfit_and_install(self):
+        possessions = Possessions()
+        possessions.add_outfit("laser_cannon")
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+        possessions.install_outfit("weapon_1", "laser_cannon")
+        self.assertEqual(possessions.owned_outfits, [])
+        self.assertEqual(possessions.installed_outfits, {"weapon_1": "laser_cannon"})
+
+    def test_installing_into_an_occupied_slot_bumps_the_old_outfit_back_to_owned(self):
+        possessions = Possessions(owned_outfits=["laser_cannon", "afterburner"])
+        possessions.install_outfit("weapon_1", "laser_cannon")
+        bumped = possessions.install_outfit("weapon_1", "afterburner")
+        self.assertEqual(bumped, "laser_cannon")
+        self.assertEqual(possessions.installed_outfits, {"weapon_1": "afterburner"})
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+
+    def test_uninstall_outfit_returns_it_to_owned(self):
+        possessions = Possessions(installed_outfits={"weapon_1": "laser_cannon"})
+        removed = possessions.uninstall_outfit("weapon_1")
+        self.assertEqual(removed, "laser_cannon")
+        self.assertEqual(possessions.installed_outfits, {})
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+
+    def test_uninstall_empty_slot_is_a_noop(self):
+        possessions = Possessions()
+        self.assertIsNone(possessions.uninstall_outfit("weapon_1"))
+        self.assertEqual(possessions.owned_outfits, [])
+
+    def test_inventory_fields_roundtrip_through_save_state(self):
+        possessions = Possessions(
+            owned_outfits=["afterburner"],
+            installed_outfits={"weapon_1": "laser_cannon"},
+            cargo={"ore": 5},
+            items={"repair_kit": 1},
+        )
+        restored = Possessions.from_state(possessions.get_state())
+        self.assertEqual(restored.owned_outfits, ["afterburner"])
+        self.assertEqual(restored.installed_outfits, {"weapon_1": "laser_cannon"})
+        self.assertEqual(restored.cargo, {"ore": 5})
+        self.assertEqual(restored.items, {"repair_kit": 1})
+
+    def test_restore_from_defaults_missing_inventory_keys_for_old_saves(self):
+        """A save made before this feature existed has no cargo/items/outfit
+        keys at all - restoring it must not error, and should leave a
+        freshly-constructed Possessions' empty defaults in place."""
+        possessions = Possessions()
+        possessions.restore_from({"credits": 500, "owned_ships": ["shuttle"], "loans": []})
+        self.assertEqual(possessions.cargo, {})
+        self.assertEqual(possessions.items, {})
+        self.assertEqual(possessions.owned_outfits, [])
+        self.assertEqual(possessions.installed_outfits, {})
+
+
+class TestShipOutfits(unittest.TestCase):
+    """Test Ship.apply_outfits() - stat modifiers stack additively on top of
+    apply_ship_type()'s base stats, and never zero out a stat an outfit
+    doesn't mention (same contract apply_ship_type itself documents)."""
+
+    def test_apply_outfits_with_no_outfits_leaves_base_stats_unchanged(self):
+        ship = Ship(0, 0)
+        ship.apply_ship_type({"max_thrust": 0.1, "max_velocity": 2.0, "rotation_speed": 4})
+        ship.apply_outfits([])
+        self.assertEqual(ship.acceleration_magnitude, 0.1)
+        self.assertEqual(ship.max_velocity, 2.0)
+        self.assertEqual(ship.rotation_speed, 4)
+
+    def test_single_outfit_modifier_stacks_onto_base_stat(self):
+        ship = Ship(0, 0)
+        ship.apply_ship_type({"max_thrust": 0.1, "max_velocity": 2.0, "rotation_speed": 4})
+        ship.apply_outfits([{"stat_modifiers": {"max_velocity": 1.5}}])
+        self.assertAlmostEqual(ship.max_velocity, 3.5)
+        self.assertEqual(ship.acceleration_magnitude, 0.1)  # unmentioned stat untouched
+
+    def test_multiple_outfits_stack_together(self):
+        ship = Ship(0, 0)
+        ship.apply_ship_type({"max_thrust": 0.1, "max_velocity": 2.0, "rotation_speed": 4})
+        ship.apply_outfits([
+            {"stat_modifiers": {"max_velocity": 1.5, "max_thrust": 0.05}},
+            {"stat_modifiers": {"rotation_speed": -1}},
+        ])
+        self.assertAlmostEqual(ship.max_velocity, 3.5)
+        self.assertAlmostEqual(ship.acceleration_magnitude, 0.15)
+        self.assertEqual(ship.rotation_speed, 3)
+
+    def test_cargo_capacity_set_by_ship_type_and_boosted_by_outfits(self):
+        ship = Ship(0, 0)
+        ship.apply_ship_type({"cargo_capacity": 10})
+        ship.apply_outfits([{"stat_modifiers": {"cargo_capacity": 20}}])
+        self.assertEqual(ship.cargo_capacity, 30)
+
+
 class TestDialogue(unittest.TestCase):
     """Test Dialogue's conversation tree - both the backward-compatible
     flat shape (from_flat) and real branching."""
