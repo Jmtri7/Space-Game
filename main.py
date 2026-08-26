@@ -180,7 +180,7 @@ def main():
                     game_screen = SpaceScreen(pilot_name=pilot_name, story=selected_story)
                     # New pilots start ship-less, in their dormitory room -
                     # not out in space with a ship already assigned.
-                    station_interior = game_screen.get_interior_screen(game_screen.station, "dormitory", 800, 600)
+                    station_interior = game_screen.get_interior_screen(game_screen.station, "dormitory")
                     current_screen = "station"
                 elif result == "cancel":
                     current_screen = "menu"
@@ -235,8 +235,8 @@ def main():
                                 # actually docks at, not wherever the save
                                 # happened to record (e.g. a dormitory) -
                                 # matches landing fresh from space, below.
-                                ship_entry_key = game_screen.get_ship_entry_key(game_screen.station)
-                                station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key, 800, 600)
+                                ship_entry_key = game_screen.station.get_ship_entry_key()
+                                station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)
                                 if station_interior:
                                     station_interior.restore_state(game_state)
                                     station_interior.arrive_from("ship")
@@ -248,7 +248,7 @@ def main():
                                 moon_location = game_state.get("moon_location", "city")
                                 if moon_location not in game_screen.moon.interiors:
                                     moon_location = "city"
-                                moon_interior = game_screen.get_interior_screen(game_screen.moon, moon_location, 1600, 1600)
+                                moon_interior = game_screen.get_interior_screen(game_screen.moon, moon_location)
                                 if moon_interior:
                                     moon_interior.restore_state(game_state)
                                 current_screen = "moon"
@@ -269,8 +269,8 @@ def main():
                 elif action == "land":
                     game_screen.player.park()
                     if game_screen.landing_target == "station":
-                        ship_entry_key = game_screen.get_ship_entry_key(game_screen.station)
-                        station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key, 800, 600)
+                        ship_entry_key = game_screen.station.get_ship_entry_key()
+                        station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)
                         if station_interior:
                             station_interior.arrive_from("ship")
                         current_screen = "station"
@@ -314,7 +314,7 @@ def main():
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
                     origin_key = station_interior.interior_key
-                    station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1], 800, 600)
+                    station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1])
                     station_interior.arrive_from(origin_key)
                 elif action == "possessions":
                     possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story)
@@ -336,7 +336,7 @@ def main():
             elif current_screen == "select_location":
                 location_key = location_selector.handle_input(events)
                 if location_key and location_key in location_selector.interior_configs:
-                    moon_interior = game_screen.get_interior_screen(game_screen.moon, location_key, 1600, 1600)
+                    moon_interior = game_screen.get_interior_screen(game_screen.moon, location_key)
                     moon_interior.arrive_from("ship")
                     current_screen = "moon"
                 elif location_key == "cancel":
@@ -351,9 +351,8 @@ def main():
                     current_screen = exit_menu_return_screen
                 elif choice:
                     is_station = exit_menu_landable is game_screen.station
-                    world_width, world_height = (800, 600) if is_station else (1600, 1600)
                     origin_key = (station_interior if is_station else moon_interior).interior_key
-                    interior = game_screen.get_interior_screen(exit_menu_landable, choice, world_width, world_height)
+                    interior = game_screen.get_interior_screen(exit_menu_landable, choice)
                     interior.arrive_from(origin_key)
                     if is_station:
                         station_interior = interior
@@ -405,7 +404,7 @@ def main():
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
                     origin_key = moon_interior.interior_key
-                    moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1], 1600, 1600)
+                    moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1])
                     moon_interior.arrive_from(origin_key)
                 elif action == "possessions":
                     possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story)

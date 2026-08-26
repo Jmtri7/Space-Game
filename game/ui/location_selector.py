@@ -11,9 +11,13 @@ class LocationSelector:
         # interior_configs: dict of {"city": config_file, "wilderness": config_file, ...}
         self.interior_configs = interior_configs or {}
         location_keys = list(self.interior_configs.keys())
+        # Each interior's own "label" (same field ExitMenu._label() reads),
+        # not a hardcoded {"city": "Moon City", ...} copy that could drift
+        # out of sync with a story's actual config - or simply not have an
+        # entry at all for a location key this story invents.
         self.location_labels = {
-            "city": "Moon City",
-            "wilderness": "Wilderness"
+            key: config.get("label", key.capitalize()) if isinstance(config, dict) else key.capitalize()
+            for key, config in self.interior_configs.items()
         }
         # max_visible covers every location, so this list never scrolls.
         self.list = SelectableList(location_keys, max_visible=max(1, len(location_keys)))

@@ -410,12 +410,13 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
 
         interior_cache = {}
-        def get_interior_screen(landable, key, world_width, world_height):
+        def get_interior_screen(landable, key):
             cache_key = (id(landable), key)
             if cache_key not in interior_cache:
                 config = landable.interiors.get(key)
                 if not config:
                     return None
+                world_width, world_height = landable.interior_world_size
                 interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
             return interior_cache[cache_key]
 
@@ -460,12 +461,13 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
 
         interior_cache = {}
-        def get_interior_screen(landable, key, world_width, world_height):
+        def get_interior_screen(landable, key):
             cache_key = (id(landable), key)
             if cache_key not in interior_cache:
                 config = landable.interiors.get(key)
                 if not config:
                     return None
+                world_width, world_height = landable.interior_world_size
                 interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
             return interior_cache[cache_key]
 
@@ -1290,7 +1292,7 @@ class TestBuildSaveGameState(unittest.TestCase):
 
     def test_station_save_keeps_story_and_system_id(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
-        station_interior = game_screen.get_interior_screen(game_screen.station, "default", 800, 600)
+        station_interior = game_screen.get_interior_screen(game_screen.station, "default")
         game_state, system_config_snapshot = build_save_game_state(game_screen, "station", station_interior, None)
         self.assertEqual(game_state["location"], "station")
         self.assertEqual(game_state["story"], "default")
@@ -1299,7 +1301,7 @@ class TestBuildSaveGameState(unittest.TestCase):
 
     def test_moon_save_keeps_story_and_system_id(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
-        moon_interior = game_screen.get_interior_screen(game_screen.moon, "wilderness", 1600, 1600)
+        moon_interior = game_screen.get_interior_screen(game_screen.moon, "wilderness")
         game_state, system_config_snapshot = build_save_game_state(game_screen, "moon", None, moon_interior)
         self.assertEqual(game_state["location"], "moon")
         self.assertEqual(game_state["moon_location"], "wilderness")
@@ -1313,7 +1315,7 @@ class TestBuildSaveGameState(unittest.TestCase):
         doesn't, so saving there was misdetected as "wilderness" and
         loading put the player in the wrong moon location entirely."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
-        city_interior = game_screen.get_interior_screen(game_screen.moon, "city", 1600, 1600)
+        city_interior = game_screen.get_interior_screen(game_screen.moon, "city")
         self.assertNotIn("city", city_interior.ui_label.lower())  # the actual label has no "city" in it
         game_state, _ = build_save_game_state(game_screen, "moon", None, city_interior)
         self.assertEqual(game_state["moon_location"], "city")
@@ -1410,7 +1412,7 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
 
     def test_restore_state_reequips_the_last_purchased_ship(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport", 800, 600)
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
         spaceport._apply_dialogue_action("buy_ship:shuttle")
         self.assertEqual(game_screen.player.ship.graphics.get("size"), 10)  # shuttle's configured size
 
@@ -1428,7 +1430,7 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
         position) - it must still pick up "possessions" and re-equip
         accordingly."""
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport", 800, 600)
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
         spaceport._apply_dialogue_action("buy_ship:shuttle")
 
         docked_state = spaceport.get_state()  # {"player": {...}, "possessions": {...}} - no ai_ships key

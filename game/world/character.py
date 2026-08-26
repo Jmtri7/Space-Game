@@ -52,7 +52,7 @@ class Character:
     what they do with either. The player is not one of these (see
     PlayerController); this is for every AI-driven character - ship pilots
     and non-piloting station/moon residents alike."""
-    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, get_ship_entry_key=None, ship_type_id=None, systems=None, system_id=None, can_move_to=None):
+    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None, can_move_to=None):
         self.person = person
         self.ship = ship
         self.role = role
@@ -73,13 +73,6 @@ class Character:
         # only ever used) for ship-flying characters - a local NPC never
         # needs to "find" the location it's already standing in.
         self.get_interior_screen = get_interior_screen
-        # Bound SpaceScreen.get_ship_entry_key, if given - lets DockRoutine
-        # find which of a station's interiors is the one a docked ship
-        # actually opens into (see that method), so a pilot walks in
-        # through the same doorway the player does instead of always
-        # "default". None falls back to "default" (DockRoutine), matching
-        # behavior before this existed.
-        self.get_ship_entry_key = get_ship_entry_key
         self.ship_type_id = ship_type_id
         # system_id -> SystemState (see SpaceScreen.systems) and which one
         # this character currently belongs to - only set for ship-flying
@@ -108,7 +101,7 @@ class Character:
         self.routine.start(self)
 
     @classmethod
-    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, get_ship_entry_key=None, space_drag=0, outfit=None, systems=None, system_id=None):
+    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None, systems=None, system_id=None):
         """Build the Character for an AI-flown ship: a Ship configured from
         ship_type, a Person seeded with the pilot's starting credits/ship
         and flavor dialogue, and the role-driven routine that flies it."""
@@ -130,7 +123,7 @@ class Character:
         # personality line in pilots.json rather than a generic greeting.
         person.dialogue = Dialogue.from_flat(pilot.get("name", "Pilot"), pilot.get("personality", "..."), ["Nod", "Leave"])
 
-        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, get_ship_entry_key=get_ship_entry_key, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
+        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/

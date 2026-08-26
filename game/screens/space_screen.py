@@ -181,7 +181,6 @@ class SpaceScreen(ScreenBase):
                 pilot=pilot,
                 route=route,
                 get_interior_screen=self.get_interior_screen,
-                get_ship_entry_key=self.get_ship_entry_key,
                 space_drag=space_drag,
                 outfit=get_graphics_asset(self.story, "outfits", "space_suit"),
                 systems=self.systems,
@@ -231,30 +230,7 @@ class SpaceScreen(ScreenBase):
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
             self.targetable_objects.append((ship_name, ship))
 
-    def get_ship_entry_key(self, landable):
-        """Which of landable's interior keys is the room a docked ship
-        actually opens into - the one with a portal (or, for a
-        single-room flat-"entrance" config, itself) marked
-        return_to_ship. Landing/loading-docked should always place the
-        player here (see main.py), never in some other room the player
-        happened to be in last (e.g. a dormitory) - matches the fiction
-        that walking out of your ship always puts you in the same
-        docking-bay doorway. Falls back to "default" if nothing in this
-        landable's interiors declares a return_to_ship path, so a story
-        that never marks a room ship-facing keeps working as before."""
-        for key, config in landable.interiors.items():
-            config = load_json(config) if isinstance(config, str) else config
-            if not config:
-                continue
-            portals = config.get("portals")
-            if portals:
-                if any(p.get("return_to_ship") for p in portals):
-                    return key
-            elif config.get("return_to_ship", True):
-                return key
-        return "default"
-
-    def get_interior_screen(self, landable, key, world_width, world_height):
+    def get_interior_screen(self, landable, key):
         """Return the persistent LocationScreen for one of landable's
         interiors (key = "default" for a station, "city"/"wilderness" for
         the moon), creating and caching it on landable.interior_screens the
@@ -263,7 +239,12 @@ class SpaceScreen(ScreenBase):
         resetting every time - and it can keep simulating in the
         background (see update_physics() calls in main.py) while the
         player is elsewhere. Returns None if the interior isn't configured.
+        Sized from landable.interior_world_size, not a caller-supplied
+        width/height - every call site used to pass the same 800x600/
+        1600x1600 pair derived from is_station itself; asking the landable
+        keeps that in one place.
         """
+        world_width, world_height = landable.interior_world_size
         if key in landable.interior_screens:
             return landable.interior_screens[key]
 

@@ -2,7 +2,7 @@
 import pygame
 import game.constants as constants
 from game.constants import GREEN
-from game.utils import get_scale, to_screen
+from game.utils import get_scale, to_screen, load_json
 from game.world.world_object import WorldObject
 
 
@@ -24,6 +24,13 @@ class Landable(WorldObject):
 
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
         self.is_station = "rotation_speed" in self.graphics or self.graphics.get("shape") in ["hexapod", "octagon"]
+        # Fixed logical size of this landable's interior LocationScreens -
+        # a station's rooms are laid out at 800x600, a moon's at 1600x1600
+        # (moons cover far more ground: outdoor structures/wander routines
+        # need the room). Lives here, not re-derived from is_station at
+        # every call site (main.py and DockRoutine both used to), so both
+        # player and AI code just ask this landable.
+        self.interior_world_size = (800, 600) if self.is_station else (1600, 1600)
 
         # Common properties
         self.size = self.graphics.get("size", 40 if self.is_station else 30)
@@ -55,6 +62,31 @@ class Landable(WorldObject):
             (-size * 0.5, size * 0.3),
             (-size * 0.4, -size * 0.3),
         ]
+
+    def get_ship_entry_key(self):
+        """Which of self.interiors is the room a docked ship actually
+        opens into - the one with a portal (or, for a single-room flat-
+        "entrance" config, itself) marked return_to_ship. Landing (see
+        SpaceScreen) and an AI pilot's DockRoutine should both always walk
+        in here, not wherever a save/route happened to leave off - matches
+        the fiction that walking out of your ship always puts you in the
+        same docking-bay doorway. Lives here (not on SpaceScreen/Character)
+        since it's purely a property of this landable's own interior
+        layout - the player and AI shouldn't each need their own copy of
+        the logic that figures it out. Falls back to "default" if nothing
+        in self.interiors declares a return_to_ship path, so a story that
+        never marks a room ship-facing keeps working as before."""
+        for key, config in self.interiors.items():
+            config = load_json(config) if isinstance(config, str) else config
+            if not config:
+                continue
+            portals = config.get("portals")
+            if portals:
+                if any(p.get("return_to_ship") for p in portals):
+                    return key
+            elif config.get("return_to_ship", True):
+                return key
+        return "default"
 
     def get_interior_labels(self):
         """Display label for each configured interior (station's "default",
