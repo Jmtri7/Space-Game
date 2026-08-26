@@ -93,6 +93,22 @@ Read-only: credits, owned ships, and outstanding loans. Opens from space, a
 station interior, or a moon interior, over whichever screen it was opened
 from.
 
+### Shop Menu (T, on an NPC with a shop)
+| Control | Action |
+|---------|--------|
+| **←/→** or **Tab** | Switch between Buy and Sell |
+| **W/↑** or **S/↓** | Navigate the item list |
+| **Enter** | Buy/sell one unit of the selected item |
+| **ESC** | Close |
+
+Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
+opens this instead of a conversation. Buy lists the shop's stock, priced from
+`commodities.json`/`items.json`; Sell lists whatever you're currently
+carrying in that category, at a fraction of its price. A commodities shop
+also shows your ship's cargo hold usage, and blocks purchases past capacity.
+Personal items aren't capacity-limited. Ships and ship outfits get their own
+dedicated menus rather than this one.
+
 ### Main Menu
 | Control | Action |
 |---------|--------|

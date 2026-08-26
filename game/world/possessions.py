@@ -35,6 +35,9 @@ class Possessions:
     def spend(self, amount):
         self.credits -= amount
 
+    def earn(self, amount):
+        self.credits += amount
+
     def add_ship(self, ship_type_id):
         self.owned_ships.append(ship_type_id)
 

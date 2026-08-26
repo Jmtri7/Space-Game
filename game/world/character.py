@@ -34,6 +34,8 @@ ROLE_ROUTINES = {
     "guard": StationaryRoutine,
     "ship_salesman": StationaryRoutine,
     "loan_officer": StationaryRoutine,
+    "quartermaster": StationaryRoutine,
+    "outfitter": StationaryRoutine,
     "traveler": WanderRoutine,
     "roommate": WanderRoutine,
     "resident": WanderRoutine,  # default/catch-all local role

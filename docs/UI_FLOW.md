@@ -162,7 +162,8 @@ While docked, `SpaceScreen.update_physics()` still runs in the background (ships
 **Transitions:**
 - L (near a portal, single usable destination) → GAME or a connected location's `LocationScreen`
 - L (near a portal, multiple destinations, or the only one isn't usable) → `ExitMenu`
-- T (NPC targeted, in range) → that NPC's `Dialogue`, always restarted at its root node
+- T (NPC targeted, in range, no `"shop"` config) → that NPC's `Dialogue`, always restarted at its root node
+- T (NPC targeted, in range, has a `"shop"` config) → `ShopMenu` instead of `Dialogue`
 - P → `PossessionsMenu`
 - ESC → PauseMenu
 
@@ -174,9 +175,11 @@ officer) have a real `dialogue_tree` in config where an option's `"next"`
 leads to another node instead of closing. An option can also carry an
 `"action"` (`"buy_ship:<ship_type_id>"`, `"take_loan"`) applied by
 `LocationScreen` right before advancing - this is how buying a ship or
-taking a loan works, no separate shop UI. An action option unaffordable or
-otherwise blocked (`LocationScreen._option_blocked_reason`) renders dim
-with the reason and can't be selected.
+taking a loan works today. An action option unaffordable or otherwise
+blocked (`LocationScreen._option_blocked_reason`) renders dim with the
+reason and can't be selected. NPCs selling commodities or personal items use
+`ShopMenu` instead (see below) - a `"shop"` config key bypasses `Dialogue`
+entirely rather than being another dialogue action.
 
 **Inputs:** UP/DOWN or W/S: navigate · RETURN: choose (advance, close, or apply an action then advance/close) · ESC: close immediately
 
@@ -212,6 +215,23 @@ possessions_menu.py`. Opened over whichever screen it was opened from
 
 **Transitions:**
 - P or ESC → back to whichever screen opened it (`possessions_return_screen` in `main.py`)
+
+### ShopMenu
+**Shows:** Buy/sell for commodities or personal items - `game/ui/
+shop_menu.py`. Opened by talking (T) to an NPC whose config has a `"shop"`
+key (`{"type": "commodities"|"items", "stock": [...], "sell_multiplier": ...}`)
+instead of that NPC's `Dialogue`. Buy tab lists `stock` priced from
+`commodities.json`/`items.json`; Sell tab lists whatever's currently in
+`possessions.cargo`/`.items` for that category, priced at
+`base_price * sell_multiplier`. Drawn over whichever screen it was opened
+from (station or moon), same overlay pattern as `PossessionsMenu`. Ships and
+ship outfits get their own dedicated menus, not this one.
+
+**Inputs:** LEFT/RIGHT or TAB: switch Buy/Sell · UP/DOWN or W/S: navigate ·
+RETURN: buy/sell one unit of the selected item · ESC: close
+
+**Transitions:**
+- ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
 ### PauseMenu
 **Shows:** Resume/Save/Quit options with optional success banner
@@ -291,6 +311,7 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
 `"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
 `"game"` / `"station"` / `"moon"` → `"possessions"` (P) → back to whichever of the three it came from
+`"station"` / `"moon"` → `"shop"` (T, on an NPC with a `"shop"` config) → back to whichever of the two it came from
 `"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)
 
 **Invalid (prevented by code):**

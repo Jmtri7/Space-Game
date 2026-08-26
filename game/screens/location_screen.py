@@ -137,6 +137,7 @@ class LocationScreen(ScreenBase):
         self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
+        self.active_shop = None  # Set to an NPC's shop config when "shop" is returned from handle_input
         # HUD panel rects from the most recently drawn frame - see draw()'s
         # own comment on where this is populated; empty until the first
         # draw() call (e.g. a LocationScreen used in a test without ever
@@ -168,6 +169,10 @@ class LocationScreen(ScreenBase):
             person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))
         else:
             person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
+        # A "shop" config key (see ShopMenu/ShipBrowserMenu/OutfittingMenu)
+        # opens a purpose-built buy/sell screen instead of dialogue when T is
+        # pressed - None for every NPC that's just flavor/dialogue.
+        person.shop = cfg.get("shop")
         return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to)
 
     def _resolve_portal(self, portal):
@@ -791,6 +796,9 @@ class LocationScreen(ScreenBase):
             elif event.key == pygame.K_t:
                 target_npc = self._get_npc_target()
                 if target_npc and target_npc.get_distance(self.player.x, self.player.y) <= self.talk_range:
+                    if target_npc.shop:
+                        self.active_shop = target_npc.shop
+                        return "shop"
                     # Always start a fresh conversation at the root node -
                     # otherwise leaving mid-tree (ESC) and talking again
                     # would silently resume wherever it was left off.

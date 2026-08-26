@@ -16,6 +16,7 @@ from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.location_selector import LocationSelector
 from game.ui.exit_menu import ExitMenu
 from game.ui.possessions_menu import PossessionsMenu
+from game.ui.shop_menu import ShopMenu
 from game.ui.pause_menu import PauseMenu
 from game.ui.save_dialog import SaveDialog
 from game.ui.confirm_dialog import ConfirmDialog
@@ -118,6 +119,8 @@ def main():
         exit_menu_return_screen = None  # "station" or "moon" - where ESC/cancel goes back to
         possessions_menu = None
         possessions_return_screen = None  # "game" / "station" / "moon" - where P/ESC closes back to
+        shop_menu = None
+        shop_return_screen = None  # "station" / "moon" - where ESC closes back to
         pilot_name_dialog = None
         pause_menu = PauseMenu()
         save_dialog = None
@@ -320,6 +323,10 @@ def main():
                     possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story)
                     possessions_return_screen = "station"
                     current_screen = "possessions"
+                elif action == "shop":
+                    shop_menu = ShopMenu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, cargo_capacity=game_screen.player.ship.cargo_capacity)
+                    shop_return_screen = "station"
+                    current_screen = "shop"
                 # Keep space physics updated while docked (but not camera) -
                 # except while a conversation is open, which should pause
                 # the rest of the world like any other modal menu (matches
@@ -388,6 +395,19 @@ def main():
                     moon_interior.draw(screen)
                 possessions_menu.draw(screen)
 
+            elif current_screen == "shop":
+                action = shop_menu.handle_input(events)
+                if action == "close":
+                    current_screen = shop_return_screen
+                # A modal menu, like PossessionsMenu/ExitMenu - the world
+                # stays frozen while it's open. Draw whichever screen this
+                # was opened over, then the overlay on top.
+                if shop_return_screen == "station" and station_interior:
+                    station_interior.draw(screen)
+                elif shop_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen)
+                shop_menu.draw(screen)
+
             elif current_screen == "moon":
                 action = moon_interior.handle_input(events)
                 if action == "quit":
@@ -410,6 +430,10 @@ def main():
                     possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story)
                     possessions_return_screen = "moon"
                     current_screen = "possessions"
+                elif action == "shop":
+                    shop_menu = ShopMenu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, cargo_capacity=game_screen.player.ship.cargo_capacity)
+                    shop_return_screen = "moon"
+                    current_screen = "shop"
                 # Keep space physics updated while on moon (but not camera) -
                 # except while a conversation is open, which should pause
                 # the rest of the world like any other modal menu.

@@ -43,6 +43,7 @@ from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
+from game.ui.shop_menu import ShopMenu
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
 
@@ -883,6 +884,8 @@ class TestPossessions(unittest.TestCase):
         self.assertFalse(possessions.can_afford(1201))
         possessions.spend(1200)
         self.assertEqual(possessions.credits, 0)
+        possessions.earn(500)
+        self.assertEqual(possessions.credits, 500)
 
     def test_add_ship(self):
         possessions = Possessions()
@@ -1032,6 +1035,79 @@ class TestShipOutfits(unittest.TestCase):
         ship.apply_ship_type({"cargo_capacity": 10})
         ship.apply_outfits([{"stat_modifiers": {"cargo_capacity": 20}}])
         self.assertEqual(ship.cargo_capacity, 30)
+
+
+class TestShopMenu(unittest.TestCase):
+    """Test ShopMenu's buy/sell logic against the real "default" story's
+    commodities.json/items.json (ore costs 12cr, repair_kit costs 150cr) -
+    same convention as other config-dependent tests that pin to real story
+    data rather than reimplementing get_commodity()/get_item() with a fake.
+    Only the transaction/navigation logic is tested here, not draw() - see
+    CLAUDE.md's "don't test UI rendering" and the fact that no other full
+    menu class (PossessionsMenu, ConfirmDialog, LocationSelector) has a
+    draw() test either."""
+
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_buying_a_commodity_spends_credits_and_adds_cargo(self):
+        possessions = Possessions(credits=100)
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        shop._transact("ore")
+        self.assertEqual(possessions.credits, 88)
+        self.assertEqual(possessions.cargo, {"ore": 1})
+
+    def test_buying_without_enough_credits_is_a_noop(self):
+        possessions = Possessions(credits=5)
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        shop._transact("ore")
+        self.assertEqual(possessions.credits, 5)
+        self.assertEqual(possessions.cargo, {})
+
+    def test_buying_a_commodity_at_full_cargo_capacity_is_a_noop(self):
+        possessions = Possessions(credits=100, cargo={"ore": 10})
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        shop._transact("ore")
+        self.assertEqual(possessions.credits, 100)  # unchanged - purchase blocked
+        self.assertEqual(possessions.cargo, {"ore": 10})
+
+    def test_selling_a_commodity_earns_credits_at_the_sell_multiplier(self):
+        possessions = Possessions(credits=0, cargo={"ore": 3})
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"], "sell_multiplier": 0.5}, cargo_capacity=10)
+        shop.mode = "sell"
+        shop._transact("ore")
+        self.assertEqual(possessions.credits, 6)  # 12cr base_price * 0.5
+        self.assertEqual(possessions.cargo, {"ore": 2})
+
+    def test_items_are_not_capacity_limited(self):
+        possessions = Possessions(credits=200)
+        shop = ShopMenu(possessions, "default", {"type": "items", "stock": ["repair_kit"]}, cargo_capacity=0)
+        shop._transact("repair_kit")
+        self.assertEqual(possessions.credits, 50)
+        self.assertEqual(possessions.items, {"repair_kit": 1})
+
+    def test_left_right_toggles_buy_sell_mode(self):
+        possessions = Possessions()
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]})
+        self.assertEqual(shop.mode, "buy")
+        import pygame as mocked_pygame
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
+        self.assertEqual(shop.mode, "sell")
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
+        self.assertEqual(shop.mode, "buy")
+
+    def test_escape_closes(self):
+        import pygame as mocked_pygame
+        shop = ShopMenu(Possessions(), "default", {"type": "commodities", "stock": ["ore"]})
+        result = shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
+        self.assertEqual(result, "close")
+
+    def test_enter_transacts_the_selected_item(self):
+        import pygame as mocked_pygame
+        possessions = Possessions(credits=100)
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertEqual(possessions.cargo, {"ore": 1})
 
 
 class TestDialogue(unittest.TestCase):

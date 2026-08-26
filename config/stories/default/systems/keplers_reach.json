@@ -38,9 +38,10 @@
             "name": "Quartermaster",
             "x": 500,
             "y": 220,
-            "behavior": "wander",
+            "role": "quartermaster",
             "greeting": "Supplies are thin out here, but we make do.",
-            "dialogue_options": ["Thanks", "Leave"]
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"], "sell_multiplier": 0.6}
           },
           {
             "name": "Dockhand",
