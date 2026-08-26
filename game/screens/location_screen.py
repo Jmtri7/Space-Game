@@ -13,6 +13,12 @@ from game.world.dialogue import Dialogue
 from game.world.player_character import PlayerCharacter
 
 
+# Bumped way up from the old "shuttle's cost" amount for testing, so a loan
+# alone can cover any ship/outfit combo without grinding for credits first.
+# Revisit before treating this as real game balance.
+TESTING_LOAN_AMOUNT = 100_000
+
+
 class LocationScreen(ScreenBase):
     """Configurable location for station, moon city, and moon wilderness. Loads layout and NPCs from config."""
     def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
@@ -327,8 +333,7 @@ class LocationScreen(ScreenBase):
         if action.startswith("buy_ship:"):
             self.buy_ship(action.split(":", 1)[1])
         elif action == "take_loan":
-            loan_amount = get_ship_type(self.story, "shuttle").get("cost", 0)
-            self.player.possessions.take_loan("Station Credit Union", loan_amount)
+            self.player.possessions.take_loan("Station Credit Union", TESTING_LOAN_AMOUNT)
 
     def buy_ship(self, ship_type_id):
         """Spend credits, add the ship to possessions, and let SpaceScreen

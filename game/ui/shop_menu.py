@@ -4,17 +4,16 @@ LocationScreen._build_local_character). Ships and ship outfits get their own
 purpose-built menus (ShipBrowserMenu, OutfittingMenu) since they need more
 than a flat price list - this one covers the two simple, stackable
 categories."""
-import math
+import functools
 import pygame
-from game.constants import YELLOW, GRAY, WHITE
+from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_selection_highlight
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell
 from game.ui.icon_grid import IconGrid
 
 DEFAULT_SELL_MULTIPLIER = 0.6
 GRID_COLUMNS = 3
 GRID_ROWS = 2
-DISABLED_COLOR = (150, 90, 90)
 
 
 class ShopMenu:
@@ -103,8 +102,6 @@ class ShopMenu:
 
         font_title = get_font(int(34 * scale))
         font_info = get_font(int(20 * scale))
-        font_name = get_font(int(19 * scale))
-        font_price = get_font(int(17 * scale))
 
         title = "Commodities" if self.category == "commodities" else "General Store"
         y = panel_rect.y + int(20 * scale)
@@ -135,12 +132,10 @@ class ShopMenu:
 
         gap = int(14 * scale)
         cell_width = (panel_rect.width - int(60 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
-        cell_height = int(110 * scale)
+        cell_height = int(130 * scale)
         grid_left = panel_rect.centerx - (cell_width * GRID_COLUMNS + gap * (GRID_COLUMNS - 1)) // 2
 
-        def draw_cell(surface, rect, item_id, is_selected, reason):
-            self._draw_cell(surface, rect, item_id, is_selected, reason, font_name, font_price, scale)
-
+        draw_cell = functools.partial(self._draw_cell, scale=scale)
         grid.draw(surface, (grid_left, y), cell_width, cell_height, gap, draw_cell,
                   disabled_fn=self._buy_disabled_reason if self.mode == "buy" else None)
 
@@ -152,33 +147,21 @@ class ShopMenu:
         help_text = font_info.render("Tab: Buy/Sell, Arrows: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
 
-    def _draw_cell(self, surface, rect, item_id, is_selected, reason, font_name, font_price, scale):
-        """cell_draw_fn for the buy/sell IconGrid: an icon, the item's name,
-        and a price/quantity line - dimmed with its `reason` when the
-        current action (buying) isn't currently possible for this item."""
-        if is_selected:
-            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
-            draw_selection_highlight(surface, rect, scale, pulse)
-
+    def _draw_cell(self, surface, rect, item_id, is_selected, reason, scale):
+        """cell_draw_fn for the buy/sell IconGrid - an icon, the item's
+        name, and a price/quantity line. The price always stays visible
+        even when `reason` is set (e.g. "not enough credits") - it used to
+        be replaced by the reason entirely, so a commodity you couldn't
+        afford didn't show its price at all."""
         item = self._resolve(item_id)
-        icon_cy = rect.y + int(rect.height * 0.32)
-        icon_size = int(rect.height * 0.24)
-        draw_item_icon(surface, rect.centerx, icon_cy, icon_size, item.get("icon_shape"), item.get("icon_color"))
-
-        name_color = DISABLED_COLOR if reason else (WHITE if is_selected else GRAY)
-        name_text = font_name.render(item.get("name", item_id), True, name_color)
-        name_y = rect.y + int(rect.height * 0.56)
-        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, name_y))
+        icon_fn = functools.partial(draw_item_icon, icon_shape=item.get("icon_shape"), icon_color=item.get("icon_color"))
 
         if self.mode == "buy":
-            price = item.get("base_price", 0)
-            detail = f"({reason})" if reason else f"{price}cr"
+            detail = f"{item.get('base_price', 0)}cr"
         else:
             held = self.possessions.cargo if self.category == "commodities" else self.possessions.items
             qty = held.get(item_id, 0)
             sell_price = int(item.get("base_price", 0) * self.sell_multiplier)
             detail = f"x{qty} - {sell_price}cr"
-        detail_color = DISABLED_COLOR if reason else YELLOW
-        detail_text = font_price.render(detail, True, detail_color)
-        detail_y = rect.y + int(rect.height * 0.78)
-        surface.blit(detail_text, (rect.centerx - detail_text.get_width() // 2, detail_y))
+
+        draw_shop_cell(surface, rect, is_selected, reason, icon_fn, item.get("name", item_id), detail, scale)

@@ -211,9 +211,9 @@
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "First loan's on the station - enough to get you off the ground, no more.",
+                  "text": "First loan's on the station - more than enough to get you off the ground.",
                   "options": [
-                    {"label": "Take loan - 1200cr", "next": "loaned", "action": "take_loan"},
+                    {"label": "Take loan - 100000cr", "next": "loaned", "action": "take_loan"},
                     {"label": "Leave", "next": null}
                   ]
                 },

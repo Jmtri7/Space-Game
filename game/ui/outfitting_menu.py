@@ -2,12 +2,14 @@
 the current ship's equipment slots. Opened via a "shop" config of type
 "outfits" (see LocationScreen._build_local_character / main.py's
 build_shop_menu), the same way ShopMenu/ShipBrowserMenu are."""
+import functools
 import math
 import pygame
 from game.constants import YELLOW, GRAY, GREEN, RED, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon, draw_shop_cell
 from game.ui.selectable_list import SelectableList
+from game.ui.icon_grid import IconGrid
 
 SLOT_COLORS = {
     "weapon": (200, 100, 100),
@@ -15,7 +17,18 @@ SLOT_COLORS = {
     "shield": (100, 200, 180),
     "utility": (200, 180, 100),
 }
+# Default icon glyph per slot type, used unless an outfit's own config sets
+# an explicit "icon_shape" - so every outfit gets a sane, on-theme icon for
+# free, and a story can still override individual outfits later.
+SLOT_ICON_SHAPES = {
+    "weapon": "blade",
+    "engine": "flame",
+    "shield": "shield",
+    "utility": "gear",
+}
 SLOT_RADIUS = 14
+GRID_COLUMNS = 3
+GRID_ROWS = 2
 
 
 class OutfittingMenu:
@@ -37,7 +50,7 @@ class OutfittingMenu:
         self.on_outfits_changed = on_outfits_changed
 
         self.tab = "install" if ship_type_id else "buy"  # nothing to install without a ship
-        self.buy_list = SelectableList(self.stock, max_visible=6)
+        self.buy_grid = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
 
         self.slots = get_ship_type(story, ship_type_id).get("slots", []) if ship_type_id else []
         self.focus_column = "slots"  # "slots" or "owned"
@@ -71,9 +84,16 @@ class OutfittingMenu:
             return "not enough credits"
         return None
 
-    def _buy_label(self, outfit_id):
+    def _icon_for(self, outfit_id):
+        """(icon_shape, icon_color) for an outfit - its own config wins if
+        set, otherwise a default keyed by slot_type (see SLOT_ICON_SHAPES/
+        SLOT_COLORS), so every outfit gets a sane on-theme icon without
+        needing per-outfit config."""
         outfit = self._resolve(outfit_id)
-        return f"{outfit.get('name', outfit_id)} ({outfit.get('slot_type', '?')}) - {outfit.get('cost', 0)}cr"
+        slot_type = outfit.get("slot_type")
+        icon_shape = outfit.get("icon_shape", SLOT_ICON_SHAPES.get(slot_type))
+        icon_color = outfit.get("icon_color", SLOT_COLORS.get(slot_type))
+        return icon_shape, icon_color
 
     def _owned_label(self, outfit_id):
         outfit = self._resolve(outfit_id)
@@ -129,17 +149,20 @@ class OutfittingMenu:
 
         if key == pygame.K_ESCAPE:
             return "close"
-        elif key in (pygame.K_LEFT, pygame.K_RIGHT):
+        elif key == pygame.K_TAB:
             self.tab = "buy" if self.tab == "install" else "install"
         elif self.tab == "buy":
-            if key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                self.buy_list.handle_key(key, disabled_fn=self._buy_disabled_reason)
+            if key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
+                # No disabled_fn: browsing the grid stays free even over
+                # outfits you can't currently afford - only Enter is
+                # gated, same reasoning as ShopMenu/ShipBrowserMenu.
+                self.buy_grid.handle_key(key)
             elif key == pygame.K_RETURN:
-                outfit_id = self.buy_list.current()
+                outfit_id = self.buy_grid.current()
                 if outfit_id:
                     self._buy_outfit(outfit_id)
         else:  # install tab
-            if key == pygame.K_TAB:
+            if key in (pygame.K_LEFT, pygame.K_RIGHT):
                 self.focus_column = "owned" if self.focus_column == "slots" else "slots"
             elif key in (pygame.K_UP, pygame.K_w) and self.slots:
                 if self.focus_column == "slots":
@@ -231,17 +254,43 @@ class OutfittingMenu:
         y += int(34 * scale)
 
         if self.tab == "buy":
-            self.buy_list.draw(surface, font_text, panel_rect.centerx, y, int(30 * scale), scale,
-                                label_fn=self._buy_label, disabled_fn=self._buy_disabled_reason)
+            self._draw_buy_tab(surface, panel_rect, y, scale, font_info)
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        help_text = font_info.render("Left/Right: Buy/Install, ESC: close", True, (150, 150, 150))
+        help_text = font_info.render("Tab: Buy/Install, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
 
         if self.dragging_outfit:
             drag_text = font_text.render(self._resolve(self.dragging_outfit).get("name", self.dragging_outfit), True, WHITE)
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
+
+    def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
+        grid = self.buy_grid
+        if grid.has_more_above:
+            up_indicator = font_info.render("↑ more", True, GRAY)
+            surface.blit(up_indicator, (panel_rect.centerx - up_indicator.get_width() // 2, y))
+        y += int(18 * scale)
+
+        gap = int(14 * scale)
+        cell_width = (panel_rect.width - int(60 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
+        cell_height = int(130 * scale)
+        grid_left = panel_rect.centerx - (cell_width * GRID_COLUMNS + gap * (GRID_COLUMNS - 1)) // 2
+
+        draw_cell = functools.partial(self._draw_buy_cell, scale=scale)
+        grid.draw(surface, (grid_left, y), cell_width, cell_height, gap, draw_cell, disabled_fn=self._buy_disabled_reason)
+
+        grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
+        if grid.has_more_below:
+            down_indicator = font_info.render("↓ more", True, GRAY)
+            surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
+
+    def _draw_buy_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
+        outfit = self._resolve(outfit_id)
+        icon_shape, icon_color = self._icon_for(outfit_id)
+        icon_fn = functools.partial(draw_item_icon, icon_shape=icon_shape, icon_color=icon_color)
+        detail = f"{outfit.get('cost', 0)}cr"
+        draw_shop_cell(surface, rect, is_selected, reason, icon_fn, outfit.get("name", outfit_id), detail, scale)
 
     def _draw_install_tab(self, surface, panel_rect, y, scale, font_text, font_info):
         if not self.ship_type_id:

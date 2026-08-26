@@ -3,13 +3,14 @@ and pulsing selection highlights. Utility functions, not a class - see
 CLAUDE.md's One Class Per File rule for why this file is an exception."""
 import math
 import pygame
-from game.constants import YELLOW, WHITE
+from game.constants import YELLOW, WHITE, GRAY
 from game.utils import get_font
 import game.utils as utils
 from game.world.ship import Ship
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
+DISABLED_TEXT_COLOR = (150, 90, 90)
 
 
 def draw_glass_panel(surface, rect, scale):
@@ -251,6 +252,33 @@ def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
         points = _star_points(center_x, center_y, size, size * 0.45, 5)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
+    elif icon_shape == "blade":  # weapon outfits
+        points = [
+            (center_x, center_y - size * 1.1), (center_x + size * 0.25, center_y + size * 0.3),
+            (center_x, center_y + size), (center_x - size * 0.25, center_y + size * 0.3),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, width=1)
+    elif icon_shape == "flame":  # engine outfits
+        points = [
+            (center_x, center_y - size), (center_x + size * 0.6, center_y + size * 0.2),
+            (center_x + size * 0.3, center_y + size), (center_x, center_y + size * 0.6),
+            (center_x - size * 0.3, center_y + size), (center_x - size * 0.6, center_y + size * 0.2),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, width=1)
+    elif icon_shape == "shield":  # shield outfits
+        points = [
+            (center_x - size * 0.8, center_y - size * 0.6), (center_x + size * 0.8, center_y - size * 0.6),
+            (center_x + size * 0.8, center_y + size * 0.1), (center_x, center_y + size),
+            (center_x - size * 0.8, center_y + size * 0.1),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, width=1)
+    elif icon_shape == "gear":  # utility outfits
+        pygame.draw.circle(surface, color, (center_x, center_y), size)
+        pygame.draw.circle(surface, outline, (center_x, center_y), size, width=1)
+        pygame.draw.circle(surface, outline, (center_x, center_y), max(1, int(size * 0.35)), width=1)
     else:  # "crate" and any unrecognized/missing icon_shape - the default
         rect = pygame.Rect(0, 0, int(size * 2), int(size * 2))
         rect.center = (center_x, center_y)
@@ -279,3 +307,40 @@ def draw_selection_highlight(surface, rect, scale, pulse):
     pygame.draw.rect(box_surf, (*YELLOW, glow_alpha // 3), box_surf.get_rect(), border_radius=radius)
     pygame.draw.rect(box_surf, (*YELLOW, glow_alpha), box_surf.get_rect(), width=2, border_radius=radius)
     surface.blit(box_surf, rect.topleft)
+
+
+def draw_shop_cell(surface, rect, is_selected, reason, icon_fn, name, detail, scale):
+    """Shared cell layout for the game's icon-grid shops (ShopMenu's buy/
+    sell tabs, OutfittingMenu's Buy tab, ShipBrowserMenu's ship grid): a
+    pulsing highlight when selected, an icon, a name line, and a detail
+    line (price, or quantity + price). `icon_fn(surface, center_x,
+    center_y, size)` draws whatever the icon actually is - a procedural
+    item glyph (draw_item_icon) or a static ship silhouette
+    (draw_ship_glyph) - so this stays agnostic about that. `reason` (a
+    disabled-reason string or None) always leaves `detail` on screen -
+    unlike SelectableList's dim rows, this never substitutes the reason
+    for the price, only adds it as a second dim line - and dims the name/
+    detail to match.
+    """
+    if is_selected:
+        pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
+        draw_selection_highlight(surface, rect, scale, pulse)
+
+    icon_cy = rect.y + int(rect.height * 0.3)
+    icon_size = int(rect.height * 0.22)
+    icon_fn(surface, rect.centerx, icon_cy, icon_size)
+
+    font_name = get_font(int(19 * scale))
+    font_detail = get_font(int(15 * scale))
+
+    name_color = DISABLED_TEXT_COLOR if reason else (WHITE if is_selected else GRAY)
+    name_text = font_name.render(name, True, name_color)
+    surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.52)))
+
+    detail_color = DISABLED_TEXT_COLOR if reason else YELLOW
+    detail_text = font_detail.render(detail, True, detail_color)
+    surface.blit(detail_text, (rect.centerx - detail_text.get_width() // 2, rect.y + int(rect.height * 0.7)))
+
+    if reason:
+        reason_text = font_detail.render(f"({reason})", True, DISABLED_TEXT_COLOR)
+        surface.blit(reason_text, (rect.centerx - reason_text.get_width() // 2, rect.y + int(rect.height * 0.86)))

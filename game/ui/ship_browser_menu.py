@@ -2,27 +2,48 @@
 "shop" config has type "ships" (see LocationScreen._build_local_character),
 replacing the old dialogue-tree "buy_ship:<id>" trick for any NPC that opts
 into this instead."""
+import functools
 import pygame
-from game.constants import YELLOW, GRAY, GREEN
+from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph
-from game.ui.selectable_list import SelectableList
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell
+from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
+
+GRID_COLUMNS = 2
+GRID_ROWS = 3
+
+# Thresholds (world "size" units, from graphics.json) for the preview's
+# "Approximate Size" stat - a plain number in world units means little to a
+# player, so it's bucketed into a coarse, human label instead.
+SIZE_LABELS = [(15, "Small"), (25, "Medium"), (40, "Large")]
+DEFAULT_SIZE_LABEL = "Massive"
+
+
+def _approximate_size_label(graphics):
+    size = graphics.get("size", 15)
+    for threshold, label in SIZE_LABELS:
+        if size < threshold:
+            return label
+    return DEFAULT_SIZE_LABEL
 
 
 class ShipBrowserMenu:
-    """Left: a SelectableList of the shop's stock ship-type ids. Right: a
-    live preview (ship glyph + stat readout) of whichever is selected.
-    Enter opens a ConfirmDialog; confirming calls the injected on_buy
-    callback (LocationScreen._buy_ship - see there for why LocationScreen
-    owns the actual purchase mutation rather than this menu)."""
+    """Left: an icon grid of the shop's stock ship types, each cell a
+    static (unrotated, no thrust) silhouette with name and cost. Right: a
+    live preview - the same glyph, but slowly spinning with its thrusters
+    cycling on/off - plus a stat readout, for whichever grid cell is
+    selected. Enter opens a ConfirmDialog; confirming calls the injected
+    on_buy callback (LocationScreen._buy_ship - see there for why
+    LocationScreen owns the actual purchase mutation rather than this
+    menu)."""
 
     def __init__(self, possessions, story, shop_config, on_buy):
         self.possessions = possessions
         self.story = story
         self.stock = list(shop_config.get("stock", []))
         self.on_buy = on_buy
-        self.list = SelectableList(self.stock, max_visible=6)
+        self.grid = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
         self.confirm = None  # ConfirmDialog while a purchase is pending confirmation
 
     def _disabled_reason(self, ship_type_id):
@@ -46,15 +67,15 @@ class ShipBrowserMenu:
                 continue
             if event.key == pygame.K_ESCAPE:
                 return "close"
-            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                # No disabled_fn here (unlike the draw() call below): the
-                # preview is tied to this same cursor, so skipping
-                # unaffordable ships during navigation would make them
-                # unpreviewable whenever at least one ship IS affordable.
-                # Browsing stays free; only Enter checks affordability.
-                self.list.handle_key(event.key)
+            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
+                # No disabled_fn: the preview is tied to this same cursor,
+                # so skipping unaffordable ships during navigation would
+                # make them unpreviewable whenever at least one ship IS
+                # affordable. Browsing stays free; only Enter checks
+                # affordability.
+                self.grid.handle_key(event.key)
             elif event.key == pygame.K_RETURN:
-                ship_type_id = self.list.current()
+                ship_type_id = self.grid.current()
                 if ship_type_id and not self._disabled_reason(ship_type_id):
                     ship_type = get_ship_type(self.story, ship_type_id)
                     self.confirm = ConfirmDialog(
@@ -73,7 +94,6 @@ class ShipBrowserMenu:
 
         font_title = get_font(int(34 * scale))
         font_info = get_font(int(20 * scale))
-        font_text = get_font(int(22 * scale))
 
         y = panel_rect.y + int(20 * scale)
         y += draw_glow_title(surface, "Shipyard", font_title, panel_rect.centerx, y)
@@ -81,16 +101,21 @@ class ShipBrowserMenu:
 
         credits_text = font_info.render(f"Credits: {self.possessions.credits}", True, (255, 220, 100))
         surface.blit(credits_text, (panel_rect.centerx - credits_text.get_width() // 2, y))
-        list_top = y + int(40 * scale)
+        grid_top = y + int(40 * scale)
 
-        list_x = panel_rect.x + panel_rect.width // 4
-        preview_x = panel_rect.x + panel_rect.width * 3 // 4
+        gap = int(14 * scale)
+        grid_area_width = int(panel_rect.width * 0.42)
+        cell_width = (grid_area_width - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
+        cell_height = int(120 * scale)
+        grid_left = panel_rect.x + int(30 * scale)
 
-        self.list.draw(surface, font_text, list_x, list_top, int(32 * scale), scale,
-                        label_fn=lambda ship_type_id: get_ship_type(self.story, ship_type_id).get("name", ship_type_id),
+        draw_cell = functools.partial(self._draw_cell, scale=scale)
+        self.grid.draw(surface, (grid_left, grid_top), cell_width, cell_height, gap, draw_cell,
                         disabled_fn=self._disabled_reason)
 
-        selected_id = self.list.current()
+        preview_x = panel_rect.x + panel_rect.width * 3 // 4
+
+        selected_id = self.grid.current()
         if selected_id:
             ship_type = get_ship_type(self.story, selected_id)
             graphics = get_graphics_asset(self.story, "ships", selected_id)
@@ -100,6 +125,9 @@ class ShipBrowserMenu:
             # visible without needing to buy it first. Driven off the clock
             # (like draw_selection_highlight's pulse) rather than per-frame
             # state, so this menu doesn't need its own update() method.
+            # The grid icons stay static (angle=0, thrust=0, draw_ship_
+            # glyph's defaults) so they read as a stable shop shelf - only
+            # this one live preview animates.
             ticks = pygame.time.get_ticks()
             preview_angle = (ticks / 30) % 360
             preview_thrust = 1.0 if (ticks // 1000) % 2 == 0 else 0.0
@@ -108,6 +136,7 @@ class ShipBrowserMenu:
 
             stats = [
                 ship_type.get("description", ""),
+                f"Approximate Size: {_approximate_size_label(graphics)}",
                 f"Thrust: {ship_type.get('max_thrust', 0)}",
                 f"Max Velocity: {ship_type.get('max_velocity', 0)}",
                 f"Rotation: {ship_type.get('rotation_speed', 0)}",
@@ -120,8 +149,18 @@ class ShipBrowserMenu:
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
-        help_text = font_info.render("Up/Down: select, Enter: buy, ESC: close", True, (150, 150, 150))
+        help_text = font_info.render("Arrows: browse, Enter: buy, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
 
         if self.confirm:
             self.confirm.draw(surface)
+
+    def _draw_cell(self, surface, rect, ship_type_id, is_selected, reason, scale):
+        """cell_draw_fn for the ship IconGrid - a static silhouette (no
+        rotation/thrust, unlike the animated preview on the right), the
+        ship's name, and its cost."""
+        ship_type = get_ship_type(self.story, ship_type_id)
+        graphics = get_graphics_asset(self.story, "ships", ship_type_id)
+        icon_fn = functools.partial(draw_ship_glyph, graphics=graphics)
+        detail = f"{ship_type.get('cost', 0)}cr"
+        draw_shop_cell(surface, rect, is_selected, reason, icon_fn, ship_type.get("name", ship_type_id), detail, scale)

@@ -44,9 +44,9 @@ from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.ui.shop_menu import ShopMenu
-from game.ui.ship_browser_menu import ShipBrowserMenu
+from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
 from game.ui.icon_grid import IconGrid
-from game.ui.outfitting_menu import OutfittingMenu
+from game.ui.outfitting_menu import OutfittingMenu, SLOT_COLORS
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
 
@@ -1193,9 +1193,30 @@ class TestShipBrowserMenu(unittest.TestCase):
         import pygame as mocked_pygame
         possessions = Possessions(credits=1200)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle", "freighter"]}, on_buy=lambda x: None)
-        self.assertEqual(menu.list.current(), "shuttle")
+        self.assertEqual(menu.grid.current(), "shuttle")
         menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_DOWN)])
-        self.assertEqual(menu.list.current(), "freighter")
+        self.assertEqual(menu.grid.current(), "freighter")
+
+
+class TestApproximateSizeLabel(unittest.TestCase):
+    """Test the Shipyard preview's "Approximate Size" bucketing - a plain
+    world-units number (graphics.json's "size") means little to a player,
+    so it's shown as a coarse label instead."""
+
+    def test_small_ship(self):
+        self.assertEqual(_approximate_size_label({"size": 10}), "Small")  # shuttle
+
+    def test_medium_ship_at_the_small_boundary(self):
+        self.assertEqual(_approximate_size_label({"size": 15}), "Medium")
+
+    def test_large_ship(self):
+        self.assertEqual(_approximate_size_label({"size": 35}), "Large")  # freighter
+
+    def test_massive_ship_above_every_threshold(self):
+        self.assertEqual(_approximate_size_label({"size": 100}), "Massive")
+
+    def test_missing_size_falls_back_to_the_default_of_15(self):
+        self.assertEqual(_approximate_size_label({}), "Medium")
 
 
 class TestIconGrid(unittest.TestCase):
@@ -1302,18 +1323,38 @@ class TestOutfittingMenu(unittest.TestCase):
         self.assertEqual(possessions.credits, 200)  # 1000 - 800cr
         self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
 
-    def test_tab_switches_focus_column(self):
+    def test_buy_grid_navigation_does_not_skip_unaffordable_outfits(self):
+        """laser_cannon costs 800cr, afterburner costs 1500cr - affording
+        only the cannon must not block browsing onto the afterburner (same
+        preview-vs-selection fix as ShopMenu/ShipBrowserMenu)."""
+        import pygame as mocked_pygame
+        possessions = Possessions(credits=800)
+        menu = OutfittingMenu(possessions, "default", {"stock": ["laser_cannon", "afterburner"]}, None)
+        self.assertEqual(menu.buy_grid.current(), "laser_cannon")
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
+        self.assertEqual(menu.buy_grid.current(), "afterburner")
+
+    def test_icon_for_defaults_to_slot_type_when_outfit_has_no_icon_shape(self):
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, None)
+        icon_shape, icon_color = menu._icon_for("laser_cannon")  # weapon slot, no icon_shape in config
+        self.assertEqual(icon_shape, "blade")
+        self.assertEqual(icon_color, SLOT_COLORS["weapon"])
+
+    def test_left_right_switches_focus_column(self):
+        """Left/Right switches slot-diagram-vs-owned-list focus on the
+        Install tab now (Tab moved to the top-level Buy/Install switch, to
+        free Left/Right for the Buy tab's icon grid navigation)."""
         import pygame as mocked_pygame
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
         self.assertEqual(menu.focus_column, "slots")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
         self.assertEqual(menu.focus_column, "owned")
 
-    def test_left_right_switches_buy_install_tab(self):
+    def test_tab_switches_buy_install_tab(self):
         import pygame as mocked_pygame
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
         self.assertEqual(menu.tab, "install")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
         self.assertEqual(menu.tab, "buy")
 
     def test_no_ship_defaults_to_buy_tab(self):
@@ -1968,10 +2009,12 @@ class TestLocationScreenEconomy(unittest.TestCase):
         option = {"label": "Take loan", "action": "take_loan"}
         self.assertEqual(screen._option_blocked_reason(option), "already have a loan")
 
-    def test_take_loan_grants_shuttle_cost(self):
+    def test_take_loan_grants_the_testing_loan_amount(self):
+        """Loan amount is bumped to 100,000cr for testing (was tied to the
+        shuttle's cost) - see LocationScreen.TESTING_LOAN_AMOUNT."""
         screen = self._make_screen()
         screen._apply_dialogue_action("take_loan")
-        self.assertEqual(screen.player.possessions.credits, 1200)
+        self.assertEqual(screen.player.possessions.credits, 100_000)
         self.assertEqual(len(screen.player.possessions.loans), 1)
 
     def test_navigation_skips_blocked_dialogue_options(self):

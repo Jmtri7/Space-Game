@@ -118,40 +118,47 @@ ship outfits get their own dedicated menus rather than this one.
 ### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate ship list |
+| **Arrow keys** or **W/S** | Browse the ship grid |
 | **Enter** | Confirm purchase (opens a Yes/No confirmation) |
 | **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
 | **ESC** | Close (when nothing is pending confirmation) |
 
-Shows the shop's stock ship types with a live preview and stat readout
-(thrust, max velocity, rotation, cargo capacity, cost) for whichever is
-selected. The preview slowly rotates and cycles its thrusters on/off, and
-draws window portholes when the ship type's graphics define any (see
-`windows` in `graphics.json`'s ship entries). Navigating the list is never
-blocked by affordability - you can always browse/preview every ship in
-stock, including ones you can't afford yet; only Enter (opening the buy
-confirmation) is gated on cost. Replaces the old dialogue-tree ship purchase
-for any NPC whose config uses a `"shop"` block instead of a `dialogue_tree`
-with `buy_ship:<id>` options (the spaceport's ship salesman now works this
-way).
+Shows the shop's stock ship types as a grid - each cell a static silhouette,
+name, and cost. Whichever cell is selected also gets a bigger live preview
+off to the side, with a full stat readout (thrust, max velocity, rotation,
+cargo capacity, an "Approximate Size" bucketed from the ship's `graphics.json`
+`size`, and cost). Unlike the grid's static icons, that preview slowly
+rotates and cycles its thrusters on/off, and draws window portholes when the
+ship type's graphics define any (see `windows` in `graphics.json`'s ship
+entries). Browsing the grid is never blocked by affordability - you can
+always preview every ship in stock, including ones you can't afford yet;
+only Enter (opening the buy confirmation) is gated on cost. Replaces the old
+dialogue-tree ship purchase for any NPC whose config uses a `"shop"` block
+instead of a `dialogue_tree` with `buy_ship:<id>` options (the spaceport's
+ship salesman now works this way).
 
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |
 |---------|--------|
-| **←/→** | Switch between Buy and Install |
+| **Tab** | Switch between Buy and Install |
+| **Arrow keys** or **W/S** (Buy tab) | Browse the outfit grid |
+| **Enter** (Buy tab) | Buy the selected outfit |
 | **Mouse drag** (Install tab) | Drag a spare outfit onto a slot to equip it, or drag an installed slot back out to unequip |
-| **Tab** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits list |
-| **W/↑** or **S/↓** | Navigate the focused column, or a list |
+| **←/→** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits list |
+| **W/↑** or **S/↓** (Install tab) | Navigate the focused column, or a list |
 | **Enter** on an empty focused slot | Open a list of compatible spare outfits to install |
 | **Enter** on an occupied focused slot | Uninstall it back to spares |
-| **Enter** (Buy tab) | Buy the selected outfit |
 | **ESC** | Close (cancels an open install picker first, if one is open) |
 
-Buy adds outfits to your spares (`owned_outfits`) - they aren't equipped
-until installed into a matching slot type (weapon/engine/shield/utility) on
-the Install tab's diagram of your current ship. Installing/uninstalling
-takes effect immediately - thrust, max velocity, rotation, and cargo
-capacity all update right away, not just after a reload.
+Buy shows the shop's stock as a grid of icons with name and cost - a weapon/
+engine/shield/utility outfit gets a default icon for its slot type unless its
+own config sets an `icon_shape`/`icon_color` (see `SLOT_ICON_SHAPES` in
+`game/ui/outfitting_menu.py`). Browsing is never blocked by affordability;
+only Enter (the purchase) is. Buying adds outfits to your spares
+(`owned_outfits`) - they aren't equipped until installed into a matching slot
+type on the Install tab's diagram of your current ship. Installing/
+uninstalling takes effect immediately - thrust, max velocity, rotation, and
+cargo capacity all update right away, not just after a reload.
 
 ### Main Menu
 | Control | Action |

@@ -409,7 +409,13 @@ rendering text itself, so the grid has no opinion about icons/fonts/colors.
   stays reusable by not knowing what a "row" looks like.
 
 **Use case:** Any menu where content reads better as a 2D grid (icons,
-thumbnails, a shop shelf) than a single vertical list - see `ShopMenu`.
+thumbnails, a shop shelf) than a single vertical list - see `ShopMenu`,
+`OutfittingMenu`'s Buy tab, and `ShipBrowserMenu`'s ship grid. All three
+share one `cell_draw_fn` implementation too - `ui_theme.draw_shop_cell`
+(highlight + icon + name + price/quantity, with a disabled `reason` always
+left visible alongside the price rather than replacing it) - so each menu's
+own `_draw_cell` only has to supply an `icon_fn` (a procedural item glyph,
+or a static ship silhouette) and the name/detail strings.
 
 ---
 
