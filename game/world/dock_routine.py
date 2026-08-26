@@ -4,6 +4,8 @@ of the same engage_seek()/park() plumbing ShuttleRoutine uses for pure
 fly-only shuttling."""
 import math
 
+from game.world.indoor_pathfinder import IndoorPathfinder
+
 WALK_SPEED = 2.5         # world units/frame - matches LocationScreen's player walk speed
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
@@ -59,7 +61,7 @@ class DockRoutine:
         self._route_index = 0
         self.phase = "flying"
         self._location = None       # the interior LocationScreen currently being visited
-        self._destination = None    # (x, y) the pilot is currently walking toward
+        self._waypoints = []        # remaining points to walk through (see IndoorPathfinder), last one is the real destination
         self._talk_timer = 0
         self._pending_exit = None   # "ship" or a connected_locations key - chosen in "talking", acted on once "walking_out" arrives
         self._visited_this_stop = set()  # connected_locations keys already entered at this stop - keeps _choose_exit from ping-ponging forever between two locations that each prefer the other
@@ -80,7 +82,7 @@ class DockRoutine:
             if self._talk_timer <= 0:
                 self._pending_exit = self._choose_exit(character)
                 exit_portal = self._location.portal_for(self._pending_exit)
-                self._destination = (exit_portal["x"], exit_portal["y"])
+                self._set_waypoints(character.person, (exit_portal["x"], exit_portal["y"]))
                 self.phase = "walking_out"
         elif self.phase == "walking_out":
             if self._step_toward(character.person):
@@ -170,27 +172,42 @@ class DockRoutine:
         location.visitors.append(character.person)
 
         target_npc = location.npcs[0].person if location.npcs else None
-        self._destination = (target_npc.x, target_npc.y) if target_npc else (character.person.x, character.person.y)
+        goal = (target_npc.x, target_npc.y) if target_npc else (character.person.x, character.person.y)
+        self._set_waypoints(character.person, goal)
         self.phase = "walking_in"
 
+    def _set_waypoints(self, person, goal):
+        """(Re)plan the walk to `goal` through self._location's rooms (see
+        IndoorPathfinder) - routing through the doorway between rooms
+        instead of a straight line that might not be walkable at all is
+        what stops a pilot (e.g. Elena Voss) from getting permanently stuck
+        against a wall partway there."""
+        self._waypoints = IndoorPathfinder.find_path(self._location.rooms, (person.x, person.y), goal)
+
     def _step_toward(self, person):
-        """Move person one step toward self._destination, respecting
-        self._location's walls (wall-sliding: try the full diagonal step,
-        then each axis alone, so a wall corner deflects the walk instead of
-        the pilot clipping straight through it) - the same walkable-area
-        check the player's own movement uses (LocationScreen.can_move_to).
-        Returns True once arrived."""
-        dx, dy = self._destination[0] - person.x, self._destination[1] - person.y
-        dist = math.hypot(dx, dy)
-        if dist <= ARRIVAL_DISTANCE:
-            return True
-        step = min(WALK_SPEED, dist)
-        step_x, step_y = dx / dist * step, dy / dist * step
-        for candidate_x, candidate_y in ((person.x + step_x, person.y + step_y), (person.x + step_x, person.y), (person.x, person.y + step_y)):
-            if self._location.can_move_to(candidate_x, candidate_y):
-                person.x, person.y = candidate_x, candidate_y
-                break
-        return False
+        """Move person one step toward the next waypoint in self._waypoints
+        (see IndoorPathfinder), respecting self._location's walls
+        (wall-sliding: try the full diagonal step, then each axis alone, so
+        a wall corner deflects the walk instead of the pilot clipping
+        straight through it) - the same walkable-area check the player's
+        own movement uses (LocationScreen.can_move_to). Advances through
+        waypoints already reached without waiting a frame; returns True
+        once the final waypoint (the real destination) is reached."""
+        while self._waypoints:
+            target_x, target_y = self._waypoints[0]
+            dx, dy = target_x - person.x, target_y - person.y
+            dist = math.hypot(dx, dy)
+            if dist <= ARRIVAL_DISTANCE:
+                self._waypoints.pop(0)
+                continue
+            step = min(WALK_SPEED, dist)
+            step_x, step_y = dx / dist * step, dy / dist * step
+            for candidate_x, candidate_y in ((person.x + step_x, person.y + step_y), (person.x + step_x, person.y), (person.x, person.y + step_y)):
+                if self._location.can_move_to(candidate_x, candidate_y):
+                    person.x, person.y = candidate_x, candidate_y
+                    break
+            return False
+        return True
 
     def _reboard(self, character):
         if self._location is not None and character.person in self._location.visitors:

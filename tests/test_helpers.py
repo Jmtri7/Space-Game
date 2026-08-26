@@ -36,6 +36,7 @@ from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
+from game.world.indoor_pathfinder import IndoorPathfinder
 from game.world.character import Character
 from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
@@ -567,6 +568,49 @@ class TestFreighterPilotDoesNotDetourIntoEmptyWilderness(unittest.TestCase):
         self.assertFalse(visited_wilderness, "Freighter pilot should never detour into the empty wilderness")
 
 
+class TestIndoorPathfinder(unittest.TestCase):
+    """IndoorPathfinder.find_path() - the room-graph router DockRoutine uses
+    (see TestDockRoutineRespectsWalls below for the full walking behavior
+    this enables)."""
+
+    def test_same_room_returns_direct_goal(self):
+        rooms = [{"rect": (0, 0, 200, 200), "label": None}]
+        self.assertEqual(IndoorPathfinder.find_path(rooms, (10, 10), (150, 150)), [(150, 150)])
+
+    def test_two_adjacent_rooms_routes_through_the_overlap(self):
+        # An L: "Vertical" is x[50,150] y[50,550], "Horizontal" is
+        # x[50,550] y[450,550] - they overlap in the x[50,150] y[450,550]
+        # square, so the route should pass through its center.
+        rooms = [
+            {"rect": (50, 50, 100, 500), "label": "Vertical"},
+            {"rect": (50, 450, 500, 100), "label": "Horizontal"},
+        ]
+        path = IndoorPathfinder.find_path(rooms, (100, 100), (500, 500))
+        self.assertEqual(path, [(100, 500), (500, 500)])
+
+    def test_three_room_chain_routes_through_each_doorway(self):
+        rooms = [
+            {"rect": (0, 0, 100, 100), "label": "A"},
+            {"rect": (100, 0, 100, 100), "label": "B"},   # shares the x=100 edge with A
+            {"rect": (200, 0, 100, 100), "label": "C"},   # shares the x=200 edge with B
+        ]
+        path = IndoorPathfinder.find_path(rooms, (10, 10), (290, 90))
+        self.assertEqual(path, [(100, 50), (200, 50), (290, 90)])
+
+    def test_unreachable_room_falls_back_to_the_direct_goal(self):
+        rooms = [
+            {"rect": (0, 0, 50, 50), "label": "A"},
+            {"rect": (1000, 1000, 50, 50), "label": "B"},  # not adjacent to A at all
+        ]
+        path = IndoorPathfinder.find_path(rooms, (10, 10), (1010, 1010))
+        self.assertEqual(path, [(1010, 1010)])
+
+    def test_point_outside_any_room_falls_back_to_the_direct_goal(self):
+        rooms = [{"rect": (0, 0, 50, 50), "label": "A"}]
+        path = IndoorPathfinder.find_path(rooms, (5000, 5000), (10, 10))
+        self.assertEqual(path, [(10, 10)])
+
+
 class TestDockRoutineRespectsWalls(unittest.TestCase):
     """Regression test: DockRoutine._step_toward() moved a visiting pilot
     in a dead-straight line toward their destination with no collision
@@ -601,7 +645,7 @@ class TestDockRoutineRespectsWalls(unittest.TestCase):
         ai_ship = SimpleNamespace(pilot_person=Person(100, 100))
         routine = DockRoutine(route=[])
         routine._location = location
-        routine._destination = (500, 500)  # the NPC, in the far corner of the L
+        routine._set_waypoints(ai_ship.pilot_person, (500, 500))  # the NPC, in the far corner of the L
 
         frames = 0
         while frames < 500:
