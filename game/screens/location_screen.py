@@ -340,9 +340,17 @@ class LocationScreen(ScreenBase):
         (which owns the real flyable ship) configure it - shared by the
         dialogue-driven "buy_ship:" action and ShipBrowserMenu (via main.py's
         build_shop_menu), so both purchase paths perform the exact same
-        mutation."""
+        mutation.
+
+        Uninstalls whatever's currently equipped first: installed_outfits
+        describes "whichever ship is flown" rather than a specific hull
+        (see docs/SAVE_SYSTEM.md), so without this a new ship would
+        silently inherit the old one's mounted outfits for free just
+        because their slot ids happen to match - it should start bare,
+        with those outfits back in your spares to reinstall."""
         cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
         self.player.possessions.spend(cost)
+        self.player.possessions.uninstall_all_outfits()
         self.player.possessions.add_ship(ship_type_id)
         if self.on_ship_purchased:
             self.on_ship_purchased(ship_type_id)

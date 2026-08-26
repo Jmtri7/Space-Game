@@ -134,13 +134,21 @@ see `game/world/possessions.py`. **`installed_outfits` describes whichever
 ship is currently flown, not a specific owned ship instance** - like
 `owned_ships`, there's no per-ship identity in this data model yet (buying a
 new ship just makes it the active one, per `SpaceScreen.restore_possessions()`
-re-equipping `owned_ships[-1]`). If "own multiple ships and switch between
-them" is ever built, `installed_outfits` will need to move from a flat map on
+re-equipping `owned_ships[-1]`). Because of that, `LocationScreen.buy_ship()`
+calls `Possessions.uninstall_all_outfits()` before adding the new ship -
+otherwise slot ids like `"utility_1"` being reused across ship types would
+let a new ship silently inherit whatever was mounted on the old one for
+free. The new ship starts bare; the old outfits land back in `owned_outfits`
+to reinstall by hand. If "own multiple ships and switch between them" is
+ever built, `installed_outfits` will need to move from a flat map on
 `Possessions` to something keyed per owned ship - this is a known, deliberate
 gap, not an oversight. `SpaceScreen._apply_ship_type()` re-applies
 `installed_outfits`' stat modifiers (via `Ship.apply_outfits()`) every time it
 runs, so a loaded save's outfitted ship keeps its bonuses instead of reverting
-to the bare ship type's base stats.
+to the bare ship type's base stats. `apply_outfits()` also clamps the
+resulting stats to a safe floor (never quite 0 for thrust/velocity/rotation,
+never negative for cargo) so a bad combination of stacked modifiers can't
+leave a ship literally unable to move/turn/thrust.
 
 `cargo` (`{commodity_id: quantity}`) is capped by the ship's own
 `cargo_capacity` (set from `ship_types.json`, boosted by any installed

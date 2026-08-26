@@ -6,6 +6,14 @@ from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
 from game.world.autopilot import Autopilot
 
+# Floors applied after stacking outfit stat_modifiers (see apply_outfits) so
+# a bad combination can never leave a ship literally unable to move/turn -
+# e.g. the freighter's base rotation_speed of 1 plus Cargo Expansion
+# Module's -1 rotation modifier used to land on exactly 0.
+MIN_ACCELERATION = 0.02
+MIN_VELOCITY = 0.5
+MIN_ROTATION_SPEED = 0.5
+
 
 class Ship(WorldObject):
     """Base ship class with physics, rendering, and manual controls."""
@@ -63,7 +71,14 @@ class Ship(WorldObject):
         zero anything out" contract as apply_ship_type. Called after
         apply_ship_type() any time the ship's base type or its installed
         outfits change (purchase, load, equip/unequip), so a reloaded or
-        re-outfitted ship never silently reverts to un-outfitted stats."""
+        re-outfitted ship never silently reverts to un-outfitted stats.
+
+        Clamped to MIN_ACCELERATION/MIN_VELOCITY/MIN_ROTATION_SPEED (and 0
+        for cargo) afterward - stacking enough negative modifiers (e.g. two
+        Cargo Expansion Modules, or one on an already-sluggish hull like the
+        freighter) could otherwise leave a stat at zero or negative, making
+        the ship literally unable to move/turn/thrust rather than just slow.
+        """
         for outfit in outfits:
             if not outfit:
                 continue
@@ -76,6 +91,11 @@ class Ship(WorldObject):
                 self.rotation_speed += modifiers["rotation_speed"]
             if "cargo_capacity" in modifiers:
                 self.cargo_capacity += modifiers["cargo_capacity"]
+
+        self.acceleration_magnitude = max(self.acceleration_magnitude, MIN_ACCELERATION)
+        self.max_velocity = max(self.max_velocity, MIN_VELOCITY)
+        self.rotation_speed = max(self.rotation_speed, MIN_ROTATION_SPEED)
+        self.cargo_capacity = max(self.cargo_capacity, 0)
 
     def engage_seek(self, target):
         """Engage autopilot to approach/land on `target`."""

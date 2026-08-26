@@ -977,6 +977,21 @@ class TestPossessionsInventory(unittest.TestCase):
         self.assertIsNone(possessions.uninstall_outfit("weapon_1"))
         self.assertEqual(possessions.owned_outfits, [])
 
+    def test_uninstall_all_outfits_moves_everything_back_to_owned(self):
+        possessions = Possessions(
+            owned_outfits=["reinforced_hull"],
+            installed_outfits={"weapon_1": "laser_cannon", "utility_1": "cargo_expansion"},
+        )
+        possessions.uninstall_all_outfits()
+        self.assertEqual(possessions.installed_outfits, {})
+        self.assertEqual(sorted(possessions.owned_outfits), ["cargo_expansion", "laser_cannon", "reinforced_hull"])
+
+    def test_uninstall_all_outfits_is_a_noop_with_nothing_installed(self):
+        possessions = Possessions(owned_outfits=["laser_cannon"])
+        possessions.uninstall_all_outfits()
+        self.assertEqual(possessions.installed_outfits, {})
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+
     def test_inventory_fields_roundtrip_through_save_state(self):
         possessions = Possessions(
             owned_outfits=["afterburner"],
@@ -1038,6 +1053,19 @@ class TestShipOutfits(unittest.TestCase):
         ship.apply_ship_type({"cargo_capacity": 10})
         ship.apply_outfits([{"stat_modifiers": {"cargo_capacity": 20}}])
         self.assertEqual(ship.cargo_capacity, 30)
+
+    def test_stacked_negative_modifiers_are_clamped_to_a_safe_floor_not_zero(self):
+        """Regression test: the freighter's base rotation_speed (1) plus a
+        Cargo Expansion Module's -1 rotation modifier landed on exactly 0 -
+        a ship that could never turn at all. Same floor applies to thrust/
+        velocity/cargo so no stat can go to zero or negative from stacking."""
+        ship = Ship(0, 0)
+        ship.apply_ship_type({"max_thrust": 0.1, "max_velocity": 2.0, "rotation_speed": 1, "cargo_capacity": 80})
+        ship.apply_outfits([{"stat_modifiers": {"rotation_speed": -1, "max_velocity": -3, "max_thrust": -1, "cargo_capacity": -100}}])
+        self.assertGreater(ship.rotation_speed, 0)
+        self.assertGreater(ship.max_velocity, 0)
+        self.assertGreater(ship.acceleration_magnitude, 0)
+        self.assertEqual(ship.cargo_capacity, 0)  # cargo has no "must always move a bit" floor, just can't go negative
 
 
 class TestShopMenu(unittest.TestCase):
@@ -2003,6 +2031,20 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen = LocationScreen(config_data=config, world_width=800, world_height=600, player_possessions=possessions, on_ship_purchased=purchased.append)
         screen._apply_dialogue_action("buy_ship:shuttle")
         self.assertEqual(purchased, ["shuttle"])
+
+    def test_buy_ship_uninstalls_outfits_instead_of_carrying_them_to_the_new_ship(self):
+        """Regression test: installed_outfits describes "whichever ship is
+        flown", not a specific hull (see docs/SAVE_SYSTEM.md) - buying a new
+        ship used to silently inherit whatever was mounted on the old one
+        for free, since slot ids like "utility_1" are reused across ship
+        types. The new ship must start bare, with the old outfit back in
+        spares to reinstall."""
+        possessions = Possessions(credits=4500, installed_outfits={"utility_1": "cargo_expansion"})
+        config = {"label": "Spaceport"}
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600, player_possessions=possessions)
+        screen.buy_ship("freighter")
+        self.assertEqual(possessions.installed_outfits, {})
+        self.assertEqual(possessions.owned_outfits, ["cargo_expansion"])
 
     def test_take_loan_blocked_if_already_taken(self):
         screen = self._make_screen(loans=[{"lender": "X", "principal": 1200}])

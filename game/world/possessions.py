@@ -90,6 +90,18 @@ class Possessions:
             self.owned_outfits.append(outfit_id)
         return outfit_id
 
+    def uninstall_all_outfits(self):
+        """Move every currently-installed outfit back to owned_outfits and
+        clear installed_outfits - call this whenever the active ship
+        changes (buying a new one). installed_outfits describes "whichever
+        ship is currently flown", not a specific hull (see
+        docs/SAVE_SYSTEM.md) - slot ids like "utility_1" are reused across
+        ship types, so without this a newly bought ship would inherit
+        whatever was mounted on the old one for free, rather than starting
+        bare with those outfits back in your spares to reinstall."""
+        self.owned_outfits.extend(self.installed_outfits.values())
+        self.installed_outfits = {}
+
     def restore_from(self, state):
         """Overwrite this object's fields in place from a save's state dict
         - never replaces the object itself, so every character/screen
