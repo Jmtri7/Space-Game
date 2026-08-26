@@ -5,21 +5,10 @@ list, not a spec — add to it whenever you notice something, and check an item 
 delete it) once it's actually fixed/shipped. If you're an agent fixing one of these,
 mention it in the commit message so this file and the commit history stay in sync.
 
-Items marked ⭐ were flagged by the user as ones they'd noticed clearly/hit directly
-(vs. general ideas) — treat them as slightly higher-confidence reports, not necessarily
+Items marked ⭐ were flagged by the user as notable in some way — either a bug they'd
+noticed clearly/hit directly, or a feature specifically called out in discussion (vs.
+general ideas) — treat them as slightly higher-confidence/interest, not necessarily
 higher priority.
-
-## Bugs
-
-- [ ] ⭐ NPC facing/heading is ambiguous — hard to tell which direction an NPC is
-      oriented or about to move.
-- [ ] ⭐ Flaky test: the "should still be moving" background AI-ship test in
-      `tests/test_helpers.py` intermittently fails because the routine driving that
-      ship (likely `ExplorerRoutine` in `game/world/routine.py`) can produce a
-      zero-net-movement frame by chance. Determine whether the zero-movement frame
-      is legitimate (fix the test to check across multiple frames) or a routine bug
-      (fix the routine). Rerun `python run_tests.py` 10+ times after the fix to
-      confirm the flake is gone.
 
 ## Features / Ideas
 
@@ -31,28 +20,28 @@ higher priority.
 - [ ] Indicate when reaching the edge of the star map.
 - [ ] Star map zoom.
 - [ ] Animals.
-- [ ] Hailing other ships.
+- [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats, distress calls, trade offers) once ships aren't just physics objects.
 - [ ] Better jumping animation.
 - [ ] Different asteroid types and quantities.
 - [ ] Unified buying/selling menus for ships, ship outfitting, and personal items.
 - [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
 - [ ] Buying and selling ships and items.
 - [ ] Enterable buildings in cities.
-- [ ] Missions and conversations with consequences.
+- [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist, so branching stakes is a natural next layer.
 - [ ] Picking up and dropping items.
 - [ ] More texture for interior grounds and ships.
 - [ ] Cultural and role-based clothing for people (space_suit is the only outfit so far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.
 - [ ] Better jump graphics.
-- [ ] Asteroid mining.
+- [ ] ⭐ Asteroid mining — pairs naturally with the existing asteroid fields and "different asteroid types" idea; gives the economy a real gameplay loop instead of just trading.
 - [ ] Hunting.
-- [ ] Procedurally generated outdoor areas, with a way to find the exit.
-- [ ] Unlockable conversation options.
+- [ ] ⭐ Procedurally generated outdoor areas, with a way to find the exit — biggest single expansion of explorable space beyond stations.
+- [ ] ⭐ Unlockable conversation options — ties into missions/consequences above.
 - [ ] Relationships.
-- [ ] Factions.
+- [ ] ⭐ Factions — combined with crime/war, would turn the sandbox into a living political map; cultures/roles already exist as a foundation.
 - [ ] Combat.
-- [ ] Crime.
-- [ ] War.
+- [ ] ⭐ Crime — see factions.
+- [ ] ⭐ War — see factions.
 - [ ] More roles.
 - [ ] More ways to make money.
 - [ ] More interior decorations, like roads.
@@ -71,3 +60,9 @@ higher priority.
 - [ ] NPCs stop wandering if the player moves close to or targets them.
 - [ ] Jump completed message.
 - [ ] Advice/hint to jump if the player drifts too far from the system.
+- [ ] ⭐ Derelict ships / distress beacons — a drifting AI ship with no pilot response you can board, loot, or tow; combines the existing AI ship, interior, and item-pickup ideas into one encounter type.
+- [ ] ⭐ Bounty hunting board — a station terminal listing wanted ships/NPCs with a reward, feeding off factions/crime once those exist.
+- [ ] ⭐ Escort/wingman contracts — hire or be hired to fly alongside another AI ship to a destination; reuses existing autopilot and multi-AI-ship work.
+- [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers scans/hails from patrol ships if caught; a light crime mechanic that doesn't need the full Crime system first.
+- [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your ship" feel more personal, especially once multiple owned ships exist.
+- [ ] ⭐ AI ships flying in formations.
