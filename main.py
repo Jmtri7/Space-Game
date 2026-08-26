@@ -302,7 +302,7 @@ def main():
                     star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
                     current_screen = "star_map"
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(game_screen.player.person.possessions, story=game_screen.story)
+                    possessions_menu = PossessionsMenu(game_screen.player.person.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "game"
                     current_screen = "possessions"
                 game_screen.update()
@@ -338,7 +338,7 @@ def main():
                     station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1])
                     station_interior.arrive_from(origin_key)
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story)
+                    possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "station"
                     current_screen = "possessions"
                 elif action == "shop":
@@ -445,7 +445,7 @@ def main():
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1])
                     moon_interior.arrive_from(origin_key)
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story)
+                    possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "moon"
                     current_screen = "possessions"
                 elif action == "shop":

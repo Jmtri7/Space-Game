@@ -89,9 +89,11 @@ See `game/world/dialogue.py`.
 |---------|--------|
 | **P** or **ESC** | Close |
 
-Read-only: credits, owned ships, and outstanding loans. Opens from space, a
-station interior, or a moon interior, over whichever screen it was opened
-from.
+Read-only: credits, owned ships, loans, the current ship's live stats
+(thrust/velocity/rotation/cargo usage - reflecting installed outfits),
+cargo, personal items, and installed/spare ship outfits. Opens from space,
+a station interior, or a moon interior, over whichever screen it was
+opened from.
 
 ### Shop Menu (T, on an NPC with a shop)
 | Control | Action |

@@ -207,9 +207,12 @@ automatically via `ROLE_EXIT_PREFERENCE` instead of getting a menu.
 - ESC → back to the location the menu was opened from
 
 ### PossessionsMenu
-**Shows:** Read-only credits, owned ships, and loans - `game/ui/
-possessions_menu.py`. Opened over whichever screen it was opened from
-(space, station, or moon), which is redrawn underneath it.
+**Shows:** Read-only credits, owned ships, loans, the current ship's live
+stats (thrust/max velocity/rotation/cargo usage - via the optional `ship`
+constructor arg, `PlayerController.ship`, so it reflects installed outfits
+immediately), cargo, personal items, and installed/spare ship outfits -
+`game/ui/possessions_menu.py`. Opened over whichever screen it was opened
+from (space, station, or moon), which is redrawn underneath it.
 
 **Inputs:** P or ESC: close
 
