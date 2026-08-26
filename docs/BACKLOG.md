@@ -13,7 +13,6 @@ higher priority.
 
 - [ ] ⭐ Elena Voss (NPC) gets stuck — likely the same root cause as the "AI walking
       pathfinding" feature below, but flagging as a concrete repro to fix against.
-- [ ] ⭐ Building collision missing — player/NPCs can walk through buildings.
 - [ ] ⭐ NPC facing/heading is ambiguous — hard to tell which direction an NPC is
       oriented or about to move.
 - [ ] ⭐ Helmet graphic is the same shade of gray as the ground, hard to distinguish.

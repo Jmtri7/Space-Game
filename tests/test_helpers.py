@@ -616,6 +616,54 @@ class TestDockRoutineRespectsWalls(unittest.TestCase):
             self.fail("Pilot never arrived within 500 frames")
 
 
+class TestBuildingFootprintCollision(unittest.TestCase):
+    """Regression test for the backlog's "Building collision missing"
+    bug: player/NPCs used to be able to walk straight through a building's
+    drawn silhouette, since can_move_to() only ever checked room walls or
+    the open-world bounds. Uses a real building_type from the default
+    story's building_types.json (drossholt_bunker: 140x90, anchored
+    top-left, so its footprint - see LocationScreen._building_footprint -
+    sits at world x:500-640, y:545-635) rather than a synthetic one, so
+    this breaks if that config's shape/footprint fields are renamed."""
+
+    def _make_screen_with_bunker(self):
+        config = {
+            "label": "Test Yard",
+            "structures": [{"x": 500, "y": 500, "building_type": "drossholt_bunker"}],
+        }
+        return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
+
+    def test_footprint_is_computed_from_the_building_type(self):
+        location = self._make_screen_with_bunker()
+        self.assertEqual(location.building_footprints, [(500.0, 545.0, 140, 90)])
+
+    def test_cannot_walk_into_the_footprint(self):
+        location = self._make_screen_with_bunker()
+        self.assertFalse(location.can_move_to(570, 590))  # dead center of the bunker
+
+    def test_can_walk_around_the_sides(self):
+        location = self._make_screen_with_bunker()
+        self.assertTrue(location.can_move_to(480, 590))  # just left of the footprint
+        self.assertTrue(location.can_move_to(660, 590))  # just right of the footprint
+
+    def test_can_walk_behind_it(self):
+        """North of the building (smaller y) is open ground once past the
+        footprint's near edge - this is what lets a character walk behind
+        the building and be drawn behind it (see draw()'s y-sort), instead
+        of the whole tall silhouette being solid all the way through."""
+        location = self._make_screen_with_bunker()
+        self.assertTrue(location.can_move_to(570, 400))
+
+    def test_decorative_structures_with_no_building_type_have_no_footprint(self):
+        config = {
+            "label": "Test Wilderness",
+            "structures": [{"type": "circle", "x": 500, "y": 500, "radius": 50}],
+        }
+        location = LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
+        self.assertEqual(location.building_footprints, [])
+        self.assertTrue(location.can_move_to(500, 500))
+
+
 class TestPossessions(unittest.TestCase):
     """Test Possessions - credits/ships/loans, composed onto every Person
     (see game/world/person.py), not just the player."""

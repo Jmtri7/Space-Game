@@ -127,6 +127,12 @@ class LocationScreen(ScreenBase):
 
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
+        # Ground-level collision boxes for the buildings among those
+        # structures (decorative terrain like moon rocks has no
+        # building_type and contributes none) - see _building_footprint()
+        # for why this is deliberately smaller than each building's full
+        # drawn silhouette.
+        self.building_footprints = [fp for fp in (self._building_footprint(s) for s in self.structures) if fp]
         self.npcs_config = self.config.get("npcs", [])
         self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
         self.current_npc_target = None  # For T key targeting
@@ -523,6 +529,10 @@ class LocationScreen(ScreenBase):
                 draw_debug_marker(surface, character.person.x, character.person.y, 8)
             for visitor in self.visitors:
                 draw_debug_marker(surface, visitor.x, visitor.y, 8)
+            for fx, fy, fw, fh in self.building_footprints:
+                x1, y1 = to_screen(fx, fy)
+                x2, y2 = to_screen(fx + fw, fy + fh)
+                pygame.draw.rect(surface, GREEN, (x1, y1, x2 - x1, y2 - y1), 1)
 
         # Draw UI
         ui_scale = get_ui_scale()
@@ -628,6 +638,44 @@ class LocationScreen(ScreenBase):
                 pygame.draw.circle(surface, glass_color, (px, py), half)
             else:
                 pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
+
+    def _building_footprint(self, structure):
+        """World-space collision box (fx, fy, fw, fh) for one structure, or
+        None if it isn't a building (decorative circle/rect/polygon terrain,
+        e.g. moon rocks/craters, has no "building_type") or its building_type
+        configures no "footprint".
+
+        Deliberately just the base, not the full drawn silhouette: a tall
+        spire's upper floors are pure occluding art (a 2D building is drawn
+        "extruded" upward from ground level via negative local y - see
+        _draw_culture_building), so making the whole visual height solid
+        would block a player from ever standing near the far side even
+        though the painter's-algorithm sort in draw() already draws them
+        behind it correctly. Sized and anchored from building_type's own
+        "footprint" (roughly square/city-block, not a sliver spanning the
+        building's full height) rather than derived from width/height,
+        since e.g. drossholt_tower is only 80 wide but 220 tall - a footprint
+        that thin would make its base nearly impossible to walk around.
+
+        Anchor point matches _structure_depth's/_draw_culture_building's own
+        per-shape convention: "rect" is authored top-left, so ground level is
+        its bottom edge (anchor + height); "circle"/"polygon" are authored
+        with ground level at the anchor itself.
+        """
+        building_type_id = structure.get("building_type")
+        if not building_type_id:
+            return None
+        building_type = get_building_type(self.story, building_type_id)
+        footprint = building_type.get("footprint")
+        if not footprint:
+            return None
+        fw, fd = footprint.get("width", 100), footprint.get("depth", 100)
+        if building_type.get("shape", "rect") == "rect":
+            ground_x = structure["x"] + building_type.get("width", 100) / 2
+            ground_y = structure["y"] + building_type.get("height", 100)
+        else:  # circle: center is ground level; polygon: authored at ground level
+            ground_x, ground_y = structure["x"], structure["y"]
+        return (ground_x - fw / 2, ground_y - fd / 2, fw, fd)
 
     def _structure_depth(self, structure):
         """Y-sort key for a structure: the ground-level depth a walking
@@ -782,6 +830,8 @@ class LocationScreen(ScreenBase):
         so anyone else moving a body around this location (e.g. DockRoutine
         walking a visiting pilot to an NPC) can respect the same walls
         instead of clipping straight through them."""
+        if any(fx <= x <= fx + fw and fy <= y <= fy + fh for fx, fy, fw, fh in self.building_footprints):
+            return False
         if self.rooms:
             # Inclusive bounds (<=), not strict (<) - two touching rooms
             # (e.g. Entrance Hall/Bar sharing the line y=300) must both
