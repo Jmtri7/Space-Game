@@ -383,6 +383,36 @@ self.selected, self.scroll_offset = _handle_scrolling_input(
 
 ---
 
+## Pattern: 2D Grid Sibling to a Scrollable List
+
+**Problem:** ShopMenu's buy/sell lists needed to read as a grid of icons
+(name/price/quantity per cell) rather than one item per line, but
+`SelectableList`'s navigation is 1D (up/down only) and its `draw()` assumes
+a single column of text.
+
+**Solution:** Rather than bolting grid support onto `SelectableList`, add a
+sibling class (`IconGrid`, `game/ui/icon_grid.py`) with the same
+`items`/`selected`/`current()` shape, but `handle_key()` understands
+Left/Right (step through row-major order, wrapping) and Up/Down (jump a
+full row, clamping - not wrapping - on a ragged last row). `draw()` stays
+layout-only: it hands each cell's `pygame.Rect` to a caller-supplied
+`cell_draw_fn(surface, rect, item, is_selected, reason)` instead of
+rendering text itself, so the grid has no opinion about icons/fonts/colors.
+
+**Why this works:**
+- Same mental model as `SelectableList` (selection + scroll state, a
+  `disabled_fn`/`reason` contract) so callers familiar with one can read
+  the other, without forcing 1D and 2D navigation into one class's
+  `handle_key()`.
+- `cell_draw_fn` keeps `IconGrid` reusable for any grid content (it doesn't
+  know what a "cell" looks like) the same way `_handle_scrolling_input`
+  stays reusable by not knowing what a "row" looks like.
+
+**Use case:** Any menu where content reads better as a 2D grid (icons,
+thumbnails, a shop shelf) than a single vertical list - see `ShopMenu`.
+
+---
+
 ## Pattern: Screen State Machine
 
 **Problem:** Complex navigation between multiple screens (menu, game, pause, load, etc.).
