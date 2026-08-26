@@ -52,11 +52,20 @@ class Character:
     what they do with either. The player is not one of these (see
     PlayerController); this is for every AI-driven character - ship pilots
     and non-piloting station/moon residents alike."""
-    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None):
+    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None, can_move_to=None):
         self.person = person
         self.ship = ship
         self.role = role
         self.route = route or []
+        # Bound LocationScreen.can_move_to, if this character lives inside
+        # one (see LocationScreen._build_local_character) - lets a routine
+        # (WanderRoutine) check its own steps against that location's rooms
+        # and building footprints without this module importing
+        # game.screens (same one-directional-dependency idiom as
+        # get_interior_screen below). None for a ship-flying character
+        # (DockRoutine gets the location itself, not just this predicate -
+        # see self._location) or one built standalone (e.g. in a test).
+        self.can_move_to = can_move_to
         # Lets a routine (DockRoutine) find/create a stop's interior
         # LocationScreen without this module importing anything from
         # game.screens, which this codebase keeps strictly one-directional

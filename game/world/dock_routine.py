@@ -177,12 +177,13 @@ class DockRoutine:
         self.phase = "walking_in"
 
     def _set_waypoints(self, person, goal):
-        """(Re)plan the walk to `goal` through self._location's rooms (see
-        IndoorPathfinder) - routing through the doorway between rooms
+        """(Re)plan the walk to `goal` through self._location's rooms and
+        around its building footprints (see IndoorPathfinder) - routing
+        through the doorway between rooms (or around a building in the way)
         instead of a straight line that might not be walkable at all is
         what stops a pilot (e.g. Elena Voss) from getting permanently stuck
-        against a wall partway there."""
-        self._waypoints = IndoorPathfinder.find_path(self._location.rooms, (person.x, person.y), goal)
+        against a wall or building partway there."""
+        self._waypoints = IndoorPathfinder.find_path(self._location.rooms, (person.x, person.y), goal, self._location.building_footprints)
 
     def _step_toward(self, person):
         """Move person one step toward the next waypoint in self._waypoints

@@ -2,6 +2,7 @@
 import sys
 import os
 import io
+import math
 import tempfile
 import shutil
 import unittest
@@ -38,6 +39,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
 from game.world.character import Character
+from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
@@ -610,6 +612,46 @@ class TestIndoorPathfinder(unittest.TestCase):
         path = IndoorPathfinder.find_path(rooms, (5000, 5000), (10, 10))
         self.assertEqual(path, [(10, 10)])
 
+    def test_clear_obstacle_does_not_add_waypoints(self):
+        """An obstacle nowhere near the straight line shouldn't perturb the
+        path at all - the common case (most walks don't pass near a
+        building)."""
+        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
+        obstacles = [(0, 0, 50, 50)]  # far from the (100,100)->(150,150) line
+        path = IndoorPathfinder.find_path(rooms, (100, 100), (150, 150), obstacles)
+        self.assertEqual(path, [(150, 150)])
+
+    def test_routes_around_a_blocking_obstacle(self):
+        """A rect square in the middle of a straight line - the resulting
+        path must actually reach the goal without any leg crossing the
+        obstacle (checked the same way IndoorPathfinder itself decides
+        whether a leg is blocked)."""
+        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
+        obstacles = [(400, 400, 200, 200)]  # centered on the direct line
+        start, goal = (300, 500), (700, 500)
+        path = IndoorPathfinder.find_path(rooms, start, goal, obstacles)
+        self.assertEqual(path[-1], goal)
+        points = [start] + path
+        for p1, p2 in zip(points, points[1:]):
+            self.assertFalse(
+                IndoorPathfinder._segment_crosses_rect(p1, p2, obstacles[0]),
+                f"Leg {p1}->{p2} still crosses the obstacle",
+            )
+
+    def test_routes_around_an_obstacle_directly_between_start_and_goal_on_one_axis(self):
+        """The failure case that actually stranded pilots: the goal is
+        directly north/south (or east/west) of the start with an obstacle
+        square in between, so a straight-line walk's wall-slide has no
+        sideways component to try at all. Must still find a real detour."""
+        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
+        obstacles = [(450, 450, 100, 100)]
+        start, goal = (500, 300), (500, 700)  # same x as the obstacle's center - dx is 0 the whole way
+        path = IndoorPathfinder.find_path(rooms, start, goal, obstacles)
+        self.assertEqual(path[-1], goal)
+        points = [start] + path
+        for p1, p2 in zip(points, points[1:]):
+            self.assertFalse(IndoorPathfinder._segment_crosses_rect(p1, p2, obstacles[0]))
+
 
 class TestDockRoutineRespectsWalls(unittest.TestCase):
     """Regression test: DockRoutine._step_toward() moved a visiting pilot
@@ -706,6 +748,99 @@ class TestBuildingFootprintCollision(unittest.TestCase):
         location = LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
         self.assertEqual(location.building_footprints, [])
         self.assertTrue(location.can_move_to(500, 500))
+
+
+class TestDockRoutineRespectsBuildings(unittest.TestCase):
+    """Regression test for the same stuck failure mode
+    TestDockRoutineRespectsWalls covers for room walls, but triggered by a
+    building instead: a moon's city/wilderness interior has structures (see
+    LocationScreen.building_footprints) but no rooms at all, so the room
+    graph IndoorPathfinder builds never learns about them on its own -
+    without also routing around obstacles, a pilot walking straight at an
+    NPC on the far side of a building got stuck exactly like Elena Voss used
+    to (worst case here: the NPC is directly north/south of the pilot, so
+    the wall-slide fallback's axis-only candidates are pure no-ops and never
+    move the pilot at all). Uses the real drossholt_bunker building_type
+    (see TestBuildingFootprintCollision), not a synthetic one."""
+
+    def _make_screen_with_bunker(self, target_x, target_y):
+        config = {
+            "label": "Test Yard",
+            "structures": [{"x": 500, "y": 500, "building_type": "drossholt_bunker"}],
+            "npcs": [{"name": "Target", "x": target_x, "y": target_y, "role": "resident"}],
+        }
+        return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
+
+    def test_pilot_routes_around_the_building_instead_of_getting_stuck(self):
+        # Bunker footprint is x:500-640, y:545-635 (see
+        # TestBuildingFootprintCollision) - start directly north of it,
+        # target directly south, so dx is 0 for the entire direct line.
+        target_x, target_y = 570, 700
+        location = self._make_screen_with_bunker(target_x, target_y)
+        person = Person(570, 400)
+        routine = DockRoutine(route=[])
+        routine._location = location
+        routine._set_waypoints(person, (target_x, target_y))
+
+        frames = 0
+        while frames < 500:
+            if routine._step_toward(person):
+                break
+            self.assertTrue(
+                location.can_move_to(person.x, person.y),
+                f"Pilot walked into the building (or left the world) at ({person.x}, {person.y})",
+            )
+            frames += 1
+        else:
+            self.fail("Pilot never arrived within 500 frames")
+        # _step_toward's ARRIVAL_DISTANCE (10) means arrival can land up to
+        # that far from the exact target, not pixel-perfect on it.
+        self.assertLessEqual(math.hypot(person.x - target_x, person.y - target_y), 10)
+
+
+class TestWanderRoutineRespectsWalls(unittest.TestCase):
+    """WanderRoutine used to move a wandering NPC (resident/roommate/
+    traveler role) with zero collision checking at all, unlike DockRoutine's
+    visiting pilots - it could wander through a wall or a building. Fixed by
+    giving it the same LocationScreen.can_move_to() check (via
+    Character.can_move_to, injected by LocationScreen._build_local_character
+    - see game/world/character.py), wall-sliding the same way DockRoutine's
+    _step_toward does."""
+
+    def test_never_leaves_the_walkable_area_over_many_wander_cycles(self):
+        # A single small room - WANDER_RADIUS (40) reaches well past every
+        # wall from the center, so without wall-awareness the wanderer would
+        # cross one almost immediately.
+        config = {
+            "label": "Tiny Room", "culture": None,
+            "rooms": [{"label": "Room", "rect": [100, 100, 60, 60]}],
+        }
+        location = LocationScreen(config_data=config, world_width=300, world_height=300)
+        location.rooms = config["rooms"]
+        person = Person(130, 130)
+        character = Character(person, role="resident", can_move_to=location.can_move_to)
+
+        for _ in range(2000):
+            character.routine.run(character)
+            self.assertTrue(
+                location.can_move_to(person.x, person.y),
+                f"Wanderer left the walkable area at ({person.x}, {person.y})",
+            )
+
+    def test_never_enters_a_building_footprint(self):
+        config = {
+            "label": "Test Yard",
+            "structures": [{"x": 500, "y": 500, "building_type": "drossholt_bunker"}],
+        }
+        location = LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
+        # Right against the bunker's near (north) edge, well within
+        # WANDER_RADIUS of stepping into it.
+        person = Person(570, 540)
+        character = Character(person, role="resident", can_move_to=location.can_move_to)
+
+        for _ in range(2000):
+            character.routine.run(character)
+            self.assertTrue(location.can_move_to(person.x, person.y))
 
 
 class TestPossessions(unittest.TestCase):

@@ -25,11 +25,6 @@ higher priority.
 ## Features / Ideas
 
 - [ ] Quick save.
-- [ ] AI walking pathfinding for wandering NPCs (WanderRoutine) — DockRoutine's visiting
-      pilots already route between rooms via `IndoorPathfinder` (see game/world/
-      indoor_pathfinder.py); WanderRoutine still just picks a random point in a radius
-      with no wall-awareness at all, so a wanderer can still walk into (or get stuck
-      against) a wall.
 - [ ] Cultural station interiors; round rooms.
 - [ ] Options for star/asteroid seeds.
 - [ ] Add metrics for game performance.

@@ -168,7 +168,7 @@ class LocationScreen(ScreenBase):
             person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))
         else:
             person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
-        return Character(person, role=cfg.get("role", "resident"))
+        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to)
 
     def _resolve_portal(self, portal):
         """Which portal get_exit_options() and friends should act on when
