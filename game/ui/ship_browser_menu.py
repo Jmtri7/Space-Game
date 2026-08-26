@@ -47,7 +47,12 @@ class ShipBrowserMenu:
             if event.key == pygame.K_ESCAPE:
                 return "close"
             elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                self.list.handle_key(event.key, disabled_fn=self._disabled_reason)
+                # No disabled_fn here (unlike the draw() call below): the
+                # preview is tied to this same cursor, so skipping
+                # unaffordable ships during navigation would make them
+                # unpreviewable whenever at least one ship IS affordable.
+                # Browsing stays free; only Enter checks affordability.
+                self.list.handle_key(event.key)
             elif event.key == pygame.K_RETURN:
                 ship_type_id = self.list.current()
                 if ship_type_id and not self._disabled_reason(ship_type_id):
@@ -90,7 +95,16 @@ class ShipBrowserMenu:
             ship_type = get_ship_type(self.story, selected_id)
             graphics = get_graphics_asset(self.story, "ships", selected_id)
             preview_center_y = panel_rect.y + int(160 * scale)
-            draw_ship_glyph(surface, preview_x, preview_center_y, int(45 * scale), graphics)
+            # Slowly spin the preview and cycle its thrusters on/off so a
+            # browsed ship's silhouette, windows, and engine mounts are all
+            # visible without needing to buy it first. Driven off the clock
+            # (like draw_selection_highlight's pulse) rather than per-frame
+            # state, so this menu doesn't need its own update() method.
+            ticks = pygame.time.get_ticks()
+            preview_angle = (ticks / 30) % 360
+            preview_thrust = 1.0 if (ticks // 1000) % 2 == 0 else 0.0
+            draw_ship_glyph(surface, preview_x, preview_center_y, int(45 * scale), graphics,
+                             angle=preview_angle, thrust=preview_thrust)
 
             stats = [
                 ship_type.get("description", ""),

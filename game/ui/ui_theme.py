@@ -128,7 +128,7 @@ def draw_status_pane(surface, status_lines, ui_scale):
     return status_panel
 
 
-def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics):
+def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, thrust=0):
     """Draw a ship's shape directly in screen pixels, centered on
     (center_x, center_y) - used by ShipBrowserMenu's preview panel and
     OutfittingMenu's diagram. Ship.draw() goes through to_screen()/
@@ -137,24 +137,138 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics):
     Ship._get_shape_points() (via a throwaway Ship instance whose .draw()
     is never called - only shape resolution is needed) so a custom
     local_points silhouette vs. a named built-in shape can't drift out of
-    sync with how the real ship renders in space. Always drawn at a fixed
-    "nose up" orientation (no rotation), which is what angle=0 already
-    renders as - see Ship._draw_rotated_polygon's rotation math."""
+    sync with how the real ship renders in space. Drawn "nose up" by
+    default (angle=0); OutfittingMenu's diagram relies on that since its
+    slot positions are laid out around the glyph without any matching
+    rotation. `thrust` (0..1) draws a thruster flame the same way
+    Ship._draw_thrusters does, scaled to pixel_size instead of world
+    units/get_scale() since this glyph is already in screen pixels."""
     ship = Ship(0, 0, graphics=graphics)
     shape = graphics.get("shape", "triangle")
     local_points = ship._get_shape_points(pixel_size, shape)
     color = tuple(graphics.get("color", (150, 150, 150)))
     outline_color = tuple(graphics.get("outline_color", (20, 18, 25)))
 
+    rad = math.radians(angle)
+    cos_a = math.cos(rad)
+    sin_a = math.sin(rad)
+
+    def _rotate(lx, ly):
+        return lx * cos_a - ly * sin_a, lx * sin_a + ly * cos_a
+
     margin = 2
     outline_points = []
+    points = []
     for lx, ly in local_points:
         dist = math.hypot(lx, ly) or 1
-        outline_points.append((center_x + lx * (dist + margin) / dist, center_y + ly * (dist + margin) / dist))
-    points = [(center_x + lx, center_y + ly) for lx, ly in local_points]
+        orx, ory = _rotate(lx * (dist + margin) / dist, ly * (dist + margin) / dist)
+        outline_points.append((center_x + orx, center_y + ory))
+        rx, ry = _rotate(lx, ly)
+        points.append((center_x + rx, center_y + ry))
 
     pygame.draw.polygon(surface, outline_color, outline_points)
     pygame.draw.polygon(surface, color, points)
+    _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a)
+    if thrust > 0.05:
+        _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a, thrust)
+
+
+def _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a):
+    """Window dots for draw_ship_glyph, mirroring Ship._draw_windows but in
+    screen-pixel space (pixel_size already stands in for ship_size*scale)."""
+    window_points = graphics.get("windows", [])
+    if not window_points:
+        return
+    window_color = tuple(graphics.get("window_color", (200, 230, 255)))
+    radius = max(1, int(round(pixel_size * 0.12)))
+    for wx, wy in window_points:
+        lx, ly = wx * pixel_size, wy * pixel_size
+        rx, ry = lx * cos_a - ly * sin_a, lx * sin_a + ly * cos_a
+        pygame.draw.circle(surface, window_color, (center_x + rx, center_y + ry), radius)
+
+
+def _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a, thrust):
+    """Thruster flames for draw_ship_glyph, mirroring Ship._draw_thrusters
+    but in screen-pixel space. thruster_length is configured in world
+    units (meaningful relative to a ship_type's own "size" field), so it's
+    rescaled by pixel_size/size to keep flame proportions looking right at
+    preview scale instead of full world scale - capped relative to
+    pixel_size itself, since that ratio blows up for small-"size" ships
+    (e.g. the shuttle) whose flame would otherwise dwarf the glyph and
+    run into whatever's drawn below the preview."""
+    thruster_points = graphics.get("thrusters", [(0, 0.6)])
+    thruster_width = graphics.get("thruster_width", 0.15)
+    thruster_length = graphics.get("thruster_length", 38)
+    thrust_color = tuple(graphics.get("thrust_color", YELLOW))
+    world_size = graphics.get("size", 15) or 15
+    flame_length = min(thrust * thruster_length * (pixel_size / world_size), pixel_size * 0.6)
+    half_width = max(2, pixel_size * thruster_width)
+
+    back_x_dir, back_y_dir = -sin_a, cos_a
+    right_x_dir, right_y_dir = cos_a, sin_a
+
+    for tx, ty in thruster_points:
+        lx, ly = tx * pixel_size, ty * pixel_size
+        mount_x = center_x + (lx * cos_a - ly * sin_a)
+        mount_y = center_y + (lx * sin_a + ly * cos_a)
+
+        tip_x = mount_x + back_x_dir * flame_length
+        tip_y = mount_y + back_y_dir * flame_length
+        base_left = (mount_x + right_x_dir * half_width, mount_y + right_y_dir * half_width)
+        base_right = (mount_x - right_x_dir * half_width, mount_y - right_y_dir * half_width)
+
+        pygame.draw.polygon(surface, thrust_color, [(tip_x, tip_y), base_left, base_right])
+
+
+ICON_DEFAULT_COLOR = (140, 140, 150)
+
+
+def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
+    """Draw a small procedural icon for a shop item/commodity, centered on
+    (center_x, center_y) with pixel `size` roughly its radius. `icon_shape`
+    selects a built-in glyph; None or any value not recognized here falls
+    back to a plain crate glyph, so an item/commodity with no "icon_shape"
+    configured still gets a sane default instead of nothing."""
+    color = tuple(icon_color) if icon_color else ICON_DEFAULT_COLOR
+    outline = tuple(max(0, c - 70) for c in color)
+
+    if icon_shape == "vial":
+        body = pygame.Rect(0, 0, int(size * 1.1), int(size * 1.3))
+        body.center = (center_x, center_y + size * 0.15)
+        pygame.draw.rect(surface, color, body, border_radius=int(size * 0.3))
+        pygame.draw.rect(surface, outline, body, width=1, border_radius=int(size * 0.3))
+        neck = pygame.Rect(0, 0, max(2, int(size * 0.4)), max(2, int(size * 0.5)))
+        neck.midbottom = body.midtop
+        pygame.draw.rect(surface, outline, neck)
+    elif icon_shape == "gem":
+        points = [
+            (center_x, center_y - size), (center_x + size * 0.85, center_y - size * 0.15),
+            (center_x, center_y + size), (center_x - size * 0.85, center_y - size * 0.15),
+        ]
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, width=1)
+    elif icon_shape == "star":
+        points = _star_points(center_x, center_y, size, size * 0.45, 5)
+        pygame.draw.polygon(surface, color, points)
+        pygame.draw.polygon(surface, outline, points, width=1)
+    else:  # "crate" and any unrecognized/missing icon_shape - the default
+        rect = pygame.Rect(0, 0, int(size * 2), int(size * 2))
+        rect.center = (center_x, center_y)
+        pygame.draw.rect(surface, color, rect, border_radius=int(size * 0.25))
+        pygame.draw.rect(surface, outline, rect, width=1, border_radius=int(size * 0.25))
+        pygame.draw.line(surface, outline, rect.midtop, rect.midbottom, 1)
+        pygame.draw.line(surface, outline, (rect.left, rect.centery), (rect.right, rect.centery), 1)
+
+
+def _star_points(cx, cy, outer_r, inner_r, num_points):
+    """Vertices of a num_points-pointed star, alternating outer_r/inner_r
+    radius, for draw_item_icon's "star" glyph."""
+    points = []
+    for i in range(num_points * 2):
+        r = outer_r if i % 2 == 0 else inner_r
+        point_angle = math.pi / num_points * i - math.pi / 2
+        points.append((cx + r * math.cos(point_angle), cy + r * math.sin(point_angle)))
+    return points
 
 
 def draw_selection_highlight(surface, rect, scale, pulse):

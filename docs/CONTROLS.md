@@ -98,18 +98,22 @@ opened from.
 ### Shop Menu (T, on an NPC with a shop)
 | Control | Action |
 |---------|--------|
-| **←/→** or **Tab** | Switch between Buy and Sell |
-| **W/↑** or **S/↓** | Navigate the item list |
+| **Tab** | Switch between Buy and Sell |
+| **Arrow keys** or **W/S** | Browse the item grid |
 | **Enter** | Buy/sell one unit of the selected item |
 | **ESC** | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
 opens this instead of a conversation. Buy lists the shop's stock, priced from
 `commodities.json`/`items.json`; Sell lists whatever you're currently
-carrying in that category, at a fraction of its price. A commodities shop
-also shows your ship's cargo hold usage, and blocks purchases past capacity.
-Personal items aren't capacity-limited. Ships and ship outfits get their own
-dedicated menus rather than this one.
+carrying in that category, at a fraction of its price. Both are shown as a
+grid of icons with the item's name and its price (Buy) or quantity held and
+sell price (Sell) - see `icon_shape`/`icon_color` in those two config files;
+an item with neither just gets a plain default crate icon. Browsing the grid
+is never blocked by affordability - only Enter (the actual purchase) is. A
+commodities shop also shows your ship's cargo hold usage, and blocks
+purchases past capacity. Personal items aren't capacity-limited. Ships and
+ship outfits get their own dedicated menus rather than this one.
 
 ### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
 | Control | Action |
@@ -121,9 +125,15 @@ dedicated menus rather than this one.
 
 Shows the shop's stock ship types with a live preview and stat readout
 (thrust, max velocity, rotation, cargo capacity, cost) for whichever is
-selected. Replaces the old dialogue-tree ship purchase for any NPC whose
-config uses a `"shop"` block instead of a `dialogue_tree` with
-`buy_ship:<id>` options (the spaceport's ship salesman now works this way).
+selected. The preview slowly rotates and cycles its thrusters on/off, and
+draws window portholes when the ship type's graphics define any (see
+`windows` in `graphics.json`'s ship entries). Navigating the list is never
+blocked by affordability - you can always browse/preview every ship in
+stock, including ones you can't afford yet; only Enter (opening the buy
+confirmation) is gated on cost. Replaces the old dialogue-tree ship purchase
+for any NPC whose config uses a `"shop"` block instead of a `dialogue_tree`
+with `buy_ship:<id>` options (the spaceport's ship salesman now works this
+way).
 
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |

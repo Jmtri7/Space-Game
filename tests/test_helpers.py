@@ -45,6 +45,7 @@ from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
+from game.ui.icon_grid import IconGrid
 from game.ui.outfitting_menu import OutfittingMenu
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
@@ -1088,15 +1089,25 @@ class TestShopMenu(unittest.TestCase):
         self.assertEqual(possessions.credits, 50)
         self.assertEqual(possessions.items, {"repair_kit": 1})
 
-    def test_left_right_toggles_buy_sell_mode(self):
+    def test_tab_toggles_buy_sell_mode(self):
         possessions = Possessions()
         shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]})
         self.assertEqual(shop.mode, "buy")
         import pygame as mocked_pygame
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
         self.assertEqual(shop.mode, "sell")
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
         self.assertEqual(shop.mode, "buy")
+
+    def test_left_right_browse_the_grid_without_changing_mode(self):
+        """Left/Right/Up/Down navigate the icon grid now (see IconGrid) -
+        they used to toggle Buy/Sell, which Tab does instead."""
+        possessions = Possessions()
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"]})
+        import pygame as mocked_pygame
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
+        self.assertEqual(shop.mode, "buy")
+        self.assertEqual(shop.buy_list.current(), "medicine")
 
     def test_escape_closes(self):
         import pygame as mocked_pygame
@@ -1171,6 +1182,56 @@ class TestShipBrowserMenu(unittest.TestCase):
         menu = ShipBrowserMenu(Possessions(), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
         result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
         self.assertEqual(result, "close")
+
+    def test_navigation_does_not_skip_unaffordable_ships(self):
+        """Regression test: the preview used to be tied to a cursor that
+        skipped over unaffordable ships whenever at least one WAS
+        affordable, so you couldn't preview (or even see) a ship you
+        couldn't yet buy. shuttle costs 1200cr, freighter costs 4500cr -
+        affording the shuttle only must not block navigating onto/
+        previewing the freighter."""
+        import pygame as mocked_pygame
+        possessions = Possessions(credits=1200)
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle", "freighter"]}, on_buy=lambda x: None)
+        self.assertEqual(menu.list.current(), "shuttle")
+        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_DOWN)])
+        self.assertEqual(menu.list.current(), "freighter")
+
+
+class TestIconGrid(unittest.TestCase):
+    """Test IconGrid's row-major navigation - the grid layout ShopMenu uses
+    for its buy/sell lists (see docs/BACKLOG.md's icon-grid item)."""
+
+    def test_right_and_left_wrap_across_row_boundaries(self):
+        grid = IconGrid(["a", "b", "c", "d"], columns=2, max_rows=2)
+        grid.selected = 1  # "b", end of row 0
+        grid.handle_key(pygame_mock.K_RIGHT)
+        self.assertEqual(grid.current(), "c")  # wraps onto row 1
+        grid.handle_key(pygame_mock.K_LEFT)
+        self.assertEqual(grid.current(), "b")
+
+    def test_left_from_first_item_wraps_to_last(self):
+        grid = IconGrid(["a", "b", "c"], columns=2, max_rows=2)
+        grid.selected = 0
+        grid.handle_key(pygame_mock.K_LEFT)
+        self.assertEqual(grid.current(), "c")
+
+    def test_down_jumps_a_full_row_and_clamps_on_a_ragged_last_row(self):
+        grid = IconGrid(["a", "b", "c"], columns=2, max_rows=2)  # row 1 has only "c"
+        grid.selected = 1  # "b"
+        grid.handle_key(pygame_mock.K_DOWN)
+        self.assertEqual(grid.current(), "c")  # clamped, not wrapped past the end
+
+    def test_up_from_top_row_clamps_to_first_row(self):
+        grid = IconGrid(["a", "b", "c", "d"], columns=2, max_rows=2)
+        grid.selected = 1  # "b", already top row
+        grid.handle_key(pygame_mock.K_UP)
+        self.assertEqual(grid.current(), "b")  # candidate index negative - clamps in place
+
+    def test_current_returns_none_when_empty(self):
+        grid = IconGrid([], columns=3, max_rows=2)
+        self.assertIsNone(grid.current())
+        grid.handle_key(pygame_mock.K_RIGHT)  # must not raise
 
 
 class TestOutfittingMenu(unittest.TestCase):

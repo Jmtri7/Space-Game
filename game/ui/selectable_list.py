@@ -84,7 +84,11 @@ class SelectableList:
             text = font.render(label, True, color)
             text_x = center_x - text.get_width() // 2
             text_y = int(start_y + i * line_height)
-            if is_selected and not reason:
+            if is_selected:
+                # Drawn even when `reason` is set (item disabled, e.g. can't
+                # afford) - otherwise the selected row looks identical to
+                # every other dim/disabled row and the cursor appears stuck,
+                # even though `selected` is still moving underneath.
                 box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
                 draw_selection_highlight(surface, box_rect, scale, pulse)
             surface.blit(text, (text_x, text_y))

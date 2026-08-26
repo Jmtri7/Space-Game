@@ -4,13 +4,17 @@ LocationScreen._build_local_character). Ships and ship outfits get their own
 purpose-built menus (ShipBrowserMenu, OutfittingMenu) since they need more
 than a flat price list - this one covers the two simple, stackable
 categories."""
+import math
 import pygame
-from game.constants import YELLOW, GRAY, GREEN
+from game.constants import YELLOW, GRAY, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
-from game.ui.selectable_list import SelectableList
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_selection_highlight
+from game.ui.icon_grid import IconGrid
 
 DEFAULT_SELL_MULTIPLIER = 0.6
+GRID_COLUMNS = 3
+GRID_ROWS = 2
+DISABLED_COLOR = (150, 90, 90)
 
 
 class ShopMenu:
@@ -18,7 +22,9 @@ class ShopMenu:
     get_commodity()/get_item(); Sell tab lists whatever the player currently
     holds in this shop's category, priced at base_price * sell_multiplier.
     One unit is bought/sold per Enter press - no bulk-quantity UI, matching
-    how nothing else in this game batches a purchase either."""
+    how nothing else in this game batches a purchase either. Both tabs are
+    drawn as a grid of icons (name, price, and the vendor's/player's
+    quantity) rather than a plain text list."""
 
     def __init__(self, possessions, story, shop_config, cargo_capacity=0):
         self.possessions = possessions
@@ -28,8 +34,8 @@ class ShopMenu:
         self.sell_multiplier = shop_config.get("sell_multiplier", DEFAULT_SELL_MULTIPLIER)
         self.cargo_capacity = cargo_capacity
         self.mode = "buy"  # "buy" or "sell"
-        self.buy_list = SelectableList(self.stock, max_visible=6)
-        self.sell_list = SelectableList(self._owned_ids(), max_visible=6)
+        self.buy_list = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
+        self.sell_list = IconGrid(self._owned_ids(), columns=GRID_COLUMNS, max_rows=GRID_ROWS)
 
     def _resolve(self, item_id):
         return get_commodity(self.story, item_id) if self.category == "commodities" else get_item(self.story, item_id)
@@ -51,27 +57,19 @@ class ShopMenu:
             return "cargo full"
         return None
 
-    def _label(self, item_id):
-        name = self._resolve(item_id).get("name", item_id)
-        if self.mode == "buy":
-            price = self._resolve(item_id).get("base_price", 0)
-            return f"{name} - {price}cr"
-        held = self.possessions.cargo if self.category == "commodities" else self.possessions.items
-        qty = held.get(item_id, 0)
-        sell_price = int(self._resolve(item_id).get("base_price", 0) * self.sell_multiplier)
-        return f"{name} x{qty} - {sell_price}cr each"
-
     def handle_input(self, events):
         for event in events:
             if event.type != pygame.KEYDOWN:
                 continue
             if event.key == pygame.K_ESCAPE:
                 return "close"
-            elif event.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_TAB):
+            elif event.key == pygame.K_TAB:
                 self.mode = "sell" if self.mode == "buy" else "buy"
-            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                disabled_fn = self._buy_disabled_reason if self.mode == "buy" else None
-                self._current_list().handle_key(event.key, disabled_fn=disabled_fn)
+            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
+                # No disabled_fn: browsing the grid stays free even over
+                # items you can't currently afford/hold - only Enter is
+                # gated, same reasoning as ShipBrowserMenu's preview list.
+                self._current_list().handle_key(event.key)
             elif event.key == pygame.K_RETURN:
                 item_id = self._current_list().current()
                 if item_id:
@@ -105,7 +103,8 @@ class ShopMenu:
 
         font_title = get_font(int(34 * scale))
         font_info = get_font(int(20 * scale))
-        font_text = get_font(int(22 * scale))
+        font_name = get_font(int(19 * scale))
+        font_price = get_font(int(17 * scale))
 
         title = "Commodities" if self.category == "commodities" else "General Store"
         y = panel_rect.y + int(20 * scale)
@@ -126,11 +125,60 @@ class ShopMenu:
         tabs_x = panel_rect.centerx - (tabs_text.get_width() + tabs_text2.get_width()) // 2
         surface.blit(tabs_text, (tabs_x, y))
         surface.blit(tabs_text2, (tabs_x + tabs_text.get_width(), y))
-        y += int(40 * scale)
+        y += int(36 * scale)
 
-        self._current_list().draw(surface, font_text, panel_rect.centerx, y, int(32 * scale), scale,
-                                   label_fn=self._label,
-                                   disabled_fn=self._buy_disabled_reason if self.mode == "buy" else None)
+        grid = self._current_list()
+        if grid.has_more_above:
+            up_indicator = font_info.render("↑ more", True, GRAY)
+            surface.blit(up_indicator, (panel_rect.centerx - up_indicator.get_width() // 2, y))
+        y += int(18 * scale)
 
-        help_text = font_info.render("Left/Right: Buy/Sell, Enter: transact 1, ESC: close", True, (150, 150, 150))
+        gap = int(14 * scale)
+        cell_width = (panel_rect.width - int(60 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
+        cell_height = int(110 * scale)
+        grid_left = panel_rect.centerx - (cell_width * GRID_COLUMNS + gap * (GRID_COLUMNS - 1)) // 2
+
+        def draw_cell(surface, rect, item_id, is_selected, reason):
+            self._draw_cell(surface, rect, item_id, is_selected, reason, font_name, font_price, scale)
+
+        grid.draw(surface, (grid_left, y), cell_width, cell_height, gap, draw_cell,
+                  disabled_fn=self._buy_disabled_reason if self.mode == "buy" else None)
+
+        grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
+        if grid.has_more_below:
+            down_indicator = font_info.render("↓ more", True, GRAY)
+            surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
+
+        help_text = font_info.render("Tab: Buy/Sell, Arrows: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+
+    def _draw_cell(self, surface, rect, item_id, is_selected, reason, font_name, font_price, scale):
+        """cell_draw_fn for the buy/sell IconGrid: an icon, the item's name,
+        and a price/quantity line - dimmed with its `reason` when the
+        current action (buying) isn't currently possible for this item."""
+        if is_selected:
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
+            draw_selection_highlight(surface, rect, scale, pulse)
+
+        item = self._resolve(item_id)
+        icon_cy = rect.y + int(rect.height * 0.32)
+        icon_size = int(rect.height * 0.24)
+        draw_item_icon(surface, rect.centerx, icon_cy, icon_size, item.get("icon_shape"), item.get("icon_color"))
+
+        name_color = DISABLED_COLOR if reason else (WHITE if is_selected else GRAY)
+        name_text = font_name.render(item.get("name", item_id), True, name_color)
+        name_y = rect.y + int(rect.height * 0.56)
+        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, name_y))
+
+        if self.mode == "buy":
+            price = item.get("base_price", 0)
+            detail = f"({reason})" if reason else f"{price}cr"
+        else:
+            held = self.possessions.cargo if self.category == "commodities" else self.possessions.items
+            qty = held.get(item_id, 0)
+            sell_price = int(item.get("base_price", 0) * self.sell_multiplier)
+            detail = f"x{qty} - {sell_price}cr"
+        detail_color = DISABLED_COLOR if reason else YELLOW
+        detail_text = font_price.render(detail, True, detail_color)
+        detail_y = rect.y + int(rect.height * 0.78)
+        surface.blit(detail_text, (rect.centerx - detail_text.get_width() // 2, detail_y))
