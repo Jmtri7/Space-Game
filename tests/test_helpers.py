@@ -40,7 +40,7 @@ from game.world.character import Character
 from game.world.system_state import SystemState
 from game.ui.selectable_list import SelectableList
 from game.ui.save_dialog import SaveDialog
-from game.screens.space_screen import SpaceScreen
+from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from main import build_save_game_state, warn_if_story_version_mismatch
 
 
@@ -783,13 +783,52 @@ class TestExplorerRoutine(unittest.TestCase):
         )
         systems["a"].ai_ships.append(character)
 
-        character.routine._timer = 1  # force the next run() to migrate
-        character.routine.run(character)
+        character.routine._timer = 1  # force the next update() to start a jump
+        # Migration now only happens once the jump animation finishes (align,
+        # bounded by 180deg / (rotation_speed*3) <= 12 frames at the default
+        # rotation_speed of 5, then JUMP_TRAVEL_FRAMES=150) - 200 comfortably
+        # clears that regardless of the animation's random heading.
+        for _ in range(200):
+            character.update()
+            if character.system_id == "b":
+                break
 
         self.assertEqual(character.system_id, "b", "Only system 'b' exists as an 'other' system to jump to")
         self.assertNotIn(character, systems["a"].ai_ships)
         self.assertIn(character, systems["b"].ai_ships)
         self.assertTrue(character.autopilot_active, "Should be orbiting something in the new system")
+        self.assertFalse(character.jumping, "Jump animation should have finished")
+
+    def test_jump_plays_an_align_and_travel_animation_before_migrating(self):
+        """Regression: ExplorerRoutine used to migrate the Character the
+        instant its timer expired - a silent teleport, with no visible
+        transition. It should now wind up and fly off the same way the
+        player's own jump does (see JumpDrive): staying put in the origin
+        system, autopilot off and ship-driven, for the animation's
+        duration before it actually migrates."""
+        systems = {"a": self._make_system(0, 0), "b": self._make_system(1000, 1000)}
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="shuttle", graphics=None,
+            pilot={"name": "Juno Vale", "role": "explorer"}, route=[],
+            get_interior_screen=None, systems=systems, system_id="a",
+        )
+        systems["a"].ai_ships.append(character)
+
+        character.routine._timer = 1
+        character.update()  # begins the jump this frame
+
+        self.assertTrue(character.jumping)
+        self.assertFalse(character.autopilot_active, "Autopilot must be off so it can't fight the jump heading")
+        self.assertEqual(character.system_id, "a", "Still in the origin system mid-animation")
+        self.assertIn(character, systems["a"].ai_ships)
+
+        for _ in range(200):
+            character.update()
+            if not character.jumping:
+                break
+
+        self.assertFalse(character.jumping)
+        self.assertEqual(character.system_id, "b")
 
     def test_single_system_story_just_keeps_orbiting_at_home(self):
         """No "other" system to jump to - should orbit again in the same
@@ -878,6 +917,56 @@ class TestMultiSystemSimulation(unittest.TestCase):
         restored = next(s for s in fresh.systems["keplers_reach"].ai_ships if s.person.name == "Juno Vale")
         self.assertEqual((restored.x, restored.y), (4242, 1337))
         self.assertEqual(restored.system_id, "keplers_reach")
+
+    def test_targeting_a_ship_that_jumps_away_clears_the_target(self):
+        """Regression: a targeted AI ship migrating to another system (see
+        ExplorerRoutine._migrate) used to leave the target selected -
+        targetable_objects (built once per _activate_system) still held
+        the stale tuple referencing it, and that Character keeps updating
+        every frame regardless of which system it's in (see
+        SystemState.update_physics), so the brackets/arrow kept tracking
+        its position in whatever system it jumped to - a totally
+        unrelated part of the same game-space coordinates. Losing the
+        ship should clear the target instead of following it there."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        filtered = game_screen._filtered_targets()
+        game_screen.current_target = next(i for i, (_, obj) in enumerate(filtered) if obj is explorer)
+        self.assertIs(game_screen._get_target_object(), explorer)
+
+        # Simulate the ship having jumped away, the way ExplorerRoutine._migrate does.
+        game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
+        game_screen.systems["keplers_reach"].ai_ships.append(explorer)
+        explorer.system_id = "keplers_reach"
+
+        game_screen.update_physics()
+
+        self.assertIsNone(game_screen.current_target, "Target should be lost once the ship leaves this system")
+        self.assertIsNone(game_screen._get_target_object())
+
+    def test_autopilot_seeking_a_ship_that_jumps_away_disengages(self):
+        """Regression: engaging autopilot on an AI ship (engage_seek, the
+        'G' key) sets player.autopilot_target independently of
+        current_target/targetable_objects - clearing current_target alone
+        (see test above) left the player's autopilot still committed to
+        chasing that Character's position in whatever system it jumped to."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+
+        game_screen.player.engage_seek(explorer)
+        self.assertTrue(game_screen.player.autopilot_active)
+
+        # Simulate the ship having jumped away, the way ExplorerRoutine._migrate does.
+        game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
+        game_screen.systems["keplers_reach"].ai_ships.append(explorer)
+        explorer.system_id = "keplers_reach"
+
+        game_screen.update_physics()
+
+        self.assertFalse(game_screen.player.autopilot_active, "Autopilot should disengage once its target is gone")
+        self.assertIsNone(game_screen.player.autopilot_target)
 
 
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):

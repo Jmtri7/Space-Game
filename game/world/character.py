@@ -79,6 +79,13 @@ class Character:
         # (DockRoutine) has them walking around a station/moon interior
         # instead, independent of the (parked) ship.
         self.ashore = False
+        # Only meaningful when self.ship is set: True while a routine
+        # (ExplorerRoutine, via JumpDrive) is driving the ship's angle/
+        # velocity/position by hand for a jump animation, the same way
+        # SpaceScreen bypasses the player's own ship.update() during
+        # _update_jump - so the ship's normal thrust/autopilot/drag physics
+        # don't also run and fight it that same frame.
+        self.jumping = False
 
         routine_cls = FACTION_ROUTINE_OVERRIDES.get((faction, role), ROLE_ROUTINES.get(role, IdleRoutine))
         self.routine = routine_cls(self.route)
@@ -111,13 +118,15 @@ class Character:
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/
-        physics, then keep the person aboard - unless they're ashore
-        (DockRoutine), in which case it's walking them instead. Shipless
-        characters (NPCs) just run their routine, which moves person.x/y
-        directly (see WanderRoutine)."""
+        physics - unless the routine is mid-jump-animation and driving the
+        ship by hand instead (see self.jumping) - then keep the person
+        aboard, unless they're ashore (DockRoutine), in which case it's
+        walking them instead. Shipless characters (NPCs) just run their
+        routine, which moves person.x/y directly (see WanderRoutine)."""
         self.routine.run(self)
         if self.ship:
-            self.ship.update()
+            if not self.jumping:
+                self.ship.update()
             if not self.ashore:
                 self.person.x = self.ship.x
                 self.person.y = self.ship.y

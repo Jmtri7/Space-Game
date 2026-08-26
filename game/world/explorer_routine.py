@@ -3,9 +3,10 @@ a random object there for a while, then repeat - a wanderer with no fixed
 route, unlike DockRoutine/ShuttleRoutine/OrbitRoutine which all ping-pong a
 configured list of stops within one system."""
 import random
+from game.world.jump_drive import JumpDrive
 
 ORBIT_MARGIN = 80                    # world units of clearance beyond the target's own landing_distance
-ORBIT_DURATION_RANGE = (300, 600)    # frames to linger in orbit (~5-10s at 60fps) before moving on
+ORBIT_DURATION_RANGE = (1800, 3600)  # frames to linger in orbit (~30-60s at 60fps) before moving on
 IDLE_RETRY_FRAMES = 60               # brief pause before retrying if a system has nothing to orbit
 
 
@@ -20,9 +21,17 @@ class ExplorerRoutine:
     are currently aliased onto SpaceScreen (the active one) is ever drawn
     or updated with a camera, so a Character sitting in a different
     system's list is simply invisible/inert until the player jumps there,
-    exactly like any other AI ship in that system."""
+    exactly like any other AI ship in that system.
+
+    The jump itself is played out through JumpDrive (align to a heading,
+    then blast forward for a couple seconds) - the same mechanic
+    SpaceScreen's _update_jump uses for the player - rather than migrating
+    instantly, so an AI ship visibly winds up and departs instead of just
+    popping out of existence and back in."""
     def __init__(self, route=None):
         self._timer = 0
+        self._jump_drive = None      # JumpDrive instance while mid-jump, else None
+        self._jump_destination = None
 
     def start(self, character):
         if not character.systems:
@@ -38,16 +47,40 @@ class ExplorerRoutine:
     def run(self, character):
         if not character.systems:
             return
+        if self._jump_drive is not None:
+            self._advance_jump(character)
+            return
         self._timer -= 1
         if self._timer <= 0:
-            self._jump_to_random_system(character)
+            self._begin_jump(character)
 
-    def _jump_to_random_system(self, character):
+    def _begin_jump(self, character):
         systems = character.systems
         other_ids = [sid for sid in systems if sid != character.system_id]
-        destination_id = random.choice(other_ids) if other_ids else character.system_id
-        self._migrate(character, destination_id)
-        self._orbit_something_in(character, destination_id)
+        if not other_ids:
+            # Nothing else to jump to - just stay put and orbit again.
+            self._orbit_something_in(character, character.system_id)
+            return
+        self._jump_destination = random.choice(other_ids)
+        # No star-map geometry to aim at here (unlike the player's jump,
+        # which points at the destination's actual map position) - any
+        # heading gives the same align-then-blast look, so pick one at
+        # random rather than plumbing story/system lookups into a routine
+        # that otherwise never needs them.
+        heading = random.uniform(0, 360)
+        character.ship.autopilot.disengage()  # stop OrbitMode from fighting JumpDrive for the controls
+        character.jumping = True
+        self._jump_drive = JumpDrive(heading)
+
+    def _advance_jump(self, character):
+        self._jump_drive.update(character.ship)
+        if self._jump_drive.is_complete():
+            destination_id = self._jump_destination
+            character.jumping = False
+            self._jump_drive = None
+            self._jump_destination = None
+            self._migrate(character, destination_id)
+            self._orbit_something_in(character, destination_id)
 
     def _orbit_something_in(self, character, system_id):
         target = self._pick_orbit_target(character.systems[system_id])

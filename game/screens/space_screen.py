@@ -436,6 +436,28 @@ class SpaceScreen(ScreenBase):
             return None
         return filtered[self.current_target][1]
 
+    def _validate_target(self):
+        """Clear the current target - and disengage the player's autopilot,
+        if it was seeking that same target - once it's an AI ship that has
+        since left this system. ExplorerRoutine can migrate a Character out
+        of self.ai_ships into another system's list entirely (it jumped
+        away) while targetable_objects, built once per _activate_system,
+        still holds the now-stale tuple referencing it, and the player's
+        own autopilot_target is a separate reference entirely (set by
+        engage_seek, independent of current_target/targetable_objects).
+        Without this, both keep tracking that Character's position in
+        whatever system it jumped to - a totally unrelated part of the same
+        game-space coordinates - instead of the target being lost, and the
+        autopilot disengaging, the way they should once the ship is gone."""
+        target = self._get_target_object()
+        if isinstance(target, Character) and target not in self.ai_ships:
+            self.current_target = None
+
+        autopilot_target = self.player.autopilot_target
+        if isinstance(autopilot_target, Character) and autopilot_target not in self.ai_ships:
+            self.player.autopilot_active = False
+            self.player.autopilot_target = None
+
     def _target_bracket_size(self, target_obj):
         """Screen-pixel bracket half-width that actually hugs target_obj's
         own drawn radius, instead of one fixed size for every target
@@ -682,6 +704,7 @@ class SpaceScreen(ScreenBase):
         self.asteroid_field.update()
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
+        self._validate_target()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
