@@ -101,7 +101,16 @@ class DockRoutine:
 
     def _begin_walking_in(self, character):
         stop = self.route[self._route_index]
-        key = "default" if stop.is_station else next((k for k in ("city", "wilderness") if k in stop.interiors), None)
+        if stop.is_station:
+            # Walk in through the same doorway a ship actually docks at
+            # (see SpaceScreen.get_ship_entry_key), not always "default" -
+            # otherwise a pilot arriving fresh lands at whichever portal
+            # happens to be listed first in that room's config (e.g. the
+            # concourse's corridor/dormitory-side portal), not the
+            # spaceport a ship actually opens into.
+            key = character.get_ship_entry_key(stop) if character.get_ship_entry_key else "default"
+        else:
+            key = next((k for k in ("city", "wilderness") if k in stop.interiors), None)
         world_width, world_height = (800, 600) if stop.is_station else (1600, 1600)
         location = character.get_interior_screen(stop, key, world_width, world_height) if character.get_interior_screen and key else None
 

@@ -181,6 +181,7 @@ class SpaceScreen(ScreenBase):
                 pilot=pilot,
                 route=route,
                 get_interior_screen=self.get_interior_screen,
+                get_ship_entry_key=self.get_ship_entry_key,
                 space_drag=space_drag,
                 outfit=get_graphics_asset(self.story, "outfits", "space_suit"),
                 systems=self.systems,
