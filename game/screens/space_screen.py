@@ -230,6 +230,29 @@ class SpaceScreen(ScreenBase):
             ship_name = ship_type.get("name", f"AI Ship {i+1}")
             self.targetable_objects.append((ship_name, ship))
 
+    def get_ship_entry_key(self, landable):
+        """Which of landable's interior keys is the room a docked ship
+        actually opens into - the one with a portal (or, for a
+        single-room flat-"entrance" config, itself) marked
+        return_to_ship. Landing/loading-docked should always place the
+        player here (see main.py), never in some other room the player
+        happened to be in last (e.g. a dormitory) - matches the fiction
+        that walking out of your ship always puts you in the same
+        docking-bay doorway. Falls back to "default" if nothing in this
+        landable's interiors declares a return_to_ship path, so a story
+        that never marks a room ship-facing keeps working as before."""
+        for key, config in landable.interiors.items():
+            config = load_json(config) if isinstance(config, str) else config
+            if not config:
+                continue
+            portals = config.get("portals")
+            if portals:
+                if any(p.get("return_to_ship") for p in portals):
+                    return key
+            elif config.get("return_to_ship", True):
+                return key
+        return "default"
+
     def get_interior_screen(self, landable, key, world_width, world_height):
         """Return the persistent LocationScreen for one of landable's
         interiors (key = "default" for a station, "city"/"wilderness" for

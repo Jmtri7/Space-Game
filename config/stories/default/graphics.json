@@ -73,7 +73,7 @@
     "space_suit": {
       "helmet_color": [150, 150, 155],
       "suit_color": [90, 90, 96],
-      "boot_color": [25, 25, 28]
+      "boot_color": [70, 70, 74]
     }
   },
   "ships": {

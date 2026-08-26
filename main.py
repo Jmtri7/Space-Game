@@ -231,12 +231,15 @@ def main():
                                 # fiction says it actually is - docked.
                                 game_screen.restore_possessions(game_state)
                                 game_screen.park_at(game_screen.station)
-                                station_location = game_state.get("station_location", "default")
-                                if station_location not in game_screen.station.interiors:
-                                    station_location = "default"
-                                station_interior = game_screen.get_interior_screen(game_screen.station, station_location, 800, 600)
+                                # Always resume in whichever room the ship
+                                # actually docks at, not wherever the save
+                                # happened to record (e.g. a dormitory) -
+                                # matches landing fresh from space, below.
+                                ship_entry_key = game_screen.get_ship_entry_key(game_screen.station)
+                                station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key, 800, 600)
                                 if station_interior:
                                     station_interior.restore_state(game_state)
+                                    station_interior.arrive_from("ship")
                                 current_screen = "station"
                             elif location == "moon":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
@@ -266,7 +269,10 @@ def main():
                 elif action == "land":
                     game_screen.player.park()
                     if game_screen.landing_target == "station":
-                        station_interior = game_screen.get_interior_screen(game_screen.station, "default", 800, 600)
+                        ship_entry_key = game_screen.get_ship_entry_key(game_screen.station)
+                        station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key, 800, 600)
+                        if station_interior:
+                            station_interior.arrive_from("ship")
                         current_screen = "station"
                     elif game_screen.landing_target == "moon":
                         location_selector = LocationSelector(game_screen.moon.interiors)
