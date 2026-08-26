@@ -64,3 +64,16 @@ higher priority.
 - [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers scans/hails from patrol ships if caught; a light crime mechanic that doesn't need the full Crime system first.
 - [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your ship" feel more personal, especially once multiple owned ships exist.
 - [ ] ⭐ AI ships flying in formations.
+- [ ] Ship buying/selling menu: the ship preview should draw the windows.
+- [ ] Ship buying/selling menu: preview ship could rotate and turn thrusters on/off.
+- [ ] Ship buying/selling menu: when you can't afford any ships, you can change the preview but not the selection; when you can afford at least one, you can't preview other ships — fix this asymmetry.
+- [ ] Bug: you can spend your loan on a laser cannon and then be stuck (no way to recover/pay it back).
+- [ ] Buying/selling menus (ships, outfits, commodities) should show items as a grid of icons with names, prices, and quantities the vendor/player has; needs icons for items plus some default/fallback icons.
+- [ ] Bug/gap: what happens when you buy a second ship? (multiple owned ships behavior is undefined — see existing "Multiple owned ships" item.)
+- [ ] Rotate camera.
+- [ ] Graphic for ship thrusters so they're visible when turned off.
+- [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
+- [ ] Make all outfits usable (not just cosmetic/inert).
+- [ ] Make some commodities usable for various purposes (not just tradeable).
+- [ ] Bug: characters added to a story don't show up in old saves.
+- [ ] Distinct buy and sell multipliers per good, dependent on various factors (supply/demand, faction, location, etc.).
