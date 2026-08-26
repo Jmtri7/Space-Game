@@ -23,9 +23,7 @@ higher priority.
 - [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats, distress calls, trade offers) once ships aren't just physics objects.
 - [ ] Better jumping animation.
 - [ ] Different asteroid types and quantities.
-- [ ] Unified buying/selling menus for ships, ship outfitting, and personal items.
 - [ ] Better station interior designs (e.g. dorm rooms are currently just short halls).
-- [ ] Buying and selling ships and items.
 - [ ] Enterable buildings in cities.
 - [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist, so branching stakes is a natural next layer.
 - [ ] Picking up and dropping items.
