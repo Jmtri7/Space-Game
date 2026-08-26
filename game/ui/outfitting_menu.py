@@ -270,12 +270,12 @@ class OutfittingMenu:
             return
 
         if self.tab == "buy":
+            # Click only selects, same as arrow-key browsing - it used to
+            # also buy immediately, but that made a stray click too easy
+            # to mistake for a purchase. Enter (still) buys the selection.
             index = self.buy_grid.index_at(pos)
             if index is not None:
                 self.buy_grid.selected = index
-                outfit_id = self.buy_grid.current()
-                if outfit_id:
-                    self._buy_outfit(outfit_id)
             return
 
         for i, slot in enumerate(self.slots):
@@ -375,11 +375,19 @@ class OutfittingMenu:
         """Bottom-of-panel help text - a short block rather than one line,
         since the Install tab has both a mouse (drag-and-drop) and a
         keyboard way to change selections and install/uninstall, and both
-        need spelling out (see CLAUDE.md's Menu Help Text rule)."""
+        need spelling out (see CLAUDE.md's Menu Help Text rule).
+
+        While the compatible-outfit picker popup is open, this replaces
+        the outer tab's help entirely - the picker is its own small modal
+        (Up/Down/Enter/ESC only), and the Buy/Install tab's own controls
+        (drag-and-drop, Tab to switch tabs, browsing the grid) don't apply
+        until it's dismissed, so showing them underneath was just clutter."""
+        if self.picker is not None:
+            return ["Up/Down: navigate", "Enter: install into the focused slot", "ESC: cancel"]
         if self.tab == "buy":
             return [
                 "Tab/Click tab: Switch Buy/Install",
-                "Arrows/Click item: browse, Enter/Click item: buy",
+                "Arrows/Click: browse, Enter: buy",
                 "ESC: close",
             ]
         return [

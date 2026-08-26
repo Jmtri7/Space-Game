@@ -57,6 +57,9 @@ class ShipBrowserMenu:
             return "not enough credits"
         return None
 
+    def _owned_count(self, ship_type_id):
+        return self.possessions.owned_ships.count(ship_type_id)
+
     def handle_input(self, events):
         if self.confirm:
             action, ship_type_id = self.confirm.handle_input(events)
@@ -71,10 +74,13 @@ class ShipBrowserMenu:
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Click only selects (and updates the live preview) - it
+                # used to also open the buy confirmation immediately, but
+                # that made a stray click too easy to mistake for "buy".
+                # Enter (still) opens the confirmation.
                 index = self.grid.index_at(event.pos)
                 if index is not None:
                     self.grid.selected = index
-                    self._open_confirm(self.grid.current())
                 continue
             if event.type != pygame.KEYDOWN:
                 continue
@@ -154,6 +160,7 @@ class ShipBrowserMenu:
 
             stats = [
                 ship_type.get("description", ""),
+                f"Owned: {self._owned_count(selected_id)}",
                 f"Approximate Size: {_approximate_size_label(graphics)}",
                 f"Thrust: {ship_type.get('max_thrust', 0)}",
                 f"Max Velocity: {ship_type.get('max_velocity', 0)}",
@@ -167,8 +174,12 @@ class ShipBrowserMenu:
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
-        help_text = font_info.render("Arrows/Click: browse, Enter/Click: buy, ESC: close", True, (150, 150, 150))
-        surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
+        # Hidden while a purchase confirmation is up - ConfirmDialog draws
+        # its own "Y: Yes  N: No  ESC: Cancel" help text, and this menu's
+        # own browse/buy controls don't apply until that's resolved.
+        if not self.confirm:
+            help_text = font_info.render("Arrows/Click: browse, Enter: buy, ESC: close", True, (150, 150, 150))
+            surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
 
         if self.message_timer > 0:
             self.message_timer -= 1
@@ -184,5 +195,6 @@ class ShipBrowserMenu:
         ship_type = get_ship_type(self.story, ship_type_id)
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
         icon_fn = functools.partial(draw_ship_glyph, graphics=graphics)
-        detail = f"{ship_type.get('cost', 0)}cr"
+        owned = self._owned_count(ship_type_id)
+        detail = f"{ship_type.get('cost', 0)}cr" + (f"  (own {owned})" if owned else "")
         draw_shop_cell(surface, rect, is_selected, reason, icon_fn, ship_type.get("name", ship_type_id), detail, scale)

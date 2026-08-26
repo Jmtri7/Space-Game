@@ -41,7 +41,7 @@
         ],
         "npcs": [
           {
-            "name": "Quartermaster",
+            "name": "Doss Kallen",
             "x": 500,
             "y": 220,
             "role": "quartermaster",
@@ -50,7 +50,7 @@
             "shop": {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"], "sell_multiplier": 0.6}
           },
           {
-            "name": "Dockhand",
+            "name": "Ruen Sabo",
             "x": 620,
             "y": 420,
             "behavior": "wander",
@@ -83,7 +83,7 @@
         ],
         "npcs": [
           {
-            "name": "Foreman",
+            "name": "Grett Halvorsen",
             "x": 350,
             "y": 600,
             "behavior": "wander",
@@ -91,7 +91,7 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Scavenger",
+            "name": "Nix Ferro",
             "x": 750,
             "y": 550,
             "behavior": "wander",
@@ -99,7 +99,7 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Trader",
+            "name": "Sela Drummond",
             "x": 1150,
             "y": 450,
             "behavior": "wander",

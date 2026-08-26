@@ -129,8 +129,11 @@ def draw_status_pane(surface, status_lines, ui_scale):
     return status_panel
 
 
-PURCHASE_MESSAGE_FRAMES = 90  # ~1.5s at 60fps before a "Bought 1 X" message starts fading
+PURCHASE_MESSAGE_FRAMES = 110  # ~1.8s at 60fps before a "Bought 1 X" message starts fading
 PURCHASE_MESSAGE_FADE_FRAMES = 30  # ~0.5s fade-out once the timer drops into this range
+PURCHASE_MESSAGE_FILL = (25, 95, 45)
+PURCHASE_MESSAGE_BORDER = (140, 255, 160)
+PURCHASE_MESSAGE_TEXT = (200, 255, 205)
 
 
 def draw_purchase_message(surface, message, timer, center_x, bottom_y, scale):
@@ -138,16 +141,28 @@ def draw_purchase_message(surface, message, timer, center_x, bottom_y, scale):
     bottom_y) with its bottom edge there, fading out over its last
     PURCHASE_MESSAGE_FADE_FRAMES of `timer` - shared by ShopMenu/
     ShipBrowserMenu/OutfittingMenu so every purchase gets the same feedback.
+    Drawn as a bordered pill (not just bare text) so it actually stands out
+    against whatever's behind it, rather than blending into a crowded panel.
     Does nothing if timer <= 0 (the caller is expected to count `timer`
     down once per frame, e.g. inside its own draw(), and stop passing a
     message once it hits 0)."""
     if timer <= 0 or not message:
         return
     alpha = 255 if timer > PURCHASE_MESSAGE_FADE_FRAMES else int(255 * timer / PURCHASE_MESSAGE_FADE_FRAMES)
-    font = get_font(int(22 * scale))
-    text = font.render(message, True, (120, 255, 140))
-    text.set_alpha(alpha)
-    surface.blit(text, (center_x - text.get_width() // 2, bottom_y - text.get_height()))
+    font = get_font(int(24 * scale))
+    text = font.render(message, True, PURCHASE_MESSAGE_TEXT)
+
+    pad_x, pad_y = int(16 * scale), int(8 * scale)
+    pill_rect = pygame.Rect(0, 0, text.get_width() + pad_x * 2, text.get_height() + pad_y * 2)
+    pill_rect.midbottom = (center_x, bottom_y)
+    radius = pill_rect.height // 2
+
+    pill_surf = pygame.Surface(pill_rect.size, pygame.SRCALPHA)
+    pygame.draw.rect(pill_surf, (*PURCHASE_MESSAGE_FILL, 235), pill_surf.get_rect(), border_radius=radius)
+    pygame.draw.rect(pill_surf, PURCHASE_MESSAGE_BORDER, pill_surf.get_rect(), width=2, border_radius=radius)
+    pill_surf.blit(text, (pad_x, pad_y))
+    pill_surf.set_alpha(alpha)
+    surface.blit(pill_surf, pill_rect.topleft)
 
 
 def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, thrust=0):

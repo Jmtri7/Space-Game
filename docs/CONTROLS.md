@@ -114,8 +114,8 @@ opened from.
 | Control | Action |
 |---------|--------|
 | **Tab** or **Click** a tab | Switch between Buy and Sell |
-| **Arrow keys** or **W/S** | Browse the item grid |
-| **Enter**, or **Click** an item | Buy/sell one unit of the selected item |
+| **Arrow keys**, **W/S**, or **Click** an item | Browse the item grid (click just selects, same as browsing) |
+| **Enter** | Buy/sell one unit of the selected item |
 | **ESC** | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
@@ -125,45 +125,46 @@ carrying in that category, at a fraction of its price. Both are shown as a
 grid of icons with the item's name and its price (Buy) or quantity held and
 sell price (Sell) - see `icon_shape`/`icon_color` in those two config files;
 an item with neither just gets a plain default crate icon. Browsing the grid
-is never blocked by affordability - only Enter/clicking an item (the actual
-purchase) is. Clicking an item both selects and transacts it in one click,
-the same way clicking a Main Menu option both selects and activates it. A
+(by arrow key or by clicking an item) is never blocked by affordability, and
+never transacts by itself - only Enter (the actual purchase) does. A
 commodities shop also shows your ship's cargo hold usage, and blocks
 purchases past capacity. Personal items aren't capacity-limited. A successful
-buy shows a brief fading "Bought 1 `<item>`" confirmation near the bottom of
-the panel. Ships and ship outfits get their own dedicated menus rather than
-this one.
+buy shows a brief fading "Bought 1 `<item>`" pill-shaped confirmation near
+the bottom of the panel. Ships and ship outfits get their own dedicated
+menus rather than this one.
 
 ### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
 | Control | Action |
 |---------|--------|
-| **Arrow keys** or **W/S** | Browse the ship grid |
-| **Enter**, or **Click** a ship | Confirm purchase (opens a Yes/No confirmation) |
+| **Arrow keys**, **W/S**, or **Click** a ship | Browse the ship grid (click just selects/previews) |
+| **Enter** | Open a Yes/No purchase confirmation for the selected ship |
 | **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
 | **ESC** | Close (when nothing is pending confirmation) |
 
 Shows the shop's stock ship types as a grid - each cell a static silhouette,
-name, and cost. Whichever cell is selected also gets a bigger live preview
-off to the side, with a full stat readout (thrust, max velocity, rotation,
-cargo capacity, an "Approximate Size" bucketed from the ship's `graphics.json`
+name, cost, and (if you already own one) an "(own N)" note. Whichever cell is
+selected also gets a bigger live preview off to the side, with a full stat
+readout (how many you already own, thrust, max velocity, rotation, cargo
+capacity, an "Approximate Size" bucketed from the ship's `graphics.json`
 `size`, and cost). Unlike the grid's static icons, that preview slowly
 rotates and cycles its thrusters on/off, and draws window portholes when the
 ship type's graphics define any (see `windows` in `graphics.json`'s ship
-entries). Browsing the grid is never blocked by affordability - you can
-always preview every ship in stock, including ones you can't afford yet;
-only Enter/clicking a ship (opening the buy confirmation) is gated on cost -
-the Yes/No confirmation itself is still keyboard-only. A confirmed purchase
-shows a brief fading "Bought 1 `<ship>`" confirmation. Replaces the old
-dialogue-tree ship purchase for any NPC whose config uses a `"shop"` block
-instead of a `dialogue_tree` with `buy_ship:<id>` options (the spaceport's
-ship salesman now works this way).
+entries). Browsing the grid (arrow keys or clicking a ship) is never blocked
+by affordability and never opens the purchase confirmation by itself - only
+Enter does that; the confirmation is still Yes/No/ESC only, no click. While
+it's open, this menu's own "Arrows/Click: browse..." help line is hidden -
+only the confirmation's own Y/N/ESC help applies until you resolve it. A
+confirmed purchase shows a brief fading "Bought 1 `<ship>`" confirmation.
+Replaces the old dialogue-tree ship purchase for any NPC whose config uses a
+`"shop"` block instead of a `dialogue_tree` with `buy_ship:<id>` options (the
+spaceport's ship salesman now works this way).
 
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |
 |---------|--------|
 | **Tab** or **Click** a tab | Switch between Buy and Install |
-| **Arrow keys** or **W/S** (Buy tab) | Browse the outfit grid |
-| **Enter**, or **Click** an outfit (Buy tab) | Buy the selected outfit |
+| **Arrow keys**, **W/S**, or **Click** an outfit (Buy tab) | Browse the outfit grid (click just selects) |
+| **Enter** (Buy tab) | Buy the selected outfit |
 | **Mouse drag** (Install tab) | Drag a spare outfit onto a slot to equip it, or drag an installed slot back out to unequip |
 | **Click** a slot or spare outfit (Install tab, no drag) | Move keyboard focus there without installing/uninstalling |
 | **Left/Right** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits grid |
@@ -179,12 +180,17 @@ sets an `icon_shape`/`icon_color` (see `SLOT_ICON_SHAPES` in
 (spares plus whatever's currently installed), which slot type it uses, and
 whether your current ship can actually fit one - "Fits your ship", "Equipped"
 (you already have one mounted), "Doesn't fit your ship" (no slot of that
-type), or "No ship yet" if you don't own a ship at all. Browsing is never
-blocked by affordability; only Enter/clicking an outfit (the purchase) is,
-same click-both-selects-and-buys behavior as the Shop Menu. Buying adds
-outfits to your spares (`owned_outfits`) - they aren't equipped until
-installed into a matching slot type on the Install tab. A successful buy
-shows a brief fading "Bought 1 `<outfit>`" confirmation.
+type), or "No ship yet" if you don't own a ship at all. Browsing (arrow keys
+or clicking an outfit) is never blocked by affordability and never buys by
+itself; only Enter does. Buying adds outfits to your spares
+(`owned_outfits`) - they aren't equipped until installed into a matching
+slot type on the Install tab. A successful buy shows a brief fading
+"Bought 1 `<outfit>`" confirmation.
+
+While the Install tab's compatible-outfit picker popup is open (after
+pressing Enter on an empty slot), this menu's help text switches to just the
+picker's own controls (Up/Down, Enter, ESC) - the Buy/Install tab's normal
+controls don't apply until the picker is dismissed.
 
 Install shows a diagram of the current ship's slots - an occupied slot draws
 that outfit's own icon inside it (plus its name below) - next to a grid of

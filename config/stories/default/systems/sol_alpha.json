@@ -111,7 +111,7 @@
         ],
         "npcs": [
           {
-            "name": "Bartender",
+            "name": "Bram Solise",
             "x": 400,
             "y": 90,
             "role": "bartender",
@@ -144,7 +144,7 @@
             }
           },
           {
-            "name": "Traveler",
+            "name": "Wren Castellan",
             "x": 400,
             "y": 240,
             "role": "traveler",
@@ -161,7 +161,7 @@
             "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
           },
           {
-            "name": "Guard",
+            "name": "Talen Brix",
             "x": 400,
             "y": 540,
             "role": "guard",
@@ -267,17 +267,17 @@
         ],
         "npcs": [
           {
-            "name": "Merchant",
+            "name": "Nadia Okafor",
             "x": 300,
             "y": 200
           },
           {
-            "name": "Vendor",
+            "name": "Ezra Kondo",
             "x": 700,
             "y": 150
           },
           {
-            "name": "Trader",
+            "name": "Livia Marchetti",
             "x": 1250,
             "y": 250
           }

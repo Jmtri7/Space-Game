@@ -455,7 +455,9 @@ class LocationScreen(ScreenBase):
         role_label = self._role_label(person)
         if role_label:
             font_role = get_font(int(13 * ui_scale))
-            role_surf = font_role.render(role_label, True, GRAY)
+            # Not GRAY (100,100,100) - too low-contrast to read at this
+            # small size against the varied floor/wall colors behind it.
+            role_surf = font_role.render(role_label, True, (210, 210, 225))
             role_rect = role_surf.get_rect(midbottom=(anchor_x, bottom_y))
             surface.blit(role_surf, role_rect)
             bottom_y = role_rect.top - 1

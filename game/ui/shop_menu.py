@@ -91,10 +91,11 @@ class ShopMenu:
         return None
 
     def _handle_click(self, pos):
-        """Click equivalent of Tab (on a tab label) or of moving the cursor
-        to a grid cell and pressing Enter (on an item) - a click both
-        selects the cell and immediately transacts it, mirroring how
-        clicking a Menu item both selects and activates it."""
+        """Click equivalent of Tab (on a tab label) or of moving the arrow-
+        key cursor to a grid cell (on an item) - click only selects, same
+        as browsing with the keyboard. It used to also transact
+        immediately, but that made a stray click too easy to mistake for a
+        purchase; Enter (still) transacts the selected item."""
         if self._buy_tab_rect and self._buy_tab_rect.collidepoint(pos):
             self.mode = "buy"
             return
@@ -103,12 +104,8 @@ class ShopMenu:
             return
         grid = self._current_list()
         index = grid.index_at(pos)
-        if index is None:
-            return
-        grid.selected = index
-        item_id = grid.current()
-        if item_id:
-            self._transact(item_id)
+        if index is not None:
+            grid.selected = index
 
     def _transact(self, item_id):
         if self.mode == "buy":
@@ -183,7 +180,7 @@ class ShopMenu:
             down_indicator = font_info.render("↓ more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
-        help_text = font_info.render("Tab/Click tab: Buy/Sell, Click/Enter: transact 1, ESC: close", True, (150, 150, 150))
+        help_text = font_info.render("Tab/Click tab: Buy/Sell, Arrows/Click: browse, Enter: transact 1, ESC: close", True, (150, 150, 150))
         surface.blit(help_text, (panel_rect.x + int(20 * scale), panel_rect.bottom - int(30 * scale)))
 
         if self.message_timer > 0:
