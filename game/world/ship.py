@@ -38,6 +38,23 @@ class Ship(WorldObject):
     def autopilot_target(self, value):
         self.autopilot.target = value
 
+    def apply_ship_type(self, ship_type):
+        """Configure acceleration/max velocity/rotation speed from a
+        ship_types.json entry - shared by the player's ship (SpaceScreen.
+        _apply_ship_type, used both at story start and after a purchase or
+        a save that re-equips the last-bought ship) and an AI pilot's ship
+        (Character.for_ai_pilot), so both read the same three fields the
+        same way instead of each keeping its own copy that can quietly
+        drift (AI's used to fall back to a literal 0.15 thrust when unset,
+        diverging from this class's own 0.1 default above). Missing
+        fields keep whatever this ship already has, so a partial
+        ship_type dict never zeroes out an unrelated stat."""
+        if not ship_type:
+            return
+        self.acceleration_magnitude = ship_type.get("max_thrust", self.acceleration_magnitude)
+        self.max_velocity = ship_type.get("max_velocity", self.max_velocity)
+        self.rotation_speed = ship_type.get("rotation_speed", self.rotation_speed)
+
     def engage_seek(self, target):
         """Engage autopilot to approach/land on `target`."""
         self.autopilot.engage_seek(target)

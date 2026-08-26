@@ -107,10 +107,7 @@ class Character:
         and flavor dialogue, and the role-driven routine that flies it."""
         ship = Ship(x, y, space_drag=space_drag, graphics=graphics)
         ship.angle = random.randint(0, 360)
-        if ship_type:
-            ship.acceleration_magnitude = ship_type.get("max_thrust", 0.15)
-            ship.max_velocity = ship_type.get("max_velocity", 4.0)
-            ship.rotation_speed = ship_type.get("rotation_speed", 5)
+        ship.apply_ship_type(ship_type)
 
         pilot = pilot or {}
         # Linked to an economy like any other character (see Person) - they

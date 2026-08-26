@@ -4,9 +4,10 @@ of the same engage_seek()/park() plumbing ShuttleRoutine uses for pure
 fly-only shuttling."""
 import math
 
+from game.constants import WALKING_SPEED
 from game.world.indoor_pathfinder import IndoorPathfinder
 
-WALK_SPEED = 2.5         # world units/frame - matches LocationScreen's player walk speed
+WALK_SPEED = WALKING_SPEED  # same pace as LocationScreen's player (see constants.WALKING_SPEED)
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
 

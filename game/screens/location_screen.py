@@ -86,7 +86,7 @@ class LocationScreen(ScreenBase):
         self.interior_key = None
         self.world_width = world_width
         self.world_height = world_height
-        self.speed = 2.5
+        self.speed = constants.WALKING_SPEED
         self.entrance_range = 35  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
         # Cached by handle_input() when L opens the exit menu, so

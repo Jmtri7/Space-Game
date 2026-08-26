@@ -284,9 +284,7 @@ class SpaceScreen(ScreenBase):
         or a save/load round-trip would silently revert to that default."""
         ship_type = get_ship_type(self.story, ship_type_id)
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
-        self.player.ship.acceleration_magnitude = ship_type.get("max_thrust", self.player.ship.acceleration_magnitude)
-        self.player.ship.max_velocity = ship_type.get("max_velocity", self.player.ship.max_velocity)
-        self.player.ship.rotation_speed = ship_type.get("rotation_speed", self.player.ship.rotation_speed)
+        self.player.ship.apply_ship_type(ship_type)
         self.player.ship.graphics = graphics
 
     def _on_ship_purchased(self, ship_type_id):
