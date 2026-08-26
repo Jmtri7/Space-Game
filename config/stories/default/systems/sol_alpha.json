@@ -146,6 +146,15 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
+            "name": "Ilsa Farrow",
+            "x": 340,
+            "y": 160,
+            "role": "quartermaster",
+            "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
+          },
+          {
             "name": "Guard",
             "x": 400,
             "y": 540,

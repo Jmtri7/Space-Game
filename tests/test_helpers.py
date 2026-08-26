@@ -1104,6 +1104,22 @@ class TestShopMenu(unittest.TestCase):
         result = shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
         self.assertEqual(result, "close")
 
+    def test_empty_stock_shop_can_still_sell_owned_cargo_at_a_premium(self):
+        """A shop with an empty "stock" (e.g. sol_alpha.json's Ilsa Farrow,
+        who only buys - see docs/BACKLOG.md-adjacent trade-loop design) has
+        nothing on the Buy tab, but the Sell tab isn't driven by "stock" at
+        all - it always lists whatever's in possessions.cargo, so a
+        buy-nothing/sell-only shop still works and can price above the
+        commodity's own base_price to make a return trip profitable."""
+        possessions = Possessions(credits=0, cargo={"ore": 2})
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": [], "sell_multiplier": 1.2})
+        self.assertIsNone(shop.buy_list.current())  # nothing to buy
+        shop.mode = "sell"
+        self.assertEqual(shop.sell_list.items, ["ore"])
+        shop._transact("ore")
+        self.assertEqual(possessions.credits, 14)  # 12cr base_price * 1.2, truncated
+        self.assertEqual(possessions.cargo, {"ore": 1})
+
     def test_enter_transacts_the_selected_item(self):
         import pygame as mocked_pygame
         possessions = Possessions(credits=100)
