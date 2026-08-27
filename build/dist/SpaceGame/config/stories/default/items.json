@@ -1,0 +1,34 @@
+{
+  "repair_kit": {
+    "name": "Repair Kit",
+    "description": "Portable hull patch kit for emergency repairs",
+    "base_price": 150,
+    "category": "tool",
+    "icon_shape": "crate",
+    "icon_color": [180, 140, 70]
+  },
+  "medkit": {
+    "name": "Medkit",
+    "description": "Personal first-aid supplies",
+    "base_price": 60,
+    "category": "consumable",
+    "icon_shape": "vial",
+    "icon_color": [220, 80, 90]
+  },
+  "star_chart": {
+    "name": "Star Chart",
+    "description": "Archived navigation data for nearby systems",
+    "base_price": 200,
+    "category": "tool",
+    "icon_shape": "star",
+    "icon_color": [120, 180, 230]
+  },
+  "engraved_flask": {
+    "name": "Engraved Flask",
+    "description": "A keepsake flask from Bram's bar - engraved 'to a good customer'",
+    "base_price": 0,
+    "category": "keepsake",
+    "icon_shape": "vial",
+    "icon_color": [200, 170, 90]
+  }
+}

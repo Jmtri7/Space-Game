@@ -1,0 +1,113 @@
+{
+  "elena_voss": {
+    "name": "Elena Voss",
+    "faction": "Frontier Traders Guild",
+    "role": "freighter_pilot",
+    "personality": "Blunt and unhurried — cares more about the manifest than the view.",
+    "hail_dialogue_tree": {
+      "root": "start",
+      "nodes": {
+        "start": {
+          "text": "Freighter One here. Hope you're not looking to relieve me of my cargo.",
+          "options": [
+            {"label": "Just saying hello.", "next": "hello"},
+            {"label": "Ask about her cargo.", "next": "cargo"},
+            {"label": "End transmission.", "next": null}
+          ]
+        },
+        "hello": {
+          "text": "Ha! Fair enough. Fly safe out there.",
+          "options": [
+            {"label": "Thanks.", "next": null}
+          ]
+        },
+        "cargo": {
+          "text": "Nothing you'd want - spare parts and paperwork, mostly. Now if you had something worth trading...",
+          "options": [
+            {"label": "Maybe next time.", "next": null}
+          ]
+        }
+      }
+    }
+  },
+  "kade_marsh": {
+    "name": "Kade Marsh",
+    "faction": "Sol Federation Navy",
+    "role": "patrol_officer",
+    "personality": "Warm and easygoing for a patrol officer - never misses a chance to talk shop with a new pilot.",
+    "one_way_hail": {
+      "range": 500,
+      "message": "Hey there, new pilot! I remember when I first stepped into a cockpit myself. Let's get you squared away - cycle your targeting mode (T) until it reads SHIPS."
+    },
+    "escort_flag": "kade_escorting",
+    "hail_dialogue_tree": {
+      "root": "start",
+      "conditional_roots": [
+        {"flag": "kade_tutorial_done", "node": "casual"}
+      ],
+      "nodes": {
+        "start": {
+          "text": "Hey! Good to actually talk. Want me to help you get your bearings out here?",
+          "options": [
+            {"label": "Sure, show me the ropes.", "next": "accepted", "actions": ["set_flag:accepted_kade_help", "set_flag:kade_escorting"]},
+            {"label": "No thanks, I've got it.", "next": "declined", "action": "abandon_mission:first_flight"}
+          ]
+        },
+        "accepted": {
+          "text": "Great - give me a second to pull alongside you. Close the comm and I'll walk you through it from here.",
+          "options": [
+            {"label": "Sounds good.", "next": null}
+          ]
+        },
+        "declined": {
+          "text": "No worries - you'll get the hang of it. Good luck out there, pilot.",
+          "options": [
+            {"label": "Thanks.", "next": null}
+          ]
+        },
+        "casual": {
+          "text": "Hey again! Ship treating you well?",
+          "options": [
+            {"label": "Can't complain.", "next": null}
+          ]
+        }
+      }
+    }
+  },
+  "priya_nandan": {
+    "name": "Priya Nandan",
+    "faction": "Independent",
+    "role": "freighter_pilot",
+    "personality": "Chatty and opportunistic, always working an angle."
+  },
+  "oskar_lindqvist": {
+    "name": "Oskar Lindqvist",
+    "faction": "Deeprock Mining Consortium",
+    "role": "mining_foreman",
+    "personality": "Gruff and practical, more comfortable with machinery than people."
+  },
+  "mira_solis": {
+    "name": "Mira Solis",
+    "faction": "Independent",
+    "role": "explorer",
+    "personality": "Restless and curious, always chasing the next horizon."
+  },
+  "dax_okafor": {
+    "name": "Dax Okafor",
+    "faction": "Frontier Traders Guild",
+    "role": "courier_pilot",
+    "personality": "Fast-talking and faster-flying, thrives under a deadline."
+  },
+  "rex_calder": {
+    "name": "Rex Calder",
+    "faction": "The Drossholt Company",
+    "role": "patrol_officer",
+    "personality": "Gruff and territorial, treats every claim boundary like it's already been shot at once."
+  },
+  "juno_vale": {
+    "name": "Juno Vale",
+    "faction": "The Vherathi Concord",
+    "role": "explorer",
+    "personality": "Never stays anywhere long, already thinking about whatever's over the next horizon."
+  }
+}

@@ -1,0 +1,326 @@
+{
+  "space_stations": {
+    "station_alpha": {
+      "name": "Station Alpha",
+      "culture": "vherathi",
+      "size": 40,
+      "rotation_speed": 0.5,
+      "landing_distance": 50,
+      "shape": "hexapod",
+      "local_points": [
+        [0, -32],
+        [16, -12],
+        [20, 12],
+        [8, 24],
+        [-8, 24],
+        [-20, 12],
+        [-16, -12]
+      ]
+    },
+    "station_delta": {
+      "name": "Station Delta",
+      "culture": "drossholt",
+      "size": 35,
+      "color": [200, 150, 100],
+      "core_color": [220, 180, 120],
+      "rotation_speed": 0.8,
+      "landing_distance": 45,
+      "shape": "octagon",
+      "local_points": [
+        [20, -5],
+        [25, -15],
+        [20, -25],
+        [5, -28],
+        [-5, -28],
+        [-20, -25],
+        [-25, -15],
+        [-20, -5],
+        [-25, 15],
+        [-20, 25],
+        [-5, 28],
+        [5, 28],
+        [20, 25],
+        [25, 15]
+      ]
+    }
+  },
+  "moons": {
+    "moon_silver": {
+      "name": "Silver Moon",
+      "size": 30,
+      "color": [200, 200, 200],
+      "crater_color": [150, 150, 150],
+      "landing_distance": 35,
+      "craters": [
+        {"x": -8, "y": -5, "radius": 4},
+        {"x": 10, "y": 8, "radius": 5}
+      ]
+    },
+    "moon_rust": {
+      "name": "Rust Moon",
+      "size": 28,
+      "color": [180, 100, 80],
+      "crater_color": [140, 70, 50],
+      "landing_distance": 33,
+      "craters": [
+        {"x": -6, "y": -10, "radius": 3},
+        {"x": 8, "y": 6, "radius": 4},
+        {"x": 2, "y": -2, "radius": 2}
+      ]
+    }
+  },
+  "outfits": {
+    "space_suit": {
+      "helmet_color": [150, 150, 155],
+      "suit_color": [90, 90, 96],
+      "boot_color": [70, 70, 74]
+    },
+
+    "vherathi_hardsuit": {
+      "helmet_color": [120, 255, 200],
+      "suit_color": [72, 48, 96],
+      "boot_color": [46, 30, 62]
+    },
+    "vherathi_softsuit": {
+      "suit_color": [110, 85, 125],
+      "boot_color": [150, 120, 170]
+    },
+    "drossholt_vacsuit": {
+      "helmet_color": [255, 200, 80],
+      "suit_color": [150, 110, 72],
+      "boot_color": [90, 65, 45]
+    },
+    "drossholt_coveralls": {
+      "suit_color": [190, 155, 115],
+      "boot_color": [90, 65, 45]
+    },
+
+    "bartender": {
+      "suit_color": [64, 72, 82],
+      "boot_color": [40, 38, 36]
+    },
+    "loan_officer": {
+      "suit_color": [42, 46, 68],
+      "boot_color": [26, 26, 34]
+    },
+    "ship_dealer": {
+      "suit_color": [122, 58, 74],
+      "boot_color": [44, 30, 34]
+    },
+    "mechanic": {
+      "helmet_color": [240, 170, 55],
+      "suit_color": [82, 78, 72],
+      "boot_color": [46, 42, 38]
+    },
+    "quartermaster": {
+      "suit_color": [108, 96, 62],
+      "boot_color": [70, 56, 38]
+    },
+    "security": {
+      "helmet_color": [96, 104, 116],
+      "suit_color": [58, 63, 72],
+      "boot_color": [36, 39, 46]
+    },
+    "dockworker": {
+      "helmet_color": [242, 150, 42],
+      "suit_color": [70, 78, 90],
+      "boot_color": [40, 44, 52]
+    },
+    "miner": {
+      "helmet_color": [235, 205, 95],
+      "suit_color": [122, 102, 72],
+      "boot_color": [72, 56, 40]
+    },
+    "flight_suit": {
+      "helmet_color": [206, 210, 220],
+      "suit_color": [58, 70, 88],
+      "boot_color": [40, 46, 56]
+    },
+    "medic": {
+      "helmet_color": [210, 236, 230],
+      "suit_color": [224, 228, 228],
+      "boot_color": [176, 188, 188]
+    },
+    "civilian": {
+      "suit_color": [96, 110, 120],
+      "boot_color": [60, 66, 72]
+    },
+    "researcher": {
+      "suit_color": [128, 140, 152],
+      "boot_color": [92, 98, 108]
+    },
+    "smuggler": {
+      "suit_color": [46, 52, 49],
+      "boot_color": [30, 33, 31]
+    },
+    "station_official": {
+      "suit_color": [54, 60, 78],
+      "boot_color": [34, 38, 48]
+    },
+
+    "vherathi_honor_guard": {
+      "helmet_color": [120, 255, 200],
+      "suit_color": [72, 48, 96],
+      "boot_color": [46, 30, 62],
+      "shoulder_color": [58, 38, 78],
+      "spike_color": [150, 255, 215],
+      "sash_color": [120, 255, 200],
+      "collar_color": [150, 120, 170]
+    },
+    "vherathi_envoy": {
+      "suit_color": [90, 64, 112],
+      "boot_color": [150, 120, 170],
+      "collar_color": [150, 255, 215],
+      "sash_color": [120, 255, 200],
+      "badge_color": [255, 255, 255]
+    },
+    "vherathi_magistrate": {
+      "helmet_color": [150, 120, 170],
+      "suit_color": [60, 40, 84],
+      "boot_color": [40, 26, 56],
+      "chest_plate_color": [96, 74, 110],
+      "collar_color": [150, 255, 215],
+      "sash_color": [150, 120, 170],
+      "badge_color": [120, 255, 200]
+    },
+    "drossholt_foreman": {
+      "helmet_color": [255, 200, 80],
+      "suit_color": [150, 110, 72],
+      "boot_color": [90, 65, 45],
+      "shoulder_color": [120, 88, 58],
+      "belt_color": [90, 65, 45],
+      "badge_color": [255, 200, 80]
+    },
+    "drossholt_hauler": {
+      "suit_color": [190, 155, 115],
+      "boot_color": [90, 65, 45],
+      "backpack_color": [150, 118, 82],
+      "belt_color": [90, 65, 45]
+    },
+    "station_command": {
+      "helmet_color": [206, 210, 220],
+      "suit_color": [46, 56, 74],
+      "boot_color": [34, 40, 50],
+      "chest_plate_color": [70, 82, 102],
+      "collar_color": [220, 225, 235],
+      "shoulder_color": [40, 48, 62],
+      "badge_color": [235, 205, 95]
+    },
+    "marshal": {
+      "helmet_color": [96, 104, 116],
+      "suit_color": [50, 54, 62],
+      "boot_color": [30, 33, 40],
+      "chest_plate_color": [66, 72, 84],
+      "spike_color": [150, 160, 175],
+      "belt_color": [30, 33, 40],
+      "badge_color": [235, 205, 95],
+      "visor_color": [235, 120, 90]
+    },
+    "deck_chief": {
+      "helmet_color": [242, 150, 42],
+      "suit_color": [64, 72, 84],
+      "boot_color": [38, 42, 50],
+      "shoulder_color": [242, 150, 42],
+      "belt_color": [38, 42, 50],
+      "badge_color": [255, 235, 200]
+    },
+    "prospector": {
+      "helmet_color": [235, 205, 95],
+      "suit_color": [122, 102, 72],
+      "boot_color": [72, 56, 40],
+      "backpack_color": [98, 82, 58],
+      "belt_color": [72, 56, 40],
+      "shoulder_color": [98, 82, 58]
+    },
+    "surgeon": {
+      "helmet_color": [210, 236, 230],
+      "suit_color": [230, 234, 234],
+      "boot_color": [176, 188, 188],
+      "chest_plate_color": [205, 224, 224],
+      "collar_color": [140, 200, 190],
+      "badge_color": [225, 90, 90]
+    },
+    "merchant_prince": {
+      "suit_color": [110, 52, 66],
+      "boot_color": [40, 28, 32],
+      "sash_color": [214, 170, 90],
+      "collar_color": [214, 170, 90],
+      "belt_color": [40, 28, 32],
+      "badge_color": [255, 225, 150]
+    },
+    "void_oracle": {
+      "suit_color": [40, 34, 66],
+      "boot_color": [26, 22, 46],
+      "collar_color": [150, 255, 215],
+      "sash_color": [120, 120, 255],
+      "spike_color": [150, 255, 215],
+      "badge_color": [255, 255, 255]
+    },
+    "bounty_hunter": {
+      "helmet_color": [60, 64, 70],
+      "suit_color": [44, 46, 52],
+      "boot_color": [28, 30, 34],
+      "chest_plate_color": [58, 60, 68],
+      "shoulder_color": [52, 54, 62],
+      "belt_color": [28, 30, 34],
+      "backpack_color": [40, 42, 48],
+      "visor_color": [235, 120, 90]
+    },
+    "guild_trader": {
+      "suit_color": [108, 96, 62],
+      "boot_color": [70, 56, 38],
+      "sash_color": [180, 150, 90],
+      "belt_color": [70, 56, 38],
+      "badge_color": [235, 215, 150]
+    },
+    "ranger": {
+      "helmet_color": [206, 210, 220],
+      "suit_color": [58, 74, 70],
+      "boot_color": [40, 50, 48],
+      "backpack_color": [48, 62, 58],
+      "belt_color": [40, 50, 48],
+      "badge_color": [235, 205, 95]
+    }
+  },
+  "ships": {
+    "shuttle": {
+      "culture": "vherathi",
+      "size": 10,
+      "local_points": [[0.15, -1.0], [0.55, -0.15], [0.4, 0.65], [-0.35, 0.7], [-0.55, -0.05]],
+      "thrusters": [[0.05, 0.68]],
+      "windows": [[0.15, -0.5]]
+    },
+    "freighter": {
+      "culture": "vherathi",
+      "size": 35,
+      "local_points": [[-0.5, -1.0], [0.35, -0.85], [0.55, 0.1], [0.3, 1.0], [-0.45, 0.85], [-0.6, 0.0]],
+      "thrusters": [[-0.35, 0.87], [-0.02, 0.94], [0.28, 1.0]],
+      "thruster_width": 0.06,
+      "thruster_length": 55,
+      "windows": [[-0.25, -0.85], [0.05, -0.95], [0.3, -0.7]]
+    },
+    "patrol": {
+      "culture": "vherathi",
+      "size": 13,
+      "local_points": [[0.05, -0.9], [0.55, 0.3], [0.15, 0.75], [-0.45, 0.55], [-0.35, -0.25]],
+      "thrusters": [[-0.3, 0.5], [0.1, 0.7]],
+      "windows": [[0.05, -0.4]]
+    },
+    "drossholt_freighter": {
+      "culture": "drossholt",
+      "size": 35,
+      "shape": "long_rectangle",
+      "thrusters": [[-0.2, 1.0], [0.2, 1.0]],
+      "thruster_width": 0.08,
+      "thruster_length": 50,
+      "windows": [[-0.15, -0.6], [0.15, -0.6], [-0.15, -0.1], [0.15, -0.1], [-0.15, 0.4], [0.15, 0.4]]
+    },
+    "drossholt_patrol": {
+      "culture": "drossholt",
+      "size": 13,
+      "shape": "rectangle",
+      "thrusters": [[-0.3, 0.6], [0.3, 0.6]],
+      "windows": [[-0.2, -0.4], [0.2, -0.4]]
+    }
+  }
+}

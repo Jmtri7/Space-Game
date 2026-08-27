@@ -1,0 +1,438 @@
+{
+  "name": "Sol Alpha System",
+  "description": "A vast star system with multiple stations and automated traffic",
+  "star_map_position": {"x": 0, "y": 0},
+  "station_asset": "station_alpha",
+  "moon_asset": "moon_silver",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Sol Alpha",
+    "size": 100,
+    "color": [255, 255, 100]
+  },
+  "player_start": {
+    "x": 0.4,
+    "y": 0.35
+  },
+  "star_seed": 42,
+  "asteroid_field": {
+    "per_chunk_range": [1, 3],
+    "types": [
+      {"type": "gray_rock", "weight": 3, "size_range": [3, 7], "speed_range": [0.05, 0.3]},
+      {"type": "brown_rock", "weight": 1, "size_range": [5, 10], "speed_range": [0.05, 0.25]}
+    ]
+  },
+  "station": {
+    "x": 0.15,
+    "y": 0.2,
+    "name": "Alpha Station",
+    "size": 40,
+    "color": [100, 200, 255],
+    "core_color": [150, 220, 255],
+    "rotation_speed": 0.5,
+    "landing_distance": 50,
+    "shape": "hexapod",
+    "local_points": [
+      [0, -32],
+      [16, -12],
+      [20, 12],
+      [8, 24],
+      [-8, 24],
+      [-20, 12],
+      [-16, -12]
+    ],
+    "interiors": {
+      "default": {
+        "label": "Alpha Station",
+        "culture": "vherathi",
+        "portals": [
+          {"x": 660, "y": 345, "connected_locations": [], "return_to_ship": true}
+        ],
+        "rooms": [
+          {"label": "Concourse", "shape": "circle", "center": [400, 300], "radius": 150, "sides": 32},
+          {"label": "The Long Vein", "shape": "circle", "center": [400, 140], "radius": 95, "sides": 28},
+          {"label": "Credit Union", "shape": "circle", "center": [140, 300], "radius": 78, "sides": 24},
+          {"label": "West Gallery", "polygon": [[175, 272], [285, 268], [285, 332], [175, 328]]},
+          {"label": "Ship Dock", "shape": "circle", "center": [660, 300], "radius": 80, "sides": 24},
+          {"label": "East Gallery", "polygon": [[515, 268], [630, 272], [630, 332], [515, 328]]},
+          {"label": "Resin Quarter", "polygon": [[330, 405], [470, 405], [455, 565], [345, 565]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 46, "color": [96, 74, 110]},
+          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 30, "color": [128, 255, 205], "width": 2},
+          {"layer": "wall", "shape": "line", "points": [[300, 70], [345, 32]], "color": [120, 255, 200], "width": 3},
+          {"layer": "wall", "shape": "line", "points": [[500, 70], [455, 32]], "color": [120, 255, 200], "width": 3},
+          {"layer": "floor", "shape": "line", "points": [[660, 300], [660, 345]], "color": [128, 255, 205], "width": 2}
+        ],
+        "npcs": [
+          {
+            "name": "Bram Solise",
+            "x": 400,
+            "y": 100,
+            "role": "bartender",
+            "outfit": "bartender",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {"flag": "bought_bartender_round", "node": "start_friendly"}
+              ],
+              "nodes": {
+                "start": {
+                  "text": "What'll it be?",
+                  "options": [
+                    {"label": "Order a drink", "next": "drink"},
+                    {"label": "Buy him a round - 20cr", "next": "round_bought", "requires_not_flag": "bought_bartender_round", "actions": ["spend_credits:20", "give_item:engraved_flask", "set_flag:bought_bartender_round"]},
+                    {"label": "Ask about the station", "next": "about_station"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "start_friendly": {
+                  "text": "Back again? Always good to see a paying customer who tips.",
+                  "options": [
+                    {"label": "Order a drink", "next": "drink"},
+                    {"label": "Ask about the station", "next": "about_station"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "drink": {
+                  "text": "One synth-ale, on the house for a new face. Cheers.",
+                  "options": [
+                    {"label": "Thanks", "next": "start"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "round_bought": {
+                  "text": "Cheers - much obliged. Here, engraved flask, on the house. Come back anytime.",
+                  "options": [
+                    {"label": "Thanks", "next": null}
+                  ]
+                },
+                "about_station": {
+                  "text": "One big ring, all of it off this concourse. Credit union's the west pod, ship dock's the east one - go see Petra if you're short, then Dax about a hull.",
+                  "options": [
+                    {"label": "Ask about the quiet cargo runs", "next": "smuggler_tip", "requires_flag": "bought_bartender_round"},
+                    {"label": "Good to know", "next": "start"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "smuggler_tip": {
+                  "text": "Word is Priya doesn't ask too many questions if the crate isn't labeled. Didn't hear that from me.",
+                  "options": [
+                    {"label": "Noted", "next": null}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Petra Voss",
+            "x": 140,
+            "y": 300,
+            "role": "loan_officer",
+            "outfit": "loan_officer",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "First loan's on the station - more than enough to get you off the ground.",
+                  "options": [
+                    {"label": "Take loan - 100000cr", "next": "loaned", "action": "take_loan"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "loaned": {
+                  "text": "Approved. Don't make me regret it.",
+                  "options": [
+                    {"label": "Thanks", "next": null}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Dax Renner",
+            "x": 645,
+            "y": 278,
+            "role": "ship_salesman",
+            "outfit": "ship_dealer",
+            "greeting": "Looking for a ship? I've got three in dock.",
+            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
+          },
+          {
+            "name": "Reeve Katic",
+            "x": 688,
+            "y": 330,
+            "role": "outfitter",
+            "outfit": "mechanic",
+            "greeting": "Need to fit your ship out with something new?",
+            "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
+          },
+          {
+            "name": "Ilsa Farrow",
+            "x": 330,
+            "y": 300,
+            "role": "quartermaster",
+            "outfit": "quartermaster",
+            "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
+          },
+          {
+            "name": "Talen Brix",
+            "x": 560,
+            "y": 300,
+            "role": "guard",
+            "outfit": "marshal",
+            "greeting": "Welcome to the station. Dock's right behind me.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Wren Castellan",
+            "x": 452,
+            "y": 350,
+            "role": "traveler",
+            "outfit": "civilian",
+            "greeting": "Safe travels!",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Mira Osei",
+            "x": 400,
+            "y": 500,
+            "role": "roommate",
+            "outfit": "vherathi_softsuit",
+            "greeting": "Rough shift. Try not to wake me on your way out.",
+            "dialogue_options": ["Sorry", "Leave"]
+          },
+          {
+            "name": "Renna Kade",
+            "x": 350,
+            "y": 372,
+            "role": "resident",
+            "outfit": "vherathi_softsuit",
+            "greeting": "Morning. Or whatever hour the station clock says it is.",
+            "dialogue_options": ["Morning", "Leave"]
+          },
+          {
+            "name": "Toma Idrisi",
+            "x": 442,
+            "y": 224,
+            "role": "resident",
+            "outfit": "vherathi_softsuit",
+            "greeting": "Concourse bar's right there if you're looking for Bram.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Adjutant Ondra",
+            "x": 230,
+            "y": 300,
+            "role": "clerk",
+            "outfit": "station_official",
+            "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Stationmaster Corell",
+            "x": 660,
+            "y": 268,
+            "role": "stationmaster",
+            "outfit": "station_command",
+            "greeting": "I run this ring. Keep your approach clean and we won't have words.",
+            "dialogue_options": ["Noted", "Leave"]
+          },
+          {
+            "name": "Jax Miren",
+            "x": 572,
+            "y": 300,
+            "role": "dockworker",
+            "outfit": "dockworker",
+            "greeting": "Mind the clamps - that gantry swings wide when a hull's coming in.",
+            "dialogue_options": ["Thanks", "Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.85,
+    "y": 0.8,
+    "name": "Luna Prime",
+    "size": 30,
+    "color": [200, 200, 200],
+    "crater_color": [150, 150, 150],
+    "landing_distance": 35,
+    "craters": [
+      {"x": -8, "y": -5, "radius": 4},
+      {"x": 10, "y": 8, "radius": 5}
+    ],
+    "interiors": {
+      "city": {
+        "label": "Moon City",
+        "description": "Lunar metropolitan settlement",
+        "culture": "vherathi",
+        "background_color": [150, 150, 150],
+        "connected_locations": ["wilderness"],
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "rooms": [
+          {"label": "The Grown Quarter", "polygon": [[140, 140], [1460, 140], [1460, 1460], [140, 1460]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [180, 780, 1240, 44], "color": [126, 100, 140]},
+          {"layer": "floor", "shape": "rect", "rect": [778, 180, 44, 1240], "color": [126, 100, 140]},
+          {"layer": "floor", "shape": "circle", "center": [800, 800], "radius": 70, "color": [96, 74, 110]}
+        ],
+        "structures": [
+          {"x": 250, "y": 700, "building_type": "vherathi_spire"},
+          {"x": 750, "y": 650, "building_type": "vherathi_spire"},
+          {"x": 1150, "y": 550, "building_type": "vherathi_bloompod"},
+          {"x": 450, "y": 1000, "building_type": "vherathi_hall"},
+          {"x": 1300, "y": 750, "building_type": "vherathi_spire"}
+        ],
+        "npcs": [
+          {
+            "name": "Nadia Okafor",
+            "x": 300,
+            "y": 200,
+            "outfit": "vherathi_envoy"
+          },
+          {
+            "name": "Ezra Kondo",
+            "x": 700,
+            "y": 150,
+            "outfit": "researcher"
+          },
+          {
+            "name": "Livia Marchetti",
+            "x": 1250,
+            "y": 250,
+            "outfit": "vherathi_honor_guard"
+          },
+          {
+            "name": "Ovie Sann",
+            "x": 550,
+            "y": 300,
+            "role": "surface_tech",
+            "outfit": "vherathi_hardsuit",
+            "greeting": "Just came off a hull-walk. The resin's growing faster on the sunward spires this cycle.",
+            "dialogue_options": ["Interesting", "Leave"]
+          },
+          {
+            "name": "Councilor Orvin",
+            "x": 1000,
+            "y": 350,
+            "role": "magistrate",
+            "outfit": "vherathi_magistrate",
+            "greeting": "The Concord welcomes visitors who respect the grown law. See that you do.",
+            "dialogue_options": ["Of course", "Leave"]
+          },
+          {
+            "name": "Captain Bell",
+            "x": 300,
+            "y": 450,
+            "role": "pilot",
+            "outfit": "flight_suit",
+            "greeting": "Grounded till my transit clears. Nice to stretch my legs off the flight deck for once.",
+            "dialogue_options": ["Safe flights", "Leave"]
+          },
+          {
+            "name": "Dr. Sesh",
+            "x": 650,
+            "y": 1150,
+            "role": "medic",
+            "outfit": "medic",
+            "greeting": "Clinic's this quarter. Decompression cases mostly - people forget to check their seals.",
+            "dialogue_options": ["Noted", "Leave"]
+          },
+          {
+            "name": "Tarn Escobar",
+            "x": 400,
+            "y": 1250,
+            "role": "ranger",
+            "outfit": "ranger",
+            "greeting": "I run the trails out past the dome. Wilderness gate's south if you want a look.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Silas Vantauk",
+            "x": 1150,
+            "y": 950,
+            "role": "merchant",
+            "outfit": "merchant_prince",
+            "greeting": "I move rare resin and rarer favors. Everything has a price; most of them are reasonable.",
+            "dialogue_options": ["Maybe later", "Leave"]
+          },
+          {
+            "name": "Oracle Threa",
+            "x": 1250,
+            "y": 1150,
+            "role": "oracle",
+            "outfit": "void_oracle",
+            "greeting": "The lattice hums a little louder near you. Make of that what you will.",
+            "dialogue_options": ["Strange", "Leave"]
+          }
+        ]
+      },
+      "wilderness": {
+        "label": "Moon Wilderness",
+        "description": "Natural lunar terrain",
+        "background_color": [150, 150, 150],
+        "connected_locations": ["city"],
+        "entrance": {
+          "x": 200,
+          "y": 200,
+          "name": "Landing Zone"
+        },
+        "structures": [
+          {"type": "circle", "x": 300, "y": 400, "radius": 50, "color": [90, 85, 80]},
+          {"type": "circle", "x": 800, "y": 600, "radius": 60, "color": [90, 85, 80]},
+          {"type": "circle", "x": 1200, "y": 500, "radius": 55, "color": [90, 85, 80]},
+          {"type": "circle", "x": 400, "y": 1000, "radius": 45, "color": [90, 85, 80]},
+          {"type": "circle", "x": 1300, "y": 1000, "radius": 50, "color": [90, 85, 80]},
+          {"type": "circle", "x": 600, "y": 200, "radius": 40, "color": [90, 85, 80]},
+          {"type": "circle", "x": 150, "y": 200, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 350, "y": 150, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 650, "y": 300, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 200, "y": 400, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 500, "y": 350, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 900, "y": 450, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 1100, "y": 200, "radius": 12, "color": [70, 68, 65]},
+          {"type": "circle", "x": 1400, "y": 600, "radius": 12, "color": [70, 68, 65]}
+        ]
+      }
+    }
+  },
+  "celestial_bodies": [
+    {"name": "Emberrock", "x": 0.56, "y": 0.53, "size": 14, "color": [180, 90, 60], "body_type": "rocky"},
+    {"name": "Frostvane", "x": 0.05, "y": 0.95, "size": 22, "color": [210, 225, 255], "body_type": "ice"},
+    {"name": "Kolossus", "x": 0.95, "y": 0.08, "size": 55, "color": [230, 180, 120], "body_type": "gas_giant", "has_ring": true, "ring_color": [200, 190, 150]}
+  ],
+  "ai_ships": [
+    {
+      "name": "Freighter One",
+      "x": 0.65,
+      "y": 0.6,
+      "ship_type": "freighter",
+      "pilot": "elena_voss",
+      "route": ["station", "moon"]
+    },
+    {
+      "name": "Patrol One",
+      "x": 0.5,
+      "y": 0.1,
+      "ship_type": "patrol",
+      "pilot": "kade_marsh",
+      "route": ["station", "moon"]
+    },
+    {
+      "name": "Explorer One",
+      "x": 0.5,
+      "y": 0.5,
+      "ship_type": "shuttle",
+      "pilot": "juno_vale"
+    }
+  ]
+}

@@ -4,8 +4,6 @@ __pycache__/
 *.pyd
 .Python
 *.egg-info/
-# PyInstaller build output — everything lands under build/ (see docs/BUILD.md)
-build/
 .venv/
 venv/
 .DS_Store

@@ -1,0 +1,26 @@
+{
+  "vherathi": {
+    "name": "The Vherathi Concord",
+    "description": "A spacefaring people whose ships and cities are grown from living resin-crystal rather than assembled from plate metal. The Vherathi shape architecture the way coral shapes a reef: asymmetric, load-bearing ridges tapering toward one dominant point, with structural stress traced by thin veins of bioluminescent glass instead of punched-out windows.",
+    "metal_color": [72, 48, 96],
+    "glass_color": [120, 255, 200],
+    "thrust_color": [220, 90, 255],
+    "wall_color": [58, 38, 78],
+    "floor_color": [110, 85, 125],
+    "wall_trim_color": [150, 120, 170],
+    "interior_decoration": {"generator": "edge_veins", "color": [120, 255, 200], "inset": 10, "width": 2},
+    "theme": "Vherathi hulls and buildings favor tapering, asymmetric silhouettes over blunt rectangles or mirror symmetry - one side is always subtly longer or sharper than the other, echoing a grown crystal rather than a machined part. Never lay windows out as a uniform grid; instead cluster a handful of them off-center, following the structure's tallest ridge or spine, as if tracing a vein of light through the material. Thrusters and other fixtures are mounted in odd counts or uneven spacing where possible rather than perfectly mirrored pairs. When adding a new Vherathi ship or building, pull the hull color from this culture's metal_color, the window/glass color from glass_color, and the thrust glow from thrust_color rather than hardcoding new ones, so the whole culture stays visually cohesive. Interiors carry the same identity through wall_color (resin-dark walls) and floor_color (a lighter warm resin floor), so stepping inside a Vherathi station feels like a continuation of the same grown structure. Vherathi interior rooms are rounded and flowing - use many-sided \"circle\" rooms and wide organic corridors joined by overlap, not a grid of rectangles; the edge_veins interior_decoration traces each room's rim with a thread of bioluminescent glass."
+  },
+  "drossholt": {
+    "name": "The Drossholt Company",
+    "description": "A frontier trading and salvage outfit running the outposts at the edge of known space. Where the Vherathi grow their architecture, Drossholt bolts it together out of whatever plate and scavenged hull segments a supply run can carry - blunt, riveted, and built to be patched rather than beautiful.",
+    "metal_color": [200, 150, 100],
+    "glass_color": [255, 200, 80],
+    "thrust_color": [255, 140, 60],
+    "wall_color": [130, 95, 65],
+    "floor_color": [190, 155, 115],
+    "wall_trim_color": [90, 65, 45],
+    "interior_decoration": {"generator": "seam_rivets", "color": [225, 195, 150], "spacing": 44, "length": 12, "width": 3},
+    "theme": "Drossholt hulls and buildings are blunt rectangular volumes bolted together along visible seams - the functional opposite of a grown Vherathi structure, with no tapering or asymmetry for its own sake. Windows and warning lights run in even, evenly-spaced rows along structural seams rather than clustering organically. Thrusters and fixtures come in mirrored, evenly-spaced pairs, not odd counts. When adding a new Drossholt ship, building, or interior, pull the hull/wall color from metal_color, the window/light glow from glass_color, the thrust glow from thrust_color, and interior wall/floor tones from wall_color/floor_color rather than hardcoding new ones, so every Drossholt outpost reads as the same weathered, practical company. Drossholt interior rooms are plain rectangles and wide straight corridors joined at right angles; the seam_rivets interior_decoration studs every room edge with evenly-spaced bolt ticks."
+  }
+}

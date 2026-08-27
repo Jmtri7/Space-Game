@@ -1,0 +1,242 @@
+{
+  "name": "Kepler's Reach",
+  "description": "A remote outpost system on the edge of known space",
+  "star_map_position": {"x": 400, "y": -250},
+  "station_asset": "station_delta",
+  "moon_asset": "moon_rust",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Kepler",
+    "size": 80,
+    "color": [255, 180, 120]
+  },
+  "player_start": {
+    "x": 0.35,
+    "y": 0.6
+  },
+  "star_seed": 777,
+  "asteroid_field": {
+    "per_chunk_range": [2, 4],
+    "types": [
+      {"type": "gray_rock", "weight": 1, "size_range": [3, 6], "speed_range": [0.05, 0.3]},
+      {"type": "brown_rock", "weight": 2, "size_range": [4, 12], "speed_range": [0.1, 0.35]}
+    ]
+  },
+  "station": {
+    "x": 0.75,
+    "y": 0.25,
+    "name": "Delta Outpost",
+    "interiors": {
+      "default": {
+        "label": "Delta Outpost",
+        "culture": "drossholt",
+        "portals": [
+          {"x": 70, "y": 300, "connected_locations": [], "return_to_ship": true}
+        ],
+        "rooms": [
+          {"label": "Airlock", "polygon": [[30, 255], [340, 255], [340, 345], [30, 345]]},
+          {"label": "Transfer", "polygon": [[300, 265], [400, 265], [400, 335], [300, 335]]},
+          {"label": "Supply Bay", "polygon": [[360, 90], [770, 90], [770, 510], [360, 510]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [420, 130, 90, 70], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "rect", "rect": [430, 210, 70, 60], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "rect", "rect": [640, 380, 100, 90], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "line", "points": [[360, 300], [770, 300]], "color": [225, 195, 150], "width": 2}
+        ],
+        "npcs": [
+          {
+            "name": "Doss Kallen",
+            "x": 500,
+            "y": 220,
+            "role": "quartermaster",
+            "outfit": "guild_trader",
+            "greeting": "Supplies are thin out here, but we make do.",
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"], "sell_multiplier": 0.6}
+          },
+          {
+            "name": "Ruen Sabo",
+            "x": 620,
+            "y": 420,
+            "behavior": "wander",
+            "outfit": "drossholt_coveralls",
+            "greeting": "Watch your step, the deck plating's loose.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Kessa Bright",
+            "x": 420,
+            "y": 140,
+            "role": "technician",
+            "outfit": "drossholt_vacsuit",
+            "greeting": "Suit's still pressurized - I was topside patching a seam. What do you need?",
+            "dialogue_options": ["Nothing", "Leave"]
+          },
+          {
+            "name": "Sergeant Dane",
+            "x": 720,
+            "y": 150,
+            "role": "security",
+            "outfit": "security",
+            "greeting": "Company security. We don't get many visitors this far out, so I'll be watching.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Medtech Sella",
+            "x": 690,
+            "y": 470,
+            "role": "medic",
+            "outfit": "surgeon",
+            "greeting": "One infirmary bunk and a crate of supplies. Try not to need either.",
+            "dialogue_options": ["Will do", "Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.2,
+    "y": 0.7,
+    "name": "Rust Moon",
+    "interiors": {
+      "city": {
+        "label": "Rust Moon Settlement",
+        "description": "A cluster of bolted-together Drossholt cargo bunkers and a watch tower",
+        "culture": "drossholt",
+        "background_color": [140, 70, 50],
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "rooms": [
+          {"label": "The Yard", "polygon": [[140, 140], [1460, 140], [1460, 1460], [140, 1460]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [180, 780, 1240, 46], "color": [120, 95, 78]},
+          {"layer": "floor", "shape": "rect", "rect": [777, 180, 46, 1240], "color": [120, 95, 78]},
+          {"layer": "floor", "shape": "rect", "rect": [250, 560, 900, 20], "color": [120, 95, 78]}
+        ],
+        "structures": [
+          {"x": 200, "y": 650, "building_type": "drossholt_warehouse"},
+          {"x": 650, "y": 600, "building_type": "drossholt_bunker"},
+          {"x": 1100, "y": 500, "building_type": "drossholt_tower"},
+          {"x": 300, "y": 950, "building_type": "drossholt_bunker"},
+          {"x": 950, "y": 900, "building_type": "drossholt_warehouse"}
+        ],
+        "npcs": [
+          {
+            "name": "Grett Halvorsen",
+            "x": 350,
+            "y": 600,
+            "behavior": "wander",
+            "outfit": "drossholt_foreman",
+            "greeting": "Mind the crates, they're not stacked for looks.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Nix Ferro",
+            "x": 750,
+            "y": 550,
+            "behavior": "wander",
+            "outfit": "prospector",
+            "greeting": "Found some good salvage out past the ridge.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Sela Drummond",
+            "x": 1150,
+            "y": 450,
+            "behavior": "wander",
+            "outfit": "quartermaster",
+            "greeting": "Prices are fair. Mostly.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Pell Grommet",
+            "x": 500,
+            "y": 800,
+            "role": "miner",
+            "outfit": "miner",
+            "greeting": "Rock's rich near the south ridge, but the seams flood. Everything out here's a trade-off.",
+            "dialogue_options": ["Right", "Leave"]
+          },
+          {
+            "name": "Marn Volk",
+            "x": 800,
+            "y": 720,
+            "role": "deck_chief",
+            "outfit": "deck_chief",
+            "greeting": "I run the loading yard. If it's on a pallet, it goes through me.",
+            "dialogue_options": ["Got it", "Leave"]
+          },
+          {
+            "name": "Tuck Barrow",
+            "x": 1200,
+            "y": 850,
+            "role": "hauler",
+            "outfit": "drossholt_hauler",
+            "greeting": "Back's carrying half a bunker's worth of fittings. Don't make me laugh, it hurts.",
+            "dialogue_options": ["Take care", "Leave"]
+          },
+          {
+            "name": "Senna Krael",
+            "x": 450,
+            "y": 1150,
+            "role": "bounty_hunter",
+            "outfit": "bounty_hunter",
+            "greeting": "I'm between contracts. Stay clean and you'll stay off my list.",
+            "dialogue_options": ["Fair enough", "Leave"]
+          },
+          {
+            "name": "Corvin Reyes",
+            "x": 1150,
+            "y": 1150,
+            "role": "fixer",
+            "outfit": "smuggler",
+            "greeting": "I know people who move things quietly. If you're asking, you already need one.",
+            "dialogue_options": ["Not today", "Leave"]
+          }
+        ]
+      },
+      "wilderness": {
+        "label": "Rust Moon Wilderness",
+        "description": "Cratered, rust-red terrain",
+        "background_color": [140, 70, 50],
+        "entrance": {"x": 200, "y": 200},
+        "structures": [
+          {"type": "circle", "x": 300, "y": 400, "radius": 45, "color": [110, 70, 55]},
+          {"type": "circle", "x": 750, "y": 550, "radius": 55, "color": [110, 70, 55]},
+          {"type": "circle", "x": 500, "y": 900, "radius": 40, "color": [110, 70, 55]},
+          {"type": "circle", "x": 150, "y": 250, "radius": 12, "color": [85, 55, 45]},
+          {"type": "circle", "x": 400, "y": 300, "radius": 12, "color": [85, 55, 45]},
+          {"type": "circle", "x": 650, "y": 200, "radius": 12, "color": [85, 55, 45]}
+        ]
+      }
+    }
+  },
+  "celestial_bodies": [
+    {"name": "Cinderpoint", "x": 0.54, "y": 0.53, "size": 12, "color": [170, 80, 60], "body_type": "rocky"},
+    {"name": "Wraithmoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
+    {"name": "Bulwark", "x": 0.05, "y": 0.1, "size": 50, "color": [210, 170, 130], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 170, 140]}
+  ],
+  "ai_ships": [
+    {
+      "name": "Trader One",
+      "x": 0.65,
+      "y": 0.6,
+      "ship_type": "drossholt_freighter",
+      "pilot": "priya_nandan",
+      "route": ["station", "moon"]
+    },
+    {
+      "name": "Patrol One",
+      "x": 0.5,
+      "y": 0.4,
+      "ship_type": "drossholt_patrol",
+      "pilot": "rex_calder",
+      "route": ["station", "moon"]
+    }
+  ]
+}

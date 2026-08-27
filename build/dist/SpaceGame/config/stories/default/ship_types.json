@@ -1,0 +1,82 @@
+{
+  "shuttle": {
+    "name": "Shuttle",
+    "description": "Small, slow starter craft",
+    "max_thrust": 0.12,
+    "max_velocity": 2.0,
+    "rotation_speed": 4,
+    "size": 10,
+    "color": [130, 160, 200],
+    "shape": "rectangle",
+    "cost": 1200,
+    "cargo_capacity": 10,
+    "slots": [
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  },
+  "freighter": {
+    "name": "Bulk Freighter",
+    "description": "Massive cargo container ship",
+    "max_thrust": 0.1,
+    "max_velocity": 2.0,
+    "rotation_speed": 1,
+    "size": 35,
+    "color": [120, 120, 120],
+    "shape": "long_rectangle",
+    "cost": 4500,
+    "cargo_capacity": 80,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "patrol": {
+    "name": "Patrol Corvette",
+    "description": "Light security vessel",
+    "max_thrust": 0.35,
+    "max_velocity": 5.0,
+    "rotation_speed": 7,
+    "size": 13,
+    "color": [150, 100, 200],
+    "cost": 3500,
+    "cargo_capacity": 15,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  },
+  "drossholt_freighter": {
+    "name": "Drossholt Hauler",
+    "description": "Bolted-plate bulk freighter, patched together from scavenged hull segments",
+    "max_thrust": 0.1,
+    "max_velocity": 2.0,
+    "rotation_speed": 1,
+    "size": 35,
+    "color": [200, 150, 100],
+    "shape": "long_rectangle",
+    "cost": 4500,
+    "cargo_capacity": 80,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "drossholt_patrol": {
+    "name": "Drossholt Cutter",
+    "description": "Riveted-plate security cutter watching Drossholt claims",
+    "max_thrust": 0.35,
+    "max_velocity": 5.0,
+    "rotation_speed": 7,
+    "size": 13,
+    "color": [200, 150, 100],
+    "shape": "rectangle",
+    "cost": 3500,
+    "cargo_capacity": 15,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  }
+}

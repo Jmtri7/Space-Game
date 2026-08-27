@@ -1,0 +1,77 @@
+{
+  "vherathi_spire": {
+    "name": "Vherathi Spire",
+    "description": "A tapering residential/administrative tower, asymmetric from base to tip.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-55, 0], [65, 0], [35, -300], [-15, -330]],
+    "windows": [[10, -250], [-5, -280], [20, -300], [5, -320]],
+    "window_size": 12,
+    "window_shape": "circle",
+    "footprint": {"width": 100, "depth": 90}
+  },
+  "vherathi_bloompod": {
+    "name": "Vherathi Bloompod",
+    "description": "A rounded, organic communal dwelling, grown rather than built.",
+    "culture": "vherathi",
+    "shape": "circle",
+    "radius": 85,
+    "windows": [[-30, -40], [25, -55], [45, 10], [-50, 15]],
+    "window_size": 14,
+    "window_shape": "circle",
+    "footprint": {"width": 140, "depth": 140}
+  },
+  "vherathi_hall": {
+    "name": "Vherathi Gathering Hall",
+    "description": "A wide, low, asymmetric structure leaning toward one side - markets and meeting spaces.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-140, 0], [160, 0], [130, -100], [-90, -130]],
+    "windows": [[-70, -50], [-40, -70], [-10, -90], [60, -60]],
+    "window_size": 12,
+    "window_shape": "circle",
+    "footprint": {"width": 260, "depth": 110}
+  },
+  "drossholt_bunker": {
+    "name": "Drossholt Bunker",
+    "description": "A squat, riveted storage bunker - blunt plate armor bolted over whatever's inside.",
+    "culture": "drossholt",
+    "shape": "rect",
+    "width": 140,
+    "height": 90,
+    "color": [200, 150, 100],
+    "window_color": [255, 200, 80],
+    "windows": [[20, 20], [70, 20], [120, 20], [20, 60], [70, 60], [120, 60]],
+    "window_size": 10,
+    "window_shape": "rect",
+    "footprint": {"width": 140, "depth": 90}
+  },
+  "drossholt_tower": {
+    "name": "Drossholt Watch Tower",
+    "description": "A blocky comms and watch tower welded up from mismatched hull plate.",
+    "culture": "drossholt",
+    "shape": "rect",
+    "width": 80,
+    "height": 220,
+    "color": [200, 150, 100],
+    "window_color": [255, 200, 80],
+    "windows": [[20, 30], [60, 30], [20, 70], [60, 70], [20, 110], [60, 110], [20, 150], [60, 150]],
+    "window_size": 10,
+    "window_shape": "rect",
+    "footprint": {"width": 90, "depth": 90}
+  },
+  "drossholt_warehouse": {
+    "name": "Drossholt Warehouse",
+    "description": "A wide, low storage hall - the outpost's main cargo hub.",
+    "culture": "drossholt",
+    "shape": "rect",
+    "width": 260,
+    "height": 120,
+    "color": [200, 150, 100],
+    "window_color": [255, 200, 80],
+    "windows": [[20, 30], [60, 30], [100, 30], [140, 30], [180, 30], [220, 30]],
+    "window_size": 12,
+    "window_shape": "rect",
+    "footprint": {"width": 240, "depth": 110}
+  }
+}
