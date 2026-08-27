@@ -15,7 +15,8 @@ from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.autopilot import has_arrived
-from game.world.character import Character
+from game.world.character import Character, resolve_routine_class
+from game.world.follow_routine import FollowRoutine
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
 from game.world.landable import Landable
@@ -29,6 +30,11 @@ from game.world.system_state import SystemState
 ONE_WAY_HAIL_RANGE = 500          # world units - how close an NPC-initiated hail can trigger from
 ONE_WAY_HAIL_BANNER_FRAMES = 300  # ~5s at 60fps an incoming-hail banner stays up
 HAIL_BUSY_BANNER_FRAMES = 150     # ~2.5s "no response" flash when hailing a docked/ashore pilot
+
+# How slow (units/frame) counts as "braked to a stop" for the generic
+# "braked_below_threshold" gameplay-event flag (see update_physics) - a
+# mission's braking-practice stage can use this as its complete_flag.
+BRAKE_SLOW_THRESHOLD = 0.3
 
 # Jump mechanic tuning
 JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
@@ -365,7 +371,8 @@ class SpaceScreen(ScreenBase):
         self._apply_ship_type(ship_type_id)
         self.park_at(self.station)
         if self.starting_mission:
-            start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
+            started = start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
+            self._deliver_stage_message(started)
 
     def park_at(self, landable):
         """Position the player's ship at `landable`'s own space position
@@ -421,7 +428,7 @@ class SpaceScreen(ScreenBase):
                 elif event.key == pygame.K_RETURN and options:
                     option = options[self.active_dialogue.selected_option]
                     for action in option_actions(option):
-                        apply_shared_actions(action, possessions)
+                        apply_shared_actions(action, possessions, self.missions_config)
                     # advance(option), not choose(index, flags) - see
                     # Dialogue.advance's docstring (LocationScreen's own
                     # dialogue handling has the same comment).
@@ -561,6 +568,11 @@ class SpaceScreen(ScreenBase):
         of leaving a stale target from the old category selected."""
         self.target_mode_index = (self.target_mode_index + 1) % len(TARGET_MODES)
         self.current_target = 0 if self._filtered_targets() else None
+        if TARGET_MODES[self.target_mode_index] == "SHIPS":
+            # Generic gameplay-event flag - see K_SPACE's own comment on
+            # why these live on Possessions.flags instead of a
+            # SpaceScreen-only field.
+            self.player.person.possessions.flags["used_ships_target_mode"] = True
 
     def _get_target_name(self):
         """Get the name of the current target"""
@@ -770,7 +782,12 @@ class SpaceScreen(ScreenBase):
             self.hail_banner_timer = HAIL_BUSY_BANNER_FRAMES
             return
         dialogue = target_obj.person.hail_dialogue
-        flags = self.player.person.possessions.flags
+        possessions = self.player.person.possessions
+        flags = possessions.flags
+        # Generic gameplay-event flag (see K_SPACE's own comment) - any
+        # story's missions.json can use "hailed_pilot:<name>" as a stage's
+        # complete_flag without this class hardcoding which pilot.
+        flags[f"hailed_pilot:{pilot_name}"] = True
         # resolve_root(), not .root directly, so an earlier flag (e.g.
         # having already been hailed by this pilot once - see
         # _check_one_way_hails) can open on a different greeting node.
@@ -786,14 +803,39 @@ class SpaceScreen(ScreenBase):
         # every physics frame for as long as the conversation stays open.
         self.player.thrust = 0
 
+    def _post_message(self, sender, text):
+        """Show a transient hail banner and permanently log a one-way
+        message from sender (see Possessions.add_message) - shared by
+        pilot-proximity hails (_check_one_way_hails) and mission-stage-
+        entry messages (missions.json's "one_way_message" - see
+        _deliver_stage_message). The banner is skipped (but the message is
+        still logged) while a hail conversation is already open, so an
+        incoming banner can't visually collide with the dialogue box - the
+        Messages pane still shows it once the conversation closes."""
+        self.player.person.possessions.add_message(sender, text)
+        if self.active_dialogue:
+            return
+        self.hail_banner = (f'Incoming transmission - {sender}: "{text}"', CYAN)
+        self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
+
+    def _deliver_stage_message(self, advanced_stage):
+        """Post the one_way_message (if any) for a stage a mission just
+        advanced into - advanced_stage is a (mission_id, stage_index) pair
+        as returned by mission.py's start_mission()/check_mission_progress(),
+        or None (nothing advanced this call, or the mission has no
+        starting_mission - see both call sites)."""
+        if not advanced_stage:
+            return
+        mission_id, stage_index = advanced_stage
+        stage = self.missions_config[mission_id]["stages"][stage_index]
+        message = stage.get("one_way_message")
+        if message:
+            self._post_message(message.get("sender", "Unknown"), message.get("text", "..."))
+
     def _check_one_way_hails(self):
         """Let an NPC-initiated hail (pilots.json's "one_way_hail" - see
-        Character.for_ai_pilot) fire once the player gets close enough:
-        shows a transient banner (not the full hail_dialogue - the player
-        still has to hail back with H to actually talk, per
-        docs/CONTROLS.md), records it in the Messages pane's log (see
-        Possessions.add_message - the banner alone is easy to miss, but the
-        log stays until read), and sets a flag so it never fires twice for
+        Character.for_ai_pilot) fire once the player gets close enough -
+        see _post_message - and sets a flag so it never fires twice for
         the same pilot. Only checks the active system's ships
         (self.ai_ships) - proximity to the player only means anything in
         whichever system they're actually in - and skips entirely while a
@@ -801,8 +843,7 @@ class SpaceScreen(ScreenBase):
         from under a conversation the player is already having."""
         if self.active_dialogue:
             return
-        possessions = self.player.person.possessions
-        flags = possessions.flags
+        flags = self.player.person.possessions.flags
         for ai_ship in self.ai_ships:
             one_way = getattr(ai_ship.person, "one_way_hail", None)
             if not one_way or ai_ship.ashore:
@@ -813,12 +854,33 @@ class SpaceScreen(ScreenBase):
             hail_range = one_way.get("range", ONE_WAY_HAIL_RANGE)
             if ai_ship.get_distance(self.player.x, self.player.y) <= hail_range:
                 flags[seen_flag] = True
-                pilot_name = ai_ship.person.name or "Unknown"
-                message = one_way.get("message", "...")
-                self.hail_banner = (f'Incoming transmission - {pilot_name}: "{message}"', CYAN)
-                self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
-                possessions.add_message(pilot_name, message)
+                self._post_message(ai_ship.person.name or "Unknown", one_way.get("message", "..."))
                 return  # one at a time - avoids stacking two banners the same frame
+
+    def _sync_escorts(self):
+        """Toggle any pilot with a configured "escort_flag" (pilots.json)
+        between escorting the player (FollowRoutine) and their normal role
+        routine, based on whether that flag is currently set in the
+        player's Possessions.flags - e.g. Kade Marsh following the player
+        through the tutorial mission once they accept his offer to help
+        (see his hail_dialogue_tree's "set_flag:kade_escorting" action),
+        and back to his normal patrol once the mission ends, finished or
+        declined (see mission.py's escort_flag clearing). Checks every
+        system, not just the active one, so this stays correct regardless
+        of which system is currently on screen."""
+        flags = self.player.person.possessions.flags
+        for state in self.systems.values():
+            for ai_ship in state.ai_ships:
+                escort_flag = getattr(ai_ship.person, "escort_flag", None)
+                if not escort_flag:
+                    continue
+                should_escort = bool(flags.get(escort_flag))
+                if should_escort and not ai_ship.escorting:
+                    ai_ship.set_routine(FollowRoutine(self.player))
+                    ai_ship.escorting = True
+                elif not should_escort and ai_ship.escorting:
+                    ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction)(ai_ship.route))
+                    ai_ship.escorting = False
 
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -954,11 +1016,19 @@ class SpaceScreen(ScreenBase):
             self._update_jump()
         else:
             self.player.update()
+        flags = self.player.person.possessions.flags
         if self.player.thrust > 0:
             # Generic gameplay-event flag - see K_SPACE's comment above on
             # why these live on Possessions.flags instead of a
             # SpaceScreen-only field.
-            self.player.person.possessions.flags["used_thrust"] = True
+            flags["used_thrust"] = True
+        # Only meaningful once thrust and the brake control have both been
+        # used at least once - otherwise a ship that simply never got
+        # moving would trivially satisfy "speed below threshold" without
+        # any actual braking having happened.
+        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+        if flags.get("used_thrust") and flags.get("used_brake") and speed < BRAKE_SLOW_THRESHOLD:
+            flags["braked_below_threshold"] = True
         for state in self.systems.values():
             state.update_physics()
         self.asteroid_field.update()
@@ -968,7 +1038,14 @@ class SpaceScreen(ScreenBase):
             self.hail_banner_timer -= 1
         self._check_one_way_hails()
         self._validate_target()
-        check_mission_progress(self.missions_config, self.player.person.possessions)
+        # Mission progress before _sync_escorts() - a mission finishing
+        # this exact frame clears its escort_flag (see mission.py's
+        # _on_mission_end), and escort sync needs to see that same-frame
+        # rather than escorting for one extra frame after the tutorial's
+        # already over.
+        for advanced_stage in check_mission_progress(self.missions_config, self.player.person.possessions):
+            self._deliver_stage_message(advanced_stage)
+        self._sync_escorts()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""

@@ -1,30 +1,64 @@
 {
   "first_flight": {
     "title": "First Flight",
+    "escort_flag": "kade_escorting",
+    "on_end_flags": ["kade_tutorial_done"],
     "stages": [
       {
-        "text": "Kade Marsh is hailing you. Cycle target mode to SHIPS (T), target his patrol ship (] or click), then hail him back (H).",
-        "complete_flag": "hailed_kade"
+        "text": "Cycle your targeting mode (T) until it reads SHIPS.",
+        "complete_flag": "used_ships_target_mode"
       },
       {
-        "text": "Get a feel for flying - turn (A/D or Left/Right) and thrust (W or Up) to move your ship.",
-        "complete_flag": "used_thrust"
+        "text": "Cycle your target ([ or ]) until you're targeting Kade Marsh, then hail him (H).",
+        "complete_flag": "hailed_pilot:Kade Marsh",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Nice, SHIPS mode. Now cycle your target with [ or ] until you're locked onto me, then hit H and let's talk."
+        }
       },
       {
-        "text": "Practice braking - hold S (or Down) to face opposite your velocity, then thrust to slow yourself down.",
-        "complete_flag": "used_brake"
+        "text": "Talk to Kade Marsh - he's offering to show you the ropes.",
+        "complete_flag": "accepted_kade_help"
       },
       {
-        "text": "Target a ship and engage autopilot toward it (Space) - it'll fly you there and brake automatically.",
-        "complete_flag": "used_autopilot_on_ship"
+        "text": "Turn your ship - A/D or the Left/Right arrow keys.",
+        "complete_flag": "used_turn",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Alright, let's start simple. Turn left with A or the left arrow, and right with D or the right arrow. Get a feel for it."
+        }
       },
       {
-        "text": "Fly to the station or moon and land (L, once you're close and slow).",
-        "complete_flag": "landed_on_landable"
+        "text": "Thrust forward - W or the Up arrow.",
+        "complete_flag": "used_thrust",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Good. Now hold W or the up arrow to thrust forward. Watch your speed build - space doesn't slow you down on its own."
+        }
       },
       {
-        "text": "If you ever drift too far from the system center, open the Star Map (M), select this system, and jump back (J).",
-        "complete_flag": "completed_jump"
+        "text": "Turn around and brake until your speed drops - S or the Down arrow, then thrust.",
+        "complete_flag": "braked_below_threshold",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Now the fun part - turning around. Hold S or the down arrow to point opposite your velocity, then thrust to cancel it out. Get your speed down."
+        }
+      },
+      {
+        "text": "Fly far enough from the system center, then jump back (M to open the Star Map, J to jump).",
+        "complete_flag": "completed_jump",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Nicely done. Now fly far enough from the system center, open the Star Map (M), select this system, and jump (J) back home."
+        }
+      },
+      {
+        "text": "Land at the station or moon (L, once you're close and slow).",
+        "complete_flag": "landed_on_landable",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "You're a fast learner. Last thing - fly up to the station or moon and press L once you're close and slow to land. Good luck out there, pilot."
+        }
       }
     ]
   }
