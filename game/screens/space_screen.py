@@ -4,7 +4,7 @@ import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
 from game.utils import (
-    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
+    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_angle,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
     get_asteroid_type, get_missions
@@ -53,6 +53,10 @@ TOAST_FRAMES = 240
 # ~10s at 60fps the Message Log's blinking "unread" light stays lit after a message
 MESSAGE_ALERT_FRAMES = 600
 SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
+
+# Degrees per frame the view rotates while Q/E is held (see handle_input).
+# Purely a camera/view setting - never touches ship heading or physics.
+CAMERA_ROTATE_SPEED = 2
 
 # Minimap tuning - its on-screen size now tracks the shared side-panel width
 # (see ui_theme.side_panel_width); this is just the radar's world reach.
@@ -142,6 +146,10 @@ class SpaceScreen(ScreenBase):
         self.landing_target = None
         self.camera_x = 0
         self.camera_y = 0
+        # View rotation (degrees) applied to the whole Space View, driven by
+        # Q/E. Player-preference view state only - not saved, not game state,
+        # and reset to north-up (0) by interiors when the player lands.
+        self.camera_angle = 0
         # Star map selection, for the Jump mechanic - never None: defaults to
         # (and resets to, after a jump) the current system, so "Jump Target"
         # always names somewhere and J is always meaningful.
@@ -439,6 +447,15 @@ class SpaceScreen(ScreenBase):
         if not self.jump_state and not self.active_dialogue:
             self.player.handle_input(keys)
 
+        # Rotate the view (Q/E) - held, like ship turning. Allowed even
+        # mid-jump (it's only the camera), blocked only while a hail has
+        # input focus, same as flight controls.
+        if not self.active_dialogue:
+            if keys[pygame.K_q]:
+                self.camera_angle = (self.camera_angle - CAMERA_ROTATE_SPEED) % 360
+            if keys[pygame.K_e]:
+                self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
+
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
@@ -496,8 +513,9 @@ class SpaceScreen(ScreenBase):
                     self.active_dialogue = None
                 continue
 
-            # Cancel autopilot on any key press (except ESC which handles pause)
-            if self.player.autopilot_active and event.key != pygame.K_ESCAPE:
+            # Cancel autopilot on any key press (except ESC which handles
+            # pause, and Q/E which only rotate the view - not a flight input)
+            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_q, pygame.K_e):
                 self.player.autopilot_active = False
                 self.player.autopilot_target = None
                 return None
@@ -718,9 +736,9 @@ class SpaceScreen(ScreenBase):
         if distance == 0:
             return
 
-        # Normalize direction
-        dir_x = dx / distance
-        dir_y = dy / distance
+        # Normalize direction, then rotate it into screen space so the arrow
+        # points the right way when the view is rotated (Q/E).
+        dir_x, dir_y = utils.rotate_camera_vector(dx / distance, dy / distance)
 
         ui_scale = get_ui_scale()
         ship_x, ship_y = utils.to_screen(self.player.x, self.player.y)
@@ -780,7 +798,10 @@ class SpaceScreen(ScreenBase):
         px_per_unit = (height / 2) / MINIMAP_RANGE
 
         def project(x, y):
-            return rect.centerx + (x - self.player.x) * px_per_unit, rect.centery + (y - self.player.y) * px_per_unit
+            # Rotate with the view (Q/E) so a blip stays in the same screen
+            # direction as the object it marks.
+            dx, dy = utils.rotate_camera_vector(x - self.player.x, y - self.player.y)
+            return rect.centerx + dx * px_per_unit, rect.centery + dy * px_per_unit
 
         # (object, dot color, dot radius in px) - central star/celestial
         # bodies only included if this system actually has them.
@@ -1158,8 +1179,9 @@ class SpaceScreen(ScreenBase):
         if self.toast_timer > 0:
             self.toast_timer -= 1
 
-        # Update camera to follow player
+        # Update camera to follow player, at the current view rotation
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
+        set_camera_angle(self.camera_angle)
 
         if self.jump_state:
             return  # skip landing checks entirely while jumping
@@ -1174,6 +1196,11 @@ class SpaceScreen(ScreenBase):
         status pane - see LocationScreen.draw's docstring for why (used
         the same way here, when this screen is only being redrawn as the
         backdrop for a modal menu on top of it)."""
+        # Re-assert the view rotation here too, not just in update() - when
+        # this screen is only a backdrop for a modal (pause menu, possessions,
+        # etc.) update() isn't called, but the stored camera angle could have
+        # been left non-zero or reset by another screen in between.
+        set_camera_angle(self.camera_angle)
         surface.fill(BLACK)
         self.star_field.draw(surface)
         if self.central_star:
@@ -1300,6 +1327,7 @@ class SpaceScreen(ScreenBase):
                 ("A/D or Left/Right", "Turn"),
                 ("W or Up", "Thrust"),
                 ("S or Down", "Reverse"),
+                ("Q/E", "Rotate View"),
                 ("T", "Target Mode"),
                 ("]", "Next Target"),
                 ("[", "Previous Target"),

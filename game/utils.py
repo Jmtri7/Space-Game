@@ -1,5 +1,6 @@
 """Utility functions for rendering, file I/O, and coordinate conversion."""
 import json
+import math
 import os
 import pygame
 import game.constants as constants
@@ -19,12 +20,49 @@ class Camera:
     def __init__(self, screen_width, screen_height):
         self.offset_x = 0
         self.offset_y = 0
+        # View rotation about the focus point (the entity kept centered -
+        # the player's ship). 0 = the original fixed north-up orientation.
+        # Only the Space View sets this non-zero (Q/E); interiors and menus
+        # reset it to 0 via set_angle().
+        self.angle = 0
+        self._cos = 1.0
+        self._sin = 0.0
         self.screen_width = screen_width
         self.screen_height = screen_height
 
     def set_offset(self, x, y):
         self.offset_x = x
         self.offset_y = y
+
+    def set_angle(self, degrees):
+        """Set the view rotation (degrees, clockwise on screen). Caches the
+        sin/cos so per-point projection stays cheap for the hundreds of
+        to_screen() calls a frame (starfield, hulls)."""
+        self.angle = degrees % 360
+        rad = math.radians(self.angle)
+        self._cos = math.cos(rad)
+        self._sin = math.sin(rad)
+
+    def _rotate_about_center(self, x_camera, y_camera, inverse=False):
+        """Rotate a camera-space point about the view center (GAME_WIDTH/2,
+        GAME_HEIGHT/2) - where the followed entity always sits, since
+        set_camera_offset() centers it there. No-op while angle is 0."""
+        if not self.angle:
+            return x_camera, y_camera
+        cx, cy = GAME_WIDTH / 2, GAME_HEIGHT / 2
+        dx, dy = x_camera - cx, y_camera - cy
+        sin_a = -self._sin if inverse else self._sin
+        return (cx + dx * self._cos - dy * sin_a,
+                cy + dx * sin_a + dy * self._cos)
+
+    def rotate_vector(self, dx, dy):
+        """Apply just the view rotation to a world-space delta, giving the
+        matching screen-space direction (before scaling). HUD elements that
+        derive a direction from a world delta - the target arrow, minimap
+        blips - use this so they track the rotated view."""
+        if not self.angle:
+            return dx, dy
+        return (dx * self._cos - dy * self._sin, dx * self._sin + dy * self._cos)
 
     def set_screen_size(self, width, height):
         self.screen_width = width
@@ -47,6 +85,7 @@ class Camera:
         offset_x, offset_y = self.get_world_offset()
         x_camera = x - self.offset_x
         y_camera = y - self.offset_y
+        x_camera, y_camera = self._rotate_about_center(x_camera, y_camera)
         return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
 
     def to_world(self, sx, sy):
@@ -55,7 +94,10 @@ class Camera:
         position to the world position it points at (e.g. click-to-target)."""
         scale = self.get_scale()
         offset_x, offset_y = self.get_world_offset()
-        return ((sx - offset_x) / scale + self.offset_x, (sy - offset_y) / scale + self.offset_y)
+        x_camera = (sx - offset_x) / scale
+        y_camera = (sy - offset_y) / scale
+        x_camera, y_camera = self._rotate_about_center(x_camera, y_camera, inverse=True)
+        return (x_camera + self.offset_x, y_camera + self.offset_y)
 
     def to_screen_x(self, x):
         """Convert world X coordinate to screen space."""
@@ -108,6 +150,16 @@ def __getattr__(name):
 def set_camera_offset(x, y):
     """Update the camera's world offset."""
     _camera.set_offset(x, y)
+
+
+def set_camera_angle(degrees):
+    """Set the view rotation about the followed entity (Space View only)."""
+    _camera.set_angle(degrees)
+
+
+def rotate_camera_vector(dx, dy):
+    """Rotate a world-space delta into the matching screen-space direction."""
+    return _camera.rotate_vector(dx, dy)
 
 
 def set_screen_size(width, height):

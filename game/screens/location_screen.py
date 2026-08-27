@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
-from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
+from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset
 import game.utils as utils
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
 from game.screens.screen_base import ScreenBase
@@ -504,6 +504,10 @@ class LocationScreen(ScreenBase):
         top-left spot instead, and whose "Press T"-style status prompt
         would otherwise be both wrong (not actually pressable right now)
         and visually colliding with the menu's own bottom help text."""
+        # Interiors are always north-up, even when only drawn as a modal
+        # backdrop (update()/update_camera() may not have run since the
+        # Space View last rotated the shared camera).
+        set_camera_angle(0)
         surface.fill(self.bg_color)
         scale = get_scale()
 
@@ -977,6 +981,9 @@ class LocationScreen(ScreenBase):
     def update_camera(self):
         """Update global camera to follow player"""
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
+        # Interiors are always north-up - clear any view rotation the Space
+        # View (Q/E) left on the shared camera.
+        set_camera_angle(0)
 
     def get_state(self):
         """Save player position state for locations"""

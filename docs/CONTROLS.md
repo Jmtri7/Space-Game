@@ -10,6 +10,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
+| **Q** / **E** | Rotate the view left / right (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
 | **]** | Cycle forward through targetable objects in the current target mode |
 | **[** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
