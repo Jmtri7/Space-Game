@@ -10,9 +10,32 @@ noticed clearly/hit directly, or a feature specifically called out in discussion
 general ideas) — treat them as slightly higher-confidence/interest, not necessarily
 higher priority.
 
-Grouped by the type of gameplay each item belongs to, so related work is easy to find
-together. Bug items stay in whichever category their affected system belongs to
-(marked with a leading "Bug:") rather than being split into a separate list.
+Top-level split is **Bugs vs. Features**. Within each, items are grouped by the type of
+gameplay they belong to, so related work is easy to find together. A gameplay category
+only appears under a section if it currently has items there.
+
+# Bugs
+
+## Missions, Dialogue & NPCs
+
+- [ ] ⭐ Target isn't officially cleared when an NPC exits the interior, so a new
+      target isn't chosen when walking close again.
+
+## Ships & Customization
+
+- [ ] Gap: what happens when you buy a second ship? (multiple owned ships behavior
+      is undefined — see the feature item under Ships & Customization.)
+
+## Economy & Trading
+
+- [ ] You can spend your loan on a laser cannon and then be stuck (no way to
+      recover/pay it back).
+
+## Stations, Interiors & World Building
+
+- [ ] Characters added to a story don't show up in old saves.
+
+# Features
 
 ## Controls & UI
 
@@ -55,8 +78,6 @@ together. Bug items stay in whichever category their affected system belongs to
 - [ ] No useless NPCs — each one should reveal something about the game's features or
       story.
 - [ ] NPCs stop wandering if the player moves close to or targets them.
-- [ ] ⭐ Bug: target isn't officially cleared when an NPC exits the interior, so a new
-      target isn't chosen when walking close again.
 - [ ] ⭐ Derelict ships / distress beacons — a drifting AI ship with no pilot response
       you can board, loot, or tow; combines the existing AI ship, interior, and
       item-pickup ideas into one encounter type.
@@ -77,8 +98,6 @@ together. Bug items stay in whichever category their affected system belongs to
 ## Ships & Customization
 
 - [ ] Multiple owned ships.
-- [ ] Bug/gap: what happens when you buy a second ship? (multiple owned ships behavior
-      is undefined — see above.)
 - [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
       ship" feel more personal, especially once multiple owned ships exist.
 - [ ] Make all outfits usable (not just cosmetic/inert).
@@ -99,8 +118,6 @@ together. Bug items stay in whichever category their affected system belongs to
 - [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers
       scans/hails from patrol ships if caught; a light crime mechanic that doesn't
       need the full Crime system first.
-- [ ] Bug: you can spend your loan on a laser cannon and then be stuck (no way to
-      recover/pay it back).
 
 ## Stations, Interiors & World Building
 
@@ -112,7 +129,6 @@ together. Bug items stay in whichever category their affected system belongs to
 - [ ] Cultural and role-based clothing for people (space_suit is the only outfit so
       far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.
-- [ ] Bug: characters added to a story don't show up in old saves.
 
 ## Exploration & World Content
 
