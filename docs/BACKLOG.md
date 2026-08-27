@@ -49,14 +49,8 @@ only appears under a section if it currently has items there.
       they're for turning, thrusting, or facing reverse.
 - [ ] ⭐ Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
-- [ ] Conversations should show help text (e.g. "Enter: continue, ESC: exit") like
-      other menus.
 - [ ] Consider mouse-based movement/control support.
 - [ ] Rotate camera.
-- [ ] ⭐ Simple dialogs (YES/NO confirms, etc.) don't show a controls pane like other
-      menus do — either special-case a controls pane for them, or find a permanent,
-      general solution for how menu options and their control help text get shown so
-      new dialog types don't need one-off handling each time.
 
 ## Navigation & Flight
 
@@ -66,7 +60,6 @@ only appears under a section if it currently has items there.
       star map).
 - [ ] Autopilot should indicate what it's currently doing (e.g. "approaching",
       "braking").
-- [ ] Jump completed message.
 
 ## Missions, Dialogue & NPCs
 
@@ -143,7 +136,6 @@ only appears under a section if it currently has items there.
 
 ## Graphics & Visual Polish
 
-- [ ] ⭐ Get rid of jump lines.
 - [ ] Better jumping animation.
 - [ ] Better jump graphics.
 - [ ] More texture for interior grounds and ships.
