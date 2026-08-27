@@ -3913,5 +3913,136 @@ class TestStationInteriorLayout(unittest.TestCase):
         self.assertTrue(interior.can_move_to(interior.player.x, interior.player.y))
 
 
+class TestSoundBoard(unittest.TestCase):
+    """The computer-generated UI sound synthesizer (game/audio/sound_board.py).
+    render_waveform() is pure Python (no pygame) so the synthesis math is
+    tested directly; SoundBoard.play() is exercised for its no-op guards."""
+
+    def _layers(self):
+        return [
+            {"freq": 1244.51, "dur": 0.10, "wave": "sine", "decay": 0.055, "amp": 0.9},
+            {"freq": 1864.66, "dur": 0.17, "wave": "sine", "decay": 0.11, "amp": 0.55, "delay": 0.035},
+        ]
+
+    def test_render_waveform_length_covers_the_latest_layer_end(self):
+        from game.audio.sound_board import render_waveform
+        samples = render_waveform(self._layers(), sample_rate=8000, channels=2)
+        # longest layer ends at 0.035 + 0.17 = 0.205s -> 1640 frames, stereo
+        self.assertEqual(len(samples), 1640 * 2)
+
+    def test_render_waveform_is_normalized_and_in_16bit_range(self):
+        from game.audio.sound_board import render_waveform, MAX_AMPLITUDE
+        samples = render_waveform(self._layers(), sample_rate=16000, channels=1)
+        peak = max(abs(s) for s in samples)
+        self.assertLessEqual(peak, MAX_AMPLITUDE)
+        self.assertGreater(peak, MAX_AMPLITUDE * 0.5)  # actually normalized up, not silent
+
+    def test_render_waveform_starts_and_ends_near_zero(self):
+        """Anti-click fade - first/last sample must not pop."""
+        from game.audio.sound_board import render_waveform
+        samples = render_waveform(self._layers(), sample_rate=16000, channels=1)
+        self.assertEqual(samples[0], 0)
+        self.assertEqual(samples[-1], 0)
+
+    def test_render_waveform_supports_every_waveform(self):
+        from game.audio.sound_board import render_waveform
+        for wave in ("sine", "square", "saw", "triangle", "noise", "bogus"):
+            samples = render_waveform([{"freq": 440.0, "dur": 0.02, "wave": wave}], sample_rate=8000, channels=1)
+            self.assertEqual(len(samples), 160)
+
+    def test_play_is_a_noop_when_disabled(self):
+        from game.audio.sound_board import SoundBoard
+        board = SoundBoard()
+        board.enabled = False
+        board._rendered.clear()
+        board.play("ping")  # must not raise, must not render
+        self.assertEqual(board._rendered, {})
+
+    def test_play_ignores_unknown_sound_names(self):
+        from game.audio.sound_board import SoundBoard
+        board = SoundBoard()
+        board.enabled = True
+        board.play("does-not-exist")  # must not raise
+        self.assertNotIn("does-not-exist", board._rendered)
+
+    def test_default_board_defines_the_ping(self):
+        from game.audio.sound_board import sound_board
+        self.assertTrue(sound_board.has("ping"))
+
+    def test_menu_button_press_plays_the_ping(self):
+        """Every menu/dialog button press funnels through
+        MenuBase._button_pressed, which fires the ping."""
+        from game.ui.menu_base import MenuBase
+        with patch("game.ui.menu_base.sound_board") as mock_board:
+            self.assertEqual(MenuBase()._button_pressed("resume"), "resume")
+            mock_board.play.assert_called_once_with("ping")
+
+
+class TestSpaceScreenAudioCues(unittest.TestCase):
+    """The two extra space-view SFX hooks: "confirm" on engaging autopilot,
+    "blip" on changing/cycling the target. Exercised against the default
+    story's real config, like TestSpaceScreenHailing."""
+
+    def test_engaging_autopilot_plays_confirm(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.target_mode_index = TARGET_MODES.index("LANDABLES")
+        game_screen.current_target = 0
+        ev = SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE, mod=0)
+        with patch("game.screens.space_screen.sound_board") as mock_board:
+            game_screen.handle_input([ev])
+            mock_board.play.assert_any_call("confirm")
+        self.assertTrue(game_screen.player.autopilot_active)
+
+    def test_cycling_target_mode_plays_blip(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        with patch("game.screens.space_screen.sound_board") as mock_board:
+            game_screen._cycle_target_mode()
+            mock_board.play.assert_called_once_with("blip")
+
+
+class TestBackgroundMusic(unittest.TestCase):
+    """Procedural ambient loop synthesis (game/audio/music.py) and the
+    scene -> track mapping main.py drives."""
+
+    def test_render_ambient_loop_is_seamless_length_and_in_range(self):
+        from game.audio.music import render_ambient_loop
+        spec = {"loop": 2.0, "root": 110.0, "chords": [[0, 7, 12], [-3, 4, 9]], "peak": 0.7}
+        samples = render_ambient_loop(spec, sample_rate=4000)
+        self.assertEqual(len(samples), int(4000 * 2.0) * 2)  # stereo
+        self.assertLessEqual(max(abs(s) for s in samples), 32767)
+        self.assertGreater(max(abs(s) for s in samples), 32767 * 0.4)  # normalized, not silent
+
+    def test_set_scene_maps_menu_screens_to_the_menu_track(self):
+        from game.audio.music import MusicPlayer
+        player = MusicPlayer()
+        player.enabled = True
+        with patch.object(MusicPlayer, "_play") as mock_play:
+            player.set_scene("menu")
+            mock_play.assert_called_once_with("menu")
+            mock_play.reset_mock()
+            player.set_scene("pilot_name")   # still a menu screen - no switch
+            mock_play.assert_not_called()
+            player.set_scene("game")          # now gameplay - switch
+            mock_play.assert_called_once_with("ingame")
+
+    def test_set_scene_is_inert_when_disabled(self):
+        from game.audio.music import MusicPlayer
+        player = MusicPlayer()
+        player.enabled = False
+        with patch.object(MusicPlayer, "_play") as mock_play:
+            player.set_scene("menu")
+            mock_play.assert_not_called()
+
+    def test_toggle_mute_flips_the_flag(self):
+        from game.audio.music import MusicPlayer
+        player = MusicPlayer()
+        player.enabled = False  # keep it from touching a channel
+        self.assertFalse(player.muted)
+        player.toggle_mute()
+        self.assertTrue(player.muted)
+        player.toggle_mute()
+        self.assertFalse(player.muted)
+
+
 if __name__ == "__main__":
     unittest.main()

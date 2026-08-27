@@ -11,6 +11,7 @@ from game.utils import (
 )
 import game.utils as utils
 from game.perf_metrics import metrics as perf
+from game.audio.sound_board import sound_board
 from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
@@ -651,6 +652,7 @@ class SpaceScreen(ScreenBase):
                 target_obj = self._get_target_object()
                 if target_obj and self.current_target is not None:
                     self.player.engage_seek(target_obj)
+                    sound_board.play("confirm")
                     if isinstance(target_obj, Character):
                         # Generic gameplay-event flag (see the docstring on
                         # the "Hailing tuning" flags above) - any story's
@@ -702,6 +704,7 @@ class SpaceScreen(ScreenBase):
         for i, (_, obj) in enumerate(self._filtered_targets()):
             if obj is best_obj:
                 self.current_target = i
+                sound_board.play("blip")
                 return
 
     def _filtered_targets(self):
@@ -728,6 +731,7 @@ class SpaceScreen(ScreenBase):
             self.current_target = 0
         else:
             self.current_target = (self.current_target + direction) % len(filtered)
+        sound_board.play("blip")
 
     def _cycle_target_mode(self):
         """Switch which category T/[/] cycles through (Tab). Immediately
@@ -736,6 +740,7 @@ class SpaceScreen(ScreenBase):
         of leaving a stale target from the old category selected."""
         self.target_mode_index = (self.target_mode_index + 1) % len(TARGET_MODES)
         self.current_target = 0 if self._filtered_targets() else None
+        sound_board.play("blip")
         if TARGET_MODES[self.target_mode_index] == "SHIPS":
             # Generic gameplay-event flag - see K_SPACE's own comment on
             # why these live on Possessions.flags instead of a
@@ -981,6 +986,10 @@ class SpaceScreen(ScreenBase):
         incoming banner can't visually collide with the dialogue box - the
         Messages pane still shows it once the conversation closes."""
         self.player.person.possessions.add_message(sender, text)
+        # Audible "you've got a message" cue - the same UI ping a menu
+        # button press makes (see game/audio/sound_board.py). Fires even
+        # while a hail conversation is open and the banner is suppressed.
+        sound_board.play("ping")
         # Snap the Message Log back to the newest entry and fire its blinking
         # red light (see draw_message_log).
         self.message_log_scroll = 0

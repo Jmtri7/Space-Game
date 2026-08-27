@@ -11,6 +11,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 - **[AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md)** ⚠️ — Required testing protocol before changing `SeekMode`/`OrbitMode`
 - **[SAVE_SYSTEM.md](SAVE_SYSTEM.md)** — Persistence, state management, file format
 - **[UI_FLOW.md](UI_FLOW.md)** — Menu state machine, screen transitions
+- **[SOUND.md](SOUND.md)** — Runtime-synthesized audio (the sound board) and where sounds are triggered
 - **[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)** — Reusable solutions and architectural decisions
 - **[BACKLOG.md](BACKLOG.md)** — Running list of known bugs and planned features
 - **[BUILD.md](BUILD.md)** — Packaging a standalone Windows build with PyInstaller

@@ -27,6 +27,7 @@ import pygame
 from game.ui.ui_theme import draw_button
 from game.utils import get_ui_scale, get_font
 from game.constants import GRAY
+from game.audio.sound_board import sound_board
 
 
 class MenuBase:
@@ -140,6 +141,14 @@ class MenuBase:
             if not entries[self.button_index][3]:
                 return
 
+    def _button_pressed(self, button_id):
+        """Every menu/dialog button press funnels through here so the UI
+        "ping" (see game/audio/sound_board.py) fires once, consistently,
+        for keyboard-Enter and mouse-click alike - callers `return
+        self._button_pressed(_id)`."""
+        sound_board.play("ping")
+        return button_id
+
     def handle_button_event(self, event, rects_fn=None):
         """Arrows / Tab / Enter / hover / click over the button bar. `rects_fn`
         is a 0-arg callable returning the rects - only invoked for a mouse
@@ -158,13 +167,13 @@ class MenuBase:
             elif event.key == pygame.K_RETURN:
                 _id, _label, _accent, disabled = entries[self.button_index]
                 if not disabled:
-                    return _id
+                    return self._button_pressed(_id)
         elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN) and rects_fn is not None:
             for i, ((_id, _l, _a, disabled), rect) in enumerate(zip(entries, rects_fn())):
                 if rect.collidepoint(event.pos) and not disabled:
                     self.button_index = i
                     if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
-                        return _id
+                        return self._button_pressed(_id)
         return None
 
     def handle_buttons(self, events):
@@ -187,5 +196,5 @@ class MenuBase:
             if rect.collidepoint(event.pos) and not disabled:
                 self.button_index = i
                 if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:
-                    return _id
+                    return self._button_pressed(_id)
         return None

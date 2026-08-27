@@ -6,6 +6,7 @@ from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, 
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story
 import game.utils as utils
 from game.perf_metrics import metrics as perf
+from game.audio.sound_board import sound_board
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
@@ -592,6 +593,7 @@ class LocationScreen(ScreenBase):
             self.current_npc_target = 0
         else:
             self.current_npc_target = (self.current_npc_target + direction) % len(people)
+        sound_board.play("blip")
 
     def _get_npc_target(self):
         """Get the currently targeted NPC or visiting pilot, if any."""
@@ -615,6 +617,7 @@ class LocationScreen(ScreenBase):
                 best_index, best_dist = i, distance
         if best_index is not None:
             self.current_npc_target = best_index
+            sound_board.play("blip")
 
     def _closest_person_in_range(self):
         """The closest targetable person within talk_range of the player, or

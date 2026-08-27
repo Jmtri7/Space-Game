@@ -173,6 +173,16 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   in `SpaceScreen`/`LocationScreen`. Recording is always on; the bottom-left
   overlay is drawn only when `constants.DEBUG_MODE`. See
   docs/UI_FLOW.md#frame-timing-metrics.
+- `game/audio/sound_board.py` — `SoundBoard` + a shared `sound_board` instance
+  (same shared-instance rationale as `metrics`). Runtime-synthesized UI/
+  notification sounds (no asset files); `sound_board.play("ping")` on every
+  menu button press and received message, `"blip"` on target cycling, `"confirm"`
+  on engaging autopilot. Silent no-op when the mixer can't start.
+- `game/audio/music.py` — `MusicPlayer` + a shared `music` instance. Two
+  procedurally generated seamless ambient loops (`menu` / `ingame`), rendered
+  on a background thread. `main.py` calls `music.set_scene(current_screen)`
+  each frame; it crossfades between the two. **Ctrl+M** (global, in `main.py`)
+  mutes both modules. See docs/SOUND.md.
 
 ## Entity Design Pattern
 

@@ -379,6 +379,18 @@ foot from this one, e.g. Moon City ↔ Wilderness) and/or sets
 (see `DockRoutine`) pick a destination from the same option list
 automatically, based on their role, instead of getting this menu.
 
+## Audio
+
+| Control | Action |
+|---------|--------|
+| **Ctrl + M** | Mute / unmute all audio (SFX + background music) — works on every screen |
+
+All sound is synthesized at runtime (no asset files) — see [SOUND.md](SOUND.md).
+The UI **ping** plays on menu button presses and incoming messages; **confirm**
+on engaging autopilot (Space); **blip** on cycling/clicking a target (`[` `]`
+`T`, click). Two ambient background tracks (menu / in-game) fade in and cross-
+fade as you move between menus and play.
+
 ## Debug Controls
 
 | Control | Action |
@@ -403,6 +415,7 @@ averages and peaks over the last ~2 seconds. See
 
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC always pauses** the game (from any screen)
+- **Ctrl + M mutes/unmutes all audio** (handled globally in `main.py`, like the debug toggle)
 - Every menu and dialog shows its actions as **buttons in its own panel**
   (click, or Tab/arrow + Enter); the top-left Controls pane is the space
   view's and interiors' only (see the Menus section)

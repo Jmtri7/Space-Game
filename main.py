@@ -13,6 +13,8 @@ from game.utils import (
     advance_accumulator
 )
 from game.world.player_controller import PlayerController
+from game.audio.sound_board import sound_board
+from game.audio.music import music
 from game.screens.space_screen import SpaceScreen
 from game.ui.backdrop_menu import BackdropMenu
 from game.ui.pilot_name_dialog import PilotNameDialog
@@ -298,6 +300,12 @@ def main():
                     screen = pygame.display.set_mode((new_width, new_height), pygame.RESIZABLE)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
+                    # Global audio mute (Ctrl+M) - works on every screen, so
+                    # it's handled here next to QUIT/DEBUG rather than in any
+                    # one screen. Toggles both the SFX board and the music.
+                    sound_board.muted = not sound_board.muted
+                    music.toggle_mute()
 
             # ========================================================
             # PHASE 1 - input & screen transitions (once per iteration)
@@ -666,6 +674,12 @@ def main():
                     elif action == "quit":
                         current_screen = "menu"
                         menu = main_menu()
+
+            # Background music follows the screen: the "menu" loop on the
+            # menu/story/pilot/load screens, the sparser "ingame" loop
+            # everywhere else. set_scene() is a cheap no-op when the track
+            # isn't changing.
+            music.set_scene(current_screen)
 
             t_after_input = time.perf_counter()
 

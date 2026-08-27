@@ -513,6 +513,6 @@ Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
 - Inventory system
 - Asteroid/obstacle collision
 - Multiple star systems
-- Sound effects and music
+- Sound effects and music (started: runtime sound board with a UI "ping" — see [docs/SOUND.md](docs/SOUND.md))
 - Multiplayer (local)
 - Missions/objectives
