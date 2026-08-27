@@ -1,11 +1,34 @@
 {
   "id": "default",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "name": "Explorer",
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
   "starting_system": "sol_alpha",
   "starting_mission": "first_flight",
+  "starting_mission_trigger": "ship_purchase",
+  "default_outfit": "space_suit",
+  "start": {
+    "location": "station",
+    "interior": "dormitory",
+    "credits": 0,
+    "ship": null,
+    "items": {},
+    "outfits": [],
+    "flags": {}
+  },
+  "loan": {
+    "lender": "Station Credit Union",
+    "amount": 100000,
+    "max_active": 1
+  },
+  "jump": {
+    "travel_frames": 150,
+    "speed": 40,
+    "arrival_distance": 1400,
+    "self_min_distance": 3200
+  },
+  "brake_slow_threshold": 0.3,
   "ships": {
     "player_type": null
   }

@@ -318,6 +318,17 @@ default ship instead of whatever they'd actually purchased. See
 **In `LocationScreen`:** restores the player's x/y and `possessions` (same
 in-place mutation).
 
+**New game only (never saved):** `story.json`'s `"start"` block seeds the
+player's opening state - `credits`, a starting `ship` (added to
+`owned_ships` and applied via `_apply_ship_type()`), spare `outfits`,
+personal `items`, story `flags`, plus `location`/`interior` for where in
+the world they begin. `SpaceScreen._apply_start_config()` runs it in
+`__init__` unconditionally (exactly like the placeholder ship is always
+built from the `player_type` default); on the load path
+`restore_possessions()` immediately overwrites all of it, so nothing about
+`"start"` needs to round-trip through a save. `begin_new_game()` (main.py,
+new game only) then places the player and fires the tutorial.
+
 **Graceful fallback:** `.get(key, default)` means missing properties use current values.
 
 ## Save/Load Flow

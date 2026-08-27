@@ -7,7 +7,7 @@ from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
 from game.utils import (
-    load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json
+    load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json, get_story
 )
 from game.world.player_controller import PlayerController
 from game.screens.space_screen import SpaceScreen
@@ -128,7 +128,7 @@ def warn_if_story_version_mismatch(story, saved_version):
     changes what the saved state means (see CLAUDE.md's "Save Compatibility
     & Story Versioning" section). Never blocks loading - just surfaces the
     risk so a stale save behaving oddly isn't a total mystery."""
-    current_version = (load_json(f"config/stories/{story}/story.json") or {}).get("version", "0.0.0")
+    current_version = get_story(story).get("version", "0.0.0")
     if saved_version is None:
         print(f"WARNING: this save predates story versioning (story '{story}' is now at version {current_version}) - it may not load correctly if the story's config or save format has changed since.", file=sys.stderr)
     elif saved_version != current_version:
@@ -241,10 +241,23 @@ def main():
                 if result and result != "cancel":
                     pilot_name = result
                     game_screen = SpaceScreen(pilot_name=pilot_name, story=selected_story)
-                    # New pilots start ship-less, in their dormitory room -
-                    # not out in space with a ship already assigned.
-                    station_interior = game_screen.get_interior_screen(game_screen.station, "dormitory")
-                    current_screen = "station"
+                    # Where the new game begins is story.json's "start" block
+                    # (defaults: ship-less, in the station "dormitory") -
+                    # begin_new_game() also fires the tutorial if its trigger
+                    # is "new_game" / a starting ship was granted.
+                    start_location, start_interior = game_screen.begin_new_game()
+                    if start_location == "space":
+                        current_screen = "game"
+                    elif start_location == "moon":
+                        moon_interior = game_screen.get_interior_screen(game_screen.moon, start_interior)
+                        if moon_interior:
+                            moon_interior.arrive_from("ship")
+                        current_screen = "moon"
+                    else:
+                        station_interior = game_screen.get_interior_screen(game_screen.station, start_interior)
+                        if station_interior:
+                            station_interior.arrive_from("ship")
+                        current_screen = "station"
                 elif result == "cancel":
                     current_screen = "menu"
                 pilot_name_dialog.draw(screen)

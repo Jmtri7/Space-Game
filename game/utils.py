@@ -213,6 +213,15 @@ def save_json(filename, data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def get_story(story):
+    """Load a story's top-level story.json (id, version, name, starting_*,
+    the "start" new-game block, "loan"/"jump" tuning blocks, ...). One
+    accessor so the handful of call sites that need story metadata
+    (main.py, SpaceScreen, LocationScreen) don't each hand-roll the same
+    load_json path. Returns {} for a missing/unreadable file."""
+    return load_json(f"config/stories/{story}/story.json") or {}
+
+
 def get_ship_type(story, ship_type_id):
     """Load ship type properties from config/stories/{story}/ship_types.json."""
     ship_types = load_json(f"config/stories/{story}/ship_types.json") or {}

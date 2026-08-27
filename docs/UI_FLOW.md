@@ -97,7 +97,7 @@ connected location (→ that location's own `LocationScreen`, staying in
 **Inputs:** Type: add to name · BACKSPACE: delete last char · Left/Right/Tab: move between buttons · RETURN/click Start (name non-empty): confirm · ESC/click Cancel: cancel
 
 **Transitions:**
-- Start (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`, then straight into `"station"` at the `"dormitory"` interior (0 credits, no ship - see the station layout under STATION / MOON below) rather than `"game"`
+- Start (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`, then `game_screen.begin_new_game()` returns where to drop the player from `story.json`'s `"start"` block: `"station"`/`"moon"` at the given interior key, or `"space"` → `"game"`. The default story starts in `"station"` at `"dormitory"` (0 credits, no ship - see the station layout under STATION / MOON below). `"start"` also seeds starting credits / ship / spare outfits / personal items / story flags.
 - ESC → Main Menu
 
 ### Load Menu (`SaveBrowser`, `mode="load"`)
@@ -384,7 +384,7 @@ completed load being abandoned - so nothing stale carries over.
 ## State Transitions & Validation
 
 **Valid transitions (`current_screen` values in `main.py`):**
-`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` (dormitory - new pilots start here, ship-less)
+`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` / `"moon"` / `"game"` per `story.json`'s `"start"` block (default story: `"station"` dormitory, ship-less)
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
 `"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)

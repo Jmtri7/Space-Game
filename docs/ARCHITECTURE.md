@@ -125,8 +125,12 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   `ui_theme.draw_glow_message()` in a glass pane (shared with the one-way
   hail banner and the "too close to jump" warning; the toast stacks below
   whichever banner is showing). `story.json`'s `"starting_mission"` names which
-  mission (if any) `SpaceScreen._on_ship_purchased()` auto-starts the
-  first time a pilot boards a ship. `SpaceScreen`/`PlayerController` also
+  mission (if any) auto-starts; `"starting_mission_trigger"` picks when -
+  `"ship_purchase"` (default, `SpaceScreen._on_ship_purchased()`, the first
+  time a pilot buys a ship) or `"new_game"` (`begin_new_game()`, as a fresh
+  game starts). A story that grants a starting ship (`story.json`'s
+  `"start"` block) gets `"new_game"` behaviour automatically since no
+  purchase happens. `SpaceScreen`/`PlayerController` also
   set a handful of generic, story-agnostic gameplay-event flags of their
   own (`used_ships_target_mode`, `used_turn`, `used_thrust`, `used_brake`,
   `braked_below_threshold`, `used_autopilot_on_ship`, `landed_on_landable`,

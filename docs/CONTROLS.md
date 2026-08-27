@@ -190,8 +190,9 @@ shows every stage done, marked "(Complete)". Opening the log also flips the
 player to actually check it (see `first_flight`).
 
 Starting a mission, completing a stage, and finishing a mission each flash a
-brief center-screen toast in the Space View (see `SpaceScreen._show_toast`). A story opts a new pilot into a mission automatically the
-first time they board a ship (`story.json`'s `"starting_mission"`) - see
+brief center-screen toast in the Space View (see `SpaceScreen._show_toast`). A story opts a new pilot into a mission automatically -
+by default the first time they buy a ship, or at new-game start if
+`story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it) - see
 `config/stories/default/missions.json`'s `"first_flight"` for a worked
 example, which an NPC hailing you (Kade Marsh - see Hailing above) kicks
 off. See `game/world/mission.py` for how a stage's `"complete_flag"` ties
