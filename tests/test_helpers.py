@@ -2207,6 +2207,28 @@ class TestCharacterSetRoutine(unittest.TestCase):
         from game.world.character import resolve_routine_class, ROLE_ROUTINES
         self.assertIs(resolve_routine_class("patrol_officer"), ROLE_ROUTINES["patrol_officer"])
 
+    def test_explicit_routine_name_overrides_the_role_default(self):
+        from game.world.character import resolve_routine_class, ROUTINE_REGISTRY
+        # an unknown role would normally be IdleRoutine
+        self.assertIs(
+            resolve_routine_class("smuggler", routine_name="wander"),
+            ROUTINE_REGISTRY["wander"],
+        )
+
+    def test_unknown_routine_name_falls_back_to_idle(self):
+        from game.world.character import resolve_routine_class, IdleRoutine
+        self.assertIs(resolve_routine_class("patrol_officer", routine_name="nonsense"), IdleRoutine)
+
+    def test_pilot_config_routine_key_picks_the_routine(self):
+        from game.world.wander_routine import WanderRoutine
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot={"name": "Rove", "role": "smuggler", "routine": "wander"},
+            route=[], get_interior_screen=None,
+        )
+        self.assertIsInstance(character.routine, WanderRoutine)
+        self.assertEqual(character.routine_name, "wander")
+
     def test_escorting_flag_defaults_to_false(self):
         character = Character.for_ai_pilot(
             0, 0, ship_type=None, ship_type_id="patrol", graphics=None,

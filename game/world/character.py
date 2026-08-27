@@ -21,10 +21,26 @@ from game.world.stationary_routine import StationaryRoutine
 # (nothing spends this yet), not tuned gameplay balance.
 AI_PILOT_STARTING_CREDITS = 500
 
+# Config-facing routine names -> Routine class. A pilots.json pilot or an
+# interior NPC config can name one directly with a "routine" key, bypassing
+# the role default below - so a story inventing a new role ("smuggler",
+# "miner", ...) can still say how that character behaves without a code
+# change. An unknown name falls back to IdleRoutine (never moves on its own).
+ROUTINE_REGISTRY = {
+    "dock": DockRoutine,
+    "shuttle": ShuttleRoutine,
+    "orbit": OrbitRoutine,
+    "explorer": ExplorerRoutine,
+    "idle": IdleRoutine,
+    "wander": WanderRoutine,
+    "stationary": StationaryRoutine,
+}
+
 # Default routine per role - which Routine strategy a character runs each
 # frame, whether that means flying a ship (DockRoutine/ShuttleRoutine/
 # OrbitRoutine) or just existing in a room (WanderRoutine/StationaryRoutine).
 # Roles with no entry here just get IdleRoutine (never moves on its own).
+# A config "routine" key (see ROUTINE_REGISTRY) overrides this per character.
 ROLE_ROUTINES = {
     "freighter_pilot": DockRoutine,
     "trader_captain": ShuttleRoutine,
@@ -48,12 +64,17 @@ ROLE_ROUTINES = {
 FACTION_ROUTINE_OVERRIDES = {}
 
 
-def resolve_routine_class(role, faction=None):
-    """Which Routine class a role (optionally overridden by faction) maps
-    to - the same lookup Character.__init__ uses when first building a
-    character, exposed separately so something can restore a character's
-    normal routine after a temporary override (see Character.set_routine
-    and person.escort_flag) without duplicating this lookup."""
+def resolve_routine_class(role, faction=None, routine_name=None):
+    """Which Routine class a character maps to - the same lookup
+    Character.__init__ uses when first building one, exposed separately so
+    something can restore a character's normal routine after a temporary
+    override (see Character.set_routine and person.escort_flag) without
+    duplicating this lookup.
+
+    An explicit routine_name (config's "routine" key) wins outright; then a
+    faction override; then the role default; then IdleRoutine."""
+    if routine_name:
+        return ROUTINE_REGISTRY.get(routine_name, IdleRoutine)
     return FACTION_ROUTINE_OVERRIDES.get((faction, role), ROLE_ROUTINES.get(role, IdleRoutine))
 
 
@@ -63,16 +84,19 @@ class Character:
     what they do with either. The player is not one of these (see
     PlayerController); this is for every AI-driven character - ship pilots
     and non-piloting station/moon residents alike."""
-    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None, can_move_to=None):
+    def __init__(self, person, ship=None, role=None, faction=None, route=None, get_interior_screen=None, ship_type_id=None, systems=None, system_id=None, can_move_to=None, routine_name=None):
         self.person = person
         self.ship = ship
         self.role = role
-        # Kept so a temporary routine override (see set_routine/
-        # person.escort_flag) can be reversed later via
-        # resolve_routine_class(self.role, self.faction) - not read
-        # anywhere else, since the initial pick below already resolves it
-        # once at construction time.
+        # role/faction/routine_name are all kept so a temporary routine
+        # override (see set_routine/person.escort_flag) can be reversed
+        # later via resolve_routine_class(self.role, self.faction,
+        # self.routine_name) - not read anywhere else, since the initial
+        # pick below already resolves it once at construction time.
         self.faction = faction
+        # Optional config "routine" key (pilots.json / interior NPC config) -
+        # names a ROUTINE_REGISTRY entry outright, overriding the role default.
+        self.routine_name = routine_name
         # Mirrored onto the person itself (not just kept here on Character)
         # so anything holding just a bare Person - LocationScreen.visitors,
         # for instance, which never keeps the Character wrapper around - can
@@ -125,7 +149,7 @@ class Character:
         # without that opt-in.
         self.escorting = False
 
-        routine_cls = resolve_routine_class(role, faction)
+        routine_cls = resolve_routine_class(role, faction, routine_name)
         self.routine = routine_cls(self.route)
         self.routine.start(self)
 
@@ -191,7 +215,7 @@ class Character:
         # who never escorts.
         person.escort_flag = pilot.get("escort_flag")
 
-        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
+        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id, routine_name=pilot.get("routine"))
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/

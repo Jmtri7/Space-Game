@@ -1028,7 +1028,7 @@ class SpaceScreen(ScreenBase):
                     ai_ship.set_routine(OrbitPlayerRoutine(self.player))
                     ai_ship.escorting = True
                 elif not should_escort and ai_ship.escorting:
-                    ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction)(ai_ship.route))
+                    ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction, ai_ship.routine_name)(ai_ship.route))
                     ai_ship.escorting = False
 
     def _check_landing(self):

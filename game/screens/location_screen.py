@@ -176,7 +176,8 @@ class LocationScreen(ScreenBase):
         Their role picks the routine that decides whether they wander or
         stay put (see game/world/character.py's ROLE_ROUTINES) - the same
         role->routine mechanism AI ship pilots use, just never flying
-        anything."""
+        anything. A "routine" key in the NPC config names one outright
+        (see ROUTINE_REGISTRY), for a role with no sensible default."""
         # "outfit" is per-NPC-config, defaulting to the story's
         # default_outfit like everyone else - lets an NPC config opt into a
         # different graphics.json outfit entry without any drawing-code changes.
@@ -190,7 +191,7 @@ class LocationScreen(ScreenBase):
         # opens a purpose-built buy/sell screen instead of dialogue when T is
         # pressed - None for every NPC that's just flavor/dialogue.
         person.shop = cfg.get("shop")
-        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to)
+        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _resolve_portal(self, portal):
         """Which portal get_exit_options() and friends should act on when

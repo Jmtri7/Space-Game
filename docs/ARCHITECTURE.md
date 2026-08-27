@@ -207,8 +207,9 @@ section below; the AI-pilot equivalent of `PlayerController`. Built via
 `ship_type`'s `max_thrust`), `max_velocity`, `rotation_speed` from a
 `ship_type` dict (see `config/stories/{story}/ship_types.json`), falling
 back to defaults if none given. Its `update()` never touches ship physics
-directly — it runs the role's routine each frame (from `ROLE_ROUTINES`,
-keyed by the pilot's role, with `FACTION_ROUTINE_OVERRIDES` checked first),
+directly — it runs the role's routine each frame (a config `"routine"` key
+naming a `ROUTINE_REGISTRY` entry wins outright; else `FACTION_ROUTINE_OVERRIDES`,
+then `ROLE_ROUTINES` keyed by the pilot's role, then `IdleRoutine`),
 which calls `engage_seek()`/`engage_orbit()` (delegated to the owned
 `Ship`), then `self.ship.update()` runs the real `Ship`/`Autopilot` physics.
 
