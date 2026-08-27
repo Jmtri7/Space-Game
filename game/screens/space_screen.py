@@ -42,7 +42,6 @@ BRAKE_SLOW_THRESHOLD = 0.3
 # travel_frames / speed / arrival_distance / self_min_distance per story
 # (see SpaceScreen.jump_* instance attributes, which is what the jump code
 # actually reads - these module names are only the fallback).
-JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
 JUMP_TRAVEL_FRAMES = 150        # ~2.5s at 60fps of high-speed travel
 JUMP_SPEED = 40                 # world units/frame while traveling
 JUMP_ARRIVAL_DISTANCE = 1400    # world units from system center on arrival
