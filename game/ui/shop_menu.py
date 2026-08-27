@@ -8,7 +8,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 
 DEFAULT_SELL_MULTIPLIER = 0.6
@@ -131,7 +131,7 @@ class ShopMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.12), int(offset_y + 600 * scale * 0.1), int(800 * scale * 0.76), int(600 * scale * 0.8))
+        panel_rect = modal_panel_rect(scale, 0.1, 0.76, 0.8)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))

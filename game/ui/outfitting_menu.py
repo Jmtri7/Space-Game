@@ -9,7 +9,7 @@ from game.constants import YELLOW, GRAY, GREEN, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
 from game.ui.ui_theme import (
     draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
-    draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
+    draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
 )
 from game.ui.selectable_list import SelectableList
 from game.ui.icon_grid import IconGrid
@@ -326,7 +326,7 @@ class OutfittingMenu:
         # (see _draw_buy_cell). Help text lives in the top-left Controls
         # pane now (see draw()'s end), not in this panel, so it no longer
         # needs extra room at the bottom for that.
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.08), int(800 * scale * 0.84), int(600 * scale * 0.84))
+        panel_rect = modal_panel_rect(scale, 0.08, 0.84, 0.84)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(32 * scale))

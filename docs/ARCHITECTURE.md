@@ -73,7 +73,11 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   `missions`/`completed_missions` (mission/stage progress - see below), and
   `message_log` (received one-way hails, newest first - `add_message()`
   inserts at the front, capped at `MESSAGE_LOG_MAX` - rendered by the
-  Space View's bottom-left Messages pane, `ui_theme.draw_message_log()`),
+  Space View's bottom-left **Message Log** pane, `ui_theme.draw_message_log()`,
+  which has a fixed max height and mouse-wheel scrolling
+  (`SpaceScreen.message_log_scroll`) for the overflow - as does the
+  top-right targeting/info pane, `draw_info_panel()` /
+  `SpaceScreen.info_panel_scroll`),
   composed onto every `Person`
 - `game/world/mission.py` (functions, not a class - see CLAUDE.md's One
   Class Per File exception for utility modules) — mission/stage tracking:
@@ -85,6 +89,10 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   vocabulary Dialogue's `requires_flag`/`"set_flag:"` use, so a stage can
   be completed by a dialogue choice or a gameplay event alike - and moves
   a mission into `completed_missions` once its last stage completes.
+  `start_mission()` sets every flag in the mission's `"on_start_flags"`
+  list (mirror of `"on_end_flags"` - e.g. `first_flight` sets
+  `"kade_escorting"` so Kade falls in alongside the player the instant the
+  tutorial begins, not only once they accept his offer).
   `abandon_mission()` (wired up as the `"abandon_mission:<id>"` dialogue
   action - see `apply_shared_actions`) drops a mission without completing
   it, for a dialogue option letting the player decline. Both finishing and
@@ -100,7 +108,14 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   `_check_one_way_hails()`'s proximity-triggered hails - both show a
   transient banner and log to `Possessions.message_log`).
   `mission_status_lines()` is the display data `MissionLog` (`game/ui/`,
-  opened with N) renders. `story.json`'s `"starting_mission"` names which
+  opened with N) renders - it shows completed and current stages only,
+  hiding stages the player hasn't reached yet. `SpaceScreen` also flashes a
+  transient toast (`_show_toast()`, distinct from `_post_message()` - no
+  Messages-log entry) on mission start, stage completion, and mission
+  finish, alongside the jump-completion toast - all rendered by
+  `ui_theme.draw_glow_message()` in a glass pane (shared with the one-way
+  hail banner and the "too close to jump" warning; the toast stacks below
+  whichever banner is showing). `story.json`'s `"starting_mission"` names which
   mission (if any) `SpaceScreen._on_ship_purchased()` auto-starts the
   first time a pilot boards a ship. `SpaceScreen`/`PlayerController` also
   set a handful of generic, story-agnostic gameplay-event flags of their

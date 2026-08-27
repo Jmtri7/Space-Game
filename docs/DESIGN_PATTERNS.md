@@ -663,35 +663,42 @@ long "drifting from the system" status line overlapping the Messages pane
 at the bottom-left on a 1859x1024 window).
 
 **Solution:** Divide the HUD horizontally into three zones - a left
-quarter, a right quarter, and a center half - and give every panel a hard
+quarter, a right quarter, and a center band - and give every panel a hard
 cap matching whichever zone it's anchored to, derived from the *real*
-window width rather than `ui_scale`: `side_panel_max_width()` (quarter) for
-anything pinned to the left/right edge, `center_panel_max_width()` (under
-half) for anything centered. A panel whose content could realistically run
-long wraps its text to fit inside that cap (`_wrap_text`); one whose
-content is always short, fixed UI text just clamps its computed width as a
-defensive no-op.
+window width rather than `ui_scale`. Edge-anchored panes take a *fixed*
+`side_panel_width()` (the quarter minus the shared `hud_margin()`), so they
+all line up on the quarter line rather than each shrinking to its own
+content. Centered panes (status pane, the top-centre popup stack, modal
+menu panels via `modal_panel_rect()`) cap at `center_panel_max_width()`,
+which is `screen//2 - 2*hud_margin()` - so at max width a centred pane
+still leaves a full `hud_margin()` gap before the quarter line, the same
+gap the side panes leave from the screen edge. Nothing centred can touch a
+side pane. Any free-form text wraps (`_wrap_text`) to fit its zone.
 
 **Implementation:** (`game/ui/ui_theme.py`)
 ```python
 def side_panel_max_width():
     return utils.screen_width // 4
 
-def center_panel_max_width():
-    return utils.screen_width // 2 - 1
+def hud_margin(ui_scale):
+    return int(HUD_MARGIN_BASE * ui_scale)
 
-# Free-form content: wrap to the zone's width before rendering.
-def draw_status_pane(surface, status_lines, ui_scale):
-    ...
-    text_max_width = center_panel_max_width() - pad_x * 2
-    wrapped_lines = [(line, color) for text, color in status_lines
-                      for line in _wrap_text(font_status, text, text_max_width)]
+# Edge-anchored: fill the quarter from the edge margin to the quarter line.
+def side_panel_width(ui_scale):
+    return max(1, side_panel_max_width() - hud_margin(ui_scale))
+
+# Centred: a full margin's gap from the quarter line on each side.
+def center_panel_max_width(ui_scale):
+    return max(1, utils.screen_width // 2 - 2 * hud_margin(ui_scale))
+
+# Modal menu panels re-centre on the real screen and cap at the centre band.
+def modal_panel_rect(ui_scale, y_frac, w_frac, h_frac):
+    width = min(int(800 * ui_scale * w_frac), center_panel_max_width(ui_scale))
     ...
 
-# Fixed, short content: clamp the computed size as a defensive no-op.
 def draw_controls_pane(surface, x, y, title, items, ui_scale):
     ...
-    panel_width = min(panel_width, side_panel_max_width())
+    panel_width = side_panel_width(ui_scale)   # not "shrink to content"
 ```
 
 **Why this works:**
@@ -701,6 +708,19 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
   reads from the same two numbers, so the zones can never drift out of
   sync with each other the way five independently-tuned pixel budgets
   would.
+- Every edge-anchored pane is a fixed `side_panel_width()` (the quarter
+  minus the shared `hud_margin()`), not sized to its own content, so the
+  Controls / info / Messages / minimap panes all share one vertical edge on
+  the quarter line instead of each stopping at a different ragged width.
+- The bottom-left Message Log and the top-right info/targeting pane both
+  additionally have a fixed *height* cap (`MESSAGE_LOG_VISIBLE_LINES` /
+  `INFO_PANEL_VISIBLE_LINES`) and mouse-wheel scrolling for the overflow
+  (`SpaceScreen.message_log_scroll` / `info_panel_scroll`, wheel routed to
+  whichever pane the cursor is over), with blue `^`/`v` `(scroll)` hints -
+  so neither can grow into the pane above/below it.
+- The top-centre transient popups (hail banner, "too close to jump"
+  warning, mission/jump toast) render as a downward stack of individual
+  `draw_glow_message` panes, so two showing at once never overlap.
 - Derived from `utils.screen_width` directly (not `ui_scale`), so the cap
   tracks the window's actual shape instead of a scale factor that can grow
   disproportionately to width on an unusual aspect ratio.

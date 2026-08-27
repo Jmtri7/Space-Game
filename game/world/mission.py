@@ -50,6 +50,10 @@ def start_mission(missions_config, possessions, mission_id):
     """Begin mission_id at its first stage, if it's a real mission and
     isn't already active or completed - a no-op otherwise, so starting the
     same mission twice (e.g. buying a second ship) never resets progress.
+    Sets every flag in the mission's "on_start_flags" list (mirror of
+    "on_end_flags" - e.g. first_flight sets "kade_escorting" so Kade falls
+    in alongside the player the moment the tutorial begins, not only once
+    they accept his offer).
     Returns (mission_id, 0) if it actually started (so a caller can
     deliver that first stage's one_way_message, if it has one), else None."""
     if mission_id not in missions_config:
@@ -57,6 +61,8 @@ def start_mission(missions_config, possessions, mission_id):
     if mission_id in possessions.missions or mission_id in possessions.completed_missions:
         return None
     possessions.missions[mission_id] = 0
+    for flag in missions_config[mission_id].get("on_start_flags", []):
+        possessions.flags[flag] = True
     return (mission_id, 0)
 
 

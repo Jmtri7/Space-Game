@@ -2,7 +2,7 @@
 import pygame
 from game.constants import GRAY
 from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_save_files, get_font
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 from game.ui.selectable_list import SelectableList
 
 
@@ -28,7 +28,7 @@ class LoadMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.2), int(800 * scale * 0.8), int(600 * scale * 0.6))
+        panel_rect = modal_panel_rect(scale, 0.2, 0.8, 0.6)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(40 * scale))

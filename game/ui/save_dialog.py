@@ -3,7 +3,7 @@ import pygame
 from datetime import datetime
 from game.constants import WHITE, YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, _center_text_x, get_save_files
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 from game.ui.selectable_list import SelectableList
 
 
@@ -78,7 +78,7 @@ class SaveDialog:
         offset_x, offset_y = get_ui_offset()
 
         if self.input_mode:
-            panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.2), int(800 * scale * 0.8), int(600 * scale * 0.6))
+            panel_rect = modal_panel_rect(scale, 0.2, 0.8, 0.6)
             draw_glass_panel(surface, panel_rect, scale)
             font_title = get_font(int(32 * scale))
             font_text = get_font(int(24 * scale))
@@ -93,7 +93,7 @@ class SaveDialog:
             help_text = font_text.render("Enter to save, ESC to cancel", True, GRAY)
             surface.blit(help_text, (_center_text_x(surface, help_text, offset_x), int(offset_y + 600 * scale * 0.6)))
         else:
-            panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.15), int(800 * scale * 0.8), int(600 * scale * 0.7))
+            panel_rect = modal_panel_rect(scale, 0.15, 0.8, 0.7)
             draw_glass_panel(surface, panel_rect, scale)
             font_title = get_font(int(32 * scale))
             font_text = get_font(int(20 * scale))

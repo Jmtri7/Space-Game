@@ -35,7 +35,7 @@ Menu hierarchy, screen transitions, and state management.
                   │                                                │
         ┌─────────▼────────────────────────────────────────────────▼──┐
         │                          PAUSE MENU                          │
-        │                    Resume / Save / Quit                     │
+        │              Resume / Save / Load / Quit                     │
         └───┬───────────────────────────┬───────────────────────┬────┘
             │                           │                       │
     ┌───────▼──────┐          ┌─────────▼─────────┐   ┌─────────▼─────────┐
@@ -242,8 +242,10 @@ Opened the same way as `ShopMenu` (T on an NPC with a `"shop"` config), but
 for `"type": "ships"` - `main.py`'s `build_shop_menu()` dispatches to this
 instead of `ShopMenu` based on the shop config's `type`. Left: the shop's
 stock ship-type ids. Right: a live preview (`ui_theme.draw_ship_glyph`) and
-stat readout for whichever is selected. Enter opens a `ConfirmDialog`;
-confirming calls the injected `on_buy` callback, which `main.py` wires to
+stat readout for whichever is selected. Enter opens a `ConfirmDialog`
+(which suppresses this menu's own top-left Controls pane and shows its
+Y/N/ESC choice as a line inside its own panel instead - see the
+ConfirmDialog note below); confirming calls the injected `on_buy` callback, which `main.py` wires to
 `LocationScreen.buy_ship()` - the same mutation the old `"buy_ship:<id>"`
 dialogue action performed (spend, `add_ship`, `on_ship_purchased`
 callback), now shared by both purchase paths. The spaceport's ship salesman
@@ -281,13 +283,14 @@ equip/unequip directly · ESC: close (or cancel an open picker first)
 - ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
 ### PauseMenu
-**Shows:** Resume/Save/Quit options with optional success banner
+**Shows:** Resume/Save Game/Load Game/Quit to Menu options with optional success banner
 
 **Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: resume (quick exit)
 
 **Transitions:**
 - Resume → back to whichever screen was active (`previous_screen`)
 - Save Game → `SaveDialog`
+- Load Game → `LoadMenu` (with `load_return_screen = "pause"`, so cancelling it returns here instead of the Main Menu; a successful load replaces the running game and goes to `"game"`/`"station"`/`"moon"`)
 - Quit to Menu → Menu
 
 ### SaveDialog (Scrollable)
@@ -303,6 +306,23 @@ equip/unequip directly · ESC: close (or cancel an open picker first)
 - Save completes → success banner (2s) → PauseMenu
 - Overwrite/Delete confirmed via their `ConfirmDialog` (Y = `"confirm"`, N/ESC = `"cancel"`)
 - ESC → PauseMenu (no save)
+
+### ConfirmDialog
+**Shows:** A title, a one-line message, and **Yes / No buttons**
+(`ui_theme.draw_button`, green / muted-red) with a shortcut-reminder line -
+all **inside its own glass panel**. Unlike a full-screen menu, a pop-up
+dialog does **not** draw a top-left Controls pane, and the menu it appears
+over suppresses its own Controls pane while the dialog is up (e.g.
+`ShipBrowserMenu.draw`'s `if not self.confirm`), so exactly one set of
+controls is on screen and it's attached to what has input focus. Panel via
+`modal_panel_rect()`. Used for ship purchases (`ShipBrowserMenu`) and save
+overwrite/delete confirmations. Starts with **No** highlighted (the safe
+default for the destructive uses).
+
+**Inputs:** Left/Right or Tab: move between buttons · Enter: pick the
+highlighted one · Y: confirm · N / ESC: cancel · mouse hover highlights a
+button, click acts on it. Returns `("confirm", context_data)` or
+`("cancel", None)`.
 
 ## Screen-to-Screen Data Flow
 
@@ -355,6 +375,7 @@ Menu recreated → has_saves = True → items = ["NEW", "LOAD", "QUIT"]
 **Valid transitions (`current_screen` values in `main.py`):**
 `"menu"` → `"story_select"` → `"pilot_name"` → `"station"` (dormitory - new pilots start here, ship-less)
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
+`"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
 `"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
 `"game"` / `"station"` / `"moon"` → `"possessions"` (P) → back to whichever of the three it came from

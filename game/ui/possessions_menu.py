@@ -2,7 +2,7 @@
 items, and ship outfits."""
 import pygame
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_ship_outfit, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, modal_panel_rect
 
 
 class PossessionsMenu:
@@ -44,7 +44,7 @@ class PossessionsMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.08), int(offset_y + 600 * scale * 0.08), int(800 * scale * 0.84), int(600 * scale * 0.84))
+        panel_rect = modal_panel_rect(scale, 0.08, 0.84, 0.84)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))

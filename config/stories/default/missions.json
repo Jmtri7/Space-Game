@@ -2,6 +2,7 @@
   "first_flight": {
     "title": "First Flight",
     "escort_flag": "kade_escorting",
+    "on_start_flags": ["kade_escorting"],
     "on_end_flags": ["kade_tutorial_done"],
     "stages": [
       {
@@ -19,6 +20,14 @@
       {
         "text": "Talk to Kade Marsh - he's offering to show you the ropes.",
         "complete_flag": "accepted_kade_help"
+      },
+      {
+        "text": "Open your Mission Log (N) - it lists every objective as you go.",
+        "complete_flag": "viewed_mission_log",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "First thing - press N to open your Mission Log. Every step I give you shows up there, so you'll never have to guess what's next. Go ahead and take a look."
+        }
       },
       {
         "text": "Turn your ship - A/D or the Left/Right arrow keys.",

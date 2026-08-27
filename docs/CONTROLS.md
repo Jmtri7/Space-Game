@@ -14,6 +14,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **[** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
 | **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
+| **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
@@ -35,9 +36,11 @@ All interactive controls and their bindings. **Update this document when adding 
 Opens centered on your current system, with a "You are here" tag next to it.
 A Controls pane (top-left) and the selected system's station/moon panel
 (top-right) share the same look as the space view's HUD. The selected
-system (if any) is shown back in the space view as "Jump Target:", and
-pressing **J** there starts the jump if the target is a different system, or
-the current one while far enough from its center.
+system is shown back in the space view as "Jump Target:" - it defaults to
+(and resets to, after a jump) your current system, so it's never empty.
+Pressing **J** starts the jump if the target is a different system, or the
+current one while far enough from its center (`JUMP_SELF_MIN_DISTANCE`).
+Completing a jump flashes a brief "arrived at ..." toast in the space view.
 
 ## Station Interior
 
@@ -129,18 +132,29 @@ ship right now) doesn't open a conversation at all - just a brief
 "no response" message, since there's no one aboard to answer.
 
 Some pilots also hail *you* first: a one-way transmission that pops up on
-screen on its own once you fly close enough (no dialogue box, and it
-doesn't require a target) - you still have to target and hail them back
+screen on its own once you fly close enough - a brief top-centre banner in
+a glass pane, the same look as the rest of the HUD (mission toasts and the
+"too close to jump" warning share that pane style and stack below it - see
+`draw_glow_message`), no dialogue box, and it doesn't require a target - you still have to target and hail them back
 (H) to actually have the conversation. Each pilot's one-way hail (if they
 have one) only ever fires once. See `pilots.json`'s `"hail_dialogue_tree"`/
 `"one_way_hail"` and `game/world/character.py`'s `Character.for_ai_pilot`.
 
 That one-way banner is easy to miss if you're looking elsewhere when it
-fires, so it's also recorded in the **Messages** pane, bottom-left of the
-Space View - every one-way message ever received, newest at the top, as
+fires, so it's also recorded in the **Message Log** pane, bottom-left of
+the Space View - every one-way message ever received, newest at the top, as
 "`Sender: message`". It only appears once at least one message has arrived
-(nothing to show before then), stays up permanently (not a timer), and
-isn't interactive - see `Possessions.message_log`/`add_message()`.
+(nothing to show before then) and stays up permanently (not a timer). The
+pane has a fixed maximum height (`MESSAGE_LOG_VISIBLE_LINES`); once the
+backlog is longer than that, scroll it with the **mouse wheel** while the
+pointer is over it (blue `^ newer (scroll)` / `v older (scroll)` hints show
+which way there's more). A new message snaps it back to the top and lights
+a **blinking red dot** in the pane's top-right corner for ~10 seconds
+(`MESSAGE_ALERT_FRAMES`) so an arrival is hard to miss. The
+top-right targeting/info pane scrolls the same way when a target's readout
+(e.g. a station's full location list) is longer than
+`INFO_PANEL_VISIBLE_LINES`. See `Possessions.message_log`/`add_message()`
+and `ui_theme.draw_message_log()` / `draw_info_panel()`.
 
 Space View also shows a persistent hint in the bottom status pane once
 you've drifted far enough from the system's center that jumping back is
@@ -158,9 +172,14 @@ points at always agree.
 Read-only, opened from space, a station interior, or a moon interior, over
 whichever screen it was opened from (same shape as the Possessions menu).
 Lists every mission that's ever been started: an active mission shows its
-stages so far completed (`[x]`), its current stage (`->`), and stages still
-ahead (`[ ]`); a finished mission shows every stage done, marked
-"(Complete)". A story opts a new pilot into a mission automatically the
+stages so far completed (`[x]`) and its current stage (`->`) - stages you
+haven't reached yet stay hidden until you unlock them; a finished mission
+shows every stage done, marked "(Complete)". Opening the log also flips the
+`viewed_mission_log` gameplay-event flag, so a mission stage can require the
+player to actually check it (see `first_flight`).
+
+Starting a mission, completing a stage, and finishing a mission each flash a
+brief center-screen toast in the Space View (see `SpaceScreen._show_toast`). A story opts a new pilot into a mission automatically the
 first time they board a ship (`story.json`'s `"starting_mission"`) - see
 `config/stories/default/missions.json`'s `"first_flight"` for a worked
 example, which an NPC hailing you (Kade Marsh - see Hailing above) kicks
@@ -316,8 +335,11 @@ top-left Controls pane every other screen uses (see `draw_controls_pane` in
 | Control | Action |
 |---------|--------|
 | **W/↑** or **S/↓** | Navigate options |
-| **Enter** | Select option |
+| **Enter** | Select option (Resume / Save Game / Load Game / Quit to Menu) |
 | **ESC** | Resume game |
+
+**Load Game** opens the same Load menu as the Main Menu; cancelling it (ESC)
+returns to the pause menu, and loading a save replaces the running game.
 
 ### Exit Menu (interior location, when the entrance leads to more than one place)
 | Control | Action |
