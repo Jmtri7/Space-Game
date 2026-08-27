@@ -130,13 +130,29 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   time a pilot buys a ship) or `"new_game"` (`begin_new_game()`, as a fresh
   game starts). A story that grants a starting ship (`story.json`'s
   `"start"` block) gets `"new_game"` behaviour automatically since no
-  purchase happens. `SpaceScreen`/`PlayerController` also
-  set a handful of generic, story-agnostic gameplay-event flags of their
-  own (`used_ships_target_mode`, `used_turn`, `used_thrust`, `used_brake`,
-  `braked_below_threshold`, `used_autopilot_on_ship`, `landed_on_landable`,
-  `completed_jump`, and `"hailed_pilot:<name>"` from `_start_hail()`) so a
-  story's missions.json can use them as `"complete_flag"`s without any
-  code change. Several of those latch permanently once the player has ever
+  purchase happens. `SpaceScreen`/`PlayerController`/`LocationScreen` also
+  set a fixed set of generic, story-agnostic **gameplay-event flags** so a
+  story's missions.json can use them as `"complete_flag"`s with no code
+  change - this is the vocabulary a new tutorial is limited to:
+
+  | flag | set when | set by |
+  |---|---|---|
+  | `used_turn` | rotate the ship | `PlayerController` |
+  | `used_brake` | press brake/reverse | `PlayerController` |
+  | `used_thrust` | thrust forward | `SpaceScreen.update_physics` |
+  | `braked_below_threshold` | speed drops below `brake_slow_threshold` after thrust+brake | `SpaceScreen.update_physics` |
+  | `used_ships_target_mode` | cycle targeting to SHIPS | `SpaceScreen._cycle_target_mode` |
+  | `used_autopilot_on_ship` | engage autopilot toward a ship | `SpaceScreen` |
+  | `landed_on_landable` | land at a station/moon | `SpaceScreen._check_landing` |
+  | `completed_jump` | finish a jump | `SpaceScreen._complete_jump` |
+  | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
+  | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
+  | `bought_ship` / `bought_ship:<type>` | buy a ship (either purchase path) | `LocationScreen.buy_ship` |
+  | `took_loan` | take a loan | `LocationScreen._apply_dialogue_action` |
+
+  Dialogue can also set arbitrary flags with `"set_flag:<name>"`, so a
+  conversation choice is the escape hatch for any event not in this list.
+  Several of these latch permanently once the player has ever
   done the thing, so a mission that walks through them one at a time
   (`first_flight`) sets `"reset_stage_flags_on_activation": true` at the
   mission level: `_reset_stage_flags()` then forces each stage's

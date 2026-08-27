@@ -59,7 +59,9 @@ only appears under a section if it currently has items there.
       missions have their own place instead of being mixed into the same list
       as in-progress ones (`report_menu.mission_report()` already gets both from
       `mission_status_lines()`).
-- [ ] Tutorial mission for taking out a loan and buying a ship.
+- [ ] Tutorial mission for taking out a loan and buying a ship. (Engine
+      support done: `took_loan` / `bought_ship` / `bought_ship:<type>`
+      gameplay-event flags - just needs the missions.json stages written.)
 - [ ] Relationships.
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or

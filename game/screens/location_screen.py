@@ -371,6 +371,9 @@ class LocationScreen(ScreenBase):
         elif action == "take_loan" or action.startswith("take_loan:"):
             lender, amount, _ = self._loan_terms(action)
             self.player.possessions.take_loan(lender, amount)
+            # Generic gameplay-event flag (see PlayerController's "used_turn")
+            # - a "take out a loan" tutorial stage can use it as a complete_flag.
+            self.player.possessions.flags["took_loan"] = True
 
     def buy_ship(self, ship_type_id):
         """Spend credits, add the ship to possessions, and let SpaceScreen
@@ -389,6 +392,11 @@ class LocationScreen(ScreenBase):
         self.player.possessions.spend(cost)
         self.player.possessions.uninstall_all_outfits()
         self.player.possessions.add_ship(ship_type_id)
+        # Generic gameplay-event flags (see PlayerController's "used_turn") -
+        # a "buy your first ship" tutorial stage can use either as its
+        # complete_flag. Set on both purchase paths since both funnel here.
+        self.player.possessions.flags["bought_ship"] = True
+        self.player.possessions.flags[f"bought_ship:{ship_type_id}"] = True
         if self.on_ship_purchased:
             self.on_ship_purchased(ship_type_id)
 

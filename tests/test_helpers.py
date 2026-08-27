@@ -3305,6 +3305,13 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen._apply_dialogue_action("buy_ship:shuttle")
         self.assertEqual(purchased, ["shuttle"])
 
+    def test_buy_ship_sets_the_bought_ship_gameplay_flags(self):
+        possessions = Possessions(credits=1200)
+        screen = LocationScreen(config_data={"label": "Spaceport"}, world_width=800, world_height=600, player_possessions=possessions)
+        screen.buy_ship("shuttle")
+        self.assertTrue(possessions.flags.get("bought_ship"))
+        self.assertTrue(possessions.flags.get("bought_ship:shuttle"))
+
     def test_buy_ship_uninstalls_outfits_instead_of_carrying_them_to_the_new_ship(self):
         """Regression test: installed_outfits describes "whichever ship is
         flown", not a specific hull (see docs/SAVE_SYSTEM.md) - buying a new
@@ -3342,6 +3349,11 @@ class TestLocationScreenEconomy(unittest.TestCase):
         self.assertEqual(screen.player.possessions.credits, 2500)
         self.assertEqual(screen.player.possessions.loans,
                          [{"lender": "Station Credit Union", "principal": 2500}])
+
+    def test_take_loan_sets_the_took_loan_gameplay_flag(self):
+        screen = self._make_screen()
+        screen._apply_dialogue_action("take_loan")
+        self.assertTrue(screen.player.possessions.flags.get("took_loan"))
 
     def test_navigation_skips_blocked_dialogue_options(self):
         """Regression test: the cursor used to be able to move onto (and
