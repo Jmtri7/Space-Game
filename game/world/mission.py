@@ -16,6 +16,18 @@ This keeps mission progress and conversation state in one shared
 vocabulary instead of two parallel systems that would each need to notice
 the same events.
 
+Some of those generic gameplay-event flags ("used_turn", "used_thrust",
+...) are latching - once the player has ever turned or thrusted, the flag
+stays set for the rest of the game. For a tutorial that walks through
+those exact actions one at a time, that means a step whose action the
+player already happened to perform earlier would complete the instant it
+became current, skipping the instruction entirely. A mission opts out of
+that by setting "reset_stage_flags_on_activation": true at the mission
+level: every stage's complete_flag is then forced False the moment that
+stage becomes the active one (all of them at start_mission, and the
+newly-active one again on each advance), so a step can only be satisfied
+by an action taken while it's actually the current step.
+
 A stage can also carry a "one_way_message" ({"sender": ..., "text": ...})
 - delivered automatically (as a one-way hail banner + Messages log entry,
 see SpaceScreen._post_message) the moment a mission advances *into* that
@@ -28,12 +40,36 @@ stays pygame/UI-free on purpose.
 A mission can also carry "escort_flag" (a flag name cleared - set False -
 whenever the mission ends, finished or abandoned) and "on_end_flags" (a
 list of flag names set True at that same point) - see _on_mission_end().
-Lets a mission put an NPC pilot in FollowRoutine for its duration (see
+Lets a mission put an NPC pilot in OrbitPlayerRoutine for its duration (see
 person.escort_flag/SpaceScreen._sync_escorts) and leave a marker behind
 (e.g. so a re-hailed pilot's dialogue can stop offering the same mission
 again - see Dialogue.conditional_roots) without SpaceScreen needing to
 know anything mission-specific.
 """
+
+
+def _reset_stage_flags(mission, possessions, stage_indices):
+    """Force back to False, for each stage in stage_indices, its
+    "complete_flag" plus every name in its optional "reset_flags" list -
+    but only if this mission set "reset_stage_flags_on_activation" (see the
+    module docstring). A no-op for any mission that didn't opt in, and for
+    an out-of-range index.
+
+    "reset_flags" is for the case where the flag that a step's completion
+    is actually derived from isn't the complete_flag itself: the braking
+    step completes on "braked_below_threshold" (recomputed live from speed
+    - clearing it alone wouldn't stick), so it also lists "used_brake",
+    the latching did-the-player-press-it input that gates that
+    computation, forcing a fresh press once the step is current."""
+    if not mission.get("reset_stage_flags_on_activation"):
+        return
+    stages = mission.get("stages", [])
+    for i in stage_indices:
+        if not 0 <= i < len(stages):
+            continue
+        for flag in [stages[i].get("complete_flag"), *stages[i].get("reset_flags", [])]:
+            if flag:
+                possessions.flags[flag] = False
 
 
 def _on_mission_end(mission, possessions):
@@ -60,9 +96,14 @@ def start_mission(missions_config, possessions, mission_id):
         return None
     if mission_id in possessions.missions or mission_id in possessions.completed_missions:
         return None
+    mission = missions_config[mission_id]
     possessions.missions[mission_id] = 0
-    for flag in missions_config[mission_id].get("on_start_flags", []):
+    for flag in mission.get("on_start_flags", []):
         possessions.flags[flag] = True
+    # Clear *every* stage's complete_flag up front (opt-in only) so a
+    # latching gameplay-event flag the player tripped before the mission
+    # even began can't pre-satisfy a step - see _reset_stage_flags.
+    _reset_stage_flags(mission, possessions, range(len(mission.get("stages", []))))
     return (mission_id, 0)
 
 
@@ -76,7 +117,11 @@ def check_mission_progress(missions_config, possessions):
 
     Returns a list of (mission_id, new_stage_index) for every mission that
     advanced into a new, not-yet-finished stage this call - so a caller
-    can deliver that stage's one_way_message, if it has one."""
+    can deliver that stage's one_way_message, if it has one.
+
+    A mission with "reset_stage_flags_on_activation" has each stage's
+    completion flag(s) forced False as it's advanced into - see
+    _reset_stage_flags and the module docstring."""
     advanced = []
     for mission_id in list(possessions.missions.keys()):
         mission = missions_config.get(mission_id)
@@ -96,6 +141,11 @@ def check_mission_progress(missions_config, possessions):
             _on_mission_end(mission, possessions)
         else:
             possessions.missions[mission_id] = next_index
+            # Re-clear the stage we just moved into (opt-in only): the
+            # player may have performed its action while an earlier stage
+            # was current, latching the flag before this step was ever
+            # the instruction on screen.
+            _reset_stage_flags(mission, possessions, [next_index])
             advanced.append((mission_id, next_index))
     return advanced
 

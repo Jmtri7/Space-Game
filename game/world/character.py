@@ -184,7 +184,7 @@ class Character:
         # None for any pilot whose config doesn't set one.
         person.one_way_hail = pilot.get("one_way_hail")
         # Optional flag name (pilots.json) that puts this pilot into
-        # FollowRoutine (escorting the player) whenever it's set in the
+        # OrbitPlayerRoutine (escorting the player) whenever it's set in the
         # player's Possessions.flags, and back to their normal role
         # routine once it's cleared - see SpaceScreen._sync_escorts() and
         # game/world/mission.py's escort_flag handling. None for any pilot

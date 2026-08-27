@@ -42,7 +42,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
 from game.world.character import Character
-from game.world.follow_routine import FollowRoutine
+from game.world.orbit_player_routine import OrbitPlayerRoutine
 from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
 from game.world.asteroid_field import AsteroidField
@@ -1165,6 +1165,68 @@ class TestMissionProgress(unittest.TestCase):
         self.assertEqual(check_mission_progress(self.MISSIONS, possessions), [])
 
 
+class TestMissionStageFlagReset(unittest.TestCase):
+    """"reset_stage_flags_on_activation" - a step can't be satisfied by a
+    latching gameplay-event flag (used_turn/used_thrust/...) the player
+    tripped before that step was the active one. See mission.py's module
+    docstring."""
+
+    MISSIONS = {
+        "tut": {
+            "title": "Tutorial",
+            "reset_stage_flags_on_activation": True,
+            "stages": [
+                {"text": "Turn.", "complete_flag": "used_turn"},
+                {"text": "Thrust.", "complete_flag": "used_thrust"},
+                {"text": "Brake.", "complete_flag": "braked_below_threshold", "reset_flags": ["used_brake"]},
+            ],
+        },
+    }
+
+    def test_start_clears_every_stage_flag_that_was_already_latched(self):
+        possessions = Possessions()
+        possessions.flags.update({"used_turn": True, "used_thrust": True, "used_brake": True})
+        start_mission(self.MISSIONS, possessions, "tut")
+        self.assertFalse(possessions.flags["used_turn"])
+        self.assertFalse(possessions.flags["used_thrust"])
+        self.assertFalse(possessions.flags["used_brake"])
+
+    def test_pre_latched_flag_does_not_auto_advance_stage_zero(self):
+        possessions = Possessions()
+        possessions.flags["used_turn"] = True
+        start_mission(self.MISSIONS, possessions, "tut")
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertEqual(possessions.missions["tut"], 0)  # must actually turn now
+
+    def test_action_taken_during_an_earlier_stage_does_not_pre_complete_a_later_one(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "tut")
+        possessions.flags["used_thrust"] = True  # thrusted while still on the "turn" step
+        possessions.flags["used_turn"] = True
+        check_mission_progress(self.MISSIONS, possessions)  # advances 0 -> 1
+        self.assertEqual(possessions.missions["tut"], 1)
+        self.assertFalse(possessions.flags["used_thrust"], "entering stage 1 re-clears its flag")
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertEqual(possessions.missions["tut"], 1)  # still there until a fresh thrust
+
+    def test_reset_flags_list_is_cleared_on_activation(self):
+        possessions = Possessions()
+        possessions.missions["tut"] = 1
+        possessions.flags["used_thrust"] = True
+        possessions.flags["used_brake"] = True  # latched early
+        check_mission_progress(self.MISSIONS, possessions)  # 1 -> 2
+        self.assertEqual(possessions.missions["tut"], 2)
+        self.assertFalse(possessions.flags["used_brake"], "listed in stage 2's reset_flags")
+
+    def test_without_the_opt_in_a_pre_set_flag_still_advances(self):
+        missions = {"m": {"title": "M", "stages": [{"text": "x", "complete_flag": "used_turn"}, {"text": "y", "complete_flag": "done"}]}}
+        possessions = Possessions()
+        possessions.flags["used_turn"] = True
+        start_mission(missions, possessions, "m")
+        check_mission_progress(missions, possessions)
+        self.assertEqual(possessions.missions["m"], 1)
+
+
 class TestMissionEscortAndAbandon(unittest.TestCase):
     """escort_flag/on_end_flags (see mission.py's _on_mission_end) and
     abandon_mission() - the mechanism behind an NPC escorting the player
@@ -2063,9 +2125,9 @@ class TestCharacterSetRoutine(unittest.TestCase):
             pilot={"name": "Kade Marsh", "role": "patrol_officer"}, route=[], get_interior_screen=None,
         )
         target = SimpleNamespace(x=100, y=0, get_distance=lambda x, y: 100)
-        character.set_routine(FollowRoutine(target))
-        self.assertIsInstance(character.routine, FollowRoutine)
-        self.assertTrue(character.autopilot_active)  # start() engaged seek
+        character.set_routine(OrbitPlayerRoutine(target))
+        self.assertIsInstance(character.routine, OrbitPlayerRoutine)
+        self.assertTrue(character.autopilot_active)  # start() engaged orbit
 
     def test_resolve_routine_class_matches_the_role_used_at_construction(self):
         from game.world.character import resolve_routine_class, ROLE_ROUTINES
@@ -2079,11 +2141,11 @@ class TestCharacterSetRoutine(unittest.TestCase):
         self.assertFalse(character.escorting)
 
 
-class TestFollowRoutine(unittest.TestCase):
-    """FollowRoutine - continuously re-engages seek on a moving target
-    (typically the player) whenever autopilot isn't already actively
-    chasing it, so an escort doesn't sit parked once the target moves
-    again after being caught up to."""
+class TestOrbitPlayerRoutine(unittest.TestCase):
+    """OrbitPlayerRoutine - keeps an escort circling a moving target
+    (typically the player) at a fixed radius by re-engaging orbit mode
+    every frame with the target's current position as the centre, so the
+    circle tracks the target instead of the escort parking on top of it."""
 
     def _character(self):
         return Character.for_ai_pilot(
@@ -2091,34 +2153,24 @@ class TestFollowRoutine(unittest.TestCase):
             pilot={"name": "Kade Marsh", "role": "patrol_officer"}, route=[], get_interior_screen=None,
         )
 
-    def test_start_engages_seek_on_the_target(self):
+    def test_start_engages_orbit_centred_on_the_target(self):
         character = self._character()
         target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
-        FollowRoutine(target).start(character)
+        OrbitPlayerRoutine(target).start(character)
         self.assertTrue(character.autopilot_active)
-        self.assertIs(character.autopilot_target, target)
+        mode = character.ship.autopilot._mode
+        self.assertEqual((mode.center_x, mode.center_y), (500, 0))
 
-    def test_run_re_engages_once_autopilot_has_disengaged(self):
+    def test_run_moves_the_orbit_centre_to_follow_the_target(self):
         character = self._character()
         target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
-        routine = FollowRoutine(target)
+        routine = OrbitPlayerRoutine(target)
         routine.start(character)
-        character.autopilot_active = False  # simulate having "arrived" and disengaged
+        target.x, target.y = 800, 200  # target flew somewhere else
         routine.run(character)
-        self.assertTrue(character.autopilot_active, "must re-engage seek once disengaged")
-
-    def test_run_does_not_re_engage_while_already_seeking(self):
-        """A no-op call while still actively seeking shouldn't reset
-        SeekMode's internal state (see autopilot.py's own comments on why
-        that matters) - checked indirectly here via the target staying the
-        exact same object reference, not a freshly re-engaged one."""
-        character = self._character()
-        target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
-        routine = FollowRoutine(target)
-        routine.start(character)
-        mode_before = character.ship.autopilot._mode
-        routine.run(character)
-        self.assertIs(character.ship.autopilot._mode, mode_before)
+        mode = character.ship.autopilot._mode
+        self.assertEqual((mode.center_x, mode.center_y), (800, 200))
+        self.assertTrue(character.autopilot_active)
 
 
 class TestExplorerRoutine(unittest.TestCase):
@@ -2536,17 +2588,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.2.0")
+        self.assertEqual(game_screen.story_version, "1.3.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.2.0")
+        self.assertEqual(game_state["story_version"], "1.3.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.2.0")
+            warn_if_story_version_mismatch("default", "1.3.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2554,7 +2606,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.2.0", captured.getvalue())
+        self.assertIn("1.3.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -2752,7 +2804,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     def test_starting_the_tutorial_makes_kade_escort_immediately(self):
         """first_flight's "on_start_flags" sets kade_escorting the moment
         the mission begins (on ship purchase), so _sync_escorts pulls Kade
-        into FollowRoutine right away - not only once the player accepts his
+        into OrbitPlayerRoutine right away - not only once the player accepts his
         offer mid-conversation."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
@@ -2760,7 +2812,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen.update_physics()
         kade = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
         self.assertTrue(kade.escorting)
-        self.assertIsInstance(kade.routine, FollowRoutine)
+        self.assertIsInstance(kade.routine, OrbitPlayerRoutine)
 
     def test_buying_a_second_ship_does_not_restart_the_mission(self):
         game_screen = self._boarded_screen()
@@ -2867,7 +2919,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 3)
         self.assertTrue(kade_char.escorting)
-        self.assertIsInstance(kade_char.routine, FollowRoutine)
+        self.assertIsInstance(kade_char.routine, OrbitPlayerRoutine)
 
     def test_declining_kades_help_abandons_the_mission_and_stops_escorting(self):
         game_screen = self._boarded_screen()

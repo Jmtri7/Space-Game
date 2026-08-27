@@ -16,7 +16,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
-| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) |
+| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`" |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
@@ -121,6 +121,9 @@ you've bought him a round once. See `game/world/dialogue.py`.
 Hailing reuses the exact same conversation UI as talking to someone
 face-to-face, but requires a targeted AI ship first (SHIPS target mode -
 see the Space View table above) - there's no hailing without a target.
+Whenever a ship is targeted, the bottom status pane shows a
+"Press H to Hail `<name>`" prompt (it is not in the top-left Controls
+pane, since it only applies with a target selected).
 A pilot answers differently depending on where they actually are: their
 **hail** conversation (this section) is a separate, ship-context
 conversation from the one they'd give you face-to-face if you boarded
@@ -136,13 +139,17 @@ screen on its own once you fly close enough - a brief top-centre banner in
 a glass pane, the same look as the rest of the HUD (mission toasts and the
 "too close to jump" warning share that pane style and stack below it - see
 `draw_glow_message`), no dialogue box, and it doesn't require a target - you still have to target and hail them back
-(H) to actually have the conversation. Each pilot's one-way hail (if they
-have one) only ever fires once. See `pilots.json`'s `"hail_dialogue_tree"`/
-`"one_way_hail"` and `game/world/character.py`'s `Character.for_ai_pilot`.
+(H) to actually have the conversation. The banner only announces the
+transmission ("Incoming transmission - `<sender>` (see Messages)") - the
+message body itself is in the Message Log pane (below), not the banner.
+Each pilot's one-way hail (if they have one) only ever fires once. See
+`pilots.json`'s `"hail_dialogue_tree"`/`"one_way_hail"` and
+`game/world/character.py`'s `Character.for_ai_pilot`.
 
 That one-way banner is easy to miss if you're looking elsewhere when it
-fires, so it's also recorded in the **Message Log** pane, bottom-left of
-the Space View - every one-way message ever received, newest at the top, as
+fires, and doesn't carry the message text anyway, so every message is
+recorded in the **Message Log** pane, bottom-left of the Space View -
+every one-way message ever received, newest at the top, as
 "`Sender: message`". It only appears once at least one message has arrived
 (nothing to show before then) and stays up permanently (not a timer). The
 pane has a fixed maximum height (`MESSAGE_LOG_VISIBLE_LINES`); once the
@@ -190,8 +197,9 @@ gameplay event (targeting/turning/thrusting/braking/landing/jumping), or
 anything else that sets a flag. A mission can also let the player decline
 it partway through (Kade offers to walk you through it - saying no ends
 the mission there instead of completing it), and can have an NPC pilot
-escort/follow you for its duration, returning to their normal routine
-once it ends - see ARCHITECTURE.md's `person.escort_flag`/`FollowRoutine`.
+escort you for its duration - circling your ship at a fixed radius -
+returning to their normal routine once it ends - see ARCHITECTURE.md's
+`person.escort_flag`/`OrbitPlayerRoutine`.
 
 ## Menus
 

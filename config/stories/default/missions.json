@@ -4,6 +4,7 @@
     "escort_flag": "kade_escorting",
     "on_start_flags": ["kade_escorting"],
     "on_end_flags": ["kade_tutorial_done"],
+    "reset_stage_flags_on_activation": true,
     "stages": [
       {
         "text": "Cycle your targeting mode (T) until it reads SHIPS.",
@@ -48,6 +49,7 @@
       {
         "text": "Turn around and brake until your speed drops - S or the Down arrow, then thrust.",
         "complete_flag": "braked_below_threshold",
+        "reset_flags": ["used_brake"],
         "one_way_message": {
           "sender": "Kade Marsh",
           "text": "Now the fun part - turning around. Hold S or the down arrow to point opposite your velocity, then thrust to cancel it out. Get your speed down."

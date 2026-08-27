@@ -123,7 +123,16 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   `braked_below_threshold`, `used_autopilot_on_ship`, `landed_on_landable`,
   `completed_jump`, and `"hailed_pilot:<name>"` from `_start_hail()`) so a
   story's missions.json can use them as `"complete_flag"`s without any
-  code change. See docs/CONTROLS.md's Mission Log section and
+  code change. Several of those latch permanently once the player has ever
+  done the thing, so a mission that walks through them one at a time
+  (`first_flight`) sets `"reset_stage_flags_on_activation": true` at the
+  mission level: `_reset_stage_flags()` then forces each stage's
+  `"complete_flag"` (plus any names in its optional `"reset_flags"` list -
+  for a step whose completion is derived from a *different* latching flag,
+  like the braking step's `used_brake`) back to `False` the moment that
+  stage becomes active (all stages at `start_mission()`, the newly-active
+  one again on each advance), so a step can't be satisfied by an action
+  taken before it was the current instruction. See docs/CONTROLS.md's Mission Log section and
   `config/stories/default/missions.json`'s `"first_flight"` for a worked
   example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
@@ -269,9 +278,10 @@ mechanism behind every non-player character in the game:
   pilot who hails the player first, once, on proximity - see
   `SpaceScreen._check_one_way_hails()` and docs/CONTROLS.md's Hailing
   section. `person.escort_flag` (optional, from `pilots.json`) names a
-  `Possessions.flags` entry that puts this pilot into `FollowRoutine`
-  (`follow_routine.py` - continuously re-`engage_seek()`s a moving target,
-  typically the player) instead of their normal role routine for as long
+  `Possessions.flags` entry that puts this pilot into `OrbitPlayerRoutine`
+  (`orbit_player_routine.py` - continuously re-`engage_orbit()`s around a
+  moving target, typically the player, so the escort circles nearby rather
+  than parking on top of them) instead of their normal role routine for as long
   as that flag is set, and back via `Character.set_routine()` +
   `resolve_routine_class(role, faction)` once it's cleared - see
   `SpaceScreen._sync_escorts()`. A mission can set/clear that flag itself
@@ -295,7 +305,7 @@ that routine flies a ship or just moves a body around a room:
 | `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
-| `FollowRoutine` | `follow_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted, temporary override via `Character.set_routine()` (see `person.escort_flag` above), not a role pick |
+| `OrbitPlayerRoutine` | `orbit_player_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted, temporary override via `Character.set_routine()` (see `person.escort_flag` above), not a role pick; circles a moving target at a fixed radius |
 
 Every `Routine` implements the same two methods regardless of which table
 row it's in: `start(character)` (once, at construction) and

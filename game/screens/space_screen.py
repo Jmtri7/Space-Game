@@ -16,7 +16,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
-from game.world.follow_routine import FollowRoutine
+from game.world.orbit_player_routine import OrbitPlayerRoutine
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
 from game.world.landable import Landable
@@ -41,7 +41,12 @@ JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel st
 JUMP_TRAVEL_FRAMES = 150        # ~2.5s at 60fps of high-speed travel
 JUMP_SPEED = 40                 # world units/frame while traveling
 JUMP_ARRIVAL_DISTANCE = 1400    # world units from system center on arrival
-JUMP_SELF_MIN_DISTANCE = 1000   # must be at least this far from center to jump "back"
+JUMP_SELF_MIN_DISTANCE = 3200   # must be at least this far from center to jump "back" -
+# roughly the point where the station/moon have scrolled off the edge of the
+# minimap (MINIMAP_RANGE, plus their own offset from center), so "far enough
+# to jump" lines up with "you can't see home on radar anymore". Not exact -
+# the minimap's reach varies a little with window aspect - and doesn't need
+# to be.
 
 # ~4s at 60fps a transient toast (jump done, mission start/stage/finish) stays up
 TOAST_FRAMES = 240
@@ -311,6 +316,15 @@ class SpaceScreen(ScreenBase):
         type's display name (the pilot name is shown separately)."""
         ship_type = get_ship_type(self.story, ship.ship_type_id)
         return ship_type.get("name", f"AI Ship {index + 1}")
+
+    def _approaching_label(self, obj):
+        """Short name for whatever the autopilot is currently seeking, for
+        the "Approaching: ..." status line - a ship's type display name
+        (matching the targeting HUD's own label), or a landable/body's
+        own name."""
+        if isinstance(obj, Character):
+            return self._ship_target_label(obj)
+        return getattr(obj, "name", "target")
 
     def get_interior_screen(self, landable, key):
         """Return the persistent LocationScreen for one of landable's
@@ -791,7 +805,7 @@ class SpaceScreen(ScreenBase):
         # Player is always exactly centered, drawn last so it stays on top.
         pygame.draw.circle(surface, CYAN, rect.center, max(2, int(3 * ui_scale)))
 
-        font_label = get_font(int(14 * ui_scale))
+        font_label = get_font(int(20 * ui_scale))
         label = font_label.render("System Map", True, GRAY)
         surface.blit(label, (rect.x + int(6 * ui_scale), rect.y + int(4 * ui_scale)))
 
@@ -862,7 +876,9 @@ class SpaceScreen(ScreenBase):
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
         if self.active_dialogue:
             return
-        self.hail_banner = (f'Incoming transmission - {sender}: "{text}"', CYAN)
+        # Banner just announces the transmission - the message body itself
+        # is in the Messages pane (bottom-left) and stays there to read.
+        self.hail_banner = (f"Incoming transmission - {sender} (see Messages)", CYAN)
         self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
 
     def _deliver_stage_message(self, advanced_stage):
@@ -906,8 +922,8 @@ class SpaceScreen(ScreenBase):
 
     def _sync_escorts(self):
         """Toggle any pilot with a configured "escort_flag" (pilots.json)
-        between escorting the player (FollowRoutine) and their normal role
-        routine, based on whether that flag is currently set in the
+        between escorting the player (OrbitPlayerRoutine - circling nearby)
+        and their normal role routine, based on whether that flag is currently set in the
         player's Possessions.flags - e.g. Kade Marsh following the player
         through the tutorial mission once they accept his offer to help
         (see his hail_dialogue_tree's "set_flag:kade_escorting" action),
@@ -923,7 +939,7 @@ class SpaceScreen(ScreenBase):
                     continue
                 should_escort = bool(flags.get(escort_flag))
                 if should_escort and not ai_ship.escorting:
-                    ai_ship.set_routine(FollowRoutine(self.player))
+                    ai_ship.set_routine(OrbitPlayerRoutine(self.player))
                     ai_ship.escorting = True
                 elif not should_escort and ai_ship.escorting:
                     ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction)(ai_ship.route))
@@ -1281,11 +1297,12 @@ class SpaceScreen(ScreenBase):
         elif draw_hud:
             help_items = [
                 ("ESC", "Pause"),
-                ("WASD/Arrows", "Thrust/Turn"),
+                ("A/D or Left/Right", "Turn"),
+                ("W or Up", "Thrust"),
+                ("S or Down", "Reverse"),
                 ("T", "Target Mode"),
                 ("]", "Next Target"),
                 ("[", "Previous Target"),
-                ("H", "Hail Target"),
                 ("M", "Star Map"),
                 ("P", "View Possessions"),
                 ("N", "Mission Log"),
@@ -1333,6 +1350,8 @@ class SpaceScreen(ScreenBase):
                 status_lines = [(status_text, GREEN)]
             elif self.player.autopilot_active:
                 status_lines = [("Autopilot engaged - press any key to cancel", GREEN)]
+                if self.player.autopilot_target is not None:
+                    status_lines.append((f"Approaching: {self._approaching_label(self.player.autopilot_target)}", GREEN))
             else:
                 if self.landing_text > 0:
                     status_lines.append(("Press L to Land", GREEN))
