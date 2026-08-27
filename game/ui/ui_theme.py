@@ -4,7 +4,7 @@ CLAUDE.md's One Class Per File rule for why this file is an exception."""
 import math
 import pygame
 from game.constants import YELLOW, WHITE, GRAY
-from game.utils import get_font
+from game.utils import get_font, _wrap_text
 import game.utils as utils
 from game.world.ship import Ship
 
@@ -127,6 +127,62 @@ def draw_status_pane(surface, status_lines, ui_scale):
         text_y = status_panel.y + pad_y + i * status_line_height
         surface.blit(text, (text_x, text_y))
     return status_panel
+
+
+MESSAGE_LOG_MAX_VISIBLE = 5  # entries drawn at once, newest first - see Possessions.message_log for the full (capped) history
+
+
+def draw_message_log(surface, messages, ui_scale):
+    """Bottom-left glass panel of received one-way messages (see
+    Possessions.add_message/message_log and SpaceScreen._check_one_way_hails),
+    newest entry on top - the bottom-left counterpart to draw_status_pane
+    (bottom-center) and draw_info_panel (top-right), for messages that
+    arrived rather than the player's current status.
+
+    `messages` is a list of (sender, text) tuples, already newest-first
+    (see Possessions.add_message) - only the most recent
+    MESSAGE_LOG_MAX_VISIBLE are drawn, so the panel has a fixed max size
+    regardless of how long the full log has grown. Drawing is skipped
+    entirely (returns None) when there are no messages yet, so a fresh
+    game doesn't show an empty box in the corner - same pattern as
+    draw_status_pane."""
+    if not messages:
+        return None
+    font_title = get_font(int(16 * ui_scale))
+    font_text = get_font(int(15 * ui_scale))
+    pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
+    line_height = int(18 * ui_scale)
+    entry_gap = int(4 * ui_scale)
+    margin = int(10 * ui_scale)
+    box_width = int(320 * ui_scale)
+
+    shown = messages[:MESSAGE_LOG_MAX_VISIBLE]
+    # Each entry wraps as one "Sender: text" unit to the panel's width,
+    # rather than sender and text wrapping independently - keeps a short
+    # message on one line without a lone "Sender:" line above it.
+    wrapped_entries = [_wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2) for sender, text in shown]
+
+    title_rendered = font_title.render("Messages", True, (200, 220, 255))
+    title_height = title_rendered.get_height() + int(4 * ui_scale)
+    total_lines = sum(len(lines) for lines in wrapped_entries)
+    box_height = pad_y * 2 + title_height + total_lines * line_height + entry_gap * (len(shown) - 1)
+
+    rect = pygame.Rect(0, 0, box_width, box_height)
+    rect.bottomleft = (margin, utils.screen_height - margin)
+    draw_glass_panel(surface, rect, ui_scale)
+
+    surface.blit(title_rendered, (rect.x + pad_x, rect.y + pad_y))
+    y = rect.y + pad_y + title_height
+    for i, lines in enumerate(wrapped_entries):
+        # Newest (first) entry reads brighter than older ones, so the most
+        # recent arrival draws the eye without needing its own timer/flash.
+        color = WHITE if i == 0 else GRAY
+        for line in lines:
+            line_surf = font_text.render(line, True, color)
+            surface.blit(line_surf, (rect.x + pad_x, y))
+            y += line_height
+        y += entry_gap
+    return rect
 
 
 PURCHASE_MESSAGE_FRAMES = 110  # ~1.8s at 60fps before a "Bought 1 X" message starts fading

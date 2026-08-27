@@ -65,7 +65,8 @@ name is kept, the timestamp lives inside it.
       "items": {"repair_kit": 1},
       "flags": {"hailed_kade": true, "bought_bartender_round": true},
       "missions": {"first_flight": 3},
-      "completed_missions": ["docking_101"]
+      "completed_missions": ["docking_101"],
+      "message_log": [{"sender": "Kade Marsh", "text": "Identify yourself or alter course."}]
     },
     "jump_state": {
       "phase": "travel",
@@ -182,6 +183,13 @@ static per-story config (`missions.json`, via `get_missions()`), never
 duplicated into the save - same story/save split as everything else here.
 A save made before this existed has no `"missions"`/`"completed_missions"`
 keys; both default to `{}`/`[]`.
+
+`message_log` (`[{"sender": ..., "text": ...}, ...]`, newest first) is the
+history behind the Space View's bottom-left Messages pane - one-way hails
+a pilot has sent the player (see `SpaceScreen._check_one_way_hails` and
+docs/CONTROLS.md's Hailing section), capped at `Possessions.MESSAGE_LOG_MAX`
+entries. A save made before this existed has no `"message_log"` key;
+`Possessions.restore_from()`/`from_state()` default it to `[]`.
 
 **`game_state["player"]` means two different things depending on `location`,
 and this matters a great deal for restoring it correctly (see below):** for a

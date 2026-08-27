@@ -2,6 +2,8 @@
 Person (player, NPCs, AI pilots) rather than bolted onto the player alone,
 so any character can be linked to an economy even if most never use it."""
 
+MESSAGE_LOG_MAX = 20  # cap on message_log's length - see add_message()
+
 
 class Possessions:
     """Credits, owned ships, cargo, personal items, and ship outfits a
@@ -38,10 +40,16 @@ class Possessions:
     `completed_missions` (a plain list of ids) once its last stage's
     complete_flag is set. The stage text/order itself is static per-story
     config (missions.json, via get_missions()), not stored here - same
-    story/save split as everything else on this class."""
+    story/save split as everything else on this class.
+
+    `message_log` is the history behind the Space View's bottom-left
+    Messages pane (see ui_theme.draw_message_log) - one-way hails a pilot
+    has sent the player (see SpaceScreen._check_one_way_hails), newest
+    first (add_message() inserts at the front), capped at MESSAGE_LOG_MAX
+    entries so a long playthrough doesn't grow this without bound."""
     def __init__(self, credits=0, owned_ships=None, loans=None,
                  owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None,
-                 missions=None, completed_missions=None):
+                 missions=None, completed_missions=None, message_log=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
         self.loans = loans or []  # list of {"lender": str, "principal": int}
@@ -52,6 +60,14 @@ class Possessions:
         self.flags = flags or {}  # {flag_name: True}
         self.missions = missions or {}  # {mission_id: current_stage_index}
         self.completed_missions = completed_missions or []  # [mission_id, ...]
+        self.message_log = message_log or []  # [{"sender": str, "text": str}, ...], newest first
+
+    def add_message(self, sender, text):
+        """Record a one-way message at the front of message_log (newest
+        first, matching how the Messages pane displays it), trimming back
+        down to MESSAGE_LOG_MAX entries."""
+        self.message_log.insert(0, {"sender": sender, "text": text})
+        del self.message_log[MESSAGE_LOG_MAX:]
 
     def can_afford(self, amount):
         return self.credits >= amount
@@ -143,6 +159,7 @@ class Possessions:
         self.flags = dict(state.get("flags", self.flags))
         self.missions = dict(state.get("missions", self.missions))
         self.completed_missions = list(state.get("completed_missions", self.completed_missions))
+        self.message_log = [dict(m) for m in state.get("message_log", self.message_log)]
 
     def get_state(self):
         return {
@@ -156,6 +173,7 @@ class Possessions:
             "flags": dict(self.flags),
             "missions": dict(self.missions),
             "completed_missions": list(self.completed_missions),
+            "message_log": [dict(m) for m in self.message_log],
         }
 
     @classmethod
@@ -173,4 +191,5 @@ class Possessions:
             flags=dict(state.get("flags", {})),
             missions=dict(state.get("missions", {})),
             completed_missions=list(state.get("completed_missions", [])),
+            message_log=[dict(m) for m in state.get("message_log", [])],
         )

@@ -1029,6 +1029,41 @@ class TestPossessionsMissions(unittest.TestCase):
         self.assertEqual(possessions.completed_missions, [])
 
 
+class TestPossessionsMessageLog(unittest.TestCase):
+    """message_log (the Space View's bottom-left Messages pane's history -
+    see ui_theme.draw_message_log and SpaceScreen._check_one_way_hails) -
+    add_message()'s newest-first/capped behavior, and the usual save
+    round-trip."""
+
+    def test_add_message_inserts_newest_first(self):
+        possessions = Possessions()
+        possessions.add_message("Kade Marsh", "Identify yourself.")
+        possessions.add_message("Elena Voss", "Hello there.")
+        self.assertEqual(possessions.message_log[0], {"sender": "Elena Voss", "text": "Hello there."})
+        self.assertEqual(possessions.message_log[1], {"sender": "Kade Marsh", "text": "Identify yourself."})
+
+    def test_add_message_caps_the_log_length(self):
+        possessions = Possessions()
+        for i in range(30):
+            possessions.add_message("Someone", f"message {i}")
+        self.assertEqual(len(possessions.message_log), 20)
+        self.assertEqual(possessions.message_log[0]["text"], "message 29")  # newest kept
+
+    def test_message_log_round_trips_through_get_state_and_restore_from(self):
+        possessions = Possessions()
+        possessions.add_message("Kade Marsh", "Identify yourself.")
+        state = possessions.get_state()
+        self.assertEqual(state["message_log"], [{"sender": "Kade Marsh", "text": "Identify yourself."}])
+
+        restored = Possessions()
+        restored.restore_from(state)
+        self.assertEqual(restored.message_log, [{"sender": "Kade Marsh", "text": "Identify yourself."}])
+
+    def test_from_state_defaults_to_no_messages_for_a_pre_existing_save(self):
+        possessions = Possessions.from_state({"credits": 10})
+        self.assertEqual(possessions.message_log, [])
+
+
 class TestMissionProgress(unittest.TestCase):
     """start_mission()/check_mission_progress()/mission_status_lines() -
     the mission/stage tracker itself. Stage completion is driven entirely
@@ -2398,10 +2433,15 @@ class TestSpaceScreenHailing(unittest.TestCase):
         self.assertIn("Kade Marsh", game_screen.hail_banner[0])
         flags = game_screen.player.person.possessions.flags
         self.assertTrue(flags.get("one_way_hail_seen:Kade Marsh"))
+        # Also logged (see Possessions.add_message) - the banner alone is
+        # easy to miss, so it stays in the Messages pane too.
+        message_log = game_screen.player.person.possessions.message_log
+        self.assertEqual(message_log[0]["sender"], "Kade Marsh")
 
         game_screen.hail_banner = None
         game_screen._check_one_way_hails()
         self.assertIsNone(game_screen.hail_banner, "must not fire a second time for the same pilot")
+        self.assertEqual(len(message_log), 1, "must not log a second time for the same pilot")
 
 
 class TestSpaceScreenMissionIntegration(unittest.TestCase):

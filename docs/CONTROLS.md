@@ -135,6 +135,13 @@ doesn't require a target) - you still have to target and hail them back
 have one) only ever fires once. See `pilots.json`'s `"hail_dialogue_tree"`/
 `"one_way_hail"` and `game/world/character.py`'s `Character.for_ai_pilot`.
 
+That one-way banner is easy to miss if you're looking elsewhere when it
+fires, so it's also recorded in the **Messages** pane, bottom-left of the
+Space View - every one-way message ever received, newest at the top, as
+"`Sender: message`". It only appears once at least one message has arrived
+(nothing to show before then), stays up permanently (not a timer), and
+isn't interactive - see `Possessions.message_log`/`add_message()`.
+
 Space View also shows a persistent hint in the bottom status pane once
 you've drifted far enough from the system's center that jumping back is
 possible ("Drifting far from the system - open the Star Map (M) and jump

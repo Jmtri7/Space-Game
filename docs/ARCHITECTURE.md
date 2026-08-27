@@ -69,8 +69,11 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   Dialogue and Hailing sections.
 - `Possessions` — credits/owned ships/loans/cargo/items, `flags`
   (`{name: True}` story-progress markers Dialogue's `requires_flag`/
-  `conditional_roots`/`"set_flag:"` read and write - see above), and
-  `missions`/`completed_missions` (mission/stage progress - see below),
+  `conditional_roots`/`"set_flag:"` read and write - see above),
+  `missions`/`completed_missions` (mission/stage progress - see below), and
+  `message_log` (received one-way hails, newest first - `add_message()`
+  inserts at the front, capped at `MESSAGE_LOG_MAX` - rendered by the
+  Space View's bottom-left Messages pane, `ui_theme.draw_message_log()`),
   composed onto every `Person`
 - `game/world/mission.py` (functions, not a class - see CLAUDE.md's One
   Class Per File exception for utility modules) — mission/stage tracking:

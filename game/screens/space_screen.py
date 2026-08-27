@@ -10,7 +10,7 @@ from game.utils import (
     get_asteroid_type, get_missions
 )
 import game.utils as utils
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -754,15 +754,18 @@ class SpaceScreen(ScreenBase):
         Character.for_ai_pilot) fire once the player gets close enough:
         shows a transient banner (not the full hail_dialogue - the player
         still has to hail back with H to actually talk, per
-        docs/CONTROLS.md), and sets a flag so it never fires twice for the
-        same pilot. Only checks the active system's ships (self.ai_ships) -
-        proximity to the player only means anything in whichever system
-        they're actually in - and skips entirely while a hail is already
-        open, so an incoming banner can't steal focus out from under a
-        conversation the player is already having."""
+        docs/CONTROLS.md), records it in the Messages pane's log (see
+        Possessions.add_message - the banner alone is easy to miss, but the
+        log stays until read), and sets a flag so it never fires twice for
+        the same pilot. Only checks the active system's ships
+        (self.ai_ships) - proximity to the player only means anything in
+        whichever system they're actually in - and skips entirely while a
+        hail is already open, so an incoming banner can't steal focus out
+        from under a conversation the player is already having."""
         if self.active_dialogue:
             return
-        flags = self.player.person.possessions.flags
+        possessions = self.player.person.possessions
+        flags = possessions.flags
         for ai_ship in self.ai_ships:
             one_way = getattr(ai_ship.person, "one_way_hail", None)
             if not one_way or ai_ship.ashore:
@@ -777,6 +780,7 @@ class SpaceScreen(ScreenBase):
                 message = one_way.get("message", "...")
                 self.hail_banner = (f'Incoming transmission - {pilot_name}: "{message}"', CYAN)
                 self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
+                possessions.add_message(pilot_name, message)
                 return  # one at a time - avoids stacking two banners the same frame
 
     def _check_landing(self):
@@ -1169,10 +1173,20 @@ class SpaceScreen(ScreenBase):
 
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
+        # --- Bottom-left: received one-way messages (see
+        # _check_one_way_hails/Possessions.add_message) - easy to miss as
+        # just a transient banner, so they also collect here until there's
+        # something to actually look back at. Skipped along with the rest
+        # of the HUD while a modal menu/hail dialogue has focus.
+        message_log_rect = None
+        if draw_hud and not self.active_dialogue:
+            messages = [(m["sender"], m["text"]) for m in self.player.person.possessions.message_log]
+            message_log_rect = draw_message_log(surface, messages, ui_scale)
+
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in
         # the world behind them (see _hud_click_rects' own comment).
-        self._hud_click_rects = [rect for rect in (minimap_rect, info_rect, controls_rect, status_rect) if rect]
+        self._hud_click_rects = [rect for rect in (minimap_rect, info_rect, controls_rect, status_rect, message_log_rect) if rect]
 
     def get_state(self):
         state = {
