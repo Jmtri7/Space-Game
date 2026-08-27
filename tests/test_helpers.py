@@ -2261,6 +2261,28 @@ class TestCharacterSetRoutine(unittest.TestCase):
         from game.world.character import resolve_routine_class, ROLE_ROUTINES
         self.assertIs(resolve_routine_class("patrol_officer"), ROLE_ROUTINES["patrol_officer"])
 
+    def test_explicit_routine_name_overrides_the_role_default(self):
+        from game.world.character import resolve_routine_class, ROUTINE_REGISTRY
+        # an unknown role would normally be IdleRoutine
+        self.assertIs(
+            resolve_routine_class("smuggler", routine_name="wander"),
+            ROUTINE_REGISTRY["wander"],
+        )
+
+    def test_unknown_routine_name_falls_back_to_idle(self):
+        from game.world.character import resolve_routine_class, IdleRoutine
+        self.assertIs(resolve_routine_class("patrol_officer", routine_name="nonsense"), IdleRoutine)
+
+    def test_pilot_config_routine_key_picks_the_routine(self):
+        from game.world.wander_routine import WanderRoutine
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot={"name": "Rove", "role": "smuggler", "routine": "wander"},
+            route=[], get_interior_screen=None,
+        )
+        self.assertIsInstance(character.routine, WanderRoutine)
+        self.assertEqual(character.routine_name, "wander")
+
     def test_escorting_flag_defaults_to_false(self):
         character = Character.for_ai_pilot(
             0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
@@ -2716,17 +2738,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.3.0")
+        self.assertEqual(game_screen.story_version, "1.4.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.3.0")
+        self.assertEqual(game_state["story_version"], "1.4.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.3.0")
+            warn_if_story_version_mismatch("default", "1.4.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2734,7 +2756,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.3.0", captured.getvalue())
+        self.assertIn("1.4.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -2906,6 +2928,79 @@ class TestSpaceScreenHailing(unittest.TestCase):
         game_screen._check_one_way_hails()
         self.assertIsNone(game_screen.hail_banner, "must not fire a second time for the same pilot")
         self.assertEqual(len(message_log), 1, "must not log a second time for the same pilot")
+
+
+class TestSpaceScreenStartConfig(unittest.TestCase):
+    """story.json's "start" block + starting_mission_trigger - the player's
+    state and world placement at the beginning of a brand-new game (see
+    SpaceScreen._apply_start_config / begin_new_game). A loaded save is
+    unaffected: restore_possessions() overwrites all of this."""
+
+    def test_default_story_begins_shipless_on_the_station_dormitory(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        location, interior = game_screen.begin_new_game()
+        self.assertEqual((location, interior), ("station", "dormitory"))
+        self.assertEqual(game_screen.player.person.possessions.owned_ships, [])
+        self.assertEqual(game_screen.player.person.possessions.credits, 0)
+        # trigger is "ship_purchase" - no mission before a ship is bought
+        self.assertNotIn("first_flight", game_screen.player.person.possessions.missions)
+
+    def test_apply_start_config_seeds_credits_ship_items_and_flags(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.start_config = {
+            "credits": 4200, "ship": "shuttle",
+            "items": {"data_chip": 2}, "outfits": ["cargo_expansion"],
+            "flags": {"met_the_broker": True},
+        }
+        game_screen._apply_start_config()
+        possessions = game_screen.player.person.possessions
+        self.assertEqual(possessions.credits, 4200)
+        self.assertEqual(possessions.owned_ships, ["shuttle"])
+        self.assertEqual(possessions.items, {"data_chip": 2})
+        self.assertEqual(possessions.owned_outfits, ["cargo_expansion"])
+        self.assertTrue(possessions.flags.get("met_the_broker"))
+        # ship stats were actually applied, not just recorded
+        self.assertEqual(game_screen.player.ship.max_velocity,
+                         utils.get_ship_type("default", "shuttle")["max_velocity"])
+
+    def test_a_starting_ship_triggers_the_tutorial_on_new_game(self):
+        """With no purchase to hook, begin_new_game() must fire the
+        starting_mission itself when the story grants a ship."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.start_config = {"ship": "shuttle", "location": "space"}
+        game_screen._apply_start_config()
+        location, interior = game_screen.begin_new_game()
+        self.assertEqual((location, interior), ("space", None))
+        self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
+
+    def test_new_game_trigger_starts_the_mission_without_a_ship(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.starting_mission_trigger = "new_game"
+        game_screen.begin_new_game()
+        self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
+
+
+class TestStoryTuningConfig(unittest.TestCase):
+    """Per-story tuning knobs read from story.json (jump / brake / camera /
+    walking) - defaults live in code, story.json overrides them."""
+
+    def test_space_screen_reads_jump_and_brake_tuning(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        self.assertEqual(s.jump_speed, 40)
+        self.assertEqual(s.jump_travel_frames, 150)
+        self.assertEqual(s.jump_arrival_distance, 1400)
+        self.assertEqual(s.jump_self_min_distance, 3200)
+        self.assertEqual(s.brake_slow_threshold, 0.3)
+
+    def test_space_screen_applies_camera_zoom_to_the_shared_camera(self):
+        utils.set_camera_zoom(99.0)
+        SpaceScreen(pilot_name="T", story="default")
+        self.assertEqual(utils.get_scale(), utils._camera.get_scale())
+        self.assertEqual(utils._camera.zoom, 3.0)  # story.json's camera_zoom
+
+    def test_location_screen_walking_speed_from_story(self):
+        screen = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
+        self.assertEqual(screen.speed, 2.5)
 
 
 class TestSpaceScreenMissionIntegration(unittest.TestCase):
@@ -3264,6 +3359,13 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen._apply_dialogue_action("buy_ship:shuttle")
         self.assertEqual(purchased, ["shuttle"])
 
+    def test_buy_ship_sets_the_bought_ship_gameplay_flags(self):
+        possessions = Possessions(credits=1200)
+        screen = LocationScreen(config_data={"label": "Spaceport"}, world_width=800, world_height=600, player_possessions=possessions)
+        screen.buy_ship("shuttle")
+        self.assertTrue(possessions.flags.get("bought_ship"))
+        self.assertTrue(possessions.flags.get("bought_ship:shuttle"))
+
     def test_buy_ship_uninstalls_outfits_instead_of_carrying_them_to_the_new_ship(self):
         """Regression test: installed_outfits describes "whichever ship is
         flown", not a specific hull (see docs/SAVE_SYSTEM.md) - buying a new
@@ -3283,13 +3385,29 @@ class TestLocationScreenEconomy(unittest.TestCase):
         option = {"label": "Take loan", "action": "take_loan"}
         self.assertEqual(screen._option_blocked_reason(option), "already have a loan")
 
-    def test_take_loan_grants_the_testing_loan_amount(self):
-        """Loan amount is bumped to 100,000cr for testing (was tied to the
-        shuttle's cost) - see LocationScreen.TESTING_LOAN_AMOUNT."""
+    def test_take_loan_uses_story_json_lender_and_amount(self):
+        """Lender name + amount come from story.json's "loan" block (the
+        default story: Station Credit Union / 100,000cr), not a hardcoded
+        literal - see LocationScreen._loan_terms."""
         screen = self._make_screen()
         screen._apply_dialogue_action("take_loan")
         self.assertEqual(screen.player.possessions.credits, 100_000)
-        self.assertEqual(len(screen.player.possessions.loans), 1)
+        self.assertEqual(screen.player.possessions.loans,
+                         [{"lender": "Station Credit Union", "principal": 100_000}])
+
+    def test_take_loan_with_explicit_amount_overrides_the_default(self):
+        """"take_loan:<amount>" grants exactly that many credits, keeping
+        the story's configured lender."""
+        screen = self._make_screen()
+        screen._apply_dialogue_action("take_loan:2500")
+        self.assertEqual(screen.player.possessions.credits, 2500)
+        self.assertEqual(screen.player.possessions.loans,
+                         [{"lender": "Station Credit Union", "principal": 2500}])
+
+    def test_take_loan_sets_the_took_loan_gameplay_flag(self):
+        screen = self._make_screen()
+        screen._apply_dialogue_action("take_loan")
+        self.assertTrue(screen.player.possessions.flags.get("took_loan"))
 
     def test_navigation_skips_blocked_dialogue_options(self):
         """Regression test: the cursor used to be able to move onto (and

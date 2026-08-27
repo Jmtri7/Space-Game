@@ -2,12 +2,12 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
+from game.constants import GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
 from game.utils import (
-    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_angle,
+    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_angle, set_camera_zoom,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
-    get_asteroid_type, get_missions
+    get_asteroid_type, get_missions, get_story
 )
 import game.utils as utils
 from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin
@@ -34,9 +34,14 @@ HAIL_BUSY_BANNER_FRAMES = 150     # ~2.5s "no response" flash when hailing a doc
 # How slow (units/frame) counts as "braked to a stop" for the generic
 # "braked_below_threshold" gameplay-event flag (see update_physics) - a
 # mission's braking-practice stage can use this as its complete_flag.
+# story.json's "brake_slow_threshold" overrides this per story (see
+# SpaceScreen.brake_slow_threshold).
 BRAKE_SLOW_THRESHOLD = 0.3
 
-# Jump mechanic tuning
+# Jump mechanic tuning - defaults; story.json's "jump" block overrides
+# travel_frames / speed / arrival_distance / self_min_distance per story
+# (see SpaceScreen.jump_* instance attributes, which is what the jump code
+# actually reads - these module names are only the fallback).
 JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
 JUMP_TRAVEL_FRAMES = 150        # ~2.5s at 60fps of high-speed travel
 JUMP_SPEED = 40                 # world units/frame while traveling
@@ -76,7 +81,7 @@ class SpaceScreen(ScreenBase):
         self.story = story  # fixed for the whole playthrough - stories are wholly separate
 
         # Load story metadata (player ship type, starting system, etc)
-        story_meta = load_json(f"config/stories/{story}/story.json") or {}
+        story_meta = get_story(story)
         self.system_id = system_id or story_meta.get("starting_system", "default")
         # Recorded into every save (see main.py's build_save_game_state) so
         # a save always knows which version of the story it was made
@@ -89,11 +94,39 @@ class SpaceScreen(ScreenBase):
         # see game/world/mission.py); which mission(s) a player actually has
         # active/completed is state on their own Possessions, not here.
         self.missions_config = get_missions(story)
-        # Which mission (if any) automatically starts the first time this
-        # player boards a ship (see _on_ship_purchased) - config-driven so a
-        # story can opt into (or change, or omit) a tutorial mission without
-        # touching this class. None = no auto-started mission.
+        # Which mission (if any) automatically starts as the player enters
+        # the game - config-driven so a story can opt into (or change, or
+        # omit) a tutorial mission without touching this class. None = no
+        # auto-started mission.
         self.starting_mission = story_meta.get("starting_mission")
+        # When that mission fires: "ship_purchase" (default - the first time
+        # the player buys a ship, see _on_ship_purchased) or "new_game" (the
+        # moment a fresh game begins, see begin_new_game). A story that hands
+        # the player a starting ship gets "new_game" behaviour automatically,
+        # since no purchase ever happens.
+        self.starting_mission_trigger = story_meta.get("starting_mission_trigger", "ship_purchase")
+        # story.json's "start" block: the player's state at the beginning of
+        # a brand-new game - starting credits/ship/spare outfits/personal
+        # items/story flags, plus where in the world they begin ("location":
+        # "station"/"moon"/"space", "interior": which interior key). Applied
+        # by _apply_start_config() (state) + begin_new_game() (placement);
+        # a loaded save overwrites all of this via restore_possessions().
+        self.start_config = story_meta.get("start", {})
+        # graphics.json "outfits" id worn by the player and every AI pilot
+        # (station/moon NPCs pick their own per-config, see LocationScreen).
+        self.default_outfit_id = story_meta.get("default_outfit", "space_suit")
+        # World-render magnification for this story (UI scale is unaffected).
+        # Global camera state - safe to set here since a session is only
+        # ever in one story, and only a live SpaceScreen renders the world.
+        set_camera_zoom(story_meta.get("camera_zoom", CAMERA_ZOOM))
+        # Per-story tuning overrides (module-level names above are the
+        # defaults / JumpDrive's own fallback).
+        self.brake_slow_threshold = story_meta.get("brake_slow_threshold", BRAKE_SLOW_THRESHOLD)
+        jump_cfg = story_meta.get("jump", {})
+        self.jump_travel_frames = jump_cfg.get("travel_frames", JUMP_TRAVEL_FRAMES)
+        self.jump_speed = jump_cfg.get("speed", JUMP_SPEED)
+        self.jump_arrival_distance = jump_cfg.get("arrival_distance", JUMP_ARRIVAL_DISTANCE)
+        self.jump_self_min_distance = jump_cfg.get("self_min_distance", JUMP_SELF_MIN_DISTANCE)
 
         # Load config for the current system within this story
         self.system_config = system_config or load_json(f"config/stories/{story}/systems/{self.system_id}.json") or {}
@@ -121,7 +154,8 @@ class SpaceScreen(ScreenBase):
         player_start_cfg = self.system_config.get("player_start", {})
         player_x = GAME_WIDTH * player_start_cfg.get("x", 0.4)
         player_y = GAME_HEIGHT * player_start_cfg.get("y", 0.35)
-        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name, outfit=get_graphics_asset(self.story, "outfits", "space_suit"))
+        self.player = PlayerController(player_x, player_y, space_drag=space_drag, graphics=player_graphics, ship_type=player_ship_type, pilot_name=pilot_name, outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id))
+        self._apply_start_config()
 
         # Every system this story defines gets built and kept simulating for
         # the whole session - not just whichever one the player currently
@@ -273,7 +307,7 @@ class SpaceScreen(ScreenBase):
                 route=route,
                 get_interior_screen=self.get_interior_screen,
                 space_drag=space_drag,
-                outfit=get_graphics_asset(self.story, "outfits", "space_suit"),
+                outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id),
                 systems=self.systems,
                 system_id=system_id
             )
@@ -408,22 +442,78 @@ class SpaceScreen(ScreenBase):
         if owned_ships:
             self._apply_ship_type(owned_ships[-1])
 
+    def _apply_start_config(self):
+        """Seed the player's Possessions from story.json's "start" block -
+        starting credits, a starting ship, spare outfits, personal items,
+        and story flags. Runs unconditionally in __init__ (exactly like the
+        placeholder ship is always built from story.json's default type):
+        for a loaded save it's immediately overwritten by
+        restore_possessions(); for a new game it is the actual starting
+        state. Placement in the world and the tutorial hand-off happen
+        separately in begin_new_game(), which main.py calls only for a
+        fresh game."""
+        start = self.start_config
+        possessions = self.player.person.possessions
+        possessions.credits = start.get("credits", possessions.credits)
+        for item_id, qty in start.get("items", {}).items():
+            possessions.add_item(item_id, qty)
+        for outfit_id in start.get("outfits", []):
+            possessions.add_outfit(outfit_id)
+        for flag_name, value in start.get("flags", {}).items():
+            possessions.flags[flag_name] = value
+        starting_ship = start.get("ship")
+        if starting_ship:
+            possessions.add_ship(starting_ship)
+            self._apply_ship_type(starting_ship)
+
+    def begin_new_game(self):
+        """One-time setup for a brand-new game (never a load): fire the
+        story's tutorial mission if its trigger is "new_game" (or if the
+        story handed the player a ship, so the "ship_purchase" trigger
+        would never get a chance to). Returns (location, interior_key) for
+        main.py - where to drop the player: ("space", None),
+        ("station", <key>) or ("moon", <key>). Parks a starting ship at
+        that landable so boarding out from the interior works the same as
+        after a purchase."""
+        start = self.start_config
+        if self.starting_mission and (
+            self.starting_mission_trigger == "new_game"
+            or self.player.person.possessions.owned_ships
+        ):
+            self._start_tutorial_mission()
+        location = start.get("location", "station")
+        interior = start.get("interior", "dormitory")
+        if self.player.person.possessions.owned_ships:
+            if location == "moon":
+                self.park_at(self.moon)
+            elif location == "station":
+                self.park_at(self.station)
+        return (location, None if location == "space" else interior)
+
+    def _start_tutorial_mission(self):
+        """Start story.json's starting_mission (a no-op if it's already
+        active or completed, so a second trigger - buying another ship -
+        never restarts it), announcing it with the same toast + first-stage
+        message the purchase path uses."""
+        if not self.starting_mission:
+            return
+        started = start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
+        if started:
+            title = self.missions_config.get(started[0], {}).get("title", started[0])
+            self._show_toast(f"Mission started: {title}", GREEN)
+        self._deliver_stage_message(started)
+
     def _on_ship_purchased(self, ship_type_id):
         """Configure the player's real ship to match a newly bought type,
         and park it right at the station - so it's "docked outside" exactly
         as a salesman's dialogue would say, ready the moment the player
         boards through the spaceport's exit. Also the natural "first launch
-        with a ship" hook for this story's starting_mission (see __init__) -
-        start_mission() is a no-op if it's already active/completed, so
-        buying a second ship later doesn't reset or restart it."""
+        with a ship" hook for this story's starting_mission when its trigger
+        is "ship_purchase" (see __init__ / begin_new_game)."""
         self._apply_ship_type(ship_type_id)
         self.park_at(self.station)
-        if self.starting_mission:
-            started = start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
-            if started:
-                title = self.missions_config.get(started[0], {}).get("title", started[0])
-                self._show_toast(f"Mission started: {title}", GREEN)
-            self._deliver_stage_message(started)
+        if self.starting_mission_trigger == "ship_purchase":
+            self._start_tutorial_mission()
 
     def park_at(self, landable):
         """Position the player's ship at `landable`'s own space position
@@ -963,7 +1053,7 @@ class SpaceScreen(ScreenBase):
                     ai_ship.set_routine(OrbitPlayerRoutine(self.player))
                     ai_ship.escorting = True
                 elif not should_escort and ai_ship.escorting:
-                    ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction)(ai_ship.route))
+                    ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction, ai_ship.routine_name)(ai_ship.route))
                     ai_ship.escorting = False
 
     def _check_landing(self):
@@ -987,7 +1077,7 @@ class SpaceScreen(ScreenBase):
         requires for a self-jump back to this system, so the hint and the
         mechanic it's pointing at agree by construction."""
         cx, cy = SYSTEM_CENTER
-        return math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2) >= JUMP_SELF_MIN_DISTANCE
+        return math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2) >= self.jump_self_min_distance
 
     def _try_jump(self):
         """Validate the current star map selection/distance, then start a jump if valid."""
@@ -995,7 +1085,7 @@ class SpaceScreen(ScreenBase):
             return
         cx, cy = SYSTEM_CENTER
         distance_from_center = math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2)
-        if self.selected_system_id == self.system_id and distance_from_center < JUMP_SELF_MIN_DISTANCE:
+        if self.selected_system_id == self.system_id and distance_from_center < self.jump_self_min_distance:
             self.jump_message_timer = 90  # brief "too close to jump" feedback
             return
         self._begin_jump()
@@ -1046,12 +1136,12 @@ class SpaceScreen(ScreenBase):
 
         elif js["phase"] == "travel":
             rad = math.radians(ship.angle)
-            ship.velocity_x = math.sin(rad) * JUMP_SPEED
-            ship.velocity_y = -math.cos(rad) * JUMP_SPEED
+            ship.velocity_x = math.sin(rad) * self.jump_speed
+            ship.velocity_y = -math.cos(rad) * self.jump_speed
             ship.x += ship.velocity_x
             ship.y += ship.velocity_y
             js["timer"] += 1
-            if js["timer"] >= JUMP_TRAVEL_FRAMES:
+            if js["timer"] >= self.jump_travel_frames:
                 self._complete_jump()
 
     def _complete_jump(self):
@@ -1065,8 +1155,8 @@ class SpaceScreen(ScreenBase):
             self._activate_system(destination)
 
         center_x, center_y = SYSTEM_CENTER
-        arrival_x = center_x - math.sin(heading_rad) * JUMP_ARRIVAL_DISTANCE
-        arrival_y = center_y + math.cos(heading_rad) * JUMP_ARRIVAL_DISTANCE
+        arrival_x = center_x - math.sin(heading_rad) * self.jump_arrival_distance
+        arrival_y = center_y + math.cos(heading_rad) * self.jump_arrival_distance
 
         ship = self.player.ship
         ship.x, ship.y = arrival_x, arrival_y
@@ -1115,7 +1205,7 @@ class SpaceScreen(ScreenBase):
         # moving would trivially satisfy "speed below threshold" without
         # any actual braking having happened.
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-        if flags.get("used_thrust") and flags.get("used_brake") and speed < BRAKE_SLOW_THRESHOLD:
+        if flags.get("used_thrust") and flags.get("used_brake") and speed < self.brake_slow_threshold:
             flags["braked_below_threshold"] = True
         for state in self.systems.values():
             state.update_physics()

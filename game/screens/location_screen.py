@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
-from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset
+from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story
 import game.utils as utils
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
 from game.screens.screen_base import ScreenBase
@@ -13,10 +13,12 @@ from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, 
 from game.world.player_character import PlayerCharacter
 
 
-# Bumped way up from the old "shuttle's cost" amount for testing, so a loan
-# alone can cover any ship/outfit combo without grinding for credits first.
-# Revisit before treating this as real game balance.
-TESTING_LOAN_AMOUNT = 100_000
+# Fallback loan size when story.json defines no "loan" block. Bumped way up
+# from the old "shuttle's cost" amount so a single loan covers any ship/
+# outfit combo without grinding for credits first - revisit before treating
+# this as real game balance. A story sets its own lender/amount/max_active
+# in story.json's "loan" block (see _loan_terms).
+DEFAULT_LOAN_AMOUNT = 100_000
 
 
 class LocationScreen(ScreenBase):
@@ -84,7 +86,11 @@ class LocationScreen(ScreenBase):
         # player's possessions are read (space HUD, other interiors, saves).
         # Falls back to a fresh empty one (via Person's own default) when
         # constructed standalone, e.g. in tests.
-        self.player = PlayerCharacter(start_x, start_y, name=pilot_name, possessions=player_possessions, outfit=get_graphics_asset(self.story, "outfits", "space_suit"))
+        # graphics.json "outfits" id the player's walking body wears, and
+        # the fallback for any NPC that doesn't name its own (see
+        # _build_local_character) - story.json's "default_outfit".
+        self.default_outfit_id = get_story(story).get("default_outfit", "space_suit")
+        self.player = PlayerCharacter(start_x, start_y, name=pilot_name, possessions=player_possessions, outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id))
         # Called with a ship_type_id right after a successful "buy_ship:"
         # dialogue action - lets SpaceScreen (which owns the real flyable
         # ship) configure it, without LocationScreen importing game.screens
@@ -97,7 +103,11 @@ class LocationScreen(ScreenBase):
         self.interior_key = None
         self.world_width = world_width
         self.world_height = world_height
-        self.speed = constants.WALKING_SPEED
+        # On-foot pace, shared by the player and any AI pilot walking a
+        # dock errand in this interior (DockRoutine reads self._location.speed
+        # off this) - story.json's "walking_speed" overrides the default so
+        # both always match.
+        self.speed = get_story(story).get("walking_speed", constants.WALKING_SPEED)
         self.entrance_range = 35  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
         # Cached by handle_input() when L opens the exit menu, so
@@ -170,11 +180,12 @@ class LocationScreen(ScreenBase):
         Their role picks the routine that decides whether they wander or
         stay put (see game/world/character.py's ROLE_ROUTINES) - the same
         role->routine mechanism AI ship pilots use, just never flying
-        anything."""
-        # "outfit" is per-NPC-config, defaulting to space_suit like everyone
-        # else - lets a future NPC config opt into a different graphics.json
-        # outfit entry without any drawing-code changes.
-        person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"), outfit=get_graphics_asset(self.story, "outfits", cfg.get("outfit", "space_suit")))
+        anything. A "routine" key in the NPC config names one outright
+        (see ROUTINE_REGISTRY), for a role with no sensible default."""
+        # "outfit" is per-NPC-config, defaulting to the story's
+        # default_outfit like everyone else - lets an NPC config opt into a
+        # different graphics.json outfit entry without any drawing-code changes.
+        person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"), outfit=get_graphics_asset(self.story, "outfits", cfg.get("outfit", self.default_outfit_id)))
         dialogue_tree = cfg.get("dialogue_tree")
         if dialogue_tree:
             person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"), conditional_roots=dialogue_tree.get("conditional_roots"))
@@ -184,7 +195,7 @@ class LocationScreen(ScreenBase):
         # opens a purpose-built buy/sell screen instead of dialogue when T is
         # pressed - None for every NPC that's just flavor/dialogue.
         person.shop = cfg.get("shop")
-        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to)
+        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _resolve_portal(self, portal):
         """Which portal get_exit_options() and friends should act on when
@@ -328,9 +339,25 @@ class LocationScreen(ScreenBase):
                 cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
                 if not self.player.possessions.can_afford(cost):
                     return "not enough credits"
-            elif action == "take_loan" and self.player.possessions.loans:
-                return "already have a loan"
+            elif action == "take_loan" or action.startswith("take_loan:"):
+                _, _, max_active = self._loan_terms(action)
+                if len(self.player.possessions.loans) >= max_active:
+                    return "already have a loan" if max_active == 1 else "loan limit reached"
         return None
+
+    def _loan_terms(self, action):
+        """(lender, amount, max_active) for a "take_loan" or
+        "take_loan:<amount>" dialogue action. Lender, default amount, and
+        how many loans a player may hold at once all come from story.json's
+        "loan" block; an explicit "take_loan:<amount>" overrides just the
+        amount (e.g. a smaller loan offered by a different NPC)."""
+        loan_cfg = get_story(self.story).get("loan", {})
+        lender = loan_cfg.get("lender", "Credit Union")
+        amount = loan_cfg.get("amount", DEFAULT_LOAN_AMOUNT)
+        max_active = loan_cfg.get("max_active", 1)
+        if ":" in action:
+            amount = int(action.split(":", 1)[1])
+        return lender, amount, max_active
 
     def _apply_dialogue_action(self, action):
         """Perform the game-state effect of one dialogue option action tag -
@@ -341,8 +368,12 @@ class LocationScreen(ScreenBase):
             return
         if action.startswith("buy_ship:"):
             self.buy_ship(action.split(":", 1)[1])
-        elif action == "take_loan":
-            self.player.possessions.take_loan("Station Credit Union", TESTING_LOAN_AMOUNT)
+        elif action == "take_loan" or action.startswith("take_loan:"):
+            lender, amount, _ = self._loan_terms(action)
+            self.player.possessions.take_loan(lender, amount)
+            # Generic gameplay-event flag (see PlayerController's "used_turn")
+            # - a "take out a loan" tutorial stage can use it as a complete_flag.
+            self.player.possessions.flags["took_loan"] = True
 
     def buy_ship(self, ship_type_id):
         """Spend credits, add the ship to possessions, and let SpaceScreen
@@ -361,6 +392,11 @@ class LocationScreen(ScreenBase):
         self.player.possessions.spend(cost)
         self.player.possessions.uninstall_all_outfits()
         self.player.possessions.add_ship(ship_type_id)
+        # Generic gameplay-event flags (see PlayerController's "used_turn") -
+        # a "buy your first ship" tutorial stage can use either as its
+        # complete_flag. Set on both purchase paths since both funnel here.
+        self.player.possessions.flags["bought_ship"] = True
+        self.player.possessions.flags[f"bought_ship:{ship_type_id}"] = True
         if self.on_ship_purchased:
             self.on_ship_purchased(ship_type_id)
 

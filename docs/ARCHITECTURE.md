@@ -125,14 +125,34 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   `ui_theme.draw_glow_message()` in a glass pane (shared with the one-way
   hail banner and the "too close to jump" warning; the toast stacks below
   whichever banner is showing). `story.json`'s `"starting_mission"` names which
-  mission (if any) `SpaceScreen._on_ship_purchased()` auto-starts the
-  first time a pilot boards a ship. `SpaceScreen`/`PlayerController` also
-  set a handful of generic, story-agnostic gameplay-event flags of their
-  own (`used_ships_target_mode`, `used_turn`, `used_thrust`, `used_brake`,
-  `braked_below_threshold`, `used_autopilot_on_ship`, `landed_on_landable`,
-  `completed_jump`, and `"hailed_pilot:<name>"` from `_start_hail()`) so a
-  story's missions.json can use them as `"complete_flag"`s without any
-  code change. Several of those latch permanently once the player has ever
+  mission (if any) auto-starts; `"starting_mission_trigger"` picks when -
+  `"ship_purchase"` (default, `SpaceScreen._on_ship_purchased()`, the first
+  time a pilot buys a ship) or `"new_game"` (`begin_new_game()`, as a fresh
+  game starts). A story that grants a starting ship (`story.json`'s
+  `"start"` block) gets `"new_game"` behaviour automatically since no
+  purchase happens. `SpaceScreen`/`PlayerController`/`LocationScreen` also
+  set a fixed set of generic, story-agnostic **gameplay-event flags** so a
+  story's missions.json can use them as `"complete_flag"`s with no code
+  change - this is the vocabulary a new tutorial is limited to:
+
+  | flag | set when | set by |
+  |---|---|---|
+  | `used_turn` | rotate the ship | `PlayerController` |
+  | `used_brake` | press brake/reverse | `PlayerController` |
+  | `used_thrust` | thrust forward | `SpaceScreen.update_physics` |
+  | `braked_below_threshold` | speed drops below `brake_slow_threshold` after thrust+brake | `SpaceScreen.update_physics` |
+  | `used_ships_target_mode` | cycle targeting to SHIPS | `SpaceScreen._cycle_target_mode` |
+  | `used_autopilot_on_ship` | engage autopilot toward a ship | `SpaceScreen` |
+  | `landed_on_landable` | land at a station/moon | `SpaceScreen._check_landing` |
+  | `completed_jump` | finish a jump | `SpaceScreen._complete_jump` |
+  | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
+  | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
+  | `bought_ship` / `bought_ship:<type>` | buy a ship (either purchase path) | `LocationScreen.buy_ship` |
+  | `took_loan` | take a loan | `LocationScreen._apply_dialogue_action` |
+
+  Dialogue can also set arbitrary flags with `"set_flag:<name>"`, so a
+  conversation choice is the escape hatch for any event not in this list.
+  Several of these latch permanently once the player has ever
   done the thing, so a mission that walks through them one at a time
   (`first_flight`) sets `"reset_stage_flags_on_activation": true` at the
   mission level: `_reset_stage_flags()` then forces each stage's
@@ -203,8 +223,9 @@ section below; the AI-pilot equivalent of `PlayerController`. Built via
 `ship_type`'s `max_thrust`), `max_velocity`, `rotation_speed` from a
 `ship_type` dict (see `config/stories/{story}/ship_types.json`), falling
 back to defaults if none given. Its `update()` never touches ship physics
-directly — it runs the role's routine each frame (from `ROLE_ROUTINES`,
-keyed by the pilot's role, with `FACTION_ROUTINE_OVERRIDES` checked first),
+directly — it runs the role's routine each frame (a config `"routine"` key
+naming a `ROUTINE_REGISTRY` entry wins outright; else `FACTION_ROUTINE_OVERRIDES`,
+then `ROLE_ROUTINES` keyed by the pilot's role, then `IdleRoutine`),
 which calls `engage_seek()`/`engage_orbit()` (delegated to the owned
 `Ship`), then `self.ship.update()` runs the real `Ship`/`Autopilot` physics.
 
@@ -453,10 +474,31 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
    - reach through `character.ship`-delegated methods (`engage_seek`, etc.)
    for ship-flying behavior, or `character.person.x/y` directly for local
    (no-ship) behavior - never both in the same routine
-2. Register it in `ROLE_ROUTINES` (`game/world/character.py`), keyed by the
-   role string
-3. Set `"role": "<name>"` on the relevant `pilots.json` entry (ship-flying)
-   or the location config's `npcs[]` entry (local) - no other code changes needed
+2. Register it in `ROUTINE_REGISTRY` (`game/world/character.py`) under a
+   short config name, and/or wire a role default into `ROLE_ROUTINES`
+3. Point a character at it: `"role": "<name>"` (role default) or
+   `"routine": "<registry name>"` (explicit, wins over the role) on the
+   relevant `pilots.json` entry (ship-flying) or the location config's
+   `npcs[]` entry (local) - no other code changes needed
+
+### `story.json` fields
+Top-level per-story config, read via `utils.get_story()`. All optional
+except where a story clearly needs it; code holds the default.
+
+| Field | Purpose |
+|---|---|
+| `id` / `name` / `description` / `difficulty` | Identity + story-picker card |
+| `version` | Save-compat version (see SAVE_SYSTEM.md) |
+| `starting_system` | Which `systems/*.json` a new game loads |
+| `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
+| `start` | New-game state: `location` (`station`/`moon`/`space`), `interior`, `credits`, `ship`, `outfits[]`, `items{}`, `flags{}` (see `SpaceScreen._apply_start_config` / `begin_new_game`) |
+| `loan` | `lender` / `amount` / `max_active` for the `take_loan` dialogue action |
+| `jump` | `travel_frames` / `speed` / `arrival_distance` / `self_min_distance` |
+| `brake_slow_threshold` | Speed the tutorial's braking stage completes below |
+| `camera_zoom` | World-render magnification (default `constants.CAMERA_ZOOM`) |
+| `walking_speed` | On-foot pace, player + AI dock-walkers (default `constants.WALKING_SPEED`) |
+| `default_outfit` | `graphics.json` `outfits` id for the player + AI pilots |
+| `ships.player_type` | Placeholder ship stats before one is owned (usually `null`) |
 
 ## Design Decisions
 
