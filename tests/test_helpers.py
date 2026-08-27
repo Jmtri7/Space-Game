@@ -3657,6 +3657,76 @@ class TestAdvanceAccumulator(unittest.TestCase):
         self.assertAlmostEqual(acc, 0.005, places=9)
 
 
+class TestPerfMetrics(unittest.TestCase):
+    """game.perf_metrics.PerfMetrics - the rolling frame-timing stats the
+    DEBUG overlay reads. Fed once per frame by main.py's loop."""
+
+    def _metrics(self):
+        from game.perf_metrics import PerfMetrics
+        return PerfMetrics(window=4)
+
+    def test_frame_total_is_the_sum_of_its_phases(self):
+        m = self._metrics()
+        m.record({"input": 1.0, "sim": 2.0, "render": 5.0, "present": 0.5}, n_steps=1, fps=60.0)
+        avg, peak = m._stat(m._frame)
+        self.assertAlmostEqual(avg, 8.5, places=6)
+        self.assertAlmostEqual(peak, 8.5, places=6)
+
+    def test_averages_and_peaks_over_the_window(self):
+        m = self._metrics()
+        for render_ms in (4.0, 8.0, 6.0):
+            m.record({"render": render_ms}, n_steps=1, fps=60.0)
+        avg, peak = m._stat(m._phases["render"])
+        self.assertAlmostEqual(avg, 6.0, places=6)
+        self.assertAlmostEqual(peak, 8.0, places=6)
+
+    def test_window_evicts_oldest_samples(self):
+        m = self._metrics()  # window=4
+        for i in range(6):
+            m.record({"render": float(i)}, n_steps=1, fps=60.0)
+        # only samples 2,3,4,5 survive
+        avg, peak = m._stat(m._phases["render"])
+        self.assertAlmostEqual(peak, 5.0, places=6)
+        self.assertAlmostEqual(avg, (2 + 3 + 4 + 5) / 4, places=6)
+
+    def test_span_accumulates_into_a_bucket_rolled_in_by_record(self):
+        m = self._metrics()
+        with m.span("render.starfield"):
+            pass
+        with m.span("render.starfield"):  # same name twice in a frame -> summed
+            pass
+        # not rolled in until record()
+        self.assertEqual(m._spans, {})
+        m.record({}, n_steps=1, fps=60.0)
+        self.assertIn("render.starfield", m._spans)
+        self.assertEqual(len(m._spans["render.starfield"]), 1)
+
+    def test_span_that_skips_a_frame_records_zero_so_its_average_decays(self):
+        m = self._metrics()
+        with m.span("sim.missions"):
+            pass
+        m.record({}, n_steps=1, fps=60.0)
+        m.record({}, n_steps=1, fps=60.0)  # span didn't fire this frame
+        self.assertEqual(list(m._spans["sim.missions"])[-1], 0.0)
+
+    def test_hot_spans_are_sorted_worst_average_first(self):
+        m = self._metrics()
+        m._spans = {
+            "a": __import__("collections").deque([1.0]),
+            "b": __import__("collections").deque([5.0]),
+            "c": __import__("collections").deque([3.0]),
+        }
+        names = [row[0] for row in m.hot_spans()]
+        self.assertEqual(names, ["b", "c", "a"])
+
+    def test_summary_lines_are_all_strings(self):
+        m = self._metrics()
+        m.record({"input": 0.1, "sim": 1.0, "render": 4.0, "present": 0.2}, n_steps=2, fps=58.3)
+        lines = m.summary_lines()
+        self.assertTrue(all(isinstance(s, str) for s in lines))
+        self.assertTrue(any("FPS" in s for s in lines))
+
+
 class TestStepWorld(unittest.TestCase):
     """main.step_world() - the single simulation entry point the fixed-
     timestep accumulator drains. One sim step must move the world exactly

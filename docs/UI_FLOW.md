@@ -464,4 +464,26 @@ smoother at >60 Hz, `draw()` still paints the latest sim state.
 Menu/dialog animations (`pause_menu.update()`'s success-banner countdown)
 are render-side and stay in phase 3 — they're not simulation.
 
+### Frame-timing metrics
+
+The loop times each phase with `time.perf_counter()` deltas and feeds them to
+`game/perf_metrics.py`'s shared `metrics` object once per iteration
+(`metrics.record(...)`), along with `n_steps` (the catch-up sim-step count) and
+`clock.get_fps()`. Finer-grained sub-sections are wrapped in
+`with metrics.span("<name>"):` at their call site — currently `render.starfield`
+/ `render.world` / `render.hud` in `SpaceScreen.draw`, `sim.player` /
+`sim.ai_ships` / `sim.missions` in `SpaceScreen.update_physics`, and `sim.npcs` /
+`render.location_entities` in `LocationScreen`. All of this runs unconditionally
+(it's a few `perf_counter` calls and deque appends per frame); only the
+bottom-left overlay that `perf_metrics.draw_overlay(screen)` paints is gated on
+`constants.DEBUG_MODE`. Everything shown is a rolling average + peak over the
+last `WINDOW` frames (~2 s).
+
+**Agents:** when a change touches the main loop, a `draw()`/`update()` path, or
+adds per-frame work (a new drawable, an AI routine, a scan over all entities),
+toggle debug (`` ` ``) and watch the panel before and after — keep `frame` well
+under the 16.67 ms budget and don't let a `sim.*` / `render.*` span balloon.
+Wrap a genuinely new expensive section in its own `metrics.span(...)` so the
+regression is visible next time.
+
 See [ARCHITECTURE.md](ARCHITECTURE.md#state-machine-screen-flow) for class hierarchy.

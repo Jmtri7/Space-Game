@@ -10,6 +10,7 @@ from game.utils import (
     get_asteroid_type, get_missions, get_story
 )
 import game.utils as utils
+from game.perf_metrics import metrics as perf
 from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
@@ -1189,10 +1190,11 @@ class SpaceScreen(ScreenBase):
         equivalent for cached interiors). The asteroid/star fields are the
         one exception, kept to just the active system - both are pure,
         camera-driven decoration (see SystemState's docstring)."""
-        if self.jump_state:
-            self._update_jump()
-        else:
-            self.player.update()
+        with perf.span("sim.player"):
+            if self.jump_state:
+                self._update_jump()
+            else:
+                self.player.update()
         flags = self.player.person.possessions.flags
         if self.player.thrust > 0:
             # Generic gameplay-event flag - see K_SPACE's comment above on
@@ -1206,9 +1208,10 @@ class SpaceScreen(ScreenBase):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         if flags.get("used_thrust") and flags.get("used_brake") and speed < self.brake_slow_threshold:
             flags["braked_below_threshold"] = True
-        for state in self.systems.values():
-            state.update_physics()
-        self.asteroid_field.update()
+        with perf.span("sim.ai_ships"):
+            for state in self.systems.values():
+                state.update_physics()
+            self.asteroid_field.update()
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
         if self.hail_banner_timer > 0:
@@ -1222,16 +1225,17 @@ class SpaceScreen(ScreenBase):
         # _on_mission_end), and escort sync needs to see that same-frame
         # rather than escorting for one extra frame after the tutorial's
         # already over.
-        possessions = self.player.person.possessions
-        completed_before = set(possessions.completed_missions)
-        for advanced_stage in check_mission_progress(self.missions_config, possessions):
-            self._deliver_stage_message(advanced_stage)
-            self._show_toast("Mission stage complete", GREEN)
-        for mission_id in possessions.completed_missions:
-            if mission_id not in completed_before:
-                title = self.missions_config.get(mission_id, {}).get("title", mission_id)
-                self._show_toast(f"Mission complete: {title}", YELLOW)
-        self._sync_escorts()
+        with perf.span("sim.missions"):
+            possessions = self.player.person.possessions
+            completed_before = set(possessions.completed_missions)
+            for advanced_stage in check_mission_progress(self.missions_config, possessions):
+                self._deliver_stage_message(advanced_stage)
+                self._show_toast("Mission stage complete", GREEN)
+            for mission_id in possessions.completed_missions:
+                if mission_id not in completed_before:
+                    title = self.missions_config.get(mission_id, {}).get("title", mission_id)
+                    self._show_toast(f"Mission complete: {title}", YELLOW)
+            self._sync_escorts()
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -1291,17 +1295,19 @@ class SpaceScreen(ScreenBase):
         # been left non-zero or reset by another screen in between.
         set_camera_angle(self.camera_angle)
         surface.fill(BLACK)
-        self.star_field.draw(surface)
-        if self.central_star:
-            self.central_star.draw(surface)
-        for body in self.celestial_bodies:
-            body.draw(surface)
-        self.station.draw(surface)
-        self.moon.draw(surface)
-        self.asteroid_field.draw(surface)
-        for ai_ship in self.ai_ships:
-            ai_ship.draw(surface)
-        self.player.draw(surface)
+        with perf.span("render.starfield"):
+            self.star_field.draw(surface)
+        with perf.span("render.world"):
+            if self.central_star:
+                self.central_star.draw(surface)
+            for body in self.celestial_bodies:
+                body.draw(surface)
+            self.station.draw(surface)
+            self.moon.draw(surface)
+            self.asteroid_field.draw(surface)
+            for ai_ship in self.ai_ships:
+                ai_ship.draw(surface)
+            self.player.draw(surface)
 
         # Debug markers for entity positions
         if constants.DEBUG_MODE:
@@ -1325,7 +1331,8 @@ class SpaceScreen(ScreenBase):
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
-        self._draw_hud(surface, target_obj, draw_hud=draw_hud)
+        with perf.span("render.hud"):
+            self._draw_hud(surface, target_obj, draw_hud=draw_hud)
 
         # Active hail conversation, drawn last so it sits on top of the HUD
         # too - same reason LocationScreen draws active_dialogue last.

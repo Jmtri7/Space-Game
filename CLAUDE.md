@@ -32,6 +32,28 @@ other file, so reverting is always `git show <commit>:game/world/autopilot.py >
 game/world/autopilot.py`. See the version history table in AUTOPILOT_TESTING.md for which
 commit is which.
 
+## For Agents: Performance & the Frame Budget
+
+The game holds 60 FPS by doing all of a frame's work (input + simulation +
+render + present) in **under 16.67 ms**. `game/perf_metrics.py` measures this
+every frame; press `` ` `` (backtick) in-game to show the bottom-left panel.
+
+**Monitor it whenever your change adds per-frame work** - a new drawable, an
+AI/physics routine, a per-frame scan over all entities/systems/interiors, a new
+`update()`/`draw()` path, or anything in `main.py`'s loop. Note the `frame`
+average and the relevant `sim.*` / `render.*` span with debug on, make the
+change, then compare. A change that pushes `frame` toward the budget or balloons
+a span is a regression even if it "looks fine" - the same failure mode the
+autopilot section describes.
+
+**Instrument genuinely new expensive sections** by wrapping them in
+`with perf.span("sim.<name>")` / `"render.<name>"` at the call site (import
+`from game.perf_metrics import metrics as perf`), so the cost shows up in the
+panel and the next agent sees any regression. Keep spans sharing a prefix
+non-overlapping. Recording is cheap and always on; only the overlay is gated on
+`constants.DEBUG_MODE`. See
+[docs/UI_FLOW.md](docs/UI_FLOW.md#frame-timing-metrics).
+
 ## For Agents: Save Compatibility & Story Versioning
 
 **Read [docs/SAVE_SYSTEM.md](docs/SAVE_SYSTEM.md) before changing anything a save file

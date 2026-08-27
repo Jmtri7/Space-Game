@@ -382,13 +382,21 @@ automatically, based on their role, instead of getting this menu.
 
 | Control | Action |
 |---------|--------|
-| **`** (backtick) | Toggle debug mode (shows entity position markers) |
+| **`** (backtick) | Toggle debug mode (entity position markers + the perf panel) |
 
 Debug mode displays green X marks at the world coordinates of all entities:
 - Space view: player ship, station, moon, AI ship
 - Interiors: player, NPCs
 
 Use this to diagnose coordinate and positioning issues.
+
+It also draws the **performance panel** in the bottom-left corner: FPS vs. the
+16.67 ms frame budget, per-phase timing for the main loop (input / sim / render
+/ present), catch-up sim steps per frame, and the slowest tracked sub-sections
+("hot spans" - e.g. `render.starfield`, `sim.ai_ships`). All figures are rolling
+averages and peaks over the last ~2 seconds. See
+[UI_FLOW.md](UI_FLOW.md#main-loop-fixed-timestep-three-phases) and
+`game/perf_metrics.py`.
 
 ## Notes
 

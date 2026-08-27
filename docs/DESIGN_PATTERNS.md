@@ -516,6 +516,46 @@ the same on slow and fast machines.
 
 ---
 
+## Pattern: Always-On Metrics, Gated Display
+
+**Problem:** Per-frame performance regressions ("this looks fine on my
+machine") slip in because nothing measures where a frame's time goes, and
+bolting on measurement only when investigating means there's no before/after
+baseline.
+
+**Solution:** Measure unconditionally into a cheap rolling-window store; gate
+only the *display* on a debug flag.
+
+**Implementation** (`game/perf_metrics.py`, a shared instance like
+`utils.Camera`):
+```python
+from game.perf_metrics import metrics as perf
+
+# main loop: time each phase, hand the numbers over every frame
+perf.record({"input": ..., "sim": ..., "render": ..., "present": ...}, n_steps, fps)
+
+# any hot sub-section, at its call site:
+with perf.span("render.starfield"):
+    self.star_field.draw(surface)
+
+# once per frame, after the active screen draws:
+perf_metrics.draw_overlay(screen)   # no-op unless constants.DEBUG_MODE
+```
+`record()` is deque appends; `span()` is two `perf_counter()` calls — cheap
+enough that there's no reason to conditionalise them, and "always recording"
+means the panel is instantly useful the moment you toggle debug, mid-session,
+with history already populated.
+
+**Keys are namespaced by phase** (`render.*`, `sim.*`) and kept
+non-overlapping so a phase's spans sum to something meaningful; a span that
+doesn't fire a given frame records `0.0` so its average decays honestly
+instead of freezing.
+
+**Use case:** Any always-running subsystem whose cost you want visible on
+demand — frame timing, allocation counts, entity counts, network round-trips.
+
+---
+
 ## Pattern: Data-Driven Configuration
 
 **Problem:** Game content (buildings, terrain features, NPC positions) hardcoded in classes makes it hard to iterate on level design, impossible to load from save files, and requires code changes for every content update.

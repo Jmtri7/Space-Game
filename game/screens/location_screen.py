@@ -5,6 +5,7 @@ import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story
 import game.utils as utils
+from game.perf_metrics import metrics as perf
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
@@ -528,8 +529,9 @@ class LocationScreen(ScreenBase):
         conversation open, so this only ever actually pauses the active one."""
         if self.active_dialogue:
             return
-        for character in self.npcs:
-            character.update()
+        with perf.span("sim.npcs"):
+            for character in self.npcs:
+                character.update()
 
     def draw(self, surface, draw_hud=True):
         """Draw location from config. draw_hud=False skips the top-left
@@ -616,13 +618,14 @@ class LocationScreen(ScreenBase):
         # building (closer to the camera, larger depth) would still be
         # drawn behind it just because structures used to be one earlier,
         # unconditional loop.
-        drawables = [(self._structure_depth(structure), self._make_structure_drawer(structure, scale)) for structure in self.structures]
-        drawables += [(character.person.y, character.person.draw) for character in self.npcs]
-        drawables += [(visitor.y, visitor.draw) for visitor in self.visitors]
-        drawables.append((self.player.y, self.player.draw))
-        drawables.sort(key=lambda item: item[0])
-        for _, draw_fn in drawables:
-            draw_fn(surface)
+        with perf.span("render.location_entities"):
+            drawables = [(self._structure_depth(structure), self._make_structure_drawer(structure, scale)) for structure in self.structures]
+            drawables += [(character.person.y, character.person.draw) for character in self.npcs]
+            drawables += [(visitor.y, visitor.draw) for visitor in self.visitors]
+            drawables.append((self.player.y, self.player.draw))
+            drawables.sort(key=lambda item: item[0])
+            for _, draw_fn in drawables:
+                draw_fn(surface)
 
         # Highlight the manually targeted NPC (see _cycle_npc_target/
         # _select_person_target_at - unrelated to who's talkable right now)

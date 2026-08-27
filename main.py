@@ -2,7 +2,9 @@
 import pygame
 import sys
 import os
+import time
 import game.constants as constants
+import game.perf_metrics as perf_metrics
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
@@ -274,6 +276,11 @@ def main():
         while running:
             events = pygame.event.get()
             frame_ms = clock.tick(FPS)
+            # Frame-timing metrics (perf_metrics.metrics): started here, after
+            # the clock.tick() FPS-cap sleep, so the sleep isn't charged to any
+            # phase. Split into input / sim / render / present below; shown
+            # bottom-left when DEBUG_MODE is on. See docs/UI_FLOW.md.
+            t_frame_start = time.perf_counter()
 
             # Handle window close button globally (all screens automatically support it)
             for event in events:
@@ -659,6 +666,8 @@ def main():
                         current_screen = "menu"
                         menu = main_menu()
 
+            t_after_input = time.perf_counter()
+
             # ========================================================
             # PHASE 2 - fixed-timestep simulation
             # Drain the real time elapsed since the last frame in fixed
@@ -679,6 +688,8 @@ def main():
                         location_selector = ls
                     current_screen = next_screen
                     break
+
+            t_after_sim = time.perf_counter()
 
             # ========================================================
             # PHASE 3 - render (once per iteration)
@@ -758,7 +769,23 @@ def main():
                 elif save_dialog:
                     save_dialog.draw(screen)
 
+            # DEBUG-only perf panel, drawn over whatever screen is active.
+            perf_metrics.draw_overlay(screen)
+            t_after_render = time.perf_counter()
+
             pygame.display.flip()
+            t_after_present = time.perf_counter()
+
+            perf_metrics.metrics.record(
+                {
+                    "input": (t_after_input - t_frame_start) * 1000.0,
+                    "sim": (t_after_sim - t_after_input) * 1000.0,
+                    "render": (t_after_render - t_after_sim) * 1000.0,
+                    "present": (t_after_present - t_after_render) * 1000.0,
+                },
+                n_steps,
+                clock.get_fps(),
+            )
 
         pygame.quit()
     except Exception as e:

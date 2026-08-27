@@ -166,6 +166,13 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
 - `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
+- `game/perf_metrics.py` — `PerfMetrics` + a shared `metrics` instance and
+  `draw_overlay()` (module-level, same shared-instance rationale as
+  `utils.Camera`). `main.py`'s loop calls `metrics.record()` once per frame
+  with per-phase timings; `with metrics.span("...")` times hot sub-sections
+  in `SpaceScreen`/`LocationScreen`. Recording is always on; the bottom-left
+  overlay is drawn only when `constants.DEBUG_MODE`. See
+  docs/UI_FLOW.md#frame-timing-metrics.
 
 ## Entity Design Pattern
 
