@@ -481,6 +481,7 @@ def main():
                     previous_screen = "station"
                     current_screen = "pause"
                 elif action == "exit":
+                    game_screen.board_ship()
                     current_screen = "game"
                 elif action == "exit_menu":
                     exit_menu = ChoiceDialog("Where To?", exit_options(station_interior.get_exit_options(), game_screen.station.interiors, station_interior.get_exit_disabled_reasons()))
@@ -519,6 +520,7 @@ def main():
             elif current_screen == "exit_menu":
                 choice = exit_menu.handle_input(events)
                 if choice == "ship":
+                    game_screen.board_ship()
                     current_screen = "game"
                 elif choice == "cancel":
                     current_screen = exit_menu_return_screen
@@ -561,6 +563,7 @@ def main():
                 if action == "quit":
                     running = False
                 elif action == "exit":
+                    game_screen.board_ship()
                     current_screen = "game"
                 elif action == "pause":
                     previous_screen = "moon"

@@ -4,7 +4,6 @@
     "escort_flag": "kade_escorting",
     "on_start_flags": ["kade_escorting"],
     "on_end_flags": ["kade_tutorial_done"],
-    "reset_stage_flags_on_activation": true,
     "stages": [
       {
         "text": "Cycle your targeting mode (T) until it reads SHIPS.",
@@ -25,6 +24,7 @@
       {
         "text": "Open your Mission Log (N) - it lists every objective as you go.",
         "complete_flag": "viewed_mission_log",
+        "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
           "text": "First thing - press N to open your Mission Log. Every step I give you shows up there, so you'll never have to guess what's next. Go ahead and take a look."
@@ -33,6 +33,7 @@
       {
         "text": "Turn your ship - A/D or the Left/Right arrow keys.",
         "complete_flag": "used_turn",
+        "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
           "text": "Alright, let's start simple. Turn left with A or the left arrow, and right with D or the right arrow. Get a feel for it."
@@ -41,6 +42,7 @@
       {
         "text": "Thrust forward - W or the Up arrow.",
         "complete_flag": "used_thrust",
+        "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
           "text": "Good. Now hold W or the up arrow to thrust forward. Watch your speed build - space doesn't slow you down on its own."
@@ -49,6 +51,7 @@
       {
         "text": "Turn around and brake until your speed drops - S or the Down arrow, then thrust.",
         "complete_flag": "braked_below_threshold",
+        "reset_on_activation": true,
         "reset_flags": ["used_brake"],
         "one_way_message": {
           "sender": "Kade Marsh",
@@ -56,19 +59,21 @@
         }
       },
       {
-        "text": "Fly far enough from the system center, then jump back (M to open the Star Map, J to jump).",
+        "text": "Fly far from the system center, wait for the drift prompt, then jump home (J).",
         "complete_flag": "completed_jump",
+        "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "Nicely done. Now fly far enough from the system center, open the Star Map (M), select this system, and jump (J) back home."
+          "text": "Nicely done. Jumping needs room - fly well clear of the system center until a prompt tells you you've drifted far enough. Your current system is already the default jump target, so from there just tap J to warp home. When you want to travel somewhere else, open the Star Map (M) first and pick your destination."
         }
       },
       {
-        "text": "Land at the station or moon (L, once you're close and slow).",
+        "text": "Target the station/moon (T for LANDABLES, then [ ]), autopilot in (Space), land (L).",
         "complete_flag": "landed_on_landable",
+        "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "You're a fast learner. Last thing - fly up to the station or moon and press L once you're close and slow to land. Good luck out there, pilot."
+          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDABLES for stations and moons, MISC for the rest. Set it to LANDABLES, then [ or ] to pick the station or moon. With it targeted, hit Space and the autopilot flies you in and sets you down - or fly it yourself and press L once you're close and slow. Good luck out there, pilot."
         }
       }
     ]

@@ -39,12 +39,18 @@ Per-layer keys: `freq` (Hz), `dur` (s), `wave`
 `delay` (s before the layer starts). Each rendered sound is peak-normalized and
 gets a ~3 ms anti-click fade at both ends.
 
+Because every sound is normalized to the same peak, a layer's `amp` only sets
+its balance *within* a recipe - it can't make a whole sound quieter than the
+board. For that, pass `define(name, layers, volume=<0..1>)`: a per-recipe gain
+applied under `master_volume` on every `play()` (the target-cycle `blip` uses
+this to sit well below the rest).
+
 ### The default board
 
 | Name | Character | Triggered by |
 |------|-----------|--------------|
 | `ping` | bright two-note blip | **every menu/dialog button press**, and **every one-way message received** |
-| `blip` | single square-wave tick | **cycling or clicking a target** — `[` / `]` / `T` in the space view, `[` / `]` / click in an interior |
+| `blip` | single square-wave tick (mixed quiet, `volume=0.4`) | **cycling or clicking a target** — `[` / `]` / `T` in the space view, `[` / `]` / click in an interior |
 | `confirm` | rising perfect-fifth chime | **engaging autopilot** (Space, space view) |
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
 | `alert` | two high triangle beeps | (available; unused by default) |

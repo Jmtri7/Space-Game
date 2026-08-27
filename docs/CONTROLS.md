@@ -194,10 +194,12 @@ player to actually check it (see `first_flight`).
 Starting a mission, completing a stage, and finishing a mission each flash a
 brief center-screen toast in the Space View (see `SpaceScreen._show_toast`). A story opts a new pilot into a mission automatically -
 by default the first time they buy a ship, or at new-game start if
-`story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it) - see
+`story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it). Either way it holds until the player
+next launches into space (so the opening toast and hail land in the
+cockpit, not while they're still in the station) - see
 `config/stories/default/missions.json`'s `"first_flight"` for a worked
 example, which an NPC hailing you (Kade Marsh - see Hailing above) kicks
-off. See `game/world/mission.py` for how a stage's `"complete_flag"` ties
+off once you're flying. See `game/world/mission.py` for how a stage's `"complete_flag"` ties
 into the same `Possessions.flags` a conversation option can set (see
 Dialogue above) - a mission stage can be completed by a dialogue choice, a
 gameplay event (targeting/turning/thrusting/braking/landing/jumping/buying
@@ -388,7 +390,8 @@ automatically, based on their role, instead of getting this menu.
 All sound is synthesized at runtime (no asset files) — see [SOUND.md](SOUND.md).
 The UI **ping** plays on menu button presses and incoming messages; **confirm**
 on engaging autopilot (Space); **blip** on cycling/clicking a target (`[` `]`
-`T`, click). Two ambient background tracks (menu / in-game) fade in and cross-
+`T`, click) - mixed deliberately quiet since it fires on every target
+keypress. Two ambient background tracks (menu / in-game) fade in and cross-
 fade as you move between menus and play.
 
 ## Debug Controls

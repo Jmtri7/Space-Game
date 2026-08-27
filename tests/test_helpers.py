@@ -1334,6 +1334,38 @@ class TestMissionStageFlagReset(unittest.TestCase):
         check_mission_progress(missions, possessions)
         self.assertEqual(possessions.missions["m"], 1)
 
+    def test_reset_on_activation_can_be_opted_in_per_stage(self):
+        """No mission-level flag - just the one latching stage opts in."""
+        missions = {"m": {"title": "M", "stages": [
+            {"text": "say hi", "complete_flag": "said_hi"},
+            {"text": "turn", "complete_flag": "used_turn", "reset_on_activation": True},
+        ]}}
+        possessions = Possessions()
+        possessions.flags["used_turn"] = True  # latched before the mission
+        start_mission(missions, possessions, "m")
+        possessions.flags["said_hi"] = True
+        check_mission_progress(missions, possessions)  # 0 -> 1, re-clears used_turn
+        self.assertEqual(possessions.missions["m"], 1)
+        self.assertFalse(possessions.flags["used_turn"])
+        check_mission_progress(missions, possessions)
+        self.assertEqual(possessions.missions["m"], 1)  # waits for a fresh turn
+
+    def test_a_stage_can_opt_out_of_a_mission_level_default(self):
+        missions = {"m": {"title": "M", "reset_stage_flags_on_activation": True, "stages": [
+            {"text": "hail", "complete_flag": "hailed_pilot:X"},
+            {"text": "accept", "complete_flag": "accepted", "reset_on_activation": False},
+        ]}}
+        possessions = Possessions()
+        start_mission(missions, possessions, "m")
+        # One frozen conversation: both the hail flag and the accept flag
+        # get set before check_mission_progress next runs.
+        possessions.flags["hailed_pilot:X"] = True
+        possessions.flags["accepted"] = True
+        check_mission_progress(missions, possessions)  # 0 -> 1; must NOT wipe "accepted"
+        self.assertTrue(possessions.flags["accepted"])
+        check_mission_progress(missions, possessions)  # 1 -> done
+        self.assertEqual(possessions.completed_missions, ["m"])
+
 
 class TestMissionEscortAndAbandon(unittest.TestCase):
     """escort_flag/on_end_flags (see mission.py's _on_mission_end) and
@@ -2789,17 +2821,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.5.0")
+        self.assertEqual(game_screen.story_version, "1.6.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.5.0")
+        self.assertEqual(game_state["story_version"], "1.6.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.5.0")
+            warn_if_story_version_mismatch("default", "1.6.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2807,7 +2839,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.5.0", captured.getvalue())
+        self.assertIn("1.6.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -2963,6 +2995,7 @@ class TestSpaceScreenHailing(unittest.TestCase):
 
     def test_one_way_hail_fires_once_in_range_and_sets_a_seen_flag(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.in_flight = True
         kade = self._target_ship(game_screen, "Kade Marsh")
         game_screen.player.x, game_screen.player.y = kade.x, kade.y  # distance 0 - well within range
         game_screen._check_one_way_hails()
@@ -2979,6 +3012,20 @@ class TestSpaceScreenHailing(unittest.TestCase):
         game_screen._check_one_way_hails()
         self.assertIsNone(game_screen.hail_banner, "must not fire a second time for the same pilot")
         self.assertEqual(len(message_log), 1, "must not log a second time for the same pilot")
+
+    def test_one_way_hail_is_suppressed_while_docked(self):
+        """update_physics() keeps running in the background while the player
+        is docked in an interior; a pilot hailing the cockpit shouldn't
+        land while nobody's in it (see SpaceScreen.in_flight)."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.in_flight = False  # docked
+        kade = self._target_ship(game_screen, "Kade Marsh")
+        game_screen.player.x, game_screen.player.y = kade.x, kade.y
+        game_screen._check_one_way_hails()
+        self.assertIsNone(game_screen.hail_banner)
+        flags = game_screen.player.person.possessions.flags
+        self.assertFalse(flags.get("one_way_hail_seen:Kade Marsh"))
+        self.assertEqual(game_screen.player.person.possessions.message_log, [])
 
 
 class TestSpaceScreenStartConfig(unittest.TestCase):
@@ -3024,11 +3071,18 @@ class TestSpaceScreenStartConfig(unittest.TestCase):
         self.assertEqual((location, interior), ("space", None))
         self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
 
-    def test_new_game_trigger_starts_the_mission_without_a_ship(self):
+    def test_new_game_trigger_arms_the_mission_and_launch_starts_it(self):
+        """A "new_game" trigger with a docked start still defers to the
+        first launch (board_ship()) - so the opening toast/hail land in
+        the cockpit, not the station the player begins in."""
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_screen.starting_mission_trigger = "new_game"
-        game_screen.begin_new_game()
-        self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
+        game_screen.begin_new_game()  # default start location is "station"
+        possessions = game_screen.player.person.possessions
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertTrue(possessions.flags.get("starting_mission_armed"))
+        game_screen.board_ship()
+        self.assertEqual(possessions.missions.get("first_flight"), 0)
 
 
 class TestStoryTuningConfig(unittest.TestCase):
@@ -3068,8 +3122,20 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     def _boarded_screen(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         spaceport = game_screen.get_interior_screen(game_screen.station, "default")
-        spaceport._apply_dialogue_action("buy_ship:shuttle")  # triggers _on_ship_purchased
+        spaceport._apply_dialogue_action("buy_ship:shuttle")  # arms the mission (_on_ship_purchased)
+        game_screen.board_ship()  # launching back into space is what actually starts it
         return game_screen
+
+    def test_buying_the_first_ship_arms_but_does_not_yet_start_the_mission(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "default")
+        spaceport._apply_dialogue_action("buy_ship:shuttle")
+        possessions = game_screen.player.person.possessions
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertTrue(possessions.flags.get("starting_mission_armed"))
+        game_screen.board_ship()
+        self.assertEqual(possessions.missions.get("first_flight"), 0)
+        self.assertFalse(possessions.flags.get("starting_mission_armed"))
 
     def test_buying_the_first_ship_auto_starts_the_configured_mission(self):
         game_screen = self._boarded_screen()
@@ -3077,9 +3143,9 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
 
     def test_starting_the_tutorial_makes_kade_escort_immediately(self):
         """first_flight's "on_start_flags" sets kade_escorting the moment
-        the mission begins (on ship purchase), so _sync_escorts pulls Kade
-        into OrbitPlayerRoutine right away - not only once the player accepts his
-        offer mid-conversation."""
+        the mission begins (on launch, board_ship()), so _sync_escorts pulls
+        Kade into OrbitPlayerRoutine right away - not only once the player
+        accepts his offer mid-conversation."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
         self.assertTrue(possessions.flags.get("kade_escorting"))
@@ -3194,6 +3260,31 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         self.assertEqual(possessions.missions["first_flight"], 3)
         self.assertTrue(kade_char.escorting)
         self.assertIsInstance(kade_char.routine, OrbitPlayerRoutine)
+
+    def test_accepting_help_on_the_first_hail_still_completes_the_stage(self):
+        """A hail freezes mission progress, so hailing Kade (stage 1's
+        flag) and accepting his offer (stage 2's flag) both land before
+        check_mission_progress next runs. Advancing into stage 2 must not
+        wipe the accepted-help flag the player already earned - otherwise
+        the mission strands on the conversation step forever."""
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        self.assertEqual(possessions.missions["first_flight"], 0)
+
+        possessions.flags["used_ships_target_mode"] = True
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+        # One frozen hail sets both flags with no update_physics() between.
+        possessions.flags["hailed_pilot:Kade Marsh"] = True
+        possessions.flags["accepted_kade_help"] = True
+        possessions.flags["kade_escorting"] = True
+
+        game_screen.update_physics()  # 1 -> 2
+        self.assertTrue(possessions.flags.get("accepted_kade_help"),
+                        "entering stage 2 must not clear the flag the player already set")
+        game_screen.update_physics()  # 2 -> 3
+        self.assertEqual(possessions.missions["first_flight"], 3)
 
     def test_declining_kades_help_abandons_the_mission_and_stops_escorting(self):
         game_screen = self._boarded_screen()
@@ -3968,6 +4059,25 @@ class TestSoundBoard(unittest.TestCase):
     def test_default_board_defines_the_ping(self):
         from game.audio.sound_board import sound_board
         self.assertTrue(sound_board.has("ping"))
+
+    def test_per_recipe_volume_scales_the_playback_gain(self):
+        """A single-layer recipe can't be made quieter via layer "amp"
+        (render_waveform normalizes each sound to the same peak), so
+        define(volume=...) applies a gain at play() time instead. The
+        default board sets the target-cycle "blip" below 1.0."""
+        from game.audio.sound_board import SoundBoard
+        board = SoundBoard()
+        board.enabled = True
+        board.master_volume = 1.0
+        self.assertLess(board._recipe_volumes["blip"], 1.0)
+        self.assertEqual(board._recipe_volumes.get("ping", 1.0), 1.0)
+
+        played = []
+        board.define("q", [{"freq": 440.0, "dur": 0.01}], volume=0.25)
+        fake = SimpleNamespace(set_volume=lambda v: played.append(v), play=lambda: None)
+        board._rendered["q"] = fake
+        board.play("q", volume=0.5)
+        self.assertAlmostEqual(played[0], 1.0 * 0.5 * 0.25)
 
     def test_menu_button_press_plays_the_ping(self):
         """Every menu/dialog button press funnels through

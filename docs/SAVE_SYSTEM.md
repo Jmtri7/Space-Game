@@ -171,10 +171,13 @@ never capacity-limited.
 
 `flags` (`{flag_name: true}`) is a flat set of story-progress markers -
 which conversation branches have been unlocked, which one-way ship hails
-have already fired, which minor dialogue consequences have happened (see
-`Dialogue`'s `requires_flag`/`requires_not_flag`/`conditional_roots` and the
+have already fired, which minor dialogue consequences have happened, and
+whether the story's `starting_mission` is armed-but-not-yet-launched
+(`"starting_mission_armed"` - set when a ship is bought while docked,
+cleared when the player next launches, see `SpaceScreen.board_ship()`).
+See `Dialogue`'s `requires_flag`/`requires_not_flag`/`conditional_roots`, the
 `"set_flag:<name>"` dialogue action in `game/world/dialogue.py`, and
-docs/CONTROLS.md's Hailing section). Lives on `Possessions` - not a separate
+docs/CONTROLS.md's Hailing section. Lives on `Possessions` - not a separate
 save key - specifically so it's captured/restored for free by the same
 shared-by-reference plumbing `credits`/`cargo`/etc. already use, and so a
 flag set while talking to a station NPC is visible when hailing a ship in

@@ -126,9 +126,15 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   hail banner and the "too close to jump" warning; the toast stacks below
   whichever banner is showing). `story.json`'s `"starting_mission"` names which
   mission (if any) auto-starts; `"starting_mission_trigger"` picks when -
-  `"ship_purchase"` (default, `SpaceScreen._on_ship_purchased()`, the first
-  time a pilot buys a ship) or `"new_game"` (`begin_new_game()`, as a fresh
-  game starts). A story that grants a starting ship (`story.json`'s
+  `"ship_purchase"` (default, the first time a pilot buys a ship) or
+  `"new_game"` (as a fresh game starts). Either way, if the player is
+  docked at that moment the mission is only *armed*
+  (`_on_ship_purchased()` / `begin_new_game()` set a
+  `"starting_mission_armed"` flag); it actually starts - toast, first
+  one-way hail, escort - on the next launch (`SpaceScreen.board_ship()`,
+  called from main.py's interior->space transitions and every `update()`
+  frame), so the opening beats land in the cockpit rather than the
+  station bar. A story that grants a starting ship (`story.json`'s
   `"start"` block) gets `"new_game"` behaviour automatically since no
   purchase happens. `SpaceScreen`/`PlayerController`/`LocationScreen` also
   set a fixed set of generic, story-agnostic **gameplay-event flags** so a
@@ -153,17 +159,25 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   Dialogue can also set arbitrary flags with `"set_flag:<name>"`, so a
   conversation choice is the escape hatch for any event not in this list.
   Several of these latch permanently once the player has ever
-  done the thing, so a mission that walks through them one at a time
-  (`first_flight`) sets `"reset_stage_flags_on_activation": true` at the
-  mission level: `_reset_stage_flags()` then forces each stage's
-  `"complete_flag"` (plus any names in its optional `"reset_flags"` list -
-  for a step whose completion is derived from a *different* latching flag,
-  like the braking step's `used_brake`) back to `False` the moment that
-  stage becomes active (all stages at `start_mission()`, the newly-active
-  one again on each advance), so a step can't be satisfied by an action
-  taken before it was the current instruction. See docs/CONTROLS.md's Mission Log section and
-  `config/stories/default/missions.json`'s `"first_flight"` for a worked
-  example.
+  done the thing, so a step in a mission that walks through them one at a
+  time (`first_flight`) sets `"reset_on_activation": true`:
+  `_reset_stage_flags()` then forces that stage's `"complete_flag"` (plus
+  any names in its optional `"reset_flags"` list - for a step whose
+  completion is derived from a *different* latching flag, like the braking
+  step's `used_brake`) back to `False` the moment that stage becomes
+  active (all such stages at `start_mission()`, the newly-active one again
+  on each advance), so the step can't be satisfied by an action taken
+  before it was the current instruction. Only opt in a step that latches
+  or that the player can trip early by accident (opening the Mission Log,
+  landing) - never one completed by a one-off deliberate choice (hailing a
+  pilot, accepting an offer): a hail freezes mission progress, so "hail
+  Kade" and "accept his offer" can both land before the next
+  `check_mission_progress()`, and resetting the later flag as its stage
+  activates would strand the mission. A mission-level
+  `"reset_stage_flags_on_activation": true` is the per-stage default for
+  any stage that doesn't say. See docs/CONTROLS.md's Mission Log section
+  and `config/stories/default/missions.json`'s `"first_flight"` for a
+  worked example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
 - `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
 - `game/perf_metrics.py` — `PerfMetrics` + a shared `metrics` instance and

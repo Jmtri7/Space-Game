@@ -189,6 +189,20 @@ class SpaceScreen(ScreenBase):
         # (and resets to, after a jump) the current system, so "Jump Target"
         # always names somewhere and J is always meaningful.
         self.selected_system_id = self.system_id
+        # True once the player is actually out flying (set by board_ship() /
+        # every update() frame, cleared by park_at() and _mark_landed()).
+        # update_physics() also runs in the background while the player is
+        # docked in an interior - things that should only happen in the
+        # cockpit (this story's starting_mission firing, an NPC's proximity
+        # one-way hail) gate on this so they don't go off mid-conversation
+        # in a station bar. See _on_ship_purchased / _check_one_way_hails.
+        self.in_flight = False
+        # Set by _on_ship_purchased when the starting_mission trigger is
+        # "ship_purchase": the mission is armed here but only actually
+        # started once the player launches (board_ship()), so the tutorial
+        # toast and Kade's opening hail don't land while they're still
+        # walking around the station having just bought the ship. Lives on
+        # possessions.flags so it survives a save made in that gap.
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
         # Transient center-screen toast (see _show_toast) - jump completion,
@@ -468,7 +482,7 @@ class SpaceScreen(ScreenBase):
             self._apply_ship_type(starting_ship)
 
     def begin_new_game(self):
-        """One-time setup for a brand-new game (never a load): fire the
+        """One-time setup for a brand-new game (never a load): arm the
         story's tutorial mission if its trigger is "new_game" (or if the
         story handed the player a ship, so the "ship_purchase" trigger
         would never get a chance to). Returns (location, interior_key) for
@@ -477,13 +491,18 @@ class SpaceScreen(ScreenBase):
         that landable so boarding out from the interior works the same as
         after a purchase."""
         start = self.start_config
+        location = start.get("location", "station")
+        interior = start.get("interior", "default")
         if self.starting_mission and (
             self.starting_mission_trigger == "new_game"
             or self.player.person.possessions.owned_ships
         ):
-            self._start_tutorial_mission()
-        location = start.get("location", "station")
-        interior = start.get("interior", "default")
+            if location == "space":
+                self._start_tutorial_mission()
+            else:
+                # Starting docked - defer to the first launch (board_ship())
+                # so the opening toast/hail land in the cockpit, not the bar.
+                self.player.person.possessions.flags["starting_mission_armed"] = True
         if self.player.person.possessions.owned_ships:
             if location == "moon":
                 self.park_at(self.moon)
@@ -508,12 +527,29 @@ class SpaceScreen(ScreenBase):
         """Configure the player's real ship to match a newly bought type,
         and park it right at the station - so it's "docked outside" exactly
         as a salesman's dialogue would say, ready the moment the player
-        boards through the spaceport's exit. Also the natural "first launch
-        with a ship" hook for this story's starting_mission when its trigger
-        is "ship_purchase" (see __init__ / begin_new_game)."""
+        boards through the spaceport's exit. For a "ship_purchase" trigger
+        this also *arms* the story's starting_mission - it doesn't start
+        until the player actually launches (board_ship()), so the tutorial
+        and Kade's opening hail don't fire while they're still standing in
+        the shop having just bought the ship."""
         self._apply_ship_type(ship_type_id)
         self.park_at(self.station)
-        if self.starting_mission_trigger == "ship_purchase":
+        possessions = self.player.person.possessions
+        if (self.starting_mission_trigger == "ship_purchase" and self.starting_mission
+                and self.starting_mission not in possessions.missions
+                and self.starting_mission not in possessions.completed_missions):
+            possessions.flags["starting_mission_armed"] = True
+
+    def board_ship(self):
+        """The player has launched from a docked interior back into space
+        (main.py's interior -> game transitions call this; update() also
+        calls it every flight frame as a catch-all for save-load-into-space
+        and any missed transition). Marks the ship in flight and starts a
+        starting_mission that _on_ship_purchased armed but deferred until
+        launch - idempotent, safe to call every frame."""
+        self.in_flight = True
+        if self.player.person.possessions.flags.get("starting_mission_armed"):
+            self.player.person.possessions.flags["starting_mission_armed"] = False
             self._start_tutorial_mission()
 
     def park_at(self, landable):
@@ -525,6 +561,7 @@ class SpaceScreen(ScreenBase):
         restore_possessions() and main.py's load handling)."""
         self.player.x, self.player.y = landable.x, landable.y
         self.player.park()
+        self.in_flight = False
 
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
@@ -681,6 +718,7 @@ class SpaceScreen(ScreenBase):
         comment above for why this lives on Possessions.flags rather than
         a SpaceScreen-only field."""
         self.player.person.possessions.flags["landed_on_landable"] = True
+        self.in_flight = False  # main.py is about to swap to the interior screen
 
     def _select_target_at(self, world_x, world_y):
         """Target whichever targetable object world_x/world_y falls within
@@ -1023,8 +1061,11 @@ class SpaceScreen(ScreenBase):
         (self.ai_ships) - proximity to the player only means anything in
         whichever system they're actually in - and skips entirely while a
         hail is already open, so an incoming banner can't steal focus out
-        from under a conversation the player is already having."""
-        if self.active_dialogue:
+        from under a conversation the player is already having, or while
+        the player is docked in an interior (update_physics() still runs
+        in the background then, but a pilot hailing your cockpit makes no
+        sense when you're not in it - see self.in_flight)."""
+        if self.active_dialogue or not self.in_flight:
             return
         flags = self.player.person.possessions.flags
         for ai_ship in self.ai_ships:
@@ -1248,6 +1289,11 @@ class SpaceScreen(ScreenBase):
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
+        # This screen only runs update() (rather than the background-only
+        # update_physics()) while the player is actually flying it, so it's
+        # also the catch-all "in flight now" hook - covers loading a save
+        # straight into space, where no board_ship() transition fired.
+        self.board_ship()
         # Auto-land if autopilot has actually arrived (has_arrived - the same
         # tight distance/speed SeekMode itself requires to stop). Checked
         # *before* update_physics() runs this frame's autopilot step: SeekMode

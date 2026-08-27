@@ -128,6 +128,13 @@ class SoundBoard:
         self.muted = False
         self.enabled = False
         self._recipes = {}
+        self._recipe_volumes = {}  # name -> 0..1 baseline gain, applied on top
+                                   # of master_volume (see define/play). Lets a
+                                   # recipe sit quieter than the rest without
+                                   # fighting render_waveform's per-sound peak
+                                   # normalization, which would otherwise pull
+                                   # any single-layer sound back up to the same
+                                   # loudness regardless of its layer "amp".
         self._rendered = {}
         self._freq = SAMPLE_RATE
         self._channels = 2
@@ -156,10 +163,15 @@ class SoundBoard:
         except (pygame.error, AttributeError):
             self.enabled = False
 
-    def define(self, name, layers):
+    def define(self, name, layers, volume=1.0):
         """Register (or replace) a sound recipe - see `render_waveform` for
-        the layer format. Drops any cached render of the same name."""
+        the layer format. `volume` (0..1) is a per-recipe baseline gain
+        applied under master_volume on every play (use it to make one
+        sound quieter than the board as a whole - layer "amp" alone can't,
+        the renderer normalizes each sound to the same peak). Drops any
+        cached render of the same name."""
         self._recipes[name] = layers
+        self._recipe_volumes[name] = max(0.0, min(1.0, volume))
         self._rendered.pop(name, None)
 
     def has(self, name):
@@ -182,7 +194,8 @@ class SoundBoard:
                 return
             self._rendered[name] = sound
         try:
-            sound.set_volume(max(0.0, min(1.0, self.master_volume * volume)))
+            gain = self.master_volume * volume * self._recipe_volumes.get(name, 1.0)
+            sound.set_volume(max(0.0, min(1.0, gain)))
             sound.play()
         except pygame.error:
             pass
@@ -195,10 +208,13 @@ class SoundBoard:
             {"freq": 1244.51, "dur": 0.10, "wave": "sine", "attack": 0.004, "decay": 0.055, "amp": 0.9},
             {"freq": 1864.66, "dur": 0.17, "wave": "sine", "attack": 0.004, "decay": 0.11, "amp": 0.55, "delay": 0.035},
         ])
-        # "blip" - a single short square-wave tick (cursor moves, minor acks).
+        # "blip" - a single short square-wave tick (cursor moves, minor
+        # acks). Deliberately well below the rest of the board: it fires on
+        # every target-cycle keypress (T/[/] in the Space View, [/] in an
+        # interior), so at full loudness it grates.
         self.define("blip", [
             {"freq": 880.0, "dur": 0.05, "wave": "square", "attack": 0.002, "decay": 0.028, "amp": 0.35},
-        ])
+        ], volume=0.4)
         # "confirm" - a rising perfect-fifth chime for a completed action.
         self.define("confirm", [
             {"freq": 659.26, "dur": 0.10, "wave": "sine", "decay": 0.07, "amp": 0.8},
