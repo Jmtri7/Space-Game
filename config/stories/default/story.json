@@ -8,6 +8,8 @@
   "starting_mission": "first_flight",
   "starting_mission_trigger": "ship_purchase",
   "default_outfit": "space_suit",
+  "camera_zoom": 3.0,
+  "walking_speed": 2.5,
   "start": {
     "location": "station",
     "interior": "dormitory",

@@ -2926,6 +2926,29 @@ class TestSpaceScreenStartConfig(unittest.TestCase):
         self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
 
 
+class TestStoryTuningConfig(unittest.TestCase):
+    """Per-story tuning knobs read from story.json (jump / brake / camera /
+    walking) - defaults live in code, story.json overrides them."""
+
+    def test_space_screen_reads_jump_and_brake_tuning(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        self.assertEqual(s.jump_speed, 40)
+        self.assertEqual(s.jump_travel_frames, 150)
+        self.assertEqual(s.jump_arrival_distance, 1400)
+        self.assertEqual(s.jump_self_min_distance, 3200)
+        self.assertEqual(s.brake_slow_threshold, 0.3)
+
+    def test_space_screen_applies_camera_zoom_to_the_shared_camera(self):
+        utils.set_camera_zoom(99.0)
+        SpaceScreen(pilot_name="T", story="default")
+        self.assertEqual(utils.get_scale(), utils._camera.get_scale())
+        self.assertEqual(utils._camera.zoom, 3.0)  # story.json's camera_zoom
+
+    def test_location_screen_walking_speed_from_story(self):
+        screen = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
+        self.assertEqual(screen.speed, 2.5)
+
+
 class TestSpaceScreenMissionIntegration(unittest.TestCase):
     """The default story's "first_flight" tutorial mission - real
     story.json ("starting_mission") + missions.json config, auto-started

@@ -20,10 +20,17 @@ class Camera:
         self.offset_y = 0
         self.screen_width = screen_width
         self.screen_height = screen_height
+        # World-render magnification. CAMERA_ZOOM is the default; a story can
+        # override it (story.json's "camera_zoom") via set_camera_zoom() so a
+        # bigger or more cramped map frames sensibly. UI scale ignores this.
+        self.zoom = CAMERA_ZOOM
 
     def set_offset(self, x, y):
         self.offset_x = x
         self.offset_y = y
+
+    def set_zoom(self, zoom):
+        self.zoom = zoom
 
     def set_screen_size(self, width, height):
         self.screen_width = width
@@ -31,7 +38,7 @@ class Camera:
 
     def get_scale(self):
         """Get rendering scale based on window size."""
-        return min(self.screen_width / GAME_WIDTH, self.screen_height / GAME_HEIGHT) * CAMERA_ZOOM
+        return min(self.screen_width / GAME_WIDTH, self.screen_height / GAME_HEIGHT) * self.zoom
 
     def get_world_offset(self):
         """Get rendering offset to center game world."""
@@ -112,6 +119,14 @@ def set_camera_offset(x, y):
 def set_screen_size(width, height):
     """Update the camera's screen dimensions."""
     _camera.set_screen_size(width, height)
+
+
+def set_camera_zoom(zoom):
+    """Set the world-render magnification (story.json's "camera_zoom";
+    defaults to constants.CAMERA_ZOOM). Global like the rest of the camera
+    state - SpaceScreen sets it per story at construction, and a game can
+    only ever be in one story at a time."""
+    _camera.set_zoom(zoom)
 
 
 def get_scale():

@@ -2,9 +2,9 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
+from game.constants import GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
 from game.utils import (
-    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
+    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_zoom,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
     get_asteroid_type, get_missions, get_story
@@ -111,6 +111,10 @@ class SpaceScreen(ScreenBase):
         # graphics.json "outfits" id worn by the player and every AI pilot
         # (station/moon NPCs pick their own per-config, see LocationScreen).
         self.default_outfit_id = story_meta.get("default_outfit", "space_suit")
+        # World-render magnification for this story (UI scale is unaffected).
+        # Global camera state - safe to set here since a session is only
+        # ever in one story, and only a live SpaceScreen renders the world.
+        set_camera_zoom(story_meta.get("camera_zoom", CAMERA_ZOOM))
         # Per-story tuning overrides (module-level names above are the
         # defaults / JumpDrive's own fallback).
         self.brake_slow_threshold = story_meta.get("brake_slow_threshold", BRAKE_SLOW_THRESHOLD)

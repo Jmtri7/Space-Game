@@ -8,7 +8,9 @@ from collections import deque
 from game.constants import WALKING_SPEED
 from game.world.indoor_pathfinder import IndoorPathfinder
 
-WALK_SPEED = WALKING_SPEED  # same pace as LocationScreen's player (see constants.WALKING_SPEED)
+WALK_SPEED = WALKING_SPEED  # fallback pace; _advance_walk() prefers the interior's own
+                            # LocationScreen.speed (story.json's "walking_speed") so an
+                            # AI dock-walker always matches the player in that same room
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
 
@@ -251,7 +253,7 @@ class DockRoutine:
             if dist <= ARRIVAL_DISTANCE:
                 self._waypoints.pop(0)
                 continue
-            step = min(WALK_SPEED, dist)
+            step = min(getattr(self._location, "speed", WALK_SPEED), dist)
             step_x, step_y = dx / dist * step, dy / dist * step
             for candidate_x, candidate_y in ((person.x + step_x, person.y + step_y), (person.x + step_x, person.y), (person.x, person.y + step_y)):
                 if self._location.can_move_to(candidate_x, candidate_y):

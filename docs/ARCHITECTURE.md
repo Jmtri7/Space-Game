@@ -454,10 +454,31 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
    - reach through `character.ship`-delegated methods (`engage_seek`, etc.)
    for ship-flying behavior, or `character.person.x/y` directly for local
    (no-ship) behavior - never both in the same routine
-2. Register it in `ROLE_ROUTINES` (`game/world/character.py`), keyed by the
-   role string
-3. Set `"role": "<name>"` on the relevant `pilots.json` entry (ship-flying)
-   or the location config's `npcs[]` entry (local) - no other code changes needed
+2. Register it in `ROUTINE_REGISTRY` (`game/world/character.py`) under a
+   short config name, and/or wire a role default into `ROLE_ROUTINES`
+3. Point a character at it: `"role": "<name>"` (role default) or
+   `"routine": "<registry name>"` (explicit, wins over the role) on the
+   relevant `pilots.json` entry (ship-flying) or the location config's
+   `npcs[]` entry (local) - no other code changes needed
+
+### `story.json` fields
+Top-level per-story config, read via `utils.get_story()`. All optional
+except where a story clearly needs it; code holds the default.
+
+| Field | Purpose |
+|---|---|
+| `id` / `name` / `description` / `difficulty` | Identity + story-picker card |
+| `version` | Save-compat version (see SAVE_SYSTEM.md) |
+| `starting_system` | Which `systems/*.json` a new game loads |
+| `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
+| `start` | New-game state: `location` (`station`/`moon`/`space`), `interior`, `credits`, `ship`, `outfits[]`, `items{}`, `flags{}` (see `SpaceScreen._apply_start_config` / `begin_new_game`) |
+| `loan` | `lender` / `amount` / `max_active` for the `take_loan` dialogue action |
+| `jump` | `travel_frames` / `speed` / `arrival_distance` / `self_min_distance` |
+| `brake_slow_threshold` | Speed the tutorial's braking stage completes below |
+| `camera_zoom` | World-render magnification (default `constants.CAMERA_ZOOM`) |
+| `walking_speed` | On-foot pace, player + AI dock-walkers (default `constants.WALKING_SPEED`) |
+| `default_outfit` | `graphics.json` `outfits` id for the player + AI pilots |
+| `ships.player_type` | Placeholder ship stats before one is owned (usually `null`) |
 
 ## Design Decisions
 
