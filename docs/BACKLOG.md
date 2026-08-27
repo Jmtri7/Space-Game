@@ -5,11 +5,6 @@ list, not a spec — add to it whenever you notice something, and check an item 
 delete it) once it's actually fixed/shipped. If you're an agent fixing one of these,
 mention it in the commit message so this file and the commit history stay in sync.
 
-Items marked ⭐ were flagged by the user as notable in some way — either a bug they'd
-noticed clearly/hit directly, or a feature specifically called out in discussion (vs.
-general ideas) — treat them as slightly higher-confidence/interest, not necessarily
-higher priority.
-
 Top-level split is **Bugs vs. Features**. Within each, items are grouped by the type of
 gameplay they belong to, so related work is easy to find together. A gameplay category
 only appears under a section if it currently has items there.
@@ -18,7 +13,7 @@ only appears under a section if it currently has items there.
 
 ## Missions, Dialogue & NPCs
 
-- [ ] ⭐ Target isn't officially cleared when an NPC exits the interior, so a new
+- [ ] Target isn't officially cleared when an NPC exits the interior, so a new
       target isn't chosen when walking close again.
 
 ## Ships & Customization
@@ -40,14 +35,11 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Quick save.
-- [ ] Minimap: bigger title text.
 - [ ] Minimap: click a target to select it.
-- [ ] ⭐ Make the player icon on the minimap more obvious than the others.
-- [ ] ⭐ Hover text on the minimap when the mouse is over a point, showing what it is.
-- [ ] ⭐ Make credits amount display consistent with other UI texts.
-- [ ] ⭐ Control pane: separate space movement controls (WASD / ARROWS) by whether
-      they're for turning, thrusting, or facing reverse.
-- [ ] ⭐ Some selling-menu controls (like the ship menu) don't mention that you can use
+- [ ] Make the player icon on the minimap more obvious than the others.
+- [ ] Hover text on the minimap when the mouse is over a point, showing what it is.
+- [ ] Make credits amount display consistent with other UI texts.
+- [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
 - [ ] Rotate camera.
@@ -58,8 +50,6 @@ only appears under a section if it currently has items there.
 - [ ] Star map zoom.
 - [ ] System minimap (local-system view during flight, distinct from the interstellar
       star map).
-- [ ] Autopilot should indicate what it's currently doing (e.g. "approaching",
-      "braking").
 
 ## Missions, Dialogue & NPCs
 
@@ -71,27 +61,27 @@ only appears under a section if it currently has items there.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
       story.
 - [ ] NPCs stop wandering if the player moves close to or targets them.
-- [ ] ⭐ Derelict ships / distress beacons — a drifting AI ship with no pilot response
+- [ ] Derelict ships / distress beacons — a drifting AI ship with no pilot response
       you can board, loot, or tow; combines the existing AI ship, interior, and
       item-pickup ideas into one encounter type.
-- [ ] ⭐ Escort/wingman contracts — hire or be hired to fly alongside another AI ship
+- [ ] Escort/wingman contracts — hire or be hired to fly alongside another AI ship
       to a destination; reuses existing autopilot and multi-AI-ship work.
 
 ## Combat, Crime & Factions
 
-- [ ] ⭐ Factions — combined with crime/war, would turn the sandbox into a living
+- [ ] Factions — combined with crime/war, would turn the sandbox into a living
       political map; cultures/roles already exist as a foundation.
 - [ ] Combat.
-- [ ] ⭐ Crime — see factions.
-- [ ] ⭐ War — see factions.
-- [ ] ⭐ Bounty hunting board — a station terminal listing wanted ships/NPCs with a
+- [ ] Crime — see factions.
+- [ ] War — see factions.
+- [ ] Bounty hunting board — a station terminal listing wanted ships/NPCs with a
       reward, feeding off factions/crime once those exist.
-- [ ] ⭐ AI ships flying in formations.
+- [ ] AI ships flying in formations.
 
 ## Ships & Customization
 
 - [ ] Multiple owned ships.
-- [ ] ⭐ Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
+- [ ] Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
       ship" feel more personal, especially once multiple owned ships exist.
 - [ ] Make all outfits usable (not just cosmetic/inert).
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
@@ -99,16 +89,16 @@ only appears under a section if it currently has items there.
 
 ## Economy & Trading
 
-- [ ] ⭐ Sell all button.
+- [ ] Sell all button.
 - [ ] Picking up and dropping items.
-- [ ] ⭐ Asteroid mining — pairs naturally with the existing asteroid fields and
+- [ ] Asteroid mining — pairs naturally with the existing asteroid fields and
       "different asteroid types" idea; gives the economy a real gameplay loop instead
       of just trading.
 - [ ] More ways to make money.
 - [ ] Make some commodities usable for various purposes (not just tradeable).
 - [ ] Distinct buy and sell multipliers per good, dependent on various factors
       (supply/demand, faction, location, etc.).
-- [ ] ⭐ Black-market smuggling runs — contraband cargo that's profitable but triggers
+- [ ] Black-market smuggling runs — contraband cargo that's profitable but triggers
       scans/hails from patrol ships if caught; a light crime mechanic that doesn't
       need the full Crime system first.
 
@@ -128,7 +118,7 @@ only appears under a section if it currently has items there.
 - [ ] Options for star/asteroid seeds.
 - [ ] Animals.
 - [ ] Hunting.
-- [ ] ⭐ Procedurally generated outdoor areas, with a way to find the exit — biggest
+- [ ] Procedurally generated outdoor areas, with a way to find the exit — biggest
       single expansion of explorable space beyond stations.
 - [ ] Planet descriptions (icy, rocky, gas giant, etc.).
 - [ ] Reasons to visit hazardous worlds.
@@ -147,6 +137,3 @@ only appears under a section if it currently has items there.
       already handles that.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
       user who wants help creating one.
-- [x] Dependency-less Windows builds (e.g. via PyInstaller) — a standalone .exe players
-      can double-click to run without installing Python/pygame. See
-      [BUILD.md](BUILD.md) / `packaging/build_windows.bat`.
