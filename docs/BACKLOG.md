@@ -30,6 +30,10 @@ together. Bug items stay in whichever category their affected system belongs to
       other menus.
 - [ ] Consider mouse-based movement/control support.
 - [ ] Rotate camera.
+- [ ] ⭐ Simple dialogs (YES/NO confirms, etc.) don't show a controls pane like other
+      menus do — either special-case a controls pane for them, or find a permanent,
+      general solution for how menu options and their control help text get shown so
+      new dialog types don't need one-off handling each time.
 
 ## Navigation & Flight
 
@@ -43,6 +47,9 @@ together. Bug items stay in whichever category their affected system belongs to
 
 ## Missions, Dialogue & NPCs
 
+- [ ] NPCs in interior locations (station interiors, etc.) should be able to display
+      messages on screen too, not just NPCs hailing from space.
+- [ ] Tutorial mission for taking out a loan and buying a ship.
 - [ ] Relationships.
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
@@ -132,3 +139,6 @@ together. Bug items stay in whichever category their affected system belongs to
       already handles that.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
       user who wants help creating one.
+- [x] Dependency-less Windows builds (e.g. via PyInstaller) — a standalone .exe players
+      can double-click to run without installing Python/pygame. See
+      [BUILD.md](BUILD.md) / `packaging/build_windows.bat`.
