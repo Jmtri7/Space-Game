@@ -42,7 +42,7 @@ only appears under a section if it currently has items there.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
-- [ ] Rotate camera.
+- [x] Rotate camera. (Q/E in the Space View - view-only rotation, resets on landing.)
 
 ## Navigation & Flight
 

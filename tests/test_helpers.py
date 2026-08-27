@@ -138,6 +138,60 @@ class TestHandleScrollingInput(unittest.TestCase):
         self.assertEqual(scroll, 1)
 
 
+class TestCameraRotation(unittest.TestCase):
+    """Camera.set_angle() / to_screen() / to_world() view rotation (Q/E in
+    the Space View). The focus point - where set_camera_offset() always
+    parks the followed entity - must stay pinned on screen at any angle,
+    and to_world must invert to_screen."""
+
+    def _camera_focused_on(self, px, py, angle=0):
+        cam = utils.Camera(1000, 800)
+        cam.set_offset(px - GAME_WIDTH // 2, py - GAME_HEIGHT // 2)
+        cam.set_angle(angle)
+        return cam
+
+    def test_focus_point_is_pinned_regardless_of_angle(self):
+        px, py = 5000, 3000
+        unrotated = self._camera_focused_on(px, py, 0).to_screen(px, py)
+        for angle in (0, 15, 90, 180, 270, 359):
+            rotated = self._camera_focused_on(px, py, angle).to_screen(px, py)
+            self.assertEqual(rotated, unrotated)
+
+    def test_angle_zero_matches_unrotated_projection(self):
+        cam = self._camera_focused_on(1000, 1000, 0)
+        # A point offset from focus projects exactly as scale+offset alone.
+        self.assertEqual(cam.to_screen(1200, 1000), cam.to_screen(1200, 1000))
+        scale = cam.get_scale()
+        ox, oy = cam.get_world_offset()
+        expected = (int(round((1200 - cam.offset_x) * scale + ox)),
+                    int(round((1000 - cam.offset_y) * scale + oy)))
+        self.assertEqual(cam.to_screen(1200, 1000), expected)
+
+    def test_ninety_degrees_maps_north_to_east(self):
+        px, py = 2000, 2000
+        cam = self._camera_focused_on(px, py, 90)
+        focus = cam.to_screen(px, py)
+        # A point due north of the focus (smaller world y) should render
+        # 90 deg clockwise from "up" - i.e. to the right of the focus, at
+        # roughly the focus's screen height.
+        north = cam.to_screen(px, py - 300)
+        self.assertGreater(north[0], focus[0])
+        self.assertAlmostEqual(north[1], focus[1], delta=2)
+
+    def test_to_world_inverts_to_screen_at_an_angle(self):
+        cam = self._camera_focused_on(7000, 1500, 37)
+        for wx, wy in ((7000, 1500), (7200, 1400), (6800, 1750), (7000, 900)):
+            sx, sy = cam.to_screen(wx, wy)
+            rx, ry = cam.to_world(sx, sy)
+            self.assertAlmostEqual(rx, wx, delta=1.0)
+            self.assertAlmostEqual(ry, wy, delta=1.0)
+
+    def test_rotate_vector_leaves_length_unchanged(self):
+        cam = self._camera_focused_on(0, 0, 50)
+        dx, dy = cam.rotate_vector(3, 4)
+        self.assertAlmostEqual(math.hypot(dx, dy), 5.0, places=6)
+
+
 class TestListFilesByPattern(unittest.TestCase):
     """Test _list_files_by_pattern helper function"""
 
