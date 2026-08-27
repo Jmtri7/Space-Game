@@ -84,14 +84,29 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   `"complete_flag"` is set in `Possessions.flags` - the *same* flag
   vocabulary Dialogue's `requires_flag`/`"set_flag:"` use, so a stage can
   be completed by a dialogue choice or a gameplay event alike - and moves
-  a mission into `completed_missions` once its last stage completes;
+  a mission into `completed_missions` once its last stage completes.
+  `abandon_mission()` (wired up as the `"abandon_mission:<id>"` dialogue
+  action - see `apply_shared_actions`) drops a mission without completing
+  it, for a dialogue option letting the player decline. Both finishing and
+  abandoning run `_on_mission_end()`: clears the mission's `"escort_flag"`
+  (see `person.escort_flag` above) and sets every flag in its
+  `"on_end_flags"` list (e.g. so a re-hailed pilot's `conditional_roots`
+  can stop re-offering the same mission). A stage can also carry a
+  `"one_way_message"` (`{"sender": ..., "text": ...}`) - not delivered by
+  this module (kept pygame/UI-free on purpose), but `start_mission()`/
+  `check_mission_progress()` return which `(mission_id, stage_index)`
+  pairs just became active so `SpaceScreen._deliver_stage_message()` can
+  look up and post each one via `_post_message()` (shared with
+  `_check_one_way_hails()`'s proximity-triggered hails - both show a
+  transient banner and log to `Possessions.message_log`).
   `mission_status_lines()` is the display data `MissionLog` (`game/ui/`,
   opened with N) renders. `story.json`'s `"starting_mission"` names which
   mission (if any) `SpaceScreen._on_ship_purchased()` auto-starts the
-  first time a pilot boards a ship. `SpaceScreen` also sets a handful of
-  generic, story-agnostic gameplay-event flags of its own (`used_thrust`,
-  `used_brake` - set by `PlayerController.handle_input()` -,
-  `used_autopilot_on_ship`, `landed_on_landable`, `completed_jump`) so a
+  first time a pilot boards a ship. `SpaceScreen`/`PlayerController` also
+  set a handful of generic, story-agnostic gameplay-event flags of their
+  own (`used_ships_target_mode`, `used_turn`, `used_thrust`, `used_brake`,
+  `braked_below_threshold`, `used_autopilot_on_ship`, `landed_on_landable`,
+  `completed_jump`, and `"hailed_pilot:<name>"` from `_start_hail()`) so a
   story's missions.json can use them as `"complete_flag"`s without any
   code change. See docs/CONTROLS.md's Mission Log section and
   `config/stories/default/missions.json`'s `"first_flight"` for a worked
@@ -238,7 +253,15 @@ mechanism behind every non-player character in the game:
   differently. `person.one_way_hail` (optional, from `pilots.json`) is a
   pilot who hails the player first, once, on proximity - see
   `SpaceScreen._check_one_way_hails()` and docs/CONTROLS.md's Hailing
-  section.
+  section. `person.escort_flag` (optional, from `pilots.json`) names a
+  `Possessions.flags` entry that puts this pilot into `FollowRoutine`
+  (`follow_routine.py` - continuously re-`engage_seek()`s a moving target,
+  typically the player) instead of their normal role routine for as long
+  as that flag is set, and back via `Character.set_routine()` +
+  `resolve_routine_class(role, faction)` once it's cleared - see
+  `SpaceScreen._sync_escorts()`. A mission can set/clear that flag itself
+  (see `Mission` below) to have an NPC escort the player for its duration,
+  e.g. Kade Marsh walking the player through `first_flight`.
 - **Station/moon NPCs** (`ship=None`): built inline by `LocationScreen`.
   Role comes from each `npcs[]` entry's `"role"` in the location's config
   (`bartender`, `guard`, `resident`, ...), defaulting to `"resident"` if
@@ -257,6 +280,7 @@ that routine flies a ship or just moves a body around a room:
 | `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
+| `FollowRoutine` | `follow_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted, temporary override via `Character.set_routine()` (see `person.escort_flag` above), not a role pick |
 
 Every `Routine` implements the same two methods regardless of which table
 row it's in: `start(character)` (once, at construction) and

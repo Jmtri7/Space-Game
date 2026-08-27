@@ -1,6 +1,7 @@
 """Dialogue system for NPC interaction - a small conversation tree."""
 import pygame
 from game.utils import _wrap_text
+from game.world.mission import abandon_mission
 
 
 def option_actions(option):
@@ -18,7 +19,7 @@ def option_actions(option):
     return []
 
 
-def apply_shared_actions(action, possessions):
+def apply_shared_actions(action, possessions, missions_config=None):
     """Handle the dialogue actions generic enough to mean the same thing
     regardless of which screen is driving the conversation - LocationScreen's
     station/moon conversations, or SpaceScreen's ship hails:
@@ -28,6 +29,11 @@ def apply_shared_actions(action, possessions):
     - "spend_credits:<amount>" - a flat credit cost, for a consequence that
       isn't buying a specific ship/outfit (see "buy_ship:"/shop menus for
       those)
+    - "abandon_mission:<id>" - let the player decline an active mission
+      (e.g. "no thanks" to an NPC's offer) - see game/world/mission.py's
+      abandon_mission(). Needs missions_config to look up that mission's
+      escort_flag/on_end_flags cleanup; a no-op if the caller didn't pass
+      one (LocationScreen's conversations don't currently need this action).
     Returns True if it handled the action, so a caller with its own extra,
     screen-specific actions (LocationScreen's "buy_ship:"/"take_loan", which
     need more than just `possessions` - see there) can try this first and
@@ -40,6 +46,10 @@ def apply_shared_actions(action, possessions):
         return True
     if action.startswith("spend_credits:"):
         possessions.spend(int(action.split(":", 1)[1]))
+        return True
+    if action.startswith("abandon_mission:"):
+        if missions_config is not None:
+            abandon_mission(missions_config, possessions, action.split(":", 1)[1])
         return True
     return False
 

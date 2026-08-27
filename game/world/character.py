@@ -48,6 +48,15 @@ ROLE_ROUTINES = {
 FACTION_ROUTINE_OVERRIDES = {}
 
 
+def resolve_routine_class(role, faction=None):
+    """Which Routine class a role (optionally overridden by faction) maps
+    to - the same lookup Character.__init__ uses when first building a
+    character, exposed separately so something can restore a character's
+    normal routine after a temporary override (see Character.set_routine
+    and person.escort_flag) without duplicating this lookup."""
+    return FACTION_ROUTINE_OVERRIDES.get((faction, role), ROLE_ROUTINES.get(role, IdleRoutine))
+
+
 class Character:
     """Someone with a role that determines their routine - a body (Person),
     optionally a ship they fly, and a Routine chosen by role that decides
@@ -58,6 +67,12 @@ class Character:
         self.person = person
         self.ship = ship
         self.role = role
+        # Kept so a temporary routine override (see set_routine/
+        # person.escort_flag) can be reversed later via
+        # resolve_routine_class(self.role, self.faction) - not read
+        # anywhere else, since the initial pick below already resolves it
+        # once at construction time.
+        self.faction = faction
         # Mirrored onto the person itself (not just kept here on Character)
         # so anything holding just a bare Person - LocationScreen.visitors,
         # for instance, which never keeps the Character wrapper around - can
@@ -103,9 +118,25 @@ class Character:
         # _update_jump - so the ship's normal thrust/autopilot/drag physics
         # don't also run and fight it that same frame.
         self.jumping = False
+        # Whether a temporary routine override (see set_routine) currently
+        # has this character escorting the player rather than running its
+        # normal role routine - see person.escort_flag and
+        # SpaceScreen._sync_escorts(). Never true for a character built
+        # without that opt-in.
+        self.escorting = False
 
-        routine_cls = FACTION_ROUTINE_OVERRIDES.get((faction, role), ROLE_ROUTINES.get(role, IdleRoutine))
+        routine_cls = resolve_routine_class(role, faction)
         self.routine = routine_cls(self.route)
+        self.routine.start(self)
+
+    def set_routine(self, routine):
+        """Override this character's routine at runtime - e.g. temporarily
+        escorting the player through a tutorial mission (see
+        person.escort_flag/SpaceScreen._sync_escorts) instead of running
+        its normal role routine. Calls routine.start(self) immediately,
+        same as __init__ does for the role-selected one, so the swap takes
+        effect the same frame it's made."""
+        self.routine = routine
         self.routine.start(self)
 
     @classmethod
@@ -152,6 +183,13 @@ class Character:
         # above (the player still has to hail back - see docs/CONTROLS.md).
         # None for any pilot whose config doesn't set one.
         person.one_way_hail = pilot.get("one_way_hail")
+        # Optional flag name (pilots.json) that puts this pilot into
+        # FollowRoutine (escorting the player) whenever it's set in the
+        # player's Possessions.flags, and back to their normal role
+        # routine once it's cleared - see SpaceScreen._sync_escorts() and
+        # game/world/mission.py's escort_flag handling. None for any pilot
+        # who never escorts.
+        person.escort_flag = pilot.get("escort_flag")
 
         return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
 

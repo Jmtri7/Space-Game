@@ -35,13 +35,14 @@ from game.world.landable import Landable
 from game.world.person import Person
 from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
-from game.world.mission import start_mission, check_mission_progress, mission_status_lines
+from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
 from game.ui.mission_log import MissionLog
 from game.ui.ui_theme import side_panel_max_width, center_panel_max_width
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
 from game.world.character import Character
+from game.world.follow_routine import FollowRoutine
 from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
 from game.world.asteroid_field import AsteroidField
@@ -1133,6 +1134,118 @@ class TestMissionProgress(unittest.TestCase):
         check_mission_progress(self.MISSIONS, possessions)  # must not raise
         self.assertEqual(possessions.missions["ghost_mission"], 0)
 
+    def test_start_mission_returns_the_first_stage_when_it_actually_starts(self):
+        possessions = Possessions()
+        self.assertEqual(start_mission(self.MISSIONS, possessions, "first_flight"), ("first_flight", 0))
+
+    def test_start_mission_returns_none_when_it_does_not_start(self):
+        possessions = Possessions()
+        self.assertIsNone(start_mission(self.MISSIONS, possessions, "no_such_mission"))
+        possessions.missions["first_flight"] = 1
+        self.assertIsNone(start_mission(self.MISSIONS, possessions, "first_flight"))
+
+    def test_check_mission_progress_returns_newly_entered_stages(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        possessions.flags["said_hello"] = True
+        self.assertEqual(check_mission_progress(self.MISSIONS, possessions), [("first_flight", 1)])
+
+    def test_check_mission_progress_returns_nothing_when_a_mission_completes(self):
+        """A stage completing into completed_missions isn't a "newly
+        entered stage" - there's no further stage to deliver a message
+        for."""
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 1
+        possessions.flags["used_thrust"] = True
+        self.assertEqual(check_mission_progress(self.MISSIONS, possessions), [])
+
+    def test_check_mission_progress_returns_nothing_when_no_flag_is_set(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertEqual(check_mission_progress(self.MISSIONS, possessions), [])
+
+
+class TestMissionEscortAndAbandon(unittest.TestCase):
+    """escort_flag/on_end_flags (see mission.py's _on_mission_end) and
+    abandon_mission() - the mechanism behind an NPC escorting the player
+    for a mission's duration (see person.escort_flag/
+    SpaceScreen._sync_escorts) and a dialogue option letting the player
+    decline one (e.g. Kade Marsh's "No thanks, I've got it.")."""
+
+    MISSIONS = {
+        "first_flight": {
+            "title": "First Flight",
+            "escort_flag": "kade_escorting",
+            "on_end_flags": ["kade_tutorial_done"],
+            "stages": [
+                {"text": "Say hello.", "complete_flag": "said_hello"},
+            ],
+        },
+    }
+
+    def test_finishing_a_mission_clears_its_escort_flag_and_sets_on_end_flags(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 0
+        possessions.flags["kade_escorting"] = True
+        possessions.flags["said_hello"] = True
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertEqual(possessions.completed_missions, ["first_flight"])
+        self.assertFalse(possessions.flags["kade_escorting"])
+        self.assertTrue(possessions.flags["kade_tutorial_done"])
+
+    def test_abandon_mission_removes_it_without_completing_it(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 0
+        abandon_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertNotIn("first_flight", possessions.completed_missions)
+
+    def test_abandon_mission_also_clears_escort_flag_and_sets_on_end_flags(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 0
+        possessions.flags["kade_escorting"] = True
+        abandon_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertFalse(possessions.flags["kade_escorting"])
+        self.assertTrue(possessions.flags["kade_tutorial_done"])
+
+    def test_abandon_mission_is_a_noop_for_a_mission_that_is_not_active(self):
+        possessions = Possessions()
+        abandon_mission(self.MISSIONS, possessions, "first_flight")  # must not raise
+        self.assertNotIn("kade_escorting", possessions.flags)
+
+
+class TestMissionOneWayMessage(unittest.TestCase):
+    """A stage's optional "one_way_message" (see mission.py's module
+    docstring) isn't read by mission.py itself - it's just data a caller
+    (SpaceScreen._deliver_stage_message) looks up using the (mission_id,
+    stage_index) pairs start_mission()/check_mission_progress() return."""
+
+    MISSIONS = {
+        "first_flight": {
+            "title": "First Flight",
+            "stages": [
+                {"text": "Say hello.", "complete_flag": "said_hello"},
+                {"text": "Fly around.", "complete_flag": "used_thrust",
+                 "one_way_message": {"sender": "Kade Marsh", "text": "Now try flying."}},
+            ],
+        },
+    }
+
+    def test_advanced_stage_carries_its_one_way_message(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        possessions.flags["said_hello"] = True
+        advanced = check_mission_progress(self.MISSIONS, possessions)
+        mission_id, stage_index = advanced[0]
+        message = self.MISSIONS[mission_id]["stages"][stage_index]["one_way_message"]
+        self.assertEqual(message, {"sender": "Kade Marsh", "text": "Now try flying."})
+
+    def test_first_stage_has_no_one_way_message_in_this_fixture(self):
+        """Mirrors the real first_flight mission's stage 0 - delivered via
+        pilots.json's proximity-gated one_way_hail instead (see
+        SpaceScreen._check_one_way_hails), not a stage-entry message."""
+        self.assertNotIn("one_way_message", self.MISSIONS["first_flight"]["stages"][0])
+
     def test_mission_status_lines_reports_active_and_completed(self):
         possessions = Possessions()
         possessions.missions["first_flight"] = 1
@@ -1902,6 +2015,86 @@ class TestCharacterAIPilotDialogue(unittest.TestCase):
         hail = character.person.hail_dialogue
         self.assertEqual(hail.current_text(), "State your business.")
         self.assertEqual(character.person.one_way_hail["message"], "Identify yourself.")
+        self.assertIsNone(character.person.escort_flag)
+
+    def test_pilot_with_escort_flag_configured(self):
+        pilot = {"name": "Kade Marsh", "personality": "...", "role": "patrol_officer", "escort_flag": "kade_escorting"}
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot=pilot, route=[], get_interior_screen=None,
+        )
+        self.assertEqual(character.person.escort_flag, "kade_escorting")
+
+
+class TestCharacterSetRoutine(unittest.TestCase):
+    """Character.set_routine()/resolve_routine_class() - the mechanism
+    behind temporarily overriding a character's routine (e.g. an escort
+    pilot following the player - see person.escort_flag/
+    SpaceScreen._sync_escorts) and restoring their normal role routine
+    afterward."""
+
+    def test_set_routine_starts_it_immediately(self):
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot={"name": "Kade Marsh", "role": "patrol_officer"}, route=[], get_interior_screen=None,
+        )
+        target = SimpleNamespace(x=100, y=0, get_distance=lambda x, y: 100)
+        character.set_routine(FollowRoutine(target))
+        self.assertIsInstance(character.routine, FollowRoutine)
+        self.assertTrue(character.autopilot_active)  # start() engaged seek
+
+    def test_resolve_routine_class_matches_the_role_used_at_construction(self):
+        from game.world.character import resolve_routine_class, ROLE_ROUTINES
+        self.assertIs(resolve_routine_class("patrol_officer"), ROLE_ROUTINES["patrol_officer"])
+
+    def test_escorting_flag_defaults_to_false(self):
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot={"name": "Kade Marsh", "role": "patrol_officer"}, route=[], get_interior_screen=None,
+        )
+        self.assertFalse(character.escorting)
+
+
+class TestFollowRoutine(unittest.TestCase):
+    """FollowRoutine - continuously re-engages seek on a moving target
+    (typically the player) whenever autopilot isn't already actively
+    chasing it, so an escort doesn't sit parked once the target moves
+    again after being caught up to."""
+
+    def _character(self):
+        return Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot={"name": "Kade Marsh", "role": "patrol_officer"}, route=[], get_interior_screen=None,
+        )
+
+    def test_start_engages_seek_on_the_target(self):
+        character = self._character()
+        target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
+        FollowRoutine(target).start(character)
+        self.assertTrue(character.autopilot_active)
+        self.assertIs(character.autopilot_target, target)
+
+    def test_run_re_engages_once_autopilot_has_disengaged(self):
+        character = self._character()
+        target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
+        routine = FollowRoutine(target)
+        routine.start(character)
+        character.autopilot_active = False  # simulate having "arrived" and disengaged
+        routine.run(character)
+        self.assertTrue(character.autopilot_active, "must re-engage seek once disengaged")
+
+    def test_run_does_not_re_engage_while_already_seeking(self):
+        """A no-op call while still actively seeking shouldn't reset
+        SeekMode's internal state (see autopilot.py's own comments on why
+        that matters) - checked indirectly here via the target staying the
+        exact same object reference, not a freshly re-engaged one."""
+        character = self._character()
+        target = SimpleNamespace(x=500, y=0, get_distance=lambda x, y: 500)
+        routine = FollowRoutine(target)
+        routine.start(character)
+        mode_before = character.ship.autopilot._mode
+        routine.run(character)
+        self.assertIs(character.ship.autopilot._mode, mode_before)
 
 
 class TestExplorerRoutine(unittest.TestCase):
@@ -2434,34 +2627,6 @@ class TestSpaceScreenHailing(unittest.TestCase):
         game_screen._start_hail()
         self.assertIsNone(game_screen.active_dialogue)
 
-    def test_a_flag_set_mid_hail_changes_the_next_hail_greeting(self):
-        """Kade Marsh's hail_dialogue_tree sets "hailed_kade" the first
-        time you sign off, and conditional_roots opens the *next* hail on
-        a different ("start_returning") node once that flag is set - the
-        worked example of a conversation with a (minor) consequence,
-        mirrored in space the same way the bartender's "Buy him a round"
-        does on the ground (see sol_alpha.json)."""
-        game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self._target_ship(game_screen, "Kade Marsh")
-        game_screen._start_hail()
-        flags = game_screen.player.person.possessions.flags
-        dialogue = game_screen.active_dialogue
-
-        # "Ask about patrol routes" -> "routes"
-        dialogue.choose(1, flags)
-        self.assertEqual(dialogue.current_node, "routes")
-
-        # "Good to know" carries the set_flag action and closes.
-        option = dialogue.current_options(flags)[0]
-        for action in option_actions(option):
-            apply_shared_actions(action, game_screen.player.person.possessions)
-        self.assertTrue(dialogue.advance(option))
-        self.assertTrue(flags.get("hailed_kade"))
-
-        game_screen.active_dialogue = None
-        game_screen._start_hail()
-        self.assertEqual(game_screen.active_dialogue.current_node, "start_returning")
-
     def test_one_way_hail_fires_once_in_range_and_sets_a_seen_flag(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         kade = self._target_ship(game_screen, "Kade Marsh")
@@ -2486,10 +2651,12 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     """The default story's "first_flight" tutorial mission - real
     story.json ("starting_mission") + missions.json config, auto-started
     on first ship purchase and advanced by the generic gameplay-event
-    flags SpaceScreen itself sets (used_thrust/used_autopilot_on_ship/
-    landed_on_landable/completed_jump) alongside "hailed_kade" from
-    Phase 1's hailing feature - see docs/BACKLOG.md's tutorial mission
-    item and game/world/mission.py."""
+    flags SpaceScreen/PlayerController set (used_ships_target_mode/
+    used_turn/used_thrust/braked_below_threshold/used_autopilot_on_ship/
+    landed_on_landable/completed_jump) alongside "hailed_pilot:<name>"
+    (set by _start_hail) and "accepted_kade_help" (set by Kade Marsh's own
+    hail_dialogue_tree once the player agrees to be walked through it) -
+    see docs/BACKLOG.md's tutorial mission item and game/world/mission.py."""
 
     def _boarded_screen(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
@@ -2504,7 +2671,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     def test_buying_a_second_ship_does_not_restart_the_mission(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.flags["hailed_kade"] = True
+        possessions.flags["used_ships_target_mode"] = True
         game_screen.update_physics()  # advances to stage 1
         self.assertEqual(possessions.missions["first_flight"], 1)
 
@@ -2512,17 +2679,34 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         spaceport._apply_dialogue_action("buy_ship:patrol")
         self.assertEqual(possessions.missions["first_flight"], 1, "a second purchase must not reset progress")
 
+    def test_cycling_to_ships_mode_sets_the_flag(self):
+        game_screen = self._boarded_screen()
+        game_screen._cycle_target_mode()
+        while TARGET_MODES[game_screen.target_mode_index] != "SHIPS":
+            game_screen._cycle_target_mode()
+        self.assertTrue(game_screen.player.person.possessions.flags.get("used_ships_target_mode"))
+
+    def test_turning_advances_past_the_turning_stage(self):
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.missions["first_flight"] = 3  # skip straight to the turning stage
+
+        keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT, pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w, pygame_mock.K_DOWN, pygame_mock.K_s)}
+        keys[pygame_mock.K_a] = True
+        game_screen.player.handle_input(keys)
+        game_screen.update_physics()
+        self.assertTrue(possessions.flags.get("used_turn"))
+        self.assertEqual(possessions.missions["first_flight"], 4)
+
     def test_thrusting_advances_past_the_flying_stage(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.flags["hailed_kade"] = True
-        game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 1)
+        possessions.missions["first_flight"] = 4  # skip straight to the thrust stage
 
         game_screen.player.thrust = 0.2
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("used_thrust"))
-        self.assertEqual(possessions.missions["first_flight"], 2)
+        self.assertEqual(possessions.missions["first_flight"], 5)
 
     def test_engaging_autopilot_on_a_ship_sets_the_flag(self):
         game_screen = self._boarded_screen()
@@ -2539,50 +2723,136 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen._mark_landed()
         self.assertTrue(game_screen.player.person.possessions.flags.get("landed_on_landable"))
 
-    def test_braking_sets_the_flag(self):
+    def test_braking_below_threshold_sets_the_flag_and_advances_the_stage(self):
         """S/Down (point_to_reverse_velocity - see PlayerController.handle_input)
-        sets "used_brake", the flag the tutorial's braking stage completes on."""
+        sets "used_brake"; combined with "used_thrust" and a low enough
+        speed, update_physics() sets "braked_below_threshold" - the flag
+        the tutorial's braking stage completes on."""
         game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.missions["first_flight"] = 5  # skip straight to the braking stage
+        possessions.flags["used_thrust"] = True
+        game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0  # already slow
+
         keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT, pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w, pygame_mock.K_DOWN, pygame_mock.K_s)}
         keys[pygame_mock.K_s] = True
         game_screen.player.handle_input(keys)
-        self.assertTrue(game_screen.player.person.possessions.flags.get("used_brake"))
+        self.assertTrue(possessions.flags.get("used_brake"))
+
+        game_screen.update_physics()
+        self.assertTrue(possessions.flags.get("braked_below_threshold"))
+        self.assertEqual(possessions.missions["first_flight"], 6)
+
+    def test_accepting_kades_help_sets_flags_and_starts_the_escort(self):
+        """Choosing "Sure, show me the ropes." in Kade's hail dialogue sets
+        both accepted_kade_help (advances the mission past the
+        conversation stage) and kade_escorting (see
+        SpaceScreen._sync_escorts) - all from one dialogue option's
+        "actions" list."""
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.missions["first_flight"] = 2  # skip straight to the conversation stage
+        kade_char = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
+
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        for i, (_, obj) in enumerate(game_screen._filtered_targets()):
+            if obj is kade_char:
+                game_screen.current_target = i
+        game_screen._start_hail()
+        dialogue = game_screen.active_dialogue
+        self.assertEqual(dialogue.current_node, "start")
+
+        option = dialogue.current_options(possessions.flags)[0]
+        self.assertEqual(option["label"], "Sure, show me the ropes.")
+        for action in option_actions(option):
+            apply_shared_actions(action, possessions, game_screen.missions_config)
+        dialogue.advance(option)
+
+        self.assertTrue(possessions.flags.get("accepted_kade_help"))
+        self.assertTrue(possessions.flags.get("kade_escorting"))
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 3)
+        self.assertTrue(kade_char.escorting)
+        self.assertIsInstance(kade_char.routine, FollowRoutine)
+
+    def test_declining_kades_help_abandons_the_mission_and_stops_escorting(self):
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.missions["first_flight"] = 2
+        kade_char = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
+
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        for i, (_, obj) in enumerate(game_screen._filtered_targets()):
+            if obj is kade_char:
+                game_screen.current_target = i
+        game_screen._start_hail()
+        dialogue = game_screen.active_dialogue
+        options = dialogue.current_options(possessions.flags)
+        decline = next(o for o in options if o["label"] == "No thanks, I've got it.")
+        for action in option_actions(decline):
+            apply_shared_actions(action, possessions, game_screen.missions_config)
+        dialogue.advance(decline)
+
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertNotIn("first_flight", possessions.completed_missions)
+        self.assertTrue(possessions.flags.get("kade_tutorial_done"))
+        game_screen.update_physics()
+        self.assertFalse(kade_char.escorting)
+
+        # Hailing him again after declining shouldn't re-offer the tutorial.
+        game_screen.active_dialogue = None
+        game_screen._start_hail()
+        self.assertEqual(game_screen.active_dialogue.current_node, "casual")
 
     def test_completing_a_jump_sets_the_flag_and_full_playthrough_completes_the_mission(self):
         """Runs every stage in order against the real config, ending with
-        the mission moved into completed_missions - the same end-to-end
-        path a player actually taking the tutorial would follow."""
+        the mission moved into completed_missions and Kade no longer
+        escorting - the same end-to-end path a player actually taking the
+        tutorial would follow."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
+        kade_char = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
 
-        possessions.flags["hailed_kade"] = True
+        possessions.flags["used_ships_target_mode"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 1)
 
-        game_screen.player.thrust = 0.2
+        possessions.flags["hailed_pilot:Kade Marsh"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 2)
 
-        possessions.flags["used_brake"] = True
+        possessions.flags["accepted_kade_help"] = True
+        possessions.flags["kade_escorting"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 3)
+        self.assertTrue(kade_char.escorting)
 
-        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
-        game_screen.current_target = 0
-        game_screen.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE)])
+        possessions.flags["used_turn"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 4)
 
-        game_screen._mark_landed()
+        game_screen.player.thrust = 0.2
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 5)
+
+        possessions.flags["used_brake"] = True
+        game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 6)
 
         game_screen.jump_state = {"phase": "travel", "heading": 0, "timer": 0, "destination": game_screen.system_id}
         game_screen._complete_jump()
         self.assertTrue(possessions.flags.get("completed_jump"))
         game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 7)
+
+        game_screen._mark_landed()
+        game_screen.update_physics()
         self.assertNotIn("first_flight", possessions.missions)
         self.assertEqual(possessions.completed_missions, ["first_flight"])
+        self.assertTrue(possessions.flags.get("kade_tutorial_done"))
+        self.assertFalse(possessions.flags.get("kade_escorting"))
+        self.assertFalse(kade_char.escorting, "Kade must stop escorting once the tutorial finishes")
 
     def test_drifted_from_center_matches_the_self_jump_threshold(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")

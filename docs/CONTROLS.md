@@ -167,8 +167,12 @@ example, which an NPC hailing you (Kade Marsh - see Hailing above) kicks
 off. See `game/world/mission.py` for how a stage's `"complete_flag"` ties
 into the same `Possessions.flags` a conversation option can set (see
 Dialogue above) - a mission stage can be completed by a dialogue choice, a
-gameplay event (thrusting, braking, landing, jumping), or anything else
-that sets a flag.
+gameplay event (targeting/turning/thrusting/braking/landing/jumping), or
+anything else that sets a flag. A mission can also let the player decline
+it partway through (Kade offers to walk you through it - saying no ends
+the mission there instead of completing it), and can have an NPC pilot
+escort/follow you for its duration, returning to their normal routine
+once it ends - see ARCHITECTURE.md's `person.escort_flag`/`FollowRoutine`.
 
 ## Menus
 

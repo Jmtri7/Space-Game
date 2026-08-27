@@ -34,43 +34,41 @@
     "name": "Kade Marsh",
     "faction": "Sol Federation Navy",
     "role": "patrol_officer",
-    "personality": "By-the-book and watchful, quick to flag anything out of place.",
+    "personality": "Warm and easygoing for a patrol officer - never misses a chance to talk shop with a new pilot.",
     "one_way_hail": {
       "range": 500,
-      "message": "Unregistered vessel, this is Patrol One. Identify yourself or alter course."
+      "message": "Hey there, new pilot! I remember when I first stepped into a cockpit myself. Let's get you squared away - cycle your targeting mode (T) until it reads SHIPS."
     },
+    "escort_flag": "kade_escorting",
     "hail_dialogue_tree": {
       "root": "start",
       "conditional_roots": [
-        {"flag": "hailed_kade", "node": "start_returning"}
+        {"flag": "kade_tutorial_done", "node": "casual"}
       ],
       "nodes": {
         "start": {
-          "text": "Patrol One to unregistered vessel - state your business in this system.",
+          "text": "Hey! Good to actually talk. Want me to help you get your bearings out here?",
           "options": [
-            {"label": "Just passing through.", "next": "passing"},
-            {"label": "Ask about patrol routes.", "next": "routes"},
-            {"label": "End transmission.", "next": null}
+            {"label": "Sure, show me the ropes.", "next": "accepted", "actions": ["set_flag:accepted_kade_help", "set_flag:kade_escorting"]},
+            {"label": "No thanks, I've got it.", "next": "declined", "action": "abandon_mission:first_flight"}
           ]
         },
-        "start_returning": {
-          "text": "Back again? Still reading clean on my scope. Carry on.",
+        "accepted": {
+          "text": "Great - give me a second to pull alongside you. Close the comm and I'll walk you through it from here.",
           "options": [
-            {"label": "Ask about patrol routes.", "next": "routes"},
-            {"label": "End transmission.", "next": null}
+            {"label": "Sounds good.", "next": null}
           ]
         },
-        "passing": {
-          "text": "Copy that. Keep your transponder active and we won't have a problem.",
+        "declined": {
+          "text": "No worries - you'll get the hang of it. Good luck out there, pilot.",
           "options": [
-            {"label": "Understood.", "next": null, "action": "set_flag:hailed_kade"}
+            {"label": "Thanks.", "next": null}
           ]
         },
-        "routes": {
-          "text": "We hold the line between the station and the moon. Anything past that, you're on your own.",
+        "casual": {
+          "text": "Hey again! Ship treating you well?",
           "options": [
-            {"label": "Good to know.", "next": null, "action": "set_flag:hailed_kade"},
-            {"label": "End transmission.", "next": null, "action": "set_flag:hailed_kade"}
+            {"label": "Can't complain.", "next": null}
           ]
         }
       }

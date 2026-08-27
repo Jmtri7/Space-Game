@@ -28,8 +28,13 @@ class PlayerController:
         # Rotation controls
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.ship.turn_left()
+            # Generic gameplay-event flag (see the "used_brake" one below) -
+            # any story's missions.json can use this as a stage's
+            # complete_flag without this class knowing about missions.
+            self.person.possessions.flags["used_turn"] = True
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.ship.turn_right()
+            self.person.possessions.flags["used_turn"] = True
 
         # Thrust controls
         if keys[pygame.K_UP] or keys[pygame.K_w]:
