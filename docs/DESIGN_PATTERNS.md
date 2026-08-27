@@ -461,6 +461,59 @@ while running:
 
 **Use case:** Menu-driven games with multiple screens.
 
+> **Note:** the real loop in `main.py` splits each iteration into three
+> phases — input/transitions, then a fixed-timestep simulation, then render
+> (see the next pattern). Input and render still branch on `current_screen`
+> the way shown above; only simulation is consolidated.
+
+---
+
+## Pattern: Fixed-Timestep Accumulator (decouple sim from render)
+
+**Problem:** When the loop does exactly one `update()` + one `draw()` per
+iteration and every constant is "per frame", a slow frame slows the
+*simulation* down — ships coast less far, timers run long in wall-clock,
+autopilot integrates differently. The game is frame-rate dependent.
+
+**Solution:** Keep a running `accumulator` of real elapsed seconds. Each
+frame, drain it in fixed `SIM_STEP`-sized chunks, running the simulation
+once per chunk; render once per frame regardless.
+
+**Implementation** (`game/utils.py` `advance_accumulator()`, `main.py`
+`step_world()`):
+```python
+accumulator, n_steps = advance_accumulator(accumulator, real_dt_seconds)
+for _ in range(n_steps):
+    step_world(...)   # ONE fixed 1/60 s step of the whole simulation
+render(...)           # once, paints the latest state
+```
+`advance_accumulator` clamps `real_dt` (hitch protection) and caps `n_steps`
+(spiral-of-death protection), and is pure — no clock, no globals — so the
+step arithmetic is unit-testable on its own.
+
+**Keep `SIM_STEP` fixed (here: exactly 1/60 s).** The constants are already
+calibrated to that step, so at a held frame rate `n_steps == 1` every frame
+and the result is byte-identical to the old loop. It only diverges when the
+machine can't keep up, running catch-up steps so the sim stays correct while
+rendering gets choppy.
+
+**One simulation entry point.** All per-step work (physics, AI, background
+locations, countdown timers) goes through a single `step_world()` so it's
+trivially called N times; input and rendering stay once per frame in their
+own phases. Screens that freeze the world are a no-op in `step_world()`.
+
+**Why this works:**
+- Deterministic: fixed step ⇒ headless tests and the live game integrate identically
+- No per-constant `* dt` rewrite, and no autopilot-prediction divergence
+- Robustness-only change: zero gameplay difference at the target frame rate
+
+**Not included:** render interpolation (storing prev+curr state and lerping
+at draw time). That's a separate, optional smoothness feature — the
+accumulator alone doesn't make motion smoother at >60 Hz.
+
+**Use case:** Any real-time loop with "per frame" constants that must behave
+the same on slow and fast machines.
+
 ---
 
 ## Pattern: Data-Driven Configuration

@@ -428,4 +428,40 @@ if current_screen == "menu":
 
 This separation makes it easy to test input handlers independently.
 
+## Main Loop: fixed-timestep, three phases
+
+`main.py`'s `while running:` runs three phases per iteration:
+
+1. **Input / transitions** — one big `if current_screen == …` that calls each
+   screen's `handle_input(events)` and applies the resulting state changes
+   (building menus, swapping `current_screen`, …). No `update()`/`draw()` here.
+   A transition requested here lands *before* phase 2, so the accumulator
+   never simulates the screen the player just left.
+2. **Simulation** — `advance_accumulator()` (`game/utils.py`) converts the
+   real milliseconds since the last frame (`clock.tick(FPS)`) into a whole
+   number of fixed `SIM_STEP` (1/60 s) steps, and `step_world()` is called
+   that many times. `step_world()` is the single simulation entry point: it
+   does exactly what each screen branch used to do inline for *simulation*
+   (`SpaceScreen.update()` / `update_physics()`, `LocationScreen.update()`,
+   `update_background_locations()`, and the per-step countdown timers inside
+   those). Screens that freeze the world (every menu/dialog, the star map,
+   pause, any open `active_dialogue`) are no-ops here, exactly as before.
+   When `SpaceScreen.update()` returns `"land"` (autopilot auto-land) the
+   step returns it, `main()` applies the landing and stops draining.
+3. **Render** — one `if current_screen == …` that draws the current screen
+   (modal screens redraw the frozen backdrop with `draw_hud=False`, then
+   their overlay), then `pygame.display.flip()`.
+
+`SIM_STEP` **must stay 1/60**: every physics constant and per-step timer is
+already calibrated to a 1/60 s step, so on a machine holding 60 FPS phase 2
+runs exactly once and the result is byte-identical to the old
+one-step-per-frame loop. It only diverges on a machine that can't keep up,
+where it runs 2–5 catch-up steps per render (`MAX_STEPS_PER_FRAME` clamps
+the spiral of death; `MAX_FRAME_TIME` clamps a debugger/asset-load hitch).
+This is frame-rate *independence*, not render interpolation — motion is not
+smoother at >60 Hz, `draw()` still paints the latest sim state.
+
+Menu/dialog animations (`pause_menu.update()`'s success-banner countdown)
+are render-side and stay in phase 3 — they're not simulation.
+
 See [ARCHITECTURE.md](ARCHITECTURE.md#state-machine-screen-flow) for class hierarchy.

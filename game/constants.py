@@ -23,6 +23,26 @@ SCREEN_WIDTH = info.current_w - 50  # Account for taskbar (~40px) and window tit
 SCREEN_HEIGHT = info.current_h - 100
 FPS = 60
 
+# Fixed-timestep simulation (see docs/BACKLOG.md "Fixed-timestep accumulator").
+# The main loop drains an accumulator of real elapsed time in fixed SIM_STEP
+# chunks, running the simulation the right number of times for the wall clock
+# regardless of frame rate, while rendering stays once per frame.
+#
+# SIM_STEP MUST stay exactly 1/60: every physics constant in the game
+# (drag 0.98/frame, thrust ramp, 5deg/frame rotation, per-frame countdown
+# timers) is already calibrated to a 1/60 s step, so at this value the math is
+# byte-identical to the old one-step-per-frame loop on any machine holding 60
+# FPS. It only diverges when a machine can't keep up, and then it runs 2-3 sim
+# steps per render (sim stays correct, rendering gets choppy) instead of one
+# slow step (sim goes wrong). Changing SIM_STEP - or moving to units/second -
+# would change what an existing save's stored velocities mean; see CLAUDE.md's
+# "Save Compatibility & Story Versioning" section before doing that.
+SIM_STEP = 1.0 / 60.0
+MAX_STEPS_PER_FRAME = 5   # spiral-of-death clamp: give up catching up past this
+MAX_FRAME_TIME = 0.25     # clamp real elapsed before it feeds the accumulator,
+                          # so a debugger pause / asset-load hitch can't dump
+                          # seconds of catch-up into the sim at once
+
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)

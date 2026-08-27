@@ -100,6 +100,13 @@ self.velocity_y *= drag
 - `max_thrust = 0.3`
 - `rotation_speed = 5` degrees/frame
 
+> **"per frame" = "per simulation step".** The main loop runs a fixed-timestep
+> accumulator (`SIM_STEP = 1/60 s`, see [UI_FLOW.md](UI_FLOW.md#main-loop-fixed-timestep-three-phases)):
+> `step_world()` runs once per rendered frame on a machine holding 60 FPS
+> (identical to before), and 2–5 times per frame to catch up on a slower one.
+> Every constant here is calibrated to that 1/60 s step and must not be
+> converted to per-second — `SIM_STEP` is fixed precisely so they don't need to be.
+
 ## Rotation & Facing Direction
 
 ### 2D Rotation Matrix

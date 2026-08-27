@@ -440,7 +440,11 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
 
 ### Adding a New Screen
 1. Create a class with `handle_input()`, `draw()` (and `update()` if it needs one)
-2. Add a `current_screen` string and branch in `main.py`'s loop
+2. Add a `current_screen` string and branches in `main.py`'s loop: input in
+   phase 1, drawing in phase 3, and — only if the screen has a live
+   simulation — a case in `step_world()` for phase 2 (the fixed-timestep
+   accumulator). A modal that freezes the world needs no `step_world()` case.
+   See [UI_FLOW.md](UI_FLOW.md#main-loop-fixed-timestep-three-phases).
 3. Implement transitions via `handle_input()` return values
 
 ### Adding a New Role/Routine (AI pilot or NPC)

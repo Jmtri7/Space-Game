@@ -7,7 +7,8 @@ from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 )
 from game.utils import (
-    load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json
+    load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json,
+    advance_accumulator
 )
 from game.world.player_controller import PlayerController
 from game.screens.space_screen import SpaceScreen
@@ -155,6 +156,76 @@ def update_background_locations(game_screen, active_location):
                     interior.update_physics()
 
 
+def begin_landing(game_screen):
+    """Bring the player's ship to rest and build the screen it's landing
+    into, from `game_screen.landing_target` (already set to "station" /
+    "moon" by whatever decided to land). Returns
+    `(next_screen, station_interior_or_None, location_selector_or_None)` -
+    the caller assigns only the field matching `next_screen` so the other
+    cached interior isn't clobbered.
+
+    Shared by two call sites: the L-key "land" action from
+    `SpaceScreen.handle_input`, and the autopilot auto-land that
+    `SpaceScreen.update()` returns "land" for from *inside* a sim step
+    (see step_world / the accumulator loop in main())."""
+    game_screen.player.park()
+    if game_screen.landing_target == "station":
+        ship_entry_key = game_screen.station.get_ship_entry_key()
+        station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)
+        if station_interior:
+            station_interior.arrive_from("ship")
+        return "station", station_interior, None
+    if game_screen.landing_target == "moon":
+        location_selector = ChoiceDialog(
+            "Landing Location", landing_location_options(game_screen.moon.interiors))
+        return "select_location", None, location_selector
+    return "game", None, None
+
+
+def step_world(current_screen, game_screen, station_interior, moon_interior):
+    """Advance the simulation by exactly one fixed SIM_STEP (1/60 s) for the
+    active screen, and nothing for rendering.
+
+    This is the "simulation half" of what each `while running:` branch in
+    main() used to do inline once per iteration - physics, NPC updates,
+    background-location updates, and the per-step countdown timers that
+    live inside those update() methods. The main loop runs it 0..N times
+    per rendered frame via advance_accumulator(), so the sim keeps correct
+    wall-clock pace no matter the frame rate; input and draw stay once per
+    frame in their own phases.
+
+    Screens that freeze the world - every menu/dialog, the star map, pause,
+    and any screen with an open conversation (`active_dialogue`) - do
+    nothing here, exactly as the old loop did nothing for them.
+
+    Returns "land" when the step itself triggers a screen change (autopilot
+    auto-land from within `SpaceScreen.update()`), else None; the caller
+    applies that transition and stops draining the accumulator."""
+    if current_screen == "game":
+        if game_screen and not game_screen.active_dialogue:
+            transition = game_screen.update()
+            update_background_locations(game_screen, None)
+            if transition == "land":
+                return "land"
+    elif current_screen == "station":
+        talking = bool(station_interior and station_interior.active_dialogue)
+        if game_screen and not talking:
+            game_screen.update_physics()
+        if station_interior:
+            station_interior.update()
+        if not talking:
+            update_background_locations(game_screen, station_interior)
+    elif current_screen == "moon":
+        talking = bool(moon_interior and moon_interior.active_dialogue)
+        if game_screen and not talking:
+            game_screen.update_physics()
+        if moon_interior:
+            moon_interior.update()
+        if not talking:
+            update_background_locations(game_screen, moon_interior)
+    return None
+
+
 def main_menu():
     """The main menu (NEW / LOAD / QUIT) - rebuilt whenever the game returns
     to it so the LOAD row reflects the current save situation."""
@@ -194,8 +265,15 @@ def main():
         pilot_name = ""
         selected_story = "default"
 
+        # Fixed-timestep accumulator (see docs/BACKLOG.md and step_world()).
+        # Each iteration: read input once, drain this many real seconds of
+        # elapsed time through step_world() in fixed 1/60 s chunks, render
+        # once. accumulator carries the sub-step remainder between frames.
+        sim_accumulator = 0.0
+
         while running:
             events = pygame.event.get()
+            frame_ms = clock.tick(FPS)
 
             # Handle window close button globally (all screens automatically support it)
             for event in events:
@@ -214,6 +292,13 @@ def main():
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
 
+            # ========================================================
+            # PHASE 1 - input & screen transitions (once per iteration)
+            # No update()/update_physics()/draw() here: simulation runs in
+            # PHASE 2 (the accumulator), rendering in PHASE 3. A transition
+            # requested here takes effect before PHASE 2, so the accumulator
+            # never steps the screen the player just left.
+            # ========================================================
             if current_screen == "menu":
                 selection = menu.handle_input(events)
                 if selection == "quit":
@@ -224,7 +309,6 @@ def main():
                 elif selection == "load":
                     load_menu = SaveBrowser("load")
                     current_screen = "load"
-                menu.draw(screen)
 
             elif current_screen == "story_select":
                 story = story_selector.handle_input(events)
@@ -234,7 +318,6 @@ def main():
                     current_screen = "pilot_name"
                 elif story == "cancel":
                     current_screen = "menu"
-                story_selector.draw(screen)
 
             elif current_screen == "pilot_name":
                 result = pilot_name_dialog.handle_input(events)
@@ -247,7 +330,6 @@ def main():
                     current_screen = "station"
                 elif result == "cancel":
                     current_screen = "menu"
-                pilot_name_dialog.draw(screen)
 
             elif current_screen == "load":
                 if delete_confirm_dialog:
@@ -265,9 +347,6 @@ def main():
                         delete_confirm_dialog = None
                     elif confirm_action == "quit":
                         running = False
-                    load_menu.draw(screen)
-                    if delete_confirm_dialog:
-                        delete_confirm_dialog.draw(screen)
                 else:
                     action, filename = load_menu.handle_input(events)
                     if action == "load":
@@ -327,7 +406,6 @@ def main():
                         else:
                             current_screen = "menu"
                             menu = main_menu()
-                    load_menu.draw(screen)
 
             elif current_screen == "game":
                 action = game_screen.handle_input(events)
@@ -337,16 +415,12 @@ def main():
                     previous_screen = "game"
                     current_screen = "pause"
                 elif action == "land":
-                    game_screen.player.park()
-                    if game_screen.landing_target == "station":
-                        ship_entry_key = game_screen.station.get_ship_entry_key()
-                        station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)
-                        if station_interior:
-                            station_interior.arrive_from("ship")
-                        current_screen = "station"
-                    elif game_screen.landing_target == "moon":
-                        location_selector = ChoiceDialog("Landing Location", landing_location_options(game_screen.moon.interiors))
-                        current_screen = "select_location"
+                    next_screen, si, ls = begin_landing(game_screen)
+                    if next_screen == "station":
+                        station_interior = si
+                    elif next_screen == "select_location":
+                        location_selector = ls
+                    current_screen = next_screen
                 elif action == "star_map":
                     star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
                     current_screen = "star_map"
@@ -358,16 +432,8 @@ def main():
                     mission_log = ReportMenu(*mission_report(game_screen.missions_config, game_screen.player.person.possessions))
                     missions_return_screen = "game"
                     current_screen = "missions"
-                # An open hail conversation fully pauses the world - the
-                # rest of the simulation freezes like any other modal menu
-                # (matches PauseMenu / the StarMap jump screen / a station
-                # NPC conversation). handle_input above still runs every
-                # frame to drive the dialogue box itself.
-                if not game_screen.active_dialogue:
-                    game_screen.update()
-                game_screen.draw(screen)
-                if not game_screen.active_dialogue:
-                    update_background_locations(game_screen, None)
+                # Simulation (including the "an open hail freezes the world"
+                # rule) runs in PHASE 2 via step_world().
 
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
@@ -375,9 +441,8 @@ def main():
                     game_screen.selected_system_id = star_map.selected_system_id
                     current_screen = "game"
                 # Unlike docking at the station/moon, opening the jump map
-                # fully pauses the simulation (matches PauseMenu) - no
-                # update_physics()/update_background_locations() here.
-                star_map.draw(screen)
+                # fully pauses the simulation (matches PauseMenu) - step_world()
+                # does nothing for "star_map".
 
             elif current_screen == "station":
                 action = station_interior.handle_input(events)
@@ -409,18 +474,9 @@ def main():
                     shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits)
                     shop_return_screen = "station"
                     current_screen = "shop"
-                # Keep space physics updated while docked (but not camera) -
-                # except while a conversation is open, which should pause
-                # the rest of the world like any other modal menu (matches
-                # ExitMenu/PossessionsMenu/PauseMenu).
-                talking = bool(station_interior and station_interior.active_dialogue)
-                if game_screen and not talking:
-                    game_screen.update_physics()
-                if station_interior:
-                    station_interior.update()
-                    station_interior.draw(screen)
-                if not talking:
-                    update_background_locations(game_screen, station_interior)
+                # Space physics stays running while docked, and the
+                # "a conversation freezes the world" rule - both in
+                # step_world() (PHASE 2).
 
             elif current_screen == "select_location":
                 location_key = location_selector.handle_input(events)
@@ -430,7 +486,6 @@ def main():
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, location_key)
                     moon_interior.arrive_from("ship")
                     current_screen = "moon"
-                location_selector.draw(screen)
 
             elif current_screen == "exit_menu":
                 choice = exit_menu.handle_input(events)
@@ -448,62 +503,29 @@ def main():
                     else:
                         moon_interior = interior
                     current_screen = exit_menu_return_screen
-                # A modal, like PauseMenu - the rest of the world
-                # (space physics, other cached interiors) stays frozen
-                # while it's open. Redraw whichever interior it was opened
-                # over first - the exit ChoiceDialog only paints a centered
-                # panel, not a full-screen fill, so skipping this left the *previous*
-                # frame's interior (e.g. the spaceport, Dax Renner and all)
-                # visible behind the menu instead of the one actually being
-                # left, which looked exactly like an NPC in two rooms at once.
-                if exit_menu_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                elif exit_menu_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                exit_menu.draw(screen)
+                # A modal, like PauseMenu - the rest of the world (space
+                # physics, other cached interiors) stays frozen while it's
+                # open (step_world() does nothing for "exit_menu"). The
+                # interior it sits over is redrawn each frame in PHASE 3.
 
             elif current_screen == "possessions":
                 action = possessions_menu.handle_input(events)
                 if action == "close":
                     current_screen = possessions_return_screen
                 # A modal menu, like PauseMenu - the world stays frozen
-                # while it's open. Draw whichever screen this was opened
-                # over, then the overlay on top - same idea as PauseMenu below.
-                if possessions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
-                elif possessions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                elif possessions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                possessions_menu.draw(screen)
+                # while it's open (step_world() does nothing here).
 
             elif current_screen == "missions":
                 action = mission_log.handle_input(events)
                 if action == "close":
                     current_screen = missions_return_screen
-                # A modal menu, like PossessionsMenu - the world stays
-                # frozen while it's open. Draw whichever screen this was
-                # opened over, then the overlay on top.
-                if missions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
-                elif missions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                elif missions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                mission_log.draw(screen)
+                # Modal - world frozen (step_world() does nothing here).
 
             elif current_screen == "shop":
                 action = shop_menu.handle_input(events)
                 if action == "close":
                     current_screen = shop_return_screen
-                # A modal menu, like PossessionsMenu/ExitMenu - the world
-                # stays frozen while it's open. Draw whichever screen this
-                # was opened over, then the overlay on top.
-                if shop_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                elif shop_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                shop_menu.draw(screen)
+                # Modal - world frozen (step_world() does nothing here).
 
             elif current_screen == "moon":
                 action = moon_interior.handle_input(events)
@@ -535,20 +557,11 @@ def main():
                     shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits)
                     shop_return_screen = "moon"
                     current_screen = "shop"
-                # Keep space physics updated while on moon (but not camera) -
-                # except while a conversation is open, which should pause
-                # the rest of the world like any other modal menu.
-                talking = bool(moon_interior and moon_interior.active_dialogue)
-                if game_screen and not talking:
-                    game_screen.update_physics()
-                if moon_interior:
-                    moon_interior.update()
-                    moon_interior.draw(screen)
-                if not talking:
-                    update_background_locations(game_screen, moon_interior)
+                # Space physics stays running while on the moon, and the
+                # "a conversation freezes the world" rule - both in
+                # step_world() (PHASE 2).
 
             elif current_screen == "pause":
-                pause_menu.update()
                 dialog_was_open = bool(delete_confirm_dialog or overwrite_confirm_dialog or save_dialog)
 
                 if delete_confirm_dialog:
@@ -633,6 +646,89 @@ def main():
                         current_screen = "menu"
                         menu = main_menu()
 
+            # ========================================================
+            # PHASE 2 - fixed-timestep simulation
+            # Drain the real time elapsed since the last frame in fixed
+            # 1/60 s steps. On a machine holding 60 FPS this runs exactly
+            # once (byte-identical to the old one-step-per-frame loop); it
+            # only runs 2+ times to catch up after a slow frame, and is
+            # clamped so it can't spiral. A step that itself triggers a
+            # screen change (autopilot auto-land) stops the drain.
+            # ========================================================
+            sim_accumulator, n_steps = advance_accumulator(sim_accumulator, frame_ms / 1000.0)
+            for _ in range(n_steps):
+                step_transition = step_world(current_screen, game_screen, station_interior, moon_interior)
+                if step_transition == "land":
+                    next_screen, si, ls = begin_landing(game_screen)
+                    if next_screen == "station":
+                        station_interior = si
+                    elif next_screen == "select_location":
+                        location_selector = ls
+                    current_screen = next_screen
+                    break
+
+            # ========================================================
+            # PHASE 3 - render (once per iteration)
+            # Draws whatever current_screen now is. Modal screens redraw
+            # the frozen world/interior they sit over, then their overlay.
+            # ========================================================
+            if current_screen == "menu":
+                menu.draw(screen)
+            elif current_screen == "story_select":
+                story_selector.draw(screen)
+            elif current_screen == "pilot_name":
+                pilot_name_dialog.draw(screen)
+            elif current_screen == "load":
+                load_menu.draw(screen)
+                if delete_confirm_dialog:
+                    delete_confirm_dialog.draw(screen)
+            elif current_screen == "game":
+                game_screen.draw(screen)
+            elif current_screen == "star_map":
+                star_map.draw(screen)
+            elif current_screen == "station":
+                if station_interior:
+                    station_interior.draw(screen)
+            elif current_screen == "select_location":
+                location_selector.draw(screen)
+            elif current_screen == "exit_menu":
+                # The exit ChoiceDialog only paints a centered panel, not a
+                # full-screen fill, so the interior being left must be
+                # redrawn under it every frame - otherwise the *previous*
+                # frame's interior (e.g. the spaceport, NPCs and all) shows
+                # through, looking like an NPC in two rooms at once.
+                if exit_menu_return_screen == "station" and station_interior:
+                    station_interior.draw(screen, draw_hud=False)
+                elif exit_menu_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen, draw_hud=False)
+                exit_menu.draw(screen)
+            elif current_screen == "possessions":
+                if possessions_return_screen == "game" and game_screen:
+                    game_screen.draw(screen, draw_hud=False)
+                elif possessions_return_screen == "station" and station_interior:
+                    station_interior.draw(screen, draw_hud=False)
+                elif possessions_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen, draw_hud=False)
+                possessions_menu.draw(screen)
+            elif current_screen == "missions":
+                if missions_return_screen == "game" and game_screen:
+                    game_screen.draw(screen, draw_hud=False)
+                elif missions_return_screen == "station" and station_interior:
+                    station_interior.draw(screen, draw_hud=False)
+                elif missions_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen, draw_hud=False)
+                mission_log.draw(screen)
+            elif current_screen == "shop":
+                if shop_return_screen == "station" and station_interior:
+                    station_interior.draw(screen, draw_hud=False)
+                elif shop_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen, draw_hud=False)
+                shop_menu.draw(screen)
+            elif current_screen == "moon":
+                if moon_interior:
+                    moon_interior.draw(screen)
+            elif current_screen == "pause":
+                pause_menu.update()  # render-side banner animation, not simulation
                 # draw_hud=False since PauseMenu.draw() immediately fills
                 # the whole screen black anyway - this is just to keep
                 # camera-follow/animation state current, not for the HUD
@@ -641,9 +737,7 @@ def main():
                     game_screen.draw(screen, draw_hud=False)
                 elif previous_screen == "station" and station_interior:
                     station_interior.draw(screen, draw_hud=False)
-
                 pause_menu.draw(screen)
-
                 if delete_confirm_dialog:
                     delete_confirm_dialog.draw(screen)
                 elif overwrite_confirm_dialog:
@@ -652,7 +746,6 @@ def main():
                     save_dialog.draw(screen)
 
             pygame.display.flip()
-            clock.tick(FPS)
 
         pygame.quit()
     except Exception as e:

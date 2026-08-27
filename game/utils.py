@@ -5,7 +5,8 @@ import pygame
 import game.constants as constants
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
-    CAMERA_ZOOM, SAVE_DIR, GREEN
+    CAMERA_ZOOM, SAVE_DIR, GREEN,
+    SIM_STEP, MAX_STEPS_PER_FRAME, MAX_FRAME_TIME
 )
 
 class Camera:
@@ -451,6 +452,32 @@ def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
         elif selected >= scroll_offset + max_visible:
             scroll_offset += 1
     return selected, scroll_offset
+
+
+def advance_accumulator(accumulator, real_dt, step=SIM_STEP,
+                        max_steps=MAX_STEPS_PER_FRAME, max_frame_time=MAX_FRAME_TIME):
+    """Fixed-timestep accumulator core (Glenn Fiedler, "Fix Your Timestep").
+
+    Given `accumulator` (leftover seconds carried from the last frame) and
+    `real_dt` (real wall-clock seconds since the last frame), return
+    `(new_accumulator, n_steps)`: how many fixed `step`-second simulation
+    steps the caller should run now, and the remainder to carry forward.
+
+    `real_dt` is clamped to `max_frame_time` before it's added, so a
+    debugger pause or asset-load hitch doesn't dump seconds of catch-up
+    into the sim. `n_steps` is capped at `max_steps`; when that cap is hit
+    the leftover is discarded (accumulator reset to 0) rather than left to
+    grow forever on a machine that simply can't keep up - the spiral-of-
+    death clamp. Pure: no clock, no globals, so it's directly testable.
+    """
+    accumulator += min(real_dt, max_frame_time)
+    n_steps = 0
+    while accumulator >= step and n_steps < max_steps:
+        accumulator -= step
+        n_steps += 1
+    if n_steps >= max_steps:
+        accumulator = 0.0
+    return accumulator, n_steps
 
 
 def _center_text_x(surface, text, offset_x=0):

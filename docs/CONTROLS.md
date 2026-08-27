@@ -16,7 +16,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
-| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`" |
+| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon now docks automatically on arrival (no extra **L** press). |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |

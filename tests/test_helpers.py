@@ -3435,5 +3435,123 @@ class TestSaveBrowserContract(unittest.TestCase):
         self.assertFalse(b.input_mode)
 
 
+class TestAdvanceAccumulator(unittest.TestCase):
+    """utils.advance_accumulator() - the fixed-timestep core the main loop
+    drains each frame (see docs/BACKLOG.md "Fixed-timestep accumulator")."""
+
+    STEP = 1.0 / 60.0
+
+    def test_one_step_per_frame_at_60fps(self):
+        """A frame worth of real time (~1/60 s) yields exactly one step -
+        the byte-identical-to-the-old-loop case on a machine holding 60 FPS."""
+        acc, n = utils.advance_accumulator(0.0, self.STEP)
+        self.assertEqual(n, 1)
+        self.assertAlmostEqual(acc, 0.0, places=9)
+
+    def test_sub_step_frames_accumulate_then_catch_up(self):
+        """Two back-to-back 10 ms frames (< 1/60 s each) run 0 then 1 step;
+        the leftover from the first isn't lost."""
+        acc, n = utils.advance_accumulator(0.0, 0.010)
+        self.assertEqual(n, 0)
+        self.assertAlmostEqual(acc, 0.010, places=9)
+        acc, n = utils.advance_accumulator(acc, 0.010)
+        self.assertEqual(n, 1)
+        self.assertAlmostEqual(acc, 0.020 - self.STEP, places=9)
+
+    def test_slow_frame_runs_multiple_steps(self):
+        """A 50 ms frame (3x the budget) runs 3 catch-up steps."""
+        acc, n = utils.advance_accumulator(0.0, 0.050)
+        self.assertEqual(n, 3)
+        self.assertAlmostEqual(acc, 0.050 - 3 * self.STEP, places=9)
+
+    def test_max_steps_clamp_drops_the_remainder(self):
+        """A frame far beyond MAX_STEPS_PER_FRAME * STEP is capped at
+        max_steps steps and the leftover is discarded (no spiral of death)."""
+        acc, n = utils.advance_accumulator(0.0, 10.0, max_steps=5)
+        self.assertEqual(n, 5)
+        self.assertEqual(acc, 0.0)
+
+    def test_real_dt_is_clamped_before_accumulating(self):
+        """A multi-second hitch (debugger pause) is clamped to
+        max_frame_time first, so it can't dump seconds of catch-up in -
+        with a generous max_steps it still only runs ~max_frame_time/STEP."""
+        acc, n = utils.advance_accumulator(0.0, 30.0, max_steps=1000, max_frame_time=0.25)
+        self.assertEqual(n, 15)  # 0.25 / (1/60) == 15
+        self.assertAlmostEqual(acc, 0.25 - 15 * self.STEP, places=9)
+
+    def test_negative_or_zero_dt_is_a_noop(self):
+        acc, n = utils.advance_accumulator(0.005, 0.0)
+        self.assertEqual(n, 0)
+        self.assertAlmostEqual(acc, 0.005, places=9)
+
+
+class TestStepWorld(unittest.TestCase):
+    """main.step_world() - the single simulation entry point the fixed-
+    timestep accumulator drains. One sim step must move the world exactly
+    as one old loop iteration did, and frozen screens must not move it."""
+
+    def _screen(self):
+        return SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+
+    def test_game_step_advances_ship_physics(self):
+        from main import step_world
+        gs = self._screen()
+        gs.player.ship.velocity_x = 1.5
+        gs.player.ship.velocity_y = -0.5
+        x0, y0 = gs.player.x, gs.player.y
+        result = step_world("game", gs, None, None)
+        self.assertIsNone(result)
+        self.assertAlmostEqual(gs.player.x, x0 + 1.5, places=6)
+        self.assertAlmostEqual(gs.player.y, y0 - 0.5, places=6)
+
+    def test_n_steps_move_n_times_as_far(self):
+        from main import step_world
+        gs = self._screen()
+        gs.player.ship.velocity_x = 2.0
+        x0 = gs.player.x
+        for _ in range(5):
+            step_world("game", gs, None, None)
+        self.assertAlmostEqual(gs.player.x, x0 + 10.0, places=6)
+
+    def test_frozen_screens_do_not_advance_the_world(self):
+        from main import step_world
+        gs = self._screen()
+        gs.player.ship.velocity_x = 3.0
+        x0 = gs.player.x
+        for frozen in ("pause", "star_map", "possessions", "shop", "menu"):
+            step_world(frozen, gs, None, None)
+        self.assertEqual(gs.player.x, x0)
+
+    def test_open_hail_freezes_the_game_screen(self):
+        from main import step_world
+        gs = self._screen()
+        gs.player.ship.velocity_x = 3.0
+        gs.active_dialogue = object()  # a hail is open
+        x0 = gs.player.x
+        step_world("game", gs, None, None)
+        self.assertEqual(gs.player.x, x0)
+
+    def test_autopilot_arrival_propagates_land_out_of_the_step(self):
+        """When SpaceScreen.update() returns "land" (autopilot reached a
+        landable) from inside a sim step, step_world() must surface it so
+        the accumulator loop can stop and open the interior - the old loop
+        dropped this return value and the auto-dock never happened."""
+        from main import step_world, begin_landing
+        gs = self._screen()
+        st = gs.station
+        gs.player.ship.x, gs.player.ship.y = st.x - 300, st.y
+        gs.player.engage_seek(st)
+        result = None
+        for _ in range(4000):
+            result = step_world("game", gs, None, None)
+            if result:
+                break
+        self.assertEqual(result, "land")
+        next_screen, si, _ls = begin_landing(gs)
+        self.assertEqual(next_screen, "station")
+        self.assertIsNotNone(si)
+        self.assertEqual((gs.player.ship.velocity_x, gs.player.ship.velocity_y), (0, 0))
+
+
 if __name__ == "__main__":
     unittest.main()

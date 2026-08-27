@@ -141,8 +141,13 @@ only appears under a section if it currently has items there.
       already handles that.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
       user who wants help creating one.
-- [ ] **Frame-rate-independent simulation via a fixed-timestep accumulator**
-      (decouple update rate from render rate). Details below.
+- [x] **Frame-rate-independent simulation via a fixed-timestep accumulator**
+      (decouple update rate from render rate). Shipped: `game/utils.py`'s
+      `advance_accumulator()` + `main.py`'s `step_world()`, and the main loop
+      restructured into input → accumulator → render phases. `SIM_STEP` is
+      exactly 1/60 so the math is byte-identical at 60 FPS; slow frames now
+      run catch-up sim steps instead of one slow step. Details below (kept
+      for context).
 
 ### Fixed-timestep accumulator (decouple sim from render)
 
