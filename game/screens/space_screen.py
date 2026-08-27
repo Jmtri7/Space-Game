@@ -16,12 +16,18 @@ from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.autopilot import has_arrived
 from game.world.character import Character
+from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.landable import Landable
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
 from game.world.celestial_body import CelestialBody
 from game.world.asteroid_field import AsteroidField
 from game.world.system_state import SystemState
+
+# Hailing tuning
+ONE_WAY_HAIL_RANGE = 500          # world units - how close an NPC-initiated hail can trigger from
+ONE_WAY_HAIL_BANNER_FRAMES = 300  # ~5s at 60fps an incoming-hail banner stays up
+HAIL_BUSY_BANNER_FRAMES = 150     # ~2.5s "no response" flash when hailing a docked/ashore pilot
 
 # Jump mechanic tuning
 JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel starts
@@ -113,6 +119,9 @@ class SpaceScreen(ScreenBase):
         self.selected_system_id = None  # Star map selection, for the Jump mechanic
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
+        self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_h)
+        self.hail_banner = None  # (text, color) for a transient hail-related message (see below)
+        self.hail_banner_timer = 0
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -356,62 +365,105 @@ class SpaceScreen(ScreenBase):
         # into velocity every frame (travel phase, see _update_jump()), so a
         # held turn key during travel would otherwise silently steer the
         # jump off its heading instead of it being a fixed, committed course.
-        if not self.jump_state:
+        # Also locked out while a hail is open (self.active_dialogue) - same
+        # reason LocationScreen pauses movement for its own active_dialogue.
+        if not self.jump_state and not self.active_dialogue:
             self.player.handle_input(keys)
 
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                # Cancel autopilot on any key press (except ESC which handles pause)
-                if self.player.autopilot_active and event.key != pygame.K_ESCAPE:
-                    self.player.autopilot_active = False
-                    self.player.autopilot_target = None
-                    return None
-
-                if event.key == pygame.K_ESCAPE:
-                    return "pause"
-                elif event.key == pygame.K_RIGHTBRACKET:
-                    self._cycle_target(1)
-                elif event.key == pygame.K_LEFTBRACKET:
-                    self._cycle_target(-1)
-                elif event.key == pygame.K_t:
-                    self._cycle_target_mode()
-                elif event.key == pygame.K_l:
-                    # Land only - never engages autopilot (see K_SPACE below
-                    # for that). If a landable is targeted and already in
-                    # range, land on it directly; otherwise fall back to a
-                    # pure proximity check, which also covers an AI ship
-                    # being targeted or nothing being targeted at all.
-                    target_obj = self._get_target_object()
-                    if target_obj and self.current_target is not None and not isinstance(target_obj, Character):
-                        distance = target_obj.get_distance(self.player.x, self.player.y)
-                        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
-                        if distance < target_obj.landing_distance and speed < 0.4:
-                            if target_obj == self.station:
-                                self.landing_target = "station"
-                                return "land"
-                            elif target_obj == self.moon:
-                                self.landing_target = "moon"
-                                return "land"
-                    landing_target = self._check_landing()
-                    if landing_target:
-                        self.landing_target = landing_target
-                        return "land"
-                elif event.key == pygame.K_SPACE:
-                    # Engage autopilot toward the current target - follows an
-                    # AI ship, or approaches a landable from any range (L
-                    # only lands once you're already close).
-                    target_obj = self._get_target_object()
-                    if target_obj and self.current_target is not None:
-                        self.player.engage_seek(target_obj)
-                elif event.key == pygame.K_m and not self.jump_state:
-                    return "star_map"
-                elif event.key == pygame.K_j and not self.jump_state:
-                    self._try_jump()
-                elif event.key == pygame.K_p:
-                    return "possessions"
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_target_at(*to_world(*event.pos))
+                continue
+
+            if event.type != pygame.KEYDOWN:
+                continue
+
+            if self.active_dialogue:
+                # While a hail is open, input drives the dialogue box
+                # instead of flight - mirrors LocationScreen's own
+                # active_dialogue branch (see there for why flags is
+                # fetched fresh each time rather than cached).
+                # A hail option's action is never a LocationScreen-only one
+                # (buy_ship:/take_loan don't make sense mid-flight) - just
+                # the shared set_flag/give_item/spend_credits actions (see
+                # apply_shared_actions) - and none of those ever block on
+                # affordability the way a ship purchase can, so unlike
+                # LocationScreen, cycling/choosing here is a plain index
+                # walk over whatever current_options(flags) returns, with
+                # no "skip the blocked ones" pass needed.
+                possessions = self.player.person.possessions
+                flags = possessions.flags
+                options = self.active_dialogue.current_options(flags)
+                if event.key in (pygame.K_UP, pygame.K_w) and options:
+                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option - 1) % len(options)
+                elif event.key in (pygame.K_DOWN, pygame.K_s) and options:
+                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option + 1) % len(options)
+                elif event.key == pygame.K_RETURN and options:
+                    option = options[self.active_dialogue.selected_option]
+                    for action in option_actions(option):
+                        apply_shared_actions(action, possessions)
+                    # advance(option), not choose(index, flags) - see
+                    # Dialogue.advance's docstring (LocationScreen's own
+                    # dialogue handling has the same comment).
+                    if self.active_dialogue.advance(option):
+                        self.active_dialogue = None
+                    else:
+                        self.active_dialogue.selected_option = 0
+                elif event.key == pygame.K_ESCAPE:
+                    self.active_dialogue = None
+                continue
+
+            # Cancel autopilot on any key press (except ESC which handles pause)
+            if self.player.autopilot_active and event.key != pygame.K_ESCAPE:
+                self.player.autopilot_active = False
+                self.player.autopilot_target = None
+                return None
+
+            if event.key == pygame.K_ESCAPE:
+                return "pause"
+            elif event.key == pygame.K_RIGHTBRACKET:
+                self._cycle_target(1)
+            elif event.key == pygame.K_LEFTBRACKET:
+                self._cycle_target(-1)
+            elif event.key == pygame.K_t:
+                self._cycle_target_mode()
+            elif event.key == pygame.K_h:
+                self._start_hail()
+            elif event.key == pygame.K_l:
+                # Land only - never engages autopilot (see K_SPACE below
+                # for that). If a landable is targeted and already in
+                # range, land on it directly; otherwise fall back to a
+                # pure proximity check, which also covers an AI ship
+                # being targeted or nothing being targeted at all.
+                target_obj = self._get_target_object()
+                if target_obj and self.current_target is not None and not isinstance(target_obj, Character):
+                    distance = target_obj.get_distance(self.player.x, self.player.y)
+                    speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+                    if distance < target_obj.landing_distance and speed < 0.4:
+                        if target_obj == self.station:
+                            self.landing_target = "station"
+                            return "land"
+                        elif target_obj == self.moon:
+                            self.landing_target = "moon"
+                            return "land"
+                landing_target = self._check_landing()
+                if landing_target:
+                    self.landing_target = landing_target
+                    return "land"
+            elif event.key == pygame.K_SPACE:
+                # Engage autopilot toward the current target - follows an
+                # AI ship, or approaches a landable from any range (L
+                # only lands once you're already close).
+                target_obj = self._get_target_object()
+                if target_obj and self.current_target is not None:
+                    self.player.engage_seek(target_obj)
+            elif event.key == pygame.K_m and not self.jump_state:
+                return "star_map"
+            elif event.key == pygame.K_j and not self.jump_state:
+                self._try_jump()
+            elif event.key == pygame.K_p:
+                return "possessions"
         return None
 
     def _select_target_at(self, world_x, world_y):
@@ -627,6 +679,71 @@ class SpaceScreen(ScreenBase):
 
         return rect
 
+    def _start_hail(self):
+        """Open a hail with the currently targeted ship (K_h - see
+        docs/CONTROLS.md's Hailing section). Requires a targeted AI ship
+        (SHIPS target mode - see _get_target_object/_filtered_targets);
+        does nothing if nothing's targeted, or the target isn't a ship at
+        all. A pilot currently ashore (DockRoutine has them walking around
+        a station/moon interior right now) can't actually be reached this
+        way - hailing them just flashes a brief "no response" banner
+        instead of opening person.hail_dialogue, since they're not in the
+        ship to answer."""
+        target_obj = self._get_target_object()
+        if not isinstance(target_obj, Character) or self.current_target is None:
+            return
+        pilot_name = target_obj.person.name or "Unknown"
+        if target_obj.ashore:
+            self.hail_banner = (f"{pilot_name}: no response - currently docked.", YELLOW)
+            self.hail_banner_timer = HAIL_BUSY_BANNER_FRAMES
+            return
+        dialogue = target_obj.person.hail_dialogue
+        flags = self.player.person.possessions.flags
+        # resolve_root(), not .root directly, so an earlier flag (e.g.
+        # having already been hailed by this pilot once - see
+        # _check_one_way_hails) can open on a different greeting node.
+        dialogue.current_node = dialogue.resolve_root(flags)
+        dialogue.selected_option = 0
+        self.active_dialogue = dialogue
+        self.hail_banner = None
+        self.hail_banner_timer = 0
+        # Release thrust - handle_input() stops calling into
+        # player.handle_input() the instant active_dialogue is set (see
+        # there), so without this whatever thrust was already applied the
+        # frame H was pressed would otherwise keep accelerating the ship
+        # every physics frame for as long as the conversation stays open.
+        self.player.thrust = 0
+
+    def _check_one_way_hails(self):
+        """Let an NPC-initiated hail (pilots.json's "one_way_hail" - see
+        Character.for_ai_pilot) fire once the player gets close enough:
+        shows a transient banner (not the full hail_dialogue - the player
+        still has to hail back with H to actually talk, per
+        docs/CONTROLS.md), and sets a flag so it never fires twice for the
+        same pilot. Only checks the active system's ships (self.ai_ships) -
+        proximity to the player only means anything in whichever system
+        they're actually in - and skips entirely while a hail is already
+        open, so an incoming banner can't steal focus out from under a
+        conversation the player is already having."""
+        if self.active_dialogue:
+            return
+        flags = self.player.person.possessions.flags
+        for ai_ship in self.ai_ships:
+            one_way = getattr(ai_ship.person, "one_way_hail", None)
+            if not one_way or ai_ship.ashore:
+                continue
+            seen_flag = f"one_way_hail_seen:{ai_ship.person.name}"
+            if flags.get(seen_flag):
+                continue
+            hail_range = one_way.get("range", ONE_WAY_HAIL_RANGE)
+            if ai_ship.get_distance(self.player.x, self.player.y) <= hail_range:
+                flags[seen_flag] = True
+                pilot_name = ai_ship.person.name or "Unknown"
+                message = one_way.get("message", "...")
+                self.hail_banner = (f'Incoming transmission - {pilot_name}: "{message}"', CYAN)
+                self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
+                return  # one at a time - avoids stacking two banners the same frame
+
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
@@ -751,6 +868,9 @@ class SpaceScreen(ScreenBase):
         self.asteroid_field.update()
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
+        if self.hail_banner_timer > 0:
+            self.hail_banner_timer -= 1
+        self._check_one_way_hails()
         self._validate_target()
 
     def update(self):
@@ -835,6 +955,11 @@ class SpaceScreen(ScreenBase):
 
         self._draw_hud(surface, target_obj, draw_hud=draw_hud)
 
+        # Active hail conversation, drawn last so it sits on top of the HUD
+        # too - same reason LocationScreen draws active_dialogue last.
+        if self.active_dialogue:
+            self.active_dialogue.draw(surface, get_ui_scale(), flags=self.player.person.possessions.flags)
+
     def _draw_hud(self, surface, target_obj, draw_hud=True):
         """Ship status, targeting, jump-target, help, and status-message
         overlays - styled with the same glass-panel look as the menus
@@ -903,22 +1028,34 @@ class SpaceScreen(ScreenBase):
         # --- Top-left: control-help pane (shared design with LocationScreen's -
         # see draw_controls_pane). Skipped (draw_hud=False) whenever a modal
         # menu on top of this screen is showing its own controls pane in
-        # the same spot instead.
+        # the same spot instead. Swapped for the hail dialogue's own
+        # controls while active_dialogue is set - same idea as
+        # LocationScreen's own active_dialogue swap - since none of the
+        # normal flight/targeting controls apply while a conversation has
+        # input focus (see handle_input).
         controls_rect = None
-        if draw_hud:
+        if self.active_dialogue:
+            help_items = [("W/S or Up/Down", "Navigate"), ("Enter", "Choose"), ("ESC", "Close")]
+            controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
+        elif draw_hud:
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD/Arrows", "Thrust/Turn"),
                 ("T", "Target Mode"),
                 ("]", "Next Target"),
                 ("[", "Previous Target"),
+                ("H", "Hail Target"),
                 ("M", "Star Map"),
                 ("P", "View Possessions"),
                 ("Click", "Target Object"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
 
-        # --- Top-center: transient "too close to jump" warning ---
+        # --- Top-center: transient "too close to jump" warning, or an
+        # incoming/blocked hail banner (see _check_one_way_hails/_start_hail) -
+        # mutually exclusive with each other in practice (jumping and
+        # hailing don't happen at the same moment) so sharing this one slot
+        # is fine.
         if self.jump_message_timer > 0:
             font_warn = get_font(int(20 * ui_scale))
             draw_glow_title(
@@ -926,15 +1063,24 @@ class SpaceScreen(ScreenBase):
                 utils.screen_width // 2, margin + int(10 * ui_scale),
                 color=YELLOW, shadow_color=(60, 45, 10)
             )
+        elif self.hail_banner_timer > 0 and self.hail_banner:
+            text, color = self.hail_banner
+            font_hail = get_font(int(20 * ui_scale))
+            draw_glow_title(
+                surface, text, font_hail,
+                utils.screen_width // 2, margin + int(10 * ui_scale),
+                color=color, shadow_color=(20, 30, 40)
+            )
 
         # --- Bottom-center: current status. Being mid-jump or having
         # autopilot engaged are exclusive committed states (almost any key
         # cancels/doesn't apply), but the land/jump/autopilot *availability*
         # prompts are independent of each other and can all be true at
         # once, so they stack as separate lines in one panel instead of
-        # being mutually exclusive.
+        # being mutually exclusive. Skipped entirely while active_dialogue
+        # is set, same reason as the controls-pane swap above.
         status_rect = None
-        if draw_hud:
+        if draw_hud and not self.active_dialogue:
             status_lines = []
             if self.jump_state:
                 status_text = "Aligning for jump..." if self.jump_state["phase"] == "align" else "JUMPING..."
@@ -953,6 +1099,8 @@ class SpaceScreen(ScreenBase):
                     status_lines.append(("Press J to Jump", GREEN))
                 if target_obj:
                     status_lines.append(("Press Space for Autopilot", GREEN))
+                if isinstance(target_obj, Character):
+                    status_lines.append((f"Press H to Hail {target_obj.person.name or 'Target'}", GREEN))
 
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 

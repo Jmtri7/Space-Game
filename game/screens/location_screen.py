@@ -9,7 +9,7 @@ from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_pan
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
-from game.world.dialogue import Dialogue
+from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.player_character import PlayerCharacter
 
 
@@ -177,7 +177,7 @@ class LocationScreen(ScreenBase):
         person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"), outfit=get_graphics_asset(self.story, "outfits", cfg.get("outfit", "space_suit")))
         dialogue_tree = cfg.get("dialogue_tree")
         if dialogue_tree:
-            person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"))
+            person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"), conditional_roots=dialogue_tree.get("conditional_roots"))
         else:
             person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
         # A "shop" config key (see ShopMenu/ShipBrowserMenu/OutfittingMenu)
@@ -316,25 +316,29 @@ class LocationScreen(ScreenBase):
         return min(in_range, key=lambda p: (self.player.x - p["x"]) ** 2 + (self.player.y - p["y"]) ** 2)
 
     def _option_blocked_reason(self, option):
-        """Why a dialogue option's "action" can't be taken right now, or
-        None if it's fine. Options with no action are never blocked."""
-        action = option.get("action")
-        if not action:
-            return None
-        if action.startswith("buy_ship:"):
-            ship_type_id = action.split(":", 1)[1]
-            cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
-            if not self.player.possessions.can_afford(cost):
-                return "not enough credits"
-        elif action == "take_loan" and self.player.possessions.loans:
-            return "already have a loan"
+        """Why any of a dialogue option's action(s) (see option_actions)
+        can't be taken right now, or None if all are fine. Options with no
+        action are never blocked."""
+        for action in option_actions(option):
+            reason = shared_action_blocked_reason(action, self.player.possessions)
+            if reason:
+                return reason
+            if action.startswith("buy_ship:"):
+                ship_type_id = action.split(":", 1)[1]
+                cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
+                if not self.player.possessions.can_afford(cost):
+                    return "not enough credits"
+            elif action == "take_loan" and self.player.possessions.loans:
+                return "already have a loan"
         return None
 
     def _apply_dialogue_action(self, action):
-        """Perform the game-state effect of a dialogue option's "action"
-        tag - called once it's confirmed not blocked (see
-        _option_blocked_reason), right before Dialogue.choose() advances to
-        the option's response node."""
+        """Perform the game-state effect of one dialogue option action tag -
+        called once the option's full action list is confirmed not blocked
+        (see _option_blocked_reason), right before Dialogue.choose()
+        advances to the option's response node."""
+        if apply_shared_actions(action, self.player.possessions):
+            return
         if action.startswith("buy_ship:"):
             self.buy_ship(action.split(":", 1)[1])
         elif action == "take_loan":
@@ -687,7 +691,7 @@ class LocationScreen(ScreenBase):
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
-            self.active_dialogue.draw(surface, ui_scale, status_fn=self._option_blocked_reason)
+            self.active_dialogue.draw(surface, ui_scale, status_fn=self._option_blocked_reason, flags=self.player.possessions.flags)
 
     def _draw_culture_building(self, surface, structure, building_type_id, scale):
         """Draw a building whose hull/window colors come from its type's culture -
@@ -837,8 +841,13 @@ class LocationScreen(ScreenBase):
                 continue
 
             if self.active_dialogue:
-                # While talking, input drives the dialogue box instead of movement
-                options = self.active_dialogue.current_options()
+                # While talking, input drives the dialogue box instead of movement.
+                # flags gates which options even show up (see Dialogue.current_options) -
+                # fetched fresh from the live Possessions each time, not cached, so a
+                # flag set mid-conversation (via "set_flag:" below) is reflected the
+                # instant the option list is next read.
+                flags = self.player.possessions.flags
+                options = self.active_dialogue.current_options(flags)
                 if event.key in (pygame.K_UP, pygame.K_w):
                     self.active_dialogue.selected_option = self._next_selectable_option(options, self.active_dialogue.selected_option, -1)
                 elif event.key in (pygame.K_DOWN, pygame.K_s):
@@ -846,13 +855,18 @@ class LocationScreen(ScreenBase):
                 elif event.key == pygame.K_RETURN:
                     option = options[self.active_dialogue.selected_option]
                     if not self._option_blocked_reason(option):
-                        action = option.get("action")
-                        if action:
+                        for action in option_actions(option):
                             self._apply_dialogue_action(action)
-                        if self.active_dialogue.choose(self.active_dialogue.selected_option):
+                        # advance(option), not choose(index, flags) - an
+                        # action just applied above (e.g. "set_flag:") can
+                        # change what current_options(flags) itself returns
+                        # (see Dialogue.advance's docstring), so re-deriving
+                        # the filtered list now and re-indexing into it
+                        # could silently pick the wrong option.
+                        if self.active_dialogue.advance(option):
                             self.active_dialogue = None
                         else:
-                            self.active_dialogue.selected_option = self._first_selectable_option(self.active_dialogue.current_options())
+                            self.active_dialogue.selected_option = self._first_selectable_option(self.active_dialogue.current_options(flags))
                 elif event.key == pygame.K_ESCAPE:
                     self.active_dialogue = None
                 continue
@@ -897,8 +911,11 @@ class LocationScreen(ScreenBase):
                     # Always start a fresh conversation at the root node -
                     # otherwise leaving mid-tree (ESC) and talking again
                     # would silently resume wherever it was left off.
-                    nearest.dialogue.current_node = nearest.dialogue.root
-                    nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options())
+                    # resolve_root() (not .root directly) lets a story flag
+                    # set earlier open on a different greeting node - see
+                    # Dialogue.conditional_roots.
+                    nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags)
+                    nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags))
                     self.active_dialogue = nearest.dialogue
             elif event.key == pygame.K_p:
                 return "possessions"

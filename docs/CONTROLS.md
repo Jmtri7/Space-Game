@@ -14,6 +14,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **[** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
 | **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
+| **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
@@ -95,7 +96,41 @@ officer) run a real branching conversation - some options lead to another
 line of dialogue instead of closing, and some perform an action (buying a
 ship, taking a loan) that's shown dim with a reason instead of selectable
 when you can't currently take it (not enough credits, already have a loan).
-See `game/world/dialogue.py`.
+
+Some options are also conditional - they don't just show dim, they don't
+appear in the list *at all* until a story flag is set (`requires_flag`), or
+disappear once one is (`requires_not_flag`), so a conversation can offer
+something new later without ever hinting at it before then. A whole
+conversation can also open differently depending on a flag
+(`conditional_roots`) - e.g. the bartender greets you differently after
+you've bought him a round once. See `game/world/dialogue.py`.
+
+## Hailing
+
+| Control | Action |
+|---------|--------|
+| **H** (Space View) | Hail the currently targeted ship |
+| **W/↑** or **S/↓**, **Enter**, **ESC** | Same as Dialogue above, once a hail is open |
+
+Hailing reuses the exact same conversation UI as talking to someone
+face-to-face, but requires a targeted AI ship first (SHIPS target mode -
+see the Space View table above) - there's no hailing without a target.
+A pilot answers differently depending on where they actually are: their
+**hail** conversation (this section) is a separate, ship-context
+conversation from the one they'd give you face-to-face if you boarded
+their ship and talked to them in person (e.g. a docked freighter pilot
+walking around the station) - a pilot can be configured with entirely
+different dialogue for each. Hailing a pilot who's currently ashore
+(docked and walking around a station/moon interior, not actually in their
+ship right now) doesn't open a conversation at all - just a brief
+"no response" message, since there's no one aboard to answer.
+
+Some pilots also hail *you* first: a one-way transmission that pops up on
+screen on its own once you fly close enough (no dialogue box, and it
+doesn't require a target) - you still have to target and hail them back
+(H) to actually have the conversation. Each pilot's one-way hail (if they
+have one) only ever fires once. See `pilots.json`'s `"hail_dialogue_tree"`/
+`"one_way_hail"` and `game/world/character.py`'s `Character.for_ai_pilot`.
 
 ## Menus
 

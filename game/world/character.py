@@ -122,11 +122,36 @@ class Character:
         # already "own" the ship they're flying, and start with some
         # walking-around money, even though nothing spends it yet.
         person = Person(x, y, name=pilot.get("name", ""), possessions=Possessions(credits=AI_PILOT_STARTING_CREDITS, owned_ships=[ship_type_id]), outfit=outfit)
+        pilot_name = pilot.get("name", "Pilot")
         # Lets the player target/talk to this pilot while they're walking
         # around a station/moon interior (see LocationScreen.visitors) the
         # same way they would an NPC - flavored from the pilot's own
         # personality line in pilots.json rather than a generic greeting.
-        person.dialogue = Dialogue.from_flat(pilot.get("name", "Pilot"), pilot.get("personality", "..."), ["Nod", "Leave"])
+        person.dialogue = Dialogue.from_flat(pilot_name, pilot.get("personality", "..."), ["Nod", "Leave"])
+        # A second, separate conversation for when this pilot is hailed
+        # over comms while still flying (see SpaceScreen's "H" hail control)
+        # rather than talked to face-to-face - a freighter pilot mid-route
+        # is a different context than the same person walking around a
+        # concourse, so pilots.json can give them a distinct
+        # "hail_dialogue_tree" (or flat "hail_greeting"/
+        # "hail_dialogue_options"); falls back to their ground personality
+        # line (with comms-flavored closing options) if a pilot defines no
+        # hail-specific dialogue of their own.
+        hail_tree = pilot.get("hail_dialogue_tree")
+        if hail_tree:
+            person.hail_dialogue = Dialogue(pilot_name, hail_tree["nodes"], root=hail_tree.get("root", "start"), conditional_roots=hail_tree.get("conditional_roots"))
+        else:
+            person.hail_dialogue = Dialogue.from_flat(
+                pilot_name,
+                pilot.get("hail_greeting", pilot.get("personality", "...")),
+                pilot.get("hail_dialogue_options", ["Acknowledged", "End transmission"]),
+            )
+        # Optional one-way hail (see SpaceScreen._check_one_way_hails): a
+        # pilot who reaches out to the player first, once, when the player
+        # gets close enough - a transient message, not the full hail_dialogue
+        # above (the player still has to hail back - see docs/CONTROLS.md).
+        # None for any pilot whose config doesn't set one.
+        person.one_way_hail = pilot.get("one_way_hail")
 
         return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id)
 

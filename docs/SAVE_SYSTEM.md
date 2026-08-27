@@ -62,7 +62,8 @@ name is kept, the timestamp lives inside it.
       "owned_outfits": ["afterburner"],
       "installed_outfits": {"weapon_1": "laser_cannon"},
       "cargo": {"ore": 5},
-      "items": {"repair_kit": 1}
+      "items": {"repair_kit": 1},
+      "flags": {"hailed_kade": true, "bought_bartender_round": true}
     },
     "jump_state": {
       "phase": "travel",
@@ -156,6 +157,19 @@ utility outfit that modifies it) - `Possessions` itself doesn't know about
 capacity or enforce it; that check happens wherever a purchase is made.
 `items` (`{item_id: quantity}`) is a player-carried personal inventory and is
 never capacity-limited.
+
+`flags` (`{flag_name: true}`) is a flat set of story-progress markers -
+which conversation branches have been unlocked, which one-way ship hails
+have already fired, which minor dialogue consequences have happened (see
+`Dialogue`'s `requires_flag`/`requires_not_flag`/`conditional_roots` and the
+`"set_flag:<name>"` dialogue action in `game/world/dialogue.py`, and
+docs/CONTROLS.md's Hailing section). Lives on `Possessions` - not a separate
+save key - specifically so it's captured/restored for free by the same
+shared-by-reference plumbing `credits`/`cargo`/etc. already use, and so a
+flag set while talking to a station NPC is visible when hailing a ship in
+space later (and vice versa). A save made before this existed simply has no
+`"flags"` key; `Possessions.restore_from()`/`from_state()` default it to
+`{}`.
 
 **`game_state["player"]` means two different things depending on `location`,
 and this matters a great deal for restoring it correctly (see below):** for a

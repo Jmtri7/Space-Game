@@ -18,9 +18,21 @@ class Possessions:
     Cargo capacity (mass) only ever applies to `cargo` - `items` (personal
     inventory) and `owned_outfits` (spare ship parts) aren't capacity-limited.
     Capacity itself lives on the ship (Ship.cargo_capacity), not here, so
-    this class stays config-free per the story/save split."""
+    this class stays config-free per the story/save split.
+
+    `flags` is a flat {name: True} set of story-progress markers - which
+    conversation branches have been unlocked, which one-way hails have
+    already fired, which minor world-state consequences have happened. See
+    Dialogue's "requires_flag"/"requires_not_flag"/"conditional_roots" and
+    the "set_flag:<name>" dialogue action (game/world/dialogue.py) for how
+    conversations read and write these. Lives here (rather than a separate
+    shared object) because Possessions is already the one piece of player
+    state shared by reference across SpaceScreen and every LocationScreen,
+    and already flows through save/load - a flag set while talking to a
+    station NPC needs to be visible when hailing a ship in space later, and
+    vice versa."""
     def __init__(self, credits=0, owned_ships=None, loans=None,
-                 owned_outfits=None, installed_outfits=None, cargo=None, items=None):
+                 owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
         self.loans = loans or []  # list of {"lender": str, "principal": int}
@@ -28,6 +40,7 @@ class Possessions:
         self.installed_outfits = installed_outfits or {}  # {slot_id: outfit_id}
         self.cargo = cargo or {}  # {commodity_id: quantity}
         self.items = items or {}  # {item_id: quantity}
+        self.flags = flags or {}  # {flag_name: True}
 
     def can_afford(self, amount):
         return self.credits >= amount
@@ -116,6 +129,7 @@ class Possessions:
         self.installed_outfits = dict(state.get("installed_outfits", self.installed_outfits))
         self.cargo = dict(state.get("cargo", self.cargo))
         self.items = dict(state.get("items", self.items))
+        self.flags = dict(state.get("flags", self.flags))
 
     def get_state(self):
         return {
@@ -126,6 +140,7 @@ class Possessions:
             "installed_outfits": dict(self.installed_outfits),
             "cargo": dict(self.cargo),
             "items": dict(self.items),
+            "flags": dict(self.flags),
         }
 
     @classmethod
@@ -140,4 +155,5 @@ class Possessions:
             installed_outfits=dict(state.get("installed_outfits", {})),
             cargo=dict(state.get("cargo", {})),
             items=dict(state.get("items", {})),
+            flags=dict(state.get("flags", {})),
         )

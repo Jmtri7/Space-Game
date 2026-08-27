@@ -34,7 +34,7 @@ from game.world.ship import Ship
 from game.world.landable import Landable
 from game.world.person import Person
 from game.world.possessions import Possessions
-from game.world.dialogue import Dialogue
+from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
@@ -978,6 +978,30 @@ class TestPossessions(unittest.TestCase):
         self.assertEqual(possessions.owned_ships, ["patrol"])
 
 
+class TestPossessionsFlags(unittest.TestCase):
+    """flags (story-progress markers - see Dialogue's requires_flag/
+    conditional_roots and the "set_flag:" dialogue action) round-trips
+    through get_state()/restore_from()/from_state() like every other
+    Possessions field - see docs/SAVE_SYSTEM.md."""
+
+    def test_flags_round_trip_through_get_state_and_restore_from(self):
+        possessions = Possessions()
+        possessions.flags["hailed_kade"] = True
+        state = possessions.get_state()
+        self.assertEqual(state["flags"], {"hailed_kade": True})
+
+        restored = Possessions()
+        restored.restore_from(state)
+        self.assertEqual(restored.flags, {"hailed_kade": True})
+
+    def test_from_state_defaults_to_empty_flags_for_a_pre_existing_save(self):
+        """A save made before this feature existed has no "flags" key at
+        all - from_state()/restore_from() must default to {} rather than
+        raising."""
+        possessions = Possessions.from_state({"credits": 10})
+        self.assertEqual(possessions.flags, {})
+
+
 class TestPossessionsInventory(unittest.TestCase):
     """Test Possessions' cargo/items/outfit tracking - added alongside the
     inventory/buying-selling/outfitting feature. Cargo capacity itself lives
@@ -1493,6 +1517,116 @@ class TestDialogue(unittest.TestCase):
         self.assertEqual(dialogue.current_node, "start")
 
 
+class TestDialogueConditionalOptions(unittest.TestCase):
+    """requires_flag/requires_not_flag hide an option entirely (not just
+    dim it, unlike an unaffordable action - see status_fn) until a
+    Possessions.flags condition is met, and conditional_roots lets a fresh
+    conversation open on a different node once a flag is set - the
+    mechanism behind hailing/unlockable/consequence dialogue (see
+    docs/CONTROLS.md's Hailing section and the bartender's "Buy him a
+    round" example in sol_alpha.json)."""
+
+    def test_requires_flag_hides_option_until_set(self):
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "Hi", "options": [
+                {"label": "Secret", "next": None, "requires_flag": "unlocked"},
+                {"label": "Leave", "next": None},
+            ]},
+        })
+        self.assertEqual([o["label"] for o in dialogue.current_options()], ["Leave"])
+        self.assertEqual([o["label"] for o in dialogue.current_options({"unlocked": True})], ["Secret", "Leave"])
+
+    def test_requires_not_flag_hides_option_once_set(self):
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "Hi", "options": [
+                {"label": "First time offer", "next": None, "requires_not_flag": "used"},
+                {"label": "Leave", "next": None},
+            ]},
+        })
+        self.assertEqual([o["label"] for o in dialogue.current_options()], ["First time offer", "Leave"])
+        self.assertEqual([o["label"] for o in dialogue.current_options({"used": True})], ["Leave"])
+
+    def test_choose_indexes_into_the_flag_filtered_list(self):
+        """choose(index, flags) must use the same filtered list
+        current_options(flags) displayed, so a UI that only shows visible
+        options can pass its own selected index straight through."""
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "Hi", "options": [
+                {"label": "Hidden", "next": None, "requires_flag": "nope"},
+                {"label": "Chat", "next": "chat"},
+            ]},
+            "chat": {"text": "...", "options": [{"label": "Bye", "next": None}]},
+        })
+        # Index 0 of the filtered (flags={}) list is "Chat", not "Hidden".
+        closed = dialogue.choose(0, {})
+        self.assertFalse(closed)
+        self.assertEqual(dialogue.current_node, "chat")
+
+    def test_advance_is_immune_to_the_options_own_action_changing_the_filtered_list(self):
+        """Regression test: an option hidden by requires_not_flag on the
+        very flag its own "set_flag:" action sets used to break navigation
+        - applying the action first (as every real caller does, so the
+        flag takes effect immediately) then calling choose(index, flags)
+        re-derived current_options(flags) *after* the flag was already
+        set, so the now-shorter filtered list shifted every later index
+        down by one and choose() advanced to the wrong node entirely.
+        advance(option) - resolving the option once, before applying its
+        actions, and advancing from that same object - must be immune."""
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "Hi", "options": [
+                {"label": "Buy a round", "next": "thanks", "requires_not_flag": "bought", "action": "set_flag:bought"},
+                {"label": "Ask something else", "next": "other"},
+            ]},
+            "thanks": {"text": "Cheers!", "options": [{"label": "Bye", "next": None}]},
+            "other": {"text": "...", "options": [{"label": "Bye", "next": None}]},
+        })
+        flags = {}
+        option = dialogue.current_options(flags)[0]
+        self.assertEqual(option["label"], "Buy a round")
+        apply_shared_actions(option["action"], SimpleNamespace(flags=flags))
+        self.assertTrue(flags["bought"])
+        dialogue.advance(option)
+        self.assertEqual(dialogue.current_node, "thanks")
+
+    def test_conditional_roots_picks_first_matching_flag_else_plain_root(self):
+        dialogue = Dialogue("Bartender", {
+            "start": {"text": "Hello stranger.", "options": []},
+            "friendly": {"text": "Welcome back!", "options": []},
+        }, conditional_roots=[{"flag": "met_before", "node": "friendly"}])
+        self.assertEqual(dialogue.resolve_root(), "start")
+        self.assertEqual(dialogue.resolve_root({"met_before": True}), "friendly")
+
+
+class TestDialogueSharedActions(unittest.TestCase):
+    """option_actions()/apply_shared_actions()/shared_action_blocked_reason() -
+    the generic dialogue-action vocabulary usable from any screen driving a
+    Dialogue (LocationScreen's station/moon conversations and SpaceScreen's
+    ship hails alike)."""
+
+    def test_option_actions_normalizes_single_and_list_forms(self):
+        self.assertEqual(option_actions({"label": "x", "next": None}), [])
+        self.assertEqual(option_actions({"label": "x", "next": None, "action": "take_loan"}), ["take_loan"])
+        self.assertEqual(option_actions({"label": "x", "next": None, "actions": ["a", "b"]}), ["a", "b"])
+
+    def test_set_flag_give_item_and_spend_credits(self):
+        possessions = Possessions(credits=100)
+        self.assertTrue(apply_shared_actions("set_flag:met_bartender", possessions))
+        self.assertTrue(possessions.flags["met_bartender"])
+        self.assertTrue(apply_shared_actions("give_item:engraved_flask", possessions))
+        self.assertEqual(possessions.items["engraved_flask"], 1)
+        self.assertTrue(apply_shared_actions("spend_credits:20", possessions))
+        self.assertEqual(possessions.credits, 80)
+
+    def test_unrecognized_action_is_not_handled(self):
+        self.assertFalse(apply_shared_actions("buy_ship:shuttle", Possessions()))
+
+    def test_spend_credits_blocked_when_unaffordable(self):
+        possessions = Possessions(credits=5)
+        self.assertEqual(shared_action_blocked_reason("spend_credits:20", possessions), "not enough credits")
+        self.assertIsNone(shared_action_blocked_reason("spend_credits:5", possessions))
+        self.assertIsNone(shared_action_blocked_reason("set_flag:x", possessions))
+
+
 class _FakeFont:
     """Stand-in for pygame.font.Font in wrap-width tests - width is just
     character count, so expected wrap points are exact and don't depend on
@@ -1538,6 +1672,41 @@ class TestCharacterAIPilotDialogue(unittest.TestCase):
         self.assertEqual(dialogue.current_text(), "Blunt and unhurried.")
         self.assertEqual([o["label"] for o in dialogue.current_options()], ["Nod", "Leave"])
         self.assertTrue(dialogue.choose(0))
+
+    def test_pilot_without_hail_config_falls_back_to_ground_personality(self):
+        """A pilot with no "hail_dialogue_tree"/"hail_greeting" of their
+        own (see Character.for_ai_pilot) still gets a usable, separate
+        hail_dialogue - flavored from the same personality line as their
+        ground dialogue, but with comms-flavored closing options instead
+        of "Nod"/"Leave"."""
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="freighter", graphics=None,
+            pilot={"name": "Elena Voss", "personality": "Blunt and unhurried."},
+            route=[], get_interior_screen=None,
+        )
+        hail = character.person.hail_dialogue
+        self.assertIsNot(hail, character.person.dialogue)
+        self.assertEqual(hail.current_text(), "Blunt and unhurried.")
+        self.assertEqual([o["label"] for o in hail.current_options()], ["Acknowledged", "End transmission"])
+        self.assertIsNone(character.person.one_way_hail)
+
+    def test_pilot_with_hail_dialogue_tree_and_one_way_hail(self):
+        pilot = {
+            "name": "Kade Marsh",
+            "personality": "...",
+            "one_way_hail": {"range": 500, "message": "Identify yourself."},
+            "hail_dialogue_tree": {
+                "root": "start",
+                "nodes": {"start": {"text": "State your business.", "options": [{"label": "Bye", "next": None}]}},
+            },
+        }
+        character = Character.for_ai_pilot(
+            0, 0, ship_type=None, ship_type_id="patrol", graphics=None,
+            pilot=pilot, route=[], get_interior_screen=None,
+        )
+        hail = character.person.hail_dialogue
+        self.assertEqual(hail.current_text(), "State your business.")
+        self.assertEqual(character.person.one_way_hail["message"], "Identify yourself.")
 
 
 class TestExplorerRoutine(unittest.TestCase):
@@ -2029,6 +2198,153 @@ class TestSpaceScreenParkAt(unittest.TestCase):
         game_screen.restore_possessions(interior_shaped_state)
         self.assertEqual((game_screen.player.x, game_screen.player.y), original_position)
         self.assertEqual(game_screen.player.person.possessions.credits, 500)
+
+
+class TestSpaceScreenHailing(unittest.TestCase):
+    """K_h hailing (see SpaceScreen.handle_input/_start_hail) and NPC-
+    initiated one-way hails (_check_one_way_hails) - exercised against the
+    default story's real pilots.json/sol_alpha.json config: Kade Marsh
+    (patrol_officer, OrbitRoutine - never ashore, and configured with both
+    a one_way_hail and a branching hail_dialogue_tree) and Elena Voss
+    (freighter_pilot, DockRoutine - can be ashore) are real fixtures here,
+    not test doubles, so a config typo in either would fail these too."""
+
+    def _target_ship(self, game_screen, pilot_name):
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        for i, (_, obj) in enumerate(game_screen._filtered_targets()):
+            if obj.person.name == pilot_name:
+                game_screen.current_target = i
+                return obj
+        self.fail(f"{pilot_name} not found among targetable ships")
+
+    def test_hailing_a_flying_pilot_opens_their_hail_dialogue(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self._target_ship(game_screen, "Kade Marsh")
+        game_screen._start_hail()
+        self.assertIsNotNone(game_screen.active_dialogue)
+        self.assertEqual(game_screen.active_dialogue.npc_name, "Kade Marsh")
+        self.assertEqual(game_screen.active_dialogue.current_node, "start")
+
+    def test_hailing_an_ashore_pilot_shows_a_busy_banner_instead(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        elena = self._target_ship(game_screen, "Elena Voss")
+        elena.ashore = True
+        game_screen._start_hail()
+        self.assertIsNone(game_screen.active_dialogue)
+        self.assertIn("docked", game_screen.hail_banner[0])
+
+    def test_hailing_with_no_target_does_nothing(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.current_target = None
+        game_screen._start_hail()
+        self.assertIsNone(game_screen.active_dialogue)
+
+    def test_a_flag_set_mid_hail_changes_the_next_hail_greeting(self):
+        """Kade Marsh's hail_dialogue_tree sets "hailed_kade" the first
+        time you sign off, and conditional_roots opens the *next* hail on
+        a different ("start_returning") node once that flag is set - the
+        worked example of a conversation with a (minor) consequence,
+        mirrored in space the same way the bartender's "Buy him a round"
+        does on the ground (see sol_alpha.json)."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self._target_ship(game_screen, "Kade Marsh")
+        game_screen._start_hail()
+        flags = game_screen.player.person.possessions.flags
+        dialogue = game_screen.active_dialogue
+
+        # "Ask about patrol routes" -> "routes"
+        dialogue.choose(1, flags)
+        self.assertEqual(dialogue.current_node, "routes")
+
+        # "Good to know" carries the set_flag action and closes.
+        option = dialogue.current_options(flags)[0]
+        for action in option_actions(option):
+            apply_shared_actions(action, game_screen.player.person.possessions)
+        self.assertTrue(dialogue.advance(option))
+        self.assertTrue(flags.get("hailed_kade"))
+
+        game_screen.active_dialogue = None
+        game_screen._start_hail()
+        self.assertEqual(game_screen.active_dialogue.current_node, "start_returning")
+
+    def test_one_way_hail_fires_once_in_range_and_sets_a_seen_flag(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        kade = self._target_ship(game_screen, "Kade Marsh")
+        game_screen.player.x, game_screen.player.y = kade.x, kade.y  # distance 0 - well within range
+        game_screen._check_one_way_hails()
+        self.assertIsNotNone(game_screen.hail_banner)
+        self.assertIn("Kade Marsh", game_screen.hail_banner[0])
+        flags = game_screen.player.person.possessions.flags
+        self.assertTrue(flags.get("one_way_hail_seen:Kade Marsh"))
+
+        game_screen.hail_banner = None
+        game_screen._check_one_way_hails()
+        self.assertIsNone(game_screen.hail_banner, "must not fire a second time for the same pilot")
+
+
+class TestBartenderConsequenceDialogue(unittest.TestCase):
+    """Exercises the bartender's (Bram Solise, sol_alpha.json's "default"
+    concourse) "Buy him a round" branch end-to-end against the real story
+    config: an option with multiple actions (spend_credits/give_item/
+    set_flag) that's itself hidden by requires_not_flag once used, a
+    conditional_roots greeting change, and a *different* node's option
+    unlocked elsewhere in the tree by requires_flag - the worked
+    "conversation with consequences" example (mirrored in space by Kade
+    Marsh's hail_dialogue_tree - see TestSpaceScreenHailing)."""
+
+    def _bartender(self, credits=100):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.player.person.possessions.credits = credits
+        concourse = game_screen.get_interior_screen(game_screen.station, "default")
+        bartender = next(c.person for c in concourse.npcs if c.person.name == "Bram Solise")
+        return concourse, bartender
+
+    def test_buying_a_round_spends_credits_grants_item_and_sets_flag(self):
+        concourse, bartender = self._bartender(credits=100)
+        dialogue = bartender.dialogue
+        flags = concourse.player.possessions.flags
+        dialogue.current_node = dialogue.resolve_root(flags)
+        options = dialogue.current_options(flags)
+        round_index = [o["label"] for o in options].index("Buy him a round - 20cr")
+        round_option = options[round_index]
+        for action in option_actions(round_option):
+            concourse._apply_dialogue_action(action)
+        # advance(option), not choose(index, flags) - see Dialogue.advance's
+        # docstring: the set_flag action just applied hides this very
+        # option from current_options(flags) going forward, so re-deriving
+        # the filtered list now and re-indexing into it would silently
+        # pick a different option.
+        dialogue.advance(round_option)
+
+        self.assertEqual(concourse.player.possessions.credits, 80)
+        self.assertEqual(concourse.player.possessions.items.get("engraved_flask"), 1)
+        self.assertTrue(flags.get("bought_bartender_round"))
+        self.assertEqual(dialogue.current_node, "round_bought")
+
+    def test_round_option_disappears_and_greeting_changes_after_buying_once(self):
+        concourse, bartender = self._bartender(credits=100)
+        dialogue = bartender.dialogue
+        flags = concourse.player.possessions.flags
+        flags["bought_bartender_round"] = True  # simulate having already bought one
+
+        root = dialogue.resolve_root(flags)
+        self.assertEqual(root, "start_friendly")
+        dialogue.current_node = root
+        labels = [o["label"] for o in dialogue.current_options(flags)]
+        self.assertNotIn("Buy him a round - 20cr", labels)
+
+    def test_smuggler_tip_option_is_unlocked_only_after_buying_a_round(self):
+        concourse, bartender = self._bartender(credits=100)
+        dialogue = bartender.dialogue
+        flags = concourse.player.possessions.flags
+
+        dialogue.current_node = "about_station"
+        labels_before = [o["label"] for o in dialogue.current_options(flags)]
+        self.assertNotIn("Ask about the quiet cargo runs", labels_before)
+
+        flags["bought_bartender_round"] = True
+        labels_after = [o["label"] for o in dialogue.current_options(flags)]
+        self.assertIn("Ask about the quiet cargo runs", labels_after)
 
 
 class TestLocationScreenEconomy(unittest.TestCase):

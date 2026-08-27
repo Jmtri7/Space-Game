@@ -44,17 +44,16 @@ together. Bug items stay in whichever category their affected system belongs to
 
 ## Missions, Dialogue & NPCs
 
-- [ ] ⭐ Hailing other ships — cheap to build, big personality payoff (bounty threats,
-      distress calls, trade offers) once ships aren't just physics objects.
 - [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist,
-      so branching stakes is a natural next layer.
-- [ ] ⭐ Unlockable conversation options — ties into missions/consequences above.
+      so branching stakes is a natural next layer. (Conditional/unlockable options,
+      conversation trees, and a couple of worked consequence examples now exist -
+      see Dialogue's requires_flag/conditional_roots and the bartender/Kade Marsh
+      dialogue in sol_alpha.json/pilots.json - the missions/stages half below is
+      still open.)
 - [ ] ⭐ Add missions/events tracked through stages and completable over time, whose
       stages introduce triggers like hidden conversation options, or NPCs/objects that
       weren't there before. Add a mission log to view unlocked stages of active and
       completed missions.
-- [ ] ⭐ One-way hailing from NPCs: they can send messages that pop up on screen in the
-      space view, but you have to hail them back to have an actual conversation.
 - [ ] ⭐ Tutorial mission on first launch with a ship: an NPC flying in the system
       hails you, explains how to change targeting mode and target/hail them, then
       walks you through a mission (with viewable stages) that teaches the basic

@@ -50,13 +50,27 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
-- `Dialogue` — Conversation tree used by `NPC`: nodes of text + options, each
-  option either advancing to another node, closing (`"next": null`), or - for
-  a few commerce-flavored NPCs - carrying an `"action"` (`"buy_ship:<id>"`,
-  `"take_loan"`) that `LocationScreen` applies against the player's
-  `Possessions`. `Dialogue.from_flat()` builds the simple one-node shape most
-  NPCs still use.
-- `Possessions` — credits/owned ships/loans, composed onto every `Person`
+- `Dialogue` — Conversation tree used by any character with a `person.dialogue`
+  (or `person.hail_dialogue` - see Character below): nodes of text + options,
+  each option either advancing to another node, closing (`"next": null`), or
+  carrying one or more actions (`"action": "..."` or `"actions": [...]`, see
+  `option_actions()`) applied via `apply_shared_actions()` (`"set_flag:<name>"`,
+  `"give_item:<id>"`, `"spend_credits:<amount>"` - generic, work from any
+  screen) and/or, for a few commerce-flavored station NPCs,
+  `LocationScreen._apply_dialogue_action()`'s own `"buy_ship:<id>"`/
+  `"take_loan"` against the player's `Possessions`. An option can also carry
+  `"requires_flag"`/`"requires_not_flag"` (a `Possessions.flags` name) -
+  `current_options(flags)` drops it from the list entirely until that
+  condition is met, for a conversation option that shouldn't be hinted at
+  before then. `"conditional_roots"` lets a fresh conversation open on a
+  different node once a flag is set (`resolve_root(flags)`) - e.g. a
+  friendlier greeting after a past kindness. `Dialogue.from_flat()` builds
+  the simple one-node shape most NPCs still use. See docs/CONTROLS.md's
+  Dialogue and Hailing sections.
+- `Possessions` — credits/owned ships/loans/cargo/items, and `flags`
+  (`{name: True}` story-progress markers Dialogue's `requires_flag`/
+  `conditional_roots`/`"set_flag:"` read and write - see above), composed
+  onto every `Person`
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
 - `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
 
@@ -190,7 +204,16 @@ mechanism behind every non-player character in the game:
 
 - **AI ship pilots** (`ship` set): built via `Character.for_ai_pilot(...)`
   from `SpaceScreen._build_system_state()`. Role comes from `pilots.json`
-  (`freighter_pilot`, `patrol_officer`, `explorer`, ...).
+  (`freighter_pilot`, `patrol_officer`, `explorer`, ...). Also gets a second,
+  separate `person.hail_dialogue` (a `Dialogue`, from `pilots.json`'s
+  `"hail_dialogue_tree"`/`"hail_greeting"`/`"hail_dialogue_options"`, falling
+  back to their ground `personality` line otherwise) for `SpaceScreen`'s "H"
+  hail control - a pilot mid-flight is a different context than the same
+  person walking around a concourse, so the two can read completely
+  differently. `person.one_way_hail` (optional, from `pilots.json`) is a
+  pilot who hails the player first, once, on proximity - see
+  `SpaceScreen._check_one_way_hails()` and docs/CONTROLS.md's Hailing
+  section.
 - **Station/moon NPCs** (`ship=None`): built inline by `LocationScreen`.
   Role comes from each `npcs[]` entry's `"role"` in the location's config
   (`bartender`, `guard`, `resident`, ...), defaulting to `"resident"` if

@@ -117,9 +117,21 @@
             "role": "bartender",
             "dialogue_tree": {
               "root": "start",
+              "conditional_roots": [
+                {"flag": "bought_bartender_round", "node": "start_friendly"}
+              ],
               "nodes": {
                 "start": {
                   "text": "What'll it be?",
+                  "options": [
+                    {"label": "Order a drink", "next": "drink"},
+                    {"label": "Buy him a round - 20cr", "next": "round_bought", "requires_not_flag": "bought_bartender_round", "actions": ["spend_credits:20", "give_item:engraved_flask", "set_flag:bought_bartender_round"]},
+                    {"label": "Ask about the station", "next": "about_station"},
+                    {"label": "Leave", "next": null}
+                  ]
+                },
+                "start_friendly": {
+                  "text": "Back again? Always good to see a paying customer who tips.",
                   "options": [
                     {"label": "Order a drink", "next": "drink"},
                     {"label": "Ask about the station", "next": "about_station"},
@@ -133,11 +145,24 @@
                     {"label": "Leave", "next": null}
                   ]
                 },
+                "round_bought": {
+                  "text": "Cheers - much obliged. Here, engraved flask, on the house. Come back anytime.",
+                  "options": [
+                    {"label": "Thanks", "next": null}
+                  ]
+                },
                 "about_station": {
                   "text": "Dormitories are back up the corridor. Spaceport and loan office are just off this concourse, if you're looking to get your own ship.",
                   "options": [
+                    {"label": "Ask about the quiet cargo runs", "next": "smuggler_tip", "requires_flag": "bought_bartender_round"},
                     {"label": "Good to know", "next": "start"},
                     {"label": "Leave", "next": null}
+                  ]
+                },
+                "smuggler_tip": {
+                  "text": "Word is Priya doesn't ask too many questions if the crate isn't labeled. Didn't hear that from me.",
+                  "options": [
+                    {"label": "Noted", "next": null}
                   ]
                 }
               }

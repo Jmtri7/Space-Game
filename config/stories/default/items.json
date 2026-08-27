@@ -22,5 +22,13 @@
     "category": "tool",
     "icon_shape": "star",
     "icon_color": [120, 180, 230]
+  },
+  "engraved_flask": {
+    "name": "Engraved Flask",
+    "description": "A keepsake flask from Bram's bar - engraved 'to a good customer'",
+    "base_price": 0,
+    "category": "keepsake",
+    "icon_shape": "vial",
+    "icon_color": [200, 170, 90]
   }
 }

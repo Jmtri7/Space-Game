@@ -3,13 +3,78 @@
     "name": "Elena Voss",
     "faction": "Frontier Traders Guild",
     "role": "freighter_pilot",
-    "personality": "Blunt and unhurried — cares more about the manifest than the view."
+    "personality": "Blunt and unhurried — cares more about the manifest than the view.",
+    "hail_dialogue_tree": {
+      "root": "start",
+      "nodes": {
+        "start": {
+          "text": "Freighter One here. Hope you're not looking to relieve me of my cargo.",
+          "options": [
+            {"label": "Just saying hello.", "next": "hello"},
+            {"label": "Ask about her cargo.", "next": "cargo"},
+            {"label": "End transmission.", "next": null}
+          ]
+        },
+        "hello": {
+          "text": "Ha! Fair enough. Fly safe out there.",
+          "options": [
+            {"label": "Thanks.", "next": null}
+          ]
+        },
+        "cargo": {
+          "text": "Nothing you'd want - spare parts and paperwork, mostly. Now if you had something worth trading...",
+          "options": [
+            {"label": "Maybe next time.", "next": null}
+          ]
+        }
+      }
+    }
   },
   "kade_marsh": {
     "name": "Kade Marsh",
     "faction": "Sol Federation Navy",
     "role": "patrol_officer",
-    "personality": "By-the-book and watchful, quick to flag anything out of place."
+    "personality": "By-the-book and watchful, quick to flag anything out of place.",
+    "one_way_hail": {
+      "range": 500,
+      "message": "Unregistered vessel, this is Patrol One. Identify yourself or alter course."
+    },
+    "hail_dialogue_tree": {
+      "root": "start",
+      "conditional_roots": [
+        {"flag": "hailed_kade", "node": "start_returning"}
+      ],
+      "nodes": {
+        "start": {
+          "text": "Patrol One to unregistered vessel - state your business in this system.",
+          "options": [
+            {"label": "Just passing through.", "next": "passing"},
+            {"label": "Ask about patrol routes.", "next": "routes"},
+            {"label": "End transmission.", "next": null}
+          ]
+        },
+        "start_returning": {
+          "text": "Back again? Still reading clean on my scope. Carry on.",
+          "options": [
+            {"label": "Ask about patrol routes.", "next": "routes"},
+            {"label": "End transmission.", "next": null}
+          ]
+        },
+        "passing": {
+          "text": "Copy that. Keep your transponder active and we won't have a problem.",
+          "options": [
+            {"label": "Understood.", "next": null, "action": "set_flag:hailed_kade"}
+          ]
+        },
+        "routes": {
+          "text": "We hold the line between the station and the moon. Anything past that, you're on your own.",
+          "options": [
+            {"label": "Good to know.", "next": null, "action": "set_flag:hailed_kade"},
+            {"label": "End transmission.", "next": null, "action": "set_flag:hailed_kade"}
+          ]
+        }
+      }
+    }
   },
   "priya_nandan": {
     "name": "Priya Nandan",
