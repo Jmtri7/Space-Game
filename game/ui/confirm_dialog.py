@@ -1,6 +1,6 @@
 """Generic yes/no confirmation dialog (see DialogBase)."""
 import pygame
-from game.constants import WHITE, YELLOW, GRAY
+from game.constants import WHITE, YELLOW
 from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
 from game.ui.dialog_base import DialogBase
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
@@ -21,7 +21,6 @@ class ConfirmDialog(DialogBase):
     `"confirm"` / `"cancel"` / `None`."""
 
     def __init__(self, title, message, context_data=None):
-        super().__init__()
         self.title = title
         self.message = message
         self.context_data = context_data
@@ -33,12 +32,15 @@ class ConfirmDialog(DialogBase):
             ("cancel", "No", NO_ACCENT, False),
         ]
 
-    def _panel(self, scale):
-        return modal_panel_rect(scale, 0.25, 0.8, 0.42)
+    def hint_text(self):
+        return "Left/Right or Y / N   ·   Enter confirms   ·   ESC cancels"
 
-    def _button_rects(self, scale):
-        panel = self._panel(scale)
-        cy = panel.y + int(panel.height * 0.62)
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.24, 0.8, 0.5)
+
+    def button_bar_rects(self, scale):
+        panel = self.panel_rect(scale)
+        cy = panel.y + int(panel.height * 0.58)
         return self.button_row_rects(panel.centerx, cy, 2, scale)
 
     def _result(self, button_id):
@@ -55,7 +57,7 @@ class ConfirmDialog(DialogBase):
                     return ("confirm", self.context_data)
                 if event.key in (pygame.K_n, pygame.K_ESCAPE):
                     return ("cancel", None)
-            result = self._result(self.handle_button_event(event, lambda: self._button_rects(get_ui_scale())))
+            result = self._result(self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())))
             if result is not None:
                 return result
         return (None, None)
@@ -63,20 +65,13 @@ class ConfirmDialog(DialogBase):
     def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
-        panel_rect = self._panel(scale)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(32 * scale))
         font_text = get_font(int(24 * scale))
-        font_hint = get_font(int(16 * scale))
 
         draw_glow_title(surface, self.title, font_title, panel_rect.centerx,
-                        int(offset_y + 600 * scale * 0.3), color=WHITE, shadow_color=(30, 30, 30))
+                        panel_rect.y + int(panel_rect.height * 0.13), color=WHITE, shadow_color=(30, 30, 30))
         message_text = font_text.render(self.message, True, YELLOW)
-        surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), int(offset_y + 600 * scale * 0.44)))
-
-        rects = self._button_rects(scale)
-        self.draw_buttons(surface, rects, scale)
-
-        hint = font_hint.render("Click, or Left/Right + Enter    Y / N shortcut    ESC: cancel", True, GRAY)
-        surface.blit(hint, (_center_text_x(surface, hint, offset_x), rects[0].bottom + int(18 * scale)))
+        surface.blit(message_text, (_center_text_x(surface, message_text, offset_x), panel_rect.y + int(panel_rect.height * 0.33)))

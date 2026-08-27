@@ -34,8 +34,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | **M** or **ESC** | Close the map (selection persists) |
 
 Opens centered on your current system, with a "You are here" tag next to it.
-A Controls pane (top-left) and the selected system's station/moon panel
-(top-right) share the same look as the space view's HUD. The selected
+A **Close Map** button (top-left), a control hint (bottom), and the selected
+system's station/moon panel (top-right) share the space view's HUD look. The selected
 system is shown back in the space view as "Jump Target:" - it defaults to
 (and resets to, after a jump) your current system, so it's never empty.
 Pressing **J** starts the jump if the target is a different system, or the
@@ -178,7 +178,7 @@ points at always agree.
 
 | Control | Action |
 |---------|--------|
-| **N** or **ESC** | Close |
+| **N**, **ESC**, or the **Close** button (top-right) | Close |
 
 Read-only, opened from space, a station interior, or a moon interior, over
 whichever screen it was opened from (same shape as the Possessions menu).
@@ -207,25 +207,28 @@ returning to their normal routine once it ends - see ARCHITECTURE.md's
 
 ## Menus
 
-Every full-screen modal is one of two kinds (see DESIGN_PATTERNS.md's "Menu
-vs. Dialog"):
+Every full-screen modal shows its actions as **buttons inside its own
+panel** - click them, or Tab / arrow to move button focus and Enter to
+press. No modal uses the top-left Controls pane (that belongs to the space
+view and interiors); a one-line dim hint under the buttons covers anything
+that isn't a button (browsing a grid, dragging an outfit, panning the map).
+While a modal is open the base screen's Controls pane and bottom status
+prompt ("Press T to talk to X") are hidden.
 
-- a **menu** you navigate and leave explicitly (Possessions, Missions, Shop,
-  Shipyard, Outfitting, Star Map, Save/Load, Pause, the main and story
-  menus). It shows its controls in the same top-left **Controls pane** the
-  base screen uses (`draw_controls_pane`), taking over that spot; the base
-  screen's own Controls pane and bottom status prompt ("Press T to talk to
-  X") hide while it's open.
-- a **dialog** shown *over* another modal that closes as soon as you pick
-  something (Yes/No confirmations, the pilot-name entry, the "where to?" and
-  landing-spot pickers). It shows its choices as buttons **inside its own
-  panel** and draws no Controls pane at all - and the modal underneath hides
-  its pane too, so exactly one set of controls is ever on screen.
+Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
+
+- a **menu** you navigate and leave explicitly - Possessions, Missions,
+  Shop, Shipyard, Outfitting, Star Map, Save/Load, Pause, the main and story
+  menus. Acting inside it doesn't close it; a Close/Resume button or ESC
+  does.
+- a **dialog** shown *over* another modal that closes the moment you pick a
+  button - Yes/No confirmations, the pilot-name entry, the "where to?" and
+  landing-spot pickers.
 
 ### Possessions Menu (P)
 | Control | Action |
 |---------|--------|
-| **P** or **ESC** | Close |
+| **P**, **ESC**, or the **Close** button (top-right) | Close |
 
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
@@ -239,7 +242,7 @@ opened from.
 | **Tab** or **Click** a tab | Switch between Buy and Sell |
 | **Arrow keys**, **W/S**, or **Click** an item | Browse the item grid (click just selects, same as browsing) |
 | **Enter** | Buy/sell one unit of the selected item |
-| **ESC** | Close |
+| **ESC** or the **Close** button (top-left) | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
 opens this instead of a conversation. Buy lists the shop's stock, priced from
@@ -262,7 +265,7 @@ menus rather than this one.
 | **Arrow keys**, **W/S**, or **Click** a ship | Browse the ship grid (click just selects/previews) |
 | **Enter** | Open a Yes/No purchase confirmation for the selected ship |
 | **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
-| **ESC** | Close (when nothing is pending confirmation) |
+| **ESC** or the **Close** button (top-left) | Close (when nothing is pending confirmation) |
 
 Shows the shop's stock ship types as a grid - each cell a static silhouette,
 name, cost, and (if you already own one) an "(own N)" note. Whichever cell is
@@ -275,10 +278,9 @@ ship type's graphics define any (see `windows` in `graphics.json`'s ship
 entries). Browsing the grid (arrow keys or clicking a ship) is never blocked
 by affordability and never opens the purchase confirmation by itself - only
 Enter does that. The confirmation is a dialog (Left/Right + Enter, Y/N/ESC
-shortcuts, or click a button): while it's open this menu's Controls pane is
-hidden and the dialog shows its Yes/No choices in its own panel, until you
-resolve it. A confirmed purchase shows a brief fading "Bought 1 `<ship>`"
-confirmation.
+shortcuts, or click a button) shown over the menu with its own Yes/No
+buttons, until you resolve it. A confirmed purchase shows a brief fading
+"Bought 1 `<ship>`" confirmation.
 Replaces the old dialogue-tree ship purchase for any NPC whose config uses a
 `"shop"` block instead of a `dialogue_tree` with `buy_ship:<id>` options (the
 spaceport's ship salesman now works this way).
@@ -295,7 +297,7 @@ spaceport's ship salesman now works this way).
 | **W/↑** or **S/↓** (Install tab) | Navigate the focused column |
 | **Enter** on an empty focused slot | Open a list of compatible spare outfits to install |
 | **Enter** on an occupied focused slot | Uninstall it back to spares |
-| **ESC** | Close (cancels an open install picker first, if one is open) |
+| **ESC** or the **Close** button (top-left) | Close (cancels an open install picker first, if one is open) |
 
 Buy shows the shop's stock as a grid of icons - a weapon/engine/shield/
 utility outfit gets a default icon for its slot type unless its own config
@@ -312,9 +314,10 @@ slot type on the Install tab. A successful buy shows a brief fading
 "Bought 1 `<outfit>`" confirmation.
 
 While the Install tab's compatible-outfit picker popup is open (after
-pressing Enter on an empty slot), this menu's Controls pane switches to just
-the picker's own controls (Up/Down, Enter, ESC) - the Buy/Install tab's
-normal controls don't apply until the picker is dismissed.
+pressing Enter on an empty slot), the hint line switches to just the
+picker's own controls (Up/Down, Enter, ESC) and the Close button is
+inactive - the Buy/Install tab's normal controls don't apply until the
+picker is dismissed.
 
 Install shows a diagram of the current ship's slots - an occupied slot draws
 that outfit's own icon inside it (plus its name below) - next to a grid of
@@ -323,41 +326,34 @@ type. Installing/uninstalling takes effect immediately - thrust, max
 velocity, rotation, and cargo capacity all update right away, not just after
 a reload.
 
-### Main Menu
+### Main Menu / Story Selector
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate options |
-| **Enter** | Select option |
-| **Click** an option | Select it |
+| **W/↑** or **S/↓** | Move between the option buttons |
+| **Enter** or **Click** | Select (NEW / LOAD / QUIT, or a story) |
+| **ESC** | (Story Selector only) back to Main Menu |
 
-### Story Selector
-| Control | Action |
-|---------|--------|
-| **W/↑** or **S/↓** | Select a story |
-| **Enter** | Play the selected story |
-| **ESC** | Cancel, back to Main Menu |
-
-The Main Menu and Story Selector are the same widget (`BackdropMenu`) and
-both show their controls in the shared top-left Controls pane.
+Both are the same widget (`BackdropMenu`) - each row is a button with the
+story's blurb under it; a hint line sits at the panel's bottom.
 
 ### Save/Load Menus
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate saves |
-| **Enter** | Load, or save (overwrite the selected save) |
-| **N** | Switch to typing a new save name (save mode) |
-| **D** | Delete selected save |
-| **ESC** | Cancel |
+| **W/↑** or **S/↓** or **Click** a save | Select a save in the list |
+| **Enter**, or the **Load** / **Overwrite** button | Load / overwrite the selected save |
+| **N** or the **New Save** button | Switch to typing a new save name (save mode) |
+| **D** or the **Delete** button | Delete the selected save |
+| **ESC** or the **Cancel** button | Close |
 
-Load and Save are one widget (`SaveBrowser`, `mode="load"` / `"save"`) - a
-menu, so its controls are in the top-left Controls pane. Deleting a save
-opens a Yes/No confirmation dialog over it.
+Load and Save are one widget (`SaveBrowser`, `mode="load"` / `"save"`); the
+verbs are buttons along the panel bottom. Deleting a save opens a Yes/No
+confirmation dialog over it.
 
 ### Pause Menu
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate options |
-| **Enter** | Select option (Resume / Save Game / Load Game / Quit to Menu) |
+| **W/↑** or **S/↓** | Move between the buttons |
+| **Enter** or **Click** | Resume / Save Game / Load Game / Quit to Menu |
 | **ESC** | Resume game |
 
 **Load Game** opens the same `SaveBrowser` as the Main Menu; cancelling it
@@ -395,5 +391,6 @@ Use this to diagnose coordinate and positioning issues.
 
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC always pauses** the game (from any screen)
-- A **menu** shows its controls in the top-left Controls pane; a **dialog**
-  shows its choices as buttons in its own panel (see the Menus section)
+- Every menu and dialog shows its actions as **buttons in its own panel**
+  (click, or Tab/arrow + Enter); the top-left Controls pane is the space
+  view's and interiors' only (see the Menus section)

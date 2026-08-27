@@ -1345,8 +1345,9 @@ class TestMissionLog(unittest.TestCase):
 
 
 class TestMenuDialogClassification(unittest.TestCase):
-    """The menu-vs-dialog split (see game/ui/menu_base.py): a menu owns a
-    Controls pane, a dialog shows buttons and never a pane."""
+    """The menu-vs-dialog split (see game/ui/menu_base.py): both hide the
+    Controls pane and drive their actions with buttons; a dialog additionally
+    closes on any pick."""
 
     def test_is_dialog_flags(self):
         self.assertFalse(ReportMenu("x", [[]]).is_dialog)
@@ -1354,9 +1355,17 @@ class TestMenuDialogClassification(unittest.TestCase):
         self.assertTrue(ChoiceDialog("x", [("a", "A", None)]).is_dialog)
         self.assertTrue(ConfirmDialog("x", "y").is_dialog)
 
-    def test_dialogs_never_offer_a_controls_pane(self):
-        self.assertIsNone(ChoiceDialog("x", [("a", "A", None)]).help_items())
-        self.assertIsNone(ConfirmDialog("x", "y").help_items())
+    def test_no_modal_renders_a_controls_pane(self):
+        # help_items() was the Controls-pane hook - it's gone from every modal.
+        for modal in (ReportMenu("x", [[]]), BackdropMenu("x", [("a", "A", None)]),
+                      ChoiceDialog("x", [("a", "A", None)]), ConfirmDialog("x", "y")):
+            self.assertFalse(hasattr(modal, "help_items"))
+
+    def test_every_modal_exposes_buttons(self):
+        self.assertTrue(ReportMenu("x", [[]]).buttons())
+        self.assertTrue(BackdropMenu("x", [("a", "A", None)]).buttons())
+        self.assertTrue(ChoiceDialog("x", [("a", "A", None)]).buttons())
+        self.assertTrue(ConfirmDialog("x", "y").buttons())
 
 
 class TestChoiceDialog(unittest.TestCase):

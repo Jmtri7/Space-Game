@@ -71,6 +71,8 @@ class ShopMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
+            if self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._handle_click(event.pos)
                 continue
@@ -128,14 +130,28 @@ class ShopMenu(MenuBase):
             else:
                 self.possessions.remove_item(item_id, 1)
 
-    def help_items(self):
-        return [("Tab/Click", "Buy/Sell tab"), ("Arrows/Click", "Browse"), ("Enter", "Transact 1"), ("ESC", "Close")]
+    def buttons(self):
+        return [("close", "Close", (235, 235, 240), False)]
+
+    def hint_text(self):
+        return "Tab/click: Buy/Sell tab  ·  arrows/click: browse  ·  Enter: transact"
+
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.1, 0.76, 0.8)
+
+    def _button_rects(self, scale):
+        panel = self.panel_rect(scale)
+        w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
+        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
+
+    def button_bar_rects(self, scale):
+        return self._button_rects(scale)
 
     def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = modal_panel_rect(scale, 0.1, 0.76, 0.8)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))
@@ -186,7 +202,7 @@ class ShopMenu(MenuBase):
 
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(64 * scale), scale)
 
     def _draw_cell(self, surface, rect, item_id, is_selected, reason, scale):
         """cell_draw_fn for the buy/sell IconGrid - an icon, the item's

@@ -13,8 +13,8 @@ CANCEL_ACCENT = (230, 150, 150)
 
 class PilotNameDialog(DialogBase):
     def __init__(self):
-        super().__init__()
         self.pilot_name = ""
+        self.button_index = 0
         # Let held keys (Backspace, letters) auto-repeat while typing.
         pygame.key.set_repeat(400, 40)
 
@@ -24,12 +24,15 @@ class PilotNameDialog(DialogBase):
             ("cancel", "Cancel", CANCEL_ACCENT, False),
         ]
 
-    def _panel(self, scale):
-        return modal_panel_rect(scale, 0.25, 0.7, 0.55)
+    def hint_text(self):
+        return "Type a name  ·  Enter to start  ·  ESC to cancel"
 
-    def _button_rects(self, scale):
-        panel = self._panel(scale)
-        cy = int(panel.y + panel.height * 0.72)
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.24, 0.7, 0.58)
+
+    def button_bar_rects(self, scale):
+        panel = self.panel_rect(scale)
+        cy = int(panel.y + panel.height * 0.78)
         return self.button_row_rects(panel.centerx, cy, 2, scale)
 
     def _finish(self, button_id):
@@ -54,7 +57,7 @@ class PilotNameDialog(DialogBase):
                 if len(self.pilot_name) < 30:
                     self.pilot_name += event.text
                 continue
-            result = self._finish(self.handle_button_event(event, lambda: self._button_rects(get_ui_scale())))
+            result = self._finish(self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())))
             if result is not None:
                 return result
         return None
@@ -62,16 +65,14 @@ class PilotNameDialog(DialogBase):
     def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
-        panel_rect = self._panel(scale)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(40 * scale))
         font_text = get_font(int(28 * scale))
 
-        draw_glow_title(surface, "New Game", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.3))
+        draw_glow_title(surface, "New Game", font_title, panel_rect.centerx, panel_rect.y + int(panel_rect.height * 0.12))
         prompt = font_text.render("Enter Pilot Name:", True, WHITE)
-        surface.blit(prompt, (_center_text_x(surface, prompt, offset_x), int(offset_y + 600 * scale * 0.4)))
+        surface.blit(prompt, (_center_text_x(surface, prompt, offset_x), panel_rect.y + int(panel_rect.height * 0.34)))
         input_box = font_text.render(self.pilot_name + "|", True, YELLOW)
-        surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), int(offset_y + 600 * scale * 0.5)))
-
-        self.draw_buttons(surface, self._button_rects(scale), scale)
+        surface.blit(input_box, (_center_text_x(surface, input_box, offset_x), panel_rect.y + int(panel_rect.height * 0.5)))

@@ -24,14 +24,14 @@ ScreenBase (base for all screens)
 └── GameScreen (main space exploration)
 
 Modal UI (game/ui/):
-MenuBase (Controls pane; dwell-in menus)
+MenuBase (in-panel action buttons; dwell-in menus, don't close on an action)
 ├── BackdropMenu     (main menu + story selector)
 ├── PauseMenu
 ├── SaveBrowser      (load + save, mode=)
 ├── ReportMenu       (possessions + missions, via *_report() builders)
 ├── ShopMenu, ShipBrowserMenu, OutfittingMenu
 ├── StarMap
-└── DialogBase       (buttons in own panel; no pane; closes on any pick)
+└── DialogBase       (same buttons; closes on any pick)
     ├── ConfirmDialog     (Yes/No)
     ├── PilotNameDialog   (text field + Start/Cancel)
     └── ChoiceDialog      (landing spot + exit "where to?")

@@ -74,6 +74,8 @@ class ShipBrowserMenu(MenuBase):
             return None
 
         for event in events:
+            if self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # Click only selects (and updates the live preview) - it
                 # used to also open the buy confirmation immediately, but
@@ -110,8 +112,22 @@ class ShipBrowserMenu(MenuBase):
                 context_data=ship_type_id,
             )
 
-    def help_items(self):
-        return [("Arrows/Click", "Browse"), ("Enter", "Buy"), ("ESC", "Close")]
+    def buttons(self):
+        return [("close", "Close", (235, 235, 240), False)]
+
+    def hint_text(self):
+        return "Arrows/click: browse  ·  Enter: buy"
+
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.1, 0.8, 0.8)
+
+    def _button_rects(self, scale):
+        panel = self.panel_rect(scale)
+        w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
+        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
+
+    def button_bar_rects(self, scale):
+        return self._button_rects(scale)
 
     def active_popup(self):
         return self.confirm
@@ -120,7 +136,7 @@ class ShipBrowserMenu(MenuBase):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = modal_panel_rect(scale, 0.1, 0.8, 0.8)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))
@@ -181,12 +197,12 @@ class ShipBrowserMenu(MenuBase):
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
-        # The Controls pane (top-left) and, while a purchase ConfirmDialog is
-        # up, deferring to it instead are both handled by MenuBase.draw via
-        # help_items()/active_popup().
+        # The Close button + hint line, and deferring to the purchase
+        # ConfirmDialog while it's up, are handled by MenuBase.draw via
+        # buttons()/hint_text()/active_popup().
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(64 * scale), scale)
 
     def _draw_cell(self, surface, rect, ship_type_id, is_selected, reason, scale):
         """cell_draw_fn for the ship IconGrid - a static silhouette (no

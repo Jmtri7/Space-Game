@@ -742,43 +742,41 @@ enforced a consistent rule, and there were four pairs of near-duplicate
 classes (`Menu`/`StorySelector`, `LocationSelector`/`ExitMenu`,
 `PossessionsMenu`/`MissionLog`, `LoadMenu`/`SaveDialog`).
 
-**Solution:** Exactly two kinds of modal, each a base class:
+**Solution:** No modal draws a Controls pane (that pane is the in-world HUD's
+alone). Every modal presents its actions as `ui_theme.draw_button` widgets
+inside its own panel, mouse- and keyboard-driven. Two base classes:
 
-- **Menu** (`game/ui/menu_base.py`, `MenuBase`, `is_dialog = False`) - one
-  you *dwell in* and leave explicitly (ESC / a close hotkey / "Resume").
-  Owns the shared top-left **Controls pane** whenever it's the topmost
-  modal. Subclass implements `draw_content()` (its panel) and `help_items()`
-  (the pane rows, or `None` to suppress); `MenuBase.draw(surface,
-  chrome=True)` is a template method that draws the content, then the pane
-  unless `chrome=False` (passed by `main.py` to whatever modal is
-  *underneath* another one) or `active_popup()` returns a sub-dialog to
-  defer to.
-- **Dialog** (`game/ui/dialog_base.py`, `DialogBase(MenuBase)`,
-  `is_dialog = True`) - sits *over* another modal and resolves in one
-  action. Choices are `draw_button` widgets inside its own panel:
-  `buttons()` returns `[(id, label, accent, disabled), ...]`,
-  `draw_buttons()` renders them, `handle_button_event(event, rects_fn)`
-  does arrow/Tab/Enter/hover/click (the keyboard path never builds geometry,
-  so it's testable without a real pygame). Never draws a Controls pane, and
-  the modal underneath hides its pane too.
+- **`MenuBase`** (`game/ui/menu_base.py`) - a **menu** you *dwell in*;
+  navigating/acting doesn't close it. Owns all the button infrastructure:
+  `buttons()` → `[(id, label, accent, disabled), ...]`, `button_bar_rects()`
+  → where they go (default: a centred row along the panel bottom; a corner
+  Close menu overrides it), `panel_rect()` → the glass panel so the default
+  bar and the dim `hint_text()` line can anchor. `draw()` is a template
+  method (content → `active_popup()` if a sub-dialog is up → buttons + hint).
+  `handle_button_event()` does arrows/Tab/Enter/hover/click; the keyboard
+  path builds no geometry (testable without real pygame). `handle_button_
+  click()` is the mouse-only variant for grid menus where Enter drives the
+  grid, not the button.
+- **`DialogBase(MenuBase)`** - a **dialog** shown *over* another modal that
+  closes as soon as you pick one of its `buttons()`. Adds nothing but
+  `is_dialog = True` and the "picking closes" semantics.
 
 **Why this works:**
-- The rule ("topmost modal owns the one Controls pane; everything under it
-  suppresses") lives in one `draw()` method, not 15 copies.
-- Classifying by *persistence* rather than by name resolves the awkward
-  cases: `SaveBrowser` stays open through delete/scroll/mode-switch → menu;
-  `ChoiceDialog` pick-and-go → dialog.
+- One `draw()` template + one button-input path, not 15 copies of chrome.
+- Classifying by *persistence* resolves the awkward cases: `SaveBrowser`
+  stays open through delete/scroll/mode-switch → menu; `ChoiceDialog`
+  pick-and-go → dialog.
 - One widget per shape instead of per screen: `BackdropMenu(title, rows,
-  seed, allow_cancel)` covers the main menu and the story picker;
+  seed, allow_cancel)` covers the main menu and story picker;
   `ChoiceDialog(title, options)` covers moon-landing and exit-door picking;
   `ReportMenu(title, columns, hotkey, hotkey_label)` + a builder fn covers
   the possessions and mission read-outs; `SaveBrowser(mode)` covers load and
   save. `main.py` builds the data, the widget doesn't know the domain.
 
 **Use case:** Any new full-screen modal - decide menu vs. dialog by "can you
-navigate inside it without it closing?", subclass the matching base, and the
-chrome is handled. Reach for an existing widget (`BackdropMenu`,
-`ChoiceDialog`, `ReportMenu`) before writing a new class.
+navigate inside it without it closing?", subclass the matching base, provide
+`buttons()` + `panel_rect()`, and the chrome is handled. Reach for an
+existing widget (`BackdropMenu`, `ChoiceDialog`, `ReportMenu`) first.
 
 ---
 

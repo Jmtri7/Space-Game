@@ -35,18 +35,26 @@ class StarMap(MenuBase):
         self.drag_start_pan = (self.pan_x, self.pan_y)
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
         self._hud_click_rects = []  # UI panel rects, refreshed each draw()
-        self._controls_rect = None  # set by MenuBase.draw, read back next frame
+        self.button_index = 0
 
-    def help_items(self):
-        return [
-            ("Click", "Select System"),
-            ("Drag", "Pan Map"),
-            ("WASD/Arrows", "Scroll Map"),
-            ("M/ESC", "Close Map"),
-        ]
+    def buttons(self):
+        return [("close", "Close Map (M)", (235, 235, 240), False)]
+
+    def hint_text(self):
+        return "Click a system to select  ·  drag or WASD/arrows to pan"
+
+    def panel_rect(self, scale):
+        import game.utils as _u
+        return pygame.Rect(0, 0, _u.screen_width, _u.screen_height)
+
+    def button_bar_rects(self, scale):
+        m = int(14 * scale)
+        return [pygame.Rect(m, m, int(150 * scale), int(38 * scale))]
 
     def handle_input(self, events):
         for event in events:
+            if self.handle_button_click(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_ESCAPE, pygame.K_m):
                     return "close"
@@ -124,16 +132,13 @@ class StarMap(MenuBase):
                 tag = font_tag.render("You are here", True, GREEN)
                 surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
 
-        # Title sits top-centre so MenuBase.draw can own the top-left corner
-        # with the shared Controls pane, like every other menu.
+        # Title top-centre (the top-left corner holds the Close button).
         title = font_title.render("Star Map", True, WHITE)
         surface.blit(title, (surface.get_width() // 2 - title.get_width() // 2, int(16 * ui_scale)))
 
         selected_rect = self._draw_selected_panel(surface, ui_scale, font_label)
-        # self._controls_rect is set by MenuBase.draw (after this runs), so it
-        # lags one frame here - fine, same cache-then-hit-test-next-frame idiom
-        # as _screen_positions.
-        self._hud_click_rects = [rect for rect in (self._controls_rect, selected_rect) if rect]
+        close_rect = self.button_bar_rects(ui_scale)[0]
+        self._hud_click_rects = [rect for rect in (close_rect, selected_rect) if rect]
 
     def _draw_selected_panel(self, surface, ui_scale, font_label):
         """Top-right panel listing the selected system's station and moon,

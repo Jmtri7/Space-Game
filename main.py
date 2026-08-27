@@ -265,7 +265,7 @@ def main():
                         delete_confirm_dialog = None
                     elif confirm_action == "quit":
                         running = False
-                    load_menu.draw(screen, chrome=not delete_confirm_dialog)
+                    load_menu.draw(screen)
                     if delete_confirm_dialog:
                         delete_confirm_dialog.draw(screen)
                 else:
@@ -642,13 +642,7 @@ def main():
                 elif previous_screen == "station" and station_interior:
                     station_interior.draw(screen, draw_hud=False)
 
-                # Exactly one set of controls on screen at a time: hide the
-                # pause menu's Controls pane whenever a dialog or the save
-                # browser is drawn on top of it (that topmost modal shows its
-                # own chrome - buttons for a dialog, a Controls pane for the
-                # SaveBrowser).
-                covered = bool(delete_confirm_dialog or overwrite_confirm_dialog or save_dialog)
-                pause_menu.draw(screen, chrome=not covered)
+                pause_menu.draw(screen)
 
                 if delete_confirm_dialog:
                     delete_confirm_dialog.draw(screen)

@@ -1,6 +1,6 @@
-"""`ReportMenu` - a read-only, full-panel text report you open with a hotkey
-and close with ESC or that same key. One or two columns of headed sections;
-each section is a heading plus indented `(line, color)` rows.
+"""`ReportMenu` - a read-only, full-panel text report. Close it with ESC,
+its hotkey, or the top-right **Close** button. One or two columns of headed
+sections; each section is a heading plus indented `(line, color)` rows.
 
 Replaces `PossessionsMenu` (P - credits/ships/loans/cargo/outfits, two
 columns) and `MissionLog` (N - mission stages with `[x]` / `->` markers, one
@@ -24,26 +24,37 @@ class ReportMenu(MenuBase):
         """`columns`: a list of 1 or 2 columns; each column is a list of
         `(heading, [(line, color), ...])` sections (a falsy heading draws no
         heading line). `hotkey`/`hotkey_label`: an extra key that closes the
-        report and how to name it in the Controls pane (ESC always closes)."""
+        report and how to name it on the Close button (ESC always closes)."""
         self.title = title
         self.columns = columns
         self.hotkey = hotkey
         self.hotkey_label = hotkey_label
+        self.button_index = 0
 
-    def help_items(self):
-        label = f"{self.hotkey_label}/ESC" if self.hotkey_label else "ESC"
-        return [(label, "Close")]
+    def buttons(self):
+        label = f"Close ({self.hotkey_label})" if self.hotkey_label else "Close"
+        return [("close", label, WHITE, False)]
+
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.08, 0.84, 0.84)
+
+    def button_bar_rects(self, scale):
+        panel = self.panel_rect(scale)
+        w, h, m = int(140 * scale), int(38 * scale), int(16 * scale)
+        return [pygame.Rect(panel.right - w - m, panel.y + m, w, h)]
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or (self.hotkey and event.key == self.hotkey):
                     return "close"
+            if self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
+                return "close"
         return None
 
     def draw_content(self, surface):
         scale = get_ui_scale()
-        panel_rect = modal_panel_rect(scale, 0.08, 0.84, 0.84)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))

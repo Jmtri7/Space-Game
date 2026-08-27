@@ -43,14 +43,14 @@ ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state
                        (used for BOTH the station interior and moon locations)
 ```
 Menus and dialogs don't extend `ScreenBase`. They extend `MenuBase`
-(`game/ui/menu_base.py`) or its subclass `DialogBase` — a **menu** you dwell
-in and that owns the shared top-left Controls pane (`BackdropMenu`,
-`PauseMenu`, `SaveBrowser`, `ShopMenu`, `OutfittingMenu`, `ShipBrowserMenu`,
-`ReportMenu`, `StarMap`), or a **dialog** that sits over another modal,
-resolves in one action, and shows `draw_button` choices with no pane
+(`game/ui/menu_base.py`) or its subclass `DialogBase`. Neither draws a
+Controls pane - every modal shows its actions as `draw_button` widgets in
+its own panel (mouse + Tab/arrow + Enter). A **menu** you dwell in
+(`BackdropMenu`, `PauseMenu`, `SaveBrowser`, `ShopMenu`, `OutfittingMenu`,
+`ShipBrowserMenu`, `ReportMenu`, `StarMap`); a **dialog** closes on any pick
 (`ConfirmDialog`, `PilotNameDialog`, `ChoiceDialog`). Each implements
-`handle_input()` + `draw_content()` + `help_items()`, driven directly by the
-main loop. `BackdropMenu` covers the old `Menu`/`StorySelector`;
+`handle_input()` + `draw_content()` + `buttons()` + `panel_rect()`, driven
+directly by the main loop. `BackdropMenu` covers the old `Menu`/`StorySelector`;
 `ChoiceDialog` the old `LocationSelector`/`ExitMenu`; `ReportMenu` (+ a
 builder fn) the old `PossessionsMenu`/`MissionLog`; `SaveBrowser(mode=...)`
 the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s

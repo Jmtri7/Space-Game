@@ -182,6 +182,8 @@ class OutfittingMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
+            if self.picker is None and self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._handle_mouse_down(event.pos)
             elif event.type == pygame.MOUSEMOTION and self.dragging_outfit:
@@ -327,7 +329,7 @@ class OutfittingMenu(MenuBase):
         # (see _draw_buy_cell). Help text lives in the top-left Controls
         # pane now (see draw()'s end), not in this panel, so it no longer
         # needs extra room at the bottom for that.
-        panel_rect = modal_panel_rect(scale, 0.08, 0.84, 0.84)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(32 * scale))
@@ -357,45 +359,39 @@ class OutfittingMenu(MenuBase):
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        # The top-left Controls pane is drawn by MenuBase.draw via help_items().
+        # The Close button + hint line are drawn by MenuBase.draw via
+        # buttons()/hint_text().
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(20 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(58 * scale), scale)
 
         if self.dragging_outfit:
             drag_text = font_text.render(self._resolve(self.dragging_outfit).get("name", self.dragging_outfit), True, WHITE)
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
 
-    def help_items(self):
-        """(key, description) rows for the top-left Controls pane (see
-        MenuBase.draw) - varies by tab since the Install tab has both
-        a mouse (drag-and-drop) and a keyboard way to change selections
-        and install/uninstall, and both need spelling out (see CLAUDE.md's
-        Menu Help Text rule).
+    def buttons(self):
+        return [("close", "Close", (235, 235, 240), False)]
 
-        While the compatible-outfit picker popup is open, this replaces
-        the outer tab's help entirely - the picker is its own small modal
-        (Up/Down/Enter/ESC only), and the Buy/Install tab's own controls
-        (drag-and-drop, Tab to switch tabs, browsing the grid) don't apply
-        until it's dismissed, so showing them underneath was just clutter."""
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.08, 0.84, 0.84)
+
+    def _button_rects(self, scale):
+        panel = self.panel_rect(scale)
+        w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
+        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
+
+    def button_bar_rects(self, scale):
+        return self._button_rects(scale)
+
+    def hint_text(self):
+        """Condensed control reminder under the panel, tab-dependent - the
+        Install tab has both a drag-and-drop and a keyboard path."""
         if self.picker is not None:
-            return [("Up/Down", "Navigate"), ("Enter", "Install into slot"), ("ESC", "Cancel")]
+            return "Up/Down + Enter to install into the slot  ·  ESC to cancel"
         if self.tab == "buy":
-            return [
-                ("Tab/Click tab", "Buy/Install"),
-                ("Arrows/Click", "Browse"),
-                ("Enter", "Buy"),
-                ("ESC", "Close"),
-            ]
-        return [
-            ("Tab/Click tab", "Buy/Install"),
-            ("Mouse drag", "Install/uninstall a slot"),
-            ("Click", "Select a slot or spare"),
-            ("Left/Right", "Switch Slots/Spares"),
-            ("Up/Down", "Navigate"),
-            ("Enter", "Install/uninstall focused slot"),
-            ("ESC", "Close (or cancel picker)"),
-        ]
+            return "Tab: switch tab  ·  arrows/click: browse  ·  Enter: buy  ·  ESC: close"
+        return ("Tab: switch tab  ·  drag a spare onto a slot to install  ·  "
+                "Left/Right + Up/Down + Enter also work  ·  ESC: close")
 
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
         grid = self.buy_grid

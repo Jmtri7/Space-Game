@@ -3,9 +3,11 @@
 Menu hierarchy, screen transitions, and state management.
 
 **Menu vs. dialog classes:** every modal below extends `MenuBase` (a
-**menu** - owns the top-left Controls pane, navigate freely) or `DialogBase`
-(a **dialog** - buttons in its own panel, closes on any pick, no pane); see
-[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s "Menu vs. Dialog". Four pairs of
+**menu** - navigate freely, doesn't close on an action) or `DialogBase` (a
+**dialog** - closes on any pick). Neither draws a Controls pane; both show
+their actions as `draw_button` widgets in their own panel (mouse + Tab/arrow
++ Enter). See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s "Menu vs. Dialog".
+Four pairs of
 old classes were merged: the main menu and story picker are both
 `BackdropMenu`; the "landing spot" and "where to?" pickers are both
 `ChoiceDialog`; the possessions and mission read-outs are both `ReportMenu`
@@ -258,9 +260,9 @@ for `"type": "ships"` - `main.py`'s `build_shop_menu()` dispatches to this
 instead of `ShopMenu` based on the shop config's `type`. Left: the shop's
 stock ship-type ids. Right: a live preview (`ui_theme.draw_ship_glyph`) and
 stat readout for whichever is selected. Enter opens a `ConfirmDialog`
-(returned from `active_popup()`, so `MenuBase.draw` hides this menu's
-Controls pane and lets the dialog show its Yes/No buttons - see the
-ConfirmDialog note below); confirming calls the injected `on_buy` callback, which `main.py` wires to
+(returned from `active_popup()`, so `MenuBase.draw` draws it on top instead
+of this menu's Close button - see the ConfirmDialog note below); confirming
+calls the injected `on_buy` callback, which `main.py` wires to
 `LocationScreen.buy_ship()` - the same mutation the old `"buy_ship:<id>"`
 dialogue action performed (spend, `add_ship`, `on_ship_purchased`
 callback), now shared by both purchase paths. The spaceport's ship salesman
@@ -298,12 +300,10 @@ equip/unequip directly · ESC: close (or cancel an open picker first)
 - ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
 ### PauseMenu (`MenuBase`)
-**Shows:** Resume/Save Game/Load Game/Quit to Menu options with optional
-success banner. Its controls are in the shared top-left Controls pane; when
-a dialog or the save browser is drawn on top, `main.py` passes `chrome=False`
-so the pane hides.
+**Shows:** A column of buttons - Resume / Save Game / Load Game / Quit to
+Menu - plus an optional "Saved!" banner.
 
-**Inputs:** UP/DOWN or W/S: navigate · RETURN: select · ESC: resume (quick exit)
+**Inputs:** UP/DOWN or W/S: move between buttons · RETURN or click: press · ESC: resume (quick exit)
 
 **Transitions:**
 - Resume → back to whichever screen was active (`previous_screen`)
@@ -327,12 +327,11 @@ so the pane hides.
 
 ### ConfirmDialog (`DialogBase`)
 **Shows:** A title, a one-line message, and **Yes / No buttons**
-(`DialogBase.draw_buttons` → `ui_theme.draw_button`, green / muted-red) with
-a shortcut-reminder line - all **inside its own glass panel**. As a dialog
-it draws no Controls pane, and the menu it appears over suppresses its pane
-too (`ShipBrowserMenu.active_popup()` returns `self.confirm`; `main.py`
-passes `chrome=False` under a save `ConfirmDialog`), so exactly one set of
-controls is on screen. Panel via `modal_panel_rect()`. Used for ship
+(`MenuBase.draw_buttons` → `ui_theme.draw_button`, green / muted-red) with a
+shortcut-reminder line - all **inside its own glass panel**. A dialog closes
+on any pick. When it's a sub-dialog of a menu (`ShipBrowserMenu.
+active_popup()` returns `self.confirm`), `MenuBase.draw` draws it on top.
+Panel via `modal_panel_rect()`. Used for ship
 purchases (`ShipBrowserMenu`) and save overwrite/delete confirmations.
 Starts with **No** highlighted (the safe default for the destructive uses).
 
