@@ -42,11 +42,19 @@ ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state
 └── LocationScreen  — generic interior/exterior location, config-driven
                        (used for BOTH the station interior and moon locations)
 ```
-Menus and dialogs (`Menu`, `StorySelector`, `PilotNameDialog`, `LoadMenu`,
-`PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`, `ExitMenu`,
-`PossessionsMenu`, `MissionLog`) don't extend
-`ScreenBase` — they're simpler `handle_input()`/`draw()` objects driven directly
-by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
+Menus and dialogs don't extend `ScreenBase`. They extend `MenuBase`
+(`game/ui/menu_base.py`) or its subclass `DialogBase` — a **menu** you dwell
+in and that owns the shared top-left Controls pane (`BackdropMenu`,
+`PauseMenu`, `SaveBrowser`, `ShopMenu`, `OutfittingMenu`, `ShipBrowserMenu`,
+`ReportMenu`, `StarMap`), or a **dialog** that sits over another modal,
+resolves in one action, and shows `draw_button` choices with no pane
+(`ConfirmDialog`, `PilotNameDialog`, `ChoiceDialog`). Each implements
+`handle_input()` + `draw_content()` + `help_items()`, driven directly by the
+main loop. `BackdropMenu` covers the old `Menu`/`StorySelector`;
+`ChoiceDialog` the old `LocationSelector`/`ExitMenu`; `ReportMenu` (+ a
+builder fn) the old `PossessionsMenu`/`MissionLog`; `SaveBrowser(mode=...)`
+the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
+"Menu vs. Dialog" and [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
@@ -107,9 +115,10 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   look up and post each one via `_post_message()` (shared with
   `_check_one_way_hails()`'s proximity-triggered hails - both show a
   transient banner and log to `Possessions.message_log`).
-  `mission_status_lines()` is the display data `MissionLog` (`game/ui/`,
-  opened with N) renders - it shows completed and current stages only,
-  hiding stages the player hasn't reached yet. `SpaceScreen` also flashes a
+  `mission_status_lines()` is the display data the mission `ReportMenu`
+  (`report_menu.mission_report()`, opened with N) renders - it shows
+  completed and current stages only, hiding stages the player hasn't reached
+  yet. `SpaceScreen` also flashes a
   transient toast (`_show_toast()`, distinct from `_post_message()` - no
   Messages-log entry) on mission start, stage completion, and mission
   finish, alongside the jump-completion toast - all rendered by
@@ -402,15 +411,15 @@ currently active:
 ## State Machine: Screen Flow
 
 ```
-Menu → StorySelector → PilotNameDialog → LocationScreen (station: dormitory)
+BackdropMenu(main) → BackdropMenu(story) → PilotNameDialog → LocationScreen (station: dormitory)
                                               ↓ (walk the connected-location graph, L)
                             LocationScreen (station: corridor/concourse/spaceport/loan_office) ←→ PauseMenu
                                               ↓ (buy a ship at the spaceport, then L: board) ↓ (save)
-                                          SpaceScreen ←→ SaveDialog
+                                          SpaceScreen ←→ SaveBrowser
                                               ↓ (land: L)
                             LocationScreen (station) ←→ PauseMenu
 
-SpaceScreen → LocationSelector → LocationScreen (moon) ←→ PauseMenu
+SpaceScreen → ChoiceDialog (landing spot) → LocationScreen (moon) ←→ PauseMenu
 ```
 A new pilot never sees `SpaceScreen` at all until they own a ship - see
 `main.py`'s `"pilot_name"` handler and `LocationScreen.ship_available`.

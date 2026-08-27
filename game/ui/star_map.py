@@ -2,14 +2,15 @@
 import pygame
 from game.constants import WHITE, YELLOW, GREEN, CYAN
 from game.utils import get_ui_scale, get_star_systems
-from game.ui.ui_theme import draw_glass_panel, draw_controls_pane
+from game.ui.menu_base import MenuBase
+from game.ui.ui_theme import draw_glass_panel
 
 # Keyboard pan speed, in star-map-space units/frame (unrelated to ui_scale -
 # see handle_input).
 PAN_SPEED = 10
 
 
-class StarMap:
+class StarMap(MenuBase):
     """Overlay showing every star system in the current story on a pannable
     galaxy map (systems only exist within one story - see space_screen.py).
 
@@ -34,6 +35,15 @@ class StarMap:
         self.drag_start_pan = (self.pan_x, self.pan_y)
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
         self._hud_click_rects = []  # UI panel rects, refreshed each draw()
+        self._controls_rect = None  # set by MenuBase.draw, read back next frame
+
+    def help_items(self):
+        return [
+            ("Click", "Select System"),
+            ("Drag", "Pan Map"),
+            ("WASD/Arrows", "Scroll Map"),
+            ("M/ESC", "Close Map"),
+        ]
 
     def handle_input(self, events):
         for event in events:
@@ -81,7 +91,7 @@ class StarMap:
                 return system_id
         return None
 
-    def draw(self, surface):
+    def draw_content(self, surface):
         surface.fill((8, 8, 20))
         ui_scale = get_ui_scale()
         center_x, center_y = surface.get_width() / 2, surface.get_height() / 2
@@ -114,23 +124,16 @@ class StarMap:
                 tag = font_tag.render("You are here", True, GREEN)
                 surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
 
+        # Title sits top-centre so MenuBase.draw can own the top-left corner
+        # with the shared Controls pane, like every other menu.
         title = font_title.render("Star Map", True, WHITE)
-        title_rect = title.get_rect(topleft=(20, 20))
-        surface.blit(title, title_rect)
-
-        margin = int(10 * ui_scale)
-        help_items = [
-            ("Click", "Select System"),
-            ("Drag", "Pan Map"),
-            ("WASD/Arrows", "Scroll Map"),
-            ("M/ESC", "Close Map"),
-        ]
-        controls_rect = draw_controls_pane(
-            surface, margin, title_rect.bottom + margin, "Controls", help_items, ui_scale
-        )
+        surface.blit(title, (surface.get_width() // 2 - title.get_width() // 2, int(16 * ui_scale)))
 
         selected_rect = self._draw_selected_panel(surface, ui_scale, font_label)
-        self._hud_click_rects = [rect for rect in (controls_rect, selected_rect) if rect]
+        # self._controls_rect is set by MenuBase.draw (after this runs), so it
+        # lags one frame here - fine, same cache-then-hit-test-next-frame idiom
+        # as _screen_positions.
+        self._hud_click_rects = [rect for rect in (self._controls_rect, selected_rect) if rect]
 
     def _draw_selected_panel(self, surface, ui_scale, font_label):
         """Top-right panel listing the selected system's station and moon,

@@ -55,6 +55,10 @@ only appears under a section if it currently has items there.
 
 - [ ] NPCs in interior locations (station interiors, etc.) should be able to display
       messages on screen too, not just NPCs hailing from space.
+- [ ] Mission Log: split into two tabs, Active and Completed, so finished
+      missions have their own place instead of being mixed into the same list
+      as in-progress ones (`report_menu.mission_report()` already gets both from
+      `mission_status_lines()`).
 - [ ] Tutorial mission for taking out a loan and buying a ship.
 - [ ] Relationships.
 - [ ] More roles.

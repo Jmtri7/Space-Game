@@ -112,22 +112,30 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 - **Maintenance:** Update help text whenever adding/changing menu options
 - **Benefit:** Players discover features without trial-and-error; new menu options self-document
 
-**Example:**
-- Menu: `"Enter: select, ESC: cancel"`
-- SaveDialog: `"Enter: save, N: new, D: delete, ESC: cancel"`
-- LoadMenu: `"Enter: load, D: delete, ESC: cancel"`
+**Menu vs. Dialog (`MenuBase` / `DialogBase`):** every full-screen modal in
+`game/ui/` is exactly one of two kinds, and the base class enforces the
+chrome - see docs/DESIGN_PATTERNS.md's "Menu vs. Dialog" for the full rule.
 
-**Full-screen menus vs. pop-up dialogs:** a full-screen menu (Menu, ShopMenu,
-PossessionsMenu, MissionLog, StarMap, ...) puts its help in the shared
-top-left **Controls pane** (`draw_controls_pane`). A **pop-up dialog** that
-appears *over* another menu (`ConfirmDialog`, `SaveDialog`, `LoadMenu`,
-`PilotNameDialog`, `PauseMenu`) shows its help/choices **inside its own
-panel** instead, and does NOT draw a Controls pane - and the menu it popped
-up over suppresses its own Controls pane while the dialog is up (e.g.
-`ShipBrowserMenu.draw`'s `if not self.confirm`). One set of controls on
-screen at a time, attached to whatever actually has input focus.
-`ConfirmDialog` presents its Yes/No as two `draw_button` buttons - keyboard
-(Left/Right + Enter, or Y/N/ESC shortcuts) and mouse (hover + click) both.
+- A **menu** (`MenuBase`, `is_dialog = False`) is one you *dwell in* and
+  leave explicitly (ESC / a close hotkey / "Resume"). It owns the shared
+  top-left **Controls pane** (`draw_controls_pane`) whenever it is the
+  topmost modal. Subclasses implement `draw_content()` + `help_items()`;
+  `MenuBase.draw(surface, chrome=True)` decides whether the pane is drawn.
+  → `BackdropMenu`, `PauseMenu`, `SaveBrowser`, `ShopMenu`, `OutfittingMenu`,
+  `ShipBrowserMenu`, `ReportMenu`, `StarMap`.
+- A **dialog** (`DialogBase`, `is_dialog = True`) sits *over* another modal
+  and resolves in one action. Its choices are `draw_button` widgets inside
+  its own panel (`buttons()` + `draw_buttons()`), it never draws a Controls
+  pane, and `main.py` passes `chrome=False` to the modal underneath so its
+  pane hides too. → `ConfirmDialog`, `PilotNameDialog`, `ChoiceDialog`.
+
+One set of controls on screen at a time, attached to whatever has input
+focus. A menu with a sub-dialog on top (e.g. `ShipBrowserMenu`'s purchase
+`ConfirmDialog`) returns it from `active_popup()` so `MenuBase.draw` defers
+to it. `main.py` builds `Menu`/`StorySelector` from `BackdropMenu`,
+`LocationSelector`/`ExitMenu` from `ChoiceDialog`, `PossessionsMenu`/
+`MissionLog` from `ReportMenu` + a builder fn, `LoadMenu`/`SaveDialog` from
+`SaveBrowser(mode=...)` - the old per-screen classes are gone.
 
 **Every menu panel** uses `modal_panel_rect()` for its main panel, which
 caps width at `center_panel_max_width()` and re-centres on the real screen,

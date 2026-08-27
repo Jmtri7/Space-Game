@@ -121,6 +121,10 @@ you've bought him a round once. See `game/world/dialogue.py`.
 Hailing reuses the exact same conversation UI as talking to someone
 face-to-face, but requires a targeted AI ship first (SHIPS target mode -
 see the Space View table above) - there's no hailing without a target.
+While a hail conversation is open the whole simulation is paused (your
+ship, AI traffic, autopilot, mission timers, cached interiors) - it lifts
+the moment the conversation closes, the same as the Pause Menu or the
+jump map.
 Whenever a ship is targeted, the bottom status pane shows a
 "Press H to Hail `<name>`" prompt (it is not in the top-left Controls
 pane, since it only applies with a target selected).
@@ -203,14 +207,20 @@ returning to their normal routine once it ends - see ARCHITECTURE.md's
 
 ## Menus
 
-Every menu below that opens over the space view or an interior location
-(Possessions, Shop, Shipyard, Outfitting, the Exit Menu, and Yes/No
-confirmations) shows its own controls in the same top-left "Controls" pane
-that screen normally uses (see `draw_controls_pane` in `game/ui/ui_theme.py`)
-- it takes over that exact spot rather than adding a separate help line of
-its own, and the base screen's own Controls pane and bottom status prompt
-(e.g. "Press T to talk to X") are hidden while any of these is open, since
-neither is actually usable until the menu closes.
+Every full-screen modal is one of two kinds (see DESIGN_PATTERNS.md's "Menu
+vs. Dialog"):
+
+- a **menu** you navigate and leave explicitly (Possessions, Missions, Shop,
+  Shipyard, Outfitting, Star Map, Save/Load, Pause, the main and story
+  menus). It shows its controls in the same top-left **Controls pane** the
+  base screen uses (`draw_controls_pane`), taking over that spot; the base
+  screen's own Controls pane and bottom status prompt ("Press T to talk to
+  X") hide while it's open.
+- a **dialog** shown *over* another modal that closes as soon as you pick
+  something (Yes/No confirmations, the pilot-name entry, the "where to?" and
+  landing-spot pickers). It shows its choices as buttons **inside its own
+  panel** and draws no Controls pane at all - and the modal underneath hides
+  its pane too, so exactly one set of controls is ever on screen.
 
 ### Possessions Menu (P)
 | Control | Action |
@@ -264,10 +274,11 @@ rotates and cycles its thrusters on/off, and draws window portholes when the
 ship type's graphics define any (see `windows` in `graphics.json`'s ship
 entries). Browsing the grid (arrow keys or clicking a ship) is never blocked
 by affordability and never opens the purchase confirmation by itself - only
-Enter does that; the confirmation is still Yes/No/ESC only, no click. While
-it's open, this menu's own Controls pane is replaced by the confirmation's
-Y/N/ESC one, in the same top-left spot, until you resolve it. A confirmed
-purchase shows a brief fading "Bought 1 `<ship>`" confirmation.
+Enter does that. The confirmation is a dialog (Left/Right + Enter, Y/N/ESC
+shortcuts, or click a button): while it's open this menu's Controls pane is
+hidden and the dialog shows its Yes/No choices in its own panel, until you
+resolve it. A confirmed purchase shows a brief fading "Bought 1 `<ship>`"
+confirmation.
 Replaces the old dialogue-tree ship purchase for any NPC whose config uses a
 `"shop"` block instead of a `dialogue_tree` with `buy_ship:<id>` options (the
 spaceport's ship salesman now works this way).
@@ -326,18 +337,21 @@ a reload.
 | **Enter** | Play the selected story |
 | **ESC** | Cancel, back to Main Menu |
 
-Both the Main Menu and Story Selector show their controls in the same
-top-left Controls pane every other screen uses (see `draw_controls_pane` in
-`game/ui/ui_theme.py`) rather than a single line of help text at the bottom.
+The Main Menu and Story Selector are the same widget (`BackdropMenu`) and
+both show their controls in the shared top-left Controls pane.
 
-### Save/Load Dialogs
+### Save/Load Menus
 | Control | Action |
 |---------|--------|
 | **W/↑** or **S/↓** | Navigate saves |
-| **Enter** | Select/save |
-| **N** | Create new save (save dialog) |
+| **Enter** | Load, or save (overwrite the selected save) |
+| **N** | Switch to typing a new save name (save mode) |
 | **D** | Delete selected save |
 | **ESC** | Cancel |
+
+Load and Save are one widget (`SaveBrowser`, `mode="load"` / `"save"`) - a
+menu, so its controls are in the top-left Controls pane. Deleting a save
+opens a Yes/No confirmation dialog over it.
 
 ### Pause Menu
 | Control | Action |
@@ -346,19 +360,22 @@ top-left Controls pane every other screen uses (see `draw_controls_pane` in
 | **Enter** | Select option (Resume / Save Game / Load Game / Quit to Menu) |
 | **ESC** | Resume game |
 
-**Load Game** opens the same Load menu as the Main Menu; cancelling it (ESC)
-returns to the pause menu, and loading a save replaces the running game.
+**Load Game** opens the same `SaveBrowser` as the Main Menu; cancelling it
+(ESC) returns to the pause menu, and loading a save replaces the running
+game.
 
 ### Exit Menu (interior location, when the entrance leads to more than one place)
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate destinations |
-| **Enter** | Go to selected destination (a connected location, or "Return to Ship") |
+| **W/↑** or **S/↓** | Move between destination buttons |
+| **Enter** or **Click** | Go to that destination (a connected location, or "Return to Ship") |
 | **ESC** | Cancel, stay put |
 
-Shown instead of leaving immediately when a location's config lists
-`connected_locations` (other interiors reachable on foot from this one,
-e.g. Moon City ↔ Wilderness) and/or sets `return_to_ship`. AI pilots
+A dialog (`ChoiceDialog`) - each destination is a button in its own panel,
+unavailable ones dimmed. Shown instead of leaving immediately when a
+location's config lists `connected_locations` (other interiors reachable on
+foot from this one, e.g. Moon City ↔ Wilderness) and/or sets
+`return_to_ship`. AI pilots
 (see `DockRoutine`) pick a destination from the same option list
 automatically, based on their role, instead of getting this menu.
 
@@ -378,4 +395,5 @@ Use this to diagnose coordinate and positioning issues.
 
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC always pauses** the game (from any screen)
-- All menus show help text at the bottom with available actions
+- A **menu** shows its controls in the top-left Controls pane; a **dialog**
+  shows its choices as buttons in its own panel (see the Menus section)

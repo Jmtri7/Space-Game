@@ -9,10 +9,11 @@ from game.constants import YELLOW, GRAY, GREEN, WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
 from game.ui.ui_theme import (
     draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
-    draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
+    draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
 )
 from game.ui.selectable_list import SelectableList
 from game.ui.icon_grid import IconGrid
+from game.ui.menu_base import MenuBase
 
 SLOT_COLORS = {
     "weapon": (200, 100, 100),
@@ -34,7 +35,7 @@ GRID_COLUMNS = 3
 GRID_ROWS = 2
 
 
-class OutfittingMenu:
+class OutfittingMenu(MenuBase):
     """Buy tab: same buy-list pattern as ShopMenu, but purchasing adds to
     possessions.owned_outfits (spare, uninstalled) instead of equipping
     directly. Install tab: a diagram of the current ship's slots (from
@@ -317,7 +318,7 @@ class OutfittingMenu:
         self.drag_source = None
         self.hover_slot = None
 
-    def draw(self, surface):
+    def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
@@ -356,13 +357,7 @@ class OutfittingMenu:
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        # Top-left Controls pane, same spot/style as the base screen's own
-        # (see LocationScreen.draw's draw_hud=False / SpaceScreen's) -
-        # replaces the base screen's controls pane in that exact spot
-        # rather than adding a separate help block inside this panel.
-        margin = int(10 * scale)
-        draw_controls_pane(surface, margin, margin, "Controls", self._help_items(), scale)
-
+        # The top-left Controls pane is drawn by MenuBase.draw via help_items().
         if self.message_timer > 0:
             self.message_timer -= 1
             draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(20 * scale), scale)
@@ -371,9 +366,9 @@ class OutfittingMenu:
             drag_text = font_text.render(self._resolve(self.dragging_outfit).get("name", self.dragging_outfit), True, WHITE)
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
 
-    def _help_items(self):
+    def help_items(self):
         """(key, description) rows for the top-left Controls pane (see
-        draw_controls_pane) - varies by tab since the Install tab has both
+        MenuBase.draw) - varies by tab since the Install tab has both
         a mouse (drag-and-drop) and a keyboard way to change selections
         and install/uninstall, and both need spelling out (see CLAUDE.md's
         Menu Help Text rule).

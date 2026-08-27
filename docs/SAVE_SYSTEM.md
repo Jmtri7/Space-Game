@@ -26,7 +26,7 @@ full discipline, including when a change needs to warn the user before it's made
 ## File Format
 
 **Filename:** `save_{name}.json`, where `name` is whatever the player typed/accepted
-in `SaveDialog` — by default `"{pilot_name} - {timestamp}"`, but it's free text and
+in the save browser (`SaveBrowser`, `mode="save"`) — by default `"{pilot_name} - {timestamp}"`, but it's free text and
 can be edited before saving. There's no separate timestamp field; if the default
 name is kept, the timestamp lives inside it.
 
@@ -94,7 +94,7 @@ always passed as `{}`; when saving from a `LocationScreen` it instead carries
 `station_interior.station_config` for a station save.
 
 `game_state["location"]` is one of `"space"`, `"station"`, or `"moon"` and drives
-where `LoadMenu` sends you. Station saves add `game_state["station_location"]`
+where the load browser sends you. Station saves add `game_state["station_location"]`
 and moon saves add `game_state["moon_location"]` - both read straight from
 `LocationScreen.interior_key` (set by `SpaceScreen.get_interior_screen()` -
 which key this actually is in the landable's own `interiors` config), falling
@@ -327,7 +327,7 @@ in-place mutation).
 ```
 Pause Menu → User selects "Save Game"
     ↓
-SaveDialog opens (shows all existing saves, pre-fills a default name)
+Save browser opens (shows all existing saves, pre-fills a default name)
     ↓
 User picks an existing save to overwrite, or types a new name (N)
     ↓
@@ -348,7 +348,7 @@ or `"moon"`) — see [UI_FLOW.md](UI_FLOW.md#screen-to-screen-data-flow).
 ```
 Main Menu → User selects "Load"
     ↓
-LoadMenu shows available saves (scrollable, 5 at a time)
+Load browser shows available saves (scrollable, 5 at a time)
     ↓
 User selects save file (or presses D to delete, with its own ConfirmDialog)
     ↓
@@ -374,7 +374,8 @@ Shows **all saves** in the directory, not filtered by pilot.
 - D to delete selected save (confirms via `ConfirmDialog`)
 - ESC to cancel
 
-**Scrolling Logic:** shared with `LoadMenu` via `utils._handle_scrolling_input()`
+**Scrolling Logic:** shared with the load browser via `SelectableList` /
+`utils._handle_scrolling_input()`
 (see the "Scrollable List Handler" pattern in [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)).
 
 ## Extending State Persistence

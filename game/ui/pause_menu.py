@@ -1,13 +1,14 @@
-"""Pause menu during gameplay."""
+"""Pause menu during gameplay (see MenuBase)."""
 import math
 import pygame
 import game.utils as utils
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font
+from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_selection_highlight, modal_panel_rect
 
 
-class PauseMenu:
+class PauseMenu(MenuBase):
     """Pause menu during gameplay."""
     def __init__(self):
         # (label, action) - handle_input returns the action for the
@@ -24,6 +25,9 @@ class PauseMenu:
     @property
     def options(self):
         return [label for label, _ in self.entries]
+
+    def help_items(self):
+        return [("Up/Down", "Select"), ("Enter", "Choose"), ("ESC", "Resume")]
 
     def update(self):
         if self.success_timer > 0:
@@ -42,7 +46,7 @@ class PauseMenu:
                     return self.entries[self.selected][1]
         return None
 
-    def draw(self, surface):
+    def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
@@ -52,7 +56,6 @@ class PauseMenu:
 
         font_title = get_font(int(48 * scale))
         font_option = get_font(int(32 * scale))
-        font_help = get_font(int(18 * scale))
 
         draw_glow_title(surface, "PAUSED", font_title, panel_rect.centerx, int(offset_y + 600 * scale * 0.29))
 
@@ -66,9 +69,6 @@ class PauseMenu:
                 box_rect = pygame.Rect(text_x - 10, text_y - 4, text.get_width() + 20, text.get_height() + 8)
                 draw_selection_highlight(surface, box_rect, scale, pulse)
             surface.blit(text, (text_x, text_y))
-
-        help_text = font_help.render("Up/Down: select, Enter: choose, ESC: resume", True, GRAY)
-        surface.blit(help_text, (panel_rect.centerx - help_text.get_width() // 2, panel_rect.bottom - int(30 * scale)))
 
         if self.success_timer > 0:
             font_success = get_font(int(32 * scale))

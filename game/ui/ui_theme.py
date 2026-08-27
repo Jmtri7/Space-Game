@@ -574,22 +574,30 @@ def draw_selection_highlight(surface, rect, scale, pulse):
     surface.blit(box_surf, rect.topleft)
 
 
-def draw_button(surface, rect, label, font, ui_scale, selected=False, accent=(255, 255, 255)):
+def draw_button(surface, rect, label, font, ui_scale, selected=False, accent=(255, 255, 255), disabled=False):
     """A rounded dialog button. When `selected` (keyboard cursor or mouse
     hover) it fills with a translucent wash of `accent` and a bright accent
     border with white text; idle it's a faint outline with accent-coloured
-    text. Used for ConfirmDialog's Yes/No so the choices read as two
-    distinct buttons rather than one line of help text."""
+    text; `disabled` is a dim, never-selectable variant (an unavailable
+    choice, e.g. an exit with no ship to return to). Used by DialogBase so a
+    dialog's choices read as distinct buttons rather than one line of help
+    text."""
     radius = int(9 * ui_scale)
     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-    if selected:
+    if disabled:
+        pygame.draw.rect(surf, (255, 255, 255, 8), surf.get_rect(), border_radius=radius)
+        pygame.draw.rect(surf, (90, 90, 100), surf.get_rect(), width=1, border_radius=radius)
+        text_color = DISABLED_TEXT_COLOR
+    elif selected:
         pygame.draw.rect(surf, (*accent, 55), surf.get_rect(), border_radius=radius)
         pygame.draw.rect(surf, accent, surf.get_rect(), width=max(2, int(2 * ui_scale)), border_radius=radius)
+        text_color = WHITE
     else:
         pygame.draw.rect(surf, (255, 255, 255, 16), surf.get_rect(), border_radius=radius)
         pygame.draw.rect(surf, (140, 140, 155), surf.get_rect(), width=1, border_radius=radius)
+        text_color = accent
     surface.blit(surf, rect.topleft)
-    text = font.render(label, True, WHITE if selected else accent)
+    text = font.render(label, True, text_color)
     surface.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
 
 

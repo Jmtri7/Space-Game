@@ -6,9 +6,10 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
+from game.ui.menu_base import MenuBase
 
 GRID_COLUMNS = 2
 GRID_ROWS = 3
@@ -28,7 +29,7 @@ def _approximate_size_label(graphics):
     return DEFAULT_SIZE_LABEL
 
 
-class ShipBrowserMenu:
+class ShipBrowserMenu(MenuBase):
     """Left: an icon grid of the shop's stock ship types, each cell a
     static (unrotated, no thrust) silhouette with name and cost. Right: a
     live preview - the same glyph, but slowly spinning with its thrusters
@@ -109,7 +110,13 @@ class ShipBrowserMenu:
                 context_data=ship_type_id,
             )
 
-    def draw(self, surface):
+    def help_items(self):
+        return [("Arrows/Click", "Browse"), ("Enter", "Buy"), ("ESC", "Close")]
+
+    def active_popup(self):
+        return self.confirm
+
+    def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
@@ -174,22 +181,12 @@ class ShipBrowserMenu:
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
                 stat_y += int(26 * scale)
 
-        # Top-left Controls pane, same spot/style as the base screen's own
-        # (see LocationScreen.draw's draw_hud=False / SpaceScreen's).
-        # Hidden while a purchase confirmation is up - a pop-up dialog shows
-        # its Y/N/ESC choices inside its own panel (see ConfirmDialog.draw),
-        # and nothing else on screen is pressable until it's resolved.
-        margin = int(10 * scale)
-        if not self.confirm:
-            help_items = [("Arrows/Click", "Browse"), ("Enter", "Buy"), ("ESC", "Close")]
-            draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)
-
+        # The Controls pane (top-left) and, while a purchase ConfirmDialog is
+        # up, deferring to it instead are both handled by MenuBase.draw via
+        # help_items()/active_popup().
         if self.message_timer > 0:
             self.message_timer -= 1
             draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
-
-        if self.confirm:
-            self.confirm.draw(surface)
 
     def _draw_cell(self, surface, rect, ship_type_id, is_selected, reason, scale):
         """cell_draw_fn for the ship IconGrid - a static silhouette (no

@@ -164,8 +164,8 @@ def abandon_mission(missions_config, possessions, mission_id):
 
 def mission_status_lines(missions_config, possessions):
     """[(display_title, [stage_text, ...], current_stage_index)] for every
-    mission that's ever been started (active or completed) - the data
-    MissionLog (game/ui/mission_log.py) renders. current_stage_index is
+    mission that's ever been started (active or completed) - the data the
+    mission ReportMenu (report_menu.mission_report()) renders. current_stage_index is
     None for a completed mission (every stage shown done - there's no
     "current" one anymore); stages before it are done, the stage at it is
     current, and stages after it are still pending."""
