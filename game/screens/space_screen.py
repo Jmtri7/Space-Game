@@ -10,7 +10,7 @@ from game.utils import (
     get_asteroid_type, get_missions
 )
 import game.utils as utils
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log
+from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_max_width
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -673,7 +673,12 @@ class SpaceScreen(ScreenBase):
         Returns its rect so the HUD can stack the jump-target panel below it.
         """
         ui_scale = get_ui_scale()
-        size = int(MINIMAP_SIZE * ui_scale)
+        # Capped at side_panel_max_width() (see its own docstring) - a
+        # no-op at typical window sizes/aspect ratios, but a wide-and-short
+        # window scales ui_scale up from height alone, which could
+        # otherwise push a fixed MINIMAP_SIZE*ui_scale past this side's
+        # quarter of the width.
+        size = min(int(MINIMAP_SIZE * ui_scale), side_panel_max_width())
         margin = int(10 * ui_scale)
         rect = pygame.Rect(0, 0, size, size)
         rect.topright = (utils.screen_width - margin, margin)
@@ -1121,15 +1126,20 @@ class SpaceScreen(ScreenBase):
         # is fine.
         if self.jump_message_timer > 0:
             font_warn = get_font(int(20 * ui_scale))
-            draw_glow_title(
+            draw_glow_message(
                 surface, "Too close to jump - move away from center first", font_warn,
                 utils.screen_width // 2, margin + int(10 * ui_scale),
                 color=YELLOW, shadow_color=(60, 45, 10)
             )
         elif self.hail_banner_timer > 0 and self.hail_banner:
+            # draw_glow_message (not draw_glow_title) - unlike the fixed
+            # warning above, this can carry a pilot's free-text one_way_hail
+            # message (see _check_one_way_hails), which needs to wrap
+            # rather than run wide enough to overlap a side panel (see
+            # center_panel_max_width).
             text, color = self.hail_banner
             font_hail = get_font(int(20 * ui_scale))
-            draw_glow_title(
+            draw_glow_message(
                 surface, text, font_hail,
                 utils.screen_width // 2, margin + int(10 * ui_scale),
                 color=color, shadow_color=(20, 30, 40)

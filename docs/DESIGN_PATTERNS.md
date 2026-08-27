@@ -648,6 +648,73 @@ on config, without the trigger's own code needing to know about all of them.
 
 ---
 
+## Pattern: HUD Zone Width Discipline
+
+**Problem:** A HUD panel that sizes itself purely from its own content
+(`draw_status_pane`, `draw_info_panel`, the bottom-left Messages log, a
+top-center banner) can grow arbitrarily wide once that content is free-form
+text - a long status sentence, an NPC's one-way hail message, a story
+config's interior label. `get_ui_scale()` doesn't prevent this either: it's
+`min(width/800, height/600)`, so a wide-but-short window is scaled by
+*height*, not width - text renders proportionally larger than the window is
+wide, and a panel that was comfortably narrow at a normal aspect ratio can
+overflow into a neighboring panel's space at an unusual one (a real bug: a
+long "drifting from the system" status line overlapping the Messages pane
+at the bottom-left on a 1859x1024 window).
+
+**Solution:** Divide the HUD horizontally into three zones - a left
+quarter, a right quarter, and a center half - and give every panel a hard
+cap matching whichever zone it's anchored to, derived from the *real*
+window width rather than `ui_scale`: `side_panel_max_width()` (quarter) for
+anything pinned to the left/right edge, `center_panel_max_width()` (under
+half) for anything centered. A panel whose content could realistically run
+long wraps its text to fit inside that cap (`_wrap_text`); one whose
+content is always short, fixed UI text just clamps its computed width as a
+defensive no-op.
+
+**Implementation:** (`game/ui/ui_theme.py`)
+```python
+def side_panel_max_width():
+    return utils.screen_width // 4
+
+def center_panel_max_width():
+    return utils.screen_width // 2 - 1
+
+# Free-form content: wrap to the zone's width before rendering.
+def draw_status_pane(surface, status_lines, ui_scale):
+    ...
+    text_max_width = center_panel_max_width() - pad_x * 2
+    wrapped_lines = [(line, color) for text, color in status_lines
+                      for line in _wrap_text(font_status, text, text_max_width)]
+    ...
+
+# Fixed, short content: clamp the computed size as a defensive no-op.
+def draw_controls_pane(surface, x, y, title, items, ui_scale):
+    ...
+    panel_width = min(panel_width, side_panel_max_width())
+```
+
+**Why this works:**
+- One pair of functions defines what "side" and "center" mean in pixels;
+  every panel - `draw_status_pane`, `draw_info_panel`, `draw_message_log`,
+  `draw_controls_pane`, `draw_glow_message`, `SpaceScreen._draw_minimap` -
+  reads from the same two numbers, so the zones can never drift out of
+  sync with each other the way five independently-tuned pixel budgets
+  would.
+- Derived from `utils.screen_width` directly (not `ui_scale`), so the cap
+  tracks the window's actual shape instead of a scale factor that can grow
+  disproportionately to width on an unusual aspect ratio.
+- Shared functions mean `LocationScreen`'s HUD (which reuses
+  `draw_controls_pane`/`draw_status_pane`/`draw_info_panel`) gets the same
+  discipline for free, without its own screen needing to know the rule
+  exists.
+
+**Use case:** Any HUD panel anchored to a screen edge or the horizontal
+center, especially one whose content can include story/dialogue text
+rather than only fixed, short UI labels.
+
+---
+
 ## Contributing Patterns
 
 When you discover a reusable solution:

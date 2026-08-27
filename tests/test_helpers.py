@@ -37,6 +37,7 @@ from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines
 from game.ui.mission_log import MissionLog
+from game.ui.ui_theme import side_panel_max_width, center_panel_max_width
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
@@ -1810,6 +1811,43 @@ class TestWrapText(unittest.TestCase):
     def test_single_long_word_is_not_split(self):
         """A word longer than max_width on its own still isn't broken mid-word."""
         self.assertEqual(utils._wrap_text(_FakeFont(), "supercalifragilistic", 5), ["supercalifragilistic"])
+
+
+class TestHudZoneWidths(unittest.TestCase):
+    """side_panel_max_width()/center_panel_max_width() (see
+    docs/DESIGN_PATTERNS.md's "HUD Zone Width Discipline") - the two
+    numbers every side/center HUD panel (draw_status_pane, draw_info_panel,
+    draw_message_log, draw_controls_pane, draw_glow_message, the minimap)
+    caps itself to, derived from the real window width rather than
+    ui_scale so they can't drift out of sync with the window's actual
+    shape (a wide-but-short window scales ui_scale from height alone -
+    see their own docstrings)."""
+
+    def setUp(self):
+        self._original_size = (utils.screen_width, utils.screen_height)
+
+    def tearDown(self):
+        utils.set_screen_size(*self._original_size)
+
+    def test_side_is_one_quarter_of_screen_width(self):
+        utils.set_screen_size(1859, 1024)  # the reported bug's window size
+        self.assertEqual(side_panel_max_width(), 1859 // 4)
+
+    def test_center_is_strictly_less_than_half_of_screen_width(self):
+        utils.set_screen_size(1859, 1024)
+        self.assertLess(center_panel_max_width(), 1859 / 2)
+        self.assertEqual(center_panel_max_width(), 1859 // 2 - 1)
+
+    def test_zones_track_window_width_directly_not_ui_scale(self):
+        """The whole point: on a wide-but-short window, ui_scale is capped
+        by height (get_ui_scale() = min(w/800, h/600)), not width - the
+        zone widths must still track the real (wide) screen_width, not
+        that scale factor, or a panel sized from ui_scale alone could
+        still overflow its zone."""
+        utils.set_screen_size(1859, 1024)
+        ui_scale = utils.get_ui_scale()
+        self.assertLess(ui_scale, 1859 / 800, "fixture must reproduce the height-capped case")
+        self.assertEqual(side_panel_max_width(), 1859 // 4)
 
 
 class TestCharacterAIPilotDialogue(unittest.TestCase):

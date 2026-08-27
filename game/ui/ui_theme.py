@@ -13,6 +13,30 @@ PANEL_BORDER = (120, 120, 145)
 DISABLED_TEXT_COLOR = (150, 90, 90)
 
 
+def side_panel_max_width():
+    """Max width for a HUD panel anchored to the left or right edge
+    (Controls, minimap, the targeting/credits info panel, the Messages
+    log) - one quarter of the real window width. Both side panels and the
+    middle status pane (see center_panel_max_width) size themselves from
+    their own content and can otherwise grow arbitrarily wide (long NPC
+    dialogue text, a long status message) regardless of window size/aspect
+    ratio - get_ui_scale() alone doesn't prevent this, since on a wide
+    window it's clamped by height, not width (e.g. a 1859x1024 window
+    scales UI text *up* well past what fits in a quarter of that width).
+    Keeping every side panel within this quarter and the status pane
+    within center_panel_max_width() is what stops them from visually
+    overlapping regardless of window shape."""
+    return utils.screen_width // 4
+
+
+def center_panel_max_width():
+    """Max width for a HUD panel/message anchored to the horizontal center
+    (the bottom status pane, the top-center jump/hail banners) - strictly
+    less than half the real window width, so it can never encroach into
+    either side's quarter (see side_panel_max_width)."""
+    return utils.screen_width // 2 - 1
+
+
 def draw_glass_panel(surface, rect, scale):
     """Draw a semi-opaque rounded panel used as a backdrop for menu content."""
     panel_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -30,6 +54,21 @@ def draw_glow_title(surface, text, font, center_x, top_y, color=YELLOW, shadow_c
     surface.blit(shadow, (x + 2, top_y + 2))
     surface.blit(title, (x, top_y))
     return title.get_height()
+
+
+def draw_glow_message(surface, text, font, center_x, top_y, color=YELLOW, shadow_color=(60, 45, 10)):
+    """Like draw_glow_title, but for free-form text that isn't a short,
+    fixed UI label - a top-center jump/hail banner, whose text can be
+    arbitrary story/dialogue content (an NPC's one-way hail message, for
+    instance). Wraps to center_panel_max_width() and stacks each line via
+    draw_glow_title, so a long message can't run wide enough to overlap a
+    side panel the way a single unwrapped line could. Returns the total
+    height drawn."""
+    lines = _wrap_text(font, text, center_panel_max_width())
+    y = top_y
+    for line in lines:
+        y += draw_glow_title(surface, line, font, center_x, y, color=color, shadow_color=shadow_color)
+    return y - top_y
 
 
 def draw_controls_pane(surface, x, y, title, items, ui_scale):
@@ -59,6 +98,12 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
         title_rendered.get_width(),
         desc_x_offset + max(text.get_width() for text in desc_rendered),
     ) + pad_x * 2
+    # Clamped to side_panel_max_width() per the HUD's quarter-width rule
+    # (see its own docstring) - a no-op in practice, since every caller's
+    # key/description strings are short, fixed text, not arbitrary-length
+    # content, but keeps this panel honest about the same rule every other
+    # side panel follows.
+    panel_width = min(panel_width, side_panel_max_width())
     # Title line, then a blank line's worth of gap, then one line per control.
     panel_height = pad_y * 2 + line_height * (len(items) + 2)
     rect = pygame.Rect(x, y, panel_width, panel_height)
@@ -82,17 +127,26 @@ def draw_info_panel(surface, lines, ui_scale, topright):
     interior locations now share for their own credits/target readout.
     `lines` is a list of (text, color) tuples; `topright` is the (x, y)
     screen point for the panel's own top-right corner. Returns the drawn rect.
+
+    A line can carry real story content (a target's name, an interior
+    label) rather than fixed UI text, so - unlike draw_controls_pane -
+    each line is wrapped (see _wrap_text) to fit within
+    side_panel_max_width() rather than just clamped, keeping this side
+    panel within its quarter of the window regardless of how long that
+    content happens to be.
     """
     font = get_font(int(18 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
     line_height = int(22 * ui_scale)
-    rendered = [font.render(text, True, color) for text, color in lines]
-    panel_width = max(text.get_width() for text in rendered) + pad_x * 2
+    text_max_width = side_panel_max_width() - pad_x * 2
+    wrapped = [(_wrap_text(font, text, text_max_width), color) for text, color in lines]
+    rendered = [(font.render(line, True, color), color) for lines, color in wrapped for line in lines]
+    panel_width = max(text.get_width() for text, _ in rendered) + pad_x * 2
     panel_height = pad_y * 2 + line_height * len(rendered)
     rect = pygame.Rect(0, 0, panel_width, panel_height)
     rect.topright = topright
     draw_glass_panel(surface, rect, ui_scale)
-    for i, text in enumerate(rendered):
+    for i, (text, _) in enumerate(rendered):
         surface.blit(text, (rect.x + pad_x, rect.y + pad_y + i * line_height))
     return rect
 
@@ -109,13 +163,20 @@ def draw_status_pane(surface, status_lines, ui_scale):
     the space/interior HUD - see SpaceScreen._draw_hud's docstring for why.
     Shared by the space view and interior locations so their status panes
     look and behave identically.
+    A status line isn't always short, fixed UI text (the drift-far-from-
+    system hint and the hail-busy message are full sentences), so each is
+    wrapped (see _wrap_text) to fit within center_panel_max_width() before
+    rendering - otherwise a long enough line can run wide enough to
+    overlap a side panel (Controls, Messages, the minimap/info panel).
     """
     if not status_lines:
         return None
     font_status = get_font(int(22 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
     margin = int(10 * ui_scale)
-    status_rendered = [font_status.render(text, True, color) for text, color in status_lines]
+    text_max_width = center_panel_max_width() - pad_x * 2
+    wrapped_lines = [(line, color) for text, color in status_lines for line in _wrap_text(font_status, text, text_max_width)]
+    status_rendered = [font_status.render(text, True, color) for text, color in wrapped_lines]
     status_line_height = status_rendered[0].get_height() + int(4 * ui_scale)
     status_width = max(text.get_width() for text in status_rendered) + pad_x * 2
     status_height = pad_y * 2 + status_line_height * len(status_rendered) - int(4 * ui_scale)
@@ -145,7 +206,11 @@ def draw_message_log(surface, messages, ui_scale):
     regardless of how long the full log has grown. Drawing is skipped
     entirely (returns None) when there are no messages yet, so a fresh
     game doesn't show an empty box in the corner - same pattern as
-    draw_status_pane."""
+    draw_status_pane. box_width is capped at side_panel_max_width() (a
+    320-wide box at typical ui_scale, but wide UI scaling on an unusual
+    window shape can otherwise push a fixed 320*ui_scale past that quarter
+    - see its own docstring), so a message ever wraps tighter rather than
+    the panel itself growing past its side of the screen."""
     if not messages:
         return None
     font_title = get_font(int(16 * ui_scale))
@@ -154,7 +219,7 @@ def draw_message_log(surface, messages, ui_scale):
     line_height = int(18 * ui_scale)
     entry_gap = int(4 * ui_scale)
     margin = int(10 * ui_scale)
-    box_width = int(320 * ui_scale)
+    box_width = min(int(320 * ui_scale), side_panel_max_width())
 
     shown = messages[:MESSAGE_LOG_MAX_VISIBLE]
     # Each entry wraps as one "Sender: text" unit to the panel's width,
