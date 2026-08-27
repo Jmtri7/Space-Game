@@ -272,9 +272,13 @@ class SpaceScreen(ScreenBase):
         # separately in the HUD (Character.person.name), not folded into
         # this label, so it stays just the ship type.
         for i, ship in enumerate(self.ai_ships):
-            ship_type = get_ship_type(self.story, ship.ship_type_id)
-            ship_name = ship_type.get("name", f"AI Ship {i+1}")
-            self.targetable_objects.append((ship_name, ship))
+            self.targetable_objects.append((self._ship_target_label(ship, i), ship))
+
+    def _ship_target_label(self, ship, index=0):
+        """HUD label for an AI ship in targetable_objects - just the ship
+        type's display name (the pilot name is shown separately)."""
+        ship_type = get_ship_type(self.story, ship.ship_type_id)
+        return ship_type.get("name", f"AI Ship {index + 1}")
 
     def get_interior_screen(self, landable, key):
         """Return the persistent LocationScreen for one of landable's
@@ -530,7 +534,9 @@ class SpaceScreen(ScreenBase):
         (AI ships only), LANDABLES (station/moon only), or MISC (everything
         else - celestial bodies, the central star). current_target is
         always an index into *this* list, not the master one, so switching
-        modes changes what index 0 means."""
+        modes changes what index 0 means. Departed AI ships are pruned from
+        targetable_objects by _validate_target every frame, so this never
+        sees a Character that's no longer in self.ai_ships."""
         mode = TARGET_MODES[self.target_mode_index]
         if mode == "SHIPS":
             return [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
@@ -571,21 +577,47 @@ class SpaceScreen(ScreenBase):
         return filtered[self.current_target][1]
 
     def _validate_target(self):
-        """Clear the current target - and disengage the player's autopilot,
-        if it was seeking that same target - once it's an AI ship that has
-        since left this system. ExplorerRoutine can migrate a Character out
-        of self.ai_ships into another system's list entirely (it jumped
-        away) while targetable_objects, built once per _activate_system,
-        still holds the now-stale tuple referencing it, and the player's
-        own autopilot_target is a separate reference entirely (set by
-        engage_seek, independent of current_target/targetable_objects).
-        Without this, both keep tracking that Character's position in
-        whatever system it jumped to - a totally unrelated part of the same
-        game-space coordinates - instead of the target being lost, and the
-        autopilot disengaging, the way they should once the ship is gone."""
+        """Keep targetable_objects in sync with self.ai_ships - prune AI
+        ships that have left this system, re-add any that have come back -
+        keep current_target pointing at the same object across that change
+        (or clear it if that object was the one that left), and disengage
+        the player's autopilot if it was seeking a ship that's now gone.
+
+        ExplorerRoutine can migrate a Character out of self.ai_ships into
+        another system's list entirely (it jumped away) while
+        targetable_objects, built once per _activate_system, still holds the
+        now-stale tuple referencing it. That Character keeps updating every
+        frame regardless of which system it's in (see
+        SystemState.update_physics), so a stale entry left in place would
+        keep the brackets/arrow tracking its position over in whatever
+        system it jumped to. It also broke cycling: current_target indexes
+        _filtered_targets(), so a ghost sitting at the end of the SHIPS list
+        meant "[" from the first ship wrapped straight onto it and bounced
+        back every time, never reaching the real ships in between (whereas
+        "]" happened to hit them on the way past). Removing the tuple
+        outright - and re-resolving current_target by identity - fixes both.
+
+        The player's autopilot_target is a separate reference entirely (set
+        by engage_seek, independent of current_target/targetable_objects),
+        so it needs its own check."""
         target = self._get_target_object()
-        if isinstance(target, Character) and target not in self.ai_ships:
-            self.current_target = None
+        stale = {entry[1] for entry in self.targetable_objects
+                 if isinstance(entry[1], Character) and entry[1] not in self.ai_ships}
+        # A ship can also come *back* (ExplorerRoutine jumps to a random
+        # system and may pick this one) - re-add any AI ship that's in
+        # self.ai_ships but has no tuple, so it becomes targetable again
+        # without waiting for the next _activate_system.
+        known = {entry[1] for entry in self.targetable_objects}
+        returned = [ship for ship in self.ai_ships if ship not in known]
+        if stale or returned:
+            self.targetable_objects = [e for e in self.targetable_objects if e[1] not in stale]
+            self.targetable_objects.extend((self._ship_target_label(s), s) for s in returned)
+            if target is None or target in stale:
+                self.current_target = None
+            else:
+                self.current_target = next(
+                    (i for i, (_, obj) in enumerate(self._filtered_targets()) if obj is target),
+                    None)
 
         autopilot_target = self.player.autopilot_target
         if isinstance(autopilot_target, Character) and autopilot_target not in self.ai_ships:

@@ -2122,6 +2122,63 @@ class TestMultiSystemSimulation(unittest.TestCase):
         self.assertFalse(game_screen.player.autopilot_active, "Autopilot should disengage once its target is gone")
         self.assertIsNone(game_screen.player.autopilot_target)
 
+    def test_cycling_ships_still_reaches_every_ship_after_one_jumps_away(self):
+        """Regression: a departed explorer's stale tuple stayed in
+        _filtered_targets() (targetable_objects is built once per
+        _activate_system and never pruned), so cycling wrapped onto a ghost
+        that _validate_target cleared a frame later. Juno Vale is last in
+        Sol Alpha's ship list, so once she jumped away, pressing "[" from
+        the first ship wrapped straight onto her and bounced back - never
+        landing on Kade Marsh in between. "]" happened to reach Kade on the
+        step before the ghost, which is why only "[" looked broken."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+
+        game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
+        game_screen.systems["keplers_reach"].ai_ships.append(explorer)
+        explorer.system_id = "keplers_reach"
+
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        game_screen.update_physics()  # prunes the departed ship (see _validate_target)
+
+        names = [obj.person.name for _, obj in game_screen._filtered_targets()]
+        self.assertNotIn("Juno Vale", names, "Departed ship should drop out of the target list")
+        self.assertEqual(set(names), {"Elena Voss", "Kade Marsh"})
+
+        for direction in (-1, 1):  # "[" and "]"
+            seen = set()
+            game_screen.current_target = None
+            for _ in range(len(names) * 2):
+                game_screen._cycle_target(direction)
+                self.assertIsNotNone(game_screen._get_target_object())
+                game_screen._validate_target()
+                still_targeted = game_screen._get_target_object()
+                self.assertIsNotNone(
+                    still_targeted,
+                    f"Cycling with direction {direction} landed on a ship that immediately got cleared")
+                seen.add(still_targeted.person.name)
+            self.assertEqual(seen, {"Elena Voss", "Kade Marsh"})
+
+    def test_a_ship_that_jumps_back_becomes_targetable_again(self):
+        """_validate_target re-adds an AI ship that's returned to this
+        system (ExplorerRoutine can jump back to where it started) so it
+        doesn't stay untargetable until the next _activate_system."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+
+        game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
+        game_screen.systems["keplers_reach"].ai_ships.append(explorer)
+        explorer.system_id = "keplers_reach"
+        game_screen.update_physics()
+        self.assertNotIn("Juno Vale", [o.person.name for _, o in game_screen._filtered_targets()])
+
+        game_screen.systems["keplers_reach"].ai_ships.remove(explorer)
+        game_screen.systems["sol_alpha"].ai_ships.append(explorer)
+        explorer.system_id = "sol_alpha"
+        game_screen.update_physics()
+        self.assertIn("Juno Vale", [o.person.name for _, o in game_screen._filtered_targets()])
+
 
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
     """Regression test: every other NPC in the room kept wandering around
