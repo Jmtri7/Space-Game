@@ -665,6 +665,7 @@ class LocationScreen(ScreenBase):
                 ("[", "Previous Target"),
                 ("Click", "Target Person"),
                 ("P", "View Possessions"),
+                ("N", "Mission Log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
 
@@ -919,6 +920,8 @@ class LocationScreen(ScreenBase):
                     self.active_dialogue = nearest.dialogue
             elif event.key == pygame.K_p:
                 return "possessions"
+            elif event.key == pygame.K_n:
+                return "missions"
             elif event.key == pygame.K_ESCAPE:
                 return "pause"
         return None

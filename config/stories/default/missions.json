@@ -1,0 +1,31 @@
+{
+  "first_flight": {
+    "title": "First Flight",
+    "stages": [
+      {
+        "text": "Kade Marsh is hailing you. Cycle target mode to SHIPS (T), target his patrol ship (] or click), then hail him back (H).",
+        "complete_flag": "hailed_kade"
+      },
+      {
+        "text": "Get a feel for flying - turn (A/D or Left/Right) and thrust (W or Up) to move your ship.",
+        "complete_flag": "used_thrust"
+      },
+      {
+        "text": "Practice braking - hold S (or Down) to face opposite your velocity, then thrust to slow yourself down.",
+        "complete_flag": "used_brake"
+      },
+      {
+        "text": "Target a ship and engage autopilot toward it (Space) - it'll fly you there and brake automatically.",
+        "complete_flag": "used_autopilot_on_ship"
+      },
+      {
+        "text": "Fly to the station or moon and land (L, once you're close and slow).",
+        "complete_flag": "landed_on_landable"
+      },
+      {
+        "text": "If you ever drift too far from the system center, open the Star Map (M), select this system, and jump back (J).",
+        "complete_flag": "completed_jump"
+      }
+    ]
+  }
+}

@@ -20,6 +20,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
+| **N** | Open the Mission Log (see Mission Log below) |
 | **ESC** | Pause menu |
 
 ## Star Map (M)
@@ -49,6 +50,7 @@ the current one while far enough from its center.
 | **T** | Talk to the closest NPC/pilot in range - always the nearest one, regardless of any manually cycled/clicked target |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
+| **N** | Open the Mission Log (see Mission Log below) |
 | **ESC** | Pause menu |
 
 Station interiors include the dormitory, corridor, concourse ("default"),
@@ -80,6 +82,7 @@ up at a distance, not for choosing who to talk to.
 | **T** | Talk to the closest NPC/pilot in range - see "NPC Targeting vs. Talking" above |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
+| **N** | Open the Mission Log (see Mission Log below) |
 | **ESC** | Pause menu |
 
 ## Dialogue
@@ -131,6 +134,34 @@ doesn't require a target) - you still have to target and hail them back
 (H) to actually have the conversation. Each pilot's one-way hail (if they
 have one) only ever fires once. See `pilots.json`'s `"hail_dialogue_tree"`/
 `"one_way_hail"` and `game/world/character.py`'s `Character.for_ai_pilot`.
+
+Space View also shows a persistent hint in the bottom status pane once
+you've drifted far enough from the system's center that jumping back is
+possible ("Drifting far from the system - open the Star Map (M) and jump
+(J) back") - the same distance a self-jump back to this system already
+requires (`JUMP_SELF_MIN_DISTANCE`), so the hint and the mechanic it
+points at always agree.
+
+## Mission Log (N)
+
+| Control | Action |
+|---------|--------|
+| **N** or **ESC** | Close |
+
+Read-only, opened from space, a station interior, or a moon interior, over
+whichever screen it was opened from (same shape as the Possessions menu).
+Lists every mission that's ever been started: an active mission shows its
+stages so far completed (`[x]`), its current stage (`->`), and stages still
+ahead (`[ ]`); a finished mission shows every stage done, marked
+"(Complete)". A story opts a new pilot into a mission automatically the
+first time they board a ship (`story.json`'s `"starting_mission"`) - see
+`config/stories/default/missions.json`'s `"first_flight"` for a worked
+example, which an NPC hailing you (Kade Marsh - see Hailing above) kicks
+off. See `game/world/mission.py` for how a stage's `"complete_flag"` ties
+into the same `Possessions.flags` a conversation option can set (see
+Dialogue above) - a mission stage can be completed by a dialogue choice, a
+gameplay event (thrusting, braking, landing, jumping), or anything else
+that sets a flag.
 
 ## Menus
 

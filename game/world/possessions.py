@@ -30,9 +30,18 @@ class Possessions:
     state shared by reference across SpaceScreen and every LocationScreen,
     and already flows through save/load - a flag set while talking to a
     station NPC needs to be visible when hailing a ship in space later, and
-    vice versa."""
+    vice versa.
+
+    `missions`/`completed_missions` track mission/stage progress (see
+    game/world/mission.py) - `missions` is {mission_id: current_stage_index}
+    for whatever's still in progress; a mission moves to
+    `completed_missions` (a plain list of ids) once its last stage's
+    complete_flag is set. The stage text/order itself is static per-story
+    config (missions.json, via get_missions()), not stored here - same
+    story/save split as everything else on this class."""
     def __init__(self, credits=0, owned_ships=None, loans=None,
-                 owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None):
+                 owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None,
+                 missions=None, completed_missions=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
         self.loans = loans or []  # list of {"lender": str, "principal": int}
@@ -41,6 +50,8 @@ class Possessions:
         self.cargo = cargo or {}  # {commodity_id: quantity}
         self.items = items or {}  # {item_id: quantity}
         self.flags = flags or {}  # {flag_name: True}
+        self.missions = missions or {}  # {mission_id: current_stage_index}
+        self.completed_missions = completed_missions or []  # [mission_id, ...]
 
     def can_afford(self, amount):
         return self.credits >= amount
@@ -130,6 +141,8 @@ class Possessions:
         self.cargo = dict(state.get("cargo", self.cargo))
         self.items = dict(state.get("items", self.items))
         self.flags = dict(state.get("flags", self.flags))
+        self.missions = dict(state.get("missions", self.missions))
+        self.completed_missions = list(state.get("completed_missions", self.completed_missions))
 
     def get_state(self):
         return {
@@ -141,6 +154,8 @@ class Possessions:
             "cargo": dict(self.cargo),
             "items": dict(self.items),
             "flags": dict(self.flags),
+            "missions": dict(self.missions),
+            "completed_missions": list(self.completed_missions),
         }
 
     @classmethod
@@ -156,4 +171,6 @@ class Possessions:
             cargo=dict(state.get("cargo", {})),
             items=dict(state.get("items", {})),
             flags=dict(state.get("flags", {})),
+            missions=dict(state.get("missions", {})),
+            completed_missions=list(state.get("completed_missions", [])),
         )

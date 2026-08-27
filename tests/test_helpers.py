@@ -35,6 +35,8 @@ from game.world.landable import Landable
 from game.world.person import Person
 from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
+from game.world.mission import start_mission, check_mission_progress, mission_status_lines
+from game.ui.mission_log import MissionLog
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
@@ -49,6 +51,7 @@ from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
 from game.ui.icon_grid import IconGrid
 from game.ui.outfitting_menu import OutfittingMenu, SLOT_COLORS
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
+from game.constants import GAME_WIDTH, GAME_HEIGHT
 from main import build_save_game_state, warn_if_story_version_mismatch
 
 
@@ -1000,6 +1003,125 @@ class TestPossessionsFlags(unittest.TestCase):
         raising."""
         possessions = Possessions.from_state({"credits": 10})
         self.assertEqual(possessions.flags, {})
+
+
+class TestPossessionsMissions(unittest.TestCase):
+    """missions/completed_missions (mission/stage progress - see
+    game/world/mission.py) round-trip through get_state()/restore_from()/
+    from_state() like every other Possessions field."""
+
+    def test_missions_round_trip_through_get_state_and_restore_from(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 2
+        possessions.completed_missions.append("old_mission")
+        state = possessions.get_state()
+        self.assertEqual(state["missions"], {"first_flight": 2})
+        self.assertEqual(state["completed_missions"], ["old_mission"])
+
+        restored = Possessions()
+        restored.restore_from(state)
+        self.assertEqual(restored.missions, {"first_flight": 2})
+        self.assertEqual(restored.completed_missions, ["old_mission"])
+
+    def test_from_state_defaults_to_no_missions_for_a_pre_existing_save(self):
+        possessions = Possessions.from_state({"credits": 10})
+        self.assertEqual(possessions.missions, {})
+        self.assertEqual(possessions.completed_missions, [])
+
+
+class TestMissionProgress(unittest.TestCase):
+    """start_mission()/check_mission_progress()/mission_status_lines() -
+    the mission/stage tracker itself. Stage completion is driven entirely
+    by Possessions.flags (see game/world/mission.py's module docstring),
+    the same flag vocabulary Dialogue's requires_flag/"set_flag:" use."""
+
+    MISSIONS = {
+        "first_flight": {
+            "title": "First Flight",
+            "stages": [
+                {"text": "Say hello.", "complete_flag": "said_hello"},
+                {"text": "Fly around.", "complete_flag": "used_thrust"},
+            ],
+        },
+    }
+
+    def test_start_mission_begins_at_stage_zero(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertEqual(possessions.missions, {"first_flight": 0})
+
+    def test_start_mission_is_a_noop_for_an_unknown_id(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "no_such_mission")
+        self.assertEqual(possessions.missions, {})
+
+    def test_start_mission_does_not_reset_an_already_active_mission(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 1
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+    def test_start_mission_does_not_reactivate_a_completed_mission(self):
+        possessions = Possessions()
+        possessions.completed_missions.append("first_flight")
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertNotIn("first_flight", possessions.missions)
+
+    def test_check_mission_progress_advances_stage_when_flag_is_set(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        possessions.flags["said_hello"] = True
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+    def test_check_mission_progress_does_nothing_before_the_flag_is_set(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertEqual(possessions.missions["first_flight"], 0)
+
+    def test_check_mission_progress_completes_the_mission_on_its_last_stage(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 1  # already on the last stage
+        possessions.flags["used_thrust"] = True
+        check_mission_progress(self.MISSIONS, possessions)
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertEqual(possessions.completed_missions, ["first_flight"])
+
+    def test_check_mission_progress_ignores_an_unknown_mission_id(self):
+        """A mission that's active in possessions.missions but no longer
+        exists in missions_config (e.g. removed from a later story update)
+        must not raise."""
+        possessions = Possessions()
+        possessions.missions["ghost_mission"] = 0
+        check_mission_progress(self.MISSIONS, possessions)  # must not raise
+        self.assertEqual(possessions.missions["ghost_mission"], 0)
+
+    def test_mission_status_lines_reports_active_and_completed(self):
+        possessions = Possessions()
+        possessions.missions["first_flight"] = 1
+        possessions.completed_missions.append("first_flight")  # contrived, but exercises both branches
+        lines = mission_status_lines(self.MISSIONS, possessions)
+        titles = [title for title, _, _ in lines]
+        self.assertIn("First Flight", titles)
+        self.assertIn("First Flight (Complete)", titles)
+        active = next(entry for entry in lines if entry[0] == "First Flight")
+        self.assertEqual(active[1], ["Say hello.", "Fly around."])
+        self.assertEqual(active[2], 1)
+        completed = next(entry for entry in lines if entry[0] == "First Flight (Complete)")
+        self.assertIsNone(completed[2])
+
+
+class TestMissionLog(unittest.TestCase):
+    """MissionLog's handle_input() - draw() is exercised implicitly by
+    TestMissionProgress's data (mission_status_lines) and isn't worth
+    testing against a mocked pygame surface here."""
+
+    def test_escape_and_n_both_close(self):
+        menu = MissionLog({}, Possessions())
+        for key in (pygame_mock.K_ESCAPE, pygame_mock.K_n):
+            event = SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
+            self.assertEqual(menu.handle_input([event]), "close")
 
 
 class TestPossessionsInventory(unittest.TestCase):
@@ -2280,6 +2402,117 @@ class TestSpaceScreenHailing(unittest.TestCase):
         game_screen.hail_banner = None
         game_screen._check_one_way_hails()
         self.assertIsNone(game_screen.hail_banner, "must not fire a second time for the same pilot")
+
+
+class TestSpaceScreenMissionIntegration(unittest.TestCase):
+    """The default story's "first_flight" tutorial mission - real
+    story.json ("starting_mission") + missions.json config, auto-started
+    on first ship purchase and advanced by the generic gameplay-event
+    flags SpaceScreen itself sets (used_thrust/used_autopilot_on_ship/
+    landed_on_landable/completed_jump) alongside "hailed_kade" from
+    Phase 1's hailing feature - see docs/BACKLOG.md's tutorial mission
+    item and game/world/mission.py."""
+
+    def _boarded_screen(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport._apply_dialogue_action("buy_ship:shuttle")  # triggers _on_ship_purchased
+        return game_screen
+
+    def test_buying_the_first_ship_auto_starts_the_configured_mission(self):
+        game_screen = self._boarded_screen()
+        self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
+
+    def test_buying_a_second_ship_does_not_restart_the_mission(self):
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.flags["hailed_kade"] = True
+        game_screen.update_physics()  # advances to stage 1
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport._apply_dialogue_action("buy_ship:patrol")
+        self.assertEqual(possessions.missions["first_flight"], 1, "a second purchase must not reset progress")
+
+    def test_thrusting_advances_past_the_flying_stage(self):
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        possessions.flags["hailed_kade"] = True
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+        game_screen.player.thrust = 0.2
+        game_screen.update_physics()
+        self.assertTrue(possessions.flags.get("used_thrust"))
+        self.assertEqual(possessions.missions["first_flight"], 2)
+
+    def test_engaging_autopilot_on_a_ship_sets_the_flag(self):
+        game_screen = self._boarded_screen()
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        game_screen.current_target = 0  # any AI ship in the default system
+        target = game_screen._get_target_object()
+        self.assertIsInstance(target, Character)
+
+        game_screen.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE)])
+        self.assertTrue(game_screen.player.person.possessions.flags.get("used_autopilot_on_ship"))
+
+    def test_landing_sets_the_flag(self):
+        game_screen = self._boarded_screen()
+        game_screen._mark_landed()
+        self.assertTrue(game_screen.player.person.possessions.flags.get("landed_on_landable"))
+
+    def test_braking_sets_the_flag(self):
+        """S/Down (point_to_reverse_velocity - see PlayerController.handle_input)
+        sets "used_brake", the flag the tutorial's braking stage completes on."""
+        game_screen = self._boarded_screen()
+        keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT, pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w, pygame_mock.K_DOWN, pygame_mock.K_s)}
+        keys[pygame_mock.K_s] = True
+        game_screen.player.handle_input(keys)
+        self.assertTrue(game_screen.player.person.possessions.flags.get("used_brake"))
+
+    def test_completing_a_jump_sets_the_flag_and_full_playthrough_completes_the_mission(self):
+        """Runs every stage in order against the real config, ending with
+        the mission moved into completed_missions - the same end-to-end
+        path a player actually taking the tutorial would follow."""
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+
+        possessions.flags["hailed_kade"] = True
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 1)
+
+        game_screen.player.thrust = 0.2
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 2)
+
+        possessions.flags["used_brake"] = True
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 3)
+
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        game_screen.current_target = 0
+        game_screen.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE)])
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 4)
+
+        game_screen._mark_landed()
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 5)
+
+        game_screen.jump_state = {"phase": "travel", "heading": 0, "timer": 0, "destination": game_screen.system_id}
+        game_screen._complete_jump()
+        self.assertTrue(possessions.flags.get("completed_jump"))
+        game_screen.update_physics()
+        self.assertNotIn("first_flight", possessions.missions)
+        self.assertEqual(possessions.completed_missions, ["first_flight"])
+
+    def test_drifted_from_center_matches_the_self_jump_threshold(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        cx, cy = GAME_WIDTH / 2, GAME_HEIGHT / 2
+        game_screen.player.x, game_screen.player.y = cx, cy
+        self.assertFalse(game_screen._drifted_from_center())
+        game_screen.player.x = cx + 5000
+        self.assertTrue(game_screen._drifted_from_center())
 
 
 class TestBartenderConsequenceDialogue(unittest.TestCase):

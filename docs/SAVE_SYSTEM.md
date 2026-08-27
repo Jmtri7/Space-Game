@@ -63,7 +63,9 @@ name is kept, the timestamp lives inside it.
       "installed_outfits": {"weapon_1": "laser_cannon"},
       "cargo": {"ore": 5},
       "items": {"repair_kit": 1},
-      "flags": {"hailed_kade": true, "bought_bartender_round": true}
+      "flags": {"hailed_kade": true, "bought_bartender_round": true},
+      "missions": {"first_flight": 3},
+      "completed_missions": ["docking_101"]
     },
     "jump_state": {
       "phase": "travel",
@@ -170,6 +172,16 @@ flag set while talking to a station NPC is visible when hailing a ship in
 space later (and vice versa). A save made before this existed simply has no
 `"flags"` key; `Possessions.restore_from()`/`from_state()` default it to
 `{}`.
+
+`missions` (`{mission_id: current_stage_index}`) and `completed_missions`
+(`[mission_id, ...]`) are mission/stage progress (see
+`game/world/mission.py` and docs/CONTROLS.md's Mission Log section) - which
+stage of which active mission a player is on, and which missions have
+finished every stage. The mission's own title/stage text/stage order is
+static per-story config (`missions.json`, via `get_missions()`), never
+duplicated into the save - same story/save split as everything else here.
+A save made before this existed has no `"missions"`/`"completed_missions"`
+keys; both default to `{}`/`[]`.
 
 **`game_state["player"]` means two different things depending on `location`,
 and this matters a great deal for restoring it correctly (see below):** for a

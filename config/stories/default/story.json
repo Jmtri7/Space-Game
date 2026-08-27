@@ -5,6 +5,7 @@
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
   "starting_system": "sol_alpha",
+  "starting_mission": "first_flight",
   "ships": {
     "player_type": null
   }

@@ -301,6 +301,18 @@ def get_item(story, item_id):
     return items.get(item_id, {})
 
 
+def get_missions(story):
+    """Load mission definitions from config/stories/{story}/missions.json -
+    static per-story data (title, ordered stages, each stage's descriptive
+    text and the Possessions.flags name that completes it) that never
+    changes during play. Which stage of which mission a player currently
+    has active (or has finished) is mutable state instead - see
+    Possessions.missions/completed_missions and
+    game/world/mission.py's check_mission_progress(). Returns {} for a
+    story that defines no missions.json at all."""
+    return load_json(f"config/stories/{story}/missions.json") or {}
+
+
 def get_star_systems(story):
     """Discover every star system belonging to one story, by scanning
     config/stories/{story}/systems/*.json. Systems only exist within a single

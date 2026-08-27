@@ -37,6 +37,11 @@ class PlayerController:
         elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
             # Point ship toward opposite velocity (brake/reverse)
             self.ship.point_to_reverse_velocity()
+            # Generic gameplay-event flag (see SpaceScreen's own "used_thrust"/
+            # etc. for the same idea) - any story's missions.json can use this
+            # as a stage's complete_flag without this class knowing about
+            # missions at all.
+            self.person.possessions.flags["used_brake"] = True
         else:
             self.ship.release_thrust()
 

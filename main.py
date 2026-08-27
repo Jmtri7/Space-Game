@@ -16,6 +16,7 @@ from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.location_selector import LocationSelector
 from game.ui.exit_menu import ExitMenu
 from game.ui.possessions_menu import PossessionsMenu
+from game.ui.mission_log import MissionLog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.ui.outfitting_menu import OutfittingMenu
@@ -137,6 +138,8 @@ def main():
         exit_menu_return_screen = None  # "station" or "moon" - where ESC/cancel goes back to
         possessions_menu = None
         possessions_return_screen = None  # "game" / "station" / "moon" - where P/ESC closes back to
+        mission_log = None
+        missions_return_screen = None  # "game" / "station" / "moon" - where N/ESC closes back to
         shop_menu = None
         shop_return_screen = None  # "station" / "moon" - where ESC closes back to
         pilot_name_dialog = None
@@ -305,6 +308,10 @@ def main():
                     possessions_menu = PossessionsMenu(game_screen.player.person.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "game"
                     current_screen = "possessions"
+                elif action == "missions":
+                    mission_log = MissionLog(game_screen.missions_config, game_screen.player.person.possessions)
+                    missions_return_screen = "game"
+                    current_screen = "missions"
                 game_screen.update()
                 game_screen.draw(screen)
                 update_background_locations(game_screen, None)
@@ -341,6 +348,10 @@ def main():
                     possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "station"
                     current_screen = "possessions"
+                elif action == "missions":
+                    mission_log = MissionLog(game_screen.missions_config, station_interior.player.possessions)
+                    missions_return_screen = "station"
+                    current_screen = "missions"
                 elif action == "shop":
                     shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits)
                     shop_return_screen = "station"
@@ -413,6 +424,21 @@ def main():
                     moon_interior.draw(screen, draw_hud=False)
                 possessions_menu.draw(screen)
 
+            elif current_screen == "missions":
+                action = mission_log.handle_input(events)
+                if action == "close":
+                    current_screen = missions_return_screen
+                # A modal menu, like PossessionsMenu - the world stays
+                # frozen while it's open. Draw whichever screen this was
+                # opened over, then the overlay on top.
+                if missions_return_screen == "game" and game_screen:
+                    game_screen.draw(screen, draw_hud=False)
+                elif missions_return_screen == "station" and station_interior:
+                    station_interior.draw(screen, draw_hud=False)
+                elif missions_return_screen == "moon" and moon_interior:
+                    moon_interior.draw(screen, draw_hud=False)
+                mission_log.draw(screen)
+
             elif current_screen == "shop":
                 action = shop_menu.handle_input(events)
                 if action == "close":
@@ -448,6 +474,10 @@ def main():
                     possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
                     possessions_return_screen = "moon"
                     current_screen = "possessions"
+                elif action == "missions":
+                    mission_log = MissionLog(game_screen.missions_config, moon_interior.player.possessions)
+                    missions_return_screen = "moon"
+                    current_screen = "missions"
                 elif action == "shop":
                     shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits)
                     shop_return_screen = "moon"

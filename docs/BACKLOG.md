@@ -40,25 +40,9 @@ together. Bug items stay in whichever category their affected system belongs to
 - [ ] Autopilot should indicate what it's currently doing (e.g. "approaching",
       "braking").
 - [ ] Jump completed message.
-- [ ] Advice/hint to jump if the player drifts too far from the system.
 
 ## Missions, Dialogue & NPCs
 
-- [ ] ⭐ Missions and conversations with consequences — dialogue trees already exist,
-      so branching stakes is a natural next layer. (Conditional/unlockable options,
-      conversation trees, and a couple of worked consequence examples now exist -
-      see Dialogue's requires_flag/conditional_roots and the bartender/Kade Marsh
-      dialogue in sol_alpha.json/pilots.json - the missions/stages half below is
-      still open.)
-- [ ] ⭐ Add missions/events tracked through stages and completable over time, whose
-      stages introduce triggers like hidden conversation options, or NPCs/objects that
-      weren't there before. Add a mission log to view unlocked stages of active and
-      completed missions.
-- [ ] ⭐ Tutorial mission on first launch with a ship: an NPC flying in the system
-      hails you, explains how to change targeting mode and target/hail them, then
-      walks you through a mission (with viewable stages) that teaches the basic
-      controls — turn, thrust, fly, brake, autopilot — and how to jump back to the
-      system center when you drift too far.
 - [ ] Relationships.
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or

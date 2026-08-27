@@ -7,7 +7,7 @@ from game.utils import (
     get_scale, get_offset, get_ui_scale, load_json, set_camera_offset,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
-    get_asteroid_type
+    get_asteroid_type, get_missions
 )
 import game.utils as utils
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, draw_status_pane, draw_info_panel
@@ -17,6 +17,7 @@ from game.world.player_controller import PlayerController
 from game.world.autopilot import has_arrived
 from game.world.character import Character
 from game.world.dialogue import option_actions, apply_shared_actions
+from game.world.mission import start_mission, check_mission_progress
 from game.world.landable import Landable
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
@@ -64,6 +65,15 @@ class SpaceScreen(ScreenBase):
         # existing save behave differently once reloaded (see CLAUDE.md's
         # "Save Compatibility & Story Versioning" section).
         self.story_version = story_meta.get("version", "0.0.0")
+        # Static mission definitions for this story (title + ordered stages -
+        # see game/world/mission.py); which mission(s) a player actually has
+        # active/completed is state on their own Possessions, not here.
+        self.missions_config = get_missions(story)
+        # Which mission (if any) automatically starts the first time this
+        # player boards a ship (see _on_ship_purchased) - config-driven so a
+        # story can opt into (or change, or omit) a tutorial mission without
+        # touching this class. None = no auto-started mission.
+        self.starting_mission = story_meta.get("starting_mission")
 
         # Load config for the current system within this story
         self.system_config = system_config or load_json(f"config/stories/{story}/systems/{self.system_id}.json") or {}
@@ -344,9 +354,14 @@ class SpaceScreen(ScreenBase):
         """Configure the player's real ship to match a newly bought type,
         and park it right at the station - so it's "docked outside" exactly
         as a salesman's dialogue would say, ready the moment the player
-        boards through the spaceport's exit."""
+        boards through the spaceport's exit. Also the natural "first launch
+        with a ship" hook for this story's starting_mission (see __init__) -
+        start_mission() is a no-op if it's already active/completed, so
+        buying a second ship later doesn't reset or restart it."""
         self._apply_ship_type(ship_type_id)
         self.park_at(self.station)
+        if self.starting_mission:
+            start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
 
     def park_at(self, landable):
         """Position the player's ship at `landable`'s own space position
@@ -443,13 +458,16 @@ class SpaceScreen(ScreenBase):
                     if distance < target_obj.landing_distance and speed < 0.4:
                         if target_obj == self.station:
                             self.landing_target = "station"
+                            self._mark_landed()
                             return "land"
                         elif target_obj == self.moon:
                             self.landing_target = "moon"
+                            self._mark_landed()
                             return "land"
                 landing_target = self._check_landing()
                 if landing_target:
                     self.landing_target = landing_target
+                    self._mark_landed()
                     return "land"
             elif event.key == pygame.K_SPACE:
                 # Engage autopilot toward the current target - follows an
@@ -458,13 +476,30 @@ class SpaceScreen(ScreenBase):
                 target_obj = self._get_target_object()
                 if target_obj and self.current_target is not None:
                     self.player.engage_seek(target_obj)
+                    if isinstance(target_obj, Character):
+                        # Generic gameplay-event flag (see the docstring on
+                        # the "Hailing tuning" flags above) - any story's
+                        # missions.json can use this as a stage's
+                        # complete_flag without this class knowing about
+                        # missions at all.
+                        self.player.person.possessions.flags["used_autopilot_on_ship"] = True
             elif event.key == pygame.K_m and not self.jump_state:
                 return "star_map"
             elif event.key == pygame.K_j and not self.jump_state:
                 self._try_jump()
             elif event.key == pygame.K_p:
                 return "possessions"
+            elif event.key == pygame.K_n:
+                return "missions"
         return None
+
+    def _mark_landed(self):
+        """Set the generic "landed_on_landable" gameplay-event flag -
+        called from every path that actually lands the ship (manual L,
+        and update()'s auto-land-on-autopilot-arrival). See K_SPACE's own
+        comment above for why this lives on Possessions.flags rather than
+        a SpaceScreen-only field."""
+        self.player.person.possessions.flags["landed_on_landable"] = True
 
     def _select_target_at(self, world_x, world_y):
         """Target whichever targetable object world_x/world_y falls within
@@ -757,6 +792,16 @@ class SpaceScreen(ScreenBase):
 
         return None
 
+    def _drifted_from_center(self):
+        """Whether the player has flown far enough from this system's
+        center that jumping back (open the Star Map, select this system,
+        J) is both possible and worth calling out - see _draw_hud's
+        status-pane hint. Uses the exact same threshold _try_jump already
+        requires for a self-jump back to this system, so the hint and the
+        mechanic it's pointing at agree by construction."""
+        cx, cy = SYSTEM_CENTER
+        return math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2) >= JUMP_SELF_MIN_DISTANCE
+
     def _try_jump(self):
         """Validate the current star map selection/distance, then start a jump if valid."""
         if not self.selected_system_id:
@@ -846,6 +891,11 @@ class SpaceScreen(ScreenBase):
 
         self.jump_state = None
         self.selected_system_id = None
+        # Generic gameplay-event flag - see K_SPACE's comment above on why
+        # these live on Possessions.flags instead of a SpaceScreen-only
+        # field. Set for any completed jump, not just a self-jump back to
+        # this same system - both demonstrate the mechanic equally well.
+        self.player.person.possessions.flags["completed_jump"] = True
 
     def update_physics(self):
         """Update physics without camera - used when space is background.
@@ -863,6 +913,11 @@ class SpaceScreen(ScreenBase):
             self._update_jump()
         else:
             self.player.update()
+        if self.player.thrust > 0:
+            # Generic gameplay-event flag - see K_SPACE's comment above on
+            # why these live on Possessions.flags instead of a
+            # SpaceScreen-only field.
+            self.player.person.possessions.flags["used_thrust"] = True
         for state in self.systems.values():
             state.update_physics()
         self.asteroid_field.update()
@@ -872,6 +927,7 @@ class SpaceScreen(ScreenBase):
             self.hail_banner_timer -= 1
         self._check_one_way_hails()
         self._validate_target()
+        check_mission_progress(self.missions_config, self.player.person.possessions)
 
     def update(self):
         """Full update including camera - only called when space is active screen"""
@@ -893,9 +949,11 @@ class SpaceScreen(ScreenBase):
             # Only try to land on landables, not ships
             if target == self.station:
                 self.landing_target = "station"
+                self._mark_landed()
                 return "land"
             elif target == self.moon:
                 self.landing_target = "moon"
+                self._mark_landed()
                 return "land"
 
         self.update_physics()
@@ -1047,6 +1105,7 @@ class SpaceScreen(ScreenBase):
                 ("H", "Hail Target"),
                 ("M", "Star Map"),
                 ("P", "View Possessions"),
+                ("N", "Mission Log"),
                 ("Click", "Target Object"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
@@ -1097,6 +1156,12 @@ class SpaceScreen(ScreenBase):
                     status_lines.append(("Slow down to land", RED))
                 if self.selected_system_id:
                     status_lines.append(("Press J to Jump", GREEN))
+                elif self._drifted_from_center():
+                    # Reuses JUMP_SELF_MIN_DISTANCE (not a separate tuning
+                    # value) - that's exactly the distance a self-jump back
+                    # to this same system already requires, so the hint
+                    # appears exactly when it becomes actionable.
+                    status_lines.append(("Drifting far from the system - open the Star Map (M) and jump (J) back", YELLOW))
                 if target_obj:
                     status_lines.append(("Press Space for Autopilot", GREEN))
                 if isinstance(target_obj, Character):

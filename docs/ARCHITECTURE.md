@@ -44,7 +44,7 @@ ScreenBase (implicit interface: handle_input/update/draw/get_state/restore_state
 ```
 Menus and dialogs (`Menu`, `StorySelector`, `PilotNameDialog`, `LoadMenu`,
 `PauseMenu`, `SaveDialog`, `ConfirmDialog`, `LocationSelector`, `ExitMenu`,
-`PossessionsMenu`) don't extend
+`PossessionsMenu`, `MissionLog`) don't extend
 `ScreenBase` — they're simpler `handle_input()`/`draw()` objects driven directly
 by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
 
@@ -67,10 +67,32 @@ by the main loop. See [UI_FLOW.md](UI_FLOW.md) for the full state machine.
   friendlier greeting after a past kindness. `Dialogue.from_flat()` builds
   the simple one-node shape most NPCs still use. See docs/CONTROLS.md's
   Dialogue and Hailing sections.
-- `Possessions` — credits/owned ships/loans/cargo/items, and `flags`
+- `Possessions` — credits/owned ships/loans/cargo/items, `flags`
   (`{name: True}` story-progress markers Dialogue's `requires_flag`/
-  `conditional_roots`/`"set_flag:"` read and write - see above), composed
-  onto every `Person`
+  `conditional_roots`/`"set_flag:"` read and write - see above), and
+  `missions`/`completed_missions` (mission/stage progress - see below),
+  composed onto every `Person`
+- `game/world/mission.py` (functions, not a class - see CLAUDE.md's One
+  Class Per File exception for utility modules) — mission/stage tracking:
+  `start_mission()` begins a mission (config from `missions.json`, via
+  `get_missions()`) at its first stage on `Possessions.missions`;
+  `check_mission_progress()` (called every frame from
+  `SpaceScreen.update_physics()`) advances a stage once its
+  `"complete_flag"` is set in `Possessions.flags` - the *same* flag
+  vocabulary Dialogue's `requires_flag`/`"set_flag:"` use, so a stage can
+  be completed by a dialogue choice or a gameplay event alike - and moves
+  a mission into `completed_missions` once its last stage completes;
+  `mission_status_lines()` is the display data `MissionLog` (`game/ui/`,
+  opened with N) renders. `story.json`'s `"starting_mission"` names which
+  mission (if any) `SpaceScreen._on_ship_purchased()` auto-starts the
+  first time a pilot boards a ship. `SpaceScreen` also sets a handful of
+  generic, story-agnostic gameplay-event flags of its own (`used_thrust`,
+  `used_brake` - set by `PlayerController.handle_input()` -,
+  `used_autopilot_on_ship`, `landed_on_landable`, `completed_jump`) so a
+  story's missions.json can use them as `"complete_flag"`s without any
+  code change. See docs/CONTROLS.md's Mission Log section and
+  `config/stories/default/missions.json`'s `"first_flight"` for a worked
+  example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
 - `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
 
