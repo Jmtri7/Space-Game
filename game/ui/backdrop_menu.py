@@ -1,0 +1,113 @@
+"""`BackdropMenu` - a top-level list screen over the animated `MenuBackdrop`:
+a title, then a centred column of **buttons** you arrow/click through, each
+optionally with a wrapped description line under it. Enter or a click returns
+the focused row's value; ESC returns `"cancel"` when the menu allows backing
+out.
+
+Replaces the old `Menu` (main menu: NEW / LOAD / QUIT) and `StorySelector`
+(pick a campaign, each with a blurb).
+"""
+import pygame
+import game.utils as utils
+from game.constants import GRAY
+from game.utils import get_font, _wrap_text
+from game.ui.menu_base import MenuBase
+from game.ui.menu_backdrop import MenuBackdrop
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+
+ROW_ACCENT = (180, 205, 235)
+
+
+class BackdropMenu(MenuBase):
+    button_layout = "column"
+
+    def __init__(self, title, rows, seed=None, allow_cancel=False):
+        """`rows`: `[(value, label, description_or_None), ...]`."""
+        self.title = title
+        self.rows = list(rows)
+        self.allow_cancel = allow_cancel
+        self.button_index = 0
+        self.backdrop = MenuBackdrop(seed=seed) if seed is not None else MenuBackdrop()
+
+    def buttons(self):
+        return [(value, label, ROW_ACCENT, False) for value, label, _desc in self.rows]
+
+    # Hint is drawn by draw_content (below the descriptions), not MenuBase.
+    def hint_text(self):
+        return None
+
+    def _hint(self):
+        return "Up/Down + Enter, or click" + ("  ·  ESC to cancel" if self.allow_cancel else "")
+
+    # --- layout -------------------------------------------------------
+    def _metrics(self):
+        scale = min(utils.screen_width, utils.screen_height) / 600.0
+        return {
+            "scale": scale,
+            "panel_width": int(560 * scale),
+            "panel_top": int(20 * scale),
+            "title_area": int(96 * scale),
+            "btn_height": int(46 * scale),
+            "desc_line_height": int(22 * scale),
+            "row_gap": int(16 * scale),
+            "box_width": int(520 * scale),
+        }
+
+    def _desc_lines(self, m):
+        font_desc = get_font(int(20 * m["scale"]))
+        return {v: (_wrap_text(font_desc, d, m["box_width"] - int(20 * m["scale"])) if d else [])
+                for v, _l, d in self.rows}
+
+    def _panel_and_rows(self):
+        m = self._metrics()
+        desc_lines = self._desc_lines(m)
+        row_heights = [m["btn_height"] + len(desc_lines[v]) * m["desc_line_height"] + m["row_gap"]
+                       for v, _l, _d in self.rows]
+        # Extra bottom padding leaves room for MenuBase's hint line.
+        panel_height = m["title_area"] + sum(row_heights) + int(52 * m["scale"])
+        panel = pygame.Rect(0, 0, m["panel_width"], panel_height)
+        panel.centerx = utils.screen_width // 2
+        panel.top = m["panel_top"]
+
+        btn_rects = []
+        y = panel.top + m["title_area"]
+        for v, _l, _d in self.rows:
+            btn_rects.append(pygame.Rect(panel.centerx - m["box_width"] // 2, y, m["box_width"], m["btn_height"]))
+            y += m["btn_height"] + len(desc_lines[v]) * m["desc_line_height"] + m["row_gap"]
+        return m, desc_lines, panel, btn_rects
+
+    def panel_rect(self, scale):
+        return self._panel_and_rows()[2]
+
+    def button_bar_rects(self, scale):
+        return self._panel_and_rows()[3]
+
+    # --- input -------------------------------------------------------
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.allow_cancel:
+                return "cancel"
+            pressed = self.handle_button_event(event, lambda: self._panel_and_rows()[3])
+            if pressed is not None:
+                return pressed
+        return None
+
+    # --- rendering --------------------------------------------------
+    def draw_content(self, surface):
+        self.backdrop.draw(surface)
+        m, desc_lines, panel, btn_rects = self._panel_and_rows()
+        scale = m["scale"]
+        draw_glass_panel(surface, panel, scale)
+        draw_glow_title(surface, self.title, get_font(int(50 * scale)), panel.centerx, panel.top + int(18 * scale))
+
+        font_desc = get_font(int(20 * scale))
+        for (value, _label, _desc), rect in zip(self.rows, btn_rects):
+            desc_y = rect.bottom + m["desc_line_height"] // 2
+            for line in desc_lines[value]:
+                dt = font_desc.render(line, True, GRAY)
+                surface.blit(dt, dt.get_rect(center=(panel.centerx, desc_y)))
+                desc_y += m["desc_line_height"]
+
+        hint = get_font(int(15 * scale)).render(self._hint(), True, GRAY)
+        surface.blit(hint, hint.get_rect(center=(panel.centerx, panel.bottom - int(20 * scale))))
+        # The row buttons themselves are drawn by MenuBase.draw via button_bar_rects().

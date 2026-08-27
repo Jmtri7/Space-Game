@@ -18,6 +18,18 @@ class SelectableList:
         self.max_visible = max_visible
         self.selected = 0
         self.scroll_offset = 0
+        # (absolute_index, pygame.Rect) per visible row, refreshed by draw() -
+        # for mouse hit-testing (see index_at); same "cache during draw,
+        # hit-test next frame" idiom as IconGrid.last_rects.
+        self._row_rects = []
+
+    def index_at(self, pos):
+        """The absolute item index under a screen point, or None. Uses the
+        row rects cached by the last draw()."""
+        for index, rect in self._row_rects:
+            if rect.collidepoint(pos):
+                return index
+        return None
 
     def _clamp_selected(self):
         """Keep `selected`/`scroll_offset` valid even if `.items` was
@@ -62,6 +74,7 @@ class SelectableList:
         unselected colors - used for options the player can't currently
         take (e.g. can't afford, already own one)."""
         self._clamp_selected()
+        self._row_rects = []
         if not self.items:
             return
 
@@ -84,6 +97,11 @@ class SelectableList:
             text = font.render(label, True, color)
             text_x = center_x - text.get_width() // 2
             text_y = int(start_y + i * line_height)
+            # A wide, forgiving hit box centred on the row (not just the text
+            # width) so clicking anywhere on the line selects it.
+            self._row_rects.append((self.scroll_offset + i, pygame.Rect(
+                center_x - int(220 * scale), text_y - int(4 * scale),
+                int(440 * scale), line_height)))
             if is_selected:
                 # Drawn even when `reason` is set (item disabled, e.g. can't
                 # afford) - otherwise the selected row looks identical to

@@ -11,20 +11,16 @@ from game.utils import (
 )
 from game.world.player_controller import PlayerController
 from game.screens.space_screen import SpaceScreen
-from game.ui.menu import Menu
+from game.ui.backdrop_menu import BackdropMenu
 from game.ui.pilot_name_dialog import PilotNameDialog
-from game.ui.location_selector import LocationSelector
-from game.ui.exit_menu import ExitMenu
-from game.ui.possessions_menu import PossessionsMenu
-from game.ui.mission_log import MissionLog
+from game.ui.choice_dialog import ChoiceDialog
+from game.ui.report_menu import ReportMenu, possessions_report, mission_report
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.ui.outfitting_menu import OutfittingMenu
 from game.ui.pause_menu import PauseMenu
-from game.ui.save_dialog import SaveDialog
+from game.ui.save_browser import SaveBrowser
 from game.ui.confirm_dialog import ConfirmDialog
-from game.ui.load_menu import LoadMenu
-from game.ui.story_selector import StorySelector
 from game.ui.star_map import StarMap
 
 # Initialize pygame and display
@@ -89,6 +85,42 @@ def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn
     return ShopMenu(possessions, story, shop_config, cargo_capacity=cargo_capacity)
 
 
+def story_menu_rows():
+    """`(value, label, description)` rows for the `BackdropMenu` story picker -
+    scans config/stories/*/story.json (same as the old StorySelector did)."""
+    rows = []
+    stories_dir = "config/stories"
+    if os.path.isdir(stories_dir):
+        for item in sorted(os.listdir(stories_dir)):
+            story_json = os.path.join(stories_dir, item, "story.json")
+            if os.path.isfile(story_json):
+                description = (load_json(story_json) or {}).get("description", "")
+                rows.append((item, item.replace("_", " ").title(), description))
+    return rows
+
+
+def landing_location_options(interiors):
+    """`(key, label, None)` options for the `ChoiceDialog` moon-landing picker."""
+    options = []
+    for key, config in interiors.items():
+        label = config.get("label", key.capitalize()) if isinstance(config, dict) else key.capitalize()
+        options.append((key, label, None))
+    return options
+
+
+def exit_options(option_keys, interiors, disabled_reasons):
+    """`(key, label, disabled_reason)` options for the `ChoiceDialog` exit picker."""
+    out = []
+    for key in option_keys:
+        if key == "ship":
+            label = "Return to Ship"
+        else:
+            config = interiors.get(key)
+            label = config.get("label", key.capitalize()) if isinstance(config, dict) else key.capitalize()
+        out.append((key, label, disabled_reasons.get(key)))
+    return out
+
+
 def warn_if_story_version_mismatch(story, saved_version):
     """Print a warning if a save's story_version doesn't match the current
     story.json's version - the story's config or this game's state-
@@ -123,11 +155,17 @@ def update_background_locations(game_screen, active_location):
                     interior.update_physics()
 
 
+def main_menu():
+    """The main menu (NEW / LOAD / QUIT) - rebuilt whenever the game returns
+    to it so the LOAD row reflects the current save situation."""
+    return BackdropMenu("GALAXY RISE", [("new", "NEW", None), ("load", "LOAD", None), ("quit", "QUIT", None)])
+
+
 def main():
     """Main game loop."""
     global screen
     try:
-        menu = Menu()
+        menu = main_menu()
         story_selector = None
         game_screen = None
         station_interior = None
@@ -181,10 +219,10 @@ def main():
                 if selection == "quit":
                     running = False
                 elif selection == "new":
-                    story_selector = StorySelector()
+                    story_selector = BackdropMenu("SELECT STORY", story_menu_rows(), seed=4242, allow_cancel=True)
                     current_screen = "story_select"
                 elif selection == "load":
-                    load_menu = LoadMenu()
+                    load_menu = SaveBrowser("load")
                     current_screen = "load"
                 menu.draw(screen)
 
@@ -222,7 +260,7 @@ def main():
                         except:
                             pass
                         delete_confirm_dialog = None
-                        load_menu = LoadMenu()
+                        load_menu = SaveBrowser("load")
                     elif confirm_action == "cancel":
                         delete_confirm_dialog = None
                     elif confirm_action == "quit":
@@ -288,7 +326,7 @@ def main():
                             load_return_screen = None
                         else:
                             current_screen = "menu"
-                            menu = Menu()
+                            menu = main_menu()
                     load_menu.draw(screen)
 
             elif current_screen == "game":
@@ -307,22 +345,29 @@ def main():
                             station_interior.arrive_from("ship")
                         current_screen = "station"
                     elif game_screen.landing_target == "moon":
-                        location_selector = LocationSelector(game_screen.moon.interiors)
+                        location_selector = ChoiceDialog("Landing Location", landing_location_options(game_screen.moon.interiors))
                         current_screen = "select_location"
                 elif action == "star_map":
                     star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
                     current_screen = "star_map"
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(game_screen.player.person.possessions, story=game_screen.story, ship=game_screen.player.ship)
+                    possessions_menu = ReportMenu(*possessions_report(game_screen.player.person.possessions, game_screen.story, game_screen.player.ship))
                     possessions_return_screen = "game"
                     current_screen = "possessions"
                 elif action == "missions":
-                    mission_log = MissionLog(game_screen.missions_config, game_screen.player.person.possessions)
+                    mission_log = ReportMenu(*mission_report(game_screen.missions_config, game_screen.player.person.possessions))
                     missions_return_screen = "game"
                     current_screen = "missions"
-                game_screen.update()
+                # An open hail conversation fully pauses the world - the
+                # rest of the simulation freezes like any other modal menu
+                # (matches PauseMenu / the StarMap jump screen / a station
+                # NPC conversation). handle_input above still runs every
+                # frame to drive the dialogue box itself.
+                if not game_screen.active_dialogue:
+                    game_screen.update()
                 game_screen.draw(screen)
-                update_background_locations(game_screen, None)
+                if not game_screen.active_dialogue:
+                    update_background_locations(game_screen, None)
 
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
@@ -344,7 +389,7 @@ def main():
                 elif action == "exit":
                     current_screen = "game"
                 elif action == "exit_menu":
-                    exit_menu = ExitMenu(station_interior.get_exit_options(), game_screen.station.interiors, disabled_reasons=station_interior.get_exit_disabled_reasons())
+                    exit_menu = ChoiceDialog("Where To?", exit_options(station_interior.get_exit_options(), game_screen.station.interiors, station_interior.get_exit_disabled_reasons()))
                     exit_menu_landable = game_screen.station
                     exit_menu_return_screen = "station"
                     current_screen = "exit_menu"
@@ -353,11 +398,11 @@ def main():
                     station_interior = game_screen.get_interior_screen(game_screen.station, action.split(":", 1)[1])
                     station_interior.arrive_from(origin_key)
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(station_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
+                    possessions_menu = ReportMenu(*possessions_report(station_interior.player.possessions, game_screen.story, game_screen.player.ship))
                     possessions_return_screen = "station"
                     current_screen = "possessions"
                 elif action == "missions":
-                    mission_log = MissionLog(game_screen.missions_config, station_interior.player.possessions)
+                    mission_log = ReportMenu(*mission_report(game_screen.missions_config, station_interior.player.possessions))
                     missions_return_screen = "station"
                     current_screen = "missions"
                 elif action == "shop":
@@ -379,12 +424,12 @@ def main():
 
             elif current_screen == "select_location":
                 location_key = location_selector.handle_input(events)
-                if location_key and location_key in location_selector.interior_configs:
+                if location_key == "cancel":
+                    current_screen = "game"
+                elif location_key:
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, location_key)
                     moon_interior.arrive_from("ship")
                     current_screen = "moon"
-                elif location_key == "cancel":
-                    current_screen = "game"
                 location_selector.draw(screen)
 
             elif current_screen == "exit_menu":
@@ -403,11 +448,11 @@ def main():
                     else:
                         moon_interior = interior
                     current_screen = exit_menu_return_screen
-                # A modal menu, like PauseMenu - the rest of the world
+                # A modal, like PauseMenu - the rest of the world
                 # (space physics, other cached interiors) stays frozen
                 # while it's open. Redraw whichever interior it was opened
-                # over first - ExitMenu only paints a centered panel, not a
-                # full-screen fill, so skipping this left the *previous*
+                # over first - the exit ChoiceDialog only paints a centered
+                # panel, not a full-screen fill, so skipping this left the *previous*
                 # frame's interior (e.g. the spaceport, Dax Renner and all)
                 # visible behind the menu instead of the one actually being
                 # left, which looked exactly like an NPC in two rooms at once.
@@ -470,7 +515,7 @@ def main():
                     previous_screen = "moon"
                     current_screen = "pause"
                 elif action == "exit_menu":
-                    exit_menu = ExitMenu(moon_interior.get_exit_options(), game_screen.moon.interiors, disabled_reasons=moon_interior.get_exit_disabled_reasons())
+                    exit_menu = ChoiceDialog("Where To?", exit_options(moon_interior.get_exit_options(), game_screen.moon.interiors, moon_interior.get_exit_disabled_reasons()))
                     exit_menu_landable = game_screen.moon
                     exit_menu_return_screen = "moon"
                     current_screen = "exit_menu"
@@ -479,11 +524,11 @@ def main():
                     moon_interior = game_screen.get_interior_screen(game_screen.moon, action.split(":", 1)[1])
                     moon_interior.arrive_from(origin_key)
                 elif action == "possessions":
-                    possessions_menu = PossessionsMenu(moon_interior.player.possessions, story=game_screen.story, ship=game_screen.player.ship)
+                    possessions_menu = ReportMenu(*possessions_report(moon_interior.player.possessions, game_screen.story, game_screen.player.ship))
                     possessions_return_screen = "moon"
                     current_screen = "possessions"
                 elif action == "missions":
-                    mission_log = MissionLog(game_screen.missions_config, moon_interior.player.possessions)
+                    mission_log = ReportMenu(*mission_report(game_screen.missions_config, moon_interior.player.possessions))
                     missions_return_screen = "moon"
                     current_screen = "missions"
                 elif action == "shop":
@@ -579,14 +624,14 @@ def main():
                     if action == "resume":
                         current_screen = previous_screen
                     elif action == "save":
-                        save_dialog = SaveDialog(pilot_name=pilot_name)
+                        save_dialog = SaveBrowser("save", pilot_name=pilot_name)
                     elif action == "load":
-                        load_menu = LoadMenu()
+                        load_menu = SaveBrowser("load")
                         load_return_screen = "pause"
                         current_screen = "load"
                     elif action == "quit":
                         current_screen = "menu"
-                        menu = Menu()
+                        menu = main_menu()
 
                 # draw_hud=False since PauseMenu.draw() immediately fills
                 # the whole screen black anyway - this is just to keep

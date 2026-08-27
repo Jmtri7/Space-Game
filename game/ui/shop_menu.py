@@ -8,15 +8,16 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_commodity, get_item
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_item_icon, draw_shop_cell, draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
+from game.ui.menu_base import MenuBase
 
 DEFAULT_SELL_MULTIPLIER = 0.6
 GRID_COLUMNS = 3
 GRID_ROWS = 2
 
 
-class ShopMenu:
+class ShopMenu(MenuBase):
     """Buy tab lists the shop's configured stock, priced via
     get_commodity()/get_item(); Sell tab lists whatever the player currently
     holds in this shop's category, priced at base_price * sell_multiplier.
@@ -70,6 +71,8 @@ class ShopMenu:
 
     def handle_input(self, events):
         for event in events:
+            if self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._handle_click(event.pos)
                 continue
@@ -127,11 +130,28 @@ class ShopMenu:
             else:
                 self.possessions.remove_item(item_id, 1)
 
-    def draw(self, surface):
+    def buttons(self):
+        return [("close", "Close", (235, 235, 240), False)]
+
+    def hint_text(self):
+        return "Tab/click: Buy/Sell tab  ·  arrows/click: browse  ·  Enter: transact"
+
+    def panel_rect(self, scale):
+        return modal_panel_rect(scale, 0.1, 0.76, 0.8)
+
+    def _button_rects(self, scale):
+        panel = self.panel_rect(scale)
+        w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
+        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
+
+    def button_bar_rects(self, scale):
+        return self._button_rects(scale)
+
+    def draw_content(self, surface):
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = modal_panel_rect(scale, 0.1, 0.76, 0.8)
+        panel_rect = self.panel_rect(scale)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))
@@ -180,18 +200,9 @@ class ShopMenu:
             down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
 
-        # Top-left Controls pane - same real-screen-corner spot/style as
-        # the base screen's own (see LocationScreen.draw's draw_hud=False /
-        # SpaceScreen's), which this menu is always shown on top of, so its
-        # controls take over that exact spot instead of a separate line
-        # tucked into this panel's own corner.
-        margin = int(10 * scale)
-        help_items = [("Tab/Click", "Buy/Sell tab"), ("Arrows/Click", "Browse"), ("Enter", "Transact 1"), ("ESC", "Close")]
-        draw_controls_pane(surface, margin, margin, "Controls", help_items, scale)
-
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(36 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(64 * scale), scale)
 
     def _draw_cell(self, surface, rect, item_id, is_selected, reason, scale):
         """cell_draw_fn for the buy/sell IconGrid - an icon, the item's

@@ -1,5 +1,11 @@
 # Class Hierarchy & Composition in Space Game
 
+> **Note:** this file is a stale early snapshot (it still references
+> `screens.py`, `GameScreen`, `WalkableArea`, `StationInterior`, per-class
+> confirm dialogs - none of which exist now). See
+> [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the authoritative
+> structure. The UI section below has been kept roughly current.
+
 ## Inheritance Hierarchies
 
 ### Ship Classes (ship.py)
@@ -17,17 +23,18 @@ ScreenBase (base for all screens)
 │       └── StationInterior (space station interiors)
 └── GameScreen (main space exploration)
 
-Independent Screens:
-├── Menu (main menu)
-├── StorySelector (story selection)
-├── PilotNameDialog (name entry)
-├── LocationSelector (moon location choice)
-├── PauseMenu (pause menu)
-├── SaveDialog (save management)
-├── LoadMenu (load management)
-└── ConfirmDialog (base confirmation dialog)
-    ├── DeleteConfirmDialog
-    └── OverwriteConfirmDialog
+Modal UI (game/ui/):
+MenuBase (in-panel action buttons; dwell-in menus, don't close on an action)
+├── BackdropMenu     (main menu + story selector)
+├── PauseMenu
+├── SaveBrowser      (load + save, mode=)
+├── ReportMenu       (possessions + missions, via *_report() builders)
+├── ShopMenu, ShipBrowserMenu, OutfittingMenu
+├── StarMap
+└── DialogBase       (same buttons; closes on any pick)
+    ├── ConfirmDialog     (Yes/No)
+    ├── PilotNameDialog   (text field + Start/Cancel)
+    └── ChoiceDialog      (landing spot + exit "where to?")
 ```
 
 ### Entity Classes (objects.py)

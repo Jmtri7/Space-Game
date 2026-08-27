@@ -36,7 +36,7 @@ from game.world.person import Person
 from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
-from game.ui.mission_log import MissionLog
+from game.ui.report_menu import ReportMenu, mission_report, possessions_report
 from game.ui.ui_theme import side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
@@ -47,7 +47,10 @@ from game.world.wander_routine import WanderRoutine
 from game.world.system_state import SystemState
 from game.world.asteroid_field import AsteroidField
 from game.ui.selectable_list import SelectableList
-from game.ui.save_dialog import SaveDialog
+from game.ui.save_browser import SaveBrowser
+from game.ui.choice_dialog import ChoiceDialog
+from game.ui.backdrop_menu import BackdropMenu
+from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
 from game.ui.icon_grid import IconGrid
@@ -1330,15 +1333,86 @@ class TestMissionOneWayMessage(unittest.TestCase):
 
 
 class TestMissionLog(unittest.TestCase):
-    """MissionLog's handle_input() - draw() is exercised implicitly by
-    TestMissionProgress's data (mission_status_lines) and isn't worth
-    testing against a mocked pygame surface here."""
+    """The mission ReportMenu's handle_input() - draw() is exercised
+    implicitly by TestMissionProgress's data (mission_status_lines) and isn't
+    worth testing against a mocked pygame surface here."""
 
     def test_escape_and_n_both_close(self):
-        menu = MissionLog({}, Possessions())
+        menu = ReportMenu(*mission_report({}, Possessions()))
         for key in (pygame_mock.K_ESCAPE, pygame_mock.K_n):
             event = SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
             self.assertEqual(menu.handle_input([event]), "close")
+
+
+class TestMenuDialogClassification(unittest.TestCase):
+    """The menu-vs-dialog split (see game/ui/menu_base.py): both hide the
+    Controls pane and drive their actions with buttons; a dialog additionally
+    closes on any pick."""
+
+    def test_is_dialog_flags(self):
+        self.assertFalse(ReportMenu("x", [[]]).is_dialog)
+        self.assertFalse(BackdropMenu("x", [("a", "A", None)]).is_dialog)
+        self.assertTrue(ChoiceDialog("x", [("a", "A", None)]).is_dialog)
+        self.assertTrue(ConfirmDialog("x", "y").is_dialog)
+
+    def test_no_modal_renders_a_controls_pane(self):
+        # help_items() was the Controls-pane hook - it's gone from every modal.
+        for modal in (ReportMenu("x", [[]]), BackdropMenu("x", [("a", "A", None)]),
+                      ChoiceDialog("x", [("a", "A", None)]), ConfirmDialog("x", "y")):
+            self.assertFalse(hasattr(modal, "help_items"))
+
+    def test_every_modal_exposes_buttons(self):
+        self.assertTrue(ReportMenu("x", [[]]).buttons())
+        self.assertTrue(BackdropMenu("x", [("a", "A", None)]).buttons())
+        self.assertTrue(ChoiceDialog("x", [("a", "A", None)]).buttons())
+        self.assertTrue(ConfirmDialog("x", "y").buttons())
+
+
+class TestChoiceDialog(unittest.TestCase):
+    """ChoiceDialog (was LocationSelector + ExitMenu): pick a key, or cancel;
+    a disabled option can't be committed."""
+
+    def _key(self, key):
+        return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
+
+    def test_enter_returns_the_focused_key(self):
+        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None), ("dorm", "Dormitory", None)])
+        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
+        dialog.handle_input([self._key(pygame_mock.K_DOWN)])
+        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "dorm")
+
+    def test_escape_cancels(self):
+        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None)])
+        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_ESCAPE)]), "cancel")
+
+    def test_focus_never_lands_on_a_disabled_option(self):
+        dialog = ChoiceDialog("Where To?", [("ship", "Return to Ship", "no ship owned"), ("bar", "Bar", None)])
+        # Starts off the disabled first entry...
+        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
+        # ...and navigation skips over it rather than stopping on it.
+        for _ in range(3):
+            dialog.handle_input([self._key(pygame_mock.K_UP)])
+            self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
+
+
+class TestBackdropMenu(unittest.TestCase):
+    """BackdropMenu (was Menu + StorySelector): Enter returns the focused
+    row's value; ESC only cancels when the menu allows it."""
+
+    def _key(self, key):
+        return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
+
+    def test_enter_returns_row_value(self):
+        menu = BackdropMenu("MAIN", [("new", "NEW", None), ("quit", "QUIT", None)])
+        self.assertEqual(menu.handle_input([self._key(pygame_mock.K_RETURN)]), "new")
+        menu.handle_input([self._key(pygame_mock.K_DOWN)])
+        self.assertEqual(menu.handle_input([self._key(pygame_mock.K_RETURN)]), "quit")
+
+    def test_escape_only_cancels_when_allowed(self):
+        no_cancel = BackdropMenu("MAIN", [("new", "NEW", None)])
+        self.assertIsNone(no_cancel.handle_input([self._key(pygame_mock.K_ESCAPE)]))
+        cancelable = BackdropMenu("STORY", [("a", "A", None)], allow_cancel=True)
+        self.assertEqual(cancelable.handle_input([self._key(pygame_mock.K_ESCAPE)]), "cancel")
 
 
 class TestPossessionsInventory(unittest.TestCase):
@@ -1495,8 +1569,8 @@ class TestShopMenu(unittest.TestCase):
     data rather than reimplementing get_commodity()/get_item() with a fake.
     Only the transaction/navigation logic is tested here, not draw() - see
     CLAUDE.md's "don't test UI rendering" and the fact that no other full
-    menu class (PossessionsMenu, ConfirmDialog, LocationSelector) has a
-    draw() test either."""
+    menu class (ReportMenu, ConfirmDialog, ChoiceDialog) has a draw() test
+    either."""
 
     def _event(self, type_, **kwargs):
         return SimpleNamespace(type=type_, **kwargs)
@@ -1975,7 +2049,7 @@ class _FakeFont:
 
 
 class TestWrapText(unittest.TestCase):
-    """Test utils._wrap_text() - shared by StorySelector and Dialogue (see
+    """Test utils._wrap_text() - shared by BackdropMenu and Dialogue (see
     Dialogue.draw()) so long NPC lines wrap inside their box instead of
     running off the edge."""
 
@@ -3195,7 +3269,8 @@ class TestLocationScreenEconomy(unittest.TestCase):
 
 class TestSelectableListDisabledNavigation(unittest.TestCase):
     """Test SelectableList.handle_key()'s disabled_fn skip - the same
-    "can't navigate onto a disabled entry" fix applied to ExitMenu."""
+    "can't navigate onto a disabled entry" fix (used by ExitMenu, now the
+    ChoiceDialog exit picker, and the outfitting picker)."""
 
     def test_skips_disabled_entry_when_moving_down(self):
         selectable = SelectableList(["a", "b", "c"], max_visible=3)
@@ -3217,12 +3292,12 @@ class TestSelectableListDisabledNavigation(unittest.TestCase):
 
 
 class TestSelectableListItemsShrink(unittest.TestCase):
-    """Regression test: SaveDialog crashed (IndexError in current()) when
-    deleting the last-selected save shrank the list out from under a
+    """Regression test: the save browser crashed (IndexError in current())
+    when deleting the last-selected save shrank the list out from under a
     SelectableList whose `selected` index wasn't updated to match - e.g.
     deleting save 3 of 3 left `selected == 2` pointing past the new 2-item
-    list. SaveDialog's existing_saves setter reassigns `.list.items`
-    directly (see game/ui/save_dialog.py), so the fix has to live in
+    list. SaveBrowser's existing_saves setter reassigns `.list.items`
+    directly (see game/ui/save_browser.py), so the fix has to live in
     SelectableList itself, not in whoever mutates it."""
 
     def test_current_does_not_crash_when_items_shrink_past_selected(self):
@@ -3295,13 +3370,13 @@ class TestSaveDialogNewSaveKey(unittest.TestCase):
     and a TEXTINPUT("n") event in the same pygame frame. handle_input() used
     to process the KEYDOWN (switching into input_mode) and then the
     TEXTINPUT from the very same keypress, appending a stray "n" to the
-    pre-populated save name. See game/ui/save_dialog.py's _suppress_next_text."""
+    pre-populated save name. See game/ui/save_browser.py's _suppress_next_text."""
 
     def _event(self, type_, **kwargs):
         return SimpleNamespace(type=type_, **kwargs)
 
     def test_pressing_n_does_not_append_n_to_save_name(self):
-        dialog = SaveDialog(pilot_name="Test")
+        dialog = SaveBrowser("save", pilot_name="Test")
         dialog.list.items = ["existing_save"]
         dialog.input_mode = False
         name_before = dialog.save_name
@@ -3316,7 +3391,7 @@ class TestSaveDialogNewSaveKey(unittest.TestCase):
         self.assertEqual(dialog.save_name, name_before)
 
     def test_textinput_still_works_after_the_suppressed_one(self):
-        dialog = SaveDialog(pilot_name="Test")
+        dialog = SaveBrowser("save", pilot_name="Test")
         dialog.list.items = ["existing_save"]
         dialog.input_mode = False
 
@@ -3328,6 +3403,36 @@ class TestSaveDialogNewSaveKey(unittest.TestCase):
         dialog.handle_input([self._event(pygame_mock.TEXTINPUT, text="x")])
 
         self.assertEqual(dialog.save_name, name_after_n + "x")
+
+
+class TestSaveBrowserContract(unittest.TestCase):
+    """The (action, payload) tuples main.py's load/pause branches switch on."""
+
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_load_mode_actions(self):
+        b = SaveBrowser("load")
+        b.list.items = ["save_a.json", "save_b.json"]
+        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("load", "save_a.json"))
+        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_d)]), ("delete", "save_a.json"))
+        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_ESCAPE)]), ("cancel", None))
+
+    def test_save_mode_overwrite_vs_new(self):
+        b = SaveBrowser("save", pilot_name="Kai")
+        b.list.items = ["save_old.json"]
+        b.input_mode = False
+        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("save", "save_old.json"))
+        # N drops into text entry; Enter there returns the typed name.
+        b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n)])
+        self.assertTrue(b.input_mode)
+        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("save", b.save_name))
+
+    def test_load_mode_has_no_new_save_key(self):
+        b = SaveBrowser("load")
+        b.list.items = ["save_a.json"]
+        b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n)])
+        self.assertFalse(b.input_mode)
 
 
 if __name__ == "__main__":

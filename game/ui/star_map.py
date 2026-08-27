@@ -2,14 +2,15 @@
 import pygame
 from game.constants import WHITE, YELLOW, GREEN, CYAN
 from game.utils import get_ui_scale, get_star_systems
-from game.ui.ui_theme import draw_glass_panel, draw_controls_pane
+from game.ui.menu_base import MenuBase
+from game.ui.ui_theme import draw_glass_panel
 
 # Keyboard pan speed, in star-map-space units/frame (unrelated to ui_scale -
 # see handle_input).
 PAN_SPEED = 10
 
 
-class StarMap:
+class StarMap(MenuBase):
     """Overlay showing every star system in the current story on a pannable
     galaxy map (systems only exist within one story - see space_screen.py).
 
@@ -34,9 +35,26 @@ class StarMap:
         self.drag_start_pan = (self.pan_x, self.pan_y)
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
         self._hud_click_rects = []  # UI panel rects, refreshed each draw()
+        self.button_index = 0
+
+    def buttons(self):
+        return [("close", "Close Map (M)", (235, 235, 240), False)]
+
+    def hint_text(self):
+        return "Click a system to select  ·  drag or WASD/arrows to pan"
+
+    def panel_rect(self, scale):
+        import game.utils as _u
+        return pygame.Rect(0, 0, _u.screen_width, _u.screen_height)
+
+    def button_bar_rects(self, scale):
+        m = int(14 * scale)
+        return [pygame.Rect(m, m, int(150 * scale), int(38 * scale))]
 
     def handle_input(self, events):
         for event in events:
+            if self.handle_button_click(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
+                return "close"
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_ESCAPE, pygame.K_m):
                     return "close"
@@ -81,7 +99,7 @@ class StarMap:
                 return system_id
         return None
 
-    def draw(self, surface):
+    def draw_content(self, surface):
         surface.fill((8, 8, 20))
         ui_scale = get_ui_scale()
         center_x, center_y = surface.get_width() / 2, surface.get_height() / 2
@@ -114,23 +132,13 @@ class StarMap:
                 tag = font_tag.render("You are here", True, GREEN)
                 surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
 
+        # Title top-centre (the top-left corner holds the Close button).
         title = font_title.render("Star Map", True, WHITE)
-        title_rect = title.get_rect(topleft=(20, 20))
-        surface.blit(title, title_rect)
-
-        margin = int(10 * ui_scale)
-        help_items = [
-            ("Click", "Select System"),
-            ("Drag", "Pan Map"),
-            ("WASD/Arrows", "Scroll Map"),
-            ("M/ESC", "Close Map"),
-        ]
-        controls_rect = draw_controls_pane(
-            surface, margin, title_rect.bottom + margin, "Controls", help_items, ui_scale
-        )
+        surface.blit(title, (surface.get_width() // 2 - title.get_width() // 2, int(16 * ui_scale)))
 
         selected_rect = self._draw_selected_panel(surface, ui_scale, font_label)
-        self._hud_click_rects = [rect for rect in (controls_rect, selected_rect) if rect]
+        close_rect = self.button_bar_rects(ui_scale)[0]
+        self._hud_click_rects = [rect for rect in (close_rect, selected_rect) if rect]
 
     def _draw_selected_panel(self, surface, ui_scale, font_label):
         """Top-right panel listing the selected system's station and moon,

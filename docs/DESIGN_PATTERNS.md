@@ -340,7 +340,7 @@ class ScrollableMenu:
 
 ## Pattern: Scrollable List Handler (Shared Logic)
 
-**Problem:** SaveDialog, LoadMenu both duplicate up/down navigation with wrapping and scroll-sync.
+**Problem:** The save and load screens both duplicate up/down navigation with wrapping and scroll-sync.
 
 **Solution:** Extract to a pure function that returns (new_selected, new_scroll_offset).
 
@@ -364,18 +364,15 @@ def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
             scroll_offset += 1
     return selected, scroll_offset
 
-# In SaveDialog.handle_input():
-self.selected, self.scroll_offset = _handle_scrolling_input(
-    event.key, self.selected, self.items, self.scroll_offset, self.max_visible)
-
-# In LoadMenu.handle_input():
+# SelectableList.handle_key() calls it; SaveBrowser (both modes) and
+# ChoiceDialog's old list form all went through SelectableList.
 self.selected, self.scroll_offset = _handle_scrolling_input(
     event.key, self.selected, self.items, self.scroll_offset, self.max_visible)
 ```
 
 **Why this works:**
 - Pure function (no side effects, testable in isolation)
-- Reusable by both SaveDialog and LoadMenu (DRY)
+- Reusable everywhere a list scrolls, via `SelectableList` (DRY)
 - Single place to fix boundary/wrapping bugs
 - Easy to add new key bindings (modify function signature once)
 
@@ -439,7 +436,7 @@ while running:
             game_screen = SpaceScreen()
             current_screen = "game"
         elif action == "load":
-            load_menu = LoadMenu()
+            load_menu = SaveBrowser("load")
             current_screen = "load"
     
     elif current_screen == "game":
@@ -732,6 +729,54 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
 **Use case:** Any HUD panel anchored to a screen edge or the horizontal
 center, especially one whose content can include story/dialogue text
 rather than only fixed, short UI labels.
+
+---
+
+## Pattern: Menu vs. Dialog (`MenuBase` / `DialogBase`)
+
+**Problem:** Every full-screen modal in `game/ui/` re-implemented its own
+"chrome" - some drew a top-left Controls pane (`draw_controls_pane`), some a
+help line inside their panel, `LocationSelector` drew nothing, `ExitMenu` (a
+one-shot picker) drew a full Controls pane like a dwelling menu. Nothing
+enforced a consistent rule, and there were four pairs of near-duplicate
+classes (`Menu`/`StorySelector`, `LocationSelector`/`ExitMenu`,
+`PossessionsMenu`/`MissionLog`, `LoadMenu`/`SaveDialog`).
+
+**Solution:** No modal draws a Controls pane (that pane is the in-world HUD's
+alone). Every modal presents its actions as `ui_theme.draw_button` widgets
+inside its own panel, mouse- and keyboard-driven. Two base classes:
+
+- **`MenuBase`** (`game/ui/menu_base.py`) - a **menu** you *dwell in*;
+  navigating/acting doesn't close it. Owns all the button infrastructure:
+  `buttons()` → `[(id, label, accent, disabled), ...]`, `button_bar_rects()`
+  → where they go (default: a centred row along the panel bottom; a corner
+  Close menu overrides it), `panel_rect()` → the glass panel so the default
+  bar and the dim `hint_text()` line can anchor. `draw()` is a template
+  method (content → `active_popup()` if a sub-dialog is up → buttons + hint).
+  `handle_button_event()` does arrows/Tab/Enter/hover/click; the keyboard
+  path builds no geometry (testable without real pygame). `handle_button_
+  click()` is the mouse-only variant for grid menus where Enter drives the
+  grid, not the button.
+- **`DialogBase(MenuBase)`** - a **dialog** shown *over* another modal that
+  closes as soon as you pick one of its `buttons()`. Adds nothing but
+  `is_dialog = True` and the "picking closes" semantics.
+
+**Why this works:**
+- One `draw()` template + one button-input path, not 15 copies of chrome.
+- Classifying by *persistence* resolves the awkward cases: `SaveBrowser`
+  stays open through delete/scroll/mode-switch → menu; `ChoiceDialog`
+  pick-and-go → dialog.
+- One widget per shape instead of per screen: `BackdropMenu(title, rows,
+  seed, allow_cancel)` covers the main menu and story picker;
+  `ChoiceDialog(title, options)` covers moon-landing and exit-door picking;
+  `ReportMenu(title, columns, hotkey, hotkey_label)` + a builder fn covers
+  the possessions and mission read-outs; `SaveBrowser(mode)` covers load and
+  save. `main.py` builds the data, the widget doesn't know the domain.
+
+**Use case:** Any new full-screen modal - decide menu vs. dialog by "can you
+navigate inside it without it closing?", subclass the matching base, provide
+`buttons()` + `panel_rect()`, and the chrome is handled. Reach for an
+existing widget (`BackdropMenu`, `ChoiceDialog`, `ReportMenu`) first.
 
 ---
 

@@ -106,28 +106,42 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 
 ## For Agents: Design Principles & Code Patterns
 
-### Menu Help Text (Consistency & Discoverability)
-**Rule:** All interactive menus and dialogs must display concise help text at the bottom showing available actions.
-- **Format:** "Action: key/button, Action: key/button, ESC: cancel" (terse, scannable)
-- **Maintenance:** Update help text whenever adding/changing menu options
-- **Benefit:** Players discover features without trial-and-error; new menu options self-document
+### Menu Discoverability
+**Rule:** A modal's primary actions are `draw_button` widgets in its own panel
+(`buttons()`); controls that *aren't* buttons (grid browsing, drag-to-install,
+map panning) go in the one-line dim `hint_text()` under the button bar. Update
+both when you add/change an action. No modal uses the top-left Controls pane -
+that's the in-world HUD's.
 
-**Example:**
-- Menu: `"Enter: select, ESC: cancel"`
-- SaveDialog: `"Enter: save, N: new, D: delete, ESC: cancel"`
-- LoadMenu: `"Enter: load, D: delete, ESC: cancel"`
+**Menu vs. Dialog (`MenuBase` / `DialogBase`):** every full-screen modal in
+`game/ui/` is one of two kinds. **Neither draws a Controls pane** - that pane
+belongs to the in-world HUD (`SpaceScreen`/`LocationScreen`) only. Every
+modal shows its actions as `ui_theme.draw_button` widgets **inside its own
+panel**, driven by mouse (hover + click) and keyboard (Tab / arrows move
+button focus, Enter presses). See docs/DESIGN_PATTERNS.md's "Menu vs. Dialog".
 
-**Full-screen menus vs. pop-up dialogs:** a full-screen menu (Menu, ShopMenu,
-PossessionsMenu, MissionLog, StarMap, ...) puts its help in the shared
-top-left **Controls pane** (`draw_controls_pane`). A **pop-up dialog** that
-appears *over* another menu (`ConfirmDialog`, `SaveDialog`, `LoadMenu`,
-`PilotNameDialog`, `PauseMenu`) shows its help/choices **inside its own
-panel** instead, and does NOT draw a Controls pane - and the menu it popped
-up over suppresses its own Controls pane while the dialog is up (e.g.
-`ShipBrowserMenu.draw`'s `if not self.confirm`). One set of controls on
-screen at a time, attached to whatever actually has input focus.
-`ConfirmDialog` presents its Yes/No as two `draw_button` buttons - keyboard
-(Left/Right + Enter, or Y/N/ESC shortcuts) and mouse (hover + click) both.
+- A **menu** (`MenuBase`, `is_dialog = False`) is one you *dwell in* -
+  navigating or acting inside it doesn't close it (a Close/Resume button,
+  ESC, or a hotkey does). → `BackdropMenu`, `PauseMenu`, `SaveBrowser`,
+  `ShopMenu`, `OutfittingMenu`, `ShipBrowserMenu`, `ReportMenu`, `StarMap`.
+- A **dialog** (`DialogBase`, `is_dialog = True`) sits *over* another modal
+  and closes as soon as you pick one of its `buttons()`. → `ConfirmDialog`,
+  `PilotNameDialog`, `ChoiceDialog`.
+
+Subclasses implement `draw_content()` (the panel), `buttons()` (the action
+bar), `button_bar_rects()` (where those go - default is a centred row along
+the panel bottom; corner-Close menus override it), `panel_rect()` (so the
+default bar + `hint_text()` line can anchor). `MenuBase.draw()` is a template
+method that draws the content then the buttons + hint. A grid menu whose
+Enter drives the grid (not the button) uses `handle_button_click()`
+(mouse-only) rather than the full `handle_button_event()`. A menu with a
+sub-dialog on top (`ShipBrowserMenu`'s purchase `ConfirmDialog`) returns it
+from `active_popup()` so `MenuBase.draw` defers to it.
+
+`main.py` builds `Menu`/`StorySelector` from `BackdropMenu`,
+`LocationSelector`/`ExitMenu` from `ChoiceDialog`, `PossessionsMenu`/
+`MissionLog` from `ReportMenu` + a builder fn, `LoadMenu`/`SaveDialog` from
+`SaveBrowser(mode=...)` - the old per-screen classes are gone.
 
 **Every menu panel** uses `modal_panel_rect()` for its main panel, which
 caps width at `center_panel_max_width()` and re-centres on the real screen,
