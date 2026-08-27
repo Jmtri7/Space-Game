@@ -71,6 +71,7 @@
             "x": 400,
             "y": 100,
             "role": "bartender",
+            "outfit": "bartender",
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
@@ -129,6 +130,7 @@
             "x": 140,
             "y": 300,
             "role": "loan_officer",
+            "outfit": "loan_officer",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
@@ -153,6 +155,7 @@
             "x": 645,
             "y": 278,
             "role": "ship_salesman",
+            "outfit": "ship_dealer",
             "greeting": "Looking for a ship? I've got three in dock.",
             "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
           },
@@ -161,6 +164,7 @@
             "x": 688,
             "y": 330,
             "role": "outfitter",
+            "outfit": "mechanic",
             "greeting": "Need to fit your ship out with something new?",
             "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
           },
@@ -169,6 +173,7 @@
             "x": 330,
             "y": 300,
             "role": "quartermaster",
+            "outfit": "quartermaster",
             "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
             "dialogue_options": ["Thanks", "Leave"],
             "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
@@ -178,6 +183,7 @@
             "x": 560,
             "y": 300,
             "role": "guard",
+            "outfit": "marshal",
             "greeting": "Welcome to the station. Dock's right behind me.",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -186,6 +192,7 @@
             "x": 452,
             "y": 350,
             "role": "traveler",
+            "outfit": "civilian",
             "greeting": "Safe travels!",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -194,6 +201,7 @@
             "x": 400,
             "y": 500,
             "role": "roommate",
+            "outfit": "vherathi_softsuit",
             "greeting": "Rough shift. Try not to wake me on your way out.",
             "dialogue_options": ["Sorry", "Leave"]
           },
@@ -202,6 +210,7 @@
             "x": 350,
             "y": 372,
             "role": "resident",
+            "outfit": "vherathi_softsuit",
             "greeting": "Morning. Or whatever hour the station clock says it is.",
             "dialogue_options": ["Morning", "Leave"]
           },
@@ -210,7 +219,35 @@
             "x": 442,
             "y": 224,
             "role": "resident",
+            "outfit": "vherathi_softsuit",
             "greeting": "Concourse bar's right there if you're looking for Bram.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Adjutant Ondra",
+            "x": 230,
+            "y": 300,
+            "role": "clerk",
+            "outfit": "station_official",
+            "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Stationmaster Corell",
+            "x": 660,
+            "y": 268,
+            "role": "stationmaster",
+            "outfit": "station_command",
+            "greeting": "I run this ring. Keep your approach clean and we won't have words.",
+            "dialogue_options": ["Noted", "Leave"]
+          },
+          {
+            "name": "Jax Miren",
+            "x": 572,
+            "y": 300,
+            "role": "dockworker",
+            "outfit": "dockworker",
+            "greeting": "Mind the clamps - that gantry swings wide when a hull's coming in.",
             "dialogue_options": ["Thanks", "Leave"]
           }
         ]
@@ -259,17 +296,83 @@
           {
             "name": "Nadia Okafor",
             "x": 300,
-            "y": 200
+            "y": 200,
+            "outfit": "vherathi_envoy"
           },
           {
             "name": "Ezra Kondo",
             "x": 700,
-            "y": 150
+            "y": 150,
+            "outfit": "researcher"
           },
           {
             "name": "Livia Marchetti",
             "x": 1250,
-            "y": 250
+            "y": 250,
+            "outfit": "vherathi_honor_guard"
+          },
+          {
+            "name": "Ovie Sann",
+            "x": 550,
+            "y": 300,
+            "role": "surface_tech",
+            "outfit": "vherathi_hardsuit",
+            "greeting": "Just came off a hull-walk. The resin's growing faster on the sunward spires this cycle.",
+            "dialogue_options": ["Interesting", "Leave"]
+          },
+          {
+            "name": "Councilor Orvin",
+            "x": 1000,
+            "y": 350,
+            "role": "magistrate",
+            "outfit": "vherathi_magistrate",
+            "greeting": "The Concord welcomes visitors who respect the grown law. See that you do.",
+            "dialogue_options": ["Of course", "Leave"]
+          },
+          {
+            "name": "Captain Bell",
+            "x": 300,
+            "y": 450,
+            "role": "pilot",
+            "outfit": "flight_suit",
+            "greeting": "Grounded till my transit clears. Nice to stretch my legs off the flight deck for once.",
+            "dialogue_options": ["Safe flights", "Leave"]
+          },
+          {
+            "name": "Dr. Sesh",
+            "x": 650,
+            "y": 1150,
+            "role": "medic",
+            "outfit": "medic",
+            "greeting": "Clinic's this quarter. Decompression cases mostly - people forget to check their seals.",
+            "dialogue_options": ["Noted", "Leave"]
+          },
+          {
+            "name": "Tarn Escobar",
+            "x": 400,
+            "y": 1250,
+            "role": "ranger",
+            "outfit": "ranger",
+            "greeting": "I run the trails out past the dome. Wilderness gate's south if you want a look.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Silas Vantauk",
+            "x": 1150,
+            "y": 950,
+            "role": "merchant",
+            "outfit": "merchant_prince",
+            "greeting": "I move rare resin and rarer favors. Everything has a price; most of them are reasonable.",
+            "dialogue_options": ["Maybe later", "Leave"]
+          },
+          {
+            "name": "Oracle Threa",
+            "x": 1250,
+            "y": 1150,
+            "role": "oracle",
+            "outfit": "void_oracle",
+            "greeting": "The lattice hums a little louder near you. Make of that what you will.",
+            "dialogue_options": ["Strange", "Leave"]
           }
         ]
       },

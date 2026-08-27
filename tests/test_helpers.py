@@ -447,6 +447,46 @@ class TestAsteroidField(unittest.TestCase):
         self.assertNotEqual(first, second)
 
 
+class TestPersonOutfitRendering(unittest.TestCase):
+    """Person.draw() with the default story's outfits - the culture/role
+    suits plus the accessory-piece keys (shoulder/spike/collar/chest_plate/
+    sash/belt/badge/backpack/antenna/visor). pygame is mocked here, so this
+    exercises the geometry math (to_screen, _shade, the hypot in the sash
+    band) and catches a typo'd color key in graphics.json, not the pixels."""
+
+    KNOWN_OUTFIT_KEYS = {
+        "helmet_color", "suit_color", "boot_color",
+        "shoulder_color", "spike_color", "collar_color", "chest_plate_color",
+        "sash_color", "belt_color", "badge_color", "backpack_color",
+        "antenna_color", "visor_color",
+    }
+
+    def _all_outfit_ids(self):
+        return list((utils.load_json("config/stories/default/graphics.json") or {}).get("outfits", {}))
+
+    def test_every_default_story_outfit_draws_without_error(self):
+        ids = self._all_outfit_ids()
+        self.assertIn("space_suit", ids)
+        for outfit_id in ids:
+            outfit = utils.get_graphics_asset("default", "outfits", outfit_id)
+            Person(570, 400, outfit=outfit).draw(MagicMock())
+
+    def test_no_outfit_uses_an_unrecognized_key(self):
+        outfits = (utils.load_json("config/stories/default/graphics.json") or {})["outfits"]
+        for outfit_id, outfit in outfits.items():
+            unknown = set(outfit) - self.KNOWN_OUTFIT_KEYS
+            self.assertEqual(unknown, set(), f"{outfit_id} has unknown key(s): {unknown}")
+
+    def test_visor_replaces_the_eyes(self):
+        with patch("game.world.person.pygame") as mock_pygame:
+            Person(0, 0, outfit={"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]}).draw(MagicMock())
+            polygons = mock_pygame.draw.polygon.call_count
+            circles = mock_pygame.draw.circle.call_count
+        self.assertGreater(polygons, 0)
+        # Head + its outline = 2 circles; a bare body would add 2 eye circles.
+        self.assertEqual(circles, 2)
+
+
 class TestLocationExitOptions(unittest.TestCase):
     """Test LocationScreen.get_exit_options() - the config-driven list of
     where an interior's exit leads (connected_locations plus "ship"),

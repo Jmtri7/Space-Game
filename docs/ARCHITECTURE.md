@@ -279,17 +279,32 @@ the currently defined cultures (e.g. the Vherathi Concord).
 
 **Base Class: `Person`**
 - Stores position, appearance, an `outfit`, and a `Possessions`
-- Implements `draw(surface)` — head + body, with the outfit's helmet/suit/
-  boot colors (if any) drawn over the shared body shape
+- Implements `draw(surface)` — head + body, with the outfit's colors and
+  accessory pieces drawn over the shared body shape (see below)
 - Provides `get_distance(x, y)` for interaction checks
 
 `outfit` is a resolved `graphics.json` "outfits" asset (see
 `get_graphics_asset(story, "outfits", outfit_id)`), same pattern as ship/
-station graphics. Every `Person` today is built with `"space_suit"`
-(`SpaceScreen`/`LocationScreen` resolve it and pass it in); a bare `Person`
-with no outfit just shows the plain body colors. Adding a new outfit is a
-new `graphics.json` entry plus whatever picks its id per-character (e.g.
-an NPC config's `"outfit"` field) - no drawing-code changes needed.
+station graphics. The player and AI pilots wear the story's
+`default_outfit` (`"space_suit"`); a station/moon NPC wears whatever its
+config's `"outfit"` field names, falling back to `default_outfit`. The
+default story ships ~34 outfits in `graphics.json` — culture standards
+(`vherathi_hardsuit`, `drossholt_coveralls`, …), role suits
+(`flight_suit`, `security`, `mechanic`, `bartender`, `medic`, …), and
+decorated variants (`marshal`, `vherathi_honor_guard`, `merchant_prince`,
+…).
+
+Every outfit key is just a color. `helmet_color` / `suit_color` /
+`boot_color` recolor the base body (helmet optional). Optional accessory
+keys each add one layered piece, drawn by `Person._draw_back_accessories`
+(behind the body: `backpack_color`, `spike_color` shoulder spikes,
+`antenna_color`) and `_draw_front_accessories` (over the torso:
+`shoulder_color` pauldrons, `chest_plate_color`, `sash_color` diagonal
+band, `belt_color` + shaded buckle, `collar_color`, `badge_color` chest
+diamond); `visor_color` is a face band that replaces the eyes. An absent
+key just skips that piece, so a bare `Person` shows plain body colors and
+**a new decorated outfit is still only a `graphics.json` entry — no
+drawing-code changes.**
 
 `Person` itself has no behavior/role concept - that lives on `Character`
 (see below), which owns a `Person` rather than subclassing it. Local NPCs
