@@ -136,7 +136,7 @@ class SpaceScreen(ScreenBase):
 
         # Placeholder ship stats/graphics for self.player before any ship is
         # actually owned - PlayerController always needs a Ship object to
-        # exist, but a new pilot starts in the dormitory with none, and
+        # exist, but a new pilot starts on foot in the station with none, and
         # this placeholder is never flown or even rendered until one is
         # bought (see _apply_ship_type()/_on_ship_purchased(), which
         # reconfigure it for real at that point). "player_type" should
@@ -404,10 +404,10 @@ class SpaceScreen(ScreenBase):
             screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
         else:
             screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
-        # Which interiors key this is (e.g. "dormitory", "default"/concourse,
-        # "spaceport") - lets save/load record exactly which station room
-        # the player was in, not just "station" (see main.py's
-        # game_state["station_location"]).
+        # Which interiors key this is (e.g. "default" for a station,
+        # "city"/"wilderness" for a moon) - recorded into a save as
+        # station_location / moon_location (see main.py's
+        # build_save_game_state; only moon_location is honoured on load).
         screen.interior_key = key
         landable.interior_screens[key] = screen
         return screen
@@ -482,7 +482,7 @@ class SpaceScreen(ScreenBase):
         ):
             self._start_tutorial_mission()
         location = start.get("location", "station")
-        interior = start.get("interior", "dormitory")
+        interior = start.get("interior", "default")
         if self.player.person.possessions.owned_ships:
             if location == "moon":
                 self.park_at(self.moon)

@@ -332,7 +332,7 @@ def main():
                     pilot_name = result
                     game_screen = SpaceScreen(pilot_name=pilot_name, story=selected_story)
                     # Where the new game begins is story.json's "start" block
-                    # (defaults: ship-less, in the station "dormitory") -
+                    # (defaults: ship-less, in the station's "default" interior) -
                     # begin_new_game() also fires the tutorial if its trigger
                     # is "new_game" / a starting ship was granted.
                     start_location, start_interior = game_screen.begin_new_game()
@@ -393,9 +393,10 @@ def main():
                                 # fiction says it actually is - docked.
                                 game_screen.restore_possessions(game_state)
                                 game_screen.park_at(game_screen.station)
-                                # Always resume in whichever room the ship
-                                # actually docks at, not wherever the save
-                                # happened to record (e.g. a dormitory) -
+                                # Always resume in whichever interior the ship
+                                # actually docks at, not whatever the save
+                                # recorded in station_location (a now-removed
+                                # key like "dormitory" for an old save) -
                                 # matches landing fresh from space, below.
                                 ship_entry_key = game_screen.station.get_ship_entry_key()
                                 station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)

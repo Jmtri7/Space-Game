@@ -97,7 +97,7 @@ connected location (→ that location's own `LocationScreen`, staying in
 **Inputs:** Type: add to name · BACKSPACE: delete last char · Left/Right/Tab: move between buttons · RETURN/click Start (name non-empty): confirm · ESC/click Cancel: cancel
 
 **Transitions:**
-- Start (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`, then `game_screen.begin_new_game()` returns where to drop the player from `story.json`'s `"start"` block: `"station"`/`"moon"` at the given interior key, or `"space"` → `"game"`. The default story starts in `"station"` at `"dormitory"` (0 credits, no ship - see the station layout under STATION / MOON below). `"start"` also seeds starting credits / ship / spare outfits / personal items / story flags.
+- Start (non-empty name) → `SpaceScreen` created with `pilot_name` and `story`, then `game_screen.begin_new_game()` returns where to drop the player from `story.json`'s `"start"` block: `"station"`/`"moon"` at the given interior key, or `"space"` → `"game"`. The default story starts in `"station"` at `"default"` (0 credits, no ship - see the station layout under STATION / MOON below). `"start"` also seeds starting credits / ship / spare outfits / personal items / story flags.
 - ESC → Main Menu
 
 ### Load Menu (`SaveBrowser`, `mode="load"`)
@@ -143,24 +143,21 @@ connected location (→ that location's own `LocationScreen`, staying in
 config-driven class used for both the station interior and every moon location —
 not a station-only or moon-only screen.
 
-The station's `interiors` now form a small connected graph, not just one
-room: `dormitory` (new game starts here, no `return_to_ship`) ↔ `corridor`
-↔ `default` (the concourse - kept as that key so `DockRoutine`'s station
-lookup needs no changes) ↔ `spaceport` (ship salesman, `return_to_ship:
-true` but disabled until a ship is owned - see `ship_available` below) /
-`loan_office` (loan officer). See `config/stories/default/systems/
-sol_alpha.json`.
+A default-story **station** is a single interior (key `"default"`): one
+connected walkable area (polygon `rooms` unioned - concourse, bar, credit
+union, ship dock, resin quarter) with **one** portal, the ship dock
+(`return_to_ship: true`, disabled until a ship is owned - see
+`ship_available` below). The new-game start, the loan officer, the ship
+salesman, and the outfitter all live in that one interior. See
+`config/stories/default/systems/sol_alpha.json`.
 
-A location can have more than one **portal** (`LocationScreen.portals`) -
-a junction with several real destinations (like the concourse, which
-connects to the corridor, spaceport, and loan office) gets one physically
-distinct portal per destination instead of a single spot that offers all
-of them, so walking back through the specific portal you arrived from
-always leads back the way you came (`LocationScreen.arrive_from()`/
-`portal_for()`) rather than re-presenting every destination the location
-has. A config with only one exit still uses the older flat `"entrance"`/
-`"connected_locations"`/`"return_to_ship"` keys, normalized into a
-single-item portal list internally.
+A location can still have more than one **portal** (`LocationScreen.portals`)
+- a moon's `city` ↔ `wilderness`, or a multi-interior story station: each
+portal leads somewhere specific, and walking back through the portal you
+arrived from always leads back the way you came
+(`LocationScreen.arrive_from()` / `portal_for()`). A config with a single
+exit may still use the flat `"entrance"` / `"connected_locations"` /
+`"return_to_ship"` keys, normalized into a one-item portal list internally.
 
 **Inputs:**
 - LEFT/RIGHT/UP/DOWN or WASD: move
@@ -184,7 +181,7 @@ While docked, `SpaceScreen.update_physics()` still runs in the background (ships
 ### Dialogue
 **Shows:** A conversation tree (`game/world/dialogue.py`) - most NPCs are a
 single node with closing options only ("Thanks"/"Leave", built via
-`Dialogue.from_flat`); a few (Bartender, the spaceport's salesman, the loan
+`Dialogue.from_flat`); a few (Bartender, the ship salesman, the loan
 officer) have a real `dialogue_tree` in config where an option's `"next"`
 leads to another node instead of closing. An option can also carry an
 `"action"` (`"buy_ship:<ship_type_id>"`, `"take_loan"`) applied by
@@ -209,7 +206,7 @@ sibling interior's own `"label"`) plus "Return to Ship" if `return_to_ship`
 allows it, built by `main.py`'s `exit_options()`. Shown whenever there's
 more than one configured option, or the single option isn't currently usable
 (e.g. "ship" with `get_exit_disabled_reasons()` returning `{"ship": "no ship
-docked here"}` - the spaceport before a purchase). Disabled entries render
+docked here"}` - the station dock before a purchase). Disabled entries render
 as dimmed buttons and can't be selected. AI pilots (`DockRoutine`) pick from
 this same option list automatically via `ROLE_EXIT_PREFERENCE` instead of
 getting a dialog.
@@ -265,7 +262,7 @@ of this menu's Close button - see the ConfirmDialog note below); confirming
 calls the injected `on_buy` callback, which `main.py` wires to
 `LocationScreen.buy_ship()` - the same mutation the old `"buy_ship:<id>"`
 dialogue action performed (spend, `add_ship`, `on_ship_purchased`
-callback), now shared by both purchase paths. The spaceport's ship salesman
+callback), now shared by both purchase paths. The station's ship salesman
 (`sol_alpha.json`'s Dax Renner) uses this instead of a `dialogue_tree`.
 
 **Inputs:** UP/DOWN or W/S: navigate · RETURN: open purchase confirmation ·
@@ -384,7 +381,7 @@ completed load being abandoned - so nothing stale carries over.
 ## State Transitions & Validation
 
 **Valid transitions (`current_screen` values in `main.py`):**
-`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` / `"moon"` / `"game"` per `story.json`'s `"start"` block (default story: `"station"` dormitory, ship-less)
+`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` / `"moon"` / `"game"` per `story.json`'s `"start"` block (default story: `"station"` interior, ship-less)
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
 `"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)

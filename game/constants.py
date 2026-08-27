@@ -17,6 +17,13 @@ SAVE_DIR = "saves"
 # can't import game/screens (LocationScreen) the other way around.
 WALKING_SPEED = 2.5
 
+# Grid resolution (world units) for interior navigation - the walkability
+# grid LocationScreen.plan_path builds once per interior and runs A* over
+# to route visiting AI pilots (DockRoutine) around walls/footprints. Small
+# enough to thread the narrowest authored corridor, large enough that a
+# whole station/moon interior is only a few thousand cells.
+NAV_CELL = 24
+
 # Display setup
 info = pygame.display.Info()
 SCREEN_WIDTH = info.current_w - 50  # Account for taskbar (~40px) and window title bar (~30px)

@@ -109,11 +109,18 @@ only appears under a section if it currently has items there.
 
 ## Stations, Interiors & World Building
 
-- [ ] Cultural station interiors; round rooms.
-- [ ] Better station interior designs (e.g. dorm rooms are currently just short
-      halls).
+- [x] Cultural station interiors; round rooms. (Interiors are polygon `rooms` -
+      `{"shape":"circle"}` N-gons, concave polygons, `{"rect"}` - unioned into
+      one walkable area; each `culture` drives wall/floor/trim colour plus an
+      `interior_decoration` generator. See `normalize_room` in
+      `location_screen.py`.)
+- [x] Better station interior designs. Each default-story station is now one
+      connected area (dormitory/corridor/concourse/spaceport/loan_office
+      collapsed to a single interior with one ship portal).
 - [ ] Enterable buildings in cities.
-- [ ] More interior decorations, like roads.
+- [~] More interior decorations, like roads. (Decoration system done -
+      per-interior `decorations` floor/wall decals + per-culture packs; moon
+      cities have road decals. Room for more content.)
 - [ ] Cultural and role-based clothing for people (space_suit is the only outfit so
       far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.

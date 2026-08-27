@@ -43,77 +43,33 @@
       [-16, -12]
     ],
     "interiors": {
-      "dormitory": {
-        "label": "My Dormitory",
-        "culture": "vherathi",
-        "entrance": {"x": 400, "y": 460},
-        "connected_locations": ["corridor"],
-        "return_to_ship": false,
-        "rooms": [
-          {"label": "Your Room", "rect": [200, 100, 400, 400]}
-        ],
-        "npcs": [
-          {
-            "name": "Mira Osei",
-            "x": 350,
-            "y": 200,
-            "role": "roommate",
-            "greeting": "Rough shift. Try not to wake me on your way out.",
-            "dialogue_options": ["Sorry", "Leave"]
-          }
-        ]
-      },
-      "corridor": {
-        "label": "Dormitory Corridor",
-        "culture": "vherathi",
-        "portals": [
-          {"x": 150, "y": 300, "connected_locations": ["dormitory"]},
-          {"x": 650, "y": 300, "connected_locations": ["default"]}
-        ],
-        "rooms": [
-          {"label": "Corridor", "rect": [100, 250, 600, 100]},
-          {"label": "Dorm 2A", "rect": [150, 200, 80, 50]},
-          {"label": "Dorm 2B", "rect": [370, 200, 80, 50]},
-          {"label": "Dorm 2C", "rect": [590, 350, 80, 50]}
-        ],
-        "npcs": [
-          {
-            "name": "Renna Kade",
-            "x": 250,
-            "y": 300,
-            "role": "resident",
-            "greeting": "Morning. Or whatever hour the station clock says it is.",
-            "dialogue_options": ["Morning", "Leave"]
-          },
-          {
-            "name": "Toma Idrisi",
-            "x": 550,
-            "y": 300,
-            "role": "resident",
-            "greeting": "Concourse is that way if you're looking for the bar.",
-            "dialogue_options": ["Thanks", "Leave"]
-          }
-        ]
-      },
       "default": {
-        "label": "Alpha Station Concourse",
+        "label": "Alpha Station",
         "culture": "vherathi",
         "portals": [
-          {"x": 400, "y": 560, "connected_locations": ["corridor"]},
-          {"x": 620, "y": 420, "connected_locations": ["spaceport"]},
-          {"x": 180, "y": 420, "connected_locations": ["loan_office"]}
+          {"x": 660, "y": 345, "connected_locations": [], "return_to_ship": true}
         ],
         "rooms": [
-          {"label": "Entrance Hall", "rect": [360, 300, 80, 300]},
-          {"label": "Bar", "rect": [300, 0, 200, 300]},
-          {"label": "West Passage", "rect": [160, 380, 200, 80]},
-          {"label": "East Passage", "rect": [440, 380, 200, 80]}
+          {"label": "Concourse", "shape": "circle", "center": [400, 300], "radius": 150, "sides": 32},
+          {"label": "The Long Vein", "shape": "circle", "center": [400, 140], "radius": 95, "sides": 28},
+          {"label": "Credit Union", "shape": "circle", "center": [140, 300], "radius": 78, "sides": 24},
+          {"label": "West Gallery", "polygon": [[175, 272], [285, 268], [285, 332], [175, 328]]},
+          {"label": "Ship Dock", "shape": "circle", "center": [660, 300], "radius": 80, "sides": 24},
+          {"label": "East Gallery", "polygon": [[515, 268], [630, 272], [630, 332], [515, 328]]},
+          {"label": "Resin Quarter", "polygon": [[330, 405], [470, 405], [455, 565], [345, 565]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 46, "color": [96, 74, 110]},
+          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 30, "color": [128, 255, 205], "width": 2},
+          {"layer": "wall", "shape": "line", "points": [[300, 70], [345, 32]], "color": [120, 255, 200], "width": 3},
+          {"layer": "wall", "shape": "line", "points": [[500, 70], [455, 32]], "color": [120, 255, 200], "width": 3},
+          {"layer": "floor", "shape": "line", "points": [[660, 300], [660, 345]], "color": [128, 255, 205], "width": 2}
         ],
         "npcs": [
           {
             "name": "Bram Solise",
             "x": 400,
-            "y": 90,
+            "y": 100,
             "role": "bartender",
             "dialogue_tree": {
               "root": "start",
@@ -152,7 +108,7 @@
                   ]
                 },
                 "about_station": {
-                  "text": "Dormitories are back up the corridor. Spaceport and loan office are just off this concourse, if you're looking to get your own ship.",
+                  "text": "One big ring, all of it off this concourse. Credit union's the west pod, ship dock's the east one - go see Petra if you're short, then Dax about a hull.",
                   "options": [
                     {"label": "Ask about the quiet cargo runs", "next": "smuggler_tip", "requires_flag": "bought_bartender_round"},
                     {"label": "Good to know", "next": "start"},
@@ -169,74 +125,9 @@
             }
           },
           {
-            "name": "Wren Castellan",
-            "x": 400,
-            "y": 240,
-            "role": "traveler",
-            "greeting": "Safe travels!",
-            "dialogue_options": ["Thanks", "Leave"]
-          },
-          {
-            "name": "Ilsa Farrow",
-            "x": 340,
-            "y": 160,
-            "role": "quartermaster",
-            "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
-            "dialogue_options": ["Thanks", "Leave"],
-            "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
-          },
-          {
-            "name": "Talen Brix",
-            "x": 400,
-            "y": 540,
-            "role": "guard",
-            "greeting": "Welcome to the station.",
-            "dialogue_options": ["Thanks", "Leave"]
-          }
-        ]
-      },
-      "spaceport": {
-        "label": "Alpha Station Spaceport",
-        "culture": "vherathi",
-        "entrance": {"x": 400, "y": 460},
-        "connected_locations": ["default"],
-        "return_to_ship": true,
-        "rooms": [
-          {"label": "Docking Bay", "rect": [150, 100, 500, 400]}
-        ],
-        "npcs": [
-          {
-            "name": "Dax Renner",
-            "x": 400,
-            "y": 250,
-            "role": "ship_salesman",
-            "greeting": "Looking for a ship? I've got three in dock.",
-            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
-          },
-          {
-            "name": "Reeve Katic",
-            "x": 480,
-            "y": 320,
-            "role": "outfitter",
-            "greeting": "Need to fit your ship out with something new?",
-            "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
-          }
-        ]
-      },
-      "loan_office": {
-        "label": "Station Credit Union",
-        "culture": "vherathi",
-        "entrance": {"x": 400, "y": 460},
-        "connected_locations": ["default"],
-        "return_to_ship": false,
-        "rooms": [
-          {"label": "Loan Office", "rect": [250, 150, 300, 350]}
-        ],
-        "npcs": [
-          {
             "name": "Petra Voss",
-            "x": 400,
-            "y": 250,
+            "x": 140,
+            "y": 300,
             "role": "loan_officer",
             "dialogue_tree": {
               "root": "start",
@@ -256,6 +147,71 @@
                 }
               }
             }
+          },
+          {
+            "name": "Dax Renner",
+            "x": 645,
+            "y": 278,
+            "role": "ship_salesman",
+            "greeting": "Looking for a ship? I've got three in dock.",
+            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter"]}
+          },
+          {
+            "name": "Reeve Katic",
+            "x": 688,
+            "y": 330,
+            "role": "outfitter",
+            "greeting": "Need to fit your ship out with something new?",
+            "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
+          },
+          {
+            "name": "Ilsa Farrow",
+            "x": 330,
+            "y": 300,
+            "role": "quartermaster",
+            "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
+          },
+          {
+            "name": "Talen Brix",
+            "x": 560,
+            "y": 300,
+            "role": "guard",
+            "greeting": "Welcome to the station. Dock's right behind me.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Wren Castellan",
+            "x": 452,
+            "y": 350,
+            "role": "traveler",
+            "greeting": "Safe travels!",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Mira Osei",
+            "x": 400,
+            "y": 500,
+            "role": "roommate",
+            "greeting": "Rough shift. Try not to wake me on your way out.",
+            "dialogue_options": ["Sorry", "Leave"]
+          },
+          {
+            "name": "Renna Kade",
+            "x": 350,
+            "y": 372,
+            "role": "resident",
+            "greeting": "Morning. Or whatever hour the station clock says it is.",
+            "dialogue_options": ["Morning", "Leave"]
+          },
+          {
+            "name": "Toma Idrisi",
+            "x": 442,
+            "y": 224,
+            "role": "resident",
+            "greeting": "Concourse bar's right there if you're looking for Bram.",
+            "dialogue_options": ["Thanks", "Leave"]
           }
         ]
       }
@@ -277,12 +233,21 @@
       "city": {
         "label": "Moon City",
         "description": "Lunar metropolitan settlement",
+        "culture": "vherathi",
         "background_color": [150, 150, 150],
         "connected_locations": ["wilderness"],
         "entrance": {
           "x": 800,
           "y": 800
         },
+        "rooms": [
+          {"label": "The Grown Quarter", "polygon": [[140, 140], [1460, 140], [1460, 1460], [140, 1460]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [180, 780, 1240, 44], "color": [126, 100, 140]},
+          {"layer": "floor", "shape": "rect", "rect": [778, 180, 44, 1240], "color": [126, 100, 140]},
+          {"layer": "floor", "shape": "circle", "center": [800, 800], "radius": 70, "color": [96, 74, 110]}
+        ],
         "structures": [
           {"x": 250, "y": 700, "building_type": "vherathi_spire"},
           {"x": 750, "y": 650, "building_type": "vherathi_spire"},

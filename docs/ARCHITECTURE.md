@@ -439,16 +439,19 @@ currently active:
 ## State Machine: Screen Flow
 
 ```
-BackdropMenu(main) → BackdropMenu(story) → PilotNameDialog → LocationScreen (station: dormitory)
-                                              ↓ (walk the connected-location graph, L)
-                            LocationScreen (station: corridor/concourse/spaceport/loan_office) ←→ PauseMenu
-                                              ↓ (buy a ship at the spaceport, then L: board) ↓ (save)
+BackdropMenu(main) → BackdropMenu(story) → PilotNameDialog → LocationScreen (station)
+                                              ↓ (one connected interior: walk to the loan officer, then the
+                                                 ship dealer; L at the dock portal boards)  ↓ (save)
                                           SpaceScreen ←→ SaveBrowser
                                               ↓ (land: L)
                             LocationScreen (station) ←→ PauseMenu
 
-SpaceScreen → ChoiceDialog (landing spot) → LocationScreen (moon) ←→ PauseMenu
+SpaceScreen → ChoiceDialog (landing spot) → LocationScreen (moon: city ←→ wilderness, L) ←→ PauseMenu
 ```
+A default-story station is a **single** `LocationScreen` — one connected
+walkable area with just one portal (the ship dock). Multi-interior landables
+(the moon's city/wilderness, or another story's station) still work: each
+interior is its own cached `LocationScreen` and `portals` wire them together.
 A new pilot never sees `SpaceScreen` at all until they own a ship - see
 `main.py`'s `"pilot_name"` handler and `LocationScreen.ship_available`.
 
@@ -518,6 +521,19 @@ except where a story clearly needs it; code holds the default.
   NPCs, exit near the entrance" — the only difference is config data
 - New locations are added by writing JSON, not new Python classes (see the
   Data-Driven Configuration pattern in [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md))
+
+**Interior geometry (`LocationScreen`).** A culture-tagged interior's walkable
+area is the **union of its `rooms`** — each a polygon (`normalize_room` folds
+`{"rect": …}`, `{"polygon": […]}`, and `{"shape": "circle", …}` N-gons to one
+form). Overlapping polygons read as one connected space; `can_move_to` is a
+point-in-any-polygon test (concave-safe). `plan_path()` routes a walking body
+(the player's own movement wall-slides; `DockRoutine` pilots use this) across
+that area with a grid A* + string-pull (`IndoorPathfinder` / `NavGrid`, one
+cached raster per interior, `can_move_to` as its oracle). `decorations` are
+cosmetic floor/wall decals (`normalize_decoration`); each culture's
+`interior_decoration` generator (`edge_veins` / `seam_rivets`) stamps a pack
+onto every room automatically. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
+"Walkability-oracle navigation".
 
 **Why `get_state()`/`restore_state()` on every screen?**
 - Centralized state capture for save/load

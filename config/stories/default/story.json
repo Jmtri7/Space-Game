@@ -1,6 +1,6 @@
 {
   "id": "default",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "name": "Explorer",
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
@@ -12,7 +12,7 @@
   "walking_speed": 2.5,
   "start": {
     "location": "station",
-    "interior": "dormitory",
+    "interior": "default",
     "credits": 0,
     "ship": null,
     "items": {},

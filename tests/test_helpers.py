@@ -38,9 +38,9 @@ from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, 
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
 from game.ui.report_menu import ReportMenu, mission_report, possessions_report
 from game.ui.ui_theme import side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin
-from game.screens.location_screen import LocationScreen
+from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
-from game.world.indoor_pathfinder import IndoorPathfinder
+from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.character import Character
 from game.world.orbit_player_routine import OrbitPlayerRoutine
 from game.world.wander_routine import WanderRoutine
@@ -717,87 +717,98 @@ class TestFreighterPilotDoesNotDetourIntoEmptyWilderness(unittest.TestCase):
         self.assertFalse(visited_wilderness, "Freighter pilot should never detour into the empty wilderness")
 
 
+class TestNormalizeRoom(unittest.TestCase):
+    """normalize_room() folds every authored room shape (rect / polygon /
+    circle) to a single {"polygon": [...], "label": ...} the rest of
+    LocationScreen handles uniformly."""
+
+    def test_rect_becomes_a_four_vertex_polygon(self):
+        room = normalize_room({"rect": [10, 20, 100, 50], "label": "Bay"})
+        self.assertEqual(room["label"], "Bay")
+        self.assertEqual(room["polygon"], [(10, 20), (110, 20), (110, 70), (10, 70)])
+
+    def test_polygon_is_kept_as_given(self):
+        room = normalize_room({"polygon": [[0, 0], [10, 0], [5, 8]]})
+        self.assertEqual(room["polygon"], [(0.0, 0.0), (10.0, 0.0), (5.0, 8.0)])
+
+    def test_circle_becomes_a_regular_polygon(self):
+        room = normalize_room({"shape": "circle", "center": [100, 100], "radius": 40, "sides": 6})
+        self.assertEqual(len(room["polygon"]), 6)
+        for x, y in room["polygon"]:
+            self.assertAlmostEqual(math.hypot(x - 100, y - 100), 40, places=5)
+
+
+class TestPointInPolygon(unittest.TestCase):
+    def test_concave_notch_is_outside(self):
+        # A C-shape: outer square 0..100 with a notch cut from the right side.
+        poly = [(0, 0), (100, 0), (100, 40), (40, 40), (40, 60), (100, 60), (100, 100), (0, 100)]
+        self.assertTrue(point_in_polygon(20, 50, poly))    # in the solid left bar
+        self.assertFalse(point_in_polygon(70, 50, poly))   # in the notch
+        self.assertTrue(point_in_polygon(70, 20, poly))    # above the notch, still solid
+
+    def test_point_on_an_edge_counts_as_inside(self):
+        poly = [(0, 0), (100, 0), (100, 100), (0, 100)]
+        self.assertTrue(point_in_polygon(100, 50, poly))   # exactly on the right edge
+
+
 class TestIndoorPathfinder(unittest.TestCase):
-    """IndoorPathfinder.find_path() - the room-graph router DockRoutine uses
-    (see TestDockRoutineRespectsWalls below for the full walking behavior
-    this enables)."""
+    """LocationScreen.plan_path() / IndoorPathfinder - the grid router that
+    walks a visiting DockRoutine pilot across an interior's walkable area,
+    around walls, concave notches, and building footprints. See
+    TestDockRoutineRespectsWalls / TestDockRoutineRespectsBuildings for the
+    full walking behavior this enables."""
 
-    def test_same_room_returns_direct_goal(self):
-        rooms = [{"rect": (0, 0, 200, 200), "label": None}]
-        self.assertEqual(IndoorPathfinder.find_path(rooms, (10, 10), (150, 150)), [(150, 150)])
+    def _screen(self, rooms=None, structures=None, w=800, h=800):
+        config = {"label": "Test", "culture": None}
+        if rooms is not None:
+            config["rooms"] = rooms
+        if structures is not None:
+            config["structures"] = structures
+        screen = LocationScreen(config_data=config, world_width=w, world_height=h, story="default")
+        if rooms is not None:
+            screen.rooms = [normalize_room(r) for r in rooms]  # bypass culture-gated population
+        return screen
 
-    def test_two_adjacent_rooms_routes_through_the_overlap(self):
-        # An L: "Vertical" is x[50,150] y[50,550], "Horizontal" is
-        # x[50,550] y[450,550] - they overlap in the x[50,150] y[450,550]
-        # square, so the route should pass through its center.
-        rooms = [
-            {"rect": (50, 50, 100, 500), "label": "Vertical"},
-            {"rect": (50, 450, 500, 100), "label": "Horizontal"},
-        ]
-        path = IndoorPathfinder.find_path(rooms, (100, 100), (500, 500))
-        self.assertEqual(path, [(100, 500), (500, 500)])
-
-    def test_three_room_chain_routes_through_each_doorway(self):
-        rooms = [
-            {"rect": (0, 0, 100, 100), "label": "A"},
-            {"rect": (100, 0, 100, 100), "label": "B"},   # shares the x=100 edge with A
-            {"rect": (200, 0, 100, 100), "label": "C"},   # shares the x=200 edge with B
-        ]
-        path = IndoorPathfinder.find_path(rooms, (10, 10), (290, 90))
-        self.assertEqual(path, [(100, 50), (200, 50), (290, 90)])
-
-    def test_unreachable_room_falls_back_to_the_direct_goal(self):
-        rooms = [
-            {"rect": (0, 0, 50, 50), "label": "A"},
-            {"rect": (1000, 1000, 50, 50), "label": "B"},  # not adjacent to A at all
-        ]
-        path = IndoorPathfinder.find_path(rooms, (10, 10), (1010, 1010))
-        self.assertEqual(path, [(1010, 1010)])
-
-    def test_point_outside_any_room_falls_back_to_the_direct_goal(self):
-        rooms = [{"rect": (0, 0, 50, 50), "label": "A"}]
-        path = IndoorPathfinder.find_path(rooms, (5000, 5000), (10, 10))
-        self.assertEqual(path, [(10, 10)])
-
-    def test_clear_obstacle_does_not_add_waypoints(self):
-        """An obstacle nowhere near the straight line shouldn't perturb the
-        path at all - the common case (most walks don't pass near a
-        building)."""
-        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
-        obstacles = [(0, 0, 50, 50)]  # far from the (100,100)->(150,150) line
-        path = IndoorPathfinder.find_path(rooms, (100, 100), (150, 150), obstacles)
-        self.assertEqual(path, [(150, 150)])
-
-    def test_routes_around_a_blocking_obstacle(self):
-        """A rect square in the middle of a straight line - the resulting
-        path must actually reach the goal without any leg crossing the
-        obstacle (checked the same way IndoorPathfinder itself decides
-        whether a leg is blocked)."""
-        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
-        obstacles = [(400, 400, 200, 200)]  # centered on the direct line
-        start, goal = (300, 500), (700, 500)
-        path = IndoorPathfinder.find_path(rooms, start, goal, obstacles)
+    def _assert_walkable_path(self, screen, start, goal, path):
         self.assertEqual(path[-1], goal)
-        points = [start] + path
-        for p1, p2 in zip(points, points[1:]):
-            self.assertFalse(
-                IndoorPathfinder._segment_crosses_rect(p1, p2, obstacles[0]),
-                f"Leg {p1}->{p2} still crosses the obstacle",
-            )
+        prev = start
+        for point in path:
+            steps = max(1, int(math.hypot(point[0] - prev[0], point[1] - prev[1]) / 6))
+            for i in range(steps + 1):
+                t = i / steps
+                x, y = prev[0] + (point[0] - prev[0]) * t, prev[1] + (point[1] - prev[1]) * t
+                self.assertTrue(screen.can_move_to(x, y), f"Path leg {prev}->{point} leaves the walkable area at ({x:.0f},{y:.0f})")
+            prev = point
 
-    def test_routes_around_an_obstacle_directly_between_start_and_goal_on_one_axis(self):
-        """The failure case that actually stranded pilots: the goal is
-        directly north/south (or east/west) of the start with an obstacle
-        square in between, so a straight-line walk's wall-slide has no
-        sideways component to try at all. Must still find a real detour."""
-        rooms = [{"rect": (0, 0, 1000, 1000), "label": None}]
-        obstacles = [(450, 450, 100, 100)]
-        start, goal = (500, 300), (500, 700)  # same x as the obstacle's center - dx is 0 the whole way
-        path = IndoorPathfinder.find_path(rooms, start, goal, obstacles)
-        self.assertEqual(path[-1], goal)
-        points = [start] + path
-        for p1, p2 in zip(points, points[1:]):
-            self.assertFalse(IndoorPathfinder._segment_crosses_rect(p1, p2, obstacles[0]))
+    def test_same_area_returns_a_path_ending_at_goal(self):
+        screen = self._screen(rooms=[{"rect": [0, 0, 400, 400]}])
+        path = screen.plan_path((30, 30), (350, 350))
+        self._assert_walkable_path(screen, (30, 30), (350, 350), path)
+
+    def test_routes_around_a_concave_notch(self):
+        # C-shaped area: a straight line from (60,60) to (60,540) is fine,
+        # but (60,300)->(540,300) would cut straight through the notch.
+        rooms = [
+            {"rect": [40, 40, 60, 520]},    # left bar
+            {"rect": [40, 40, 500, 60]},    # top bar
+            {"rect": [40, 500, 500, 60]},   # bottom bar
+        ]
+        screen = self._screen(rooms=rooms, w=600, h=600)
+        start, goal = (70, 300), (520, 520)
+        path = screen.plan_path(start, goal)
+        self._assert_walkable_path(screen, start, goal, path)
+
+    def test_unreachable_goal_falls_back_to_the_direct_goal(self):
+        screen = self._screen(rooms=[{"rect": [0, 0, 200, 200]}])
+        self.assertEqual(screen.plan_path((10, 10), (5000, 5000)), [(5000, 5000)])
+
+    def test_routes_around_a_building_footprint_with_no_rooms(self):
+        # A moon interior: structures but no rooms. Start due north of the
+        # bunker, goal due south - the direct line is straight through it.
+        screen = self._screen(structures=[{"x": 500, "y": 500, "building_type": "drossholt_bunker"}], w=1600, h=1600)
+        start, goal = (570, 400), (570, 700)
+        path = screen.plan_path(start, goal)
+        self._assert_walkable_path(screen, start, goal, path)
 
 
 class TestDockRoutineRespectsWalls(unittest.TestCase):
@@ -825,7 +836,7 @@ class TestDockRoutineRespectsWalls(unittest.TestCase):
             "npcs": [{"name": "Target", "x": 500, "y": 500, "role": "resident"}],
         }
         screen = LocationScreen(config_data=config, world_width=600, world_height=600)
-        screen.rooms = config["rooms"]  # bypass culture-gated room population, see other tests
+        screen.rooms = [normalize_room(r) for r in config["rooms"]]  # bypass culture-gated room population, see other tests
         screen.entrance_x, screen.entrance_y = 100, 100
         return screen
 
@@ -963,7 +974,7 @@ class TestWanderRoutineRespectsWalls(unittest.TestCase):
             "rooms": [{"label": "Room", "rect": [100, 100, 60, 60]}],
         }
         location = LocationScreen(config_data=config, world_width=300, world_height=300)
-        location.rooms = config["rooms"]
+        location.rooms = [normalize_room(r) for r in config["rooms"]]
         person = Person(130, 130)
         character = Character(person, role="resident", can_move_to=location.can_move_to)
 
@@ -2738,17 +2749,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.4.0")
+        self.assertEqual(game_screen.story_version, "1.5.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.4.0")
+        self.assertEqual(game_state["story_version"], "1.5.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.4.0")
+            warn_if_story_version_mismatch("default", "1.5.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2756,7 +2767,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.4.0", captured.getvalue())
+        self.assertIn("1.5.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -2788,7 +2799,7 @@ class TestLocationScreenTouchingRoomBoundary(unittest.TestCase):
         screen = LocationScreen(config_data=config, world_width=800, world_height=600)
         # rooms only populate when a culture is set (see LocationScreen.__init__) -
         # set them directly to exercise the bounds check in isolation.
-        screen.rooms = config["rooms"]
+        screen.rooms = [normalize_room(r) for r in config["rooms"]]
         return screen
 
     def test_can_cross_from_hall_into_bar_at_every_starting_y(self):
@@ -2813,7 +2824,7 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
 
     def test_restore_state_reequips_the_last_purchased_ship(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "default")
         spaceport._apply_dialogue_action("buy_ship:shuttle")
         self.assertEqual(game_screen.player.ship.graphics.get("size"), 10)  # shuttle's configured size
 
@@ -2831,7 +2842,7 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
         position) - it must still pick up "possessions" and re-equip
         accordingly."""
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "default")
         spaceport._apply_dialogue_action("buy_ship:shuttle")
 
         docked_state = spaceport.get_state()  # {"player": {...}, "possessions": {...}} - no ai_ships key
@@ -2936,10 +2947,10 @@ class TestSpaceScreenStartConfig(unittest.TestCase):
     SpaceScreen._apply_start_config / begin_new_game). A loaded save is
     unaffected: restore_possessions() overwrites all of this."""
 
-    def test_default_story_begins_shipless_on_the_station_dormitory(self):
+    def test_default_story_begins_shipless_in_the_station_interior(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         location, interior = game_screen.begin_new_game()
-        self.assertEqual((location, interior), ("station", "dormitory"))
+        self.assertEqual((location, interior), ("station", "default"))
         self.assertEqual(game_screen.player.person.possessions.owned_ships, [])
         self.assertEqual(game_screen.player.person.possessions.credits, 0)
         # trigger is "ship_purchase" - no mission before a ship is bought
@@ -3016,7 +3027,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
 
     def _boarded_screen(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "default")
         spaceport._apply_dialogue_action("buy_ship:shuttle")  # triggers _on_ship_purchased
         return game_screen
 
@@ -3044,7 +3055,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen.update_physics()  # advances to stage 1
         self.assertEqual(possessions.missions["first_flight"], 1)
 
-        spaceport = game_screen.get_interior_screen(game_screen.station, "spaceport")
+        spaceport = game_screen.get_interior_screen(game_screen.station, "default")
         spaceport._apply_dialogue_action("buy_ship:patrol")
         self.assertEqual(possessions.missions["first_flight"], 1, "a second purchase must not reset progress")
 
@@ -3793,6 +3804,73 @@ class TestStepWorld(unittest.TestCase):
         self.assertEqual(next_screen, "station")
         self.assertIsNotNone(si)
         self.assertEqual((gs.player.ship.velocity_x, gs.player.ship.velocity_y), (0, 0))
+
+
+class TestStationInteriorLayout(unittest.TestCase):
+    """The default story's station interiors are each one connected polygon
+    area with a single ship portal (the dormitory/corridor/concourse/
+    spaceport/loan_office portal chain was collapsed - see
+    docs/BACKLOG.md). Guards the authored floor plans: every NPC spawns on
+    the walkable area, and a visiting pilot can path clear across it."""
+
+    def _interior(self, system_id, landable_attr, key="default"):
+        system = utils.load_json(f"config/stories/default/systems/{system_id}.json")
+        game_screen = SpaceScreen(system, pilot_name="Test", story="default", system_id=system_id)
+        return game_screen.get_interior_screen(getattr(game_screen, landable_attr), key)
+
+    def test_alpha_station_is_one_interior_with_a_single_ship_portal(self):
+        interior = self._interior("sol_alpha", "station")
+        self.assertEqual(len(interior.portals), 1)
+        self.assertTrue(interior.portals[0]["return_to_ship"])
+        self.assertEqual(interior.get_exit_options(), ["ship"])
+
+    def test_every_authored_interior_spawns_its_npcs_inside_the_walkable_area(self):
+        for system_id, attr, key in [
+            ("sol_alpha", "station", "default"),
+            ("sol_alpha", "moon", "city"),
+            ("keplers_reach", "station", "default"),
+            ("keplers_reach", "moon", "city"),
+        ]:
+            interior = self._interior(system_id, attr, key)
+            for character in interior.npcs:
+                person = character.person
+                self.assertTrue(
+                    interior.can_move_to(person.x, person.y),
+                    f"{system_id}/{key}: {person.name} at ({person.x},{person.y}) is outside every room",
+                )
+
+    def test_a_pilot_can_path_from_the_ship_portal_across_alpha_station(self):
+        interior = self._interior("sol_alpha", "station")
+        start = (interior.portals[0]["x"], interior.portals[0]["y"])
+        bram = next(c.person for c in interior.npcs if c.person.name == "Bram Solise")
+        goal = (bram.x, bram.y)
+        path = interior.plan_path(start, goal)
+        self.assertEqual(path[-1], goal)
+        prev = start
+        for point in path:
+            steps = max(1, int(math.hypot(point[0] - prev[0], point[1] - prev[1]) / 6))
+            for i in range(steps + 1):
+                t = i / steps
+                x, y = prev[0] + (point[0] - prev[0]) * t, prev[1] + (point[1] - prev[1]) * t
+                self.assertTrue(interior.can_move_to(x, y), f"path leaves the walkable area at ({x:.0f},{y:.0f})")
+            prev = point
+
+    def test_old_station_save_key_resumes_at_the_ship_entry_interior(self):
+        """An old save recorded station_location="dormitory" etc.; those
+        keys are gone now. The load path never trusts that key - it
+        re-derives the ship-entry room (Landable.get_ship_entry_key) and
+        arrive_from("ship")s, so the player lands at the dock portal
+        regardless of what the save said or where it left their body."""
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self.assertIsNone(game_screen.get_interior_screen(game_screen.station, "dormitory"))
+        key = game_screen.station.get_ship_entry_key()
+        self.assertEqual(key, "default")
+        interior = game_screen.get_interior_screen(game_screen.station, key)
+        interior.restore_state({"player": {"x": 12345, "y": 999}, "possessions": {}})
+        interior.arrive_from("ship")
+        portal = interior.portal_for("ship")
+        self.assertEqual((interior.player.x, interior.player.y), (portal["x"], portal["y"]))
+        self.assertTrue(interior.can_move_to(interior.player.x, interior.player.y))
 
 
 if __name__ == "__main__":

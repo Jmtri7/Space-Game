@@ -52,14 +52,15 @@ Completing a jump flashes a brief "arrived at ..." toast in the space view.
 | **[** | Cycle backward through targetable NPCs |
 | **Click** a person | Target them directly |
 | **T** | Talk to the closest NPC/pilot in range - always the nearest one, regardless of any manually cycled/clicked target |
-| **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
+| **L** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
 | **ESC** | Pause menu |
 
-Station interiors include the dormitory, corridor, concourse ("default"),
-spaceport, and loan office - see [ARCHITECTURE.md](ARCHITECTURE.md) for how
-they're connected.
+A default-story station is one connected interior with a single ship portal
+in the dock area - walk to the loan officer and ship dealer, then **L** at
+the dock to board. Moons still have separate `city` and `wilderness` areas
+joined by a portal. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### NPC Targeting vs. Talking
 

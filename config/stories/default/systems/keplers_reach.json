@@ -29,15 +29,21 @@
     "name": "Delta Outpost",
     "interiors": {
       "default": {
-        "label": "Delta Outpost Interior",
+        "label": "Delta Outpost",
         "culture": "drossholt",
-        "entrance": {
-          "x": 60,
-          "y": 300
-        },
+        "portals": [
+          {"x": 70, "y": 300, "connected_locations": [], "return_to_ship": true}
+        ],
         "rooms": [
-          {"label": "Airlock", "rect": [20, 260, 300, 80]},
-          {"label": "Supply Bay", "rect": [320, 100, 440, 400]}
+          {"label": "Airlock", "polygon": [[30, 255], [340, 255], [340, 345], [30, 345]]},
+          {"label": "Transfer", "polygon": [[300, 265], [400, 265], [400, 335], [300, 335]]},
+          {"label": "Supply Bay", "polygon": [[360, 90], [770, 90], [770, 510], [360, 510]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [420, 130, 90, 70], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "rect", "rect": [430, 210, 70, 60], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "rect", "rect": [640, 380, 100, 90], "color": [150, 118, 82]},
+          {"layer": "floor", "shape": "line", "points": [[360, 300], [770, 300]], "color": [225, 195, 150], "width": 2}
         ],
         "npcs": [
           {
@@ -70,10 +76,19 @@
         "label": "Rust Moon Settlement",
         "description": "A cluster of bolted-together Drossholt cargo bunkers and a watch tower",
         "culture": "drossholt",
+        "background_color": [140, 70, 50],
         "entrance": {
           "x": 800,
           "y": 800
         },
+        "rooms": [
+          {"label": "The Yard", "polygon": [[140, 140], [1460, 140], [1460, 1460], [140, 1460]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [180, 780, 1240, 46], "color": [120, 95, 78]},
+          {"layer": "floor", "shape": "rect", "rect": [777, 180, 46, 1240], "color": [120, 95, 78]},
+          {"layer": "floor", "shape": "rect", "rect": [250, 560, 900, 20], "color": [120, 95, 78]}
+        ],
         "structures": [
           {"x": 200, "y": 650, "building_type": "drossholt_warehouse"},
           {"x": 650, "y": 600, "building_type": "drossholt_bunker"},

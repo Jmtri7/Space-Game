@@ -2,7 +2,7 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, NAV_CELL
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story
 import game.utils as utils
 from game.perf_metrics import metrics as perf
@@ -12,6 +12,140 @@ from game.world.character import Character
 from game.world.person import Person
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.player_character import PlayerCharacter
+from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
+
+
+# Default vertex count for a "circle"-shaped room/decoration - a regular
+# polygon with this many sides reads as round at interior zoom while still
+# being a plain polygon everywhere else (movement, pathfinding, drawing).
+CIRCLE_SIDES = 28
+
+
+def _regular_polygon(cx, cy, radius, sides):
+    """`sides` points evenly spaced on a circle - the concrete geometry
+    behind a `"shape": "circle"` room or decoration."""
+    return [
+        (cx + radius * math.cos(2 * math.pi * i / sides - math.pi / 2),
+         cy + radius * math.sin(2 * math.pi * i / sides - math.pi / 2))
+        for i in range(sides)
+    ]
+
+
+def normalize_room(cfg):
+    """One interior room config -> {"polygon": [(x, y), ...], "label": str|None}.
+
+    Accepts three authoring shapes, so old rect layouts and new polygon /
+    near-circular ones all end up as a single polygon the rest of the
+    class handles uniformly:
+      - {"polygon": [[x, y], ...]}         used as-is (>= 3 vertices)
+      - {"rect": [x, y, w, h]}             the pre-polygon shape, kept working
+      - {"shape": "circle", "center": [x, y], "radius": r, "sides": n}
+                                           regular n-gon (n defaults to CIRCLE_SIDES)
+    """
+    label = cfg.get("label")
+    if "polygon" in cfg:
+        poly = [(float(x), float(y)) for x, y in cfg["polygon"]]
+    elif cfg.get("shape") == "circle":
+        cx, cy = cfg["center"]
+        poly = _regular_polygon(cx, cy, cfg["radius"], cfg.get("sides", CIRCLE_SIDES))
+    else:
+        x, y, w, h = cfg["rect"]
+        poly = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
+    return {"polygon": poly, "label": label, "bounds": _polygon_bounds(poly)}
+
+
+def normalize_decoration(cfg):
+    """One cosmetic decoration config -> a dict with a resolved point list.
+
+    Shapes: "polygon" (points), "rect" ([x,y,w,h]), "circle" (center+radius),
+    "line" (points, always stroked). `layer` is "floor" (drawn on top of the
+    floor) or "wall" (drawn on the wall fill, behind the floor). `width` 0
+    fills the shape; > 0 strokes it at that line width. Purely visual - no
+    collision, never depth-sorted against people.
+    """
+    shape = cfg.get("shape", "polygon")
+    if shape == "rect":
+        x, y, w, h = cfg["rect"]
+        points = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
+    elif shape == "circle":
+        cx, cy = cfg["center"]
+        points = _regular_polygon(cx, cy, cfg["radius"], cfg.get("sides", CIRCLE_SIDES))
+    else:  # polygon / line
+        points = [(float(x), float(y)) for x, y in cfg["points"]]
+    return {
+        "shape": shape,
+        "layer": cfg.get("layer", "floor"),
+        "points": points,
+        "color": tuple(cfg.get("color", (255, 255, 255))),
+        "width": cfg.get("width", 0),
+    }
+
+
+def point_in_polygon(x, y, poly):
+    """Even-odd ray cast, with a point on any edge counted as inside - so a
+    step that lands exactly on the seam between two overlapping rooms is
+    valid in at least one of them instead of falling through the crack."""
+    n = len(poly)
+    j = n - 1
+    inside = False
+    for i in range(n):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        # On-segment test (within ~half a pixel) - boundary counts as inside.
+        cross = (xj - xi) * (y - yi) - (yj - yi) * (x - xi)
+        if abs(cross) < 1.0 and min(xi, xj) - 0.5 <= x <= max(xi, xj) + 0.5 and min(yi, yj) - 0.5 <= y <= max(yi, yj) + 0.5:
+            return True
+        if (yi > y) != (yj > y):
+            x_cross = (xj - xi) * (y - yi) / (yj - yi) + xi
+            if x < x_cross:
+                inside = not inside
+        j = i
+    return inside
+
+
+def _polygon_bounds(poly):
+    xs = [p[0] for p in poly]
+    ys = [p[1] for p in poly]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _polygon_centroid(poly):
+    return (sum(p[0] for p in poly) / len(poly), sum(p[1] for p in poly) / len(poly))
+
+
+def _inset_polygon(poly, inset):
+    """Each vertex pulled `inset` world units toward the polygon's centroid -
+    a cheap approximation of a true offset, good enough for tracing a
+    decorative line just inside a room's edge."""
+    cx, cy = _polygon_centroid(poly)
+    out = []
+    for x, y in poly:
+        dx, dy = cx - x, cy - y
+        d = math.hypot(dx, dy) or 1.0
+        f = min(1.0, inset / d)
+        out.append((x + dx * f, y + dy * f))
+    return out
+
+
+def _edge_ticks(poly, spacing, length):
+    """Short segments straddling each polygon edge every `spacing` units -
+    the geometry behind the "seam_rivets" culture decoration."""
+    ticks = []
+    n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]
+        x2, y2 = poly[(i + 1) % n]
+        seg_len = math.hypot(x2 - x1, y2 - y1)
+        if seg_len < 1:
+            continue
+        ux, uy = (x2 - x1) / seg_len, (y2 - y1) / seg_len
+        px, py = -uy, ux
+        d = spacing
+        while d < seg_len:
+            mx, my = x1 + ux * d, y1 + uy * d
+            ticks.append([(mx - px * length / 2, my - py * length / 2), (mx + px * length / 2, my + py * length / 2)])
+            d += spacing
+    return ticks
 
 
 # Fallback loan size when story.json defines no "loan" block. Bumped way up
@@ -129,23 +263,39 @@ class LocationScreen(ScreenBase):
         # instead of one flat fill. Locations with no culture keep the old
         # flat-background behavior (movement bounded by the full world rect).
         self.culture_id = self.config.get("culture")
-        # Each room is {"rect": (x, y, w, h), "label": str or None} in world space.
-        # A station interior with a "rooms" list gets one rect per room/hallway
-        # (movement is allowed anywhere in their union, so a hallway rect between
-        # two room rects reads as a corridor connecting them); one without falls
-        # back to a single margin-inset rect, same as before rooms existed.
+        # Each room is {"polygon": [(x, y), ...], "label": str or None} in world
+        # space (see normalize_room - "rect" and "circle" configs are folded to
+        # polygons on the way in). Movement is allowed anywhere in the union of
+        # the room polygons, so overlapping polygons read as one connected
+        # space and the whole station interior is a single walkable area. An
+        # interior with no "rooms" list falls back to one margin-inset
+        # rectangle, same as before rooms existed.
         self.rooms = []
         self.floor_color = None
+        self.wall_trim_color = None
+        # Cosmetic floor/wall decals (see normalize_decoration) - explicit
+        # per-interior ones always, plus a per-culture generated pack layered
+        # underneath them (see _build_culture_decorations).
+        self.decorations = [normalize_decoration(d) for d in self.config.get("decorations", [])]
+        # Lazily-built walkability raster for plan_path() - the walkable area
+        # never changes during play, so it's built once on first use and kept.
+        self._nav_grid = None
         if self.culture_id:
             culture = get_culture(self.story, self.culture_id)
-            self.bg_color = tuple(culture.get("wall_color", self.bg_color))
+            # An explicit background_color wins (a moon settlement keeps its
+            # regolith grey); otherwise the wall fill is the culture's
+            # resin-dark wall_color, so an enclosed station reads as walls.
+            if "background_color" not in self.config:
+                self.bg_color = tuple(culture.get("wall_color", self.bg_color))
             self.floor_color = tuple(culture.get("floor_color", self.bg_color))
+            self.wall_trim_color = tuple(culture["wall_trim_color"]) if culture.get("wall_trim_color") else tuple(int(c * 0.6) for c in self.floor_color)
             rooms_cfg = self.config.get("rooms")
             if rooms_cfg:
-                self.rooms = [{"rect": tuple(room["rect"]), "label": room.get("label")} for room in rooms_cfg]
+                self.rooms = [normalize_room(room) for room in rooms_cfg]
             else:
                 margin = self.config.get("wall_margin", 60)
-                self.rooms = [{"rect": (margin, margin, world_width - 2 * margin, world_height - 2 * margin), "label": None}]
+                self.rooms = [normalize_room({"rect": [margin, margin, world_width - 2 * margin, world_height - 2 * margin]})]
+            self.decorations = self._build_culture_decorations(culture) + self.decorations
 
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
@@ -533,6 +683,46 @@ class LocationScreen(ScreenBase):
             for character in self.npcs:
                 character.update()
 
+    def _draw_decorations(self, surface, layer):
+        """Draw every decoration on `layer` ("wall" or "floor"). Filled when
+        width == 0, stroked otherwise; a "line" shape is always stroked."""
+        scale = get_scale()
+        for deco in self.decorations:
+            if deco["layer"] != layer:
+                continue
+            screen_pts = [to_screen(px, py) for px, py in deco["points"]]
+            width = max(1, int(deco["width"] * scale)) if deco["width"] else 0
+            if deco["shape"] == "line" or width:
+                if len(screen_pts) >= 2:
+                    pygame.draw.lines(surface, deco["color"], deco["shape"] != "line", screen_pts, max(1, int((deco["width"] or 1) * scale)))
+            elif len(screen_pts) >= 3:
+                pygame.draw.polygon(surface, deco["color"], screen_pts)
+
+    def _build_culture_decorations(self, culture):
+        """Expand this culture's optional "interior_decoration" generator
+        against every room polygon into concrete decoration dicts (see
+        normalize_decoration). Keeps a Vherathi station's rooms edged with
+        light-veins and a Drossholt one's with riveted seams without every
+        interior having to author them by hand. Unknown generator -> no-op."""
+        spec = culture.get("interior_decoration")
+        if not spec:
+            return []
+        generator = spec.get("generator")
+        out = []
+        if generator == "edge_veins":
+            inset, color, width = spec.get("inset", 8), spec.get("color", [120, 255, 200]), spec.get("width", 2)
+            for room in self.rooms:
+                ring = _inset_polygon(room["polygon"], inset)
+                if len(ring) >= 3:
+                    out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": ring + ring[:1], "color": color, "width": width}))
+        elif generator == "seam_rivets":
+            spacing, color, width = spec.get("spacing", 46), spec.get("color", [210, 180, 140]), spec.get("width", 3)
+            tick = spec.get("length", 10)
+            for room in self.rooms:
+                for segment in _edge_ticks(room["polygon"], spacing, tick):
+                    out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
+        return out
+
     def draw(self, surface, draw_hud=True):
         """Draw location from config. draw_hud=False skips the top-left
         Controls pane and bottom status pane (e.g. "Press T to talk to
@@ -549,22 +739,33 @@ class LocationScreen(ScreenBase):
         surface.fill(self.bg_color)
         scale = get_scale()
 
-        # Walkable floor - one rect per room/hallway in the culture's floor_color,
-        # so each reads as distinct from the surrounding wall_color fill
-        for room in self.rooms:
-            fx, fy, fw, fh = room["rect"]
-            x1, y1 = to_screen(fx, fy)
-            x2, y2 = to_screen(fx + fw, fy + fh)
-            pygame.draw.rect(surface, self.floor_color, (x1, y1, x2 - x1, y2 - y1))
-        if self.rooms:
-            font_room_label = pygame.font.Font(None, max(10, int(16 * scale)))
+        with perf.span("render.location_floor"):
+            # Wall-layer decorations sit on the wall fill, behind the floor
+            # (the floor polygons paint over anything that spills onto them).
+            self._draw_decorations(surface, "wall")
+
+            # Walkable floor - one polygon per room in the culture's floor_color,
+            # so each reads as distinct from the surrounding wall_color fill.
+            # An optional thin trim outline gives the plan crisp edges.
             for room in self.rooms:
-                if not room["label"]:
-                    continue
-                fx, fy, fw, fh = room["rect"]
-                label_pos = to_screen(fx + 10, fy + 8)
-                label_surf = font_room_label.render(room["label"], True, (200, 200, 210))
-                surface.blit(label_surf, label_pos)
+                screen_pts = [to_screen(px, py) for px, py in room["polygon"]]
+                if len(screen_pts) >= 3:
+                    pygame.draw.polygon(surface, self.floor_color, screen_pts)
+                    if self.wall_trim_color:
+                        pygame.draw.polygon(surface, self.wall_trim_color, screen_pts, max(1, int(2 * scale)))
+
+            # Floor-layer decorations: on top of the floor, under everyone.
+            self._draw_decorations(surface, "floor")
+
+            if self.rooms:
+                font_room_label = pygame.font.Font(None, max(10, int(16 * scale)))
+                for room in self.rooms:
+                    if not room["label"]:
+                        continue
+                    min_x, min_y, _, _ = _polygon_bounds(room["polygon"])
+                    label_pos = to_screen(min_x + 10, min_y + 8)
+                    label_surf = font_room_label.render(room["label"], True, (200, 200, 210))
+                    surface.blit(label_surf, label_pos)
 
         # Draw windows/details from config - flat wall decoration, drawn
         # before structures/people so it never has to compete for depth.
@@ -1001,21 +1202,47 @@ class LocationScreen(ScreenBase):
         """Whether (x, y) is inside this location's walkable area - the
         default bounds check _handle_movement uses for the player, exposed
         so anyone else moving a body around this location (e.g. DockRoutine
-        walking a visiting pilot to an NPC) can respect the same walls
-        instead of clipping straight through them."""
+        walking a visiting pilot to an NPC, and plan_path's nav grid) can
+        respect the same walls instead of clipping straight through them."""
         if any(fx <= x <= fx + fw and fy <= y <= fy + fh for fx, fy, fw, fh in self.building_footprints):
             return False
         if self.rooms:
-            # Inclusive bounds (<=), not strict (<) - two touching rooms
-            # (e.g. Entrance Hall/Bar sharing the line y=300) must both
-            # accept landing exactly on that shared boundary, or a step
-            # that lands exactly there (all coordinates here are integers
-            # and speed is a fixed 3, so this isn't a rare float fluke -
-            # roughly a third of all positions hit it) is invalid in both
-            # rooms at once and whoever's moving gets stuck one step short
-            # of an invisible wall, unable to cross at all.
-            return any(fx <= x <= fx + fw and fy <= y <= fy + fh for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
+            # Union of the room polygons - overlapping polygons read as one
+            # connected space, and point_in_polygon counts a point on any
+            # edge as inside so a step landing exactly on the seam between
+            # two rooms is never invalid in both at once. The bbox test is a
+            # cheap reject before the per-vertex ray cast (the nav grid runs
+            # this thousands of times when it builds).
+            for room in self.rooms:
+                bx0, by0, bx1, by1 = room["bounds"]
+                if bx0 <= x <= bx1 and by0 <= y <= by1 and point_in_polygon(x, y, room["polygon"]):
+                    return True
+            return False
         return 0 < x < self.world_width and 0 < y < self.world_height
+
+    def plan_path(self, start, goal):
+        """Waypoints (ending at `goal`) to walk from `start` to `goal`
+        through this location's walkable area, routing around walls,
+        concave notches, and building footprints via a grid A* (see
+        IndoorPathfinder). Used by DockRoutine to move a visiting pilot;
+        callers keep wall-sliding each leg as a safety net for the direct
+        [goal] fallback this returns when no route exists.
+
+        The nav grid is built once (the walkable area never changes during
+        play) and cached - `can_move_to` is the walkability oracle, so
+        rooms, overlaps, and footprints all come along for free."""
+        if not self.rooms and not self.building_footprints:
+            return [goal]  # nothing to route around - a straight line is always fine
+        if self._nav_grid is None:
+            with perf.span("sim.nav_build"):
+                if self.rooms:
+                    xs = [p[0] for room in self.rooms for p in room["polygon"]]
+                    ys = [p[1] for room in self.rooms for p in room["polygon"]]
+                    bounds = (min(xs), min(ys), max(xs), max(ys))
+                else:
+                    bounds = (0, 0, self.world_width, self.world_height)
+                self._nav_grid = NavGrid(self.can_move_to, bounds, NAV_CELL)
+        return IndoorPathfinder.find_path(self._nav_grid, start, goal)
 
     def update_camera(self):
         """Update global camera to follow player"""

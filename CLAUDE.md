@@ -364,12 +364,22 @@ convention above.
 }
 ```
 
-**station_interior.json**: Interior layout & NPCs
+**Interior layout** (per key in a landable's `interiors`, in the system JSON): a
+`culture`, one or more `rooms` (each a `{"rect": [...]}`, `{"polygon": [[x,y],…]}`,
+or `{"shape": "circle", "center": […], "radius": r}` — walkable area is their
+union), `portals` (usually one, `{"x", "y", "return_to_ship": true}` for a
+station's ship dock), optional `decorations` (cosmetic floor/wall decals), and
+`npcs`. A default-story station is now a **single** such interior. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)'s "Interior geometry" and
+`game/screens/location_screen.py` (`normalize_room` / `normalize_decoration` /
+`plan_path`).
 ```json
 {
-  "bar": {"x": 0.5, "y": 0.15},
-  "hallway": {"narrow_width": 80, "transition_y": 0.5},
-  "npcs": [{"name": "...", "x": ..., "behavior": "bar/wander", "dialogue_options": [...]}]
+  "label": "Alpha Station", "culture": "vherathi",
+  "portals": [{"x": 660, "y": 345, "connected_locations": [], "return_to_ship": true}],
+  "rooms": [{"label": "Concourse", "shape": "circle", "center": [400, 300], "radius": 150}],
+  "decorations": [{"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 46, "color": [96, 74, 110]}],
+  "npcs": [{"name": "...", "x": 400, "y": 100, "role": "bartender", "dialogue_options": [...]}]
 }
 ```
 
@@ -419,8 +429,11 @@ rotated_x = lx * cos_a - ly * sin_a
 rotated_y = lx * sin_a + ly * cos_a
 ```
 
-### NPC Collision
-Use `_is_in_valid_area()` to check hallway + bar regions before moving.
+### NPC / player collision inside a location
+`LocationScreen.can_move_to(x, y)` is the one walkable-area check (point in the
+union of the room polygons, minus building footprints). The player's movement,
+`WanderRoutine`, and `DockRoutine` (via `plan_path`) all go through it — never
+reimplement the bounds test.
 
 ### Save Dialog
 - Shows ALL saves in directory (not filtered by pilot)

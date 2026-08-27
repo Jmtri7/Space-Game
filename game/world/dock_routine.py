@@ -6,7 +6,6 @@ import math
 from collections import deque
 
 from game.constants import WALKING_SPEED
-from game.world.indoor_pathfinder import IndoorPathfinder
 
 WALK_SPEED = WALKING_SPEED  # fallback pace; _advance_walk() prefers the interior's own
                             # LocationScreen.speed (story.json's "walking_speed") so an
@@ -31,11 +30,13 @@ TOWARD_SHIP = "toward_ship"
 # DEFAULT_EXIT_PREFERENCE, i.e. they head straight back to the ship exactly
 # like before connected_locations existed.
 #
-# TOWARD_SHIP is here because a station's landing room doesn't always
-# offer "ship" directly (e.g. sol_alpha's concourse doesn't - only its
-# spaceport does, gated on the player owning one) - a freighter pilot
-# landing somewhere else needs an explicit route to wherever does, not
-# just a preference that happens to be offered at the current stop.
+# TOWARD_SHIP is here because a multi-interior landable's landing room
+# doesn't always offer "ship" directly - a freighter pilot landing
+# somewhere else needs an explicit route to whichever interior does, not
+# just a preference that happens to be offered at the current stop. (The
+# default story's stations are now single-interior so this resolves
+# immediately there, but the moon's city/wilderness graph and any
+# multi-interior story station still exercise it.)
 #
 # Deliberately does NOT include "wilderness"/"city" - an earlier version
 # had freighter_pilot detour into the moon's other location before
@@ -229,13 +230,13 @@ class DockRoutine:
         self.phase = "walking_in"
 
     def _set_waypoints(self, person, goal):
-        """(Re)plan the walk to `goal` through self._location's rooms and
-        around its building footprints (see IndoorPathfinder) - routing
-        through the doorway between rooms (or around a building in the way)
-        instead of a straight line that might not be walkable at all is
-        what stops a pilot (e.g. Elena Voss) from getting permanently stuck
-        against a wall or building partway there."""
-        self._waypoints = IndoorPathfinder.find_path(self._location.rooms, (person.x, person.y), goal, self._location.building_footprints)
+        """(Re)plan the walk to `goal` across self._location's walkable area,
+        routing around walls, concave notches, and building footprints (see
+        LocationScreen.plan_path / IndoorPathfinder) instead of a straight
+        line that might not be walkable at all - what stops a pilot (e.g.
+        Elena Voss) from getting permanently stuck against a wall or
+        building partway there."""
+        self._waypoints = self._location.plan_path((person.x, person.y), goal)
 
     def _step_toward(self, person):
         """Move person one step toward the next waypoint in self._waypoints

@@ -189,17 +189,27 @@ if player.get_distance(station.x, station.y) < 100:
 ```
 
 ### Collision Areas (Station Interior)
-A station interior's walkable area is one or more rectangular rooms
-(`LocationScreen.rooms`, from the interior's `"rooms"` config - a hallway is
-just another room-shaped rect whose bounds touch the ones it connects).
-Movement is allowed anywhere inside their union, which is what keeps the
-player from walking through walls:
+A culture-tagged interior's walkable area is the **union of its room
+polygons** (`LocationScreen.rooms`, from the interior's `"rooms"` config;
+`normalize_room` folds `"rect"` / `"polygon"` / `"circle"` shapes to one
+polygon form). Overlapping polygons read as one connected space, so a wide
+corridor is just another polygon overlapping the rooms it joins. Movement is
+allowed anywhere in that union, with a cheap bounding-box reject before the
+per-vertex ray cast:
 ```python
-can_move = any(fx < new_x < fx + fw and fy < new_y < fy + fh
-               for fx, fy, fw, fh in (room["rect"] for room in self.rooms))
+def can_move_to(self, x, y):
+    if any(fx <= x <= fx+fw and fy <= y <= fy+fh for fx,fy,fw,fh in self.building_footprints):
+        return False
+    if self.rooms:
+        return any(bx0 <= x <= bx1 and by0 <= y <= by1 and point_in_polygon(x, y, room["polygon"])
+                   for room in self.rooms for (bx0, by0, bx1, by1) in [room["bounds"]])
+    return 0 < x < self.world_width and 0 < y < self.world_height
 ```
-An interior with no `"rooms"` configured (most moon interiors) falls back to
-a single rect inset from the world edges by `wall_margin`.
+`point_in_polygon` is an even-odd ray cast (concave-safe) that counts a point
+on any edge as inside. An interior with no `"rooms"` falls back to the full
+world rect. AI walking (`DockRoutine`) uses `plan_path()` - a grid A* over
+this same `can_move_to` (see ARCHITECTURE.md's "Walkability-oracle
+navigation").
 
 ## Performance Considerations
 

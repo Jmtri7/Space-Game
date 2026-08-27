@@ -673,6 +673,42 @@ usually called Y-sorting).
 
 ---
 
+## Pattern: Walkability-Oracle Navigation
+
+**Problem:** AI needs to walk a body from A to B across an area whose shape is
+arbitrary (concave rooms, overlapping polygons, buildings sitting in the
+middle). Walking straight and wall-sliding strands the walker whenever the
+direct line leaves the walkable area. Encoding the geometry a second time for
+the pathfinder (room-adjacency graphs, visibility graphs over obstacle
+corners) means two representations that drift apart, and it can't handle
+concave shapes without a full navmesh.
+
+**Solution:** There's already one authority on "can a body be here?" - the
+same predicate the player's own movement uses (`LocationScreen.can_move_to`,
+folding in room polygons + building footprints). Rasterize *that* into a grid
+once (`NavGrid`: every cell centre walkable or not), A* over the grid, then
+string-pull the cell staircase back to real corners by dropping any waypoint
+whose bypass segment is still fully walkable (sampled through the same
+predicate). Concave rooms, overlaps, and obstacles are all just "cell not
+walkable" - no special cases, and the pathfinder can never disagree with
+movement because they share the oracle.
+
+**Implementation:** `game/world/indoor_pathfinder.py` (`NavGrid`,
+`IndoorPathfinder`), `LocationScreen.plan_path()` (builds + caches one grid
+per interior - the walkable area never changes during play), consumed by
+`DockRoutine._set_waypoints`. Callers keep wall-sliding each leg as the
+safety net for the `[goal]` fallback `plan_path` returns when the goal isn't
+walkable or no route exists.
+
+**Benefits:** one geometry representation; concave-safe; a cheap bbox reject
+in `can_move_to` keeps the one-time grid build well under a frame.
+
+**Use case:** any grid-or-continuous space where "is this point valid?" is
+already cheap to answer and you'd rather not maintain a parallel nav
+structure.
+
+---
+
 ## Pattern: Config-Driven Screen Dispatch ("shop" NPCs)
 
 **Problem:** Several different screen classes need to open from the same

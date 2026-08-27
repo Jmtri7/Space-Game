@@ -99,7 +99,15 @@ and moon saves add `game_state["moon_location"]` - both read straight from
 `LocationScreen.interior_key` (set by `SpaceScreen.get_interior_screen()` -
 which key this actually is in the landable's own `interiors` config), falling
 back to `"default"`/`"city"` respectively if the key is missing or no longer
-valid. **Do not** re-derive this from a label/config-file text guess (e.g.
+valid. **`station_location` is only advisory** - the station **load** path
+ignores it entirely and always resumes at `Landable.get_ship_entry_key()` +
+`arrive_from("ship")` (you walk out of your ship into the same dock doorway,
+same as landing fresh). So collapsing the default story's five station
+interiors into one (story `1.5.0`) is save-safe: an old save that recorded
+`"dormitory"` / `"loan_office"` / `"spaceport"` just resumes in the single
+interior at the dock, and `arrive_from` overwrites any stale walking `x/y`.
+`moon_location` **is** honoured on load (city vs. wilderness), falling back to
+`"city"`. **Do not** re-derive this from a label/config-file text guess (e.g.
 "does the label contain the word 'city'") - a real bug shipped exactly that
 way, since not every story names its interiors so obligingly (Kepler's Reach's
 moon city interior is labeled "Rust Moon Settlement"). `game_state["story"]`
