@@ -4,7 +4,7 @@ immediately exiting, whenever get_exit_options() returns more than one
 option (see docs/CONTROLS.md#exit-menu)."""
 import pygame
 from game.utils import get_ui_scale, get_ui_offset, get_font
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_controls_pane, modal_panel_rect
 from game.ui.selectable_list import SelectableList
 
 
@@ -55,7 +55,7 @@ class ExitMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.25), int(800 * scale * 0.7), int(600 * scale * 0.5))
+        panel_rect = modal_panel_rect(scale, 0.25, 0.7, 0.5)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(40 * scale))

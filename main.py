@@ -148,6 +148,7 @@ def main():
         delete_confirm_dialog = None
         overwrite_confirm_dialog = None
         load_menu = None
+        load_return_screen = None  # "pause" when the Load menu was opened from the pause menu (ESC/load returns there), else None -> main menu
         star_map = None
         current_screen = "menu"
         previous_screen = None
@@ -276,11 +277,18 @@ def main():
                                 if moon_interior:
                                     moon_interior.restore_state(game_state)
                                 current_screen = "moon"
+                            # A load fully replaces the running game, so the
+                            # "opened from pause" link is spent either way.
+                            load_return_screen = None
                     elif action == "delete":
                         delete_confirm_dialog = ConfirmDialog("Delete Save?", filename[:50], context_data=filename)
                     elif action == "cancel":
-                        current_screen = "menu"
-                        menu = Menu()
+                        if load_return_screen == "pause":
+                            current_screen = "pause"
+                            load_return_screen = None
+                        else:
+                            current_screen = "menu"
+                            menu = Menu()
                     load_menu.draw(screen)
 
             elif current_screen == "game":
@@ -572,6 +580,10 @@ def main():
                         current_screen = previous_screen
                     elif action == "save":
                         save_dialog = SaveDialog(pilot_name=pilot_name)
+                    elif action == "load":
+                        load_menu = LoadMenu()
+                        load_return_screen = "pause"
+                        current_screen = "load"
                     elif action == "quit":
                         current_screen = "menu"
                         menu = Menu()

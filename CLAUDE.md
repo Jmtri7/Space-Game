@@ -117,6 +117,28 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 - SaveDialog: `"Enter: save, N: new, D: delete, ESC: cancel"`
 - LoadMenu: `"Enter: load, D: delete, ESC: cancel"`
 
+**Full-screen menus vs. pop-up dialogs:** a full-screen menu (Menu, ShopMenu,
+PossessionsMenu, MissionLog, StarMap, ...) puts its help in the shared
+top-left **Controls pane** (`draw_controls_pane`). A **pop-up dialog** that
+appears *over* another menu (`ConfirmDialog`, `SaveDialog`, `LoadMenu`,
+`PilotNameDialog`, `PauseMenu`) shows its help/choices **inside its own
+panel** instead, and does NOT draw a Controls pane - and the menu it popped
+up over suppresses its own Controls pane while the dialog is up (e.g.
+`ShipBrowserMenu.draw`'s `if not self.confirm`). One set of controls on
+screen at a time, attached to whatever actually has input focus.
+`ConfirmDialog` presents its Yes/No as two `draw_button` buttons - keyboard
+(Left/Right + Enter, or Y/N/ESC shortcuts) and mouse (hover + click) both.
+
+**Every menu panel** uses `modal_panel_rect()` for its main panel, which
+caps width at `center_panel_max_width()` and re-centres on the real screen,
+so a menu can't spill past the centre zone on a wide window.
+
+Transient in-world popups in the Space View (mission toasts, jump-complete
+notice, one-way hail banners, the "too close to jump" warning) are each
+wrapped in their own glass pane (`draw_glow_message` always draws its pane)
+and rendered as a **downward stack** in `SpaceScreen._draw_hud` so two
+showing at once never overlap.
+
 ### Cross-Cutting Concerns: Handle at the Source
 **Principle:** When a behavior needs to apply everywhere (like window close, event filtering, startup logic), handle it once in the main loop or base class, not repeated in every subclass.
 - **Benefit:** New screens inherit correct behavior by default; no need to remember to add it

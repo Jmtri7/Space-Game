@@ -5,7 +5,7 @@ import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, get_building_type, get_culture, get_ship_type, get_graphics_asset
 import game.utils as utils
-from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel
+from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
 from game.screens.screen_base import ScreenBase
 from game.world.character import Character
 from game.world.person import Person
@@ -619,11 +619,14 @@ class LocationScreen(ScreenBase):
         control_margin = int(10 * ui_scale)
 
         # Top-center title pane - same glass-panel look as the Controls/
-        # status panes, anchored to the real screen edge like they are.
+        # status panes, and held within the centre-half zone (see
+        # center_panel_max_width / docs/DESIGN_PATTERNS.md) like every other
+        # centre-anchored HUD element.
         font_label = get_font(int(24 * ui_scale))
         label_text = font_label.render(self.ui_label, True, WHITE)
         label_pad_x, label_pad_y = int(16 * ui_scale), int(8 * ui_scale)
-        label_rect = pygame.Rect(0, 0, label_text.get_width() + label_pad_x * 2, label_text.get_height() + label_pad_y * 2)
+        label_width = min(label_text.get_width() + label_pad_x * 2, center_panel_max_width(ui_scale))
+        label_rect = pygame.Rect(0, 0, label_width, label_text.get_height() + label_pad_y * 2)
         label_rect.midtop = (utils.screen_width // 2, control_margin)
         draw_glass_panel(surface, label_rect, ui_scale)
         surface.blit(label_text, (label_rect.centerx - label_text.get_width() // 2, label_rect.y + label_pad_y))
@@ -642,7 +645,7 @@ class LocationScreen(ScreenBase):
                 info_lines.append((f"  {target_role}", GREEN))
         else:
             info_lines.append(("Target: None", GRAY))
-        info_rect = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
+        info_rect, _ = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
 
         # Top-left control-reference pane - same design as SpaceScreen's
         # (see draw_controls_pane), with the controls that apply here.
@@ -921,6 +924,10 @@ class LocationScreen(ScreenBase):
             elif event.key == pygame.K_p:
                 return "possessions"
             elif event.key == pygame.K_n:
+                # Generic gameplay-event flag - lets a mission stage use
+                # "viewed_mission_log" as its complete_flag (see
+                # missions.json's first_flight); mirrors SpaceScreen's K_n.
+                self.player.possessions.flags["viewed_mission_log"] = True
                 return "missions"
             elif event.key == pygame.K_ESCAPE:
                 return "pause"

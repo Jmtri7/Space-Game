@@ -10,7 +10,7 @@ from game.utils import (
     get_asteroid_type, get_missions
 )
 import game.utils as utils
-from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_max_width
+from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -41,11 +41,16 @@ JUMP_ALIGN_TOLERANCE = 3        # degrees; how close to heading before travel st
 JUMP_TRAVEL_FRAMES = 150        # ~2.5s at 60fps of high-speed travel
 JUMP_SPEED = 40                 # world units/frame while traveling
 JUMP_ARRIVAL_DISTANCE = 1400    # world units from system center on arrival
-JUMP_SELF_MIN_DISTANCE = 700    # must be at least this far from center to jump "back"
+JUMP_SELF_MIN_DISTANCE = 1000   # must be at least this far from center to jump "back"
+
+# ~4s at 60fps a transient toast (jump done, mission start/stage/finish) stays up
+TOAST_FRAMES = 240
+# ~10s at 60fps the Message Log's blinking "unread" light stays lit after a message
+MESSAGE_ALERT_FRAMES = 600
 SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
-# Minimap tuning
-MINIMAP_SIZE = 240     # px, before ui_scale
+# Minimap tuning - its on-screen size now tracks the shared side-panel width
+# (see ui_theme.side_panel_width); this is just the radar's world reach.
 MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 
 # Targeting modes - cycled with Tab, filters what T/[/] can select.
@@ -132,9 +137,17 @@ class SpaceScreen(ScreenBase):
         self.landing_target = None
         self.camera_x = 0
         self.camera_y = 0
-        self.selected_system_id = None  # Star map selection, for the Jump mechanic
+        # Star map selection, for the Jump mechanic - never None: defaults to
+        # (and resets to, after a jump) the current system, so "Jump Target"
+        # always names somewhere and J is always meaningful.
+        self.selected_system_id = self.system_id
         self.jump_state = None  # None, or a dict tracking the jump animation
         self.jump_message_timer = 0  # Transient "too close to jump" feedback
+        # Transient center-screen toast (see _show_toast) - jump completion,
+        # mission started / stage completed / mission finished.
+        self.toast_text = None
+        self.toast_color = CYAN
+        self.toast_timer = 0
         self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_h)
         self.hail_banner = None  # (text, color) for a transient hail-related message (see below)
         self.hail_banner_timer = 0
@@ -145,6 +158,19 @@ class SpaceScreen(ScreenBase):
         # each loop), which is fine since these panels don't move frame to
         # frame.
         self._hud_click_rects = []
+        # Mouse-wheel scroll offsets (in lines) for the two scrollable HUD
+        # side panes - the bottom-left Message Log and the top-right
+        # targeting/info pane - plus each pane's rect from the last drawn
+        # frame, for wheel hit-testing (see handle_input / _draw_hud). The
+        # message scroll resets to 0 (newest) whenever one arrives
+        # (_post_message).
+        self.message_log_scroll = 0
+        self._message_log_rect = None
+        self.info_panel_scroll = 0
+        self._info_panel_rect = None
+        # Frames left on the Message Log's blinking red "new message" light
+        # (see MESSAGE_ALERT_FRAMES / _post_message / draw_message_log).
+        self.message_alert_timer = 0
 
     def _build_asteroid_types(self, config):
         """Resolve a system's "asteroid_field.types" entries (each just a
@@ -372,6 +398,9 @@ class SpaceScreen(ScreenBase):
         self.park_at(self.station)
         if self.starting_mission:
             started = start_mission(self.missions_config, self.player.person.possessions, self.starting_mission)
+            if started:
+                title = self.missions_config.get(started[0], {}).get("title", started[0])
+                self._show_toast(f"Mission started: {title}", GREEN)
             self._deliver_stage_message(started)
 
     def park_at(self, landable):
@@ -400,6 +429,19 @@ class SpaceScreen(ScreenBase):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_target_at(*to_world(*event.pos))
+                continue
+
+            if event.type == pygame.MOUSEWHEEL:
+                # Scroll whichever scrollable side pane the pointer is over -
+                # the Message Log (bottom-left) or the targeting/info pane
+                # (top-right). Wheel up (event.y > 0) moves toward the top;
+                # the upper bound is clamped against max_scroll in _draw_hud
+                # once each pane's real line count is known.
+                mouse_pos = pygame.mouse.get_pos()
+                if self._message_log_rect and self._message_log_rect.collidepoint(mouse_pos):
+                    self.message_log_scroll = max(0, self.message_log_scroll - event.y)
+                elif self._info_panel_rect and self._info_panel_rect.collidepoint(mouse_pos):
+                    self.info_panel_scroll = max(0, self.info_panel_scroll - event.y)
                 continue
 
             if event.type != pygame.KEYDOWN:
@@ -501,6 +543,10 @@ class SpaceScreen(ScreenBase):
             elif event.key == pygame.K_p:
                 return "possessions"
             elif event.key == pygame.K_n:
+                # Generic gameplay-event flag (see K_SPACE's comment) - a
+                # mission stage can use "viewed_mission_log" as its
+                # complete_flag (see missions.json's first_flight).
+                self.player.person.possessions.flags["viewed_mission_log"] = True
                 return "missions"
         return None
 
@@ -693,43 +739,31 @@ class SpaceScreen(ScreenBase):
         points = [(tip_x, tip_y), (wing1_x, wing1_y), (wing2_x, wing2_y)]
         pygame.draw.polygon(surface, GREEN, points)
 
-    def _draw_jump_streak(self, surface):
-        """Bright motion-streak lines trailing the ship during high-speed jump travel."""
-        rad = math.radians(self.player.angle)
-        back_x, back_y = -math.sin(rad), math.cos(rad)
-        right_x, right_y = math.cos(rad), math.sin(rad)
-        ship_x, ship_y = self.player.x, self.player.y
-        streak_length = 220
-
-        for offset in (-14, -5, 5, 14):
-            start_x = ship_x + right_x * offset
-            start_y = ship_y + right_y * offset
-            end_x = start_x + back_x * streak_length
-            end_y = start_y + back_y * streak_length
-            pygame.draw.line(surface, CYAN, utils.to_screen(start_x, start_y), utils.to_screen(end_x, end_y), 2)
-
     def _draw_minimap(self, surface, target_obj):
-        """Square radar in the top-right corner: player stays centered, every
+        """Local radar in the top-right corner: player stays centered, every
         other system object is plotted as a point at its true relative
-        position/color, scaled down to MINIMAP_RANGE world units per half-width.
-        Objects beyond that range simply don't appear - this is a local radar,
-        not the galaxy-scale StarMap (M key), so it never needs to pan/zoom.
-        Returns its rect so the HUD can stack the jump-target panel below it.
+        position/color, scaled down to MINIMAP_RANGE world units per half-
+        height. Objects beyond that range simply don't appear - this is a
+        local radar, not the galaxy-scale StarMap (M key), so it never needs
+        to pan/zoom. Returns its rect so the HUD can stack the info panel
+        below it.
         """
         ui_scale = get_ui_scale()
-        # Capped at side_panel_max_width() (see its own docstring) - a
-        # no-op at typical window sizes/aspect ratios, but a wide-and-short
-        # window scales ui_scale up from height alone, which could
-        # otherwise push a fixed MINIMAP_SIZE*ui_scale past this side's
-        # quarter of the width.
-        size = min(int(MINIMAP_SIZE * ui_scale), side_panel_max_width())
-        margin = int(10 * ui_scale)
-        rect = pygame.Rect(0, 0, size, size)
+        # Fills the full side-panel width (see side_panel_width) so it shares
+        # both vertical edges with the info panel stacked below it. Height is
+        # capped at 40% of the window so the info panel always has room -
+        # on a wide window that makes the radar a wide-ish rectangle rather
+        # than a square, which is fine for a local radar (you just see more
+        # to the sides than fore/aft).
+        width = side_panel_width(ui_scale)
+        height = min(width, int(utils.screen_height * 0.4))
+        margin = hud_margin(ui_scale)
+        rect = pygame.Rect(0, 0, width, height)
         rect.topright = (utils.screen_width - margin, margin)
 
         draw_glass_panel(surface, rect, ui_scale)
 
-        px_per_unit = (size / 2) / MINIMAP_RANGE
+        px_per_unit = (height / 2) / MINIMAP_RANGE
 
         def project(x, y):
             return rect.centerx + (x - self.player.x) * px_per_unit, rect.centery + (y - self.player.y) * px_per_unit
@@ -803,6 +837,15 @@ class SpaceScreen(ScreenBase):
         # every physics frame for as long as the conversation stays open.
         self.player.thrust = 0
 
+    def _show_toast(self, text, color=CYAN):
+        """Flash a short, self-clearing message in the center of the screen
+        (see _draw_hud) - used for jump completion and mission events
+        (started / stage completed / finished). Unlike _post_message this
+        is purely transient: nothing is written to the Messages log."""
+        self.toast_text = text
+        self.toast_color = color
+        self.toast_timer = TOAST_FRAMES
+
     def _post_message(self, sender, text):
         """Show a transient hail banner and permanently log a one-way
         message from sender (see Possessions.add_message) - shared by
@@ -813,6 +856,10 @@ class SpaceScreen(ScreenBase):
         incoming banner can't visually collide with the dialogue box - the
         Messages pane still shows it once the conversation closes."""
         self.player.person.possessions.add_message(sender, text)
+        # Snap the Message Log back to the newest entry and fire its blinking
+        # red light (see draw_message_log).
+        self.message_log_scroll = 0
+        self.message_alert_timer = MESSAGE_ALERT_FRAMES
         if self.active_dialogue:
             return
         self.hail_banner = (f'Incoming transmission - {sender}: "{text}"', CYAN)
@@ -993,7 +1040,11 @@ class SpaceScreen(ScreenBase):
         ship.thrust = 0
 
         self.jump_state = None
-        self.selected_system_id = None
+        # Reset the jump target to wherever we just arrived (never None) -
+        # matches __init__ and keeps "Jump Target" meaningful.
+        self.selected_system_id = self.system_id
+        arrival_name = get_star_systems(self.story).get(self.system_id, {}).get("name", self.system_id)
+        self._show_toast(f"Jump complete - arrived at {arrival_name}", CYAN)
         # Generic gameplay-event flag - see K_SPACE's comment above on why
         # these live on Possessions.flags instead of a SpaceScreen-only
         # field. Set for any completed jump, not just a self-jump back to
@@ -1036,6 +1087,8 @@ class SpaceScreen(ScreenBase):
             self.jump_message_timer -= 1
         if self.hail_banner_timer > 0:
             self.hail_banner_timer -= 1
+        if self.message_alert_timer > 0:
+            self.message_alert_timer -= 1
         self._check_one_way_hails()
         self._validate_target()
         # Mission progress before _sync_escorts() - a mission finishing
@@ -1043,8 +1096,15 @@ class SpaceScreen(ScreenBase):
         # _on_mission_end), and escort sync needs to see that same-frame
         # rather than escorting for one extra frame after the tutorial's
         # already over.
-        for advanced_stage in check_mission_progress(self.missions_config, self.player.person.possessions):
+        possessions = self.player.person.possessions
+        completed_before = set(possessions.completed_missions)
+        for advanced_stage in check_mission_progress(self.missions_config, possessions):
             self._deliver_stage_message(advanced_stage)
+            self._show_toast("Mission stage complete", GREEN)
+        for mission_id in possessions.completed_missions:
+            if mission_id not in completed_before:
+                title = self.missions_config.get(mission_id, {}).get("title", mission_id)
+                self._show_toast(f"Mission complete: {title}", YELLOW)
         self._sync_escorts()
 
     def update(self):
@@ -1076,6 +1136,12 @@ class SpaceScreen(ScreenBase):
 
         self.update_physics()
 
+        # Toast counts down only here, not in update_physics() - so one
+        # raised while docked (update_physics() still runs in the background
+        # then) is still on screen when the player launches back into space.
+        if self.toast_timer > 0:
+            self.toast_timer -= 1
+
         # Update camera to follow player
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
 
@@ -1104,8 +1170,6 @@ class SpaceScreen(ScreenBase):
         for ai_ship in self.ai_ships:
             ai_ship.draw(surface)
         self.player.draw(surface)
-        if self.jump_state and self.jump_state["phase"] == "travel":
-            self._draw_jump_streak(surface)
 
         # Debug markers for entity positions
         if constants.DEBUG_MODE:
@@ -1189,17 +1253,18 @@ class SpaceScreen(ScreenBase):
         else:
             lines.append(("Target: None", GRAY))
 
-        if self.selected_system_id:
-            systems = get_star_systems(self.story)
-            selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
-            jump_label = selected_name
-            if self.selected_system_id == self.system_id:
-                jump_label += " (current)"
-            lines.append((f"Jump Target: {jump_label}", CYAN))
-        else:
-            lines.append(("Jump Target: None", GRAY))
+        # selected_system_id is never None (see __init__) - it defaults to
+        # the current system, so this line always names somewhere.
+        systems = get_star_systems(self.story)
+        selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
+        jump_label = selected_name
+        if self.selected_system_id == self.system_id:
+            jump_label += " (current)"
+        lines.append((f"Jump Target: {jump_label}", CYAN))
 
-        info_rect = draw_info_panel(surface, lines, ui_scale, (utils.screen_width - margin, minimap_rect.bottom + margin))
+        info_rect, info_max_scroll = draw_info_panel(surface, lines, ui_scale, (utils.screen_width - margin, minimap_rect.bottom + margin), scroll=self.info_panel_scroll)
+        self.info_panel_scroll = max(0, min(self.info_panel_scroll, info_max_scroll))
+        self._info_panel_rect = info_rect
 
         # --- Top-left: control-help pane (shared design with LocationScreen's -
         # see draw_controls_pane). Skipped (draw_hud=False) whenever a modal
@@ -1225,34 +1290,33 @@ class SpaceScreen(ScreenBase):
                 ("P", "View Possessions"),
                 ("N", "Mission Log"),
                 ("Click", "Target Object"),
+                ("Wheel", "Scroll pane under cursor"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
 
-        # --- Top-center: transient "too close to jump" warning, or an
-        # incoming/blocked hail banner (see _check_one_way_hails/_start_hail) -
-        # mutually exclusive with each other in practice (jumping and
-        # hailing don't happen at the same moment) so sharing this one slot
-        # is fine.
+        # --- Top-center: transient popups, each in its own glass pane (see
+        # draw_glow_message), stacked downward so they can never overlap -
+        # the "too close to jump" warning / an incoming hail banner (only
+        # one of those is ever up at once) plus the mission/jump toast,
+        # which can coexist with a hail (a mission stage advancing delivers
+        # both its one_way_message banner and a "stage complete" toast the
+        # same frame).
+        popups = []
         if self.jump_message_timer > 0:
-            font_warn = get_font(int(20 * ui_scale))
-            draw_glow_message(
-                surface, "Too close to jump - move away from center first", font_warn,
-                utils.screen_width // 2, margin + int(10 * ui_scale),
-                color=YELLOW, shadow_color=(60, 45, 10)
-            )
+            popups.append(("Too close to jump - move away from center first", YELLOW, (60, 45, 10)))
         elif self.hail_banner_timer > 0 and self.hail_banner:
-            # draw_glow_message (not draw_glow_title) - unlike the fixed
-            # warning above, this can carry a pilot's free-text one_way_hail
-            # message (see _check_one_way_hails), which needs to wrap
-            # rather than run wide enough to overlap a side panel (see
-            # center_panel_max_width).
-            text, color = self.hail_banner
-            font_hail = get_font(int(20 * ui_scale))
-            draw_glow_message(
-                surface, text, font_hail,
-                utils.screen_width // 2, margin + int(10 * ui_scale),
-                color=color, shadow_color=(20, 30, 40)
+            popups.append((self.hail_banner[0], self.hail_banner[1], (20, 30, 40)))
+        if self.toast_timer > 0 and self.toast_text:
+            popups.append((self.toast_text, self.toast_color, (20, 30, 40)))
+
+        font_popup = get_font(int(20 * ui_scale))
+        popup_y = margin + int(10 * ui_scale)
+        for text, color, shadow in popups:
+            popup_rect = draw_glow_message(
+                surface, text, font_popup, utils.screen_width // 2, popup_y,
+                color=color, shadow_color=shadow,
             )
+            popup_y = popup_rect.bottom + int(8 * ui_scale)
 
         # --- Bottom-center: current status. Being mid-jump or having
         # autopilot engaged are exclusive committed states (almost any key
@@ -1277,13 +1341,14 @@ class SpaceScreen(ScreenBase):
                     or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
                 ):
                     status_lines.append(("Slow down to land", RED))
-                if self.selected_system_id:
+                # Jump Target is never None now (see __init__). A jump to a
+                # *different* system is always allowed; a jump back to the
+                # current one needs distance from center first (see _try_jump/
+                # JUMP_SELF_MIN_DISTANCE), so only prompt for it once that's
+                # actually true.
+                if self.selected_system_id != self.system_id:
                     status_lines.append(("Press J to Jump", GREEN))
                 elif self._drifted_from_center():
-                    # Reuses JUMP_SELF_MIN_DISTANCE (not a separate tuning
-                    # value) - that's exactly the distance a self-jump back
-                    # to this same system already requires, so the hint
-                    # appears exactly when it becomes actionable.
                     status_lines.append(("Drifting far from the system - open the Star Map (M) and jump (J) back", YELLOW))
                 if target_obj:
                     status_lines.append(("Press Space for Autopilot", GREEN))
@@ -1300,7 +1365,11 @@ class SpaceScreen(ScreenBase):
         message_log_rect = None
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.person.possessions.message_log]
-            message_log_rect = draw_message_log(surface, messages, ui_scale)
+            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=self.message_alert_timer > 0)
+            # Clamp now that the real wrapped-line count is known (window
+            # resize or a shrinking log can leave the stored offset too big).
+            self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
+        self._message_log_rect = message_log_rect
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in

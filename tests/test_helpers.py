@@ -37,7 +37,7 @@ from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
 from game.ui.mission_log import MissionLog
-from game.ui.ui_theme import side_panel_max_width, center_panel_max_width
+from game.ui.ui_theme import side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin
 from game.screens.location_screen import LocationScreen
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder
@@ -1176,12 +1176,18 @@ class TestMissionEscortAndAbandon(unittest.TestCase):
         "first_flight": {
             "title": "First Flight",
             "escort_flag": "kade_escorting",
+            "on_start_flags": ["kade_escorting"],
             "on_end_flags": ["kade_tutorial_done"],
             "stages": [
                 {"text": "Say hello.", "complete_flag": "said_hello"},
             ],
         },
     }
+
+    def test_start_mission_sets_on_start_flags(self):
+        possessions = Possessions()
+        start_mission(self.MISSIONS, possessions, "first_flight")
+        self.assertTrue(possessions.flags.get("kade_escorting"))
 
     def test_finishing_a_mission_clears_its_escort_flag_and_sets_on_end_flags(self):
         possessions = Possessions()
@@ -1946,10 +1952,17 @@ class TestHudZoneWidths(unittest.TestCase):
         utils.set_screen_size(1859, 1024)  # the reported bug's window size
         self.assertEqual(side_panel_max_width(), 1859 // 4)
 
-    def test_center_is_strictly_less_than_half_of_screen_width(self):
+    def test_center_leaves_a_full_margin_gap_from_each_side_zone(self):
         utils.set_screen_size(1859, 1024)
-        self.assertLess(center_panel_max_width(), 1859 / 2)
-        self.assertEqual(center_panel_max_width(), 1859 // 2 - 1)
+        ui_scale = utils.get_ui_scale()
+        self.assertLess(center_panel_max_width(ui_scale), 1859 / 2)
+        self.assertEqual(center_panel_max_width(ui_scale), 1859 // 2 - 2 * hud_margin(ui_scale))
+        # A centred pane this wide reaches to within ~hud_margin() of the
+        # quarter line (where a left/right side pane begins), never past it.
+        centre_right_edge = 1859 / 2 + center_panel_max_width(ui_scale) / 2
+        quarter_line = 1859 - side_panel_max_width()  # right side pane's inner edge
+        self.assertLessEqual(centre_right_edge, quarter_line)
+        self.assertAlmostEqual(quarter_line - centre_right_edge, hud_margin(ui_scale), delta=2)
 
     def test_zones_track_window_width_directly_not_ui_scale(self):
         """The whole point: on a wide-but-short window, ui_scale is capped
@@ -1961,6 +1974,17 @@ class TestHudZoneWidths(unittest.TestCase):
         ui_scale = utils.get_ui_scale()
         self.assertLess(ui_scale, 1859 / 800, "fixture must reproduce the height-capped case")
         self.assertEqual(side_panel_max_width(), 1859 // 4)
+
+    def test_side_panel_width_fills_quarter_from_margin_to_the_line(self):
+        """An edge-anchored pane at hud_margin() from the edge, this wide,
+        has its inner edge exactly on the quarter line."""
+        utils.set_screen_size(1859, 1024)
+        ui_scale = utils.get_ui_scale()
+        self.assertEqual(hud_margin(ui_scale) + side_panel_width(ui_scale), side_panel_max_width())
+
+    def test_side_panel_width_stays_positive_on_a_tiny_window(self):
+        utils.set_screen_size(200, 200)
+        self.assertGreaterEqual(side_panel_width(utils.get_ui_scale()), 1)
 
 
 class TestCharacterAIPilotDialogue(unittest.TestCase):
@@ -2512,17 +2536,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.1.0")
+        self.assertEqual(game_screen.story_version, "1.2.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.1.0")
+        self.assertEqual(game_state["story_version"], "1.2.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.1.0")
+            warn_if_story_version_mismatch("default", "1.2.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2530,7 +2554,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.1.0", captured.getvalue())
+        self.assertIn("1.2.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -2725,6 +2749,19 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen = self._boarded_screen()
         self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
 
+    def test_starting_the_tutorial_makes_kade_escort_immediately(self):
+        """first_flight's "on_start_flags" sets kade_escorting the moment
+        the mission begins (on ship purchase), so _sync_escorts pulls Kade
+        into FollowRoutine right away - not only once the player accepts his
+        offer mid-conversation."""
+        game_screen = self._boarded_screen()
+        possessions = game_screen.player.person.possessions
+        self.assertTrue(possessions.flags.get("kade_escorting"))
+        game_screen.update_physics()
+        kade = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
+        self.assertTrue(kade.escorting)
+        self.assertIsInstance(kade.routine, FollowRoutine)
+
     def test_buying_a_second_ship_does_not_restart_the_mission(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
@@ -2746,24 +2783,24 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     def test_turning_advances_past_the_turning_stage(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 3  # skip straight to the turning stage
+        possessions.missions["first_flight"] = 4  # skip straight to the turning stage
 
         keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT, pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w, pygame_mock.K_DOWN, pygame_mock.K_s)}
         keys[pygame_mock.K_a] = True
         game_screen.player.handle_input(keys)
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("used_turn"))
-        self.assertEqual(possessions.missions["first_flight"], 4)
+        self.assertEqual(possessions.missions["first_flight"], 5)
 
     def test_thrusting_advances_past_the_flying_stage(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 4  # skip straight to the thrust stage
+        possessions.missions["first_flight"] = 5  # skip straight to the thrust stage
 
         game_screen.player.thrust = 0.2
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("used_thrust"))
-        self.assertEqual(possessions.missions["first_flight"], 5)
+        self.assertEqual(possessions.missions["first_flight"], 6)
 
     def test_engaging_autopilot_on_a_ship_sets_the_flag(self):
         game_screen = self._boarded_screen()
@@ -2787,7 +2824,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         the tutorial's braking stage completes on."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 5  # skip straight to the braking stage
+        possessions.missions["first_flight"] = 6  # skip straight to the braking stage
         possessions.flags["used_thrust"] = True
         game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0  # already slow
 
@@ -2798,7 +2835,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
 
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("braked_below_threshold"))
-        self.assertEqual(possessions.missions["first_flight"], 6)
+        self.assertEqual(possessions.missions["first_flight"], 7)
 
     def test_accepting_kades_help_sets_flags_and_starts_the_escort(self):
         """Choosing "Sure, show me the ropes." in Kade's hail dialogue sets
@@ -2884,24 +2921,28 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         self.assertEqual(possessions.missions["first_flight"], 3)
         self.assertTrue(kade_char.escorting)
 
-        possessions.flags["used_turn"] = True
+        possessions.flags["viewed_mission_log"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 4)
 
-        game_screen.player.thrust = 0.2
+        possessions.flags["used_turn"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 5)
+
+        game_screen.player.thrust = 0.2
+        game_screen.update_physics()
+        self.assertEqual(possessions.missions["first_flight"], 6)
 
         possessions.flags["used_brake"] = True
         game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0
         game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 6)
+        self.assertEqual(possessions.missions["first_flight"], 7)
 
         game_screen.jump_state = {"phase": "travel", "heading": 0, "timer": 0, "destination": game_screen.system_id}
         game_screen._complete_jump()
         self.assertTrue(possessions.flags.get("completed_jump"))
         game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 7)
+        self.assertEqual(possessions.missions["first_flight"], 8)
 
         game_screen._mark_landed()
         game_screen.update_physics()

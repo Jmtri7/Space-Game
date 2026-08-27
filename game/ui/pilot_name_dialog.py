@@ -2,7 +2,7 @@
 import pygame
 from game.constants import WHITE, YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 
 
 class PilotNameDialog:
@@ -32,7 +32,7 @@ class PilotNameDialog:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.15), int(offset_y + 600 * scale * 0.25), int(800 * scale * 0.7), int(600 * scale * 0.5))
+        panel_rect = modal_panel_rect(scale, 0.25, 0.7, 0.5)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(40 * scale))

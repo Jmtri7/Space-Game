@@ -4,7 +4,7 @@ CLAUDE.md's One Class Per File rule for why this file is an exception."""
 import math
 import pygame
 from game.constants import YELLOW, WHITE, GRAY
-from game.utils import get_font, _wrap_text
+from game.utils import get_font, _wrap_text, get_ui_scale
 import game.utils as utils
 from game.world.ship import Ship
 
@@ -29,12 +29,57 @@ def side_panel_max_width():
     return utils.screen_width // 4
 
 
-def center_panel_max_width():
+HUD_MARGIN_BASE = 10  # px at scale 1 - gap every HUD panel keeps from the screen edge
+
+
+def hud_margin(ui_scale):
+    """The gap a HUD panel leaves between itself and the screen edge -
+    every edge-anchored pane (both screens' Controls / info / status /
+    Messages panes, the minimap) uses this exact value so they line up."""
+    return int(HUD_MARGIN_BASE * ui_scale)
+
+
+def side_panel_width(ui_scale):
+    """Exact width for an edge-anchored HUD side panel: its outer edge sits
+    hud_margin() from the screen edge and its inner edge lands right on the
+    quarter line (side_panel_max_width()), so the Controls / info / Messages
+    panes all fill their quarter to the same width instead of each shrinking
+    to its own content. Callers still add their own internal padding within
+    this width."""
+    return max(1, side_panel_max_width() - hud_margin(ui_scale))
+
+
+def center_panel_max_width(ui_scale):
     """Max width for a HUD panel/message anchored to the horizontal center
-    (the bottom status pane, the top-center jump/hail banners) - strictly
-    less than half the real window width, so it can never encroach into
-    either side's quarter (see side_panel_max_width)."""
-    return utils.screen_width // 2 - 1
+    (the bottom status pane, the top-centre popup stack, modal menu panels).
+    At this width a centred pane leaves a full hud_margin() gap on each side
+    before the quarter line where a side pane begins - the same gap the side
+    panes leave from the screen edge - so nothing centred ever touches, let
+    alone overlaps, a side pane regardless of window shape."""
+    return max(1, utils.screen_width // 2 - 2 * hud_margin(ui_scale))
+
+
+def modal_panel_rect(ui_scale, y_frac, w_frac, h_frac):
+    """The main panel rect for a full-screen modal menu (shop, outfitting,
+    possessions, mission log, the save/load/confirm dialogs, ...). Menus
+    historically sized this by hand as fractions of the letterboxed 800x600
+    UI canvas (`get_ui_offset()` + `800 * scale * frac`); on a window wider
+    than 4:3 that canvas is height-bound and can grow wide enough to push a
+    0.8-of-canvas panel well past the screen's middle-half zone.
+
+    This keeps the same vertical placement (`y_frac`/`h_frac` are still
+    canvas fractions) but caps the width at `center_panel_max_width()` and
+    re-centres it on the real screen, so a modal menu respects the same
+    horizontal zone discipline as the HUD's centre panes (see
+    docs/DESIGN_PATTERNS.md's "HUD Zone Width Discipline"). Every menu's
+    panel was already horizontally centred, so nothing shifts on a normal
+    aspect ratio - the cap is a no-op there."""
+    _, offset_y = utils.get_ui_offset()
+    width = min(int(800 * ui_scale * w_frac), center_panel_max_width(ui_scale))
+    height = int(600 * ui_scale * h_frac)
+    x = int(utils.screen_width / 2 - width / 2)
+    y = int(offset_y + 600 * ui_scale * y_frac)
+    return pygame.Rect(x, y, width, height)
 
 
 def draw_glass_panel(surface, rect, scale):
@@ -58,17 +103,37 @@ def draw_glow_title(surface, text, font, center_x, top_y, color=YELLOW, shadow_c
 
 def draw_glow_message(surface, text, font, center_x, top_y, color=YELLOW, shadow_color=(60, 45, 10)):
     """Like draw_glow_title, but for free-form text that isn't a short,
-    fixed UI label - a top-center jump/hail banner, whose text can be
-    arbitrary story/dialogue content (an NPC's one-way hail message, for
-    instance). Wraps to center_panel_max_width() and stacks each line via
-    draw_glow_title, so a long message can't run wide enough to overlap a
-    side panel the way a single unwrapped line could. Returns the total
-    height drawn."""
-    lines = _wrap_text(font, text, center_panel_max_width())
+    fixed UI label - a top-center jump/hail banner or a mission toast, whose
+    text can be arbitrary story/dialogue content (an NPC's one-way hail
+    message, for instance). Wraps to center_panel_max_width() and stacks
+    each line via draw_glow_title, so a long message can't run wide enough
+    to overlap a side panel the way a single unwrapped line could.
+
+    Drawn inside a glass pane (same look as every other HUD panel) so these
+    transient popups read as part of the UI rather than bare floating text.
+    `top_y` is where the *text* starts; the pane extends a little above and
+    around it. Returns the pane's pygame.Rect so a caller can stack another
+    message directly below it."""
+    scale = get_ui_scale()
+    pad_x, pad_y = int(16 * scale), int(10 * scale)
+    # Wrap so the whole pane (text + padding) stays within the centre zone,
+    # not just the text - otherwise the padding can nudge a full-width
+    # message's pane into a side panel's quarter (see center_panel_max_width).
+    lines = _wrap_text(font, text, center_panel_max_width(scale) - pad_x * 2)
+    rendered = [font.render(line, True, color) for line in lines]
+    line_height = font.get_linesize()
+    text_width = max((surf.get_width() for surf in rendered), default=0)
+    text_height = line_height * max(1, len(lines))
+
+    panel = pygame.Rect(0, 0, text_width + pad_x * 2, text_height + pad_y * 2)
+    panel.midtop = (center_x, top_y - pad_y)
+    draw_glass_panel(surface, panel, scale)
+
     y = top_y
     for line in lines:
-        y += draw_glow_title(surface, line, font, center_x, y, color=color, shadow_color=shadow_color)
-    return y - top_y
+        draw_glow_title(surface, line, font, center_x, y, color=color, shadow_color=shadow_color)
+        y += line_height
+    return panel
 
 
 def draw_controls_pane(surface, x, y, title, items, ui_scale):
@@ -94,16 +159,10 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
     key_column_width = max(text.get_width() for text in key_rendered)
     desc_x_offset = key_column_width + colon_gap + colon_rendered.get_width() + desc_gap
 
-    panel_width = max(
-        title_rendered.get_width(),
-        desc_x_offset + max(text.get_width() for text in desc_rendered),
-    ) + pad_x * 2
-    # Clamped to side_panel_max_width() per the HUD's quarter-width rule
-    # (see its own docstring) - a no-op in practice, since every caller's
-    # key/description strings are short, fixed text, not arbitrary-length
-    # content, but keeps this panel honest about the same rule every other
-    # side panel follows.
-    panel_width = min(panel_width, side_panel_max_width())
+    # Fixed to the full side-panel width (see side_panel_width) so this pane
+    # fills its quarter of the window to the same edge as the info/Messages
+    # panes rather than shrinking to its own short key/description text.
+    panel_width = side_panel_width(ui_scale)
     # Title line, then a blank line's worth of gap, then one line per control.
     panel_height = pad_y * 2 + line_height * (len(items) + 2)
     rect = pygame.Rect(x, y, panel_width, panel_height)
@@ -121,34 +180,55 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale):
     return rect
 
 
-def draw_info_panel(surface, lines, ui_scale, topright):
+def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
     """Draw a top-right-anchored glass panel of aligned (text, color) lines -
     the ship-status/targeting readout style SpaceScreen's HUD uses and
     interior locations now share for their own credits/target readout.
     `lines` is a list of (text, color) tuples; `topright` is the (x, y)
-    screen point for the panel's own top-right corner. Returns the drawn rect.
+    screen point for the panel's own top-right corner.
 
     A line can carry real story content (a target's name, an interior
-    label) rather than fixed UI text, so - unlike draw_controls_pane -
-    each line is wrapped (see _wrap_text) to fit within
-    side_panel_max_width() rather than just clamped, keeping this side
-    panel within its quarter of the window regardless of how long that
-    content happens to be.
-    """
+    label) rather than fixed UI text, so each line is wrapped (see
+    _wrap_text) to fit. The panel is a fixed side_panel_width() wide so it
+    fills its quarter of the window to the same edge as the Controls /
+    Messages panes regardless of how long that content happens to be.
+
+    Fixed maximum height: at most INFO_PANEL_VISIBLE_LINES wrapped lines are
+    shown; a longer readout (many locations inside a targeted station, say)
+    scrolls via `scroll` - a line offset clamped here, driven by the mouse
+    wheel while the pointer is over the pane. `^`/`v` scroll hints show when
+    there's more. Returns `(rect, max_scroll)`."""
     font = get_font(int(18 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
     line_height = int(22 * ui_scale)
-    text_max_width = side_panel_max_width() - pad_x * 2
+    panel_width = side_panel_width(ui_scale)
+    text_max_width = panel_width - pad_x * 2
     wrapped = [(_wrap_text(font, text, text_max_width), color) for text, color in lines]
     rendered = [(font.render(line, True, color), color) for lines, color in wrapped for line in lines]
-    panel_width = max(text.get_width() for text, _ in rendered) + pad_x * 2
-    panel_height = pad_y * 2 + line_height * len(rendered)
+
+    total = len(rendered)
+    visible = min(total, INFO_PANEL_VISIBLE_LINES)
+    max_scroll = max(0, total - visible)
+    scroll = max(0, min(scroll, max_scroll))
+    scrollable = max_scroll > 0
+    hint_height = font.get_height() + int(2 * ui_scale)
+
+    panel_height = pad_y * 2 + line_height * visible + (hint_height * 2 if scrollable else 0)
     rect = pygame.Rect(0, 0, panel_width, panel_height)
     rect.topright = topright
     draw_glass_panel(surface, rect, ui_scale)
-    for i, (text, _) in enumerate(rendered):
-        surface.blit(text, (rect.x + pad_x, rect.y + pad_y + i * line_height))
-    return rect
+
+    y = rect.y + pad_y
+    if scrollable:
+        if scroll > 0:
+            surface.blit(font.render("^ more  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
+        y += hint_height
+    for text, _ in rendered[scroll:scroll + visible]:
+        surface.blit(text, (rect.x + pad_x, y))
+        y += line_height
+    if scrollable and scroll < max_scroll:
+        surface.blit(font.render("v more  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
+    return rect, max_scroll
 
 
 def draw_status_pane(surface, status_lines, ui_scale):
@@ -174,7 +254,7 @@ def draw_status_pane(surface, status_lines, ui_scale):
     font_status = get_font(int(22 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
     margin = int(10 * ui_scale)
-    text_max_width = center_panel_max_width() - pad_x * 2
+    text_max_width = center_panel_max_width(ui_scale) - pad_x * 2
     wrapped_lines = [(line, color) for text, color in status_lines for line in _wrap_text(font_status, text, text_max_width)]
     status_rendered = [font_status.render(text, True, color) for text, color in wrapped_lines]
     status_line_height = status_rendered[0].get_height() + int(4 * ui_scale)
@@ -190,10 +270,12 @@ def draw_status_pane(surface, status_lines, ui_scale):
     return status_panel
 
 
-MESSAGE_LOG_MAX_VISIBLE = 5  # entries drawn at once, newest first - see Possessions.message_log for the full (capped) history
+MESSAGE_LOG_VISIBLE_LINES = 7  # text lines drawn at once; the rest scroll (mouse wheel)
+SCROLL_HINT_COLOR = (120, 200, 255)  # "^ newer" / "v older" arrows - a distinct blue, not the dim GRAY of older text
+INFO_PANEL_VISIBLE_LINES = 8  # draw_info_panel lines shown at once before it scrolls
 
 
-def draw_message_log(surface, messages, ui_scale):
+def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     """Bottom-left glass panel of received one-way messages (see
     Possessions.add_message/message_log and SpaceScreen._check_one_way_hails),
     newest entry on top - the bottom-left counterpart to draw_status_pane
@@ -201,53 +283,79 @@ def draw_message_log(surface, messages, ui_scale):
     arrived rather than the player's current status.
 
     `messages` is a list of (sender, text) tuples, already newest-first
-    (see Possessions.add_message) - only the most recent
-    MESSAGE_LOG_MAX_VISIBLE are drawn, so the panel has a fixed max size
-    regardless of how long the full log has grown. Drawing is skipped
-    entirely (returns None) when there are no messages yet, so a fresh
-    game doesn't show an empty box in the corner - same pattern as
-    draw_status_pane. box_width is capped at side_panel_max_width() (a
-    320-wide box at typical ui_scale, but wide UI scaling on an unusual
-    window shape can otherwise push a fixed 320*ui_scale past that quarter
-    - see its own docstring), so a message ever wraps tighter rather than
-    the panel itself growing past its side of the screen."""
+    (see Possessions.add_message). The panel has a **fixed maximum height**:
+    it grows to at most MESSAGE_LOG_VISIBLE_LINES wrapped text lines and
+    then stops, so a long backlog can't push up over the Controls pane. The
+    rest is reached with `scroll` - a line offset from the newest, clamped
+    here - which SpaceScreen drives from the mouse wheel while the pointer
+    is over this panel. `^ newer` / `v older` hints show when there's more
+    in either direction.
+
+    Returns `(rect, max_scroll)` so the caller can clamp its own stored
+    scroll offset; returns `(None, 0)` when there are no messages yet (a
+    fresh game shows no empty box - same pattern as draw_status_pane).
+
+    box_width is the shared side_panel_width(), so this pane fills its
+    quarter of the window to the same edge as the Controls / info panes."""
     if not messages:
-        return None
+        return None, 0
     font_title = get_font(int(16 * ui_scale))
     font_text = get_font(int(15 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
     line_height = int(18 * ui_scale)
-    entry_gap = int(4 * ui_scale)
-    margin = int(10 * ui_scale)
-    box_width = min(int(320 * ui_scale), side_panel_max_width())
+    margin = hud_margin(ui_scale)
+    box_width = side_panel_width(ui_scale)
 
-    shown = messages[:MESSAGE_LOG_MAX_VISIBLE]
-    # Each entry wraps as one "Sender: text" unit to the panel's width,
-    # rather than sender and text wrapping independently - keeps a short
-    # message on one line without a lone "Sender:" line above it.
-    wrapped_entries = [_wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2) for sender, text in shown]
+    # Every message flattened to (line, is_newest_entry) - each entry wraps
+    # as one "Sender: text" unit (not sender/text independently, so a short
+    # message stays on one line without a lone "Sender:" above it). The
+    # newest entry's lines stay bright and the rest dim, kept as a cue even
+    # after scrolling.
+    flat = []
+    for i, (sender, text) in enumerate(messages):
+        for line in _wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2):
+            flat.append((line, i == 0))
 
-    title_rendered = font_title.render("Messages", True, (200, 220, 255))
+    total = len(flat)
+    visible = min(total, MESSAGE_LOG_VISIBLE_LINES)
+    max_scroll = max(0, total - visible)
+    scroll = max(0, min(scroll, max_scroll))
+    scrollable = max_scroll > 0
+
+    title_rendered = font_title.render("Message Log", True, (200, 220, 255))
     title_height = title_rendered.get_height() + int(4 * ui_scale)
-    total_lines = sum(len(lines) for lines in wrapped_entries)
-    box_height = pad_y * 2 + title_height + total_lines * line_height + entry_gap * (len(shown) - 1)
+    hint_height = font_text.get_height() + int(2 * ui_scale)
+    # Both hint rows are reserved whenever the log is scrollable at all, so
+    # the panel's height doesn't jump as the offset passes the ends - it
+    # only changes with the message count, up to the visible-lines cap.
+    box_height = pad_y * 2 + title_height + visible * line_height + (hint_height * 2 if scrollable else 0)
 
     rect = pygame.Rect(0, 0, box_width, box_height)
     rect.bottomleft = (margin, utils.screen_height - margin)
     draw_glass_panel(surface, rect, ui_scale)
 
     surface.blit(title_rendered, (rect.x + pad_x, rect.y + pad_y))
+    # Blinking red "unread" light in the panel's top-right corner - the
+    # caller passes alert=True for ~10s after a message lands (see
+    # SpaceScreen.message_alert_timer / MESSAGE_ALERT_FRAMES).
+    if alert and (pygame.time.get_ticks() // 350) % 2 == 0:
+        r = max(3, int(5 * ui_scale))
+        cx = rect.right - pad_x - r
+        cy = rect.y + pad_y + title_rendered.get_height() // 2
+        pygame.draw.circle(surface, (60, 15, 15), (cx, cy), r + max(1, int(2 * ui_scale)))
+        pygame.draw.circle(surface, (255, 60, 60), (cx, cy), r)
     y = rect.y + pad_y + title_height
-    for i, lines in enumerate(wrapped_entries):
-        # Newest (first) entry reads brighter than older ones, so the most
-        # recent arrival draws the eye without needing its own timer/flash.
-        color = WHITE if i == 0 else GRAY
-        for line in lines:
-            line_surf = font_text.render(line, True, color)
-            surface.blit(line_surf, (rect.x + pad_x, y))
-            y += line_height
-        y += entry_gap
-    return rect
+    if scrollable:
+        if scroll > 0:
+            surface.blit(font_text.render("^ newer  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
+        y += hint_height
+    for line, is_newest in flat[scroll:scroll + visible]:
+        surface.blit(font_text.render(line, True, WHITE if is_newest else GRAY), (rect.x + pad_x, y))
+        y += line_height
+    if scrollable and scroll < max_scroll:
+        surface.blit(font_text.render("v older  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
+
+    return rect, max_scroll
 
 
 PURCHASE_MESSAGE_FRAMES = 110  # ~1.8s at 60fps before a "Bought 1 X" message starts fading
@@ -464,6 +572,25 @@ def draw_selection_highlight(surface, rect, scale, pulse):
     pygame.draw.rect(box_surf, (*YELLOW, glow_alpha // 3), box_surf.get_rect(), border_radius=radius)
     pygame.draw.rect(box_surf, (*YELLOW, glow_alpha), box_surf.get_rect(), width=2, border_radius=radius)
     surface.blit(box_surf, rect.topleft)
+
+
+def draw_button(surface, rect, label, font, ui_scale, selected=False, accent=(255, 255, 255)):
+    """A rounded dialog button. When `selected` (keyboard cursor or mouse
+    hover) it fills with a translucent wash of `accent` and a bright accent
+    border with white text; idle it's a faint outline with accent-coloured
+    text. Used for ConfirmDialog's Yes/No so the choices read as two
+    distinct buttons rather than one line of help text."""
+    radius = int(9 * ui_scale)
+    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+    if selected:
+        pygame.draw.rect(surf, (*accent, 55), surf.get_rect(), border_radius=radius)
+        pygame.draw.rect(surf, accent, surf.get_rect(), width=max(2, int(2 * ui_scale)), border_radius=radius)
+    else:
+        pygame.draw.rect(surf, (255, 255, 255, 16), surf.get_rect(), border_radius=radius)
+        pygame.draw.rect(surf, (140, 140, 155), surf.get_rect(), width=1, border_radius=radius)
+    surface.blit(surf, rect.topleft)
+    text = font.render(label, True, WHITE if selected else accent)
+    surface.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
 
 
 def draw_shop_cell(surface, rect, is_selected, reason, icon_fn, name, detail, scale):

@@ -6,7 +6,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, draw_controls_pane, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, draw_controls_pane, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
 
@@ -113,7 +113,7 @@ class ShipBrowserMenu:
         scale = get_ui_scale()
         offset_x, offset_y = get_ui_offset()
 
-        panel_rect = pygame.Rect(int(offset_x + 800 * scale * 0.1), int(offset_y + 600 * scale * 0.1), int(800 * scale * 0.8), int(600 * scale * 0.8))
+        panel_rect = modal_panel_rect(scale, 0.1, 0.8, 0.8)
         draw_glass_panel(surface, panel_rect, scale)
 
         font_title = get_font(int(34 * scale))
@@ -176,10 +176,9 @@ class ShipBrowserMenu:
 
         # Top-left Controls pane, same spot/style as the base screen's own
         # (see LocationScreen.draw's draw_hud=False / SpaceScreen's).
-        # Hidden while a purchase confirmation is up - ConfirmDialog draws
-        # its own Y/N/ESC controls pane in that same spot instead, since
-        # this menu's own browse/buy controls don't apply until that's
-        # resolved (see ConfirmDialog.draw).
+        # Hidden while a purchase confirmation is up - a pop-up dialog shows
+        # its Y/N/ESC choices inside its own panel (see ConfirmDialog.draw),
+        # and nothing else on screen is pressable until it's resolved.
         margin = int(10 * scale)
         if not self.confirm:
             help_items = [("Arrows/Click", "Browse"), ("Enter", "Buy"), ("ESC", "Close")]
