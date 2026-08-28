@@ -52,10 +52,11 @@ if sys.platform == "win32":
 # overshoot into the next vblank, stretching that frame to two refreshes
 # (judder on a camera pan).
 vsync_display = False
+_display_flags = pygame.RESIZABLE  # the flag combo open_window() settled on
 VSYNC_SAFETY_FPS = FPS * 4
 
 
-def open_window(size):
+def open_window(size, probe=True):
     """(Re)create the game window at `size`, requesting vsync so
     `display.flip()` is paced to the monitor's refresh - without it a plain
     resizable window tears on a horizontal camera pan (a flip lands
@@ -64,12 +65,24 @@ def open_window(size):
     `SCALED` is what lets SDL2 apply vsync to a non-OpenGL window (it backs
     the window with a GPU renderer); the logical surface still tracks the
     window size because we recreate on resize, so nothing is upscaled.
-    Whether vsync actually engaged is *measured* (a short burst of flips -
-    the SCALED flag alone lies, it can be stripped from get_flags() while
-    vsync still works) and recorded in the module-level `vsync_display`.
-    Falls back to a plain resizable window (clock.tick does the pacing) if
-    nothing syncs."""
-    global vsync_display
+
+    First call (`probe=True`): try the vsync-capable flag combos and keep the
+    first that *measurably* paces flips (the SCALED flag alone lies - it can
+    be stripped from get_flags() while vsync still works), recording the combo
+    and the result in the module globals. Falls back to a plain resizable
+    window if nothing syncs.
+
+    A resize passes `probe=False` to just recreate at the new size with that
+    same combo - re-running the 24-flip blanking probe on every VIDEORESIZE
+    event (dozens per second while the user drags a corner) is what made the
+    window feel like it couldn't be resized at all."""
+    global vsync_display, _display_flags
+
+    if not probe:
+        try:
+            return pygame.display.set_mode(size, _display_flags, vsync=1 if vsync_display else 0)
+        except pygame.error:
+            return pygame.display.set_mode(size, pygame.RESIZABLE)
 
     def _is_synced(surface):
         t0 = time.perf_counter()
@@ -85,8 +98,10 @@ def open_window(size):
             continue
         if _is_synced(surface):
             vsync_display = True
+            _display_flags = flags
             return surface
     vsync_display = False
+    _display_flags = pygame.RESIZABLE
     return pygame.display.set_mode(size, pygame.RESIZABLE)
 
 
@@ -368,11 +383,13 @@ def main():
             if not running:
                 break
 
+            # Coalesce the burst of VIDEORESIZE events a corner-drag produces
+            # into one window recreate per frame, at the final size - one
+            # set_mode() per frame is cheap, one per event is not.
+            resize_to = None
             for event in events:
                 if event.type == pygame.VIDEORESIZE:
-                    new_width, new_height = event.size
-                    set_screen_size(new_width, new_height)
-                    screen = open_window((new_width, new_height))
+                    resize_to = event.size
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
@@ -381,6 +398,11 @@ def main():
                     # one screen. Toggles both the SFX board and the music.
                     sound_board.muted = not sound_board.muted
                     music.toggle_mute()
+
+            if resize_to is not None:
+                w, h = max(320, resize_to[0]), max(240, resize_to[1])
+                set_screen_size(w, h)
+                screen = open_window((w, h), probe=False)
 
             # ========================================================
             # PHASE 1 - input & screen transitions (once per iteration)
