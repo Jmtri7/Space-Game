@@ -292,6 +292,15 @@ centred) while running left/right.
     linear downscale is **not phase-invariant**, so it only halves the
     breathing, not removes it; 4×+ (which would) is ~16 MP+ per frame to
     upload — well over budget. Not worth it.
+- **Snapped pan + pinned focus** (commit 5f44cb8) — **tried and reverted**
+  (bfcffbb). `to_screen` rounded each point with no camera term, then
+  subtracted the pan snapped to a whole pixel, so the scene translated as a
+  rigid block (`lock_camera_focus` pinned the player on top). That *does*
+  kill the shimmer/crawl and keeps everything pixel-crisp for free — but the
+  rigid 3-3-3-4 whole-scene judder it leaves reads as **worse** than the
+  independent-rounding shimmer it replaced (the shimmer is high-frequency
+  noise you stop noticing; a coherent whole-screen lurch you don't). Rejected
+  on that basis.
 - **Current choice — accept the shimmer.** At 60 FPS vsync'd it's subtle;
   frame *pacing* was the dominant complaint and that is fixed. `to_screen`'s
   rounding is also load-bearing for crisp static geometry, and every
