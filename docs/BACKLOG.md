@@ -15,6 +15,8 @@ only appears under a section if it currently has items there.
 
 - [ ] Target isn't officially cleared when an NPC exits the interior, so a new
       target isn't chosen when walking close again.
+- [ ] No mission-complete message when leaving the mission area — a mission that
+      completes on leaving/returning surfaces no confirmation toast.
 
 ## Ships & Customization
 
@@ -25,6 +27,7 @@ only appears under a section if it currently has items there.
 
 - [ ] You can spend your loan on a laser cannon and then be stuck (no way to
       recover/pay it back).
+- [ ] Loan amount is too big — fine for testing now, but needs tuning down.
 
 ## Stations, Interiors & World Building
 
@@ -32,6 +35,9 @@ only appears under a section if it currently has items there.
 
 ## Graphics & Rendering
 
+- [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
+      player's own model instead of a distinct sprite.
+- [ ] Building collision footprint extends too far below the building graphic.
 - [ ] Faint shimmer of the world when panning (running left/right in an
       interior, flying in space): the camera scrolls a non-integer number of
       screen pixels per frame and `to_screen`'s pixel rounding renders it as
@@ -52,6 +58,9 @@ only appears under a section if it currently has items there.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
+- [ ] Show the active mission on the in-world HUD.
+- [ ] Controls should be usable without moving the hand off WASD / arrow keys —
+      avoid bindings that force the player to reposition their hand.
 
 ## Navigation & Flight
 
@@ -71,6 +80,8 @@ only appears under a section if it currently has items there.
 - [ ] Tutorial mission for taking out a loan and buying a ship. (Engine
       support done: `took_loan` / `bought_ship` / `bought_ship:<type>`
       gameplay-event flags - just needs the missions.json stages written.)
+- [ ] Tutorial for turning the camera.
+- [ ] Tutorial for jumping to another system.
 - [ ] Relationships.
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
@@ -110,6 +121,7 @@ only appears under a section if it currently has items there.
       "different asteroid types" idea; gives the economy a real gameplay loop instead
       of just trading.
 - [ ] More ways to make money.
+- [ ] Ilsa Farrow should sell things — give her a shop/merchant role.
 - [ ] Make some commodities usable for various purposes (not just tradeable).
 - [ ] Distinct buy and sell multipliers per good, dependent on various factors
       (supply/demand, faction, location, etc.).
