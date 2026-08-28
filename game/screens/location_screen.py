@@ -855,14 +855,21 @@ class LocationScreen(ScreenBase):
         return out
 
     def draw(self, surface, draw_hud=True):
-        """Draw location from config. draw_hud=False skips the top-left
-        Controls pane and bottom status pane (e.g. "Press T to talk to
-        X") - used when this location is only being redrawn as the
-        backdrop for a modal menu on top of it (shop/possessions/exit
-        menu - see main.py), whose own controls pane takes that same
-        top-left spot instead, and whose "Press T"-style status prompt
-        would otherwise be both wrong (not actually pressable right now)
-        and visually colliding with the menu's own bottom help text."""
+        """Whole-screen draw for callers that pass a single surface (tests,
+        and main.py's software-compositor fallback). The GPU compositor
+        path calls draw_world()/draw_hud() separately so the scrolling
+        interior and the static HUD land on different surfaces - see
+        docs/PHYSICS.md "Frame Timing & Smooth Motion" and
+        SpaceScreen.draw()."""
+        self.draw_world(surface)
+        self.draw_hud(surface, draw_hud=draw_hud)
+
+    def draw_world(self, surface):
+        """The scrolling layer: floor, decorations, portal pads, structures,
+        NPCs, visiting pilots, the player, the targeted-NPC brackets/labels,
+        and debug markers - everything positioned through utils.to_screen().
+        main.py renders this onto an oversized world surface that the
+        compositor then slides by the camera's sub-pixel remainder."""
         # Interiors are always north-up, even when only drawn as a modal
         # backdrop (update()/update_camera() may not have run since the
         # Space View last rotated the shared camera).
@@ -989,9 +996,21 @@ class LocationScreen(ScreenBase):
                 x2, y2 = to_screen(fx + fw, fy + fh)
                 pygame.draw.rect(surface, GREEN, (x1, y1, x2 - x1, y2 - y1), 1)
 
-        # Draw UI
+    def draw_hud(self, surface, draw_hud=True):
+        """The static overlay layer: title pane, transient message banner,
+        Controls pane, bottom status prompts, targeting/credits panel,
+        message log, and an open dialogue box. draw_hud=False skips the
+        Controls pane and status prompt when a modal menu on top supplies
+        its own in the same spot (see main.py). main.py renders this onto a
+        screen-sized surface drawn 1:1 over the world layer, so text stays
+        crisp."""
         ui_scale = get_ui_scale()
         control_margin = int(10 * ui_scale)
+        # Recomputed here (also computed in draw_world for the in-world
+        # brackets/labels) - all three are cheap side-effect-free lookups.
+        target_npc = self._get_npc_target()
+        closest_npc = self._closest_person_in_range()
+        active_portal = self._nearby_portal()
 
         # Top-center title pane - same glass-panel look as the Controls/
         # status panes, and held within the centre-half zone (see

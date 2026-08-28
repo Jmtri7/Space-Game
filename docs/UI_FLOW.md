@@ -445,21 +445,36 @@ This separation makes it easy to test input handlers independently.
    pause, any open `active_dialogue`) are no-ops here, exactly as before.
    When `SpaceScreen.update()` returns `"land"` (autopilot auto-land) the
    step returns it, `main()` applies the landing and stops draining.
-3. **Render** — one `if current_screen == …` that draws the current screen
-   (modal screens redraw the frozen backdrop with `draw_hud=False`, then
-   their overlay), then `pygame.display.flip()`.
+3. **Render** — the frame is built as **two layers** and then composited (see
+   [PHYSICS.md](PHYSICS.md#frame-timing--smooth-motion--two-deliberate-tradeoffs)):
+   - `world_surface` — the scrolling world, drawn by `<screen>.draw_world()`
+     (`SpaceScreen`/`LocationScreen`). 1px larger than the window on every
+     side (`utils.WORLD_MARGIN`).
+   - `hud_surface` — the static overlay (`<screen>.draw_hud()`, or a menu's
+     `draw()`), cleared to transparent each frame.
+   A screen with no world of its own fills `world_surface` black; a modal
+   over the world draws that world screen's `draw_world()` **and**
+   `draw_hud(draw_hud=False)`, then the modal on `hud_surface`.
+   `main.present_frame()` then composites: the world layer at a **sub-pixel
+   offset** (smooth scroll — see below), the HUD layer 1:1 on top (crisp).
 
-The window is opened by `main.open_window()` with `RESIZABLE | SCALED` and
-`vsync=1` (falling back to plain `RESIZABLE` if a driver refuses it), so the
-flip is paced to the monitor's refresh. Without vsync a horizontal camera pan
-tears: a flip periodically lands mid-scanout. `SCALED` is the flag that makes
-SDL2 apply vsync to a non-OpenGL window; `open_window()` is also the
-`VIDEORESIZE` handler, recreating the surface at the new size so world/UI
-scaling stays crisp rather than being upscaled from a fixed backbuffer.
+The window is opened by `main.open_window()`. Preferred path: a
+`pygame._sdl2.video` `Renderer` with `vsync=1`. To slide the world layer by a
+fraction of a pixel it sets the renderer's *logical size* to
+`LOGICAL_SCALE`× the window, draws the world texture there offset by a whole
+number of *logical* pixels, and lets SDL's linear logical→window downscale
+turn that into a smooth sub-pixel shift (every SDL backend on Windows
+quantises a fractional `RenderCopyF` destination to whole pixels, so drawing
+the texture at a float position directly does nothing). The HUD texture is
+drawn with logical scaling off, so it stays pixel-crisp. If no `Renderer`
+can be made, `open_window()` falls back to a plain `RESIZABLE`/`SCALED`
+`set_mode` window and `present_frame()` blits the two layers with a
+whole-pixel offset (identical to the pre-sub-pixel look). `main.resize_window()`
+is the `VIDEORESIZE` handler, reallocating both layer surfaces + textures.
 
 **Frame cap ↔ vsync:** `open_window()` *measures* whether a requested vsync
-mode is actually pacing flips (a short burst — the `SCALED` flag alone lies)
-and records it in `main.vsync_display`. When vsync is real, the flip is the
+mode is actually pacing presents (a short burst) and records it in
+`main.vsync_display`. When vsync is real, the present is the
 frame pacer and `clock.tick()` only enforces a loose safety cap (`FPS * 4`) —
 a tight `clock.tick(FPS)` on top of vsync makes the sleep overshoot into the
 next vblank, stretching that frame to two refreshes (judder on a pan). With
@@ -491,13 +506,15 @@ The loop times each phase with `time.perf_counter()` deltas and feeds them to
 (`metrics.record(...)`), along with `n_steps` (the catch-up sim-step count) and
 `clock.get_fps()`. Finer-grained sub-sections are wrapped in
 `with metrics.span("<name>"):` at their call site — currently `render.starfield`
-/ `render.world` / `render.hud` in `SpaceScreen.draw`, `sim.player` /
-`sim.ai_ships` / `sim.missions` in `SpaceScreen.update_physics`, and `sim.npcs` /
-`render.location_entities` in `LocationScreen`. All of this runs unconditionally
-(it's a few `perf_counter` calls and deque appends per frame); only the
-bottom-left overlay that `perf_metrics.draw_overlay(screen)` paints is gated on
-`constants.DEBUG_MODE`. Everything shown is a rolling average + peak over the
-last `WINDOW` frames (~2 s).
+/ `render.world` / `render.hud` in `SpaceScreen.draw_world`/`draw_hud`,
+`render.composite` in `main.present_frame()` (the two per-frame layer→texture
+uploads — the dominant cost added by the sub-pixel path, ~2 ms at native res),
+`sim.player` / `sim.ai_ships` / `sim.missions` in `SpaceScreen.update_physics`,
+and `sim.npcs` / `render.location_entities` in `LocationScreen`. All of this runs
+unconditionally (it's a few `perf_counter` calls and deque appends per frame);
+only the bottom-left overlay that `perf_metrics.draw_overlay(hud_surface)` paints
+is gated on `constants.DEBUG_MODE`. Everything shown is a rolling average + peak
+over the last `WINDOW` frames (~2 s).
 
 **Agents:** when a change touches the main loop, a `draw()`/`update()` path, or
 adds per-frame work (a new drawable, an AI routine, a scan over all entities),

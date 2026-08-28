@@ -54,6 +54,16 @@ non-overlapping. Recording is cheap and always on; only the overlay is gated on
 `constants.DEBUG_MODE`. See
 [docs/UI_FLOW.md](docs/UI_FLOW.md#frame-timing-metrics).
 
+**The frame is two layers now** (`main.py`): a scrolling `world_surface`
+(`<screen>.draw_world()`) and a static `hud_surface` (`<screen>.draw_hud()` or a
+menu), composited by `present_frame()` with the world layer shifted a sub-pixel
+amount for smooth scroll (see
+[docs/PHYSICS.md](docs/PHYSICS.md#frame-timing--smooth-motion--two-deliberate-tradeoffs)).
+The composite's own cost is the `render.composite` span (two texture uploads,
+~2 ms). Anything world-positioned (via `utils.to_screen`) belongs in
+`draw_world`; panels/text belong in `draw_hud`. Keep both layer surfaces
+`SRCALPHA` - a plain RGB surface doubles the upload cost.
+
 ## For Agents: Save Compatibility & Story Versioning
 
 **Read [docs/SAVE_SYSTEM.md](docs/SAVE_SYSTEM.md) before changing anything a save file

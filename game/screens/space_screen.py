@@ -1340,10 +1340,20 @@ class SpaceScreen(ScreenBase):
             self.landing_text = max(0, self.landing_text - 1)
 
     def draw(self, surface, draw_hud=True):
-        """draw_hud=False skips the top-left Controls pane and bottom
-        status pane - see LocationScreen.draw's docstring for why (used
-        the same way here, when this screen is only being redrawn as the
-        backdrop for a modal menu on top of it)."""
+        """Whole-screen draw for any caller that still passes a single
+        surface (tests, and the software-compositor fallback in main.py).
+        The GPU compositor path calls draw_world()/draw_hud() separately so
+        the scrolling world layer and the static HUD layer land on different
+        surfaces (see docs/PHYSICS.md "Frame Timing & Smooth Motion")."""
+        self.draw_world(surface)
+        self.draw_hud(surface, draw_hud=draw_hud)
+
+    def draw_world(self, surface):
+        """The scrolling layer: starfield, bodies, station/moon, ships, the
+        player, target brackets/arrow, debug markers, and the letterbox
+        border - everything positioned through utils.to_screen(). main.py
+        renders this onto an oversized world surface that the compositor
+        then slides by the camera's sub-pixel remainder."""
         # Re-assert the view rotation here too, not just in update() - when
         # this screen is only a backdrop for a modal (pause menu, possessions,
         # etc.) update() isn't called, but the stored camera angle could have
@@ -1386,6 +1396,15 @@ class SpaceScreen(ScreenBase):
         border_rect = (int(offset_x), int(offset_y), int(GAME_WIDTH * scale), int(GAME_HEIGHT * scale))
         pygame.draw.rect(surface, (100, 100, 100), border_rect, 2)
 
+    def draw_hud(self, surface, draw_hud=True):
+        """The static overlay layer: status panels, minimap, messages, and
+        an open hail dialogue. draw_hud=False skips the top-left Controls
+        pane and bottom status pane - used when this screen is only the
+        backdrop for a modal menu on top of it, whose own controls pane
+        takes that same top-left spot. main.py renders this onto a
+        screen-sized surface drawn 1:1 over the world layer (no resample,
+        so text stays crisp)."""
+        target_obj = self._get_target_object()
         with perf.span("render.hud"):
             self._draw_hud(surface, target_obj, draw_hud=draw_hud)
 

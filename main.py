@@ -1,8 +1,23 @@
 """Space exploration game - main entry point and game loop."""
+import os
+# Linear filtering for the SDL2 renderer, set before any renderer/texture is
+# created: it's what lets the world layer be drawn at a fractional offset
+# with bilinear sampling (smooth sub-pixel scroll) instead of nearest-pixel
+# snapping. See docs/PHYSICS.md "Frame Timing & Smooth Motion" and
+# present_frame() below.
+os.environ.setdefault("SDL_RENDER_SCALE_QUALITY", "1")
 import pygame
 import sys
-import os
 import time
+try:
+    # Semi-experimental GPU renderer - the sub-pixel composite path. Guarded
+    # so the module still imports where it's unavailable (or where pygame
+    # itself is stubbed, e.g. the unit-test suite), falling back to the
+    # plain set_mode window.
+    from pygame._sdl2.video import Window, Renderer, Texture
+    _HAVE_SDL2_RENDERER = True
+except (ImportError, ModuleNotFoundError):
+    _HAVE_SDL2_RENDERER = False
 import game.constants as constants
 import game.perf_metrics as perf_metrics
 from game.constants import (
@@ -10,7 +25,7 @@ from game.constants import (
 )
 from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json, get_story,
-    advance_accumulator
+    advance_accumulator, subpixel, WORLD_MARGIN
 )
 from game.world.player_controller import PlayerController
 from game.audio.sound_board import sound_board
@@ -45,55 +60,166 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Set True by open_window() when a vsync'd display mode is actually pacing
-# flips (measured, not just requested). When it is, the main loop leaves the
-# frame rate to the vsync'd flip and clock.tick() only enforces a loose
-# safety cap - a tight clock.tick(FPS) on top of vsync makes the sleep
-# overshoot into the next vblank, stretching that frame to two refreshes
-# (judder on a camera pan).
+# Set True by open_window() when vsync is actually pacing presents (measured,
+# not just requested). When it is, the main loop leaves the frame rate to the
+# vsync'd present and clock.tick() only enforces a loose safety cap - a tight
+# clock.tick(FPS) on top of vsync makes the sleep overshoot into the next
+# vblank, stretching that frame to two refreshes (judder on a camera pan).
 vsync_display = False
 VSYNC_SAFETY_FPS = FPS * 4
 
+# The frame is composited as two layers (see docs/PHYSICS.md "Frame Timing &
+# Smooth Motion" and the PHASE 3 rewrite): a scrolling `world_surface` (1px
+# larger than the window on every side - WORLD_MARGIN) and a static
+# `hud_surface`.
+#
+# Preferred path: an SDL2 Renderer. To slide the world layer by a sub-pixel
+# amount we can't just draw its texture at a fractional destination - every
+# SDL2 render backend on Windows quantises `SDL_RenderCopyF`'s position to
+# whole pixels. Instead we set the renderer's *logical size* to LOGICAL_SCALE
+# times the window, draw the world texture there offset by a whole number of
+# *logical* pixels (= 1/LOGICAL_SCALE of a real pixel), and let SDL's
+# linear-filtered logical->window downscale turn that into a smooth
+# sub-pixel shift. The HUD texture is then drawn with logical scaling off, so
+# it stays pixel-crisp.
+#
+# Fallback (no renderer): a plain resizable window, the two layers blitted
+# with a whole-pixel offset (identical to the pre-subpixel look).
+LOGICAL_SCALE = 8
+gpu_compositor = False
+window = None
+renderer = None
+world_surface = None
+hud_surface = None
+world_texture = None
+hud_texture = None
+fallback_screen = None
+
+
+def _renderer_synced(ren):
+    """Measure whether the renderer's present() is actually blocking on the
+    vblank - a burst of empty presents that runs faster than ~200/s isn't
+    vsynced (requesting vsync=1 doesn't guarantee the driver honours it)."""
+    t0 = time.perf_counter()
+    for _ in range(24):
+        ren.clear()
+        ren.present()
+    return 24 / max(time.perf_counter() - t0, 1e-6) < 200.0
+
+
+def _rebuild_frame_buffers(size):
+    """(Re)allocate the two layer surfaces (and, on the GPU path, their
+    streaming textures) for a `size` window. Called on first open and on
+    every resize."""
+    global world_surface, hud_surface, world_texture, hud_texture
+    w, h = max(1, size[0]), max(1, size[1])
+    # Both layers are SRCALPHA (32-bit BGRA) - not for the alpha (the world
+    # layer is drawn fully opaque) but because it's the streaming texture's
+    # native format: Texture.update() of a matching-format surface is a
+    # straight memcpy (~1 ms at native res), vs ~4.5 ms when it has to
+    # convert a plain 24-bit RGB surface. This is the dominant per-frame
+    # cost of the composite, so the format match matters.
+    world_surface = pygame.Surface((w + 2 * WORLD_MARGIN, h + 2 * WORLD_MARGIN), pygame.SRCALPHA)
+    hud_surface = pygame.Surface((w, h), pygame.SRCALPHA)
+    if gpu_compositor:
+        world_texture = Texture(renderer, world_surface.get_size(), streaming=True)
+        hud_texture = Texture(renderer, hud_surface.get_size(), streaming=True)
+        # Straight-alpha "over" so the transparent parts of the HUD layer let
+        # the world layer show through (dialogs that only draw a panel).
+        hud_texture.blend_mode = pygame.BLENDMODE_BLEND
+
 
 def open_window(size):
-    """(Re)create the game window at `size`, requesting vsync so
-    `display.flip()` is paced to the monitor's refresh - without it a plain
-    resizable window tears on a horizontal camera pan (a flip lands
-    mid-scanout).
+    """(Re)create the window + compositor at `size`.
 
-    `SCALED` is what lets SDL2 apply vsync to a non-OpenGL window (it backs
-    the window with a GPU renderer); the logical surface still tracks the
-    window size because we recreate on resize, so nothing is upscaled.
-    Whether vsync actually engaged is *measured* (a short burst of flips -
-    the SCALED flag alone lies, it can be stripped from get_flags() while
-    vsync still works) and recorded in the module-level `vsync_display`.
-    Falls back to a plain resizable window (clock.tick does the pacing) if
-    nothing syncs."""
-    global vsync_display
+    Preferred: an SDL2 `Renderer` with vsync, which can draw the world layer
+    at sub-pixel offsets. Whether vsync engaged is measured and recorded in
+    `vsync_display`. Falls back to a plain resizable `set_mode` window
+    (software two-layer blit, whole-pixel scroll) if no renderer can be
+    made - `gpu_compositor` records which path is live."""
+    global gpu_compositor, vsync_display, window, renderer, fallback_screen
 
-    def _is_synced(surface):
-        t0 = time.perf_counter()
-        for _ in range(24):
-            surface.fill((0, 0, 0))
-            pygame.display.flip()
-        return 24 / max(time.perf_counter() - t0, 1e-6) < 200.0
+    if _HAVE_SDL2_RENDERER and window is None:
+        try:
+            window = Window("Space Game", size=size, resizable=True)
+        except pygame.error:
+            window = None
 
+    if window is not None:
+        for want_vsync in (1, 0):
+            try:
+                renderer = Renderer(window, vsync=want_vsync)
+            except pygame.error:
+                renderer = None
+                continue
+            gpu_compositor = True
+            vsync_display = want_vsync == 1 and _renderer_synced(renderer)
+            _rebuild_frame_buffers(size)
+            return
+        window = None  # window exists but no renderer - use the set_mode path
+
+    gpu_compositor = False
     for flags in (pygame.RESIZABLE | pygame.SCALED, pygame.SCALED, pygame.RESIZABLE):
         try:
-            surface = pygame.display.set_mode(size, flags, vsync=1)
+            fallback_screen = pygame.display.set_mode(size, flags, vsync=1)
+            break
         except pygame.error:
             continue
-        if _is_synced(surface):
-            vsync_display = True
-            return surface
-    vsync_display = False
-    return pygame.display.set_mode(size, pygame.RESIZABLE)
+    else:
+        fallback_screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+    vsync_display = bool(fallback_screen.get_flags() & pygame.SCALED)
+    _rebuild_frame_buffers(size)
 
 
-screen = open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
-screen.fill((0, 0, 0))
-pygame.display.flip()
-pygame.display.set_caption("Space Game")
+def resize_window(size):
+    """Handle a window resize: update the camera's screen size and
+    reallocate the frame buffers. The SDL2 renderer follows the window on
+    its own; only the fallback path recreates the display surface."""
+    set_screen_size(*size)
+    if gpu_compositor:
+        _rebuild_frame_buffers(size)
+    else:
+        open_window(size)
+
+
+def present_frame():
+    """Composite this frame's `world_surface` + `hud_surface` to the glass.
+
+    GPU path: upload both to their streaming textures. Draw the world one in
+    LOGICAL_SCALE-times-window logical space, offset by
+    `-(WORLD_MARGIN + subpixel) * LOGICAL_SCALE` rounded to whole logical
+    pixels - SDL's linear logical->window downscale turns that into a smooth
+    fractional shift. Then turn logical scaling off and draw the HUD 1:1 on
+    top so it stays pixel-crisp. `render.composite` covers the texture
+    uploads (the dominant new cost); the draws + vsync'd present fall under
+    the loop's "present" phase."""
+    if gpu_compositor:
+        fx, fy = subpixel()
+        w, h = hud_surface.get_size()
+        s = LOGICAL_SCALE
+        with perf_metrics.metrics.span("render.composite"):
+            world_texture.update(world_surface)
+            hud_texture.update(hud_surface)
+        renderer.logical_size = (w * s, h * s)
+        renderer.clear()
+        world_texture.draw(dstrect=(
+            -round((WORLD_MARGIN + fx) * s), -round((WORLD_MARGIN + fy) * s),
+            world_surface.get_width() * s, world_surface.get_height() * s))
+        renderer.logical_size = (0, 0)
+        hud_texture.draw(dstrect=(0, 0, w, h))
+        renderer.present()
+    else:
+        fallback_screen.blit(world_surface, (-WORLD_MARGIN, -WORLD_MARGIN))
+        fallback_screen.blit(hud_surface, (0, 0))
+        pygame.display.flip()
+
+
+open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
+if gpu_compositor:
+    renderer.clear()
+    renderer.present()
+else:
+    pygame.display.set_caption("Space Game")
 clock = pygame.time.Clock()
 
 
@@ -298,7 +424,6 @@ def main_menu():
 
 def main():
     """Main game loop."""
-    global screen
     try:
         # Build both music tracks (or load them from the on-disk cache)
         # during menu time, so neither has to render the first time it's
@@ -370,9 +495,7 @@ def main():
 
             for event in events:
                 if event.type == pygame.VIDEORESIZE:
-                    new_width, new_height = event.size
-                    set_screen_size(new_width, new_height)
-                    screen = open_window((new_width, new_height))
+                    resize_window(event.size)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
@@ -788,64 +911,97 @@ def main():
 
             # ========================================================
             # PHASE 3 - render (once per iteration)
-            # Draws whatever current_screen now is. Modal screens redraw
-            # the frozen world/interior they sit over, then their overlay.
+            # The frame is composited from two layers: `world_surface` (the
+            # scrolling world, drawn by <screen>.draw_world) and
+            # `hud_surface` (the static overlay - <screen>.draw_hud, or a
+            # menu). present_frame() draws the world layer at a sub-pixel
+            # offset (smooth scroll) and the HUD layer 1:1 on top (crisp).
+            # A screen with no world of its own fills the world layer black;
+            # a modal over the world draws the world screen's draw_world()
+            # plus its draw_hud(draw_hud=False), then the modal on top.
             # ========================================================
+            hud_surface.fill((0, 0, 0, 0))
+
             if current_screen == "menu":
-                menu.draw(screen)
+                world_surface.fill((0, 0, 0))
+                menu.draw(hud_surface)
             elif current_screen == "story_select":
-                story_selector.draw(screen)
+                world_surface.fill((0, 0, 0))
+                story_selector.draw(hud_surface)
             elif current_screen == "pilot_name":
-                pilot_name_dialog.draw(screen)
+                world_surface.fill((0, 0, 0))
+                story_selector.draw(hud_surface)  # frozen story picker as the backdrop
+                pilot_name_dialog.draw(hud_surface)
             elif current_screen == "load":
-                load_menu.draw(screen)
+                world_surface.fill((0, 0, 0))
+                if load_return_screen == "pause":
+                    hud_surface.fill((0, 0, 0, 255))
+                elif menu:
+                    menu.draw(hud_surface)  # animated main-menu backdrop
+                else:
+                    hud_surface.fill((6, 8, 16, 255))
+                load_menu.draw(hud_surface)
                 if delete_confirm_dialog:
-                    delete_confirm_dialog.draw(screen)
+                    delete_confirm_dialog.draw(hud_surface)
             elif current_screen == "game":
-                game_screen.draw(screen)
+                game_screen.draw_world(world_surface)
+                game_screen.draw_hud(hud_surface)
             elif current_screen == "star_map":
-                star_map.draw(screen)
+                world_surface.fill((0, 0, 0))
+                star_map.draw(hud_surface)
             elif current_screen == "station":
                 if station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface)
             elif current_screen == "select_location":
-                location_selector.draw(screen)
+                if game_screen:
+                    game_screen.draw_world(world_surface)
+                location_selector.draw(hud_surface)
             elif current_screen == "exit_menu":
-                # The exit ChoiceDialog only paints a centered panel, not a
-                # full-screen fill, so the interior being left must be
-                # redrawn under it every frame - otherwise the *previous*
-                # frame's interior (e.g. the spaceport, NPCs and all) shows
-                # through, looking like an NPC in two rooms at once.
+                # The exit ChoiceDialog only paints a centered panel, so the
+                # interior being left is drawn on the world layer and its
+                # HUD (minus the controls/status panes) under the panel.
                 if exit_menu_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface, draw_hud=False)
                 elif exit_menu_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                exit_menu.draw(screen)
+                    moon_interior.draw_world(world_surface)
+                    moon_interior.draw_hud(hud_surface, draw_hud=False)
+                exit_menu.draw(hud_surface)
             elif current_screen == "possessions":
                 if possessions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw_world(world_surface)
+                    game_screen.draw_hud(hud_surface, draw_hud=False)
                 elif possessions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface, draw_hud=False)
                 elif possessions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                possessions_menu.draw(screen)
+                    moon_interior.draw_world(world_surface)
+                    moon_interior.draw_hud(hud_surface, draw_hud=False)
+                possessions_menu.draw(hud_surface)
             elif current_screen == "missions":
                 if missions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw_world(world_surface)
+                    game_screen.draw_hud(hud_surface, draw_hud=False)
                 elif missions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface, draw_hud=False)
                 elif missions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                mission_log.draw(screen)
+                    moon_interior.draw_world(world_surface)
+                    moon_interior.draw_hud(hud_surface, draw_hud=False)
+                mission_log.draw(hud_surface)
             elif current_screen == "shop":
                 if shop_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface, draw_hud=False)
                 elif shop_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                shop_menu.draw(screen)
+                    moon_interior.draw_world(world_surface)
+                    moon_interior.draw_hud(hud_surface, draw_hud=False)
+                shop_menu.draw(hud_surface)
             elif current_screen == "moon":
                 if moon_interior:
-                    moon_interior.draw(screen)
+                    moon_interior.draw_world(world_surface)
+                    moon_interior.draw_hud(hud_surface)
             elif current_screen == "pause":
                 pause_menu.update()  # render-side banner animation, not simulation
                 # draw_hud=False since PauseMenu.draw() immediately fills
@@ -853,22 +1009,24 @@ def main():
                 # camera-follow/animation state current, not for the HUD
                 # to actually be seen.
                 if previous_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw_world(world_surface)
+                    game_screen.draw_hud(hud_surface, draw_hud=False)
                 elif previous_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                pause_menu.draw(screen)
+                    station_interior.draw_world(world_surface)
+                    station_interior.draw_hud(hud_surface, draw_hud=False)
+                pause_menu.draw(hud_surface)
                 if delete_confirm_dialog:
-                    delete_confirm_dialog.draw(screen)
+                    delete_confirm_dialog.draw(hud_surface)
                 elif overwrite_confirm_dialog:
-                    overwrite_confirm_dialog.draw(screen)
+                    overwrite_confirm_dialog.draw(hud_surface)
                 elif save_dialog:
-                    save_dialog.draw(screen)
+                    save_dialog.draw(hud_surface)
 
             # DEBUG-only perf panel, drawn over whatever screen is active.
-            perf_metrics.draw_overlay(screen)
+            perf_metrics.draw_overlay(hud_surface)
             t_after_render = time.perf_counter()
 
-            pygame.display.flip()
+            present_frame()
             t_after_present = time.perf_counter()
 
             perf_metrics.metrics.record(
