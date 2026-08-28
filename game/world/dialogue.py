@@ -1,7 +1,7 @@
 """Dialogue system for NPC interaction - a small conversation tree."""
 import pygame
 from game.utils import _wrap_text, get_font
-from game.world.mission import abandon_mission
+from game.world.mission import abandon_mission, start_mission
 
 
 def option_actions(option):
@@ -33,7 +33,15 @@ def apply_shared_actions(action, possessions, missions_config=None):
       (e.g. "no thanks" to an NPC's offer) - see game/world/mission.py's
       abandon_mission(). Needs missions_config to look up that mission's
       escort_flag/on_end_flags cleanup; a no-op if the caller didn't pass
-      one (LocationScreen's conversations don't currently need this action).
+      one.
+    - "start_mission:<id>" - begin a mission from a dialogue choice (e.g.
+      accepting a station guide's offer to walk you through the place),
+      instead of it only being kick-started by story.json's
+      starting_mission. Needs missions_config; a no-op without it, or if
+      the mission is already active/completed (see start_mission()). The
+      first stage's one_way_message is *not* delivered here (this returns
+      only a bool) - author stage 0 with no message, or as one the guide's
+      own dialogue text already covers.
     Returns True if it handled the action, so a caller with its own extra,
     screen-specific actions (LocationScreen's "buy_ship:"/"take_loan", which
     need more than just `possessions` - see there) can try this first and
@@ -50,6 +58,10 @@ def apply_shared_actions(action, possessions, missions_config=None):
     if action.startswith("abandon_mission:"):
         if missions_config is not None:
             abandon_mission(missions_config, possessions, action.split(":", 1)[1])
+        return True
+    if action.startswith("start_mission:"):
+        if missions_config is not None:
+            start_mission(missions_config, possessions, action.split(":", 1)[1])
         return True
     return False
 

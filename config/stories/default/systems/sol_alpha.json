@@ -47,29 +47,82 @@
         "label": "Alpha Station",
         "culture": "vherathi",
         "portals": [
-          {"x": 660, "y": 345, "connected_locations": [], "return_to_ship": true}
+          {"x": 1320, "y": 690, "connected_locations": [], "return_to_ship": true}
         ],
         "rooms": [
-          {"label": "Concourse", "shape": "circle", "center": [400, 300], "radius": 150, "sides": 32},
-          {"label": "The Long Vein", "shape": "circle", "center": [400, 140], "radius": 95, "sides": 28},
-          {"label": "Credit Union", "shape": "circle", "center": [140, 300], "radius": 78, "sides": 24},
-          {"label": "West Gallery", "polygon": [[175, 272], [285, 268], [285, 332], [175, 328]]},
-          {"label": "Ship Dock", "shape": "circle", "center": [660, 300], "radius": 80, "sides": 24},
-          {"label": "East Gallery", "polygon": [[515, 268], [630, 272], [630, 332], [515, 328]]},
-          {"label": "Resin Quarter", "polygon": [[330, 405], [470, 405], [455, 565], [345, 565]]}
+          {"label": "Concourse", "shape": "circle", "center": [800, 600], "radius": 320, "sides": 40},
+          {"label": "The Long Vein", "shape": "circle", "center": [800, 300], "radius": 210, "sides": 32},
+          {"label": "Credit Union", "shape": "circle", "center": [280, 600], "radius": 280, "sides": 32},
+          {"label": "West Gallery", "polygon": [[360, 540], [560, 540], [560, 660], [360, 660]]},
+          {"label": "Ship Dock", "shape": "circle", "center": [1320, 600], "radius": 280, "sides": 32},
+          {"label": "East Gallery", "polygon": [[1040, 540], [1240, 540], [1240, 660], [1040, 660]]},
+          {"label": "Resin Quarter", "polygon": [[660, 820], [940, 820], [910, 1130], [690, 1130]]}
         ],
         "decorations": [
-          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 46, "color": [96, 74, 110]},
-          {"layer": "floor", "shape": "circle", "center": [400, 300], "radius": 30, "color": [128, 255, 205], "width": 2},
-          {"layer": "wall", "shape": "line", "points": [[300, 70], [345, 32]], "color": [120, 255, 200], "width": 3},
-          {"layer": "wall", "shape": "line", "points": [[500, 70], [455, 32]], "color": [120, 255, 200], "width": 3},
-          {"layer": "floor", "shape": "line", "points": [[660, 300], [660, 345]], "color": [128, 255, 205], "width": 2}
+          {"layer": "floor", "shape": "circle", "center": [800, 600], "radius": 92, "color": [96, 74, 110]},
+          {"layer": "floor", "shape": "circle", "center": [800, 600], "radius": 60, "color": [128, 255, 205], "width": 4},
+          {"layer": "wall", "shape": "line", "points": [[600, 140], [690, 64]], "color": [120, 255, 200], "width": 6},
+          {"layer": "wall", "shape": "line", "points": [[1000, 140], [910, 64]], "color": [120, 255, 200], "width": 6},
+          {"layer": "floor", "shape": "line", "points": [[1320, 600], [1320, 690]], "color": [128, 255, 205], "width": 4}
         ],
         "npcs": [
           {
+            "name": "Sela Cordova",
+            "x": 800,
+            "y": 760,
+            "role": "concierge",
+            "outfit": "station_official",
+            "escort_flag": "station_guide_escorting",
+            "ambient": {
+              "range": 190,
+              "message": "New face on the ring? I'm Sela, station concierge. Walk over and press T when you've got a minute - I'll show you around and get you flight-ready."
+            },
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {"flag": "station_tour_done", "node": "done"},
+                {"flag": "station_tour_accepted", "node": "in_progress"}
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Welcome to Alpha Station. First time out here, I'd guess. Want the quick tour? I'll walk you through the controls, help you line up a loan, and get you into a ship of your own.",
+                  "options": [
+                    {"label": "Yes, show me around.", "next": "accepted", "actions": ["set_flag:station_tour_accepted", "start_mission:station_tour"]},
+                    {"label": "Maybe later.", "next": null}
+                  ]
+                },
+                "accepted": {
+                  "text": "Good call. Close the comm and stay near me - every step shows up in your Mission Log as we go.",
+                  "options": [
+                    {"label": "Lead on.", "next": null}
+                  ]
+                },
+                "in_progress": {
+                  "text": "Still with me? Check your Mission Log (N) for the current step. Or if you'd rather strike out on your own, just say the word.",
+                  "options": [
+                    {"label": "I'll keep following.", "next": null},
+                    {"label": "I'll manage on my own.", "next": "declined", "action": "abandon_mission:station_tour"}
+                  ]
+                },
+                "declined": {
+                  "text": "Fair enough. The pods are all off the concourse - Credit Union west, Ship Dock east. Good luck out there.",
+                  "options": [
+                    {"label": "Thanks.", "next": null}
+                  ]
+                },
+                "done": {
+                  "text": "Back again? Ship's treating you right, I hope. Safe flying.",
+                  "options": [
+                    {"label": "Just passing through.", "next": null}
+                  ]
+                }
+              }
+            }
+          },
+          {
             "name": "Bram Solise",
-            "x": 400,
-            "y": 100,
+            "x": 800,
+            "y": 200,
             "role": "bartender",
             "outfit": "bartender",
             "dialogue_tree": {
@@ -127,8 +180,8 @@
           },
           {
             "name": "Petra Voss",
-            "x": 140,
-            "y": 300,
+            "x": 280,
+            "y": 600,
             "role": "loan_officer",
             "outfit": "loan_officer",
             "dialogue_tree": {
@@ -152,8 +205,8 @@
           },
           {
             "name": "Dax Renner",
-            "x": 645,
-            "y": 278,
+            "x": 1290,
+            "y": 556,
             "role": "ship_salesman",
             "outfit": "ship_dealer",
             "greeting": "Looking for a ship? I've got three in dock.",
@@ -161,8 +214,8 @@
           },
           {
             "name": "Reeve Katic",
-            "x": 688,
-            "y": 330,
+            "x": 1376,
+            "y": 660,
             "role": "outfitter",
             "outfit": "mechanic",
             "greeting": "Need to fit your ship out with something new?",
@@ -170,8 +223,8 @@
           },
           {
             "name": "Ilsa Farrow",
-            "x": 330,
-            "y": 300,
+            "x": 660,
+            "y": 600,
             "role": "quartermaster",
             "outfit": "quartermaster",
             "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
@@ -180,8 +233,8 @@
           },
           {
             "name": "Talen Brix",
-            "x": 560,
-            "y": 300,
+            "x": 1120,
+            "y": 600,
             "role": "guard",
             "outfit": "marshal",
             "greeting": "Welcome to the station. Dock's right behind me.",
@@ -189,8 +242,8 @@
           },
           {
             "name": "Wren Castellan",
-            "x": 452,
-            "y": 350,
+            "x": 904,
+            "y": 700,
             "role": "traveler",
             "outfit": "civilian",
             "greeting": "Safe travels!",
@@ -198,8 +251,8 @@
           },
           {
             "name": "Mira Osei",
-            "x": 400,
-            "y": 500,
+            "x": 800,
+            "y": 1000,
             "role": "roommate",
             "outfit": "vherathi_softsuit",
             "greeting": "Rough shift. Try not to wake me on your way out.",
@@ -207,8 +260,8 @@
           },
           {
             "name": "Renna Kade",
-            "x": 350,
-            "y": 372,
+            "x": 700,
+            "y": 744,
             "role": "resident",
             "outfit": "vherathi_softsuit",
             "greeting": "Morning. Or whatever hour the station clock says it is.",
@@ -216,8 +269,8 @@
           },
           {
             "name": "Toma Idrisi",
-            "x": 442,
-            "y": 224,
+            "x": 884,
+            "y": 448,
             "role": "resident",
             "outfit": "vherathi_softsuit",
             "greeting": "Concourse bar's right there if you're looking for Bram.",
@@ -225,8 +278,8 @@
           },
           {
             "name": "Adjutant Ondra",
-            "x": 230,
-            "y": 300,
+            "x": 460,
+            "y": 600,
             "role": "clerk",
             "outfit": "station_official",
             "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
@@ -234,8 +287,8 @@
           },
           {
             "name": "Stationmaster Corell",
-            "x": 660,
-            "y": 268,
+            "x": 1320,
+            "y": 536,
             "role": "stationmaster",
             "outfit": "station_command",
             "greeting": "I run this ring. Keep your approach clean and we won't have words.",
@@ -243,8 +296,8 @@
           },
           {
             "name": "Jax Miren",
-            "x": 572,
-            "y": 300,
+            "x": 1144,
+            "y": 600,
             "role": "dockworker",
             "outfit": "dockworker",
             "greeting": "Mind the clamps - that gantry swings wide when a hull's coming in.",

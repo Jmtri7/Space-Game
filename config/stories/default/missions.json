@@ -1,4 +1,85 @@
 {
+  "station_tour": {
+    "title": "Getting Your Bearings",
+    "escort_flag": "station_guide_escorting",
+    "on_start_flags": ["station_guide_escorting"],
+    "on_end_flags": ["station_tour_done"],
+    "stages": [
+      {
+        "text": "Accept Sela Cordova's offer to show you around.",
+        "complete_flag": "station_tour_accepted"
+      },
+      {
+        "text": "Walk around the concourse - WASD or the arrow keys.",
+        "complete_flag": "walked_interior",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Close the comm and stay near me. First, get a feel for moving around - WASD or the arrow keys. Take a lap of the concourse."
+        }
+      },
+      {
+        "text": "Target one of the people here - press [ or ] to cycle, or click them.",
+        "complete_flag": "targeted_person",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "See everyone around us? Tap [ or ] to cycle a target lock, or just click someone. Their name and role show up top-right."
+        }
+      },
+      {
+        "text": "Walk up to someone and talk - press T.",
+        "complete_flag": "talked_to_npc",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Get in close to anyone and press T to talk. Shopkeepers open their store; everyone else has something to say."
+        }
+      },
+      {
+        "text": "Open your Mission Log - press N.",
+        "complete_flag": "viewed_mission_log",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Press N for your Mission Log. Every step I give you is listed there, so you'll never have to guess what's next."
+        }
+      },
+      {
+        "text": "Open your Possessions - press P.",
+        "complete_flag": "viewed_possessions",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Now press P for your Possessions - credits, ships, cargo, outfits. Pretty bare right now. Let's fix that."
+        }
+      },
+      {
+        "text": "Go to the Credit Union (west pod) and take the starter loan from Petra Voss.",
+        "complete_flag": "took_loan",
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Head west off the concourse to the Credit Union. Talk to Petra Voss and take the station's starter loan - you'll need the credits for a ship."
+        }
+      },
+      {
+        "text": "Go to the Ship Dock (east pod) and buy a ship from Dax Renner.",
+        "complete_flag": "bought_ship",
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Now the Ship Dock, east side. Dax Renner has a few hulls for sale - buy whichever you like. The shuttle's an easy first ship."
+        }
+      },
+      {
+        "text": "You're flight-ready - board your ship through the Ship Dock portal (L).",
+        "complete_flag": "bought_ship",
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "That's everything. Your ship's docked and waiting - step on the Ship Dock portal and press L to board when you're ready. Come find me if you're ever back this way. Good luck out there, pilot."
+        }
+      }
+    ]
+  },
   "first_flight": {
     "title": "First Flight",
     "escort_flag": "kade_escorting",

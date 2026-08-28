@@ -2,18 +2,27 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, NAV_CELL
-from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story
+from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
+from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
 import game.utils as utils
 from game.perf_metrics import metrics as perf
 from game.audio.sound_board import sound_board
-from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, center_panel_max_width
+from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, draw_message_log, draw_glow_message, center_panel_max_width
 from game.screens.screen_base import ScreenBase
-from game.world.character import Character
+from game.world.character import Character, resolve_routine_class
 from game.world.person import Person
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.player_character import PlayerCharacter
+from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
+
+
+# Frames an interior message banner / unread light stays lit after a
+# message arrives (see _refresh_messages). Mirrors SpaceScreen's own
+# ONE_WAY_HAIL_BANNER_FRAMES / MESSAGE_ALERT_FRAMES - kept as local
+# constants rather than imported, since space_screen imports this module.
+MESSAGE_BANNER_FRAMES = 300   # ~5s
+MESSAGE_ALERT_FRAMES = 600    # ~10s blinking unread light
 
 
 # Default vertex count for a "circle"-shaped room/decoration - a regular
@@ -306,6 +315,12 @@ class LocationScreen(ScreenBase):
         # for why this is deliberately smaller than each building's full
         # drawn silhouette.
         self.building_footprints = [fp for fp in (self._building_footprint(s) for s in self.structures) if fp]
+        # Static mission definitions for this story (missions.json) - needed
+        # so a dialogue "start_mission:" / "abandon_mission:" action (see
+        # apply_shared_actions) can look one up, e.g. a station guide's
+        # offer to walk the player through the place. {} for a story with
+        # no missions.json.
+        self.missions_config = get_missions(story)
         self.npcs_config = self.config.get("npcs", [])
         self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
         self.current_npc_target = None  # For T key targeting
@@ -324,6 +339,21 @@ class LocationScreen(ScreenBase):
         # room with, even while docked at a different station than the
         # player happens to be standing in.
         self.visitors = []
+
+        # --- Message Log (shared with the Space View) ----------------------
+        # possessions.message_log is one shared list (see Possessions) -
+        # mission-stage messages and pilot hails written to it while flying
+        # show up here too, and interior NPCs can add to it directly (see
+        # _post_local_message / an NPC config's "ambient"). _refresh_messages()
+        # watches it each frame and raises the banner + unread light when it
+        # grows; the bottom-left panel (draw_message_log) renders it exactly
+        # as SpaceScreen does.
+        self._seen_message_count = len(self.player.possessions.message_log)
+        self.message_log_scroll = 0
+        self.message_alert_timer = 0
+        self.message_banner = None
+        self.message_banner_timer = 0
+        self._message_log_rect = None
 
     def _build_local_character(self, cfg):
         """Build one config-driven local resident: a Person (with a
@@ -347,6 +377,17 @@ class LocationScreen(ScreenBase):
         # opens a purpose-built buy/sell screen instead of dialogue when T is
         # pressed - None for every NPC that's just flavor/dialogue.
         person.shop = cfg.get("shop")
+        # Optional flag name that puts this NPC into FollowPlayerRoutine
+        # (trailing the player on foot) while it's set, and back to its
+        # normal role routine once cleared - the interior mirror of a ship
+        # pilot's pilots.json "escort_flag" (see _sync_npc_escorts and
+        # SpaceScreen._sync_escorts). None for an NPC that never escorts.
+        person.escort_flag = cfg.get("escort_flag")
+        # Optional {"message": ..., "range": ...} the NPC says over the
+        # Message Log, once, when the player first gets close - the interior
+        # counterpart to a pilot's "one_way_hail" (see _check_npc_ambient).
+        # None for an NPC with nothing unprompted to say.
+        person.ambient = cfg.get("ambient")
         return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _resolve_portal(self, portal):
@@ -516,7 +557,7 @@ class LocationScreen(ScreenBase):
         called once the option's full action list is confirmed not blocked
         (see _option_blocked_reason), right before Dialogue.choose()
         advances to the option's response node."""
-        if apply_shared_actions(action, self.player.possessions):
+        if apply_shared_actions(action, self.player.possessions, self.missions_config):
             return
         if action.startswith("buy_ship:"):
             self.buy_ship(action.split(":", 1)[1])
@@ -593,6 +634,9 @@ class LocationScreen(ScreenBase):
             self.current_npc_target = 0
         else:
             self.current_npc_target = (self.current_npc_target + direction) % len(people)
+        # Generic gameplay-event flag (see PlayerController's "used_turn") -
+        # lets a tutorial stage use "targeted_person" as its complete_flag.
+        self.player.possessions.flags["targeted_person"] = True
         sound_board.play("blip")
 
     def _get_npc_target(self):
@@ -617,6 +661,7 @@ class LocationScreen(ScreenBase):
                 best_index, best_dist = i, distance
         if best_index is not None:
             self.current_npc_target = best_index
+            self.player.possessions.flags["targeted_person"] = True
             sound_board.play("blip")
 
     def _closest_person_in_range(self):
@@ -679,12 +724,95 @@ class LocationScreen(ScreenBase):
         (active_dialogue) - talking to one NPC shouldn't leave every other
         NPC in the room still visibly wandering around, any more than the
         player's own movement does. Other cached locations never have a
-        conversation open, so this only ever actually pauses the active one."""
+        conversation open, so this only ever actually pauses the active one.
+
+        Message-log housekeeping runs even mid-conversation (so a message
+        that lands while a dialogue is open still lights the unread light
+        and is caught the moment it closes) - only NPC movement and the
+        escort/ambient checks pause."""
+        self._refresh_messages()
+        if self.message_alert_timer > 0:
+            self.message_alert_timer -= 1
+        if self.message_banner_timer > 0:
+            self.message_banner_timer -= 1
         if self.active_dialogue:
             return
+        self._sync_npc_escorts()
+        self._check_npc_ambient()
         with perf.span("sim.npcs"):
             for character in self.npcs:
                 character.update()
+
+    def _post_local_message(self, sender, text):
+        """Add a one-way message to the shared log from an interior NPC and
+        play the same "you've got a message" ping the Space View uses -
+        _refresh_messages() picks it up next frame for the banner + unread
+        light, exactly as it does for a message that arrived while flying."""
+        self.player.possessions.add_message(sender, text)
+        sound_board.play("ping")
+
+    def _refresh_messages(self):
+        """Notice any message that's been appended to the shared
+        possessions.message_log since last frame - by a mission stage
+        advancing (SpaceScreen delivers those even while the player is
+        docked), a hail, or an interior NPC (_post_local_message) - and
+        raise the banner + unread light for it. Compares length rather than
+        tracking identities; once the log is at its MESSAGE_LOG_MAX cap a
+        further message won't re-trigger this, which is fine for the
+        early-game tutorial context this mainly serves."""
+        log = self.player.possessions.message_log
+        if len(log) <= self._seen_message_count:
+            self._seen_message_count = len(log)
+            return
+        self._seen_message_count = len(log)
+        newest = log[0]
+        self.message_alert_timer = MESSAGE_ALERT_FRAMES
+        self.message_log_scroll = 0
+        if not self.active_dialogue:
+            self.message_banner = (f"Incoming message - {newest['sender']} (see Message Log)", CYAN)
+            self.message_banner_timer = MESSAGE_BANNER_FRAMES
+
+    def _sync_npc_escorts(self):
+        """Swap any NPC with a configured "escort_flag" between trailing the
+        player on foot (FollowPlayerRoutine) and its normal role routine,
+        based on whether that flag is currently set in the player's
+        Possessions.flags - the interior counterpart to
+        SpaceScreen._sync_escorts(). Used for a station guide walking the
+        player through the place (see missions.json's station_tour and
+        Sela Cordova's dialogue), and back to standing still once that
+        mission ends, finished or abandoned (see mission.py's escort_flag
+        clearing)."""
+        flags = self.player.possessions.flags
+        for character in self.npcs:
+            escort_flag = getattr(character.person, "escort_flag", None)
+            if not escort_flag:
+                continue
+            should_escort = bool(flags.get(escort_flag))
+            if should_escort and not character.escorting:
+                character.set_routine(FollowPlayerRoutine(self.player))
+                character.escorting = True
+            elif not should_escort and character.escorting:
+                normal = resolve_routine_class(character.role, character.faction, character.routine_name)
+                character.set_routine(normal(character.route))
+                character.escorting = False
+
+    def _check_npc_ambient(self):
+        """Let an interior NPC's "ambient" line (see _build_local_character)
+        fire once the player first walks within range - the on-foot
+        counterpart to SpaceScreen._check_one_way_hails. A per-NPC flag
+        keeps it to one delivery ever."""
+        flags = self.player.possessions.flags
+        for character in self.npcs:
+            ambient = getattr(character.person, "ambient", None)
+            if not ambient:
+                continue
+            seen_flag = f"npc_ambient_seen:{character.person.name}"
+            if flags.get(seen_flag):
+                continue
+            if character.person.get_distance(self.player.x, self.player.y) <= ambient.get("range", 160):
+                flags[seen_flag] = True
+                self._post_local_message(character.person.name or "Unknown", ambient.get("message", "..."))
+                return  # one at a time - avoids two banners the same frame
 
     def _draw_decorations(self, surface, layer):
         """Draw every decoration on `layer` ("wall" or "floor"). Filled when
@@ -878,6 +1006,19 @@ class LocationScreen(ScreenBase):
         draw_glass_panel(surface, label_rect, ui_scale)
         surface.blit(label_text, (label_rect.centerx - label_text.get_width() // 2, label_rect.y + label_pad_y))
 
+        # Top-center transient banner, directly under the title pane -
+        # announces a message that just landed in the Message Log (a mission
+        # step from a guide, an NPC's unprompted line - see
+        # _refresh_messages). The body itself is in the bottom-left panel;
+        # this is just the "look down there" nudge, mirroring SpaceScreen's
+        # incoming-hail banner.
+        if draw_hud and not self.active_dialogue and self.message_banner_timer > 0 and self.message_banner:
+            draw_glow_message(
+                surface, self.message_banner[0], get_font(int(20 * ui_scale)),
+                utils.screen_width // 2, label_rect.bottom + int(10 * ui_scale),
+                color=self.message_banner[1], shadow_color=(20, 30, 40),
+            )
+
         # Top-right targeting/credits pane (see draw_info_panel) - same
         # design as SpaceScreen's own info panel, minus the speed/mode
         # lines that don't apply while on foot.
@@ -916,6 +1057,7 @@ class LocationScreen(ScreenBase):
                 ("Click", "Target Person"),
                 ("P", "View Possessions"),
                 ("N", "Mission Log"),
+                ("Wheel", "Scroll Message Log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
 
@@ -935,10 +1077,23 @@ class LocationScreen(ScreenBase):
                 status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
+        # Bottom-left Message Log - the same shared history the Space View
+        # shows (see draw_message_log / Possessions.message_log), so a
+        # mission step or an NPC's line the player got while docked is still
+        # there to read. Skipped along with the rest of the HUD while a
+        # modal menu / conversation has focus.
+        message_log_rect = None
+        if draw_hud and not self.active_dialogue:
+            messages = [(m["sender"], m["text"]) for m in self.player.possessions.message_log]
+            message_log_rect, message_log_max_scroll = draw_message_log(
+                surface, messages, ui_scale, self.message_log_scroll, alert=self.message_alert_timer > 0)
+            self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
+        self._message_log_rect = message_log_rect
+
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in
         # the world behind them (see SpaceScreen._hud_click_rects).
-        self._hud_click_rects = [rect for rect in (label_rect, info_rect, controls_rect, status_rect) if rect]
+        self._hud_click_rects = [rect for rect in (label_rect, info_rect, controls_rect, status_rect, message_log_rect) if rect]
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
@@ -1088,6 +1243,15 @@ class LocationScreen(ScreenBase):
                     self._select_person_target_at(*to_world(*event.pos))
                 continue
 
+            if event.type == pygame.MOUSEWHEEL:
+                # Scroll the Message Log (bottom-left) when the pointer is
+                # over it - mirrors SpaceScreen's own wheel handling. Wheel
+                # up (event.y > 0) moves toward the newest entry; the upper
+                # bound is clamped against max_scroll in draw().
+                if self._message_log_rect and self._message_log_rect.collidepoint(pygame.mouse.get_pos()):
+                    self.message_log_scroll = max(0, self.message_log_scroll - event.y)
+                continue
+
             if event.type != pygame.KEYDOWN:
                 continue
 
@@ -1152,6 +1316,11 @@ class LocationScreen(ScreenBase):
                 # for viewing info at a distance now.
                 nearest = self._closest_person_in_range()
                 if nearest:
+                    # Generic gameplay-event flag - lets a tutorial stage
+                    # use "talked_to_npc" as its complete_flag. Set for a
+                    # shop NPC too (opening a store still counts as walking
+                    # up and pressing T).
+                    self.player.possessions.flags["talked_to_npc"] = True
                     # getattr, not nearest.shop: a visiting AI pilot (see
                     # Character.for_ai_pilot) never gets a .shop attribute at
                     # all, unlike a local NPC (_build_local_character) - only
@@ -1169,6 +1338,9 @@ class LocationScreen(ScreenBase):
                     nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags))
                     self.active_dialogue = nearest.dialogue
             elif event.key == pygame.K_p:
+                # Generic gameplay-event flag - lets a tutorial stage use
+                # "viewed_possessions" as its complete_flag; mirrors K_n below.
+                self.player.possessions.flags["viewed_possessions"] = True
                 return "possessions"
             elif event.key == pygame.K_n:
                 # Generic gameplay-event flag - lets a mission stage use
@@ -1194,12 +1366,16 @@ class LocationScreen(ScreenBase):
         can_move = can_move_func or self.can_move_to
         # Aim one full step away in the input direction; step_toward caps the
         # move at that distance and normalizes, so holding two keys isn't faster.
-        self.player.step_toward(
+        moved = self.player.step_toward(
             self.player.x + dir_x * self.speed,
             self.player.y + dir_y * self.speed,
             self.speed,
             can_move,
         )
+        if moved:
+            # Generic gameplay-event flag (see PlayerController's "used_turn") -
+            # lets a tutorial stage use "walked_interior" as its complete_flag.
+            self.player.possessions.flags["walked_interior"] = True
 
     def can_move_to(self, x, y):
         """Whether (x, y) is inside this location's walkable area - the
@@ -1272,5 +1448,13 @@ class LocationScreen(ScreenBase):
             player_state = state["player"]
             self.player.x = player_state.get("x", self.player.x)
             self.player.y = player_state.get("y", self.player.y)
+            # A saved position can land outside this interior's walkable
+            # area if the floor plan was rescaled/reshaped since the save
+            # was made (see CLAUDE.md's save-compat notes) - snap to the
+            # primary portal rather than leaving the player wedged in a
+            # wall with no way to move.
+            if not self.can_move_to(self.player.x, self.player.y):
+                self.player.x, self.player.y = self.portals[0]["x"], self.portals[0]["y"]
         if "possessions" in state:
             self.player.possessions.restore_from(state["possessions"])
+        self._seen_message_count = len(self.player.possessions.message_log)

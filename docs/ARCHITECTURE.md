@@ -366,7 +366,15 @@ mechanism behind every non-player character in the game:
 - **Station/moon NPCs** (`ship=None`): built inline by `LocationScreen`.
   Role comes from each `npcs[]` entry's `"role"` in the location's config
   (`bartender`, `guard`, `resident`, ...), defaulting to `"resident"` if
-  omitted.
+  omitted. An entry can also carry `"escort_flag"` (interior mirror of the
+  pilot key above - `LocationScreen._sync_npc_escorts()` swaps the NPC into
+  `FollowPlayerRoutine` while the flag is set) and `"ambient"`
+  (`{"message", "range"}` - a line the NPC drops into the shared Message
+  Log once, on proximity, via `LocationScreen._check_npc_ambient()`, the
+  on-foot counterpart to a pilot's `one_way_hail`). A dialogue option's
+  `"start_mission:<id>"` / `"abandon_mission:<id>"` action (see
+  `apply_shared_actions`) lets an NPC kick off or drop a mission - e.g.
+  Sela Cordova offering the `station_tour` walkthrough.
 
 `ROLE_ROUTINES` (in `character.py`) maps every role, ship-flying or not, to
 a `Routine` class - the same table, the same lookup, regardless of whether
@@ -382,6 +390,7 @@ that routine flies a ship or just moves a body around a room:
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
 | `OrbitPlayerRoutine` | `orbit_player_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted, temporary override via `Character.set_routine()` (see `person.escort_flag` above), not a role pick; circles a moving target at a fixed radius |
+| `FollowPlayerRoutine` | `follow_player_routine.py` | No | Not in this table/`ROLE_ROUTINES` - the on-foot counterpart to `OrbitPlayerRoutine`; a scripted override that trails a moving target (the player) at a polite distance, wall-sliding via `character.can_move_to`. Driven by an interior NPC config's `"escort_flag"` through `LocationScreen._sync_npc_escorts()` (the mirror of `SpaceScreen._sync_escorts()`) - e.g. Sela Cordova walking the player through Alpha Station for the `station_tour` mission |
 
 Every `Routine` implements the same two methods regardless of which table
 row it's in: `start(character)` (once, at construction) and

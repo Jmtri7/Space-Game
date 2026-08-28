@@ -55,12 +55,26 @@ Completing a jump flashes a brief "arrived at ..." toast in the space view.
 | **L** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
+| **Mouse wheel** | Scroll the Message Log (bottom-left) when it has more than fits |
 | **ESC** | Pause menu |
 
 A default-story station is one connected interior with a single ship portal
 in the dock area - walk to the loan officer and ship dealer, then **L** at
 the dock to board. Moons still have separate `city` and `wilderness` areas
 joined by a portal. See [ARCHITECTURE.md](ARCHITECTURE.md).
+
+The **Message Log** pane (bottom-left, same one as the Space View) shows up
+in interiors too - an NPC can drop a line into it unprompted when you get
+close (a config `"ambient"` message), and a mission guide's step-by-step
+instructions arrive there as you go. A short banner under the location
+title announces each new one; scroll the pane with the wheel.
+
+**Guided walkthrough:** on a fresh game you start on Alpha Station with no
+ship. Sela Cordova, the concierge on the concourse, offers a tour that
+walks you through the interior controls, taking out a loan, and buying your
+first ship - accept it (**T**, then "Yes, show me around") and she trails
+you on foot, posting each step to the Message Log and Mission Log. It's the
+on-foot counterpart to Kade Marsh's flying lesson once you launch.
 
 ### NPC Targeting vs. Talking
 

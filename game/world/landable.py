@@ -25,12 +25,15 @@ class Landable(WorldObject):
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
         self.is_station = "rotation_speed" in self.graphics or self.graphics.get("shape") in ["hexapod", "octagon"]
         # Fixed logical size of this landable's interior LocationScreens -
-        # a station's rooms are laid out at 800x600, a moon's at 1600x1600
+        # a station's rooms are laid out at 1600x1200, a moon's at 1600x1600
         # (moons cover far more ground: outdoor structures/wander routines
         # need the room). Lives here, not re-derived from is_station at
         # every call site (main.py and DockRoutine both used to), so both
-        # player and AI code just ask this landable.
-        self.interior_world_size = (800, 600) if self.is_station else (1600, 1600)
+        # player and AI code just ask this landable. Only the no-"rooms"
+        # fallback bounds actually read this - an authored interior with
+        # "rooms" is bounded by the room polygons themselves (see
+        # LocationScreen.can_move_to / plan_path).
+        self.interior_world_size = (1600, 1200) if self.is_station else (1600, 1600)
 
         # Common properties
         self.size = self.graphics.get("size", 40 if self.is_station else 30)

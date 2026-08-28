@@ -39,6 +39,7 @@ from game.world.person import Person
 from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
+from game.world.follow_player_routine import FollowPlayerRoutine
 from game.ui.report_menu import ReportMenu, mission_report, possessions_report
 from game.ui.ui_theme import side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin
 from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
@@ -2888,17 +2889,17 @@ class TestStoryVersioning(unittest.TestCase):
 
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.6.0")
+        self.assertEqual(game_screen.story_version, "1.7.0")
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.6.0")
+        self.assertEqual(game_state["story_version"], "1.7.0")
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.6.0")
+            warn_if_story_version_mismatch("default", "1.7.0")
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2906,7 +2907,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.6.0", captured.getvalue())
+        self.assertIn("1.7.0", captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -3509,6 +3510,134 @@ class TestBartenderConsequenceDialogue(unittest.TestCase):
         flags["bought_bartender_round"] = True
         labels_after = [o["label"] for o in dialogue.current_options(flags)]
         self.assertIn("Ask about the quiet cargo runs", labels_after)
+
+
+class TestStationTour(unittest.TestCase):
+    """The station-interior walkthrough: Sela Cordova offers a tour, which
+    starts missions.json's station_tour, and while it's active she trails
+    the player on foot (FollowPlayerRoutine) - the interior counterpart to
+    Kade Marsh's flying lesson. Also covers the shared Message Log now
+    rendered in interiors, and interior NPCs' "ambient" lines."""
+
+    def _concourse(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        concourse = game_screen.get_interior_screen(game_screen.station, "default")
+        sela = next(c for c in concourse.npcs if c.person.name == "Sela Cordova")
+        return concourse, sela
+
+    def _accept_tour(self, concourse, sela):
+        flags = concourse.player.possessions.flags
+        dialogue = sela.person.dialogue
+        dialogue.current_node = dialogue.resolve_root(flags)
+        option = next(o for o in dialogue.current_options(flags) if o["next"] == "accepted")
+        for action in option_actions(option):
+            concourse._apply_dialogue_action(action)
+        dialogue.advance(option)
+
+    def test_start_mission_dialogue_action_begins_the_mission(self):
+        possessions = Possessions()
+        missions = utils.get_missions("default")
+        self.assertTrue(apply_shared_actions("start_mission:station_tour", possessions, missions))
+        self.assertIn("station_tour", possessions.missions)
+
+    def test_start_mission_action_is_a_noop_without_missions_config(self):
+        possessions = Possessions()
+        apply_shared_actions("start_mission:station_tour", possessions, None)
+        self.assertNotIn("station_tour", possessions.missions)
+
+    def test_accepting_selas_tour_starts_the_mission_and_makes_her_escort(self):
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        possessions = concourse.player.possessions
+        self.assertIn("station_tour", possessions.missions)
+        self.assertTrue(possessions.flags.get("station_guide_escorting"))
+        concourse.update_physics()
+        self.assertTrue(sela.escorting)
+        self.assertIsInstance(sela.routine, FollowPlayerRoutine)
+
+    def test_sela_follows_the_player_then_stops_when_the_mission_ends(self):
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        concourse.update_physics()
+        # Player moves off across the open concourse; Sela should trail in.
+        concourse.player.x, concourse.player.y = sela.person.x + 220, sela.person.y - 90
+        start_gap = sela.person.get_distance(concourse.player.x, concourse.player.y)
+        for _ in range(200):
+            concourse.update_physics()
+        end_gap = sela.person.get_distance(concourse.player.x, concourse.player.y)
+        self.assertLess(end_gap, start_gap - 100)
+        self.assertLessEqual(end_gap, FollowPlayerRoutine.STOP_DISTANCE + 5)
+
+        # Mission ends -> escort_flag cleared -> back to a stationary routine.
+        concourse.player.possessions.flags["station_guide_escorting"] = False
+        concourse.update_physics()
+        self.assertFalse(sela.escorting)
+
+    def test_declining_mid_tour_abandons_the_mission_and_stops_the_escort(self):
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        concourse.update_physics()
+        self.assertTrue(sela.escorting)
+
+        flags = concourse.player.possessions.flags
+        dialogue = sela.person.dialogue
+        dialogue.current_node = dialogue.resolve_root(flags)  # -> "in_progress"
+        option = next(o for o in dialogue.current_options(flags) if o.get("next") == "declined")
+        for action in option_actions(option):
+            concourse._apply_dialogue_action(action)
+        dialogue.advance(option)
+        self.assertNotIn("station_tour", concourse.player.possessions.missions)
+        concourse.update_physics()
+        self.assertFalse(sela.escorting)
+
+    def test_tutorial_stages_advance_from_interior_gameplay_flags(self):
+        concourse, sela = self._concourse()
+        missions = concourse.missions_config
+        possessions = concourse.player.possessions
+        self._accept_tour(concourse, sela)
+        # stage 0 completes on the flag the accept option set
+        check_mission_progress(missions, possessions)
+        self.assertEqual(possessions.missions["station_tour"], 1)
+
+        for flag in ["walked_interior", "targeted_person", "talked_to_npc",
+                     "viewed_mission_log", "viewed_possessions", "took_loan"]:
+            possessions.flags[flag] = True
+            check_mission_progress(missions, possessions)
+        # 6 flag-driven stages consumed -> now on the "buy a ship" stage
+        self.assertEqual(possessions.missions["station_tour"], 7)
+
+        possessions.flags["bought_ship"] = True
+        check_mission_progress(missions, possessions)  # -> farewell stage
+        check_mission_progress(missions, possessions)  # -> complete
+        self.assertIn("station_tour", possessions.completed_missions)
+        self.assertTrue(possessions.flags.get("station_tour_done"))
+        self.assertFalse(possessions.flags.get("station_guide_escorting"))
+
+    def test_message_log_banner_and_alert_fire_when_the_shared_log_grows(self):
+        concourse, _ = self._concourse()
+        concourse.player.possessions.add_message("Sela Cordova", "Follow me.")
+        concourse._refresh_messages()
+        self.assertGreater(concourse.message_alert_timer, 0)
+        self.assertIsNotNone(concourse.message_banner)
+        self.assertGreater(concourse.message_banner_timer, 0)
+
+    def test_interior_npc_ambient_line_posts_once_when_player_is_close(self):
+        concourse, sela = self._concourse()
+        concourse.player.x, concourse.player.y = sela.person.x, sela.person.y
+        before = len(concourse.player.possessions.message_log)
+        concourse._check_npc_ambient()
+        concourse._check_npc_ambient()
+        self.assertEqual(len(concourse.player.possessions.message_log), before + 1)
+        self.assertEqual(concourse.player.possessions.message_log[0]["sender"], "Sela Cordova")
+
+    def test_walking_sets_the_walked_interior_flag(self):
+        concourse, _ = self._concourse()
+        keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT,
+                                   pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w,
+                                   pygame_mock.K_DOWN, pygame_mock.K_s)}
+        keys[pygame_mock.K_d] = True  # move right, into open concourse
+        concourse._handle_movement(keys)
+        self.assertTrue(concourse.player.possessions.flags.get("walked_interior"))
 
 
 class TestLocationScreenEconomy(unittest.TestCase):
