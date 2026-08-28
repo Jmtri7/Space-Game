@@ -3225,6 +3225,51 @@ class TestSpaceScreenHailing(unittest.TestCase):
         self.assertEqual(game_screen.player.person.possessions.message_log, [])
 
 
+class TestSpaceScreenMinimapTargeting(unittest.TestCase):
+    """Minimap click-to-target + hover text (see SpaceScreen._select_target /
+    _minimap_blip_at / _minimap_label, and the minimap branch in
+    handle_input). Exercised against the default story's real sol_alpha
+    config, so station/moon/pilot fixtures are real, not doubles."""
+
+    def _first_ship(self, game_screen):
+        self.assertTrue(game_screen.ai_ships, "sol_alpha should have AI ships")
+        return game_screen.ai_ships[0]
+
+    def test_select_target_switches_mode_and_points_at_the_object(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.target_mode_index = TARGET_MODES.index("LANDABLES")
+        ship = self._first_ship(game_screen)
+        game_screen._select_target(ship)
+        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "SHIPS")
+        self.assertIs(game_screen._get_target_object(), ship)
+
+    def test_select_target_on_a_landable_switches_to_landables_mode(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        game_screen._select_target(game_screen.moon)
+        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "LANDABLES")
+        self.assertIs(game_screen._get_target_object(), game_screen.moon)
+
+    def test_minimap_blip_at_returns_the_closest_blip_within_its_hit_radius(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        ship = self._first_ship(game_screen)
+        # (screen_x, screen_y, hit_radius, obj) - the shape _draw_minimap builds.
+        game_screen._minimap_blips = [
+            (100, 100, 10, game_screen.station),
+            (105, 100, 10, ship),
+        ]
+        self.assertIs(game_screen._minimap_blip_at((104, 100)), ship)
+        self.assertIs(game_screen._minimap_blip_at((97, 100)), game_screen.station)
+        self.assertIsNone(game_screen._minimap_blip_at((500, 500)))
+
+    def test_minimap_label_names_the_object_and_pilot(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self.assertEqual(game_screen._minimap_label(game_screen.station), game_screen.station.name)
+        ship = self._first_ship(game_screen)
+        label = game_screen._minimap_label(ship)
+        self.assertIn(ship.person.name, label)
+
+
 class TestSpaceScreenStartConfig(unittest.TestCase):
     """story.json's "start" block + starting_mission_trigger - the player's
     state and world placement at the beginning of a brand-new game (see

@@ -14,7 +14,8 @@ All interactive controls and their bindings. **Update this document when adding 
 | **]** | Cycle forward through targetable objects in the current target mode |
 | **[** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
-| **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
+| **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
+| **Hover** a minimap blip | Show its name in a label by the cursor |
 | **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |

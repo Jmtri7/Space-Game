@@ -45,9 +45,12 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Quick save.
-- [ ] Minimap: click a target to select it.
+- [x] Minimap: click a target to select it. (`SpaceScreen._select_target` /
+      the minimap branch in `handle_input` - a click on a blip targets it,
+      inferring the target mode.)
 - [ ] Make the player icon on the minimap more obvious than the others.
-- [ ] Hover text on the minimap when the mouse is over a point, showing what it is.
+- [x] Hover text on the minimap when the mouse is over a point, showing what it
+      is. (`_draw_minimap_tooltip` / `_minimap_blip_at` / `_minimap_label`.)
 - [ ] Make credits amount display consistent with other UI texts.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.

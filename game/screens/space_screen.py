@@ -220,6 +220,13 @@ class SpaceScreen(ScreenBase):
         # each loop), which is fine since these panels don't move frame to
         # frame.
         self._hud_click_rects = []
+        # Minimap panel rect + the plotted blips (screen_x, screen_y,
+        # hit_radius, obj) from the last drawn frame, so handle_input() can
+        # click-to-target a blip and _draw_minimap() can show hover text for
+        # whichever one the pointer is over (see _minimap_blip_at). One frame
+        # stale, same as _hud_click_rects.
+        self._minimap_rect = None
+        self._minimap_blips = []
         # Mouse-wheel scroll offsets (in lines) for the two scrollable HUD
         # side panes - the bottom-left Message Log and the top-right
         # targeting/info pane - plus each pane's rect from the last drawn
@@ -608,7 +615,15 @@ class SpaceScreen(ScreenBase):
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                # A click on the minimap targets the blip under the pointer
+                # (if any - a click on empty radar does nothing); a click
+                # anywhere in the world that isn't on a HUD panel targets
+                # whatever object was clicked directly.
+                if self._minimap_rect and self._minimap_rect.collidepoint(event.pos):
+                    blip_obj = self._minimap_blip_at(event.pos)
+                    if blip_obj is not None:
+                        self._select_target(blip_obj)
+                elif not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_target_at(*to_world(*event.pos))
                 continue
 
@@ -726,15 +741,48 @@ class SpaceScreen(ScreenBase):
             distance = math.sqrt((obj.x - world_x) ** 2 + (obj.y - world_y) ** 2)
             if distance <= radius + 12 and (best_dist is None or distance < best_dist):
                 best_obj, best_dist = obj, distance
-        if best_obj is None:
-            return
-        mode = "SHIPS" if isinstance(best_obj, Character) else "LANDABLES" if isinstance(best_obj, Landable) else "MISC"
+        if best_obj is not None:
+            self._select_target(best_obj)
+
+    def _select_target(self, obj):
+        """Point current_target at obj, inferring the target mode from what
+        obj is and switching target_mode_index to match first (a click - on
+        the world via _select_target_at, or on the minimap via handle_input -
+        carries no mode of its own). current_target is an index into the
+        filtered list for that mode (see _filtered_targets). No-op if obj
+        somehow isn't in that list."""
+        mode = "SHIPS" if isinstance(obj, Character) else "LANDABLES" if isinstance(obj, Landable) else "MISC"
         self.target_mode_index = TARGET_MODES.index(mode)
-        for i, (_, obj) in enumerate(self._filtered_targets()):
-            if obj is best_obj:
+        for i, (_, candidate) in enumerate(self._filtered_targets()):
+            if candidate is obj:
                 self.current_target = i
                 sound_board.play("blip")
                 return
+
+    def _minimap_blip_at(self, pos):
+        """The targetable object whose minimap blip is under screen point
+        `pos` (closest wins on overlap), or None. Backs both the minimap
+        hover text and minimap click-to-target - see _draw_minimap /
+        handle_input. Reads _minimap_blips from the last drawn frame."""
+        best_obj, best_dist = None, None
+        for sx, sy, hit_r, obj in self._minimap_blips:
+            d = math.hypot(sx - pos[0], sy - pos[1])
+            if d <= hit_r and (best_dist is None or d < best_dist):
+                best_obj, best_dist = obj, d
+        return best_obj
+
+    def _minimap_label(self, obj):
+        """Readable name for a minimap blip - the same label the targeting
+        HUD uses (from targetable_objects), plus the pilot name for a
+        crewed ship."""
+        label = next((lbl for lbl, o in self.targetable_objects if o is obj), None)
+        if label is None:
+            label = getattr(obj, "name", "Unknown")
+        if isinstance(obj, Character):
+            pilot = obj.person.name
+            if pilot:
+                label = f"{label} - {pilot}"
+        return label
 
     def _filtered_targets(self):
         """targetable_objects narrowed to the current target mode - SHIPS
@@ -939,6 +987,10 @@ class SpaceScreen(ScreenBase):
         for ai_ship in self.ai_ships:
             points.append((ai_ship, GREEN, 2))
 
+        # Rebuilt every frame (blips move) - (screen_x, screen_y, hit_radius,
+        # obj) for each on-radar point, consumed by _minimap_blip_at for
+        # hover text and click-to-target (see handle_input).
+        self._minimap_blips = []
         for obj, color, radius in points:
             sx, sy = project(obj.x, obj.y)
             if rect.left <= sx <= rect.right and rect.top <= sy <= rect.bottom:
@@ -946,6 +998,10 @@ class SpaceScreen(ScreenBase):
                 pygame.draw.circle(surface, color, (int(sx), int(sy)), r)
                 if obj is target_obj:
                     pygame.draw.circle(surface, YELLOW, (int(sx), int(sy)), r + int(4 * ui_scale), 1)
+                # Generous minimum hit area so tightly clustered blips (and
+                # the 2px celestial/ship dots) are still easy to click/hover.
+                hit_r = max(r + int(4 * ui_scale), int(9 * ui_scale))
+                self._minimap_blips.append((sx, sy, hit_r, obj))
 
         # Player is always exactly centered, drawn last so it stays on top.
         pygame.draw.circle(surface, CYAN, rect.center, max(2, int(3 * ui_scale)))
@@ -954,7 +1010,36 @@ class SpaceScreen(ScreenBase):
         label = font_label.render("System Map", True, GRAY)
         surface.blit(label, (rect.x + int(6 * ui_scale), rect.y + int(4 * ui_scale)))
 
+        # Hover readout - the name of whatever blip the pointer is over,
+        # following the cursor but clamped inside the panel. Drawn last so it
+        # sits above the blips. (The click-to-target half lives in
+        # handle_input.)
+        hover_obj = self._minimap_blip_at(pygame.mouse.get_pos())
+        if hover_obj is not None:
+            self._draw_minimap_tooltip(surface, rect, ui_scale, hover_obj)
+
+        self._minimap_rect = rect
         return rect
+
+    def _draw_minimap_tooltip(self, surface, rect, ui_scale, obj):
+        """Small label box near the cursor naming the hovered minimap blip
+        (see _draw_minimap). Clamped to stay wholly inside `rect`."""
+        font = get_font(int(18 * ui_scale))
+        text = font.render(self._minimap_label(obj), True, WHITE)
+        pad = int(5 * ui_scale)
+        mx, my = pygame.mouse.get_pos()
+        box = pygame.Rect(0, 0, text.get_width() + pad * 2, text.get_height() + pad * 2)
+        box.topleft = (mx + int(12 * ui_scale), my + int(12 * ui_scale))
+        box.right = min(box.right, rect.right - pad)
+        box.left = max(box.left, rect.left + pad)
+        box.bottom = min(box.bottom, rect.bottom - pad)
+        box.top = max(box.top, rect.top + pad)
+        bg = pygame.Surface(box.size, pygame.SRCALPHA)
+        bg.fill((20, 30, 40, 225))
+        surface.blit(bg, box.topleft)
+        pygame.draw.rect(surface, (120, 140, 160), box, 1)
+        surface.blit(text, (box.x + pad, box.y + pad))
+        return box
 
     def _start_hail(self):
         """Open a hail with the currently targeted ship (K_h - see
@@ -1510,6 +1595,7 @@ class SpaceScreen(ScreenBase):
                 ("WASD / Arrows", "Fly"),
                 ("Q / E", "Rotate view"),
                 ("T  /  [  ]", "Target mode / target"),
+                ("Click / hover blip", "Minimap: target / name"),
                 ("Space", "Autopilot"),
                 ("L", "Land / board"),
                 ("H", "Hail target"),
