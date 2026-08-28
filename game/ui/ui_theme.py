@@ -16,17 +16,16 @@ DISABLED_TEXT_COLOR = (150, 90, 90)
 def side_panel_max_width():
     """Max width for a HUD panel anchored to the left or right edge
     (Controls, minimap, the targeting/credits info panel, the Messages
-    log) - one quarter of the real window width. Both side panels and the
+    log) - one fifth of the real window width. Both side panels and the
     middle status pane (see center_panel_max_width) size themselves from
     their own content and can otherwise grow arbitrarily wide (long NPC
     dialogue text, a long status message) regardless of window size/aspect
     ratio - get_ui_scale() alone doesn't prevent this, since on a wide
-    window it's clamped by height, not width (e.g. a 1859x1024 window
-    scales UI text *up* well past what fits in a quarter of that width).
-    Keeping every side panel within this quarter and the status pane
-    within center_panel_max_width() is what stops them from visually
-    overlapping regardless of window shape."""
-    return utils.screen_width // 4
+    window it's clamped by height, not width. Keeping every side panel
+    within this fifth and the status pane within center_panel_max_width()
+    is what stops them from visually overlapping regardless of window
+    shape."""
+    return utils.screen_width // 5
 
 
 HUD_MARGIN_BASE = 10  # px at scale 1 - gap every HUD panel keeps from the screen edge
@@ -52,10 +51,10 @@ def side_panel_width(ui_scale):
 def center_panel_max_width(ui_scale):
     """Max width for a HUD panel/message anchored to the horizontal center
     (the bottom status pane, the top-centre popup stack, modal menu panels).
-    At this width a centred pane leaves a full hud_margin() gap on each side
-    before the quarter line where a side pane begins - the same gap the side
-    panes leave from the screen edge - so nothing centred ever touches, let
-    alone overlaps, a side pane regardless of window shape."""
+    Half the window width minus a hud_margin() gap on each side - well clear
+    of the 4/5 line where a side pane (now side_panel_max_width() = a fifth)
+    begins, so nothing centred ever touches, let alone overlaps, a side pane
+    regardless of window shape."""
     return max(1, utils.screen_width // 2 - 2 * hud_margin(ui_scale))
 
 
@@ -136,47 +135,60 @@ def draw_glow_message(surface, text, font, center_x, top_y, color=YELLOW, shadow
     return panel
 
 
-def draw_controls_pane(surface, x, y, title, items, ui_scale):
+CONTROLS_TOGGLE_KEY = "C"  # key that shows/hides the Controls pane (see the screens' handle_input)
+
+
+def draw_controls_pane(surface, x, y, title, items, ui_scale, collapsed=False):
     """Draw a titled key/description control-reference panel with its
-    top-left corner at (x, y) - keys are left-aligned at the margin, colons
-    sit in a fixed column, and descriptions start after that column, so
-    controls of different key-length still read as one aligned list (space-
-    padding a single string wouldn't align, since the HUD font isn't
-    monospace). `items` is a list of (key, description) tuples. Shared by
-    the space view and interior locations so their control panes look and
-    behave identically. Returns the drawn rect.
+    top-left corner at (x, y) - keys are left-aligned at the margin and
+    descriptions sit in a fixed column after them, so different key lengths
+    still read as one aligned list. A description too long for the remaining
+    width **wraps** onto continuation lines (aligned under the description
+    column) instead of running off the panel edge. `items` is a list of
+    (key, description) tuples.
+
+    When `collapsed` is True only the title and a single
+    "<key> : Show controls" line are drawn - the pane folds to a two-liner.
+    Either way it is exactly `side_panel_width()` wide so it lines up with
+    the info / Messages panes. Returns the drawn rect.
     """
-    font = get_font(int(18 * ui_scale))
+    font = get_font(int(17 * ui_scale))
     pad_x, pad_y = int(12 * ui_scale), int(8 * ui_scale)
-    line_height = int(22 * ui_scale)
-    colon_gap = int(6 * ui_scale)
+    line_height = int(21 * ui_scale)
+    colon_gap = int(5 * ui_scale)
     desc_gap = int(8 * ui_scale)
-
-    title_rendered = font.render(title, True, WHITE)
-    key_rendered = [font.render(key, True, WHITE) for key, _ in items]
-    desc_rendered = [font.render(desc, True, WHITE) for _, desc in items]
-    colon_rendered = font.render(":", True, WHITE)
-    key_column_width = max(text.get_width() for text in key_rendered)
-    desc_x_offset = key_column_width + colon_gap + colon_rendered.get_width() + desc_gap
-
-    # Fixed to the full side-panel width (see side_panel_width) so this pane
-    # fills its quarter of the window to the same edge as the info/Messages
-    # panes rather than shrinking to its own short key/description text.
     panel_width = side_panel_width(ui_scale)
-    # Title line, then a blank line's worth of gap, then one line per control.
-    panel_height = pad_y * 2 + line_height * (len(items) + 2)
+    key_color = (150, 220, 255)
+
+    rows = [(CONTROLS_TOGGLE_KEY, "Show controls")] if collapsed \
+        else list(items) + [(CONTROLS_TOGGLE_KEY, "Hide controls")]
+
+    title_rendered = get_font(int(18 * ui_scale)).render(title, True, WHITE)
+    colon_rendered = font.render(":", True, key_color)
+    # Cap the key column so one long key can't crush the description column.
+    key_col = min(max(font.size(k)[0] for k, _ in rows), int(panel_width * 0.42))
+    desc_x_off = key_col + colon_gap + colon_rendered.get_width() + desc_gap
+    desc_max_width = max(int(40 * ui_scale), panel_width - pad_x * 2 - desc_x_off)
+
+    wrapped = [_wrap_text(font, d, desc_max_width) or [""] for _, d in rows]
+    total_lines = sum(len(w) for w in wrapped)
+
+    panel_height = pad_y * 2 + line_height * 2 + int(4 * ui_scale) + total_lines * line_height
     rect = pygame.Rect(x, y, panel_width, panel_height)
     draw_glass_panel(surface, rect, ui_scale)
 
     surface.blit(title_rendered, (rect.x + pad_x, rect.y + pad_y))
     key_x = rect.x + pad_x
-    colon_x = rect.x + pad_x + key_column_width + colon_gap
-    desc_x = rect.x + pad_x + desc_x_offset
-    for i, (key_text, desc_text) in enumerate(zip(key_rendered, desc_rendered)):
-        row_y = rect.y + pad_y + (i + 2) * line_height
-        surface.blit(key_text, (key_x, row_y))
+    colon_x = key_x + key_col + colon_gap
+    desc_x = rect.x + pad_x + desc_x_off
+
+    row_y = rect.y + pad_y + line_height + int(4 * ui_scale)
+    for (key, _d), desc_lines in zip(rows, wrapped):
+        surface.blit(font.render(key, True, key_color), (key_x, row_y))
         surface.blit(colon_rendered, (colon_x, row_y))
-        surface.blit(desc_text, (desc_x, row_y))
+        for line in desc_lines:
+            surface.blit(font.render(line, True, WHITE), (desc_x, row_y))
+            row_y += line_height
     return rect
 
 

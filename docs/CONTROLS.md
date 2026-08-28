@@ -17,13 +17,20 @@ All interactive controls and their bindings. **Update this document when adding 
 | **Click** an object | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
-| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon now docks automatically on arrival (no extra **L** press). |
+| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
 | **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
+| **C** | Show / hide the top-left Controls pane (starts hidden - just its title and this line) |
 | **ESC** | Pause menu |
+
+The top-left **Controls pane** starts collapsed to a two-liner; **C** expands
+it to the full key list (and collapses it again). A long entry wraps onto a
+second line rather than running off the panel. It's hidden entirely while a
+menu or a conversation is open. Side HUD panes (Controls, minimap, info,
+Message Log) are each capped at one fifth of the window width.
 
 ## Star Map (M)
 
@@ -31,11 +38,10 @@ All interactive controls and their bindings. **Update this document when adding 
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
-| **W/A/S/D** or **Arrow Keys** | Scroll the map |
-| **M** or **ESC** | Close the map (selection persists) |
+| **Close Map** button (top-left) | Close the map (selection persists) |
 
-Opens centered on your current system, with a "You are here" tag next to it.
-A **Close Map** button (top-left), a control hint (bottom), and the selected
+The map is mouse-only. It opens centered on your current system, with a "You
+are here" tag next to it. A **Close Map** button (top-left) and the selected
 system's station/moon panel (top-right) share the space view's HUD look. The selected
 system is shown back in the space view as "Jump Target:" - it defaults to
 (and resets to, after a jump) your current system, so it's never empty.
@@ -55,6 +61,7 @@ Completing a jump flashes a brief "arrived at ..." toast in the space view.
 | **L** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
+| **C** | Show / hide the top-left Controls pane |
 | **Mouse wheel** | Scroll the Message Log (bottom-left) when it has more than fits |
 | **ESC** | Pause menu |
 
@@ -104,6 +111,7 @@ up at a distance, not for choosing who to talk to.
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
+| **C** | Show / hide the top-left Controls pane |
 | **ESC** | Pause menu |
 
 ## Dialogue
@@ -113,7 +121,7 @@ The NPC conversation box is **mouse-only**, like every other modal:
 | Control | Action |
 |---------|--------|
 | **Hover** an option | Highlights it |
-| **Click** an option | Choose it - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
+| **Click** an option, or **Enter** on the highlighted one | Choose it - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
 | **Click** the **X** (top-right of the box) | Leave the conversation |
 
 Most NPCs offer a flat greeting plus a couple of closing options ("Thanks" /
@@ -159,11 +167,14 @@ ship right now) doesn't open a conversation at all - just a brief
 "no response" message, since there's no one aboard to answer.
 
 Some pilots also hail *you* first: a one-way transmission that pops up on
-screen on its own once you fly close enough - a brief top-centre banner in
-a glass pane, the same look as the rest of the HUD (mission toasts and the
-"too close to jump" warning share that pane style and stack below it - see
-`draw_glow_message`), no dialogue box, and it doesn't require a target - you still have to target and hail them back
-(H) to actually have the conversation. The banner only announces the
+screen on its own - a brief top-centre banner in a glass pane, the same look
+as the rest of the HUD (mission toasts and the "too close to jump" warning
+share that pane style and stack below it - see `draw_glow_message`), no
+dialogue box, and it doesn't require a target - you still have to target and
+hail them back (H) to actually have the conversation. A pilot's `one_way_hail`
+has a `range` gating how close you must be; the tutorial's Kade Marsh uses a
+very large range so his opening hail lands the moment you launch. The banner
+only announces the
 transmission ("Incoming transmission - `<sender>` (see Messages)") - the
 message body itself is in the Message Log pane (below), not the banner.
 Each pilot's one-way hail (if they have one) only ever fires once. See
@@ -232,15 +243,25 @@ it partway through (Kade offers to walk you through it - saying no ends
 the mission there instead of completing it), and can have an NPC pilot
 escort you for its duration - circling your ship at a fixed radius -
 returning to their normal routine once it ends - see ARCHITECTURE.md's
-`person.escort_flag`/`OrbitPlayerRoutine`.
+`person.escort_flag`/`OrbitPlayerRoutine`. In `first_flight`, Kade only
+*starts* escorting (falls into orbit) once you close the "give me a second to
+pull alongside" line - not the moment the mission begins.
+
+`first_flight`'s stages: SHIPS target mode → target + hail Kade → accept his
+help → **turn both ways** (left *and* right, `turned_both_ways`) → thrust →
+brake → jump home → autopilot in and land. (Sela's station tour already
+covers the Mission Log, so Kade no longer has a stage for it.)
 
 ## Menus
 
-**Every menu and dialog is mouse-only.** Actions are `draw_button` widgets
+**Every menu and dialog is mouse-driven.** Actions are `draw_button` widgets
 inside the panel - hover highlights, left-click presses. The keyboard does
-**nothing** in a menu except type into a text field (naming a pilot or a
-new save); it never moves a selection, presses a button, or closes a modal.
-There is no dim hint line under the buttons any more - a menu is meant to
+**nothing** in a menu except: type into a text field (naming a pilot or a
+new save), and **Enter**, which presses whichever button is currently
+highlighted (or trades/confirms the selected grid item) - a shortcut for
+confirming a choice already made with the mouse. Arrows, Tab, ESC, and letter
+hotkeys do nothing. There is no dim hint line under the buttons any more - a
+menu is meant to
 be self-explanatory from its buttons and labels. Every menu has a visible
 **Close** / **Cancel** / **Resume** / **Back** button; there is no
 ESC-to-close. No modal uses the top-left Controls pane (that belongs to the
@@ -280,7 +301,7 @@ button top-right.
 |---------|--------|
 | **Click** a Buy / Sell tab label | Switch tab |
 | **Click** an item | Select it (updates the readout) |
-| **Buy** / **Sell** button, or **double-click** an item | Buy/sell one unit of the selected item |
+| **Buy** / **Sell** button, **double-click** an item, or **Enter** | Buy/sell one unit of the selected item |
 | **Mouse wheel** | Scroll the item grid |
 | **Close** button (top-left) | Close |
 
@@ -300,7 +321,7 @@ their own dedicated menus.
 | Control | Action |
 |---------|--------|
 | **Click** a ship | Select it (updates the live preview + stat readout) |
-| **Buy** button, or **double-click** a ship | Open a Yes/No purchase confirmation |
+| **Buy** button, **double-click** a ship, or **Enter** | Open a Yes/No purchase confirmation |
 | **Mouse wheel** | Scroll the ship grid |
 | **Click** a **Yes** / **No** button | Confirm / cancel the pending purchase |
 | **Close** button (top-left) | Close (when nothing is pending confirmation) |
@@ -317,7 +338,7 @@ fading "Bought 1 `<ship>`" confirmation.
 |---------|--------|
 | **Click** a Buy / Install tab label | Switch tab |
 | **Click** an outfit (Buy tab) | Select it |
-| **Buy** button, or **double-click** an outfit (Buy tab) | Buy the selected outfit |
+| **Buy** button, **double-click** an outfit, or **Enter** (Buy tab) | Buy the selected outfit |
 | **Mouse wheel** | Scroll the outfit grid |
 | **Drag** a spare outfit onto a slot (Install tab) | Equip it |
 | **Drag** an installed slot out to empty space (Install tab) | Unequip it |

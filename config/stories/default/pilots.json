@@ -36,7 +36,7 @@
     "role": "patrol_officer",
     "personality": "Warm and easygoing for a patrol officer - never misses a chance to talk shop with a new pilot.",
     "one_way_hail": {
-      "range": 500,
+      "range": 100000,
       "message": "Hey there, new pilot! I remember when I first stepped into a cockpit myself. Let's get you squared away - cycle your targeting mode (T) until it reads SHIPS."
     },
     "escort_flag": "kade_escorting",
@@ -49,14 +49,14 @@
         "start": {
           "text": "Hey! Good to actually talk. Want me to help you get your bearings out here?",
           "options": [
-            {"label": "Sure, show me the ropes.", "next": "accepted", "actions": ["set_flag:accepted_kade_help", "set_flag:kade_escorting"]},
+            {"label": "Sure, show me the ropes.", "next": "accepted", "action": "set_flag:accepted_kade_help"},
             {"label": "No thanks, I've got it.", "next": "declined", "action": "abandon_mission:first_flight"}
           ]
         },
         "accepted": {
           "text": "Great - give me a second to pull alongside you. Close the comm and I'll walk you through it from here.",
           "options": [
-            {"label": "Sounds good.", "next": null}
+            {"label": "Sounds good.", "next": null, "action": "set_flag:kade_escorting"}
           ]
         },
         "declined": {

@@ -26,15 +26,23 @@ class PlayerController:
             return
 
         # Rotation controls
+        flags = self.person.possessions.flags
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.ship.turn_left()
-            # Generic gameplay-event flag (see the "used_brake" one below) -
-            # any story's missions.json can use this as a stage's
+            # Generic gameplay-event flags (see the "used_brake" one below) -
+            # any story's missions.json can use these as a stage's
             # complete_flag without this class knowing about missions.
-            self.person.possessions.flags["used_turn"] = True
+            # "turned_left"/"turned_right" let a tutorial stage require both
+            # directions (first_flight does); "turned_both_ways" is the
+            # derived flag it completes on.
+            flags["used_turn"] = True
+            flags["turned_left"] = True
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.ship.turn_right()
-            self.person.possessions.flags["used_turn"] = True
+            flags["used_turn"] = True
+            flags["turned_right"] = True
+        if flags.get("turned_left") and flags.get("turned_right"):
+            flags["turned_both_ways"] = True
 
         # Thrust controls
         if keys[pygame.K_UP] or keys[pygame.K_w]:

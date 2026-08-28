@@ -1030,30 +1030,22 @@ class LocationScreen(ScreenBase):
         info_rect, _ = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
 
         # Top-left control-reference pane - same design as SpaceScreen's
-        # (see draw_controls_pane), with the controls that apply here.
-        # Anchored to the real screen corner (not get_ui_offset()'s
-        # letterboxed 800x600 canvas), matching SpaceScreen's own pane.
-        # Skipped (draw_hud=False) whenever a modal menu on top of this
-        # location is showing its own controls pane in the same spot -
-        # and swapped for the dialogue's own controls while active_dialogue
-        # is set, since none of the normal move/target controls apply
-        # while a conversation has input focus (see handle_input).
+        # (see draw_controls_pane). Hidden (draw_hud=False) while a modal
+        # menu is up, and while a conversation has focus (it's mouse-only -
+        # click an option or the X). C collapses it to a two-liner.
         controls_rect = None
-        if self.active_dialogue:
-            help_items = [("W/S or Up/Down", "Navigate"), ("Enter", "Choose"), ("ESC", "Close")]
-            controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
-        elif draw_hud:
+        if draw_hud and not self.active_dialogue:
             help_items = [
                 ("ESC", "Pause"),
-                ("WASD/Arrows", "Move"),
-                ("]", "Next Target"),
-                ("[", "Previous Target"),
-                ("Click", "Target Person"),
-                ("P", "View Possessions"),
-                ("N", "Mission Log"),
-                ("Wheel", "Scroll Message Log"),
+                ("WASD / Arrows", "Walk"),
+                ("[  /  ]", "Cycle target"),
+                ("T", "Talk"),
+                ("L", "Board / exit"),
+                ("P  /  N", "Gear / log"),
+                ("Wheel", "Scroll log"),
             ]
-            controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale)
+            controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale,
+                                               collapsed=self.controls_collapsed)
 
         # Bottom-center status pane (see draw_status_pane) - entrance and
         # talk prompts are independent of each other and can both be true
@@ -1279,6 +1271,8 @@ class LocationScreen(ScreenBase):
                         picked = self.active_dialogue.option_at(event.pos)
                         if picked is not None:
                             self._choose_dialogue_option(picked)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    self._choose_dialogue_option(self.active_dialogue.selected_option)
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -1366,6 +1360,8 @@ class LocationScreen(ScreenBase):
                 # missions.json's first_flight); mirrors SpaceScreen's K_n.
                 self.player.possessions.flags["viewed_mission_log"] = True
                 return "missions"
+            elif event.key == pygame.K_c:
+                self._toggle_controls()
             elif event.key == pygame.K_ESCAPE:
                 return "pause"
         return None

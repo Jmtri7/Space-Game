@@ -603,6 +603,8 @@ class SpaceScreen(ScreenBase):
                         picked = self.active_dialogue.option_at(event.pos)
                         if picked is not None:
                             self._choose_hail_option(picked)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    self._choose_hail_option(self.active_dialogue.selected_option)
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -696,6 +698,8 @@ class SpaceScreen(ScreenBase):
                 # complete_flag (see missions.json's first_flight).
                 self.player.person.possessions.flags["viewed_mission_log"] = True
                 return "missions"
+            elif event.key == pygame.K_c:
+                self._toggle_controls()
         return None
 
     def _mark_landed(self):
@@ -1153,12 +1157,23 @@ class SpaceScreen(ScreenBase):
         if not origin or not destination:
             return
 
-        origin_pos = origin["star_map_position"]
-        dest_pos = destination["star_map_position"]
-        dx = dest_pos["x"] - origin_pos["x"]
-        dy = dest_pos["y"] - origin_pos["y"]
-        if dx == 0 and dy == 0:
-            dx = 1  # degenerate guard: jumping to a system at the same map position
+        if self.selected_system_id == self.system_id:
+            # Self-jump ("jump home" to re-centre after drifting) - there's no
+            # star-map direction, so aim the ship straight at the system
+            # centre from wherever it currently is. It then travels toward
+            # centre and arrives on the near side facing inward (see
+            # _complete_jump).
+            cx, cy = SYSTEM_CENTER
+            dx, dy = cx - self.player.x, cy - self.player.y
+            if dx == 0 and dy == 0:
+                dx = 1
+        else:
+            origin_pos = origin["star_map_position"]
+            dest_pos = destination["star_map_position"]
+            dx = dest_pos["x"] - origin_pos["x"]
+            dy = dest_pos["y"] - origin_pos["y"]
+            if dx == 0 and dy == 0:
+                dx = 1  # degenerate guard: two systems at the same map position
 
         heading = math.degrees(math.atan2(dx, -dy)) % 360
 
@@ -1216,7 +1231,10 @@ class SpaceScreen(ScreenBase):
         ship = self.player.ship
         ship.x, ship.y = arrival_x, arrival_y
         ship.angle = js["heading"] % 360
-        arrival_speed = ship.max_velocity * 1.6
+        # Arrive coasting at the ship's own top speed - no faster (the base
+        # physics only caps velocity while thrusting, so an over-max arrival
+        # speed would otherwise persist until the player next thrusts).
+        arrival_speed = ship.max_velocity
         ship.velocity_x = math.sin(heading_rad) * arrival_speed
         ship.velocity_y = -math.cos(heading_rad) * arrival_speed
         ship.thrust = 0
@@ -1301,16 +1319,17 @@ class SpaceScreen(ScreenBase):
         # also the catch-all "in flight now" hook - covers loading a save
         # straight into space, where no board_ship() transition fired.
         self.board_ship()
-        # Auto-land if autopilot has actually arrived (has_arrived - the same
-        # tight distance/speed SeekMode itself requires to stop). Checked
-        # *before* update_physics() runs this frame's autopilot step: SeekMode
-        # reaching that exact same condition inside update_physics() disengages
-        # and clears autopilot_target itself, so checking after would just see
-        # autopilot_active already False and never trigger the landing-screen
-        # transition at all. This used to check its own looser distance/speed
-        # (full landing_distance, speed<0.4) instead, so it fired well before
-        # the ship actually braked down to SeekMode's intended stopping point -
-        # visibly "giving up" on braking early with a lot of residual speed.
+        # Auto-land when the autopilot brings the ship in. Two checks bracket
+        # update_physics(): the pre-check catches has_arrived() being true at
+        # the top of the frame (the tight distance/speed SeekMode itself uses
+        # to stop, so we don't "give up" braking early with residual speed);
+        # the post-check catches SeekMode disengaging *inside* update_physics()
+        # - via its own arrival or its looser stall-bailout stop - and
+        # finishing near enough to land. `pending` carries the target across
+        # update_physics(), which clears autopilot_target once it disengages.
+        pending = self.player.autopilot_target if (
+            self.player.autopilot_active and self.player.autopilot_target in (self.station, self.moon)) else None
+
         if self.player.autopilot_active and self.player.autopilot_target and has_arrived(self.player, self.player.autopilot_target):
             target = self.player.autopilot_target
             self.player.park()
@@ -1327,6 +1346,19 @@ class SpaceScreen(ScreenBase):
                 return "land"
 
         self.update_physics()
+
+        # The autopilot disengaged itself this frame (SeekMode's own arrival /
+        # stall-bailout inside update_physics(), which uses a looser stop than
+        # has_arrived()) - if it left us stopped within landing range of the
+        # landable it was seeking, finish the landing rather than leave the
+        # ship parked-but-not-landed for the player to press L.
+        if pending is not None and not self.player.autopilot_active:
+            speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
+            if self.player.get_distance(pending.x, pending.y) < pending.landing_distance and speed < 0.4:
+                self.player.park()
+                self.landing_target = "station" if pending == self.station else "moon"
+                self._mark_landed()
+                return "land"
 
         # Toast counts down only here, not in update_physics() - so one
         # raised while docked (update_physics() still runs in the background
@@ -1468,34 +1500,25 @@ class SpaceScreen(ScreenBase):
         self._info_panel_rect = info_rect
 
         # --- Top-left: control-help pane (shared design with LocationScreen's -
-        # see draw_controls_pane). Skipped (draw_hud=False) whenever a modal
-        # menu on top of this screen is showing its own controls pane in
-        # the same spot instead. Swapped for the hail dialogue's own
-        # controls while active_dialogue is set - same idea as
-        # LocationScreen's own active_dialogue swap - since none of the
-        # normal flight/targeting controls apply while a conversation has
-        # input focus (see handle_input).
+        # see draw_controls_pane). Hidden (draw_hud=False) while a modal menu
+        # is up, and while a hail conversation has focus (it's mouse-only -
+        # click an option or the X). C collapses it to a two-liner.
         controls_rect = None
-        if self.active_dialogue:
-            help_items = [("W/S or Up/Down", "Navigate"), ("Enter", "Choose"), ("ESC", "Close")]
-            controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
-        elif draw_hud:
+        if draw_hud and not self.active_dialogue:
             help_items = [
                 ("ESC", "Pause"),
-                ("A/D or Left/Right", "Turn"),
-                ("W or Up", "Thrust"),
-                ("S or Down", "Reverse"),
-                ("Q/E", "Rotate View"),
-                ("T", "Target Mode"),
-                ("]", "Next Target"),
-                ("[", "Previous Target"),
-                ("M", "Star Map"),
-                ("P", "View Possessions"),
-                ("N", "Mission Log"),
-                ("Click", "Target Object"),
-                ("Wheel", "Scroll pane under cursor"),
+                ("WASD / Arrows", "Fly"),
+                ("Q / E", "Rotate view"),
+                ("T  /  [  ]", "Target mode / target"),
+                ("Space", "Autopilot"),
+                ("L", "Land / board"),
+                ("H", "Hail target"),
+                ("J  /  M", "Jump / map"),
+                ("P  /  N", "Gear / log"),
+                ("Wheel", "Scroll pane"),
             ]
-            controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale)
+            controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale,
+                                               collapsed=self.controls_collapsed)
 
         # --- Top-center: transient popups, each in its own glass pane (see
         # draw_glow_message), stacked downward so they can never overlap -

@@ -71,6 +71,14 @@ class ShopMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                # Enter trades the selected grid item (a selection is always
+                # highlighted) - the button-bar Enter would otherwise just
+                # press Close.
+                item_id = self._current_list().current()
+                if item_id and not (self.mode == "buy" and self._buy_disabled_reason(item_id)):
+                    self._transact(item_id)
+                continue
             pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
             if pressed == "close":
                 return "close"
