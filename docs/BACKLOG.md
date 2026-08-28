@@ -30,6 +30,16 @@ only appears under a section if it currently has items there.
 
 - [ ] Characters added to a story don't show up in old saves.
 
+## Graphics & Rendering
+
+- [ ] Faint shimmer of the world when panning (running left/right in an
+      interior, flying in space): the camera scrolls a non-integer number of
+      screen pixels per frame and `to_screen`'s pixel rounding renders it as
+      an irregular 3-3-3-4 cadence. Subtle at 60 FPS vsync'd; frame *pacing*
+      (the bigger stutter) is fixed. Real fix needs sub-pixel rendering. See
+      [PHYSICS.md](PHYSICS.md) "Frame Timing & Smooth Motion" for the
+      writeup and options.
+
 # Features
 
 ## Controls & UI
@@ -141,6 +151,12 @@ only appears under a section if it currently has items there.
 - [ ] Better jumping animation.
 - [ ] Better jump graphics.
 - [ ] More texture for interior grounds and ships.
+- [ ] Render interpolation (lerp each drawable between its previous and
+      current sim state on draw). Only worth it if >60 Hz smoothness becomes
+      a real goal, or netcode arrives — the fixed-timestep loop currently
+      drops a <0.1% sliver of sim time instead, which is fine for a
+      single-player game. See [PHYSICS.md](PHYSICS.md) "Frame Timing &
+      Smooth Motion".
 
 ## Meta, Tooling & Performance
 

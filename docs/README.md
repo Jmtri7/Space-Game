@@ -7,7 +7,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 - **[CLAUDE.md](../CLAUDE.md)** ← Start here for quick reference
 - **[CONTROLS.md](CONTROLS.md)** — All keyboard bindings and player controls
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — Class hierarchy, entity design, base classes
-- **[PHYSICS.md](PHYSICS.md)** — Coordinate systems, movement, collision
+- **[PHYSICS.md](PHYSICS.md)** — Coordinate systems, movement, collision, frame timing & smooth-motion tradeoffs
 - **[AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md)** ⚠️ — Required testing protocol before changing `SeekMode`/`OrbitMode`
 - **[SAVE_SYSTEM.md](SAVE_SYSTEM.md)** — Persistence, state management, file format
 - **[UI_FLOW.md](UI_FLOW.md)** — Menu state machine, screen transitions
@@ -30,6 +30,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 - State/save problems → [SAVE_SYSTEM.md](SAVE_SYSTEM.md)
 - UI/menu bugs → [UI_FLOW.md](UI_FLOW.md)
 - Coordinate system issues → [PHYSICS.md](PHYSICS.md#coordinate-system)
+- Stutter / judder / motion smoothness → [PHYSICS.md](PHYSICS.md#frame-timing--smooth-motion--two-deliberate-tradeoffs), [UI_FLOW.md](UI_FLOW.md) (frame loop & vsync)
 
 ### Understanding the Codebase
 Start with [ARCHITECTURE.md](ARCHITECTURE.md), then deep-dive into specific docs as needed.

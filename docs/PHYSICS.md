@@ -102,10 +102,12 @@ self.velocity_y *= drag
 
 > **"per frame" = "per simulation step".** The main loop runs a fixed-timestep
 > accumulator (`SIM_STEP = 1/60 s`, see [UI_FLOW.md](UI_FLOW.md#main-loop-fixed-timestep-three-phases)):
-> `step_world()` runs once per rendered frame on a machine holding 60 FPS
-> (identical to before), and 2–5 times per frame to catch up on a slower one.
-> Every constant here is calibrated to that 1/60 s step and must not be
-> converted to per-second — `SIM_STEP` is fixed precisely so they don't need to be.
+> `step_world()` runs once per rendered frame on a machine holding ~60 FPS,
+> and multi-steps only to catch up on a sustained slowdown (it deliberately
+> holds at one step through normal jitter — see "Frame Timing & Smooth
+> Motion" below). Every constant here is calibrated to that 1/60 s step and
+> must not be converted to per-second — `SIM_STEP` is fixed precisely so they
+> don't need to be.
 
 ## Rotation & Facing Direction
 
@@ -219,10 +221,73 @@ through `Person.step_toward(tx, ty, speed, can_move_to)`: one normalized step
 step); `WanderRoutine` uses its own slower `WANDER_SPEED`. See
 DESIGN_PATTERNS.md's "One Movement Primitive on the Base Entity".
 
+## Frame Timing & Smooth Motion — two deliberate tradeoffs
+
+Motion smoothness on this engine runs into two hard constraints. Both are
+currently resolved by a *calibrated compromise*, not a real fix. This section
+records why, and what the real fixes would cost, so a future change is a
+decision and not a surprise.
+
+### 1. The sim drops a sliver of time to stay visually smooth
+
+`advance_accumulator` (`game/utils.py`) does **not** do a textbook
+`floor(accumulator / step)`. It runs *exactly one* step for any frame worth
+~0.5–2.5 steps, and multi-step catch-up only on a sustained slowdown. The
+positive remainder is clamped well under a step — i.e. a persistent sub-step
+surplus is **discarded** rather than banked for a later catch-up frame.
+
+- **Why:** `floor` emits a 0-step frame next to a 2-step frame under ordinary
+  frame-time jitter, and a "60 Hz" panel that's really 59.94 Hz *guarantees*
+  that every ~20 s (60 sim steps/s vs 59.94 frames/s — the surplus has to
+  surface somewhere). A 2-step frame is a visible lurch on a camera pan.
+- **Cost:** the sim tracks the *display* rate, not the wall clock — drift is
+  well under 0.1 %. Benign here: every timer is frame-count based
+  (`wait_frames`, `_talk_timer`, jump countdowns), there is no netcode, and
+  nothing keys off real time-of-day.
+- **The real fix — render interpolation:** keep each drawable's previous *and*
+  current sim state and `lerp` between them at draw time by
+  `accumulator / step`. Sim and render become fully independent — smooth at
+  any refresh rate, nothing dropped. Cost: every `draw()` path needs a
+  prev/current state pair and a lerp; it's a day of work touching every
+  entity. Worth it only if >60 Hz becomes a real feature, or netcode arrives.
+- **Revisit if:** multiplayer/netcode is added (needs wall-clock-accurate
+  sim), or any real-time mechanic is added.
+
+### 2. Non-integer scroll speed shimmers on a whole-pixel grid
+
+`to_screen()` ends in `int(round(...))` — every drawn point snaps to a whole
+pixel. When the camera pans, a fixed world point moves at
+`walking_speed × get_scale()` screen-px/frame; at common window sizes that's
+~3.3 px/frame, which the pixel grid renders as an irregular **3-3-3-4**
+cadence — a faint ~15 Hz shimmer of the *world* (the player stays put,
+centred) while running left/right.
+
+- **Why it's not just "pick a better number":**
+  `get_scale() = min(w/2400, h/1800) × camera_zoom`, and that `min()` term
+  changes with the window size, so **no fixed `walking_speed` or
+  `camera_zoom` is smooth at every window size.** (`walking_speed 2.5`
+  happened to land near ~4.0 px/frame and was smoother than the current 2.0
+  at ~3.3 — near the worst case. That's luck, not a fix.)
+- **The real fix — sub-pixel rendering:**
+  - *GPU-textured render path* (`pygame._sdl2.video`): render the world to a
+    texture, draw it at float coordinates with bilinear sampling. Smooth
+    sub-pixel scroll at native resolution. Cost: move the composite (or the
+    whole draw path) onto pygame's still-semi-experimental SDL2 renderer API.
+  - *Supersample:* render 2× to an offscreen surface, `pygame.transform.
+    smoothscale` down — averages the 3/4 error away. Cost: ~4× fill rate
+    (current ~5 ms render → ~20 ms, over the 16.7 ms budget). 1.5× is
+    borderline and only half-helps. Not worth it.
+- **Current choice — accept it.** At 60 FPS vsync'd it's subtle; frame
+  *pacing* was the dominant complaint and that is fixed. `to_screen`'s
+  rounding is also load-bearing for crisp static geometry.
+- **Revisit if:** it's demonstrably bothering players, or a render-path
+  change happens for another reason.
+
 ## Performance Considerations
 
 **Optimization done:**
-- Integer rounding on screen coordinates (no subpixel rendering)
+- Integer rounding on screen coordinates (no subpixel rendering — see
+  "Frame Timing & Smooth Motion" above for the tradeoff this carries)
 - Scaled once per update cycle, cached
 - Viewport letterboxing (only render once)
 
