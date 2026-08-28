@@ -32,14 +32,10 @@ def get_offset():
     return (offset_x, offset_y)
 
 def to_screen(x, y):
-    # Convert game-space (x,y) to a pixel on the world-render surface.
-    # Ends in floor(... + camera sub-pixel remainder) + WORLD_MARGIN, not
-    # round(...) - see "Frame Timing & Smooth Motion #2" for why.
+    # Convert game-space (x,y) to screen-space
     scale = get_scale()
     offset_x, offset_y = get_offset()
-    fx, fy = subpixel()
-    return (math.floor(x * scale + offset_x + fx) + WORLD_MARGIN,
-            math.floor(y * scale + offset_y + fy) + WORLD_MARGIN)
+    return (int(round(x * scale + offset_x)), int(round(y * scale + offset_y)))
 ```
 
 **Common Mistakes:**
@@ -257,62 +253,41 @@ surplus is **discarded** rather than banked for a later catch-up frame.
 - **Revisit if:** multiplayer/netcode is added (needs wall-clock-accurate
   sim), or any real-time mechanic is added.
 
-### 2. Non-integer scroll speed — fixed by a sub-pixel composite path
+### 2. Non-integer scroll speed shimmers on a whole-pixel grid
 
-When the camera pans, a fixed world point moves at `walking_speed ×
-get_scale()` screen-px/frame; at common window sizes that's a non-integer
-rate (~3.3 px/frame). Snapping every point to a whole pixel renders that as
-an irregular **3-3-3-4** cadence — a faint ~15 Hz shimmer of the *world*
-(the player stays centred) during cardinal *and* diagonal motion, in the
-Space View and in interiors alike. No fixed `walking_speed`/`camera_zoom` is
-smooth at every window size, because `get_scale()`'s `min(w/2400, h/1800)`
-term moves with the window.
+`to_screen()` ends in `int(round(...))` — every drawn point snaps to a whole
+pixel. When the camera pans, a fixed world point moves at
+`walking_speed × get_scale()` screen-px/frame; at common window sizes that's
+~3.3 px/frame, which the pixel grid renders as an irregular **3-3-3-4**
+cadence — a faint ~15 Hz shimmer of the *world* (the player stays put,
+centred) while running left/right.
 
-**The fix — a two-layer sub-pixel composite** (`main.py` + `Camera`):
-
-1. **`Camera` splits the camera pan** (`set_offset`) into a whole-pixel part
-   and a sub-pixel remainder `_subpixel_x/y ∈ [0,1)`. `to_screen()` ends in
-   `floor(... + _subpixel) + WORLD_MARGIN`, not `round(...)` — so between two
-   frames a static point's world-surface pixel only ever changes by a *whole*
-   number, and all the smooth motion is in the remainder. (`WORLD_MARGIN`, 1px,
-   is the bleed border the world surface carries so the compositor's edge
-   sample always has a texel.)
-2. **The frame is drawn as two layers** — `world_surface` (the scrolling
-   world; `<screen>.draw_world()`) and `hud_surface` (static overlay;
-   `<screen>.draw_hud()`). `main.present_frame()` composites them.
-3. **The world layer is shifted by the sub-pixel remainder** using the SDL2
-   renderer's *logical size*: set it to `LOGICAL_SCALE`× (8×) the window,
-   draw the world texture there offset by `round((WORLD_MARGIN + subpixel) ×
-   8)` whole *logical* pixels, and let SDL's linear-filtered logical→window
-   downscale turn that into a smooth fractional shift. Drawing the texture at
-   a float destination directly does **not** work — every SDL2 backend on
-   Windows quantises `SDL_RenderCopyF`'s position to whole pixels (verified
-   across direct3d/11, opengl, opengles2, software). The HUD layer is then
-   drawn with logical scaling off, 1:1 → **stays pixel-crisp**.
-
-**Costs / tradeoffs, all accepted:**
-- The world layer is slightly softened at non-integer offsets (bilinear
-  sampling) — the intended tradeoff; it's *sharp* whenever the pan lands on a
-  whole pixel (`floor` keeps static geometry crisp then).
-- Two full-window `Texture.update()` per frame (`render.composite` span,
-  ~2 ms at native res — both layer surfaces are `SRCALPHA`/BGRA so the upload
-  is a straight memcpy, not a ~4.5 ms format conversion).
-- `pygame._sdl2.video` is semi-experimental → a `pygame.display.set_mode`
-  fallback path (whole-pixel scroll, the old look) runs if no `Renderer` can
-  be created.
-- **Revisit if:** the ~2 ms composite starts crowding the budget on some
-  machine (lower `LOGICAL_SCALE`, or dirty-rect the HUD upload), or a future
-  pygame exposes `SDL_RenderGeometry` (float UVs would remove the logical-size
-  trick entirely).
+- **Why it's not just "pick a better number":**
+  `get_scale() = min(w/2400, h/1800) × camera_zoom`, and that `min()` term
+  changes with the window size, so **no fixed `walking_speed` or
+  `camera_zoom` is smooth at every window size.** (`walking_speed 2.5`
+  happened to land near ~4.0 px/frame and was smoother than the current 2.0
+  at ~3.3 — near the worst case. That's luck, not a fix.)
+- **The real fix — sub-pixel rendering:**
+  - *GPU-textured render path* (`pygame._sdl2.video`): render the world to a
+    texture, draw it at float coordinates with bilinear sampling. Smooth
+    sub-pixel scroll at native resolution. Cost: move the composite (or the
+    whole draw path) onto pygame's still-semi-experimental SDL2 renderer API.
+  - *Supersample:* render 2× to an offscreen surface, `pygame.transform.
+    smoothscale` down — averages the 3/4 error away. Cost: ~4× fill rate
+    (current ~5 ms render → ~20 ms, over the 16.7 ms budget). 1.5× is
+    borderline and only half-helps. Not worth it.
+- **Current choice — accept it.** At 60 FPS vsync'd it's subtle; frame
+  *pacing* was the dominant complaint and that is fixed. `to_screen`'s
+  rounding is also load-bearing for crisp static geometry.
+- **Revisit if:** it's demonstrably bothering players, or a render-path
+  change happens for another reason.
 
 ## Performance Considerations
 
 **Optimization done:**
-- `to_screen()` floors to a stable whole-pixel world-surface grid; the
-  sub-pixel scroll is applied once at composite time, not per point (see
-  "Frame Timing & Smooth Motion #2" above)
-- Both composite layers are `SRCALPHA`/BGRA so `Texture.update()` is a
-  straight memcpy (~1 ms each) rather than a ~4.5 ms format conversion
+- Integer rounding on screen coordinates (no subpixel rendering — see
+  "Frame Timing & Smooth Motion" above for the tradeoff this carries)
 - Scaled once per update cycle, cached
 - Viewport letterboxing (only render once)
 

@@ -163,16 +163,12 @@ class TestCameraRotation(unittest.TestCase):
 
     def test_angle_zero_matches_unrotated_projection(self):
         cam = self._camera_focused_on(1000, 1000, 0)
-        # A point offset from focus projects as scale+offset alone, then
-        # floored to the world-surface grid with the sub-pixel pan remainder
-        # folded in and the 1px world-surface bleed margin added (see
-        # Camera.to_screen / set_offset / utils.WORLD_MARGIN).
+        # A point offset from focus projects exactly as scale+offset alone.
         self.assertEqual(cam.to_screen(1200, 1000), cam.to_screen(1200, 1000))
         scale = cam.get_scale()
         ox, oy = cam.get_world_offset()
-        fx, fy = cam.subpixel()
-        expected = (math.floor((1200 - cam.offset_x) * scale + ox + fx) + utils.WORLD_MARGIN,
-                    math.floor((1000 - cam.offset_y) * scale + oy + fy) + utils.WORLD_MARGIN)
+        expected = (int(round((1200 - cam.offset_x) * scale + ox)),
+                    int(round((1000 - cam.offset_y) * scale + oy)))
         self.assertEqual(cam.to_screen(1200, 1000), expected)
 
     def test_ninety_degrees_maps_north_to_east(self):

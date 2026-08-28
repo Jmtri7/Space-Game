@@ -10,13 +10,6 @@ from game.constants import (
     SIM_STEP, MAX_STEPS_PER_FRAME, MAX_FRAME_TIME
 )
 
-# The world-render surface (main.py) is this many pixels larger than the
-# window on every side. to_screen() shifts every world pixel in by this
-# much; the compositor shifts the whole layer back out by it (plus the
-# sub-pixel remainder). One pixel is enough to feed the edge bilinear tap.
-WORLD_MARGIN = 1
-
-
 class Camera:
     """Owns the camera's world offset and the window's screen size, and
     derives every scale/coordinate conversion from them. Replaces what used
@@ -36,15 +29,6 @@ class Camera:
         self._sin = 0.0
         self.screen_width = screen_width
         self.screen_height = screen_height
-        # Sub-pixel remainder of the camera pan, in screen pixels, each in
-        # [0, 1). to_screen() floors the world-surface pixel grid to whole
-        # pixels and hands this leftover fraction to the compositor
-        # (main.py), which slides the whole world layer by it with bilinear
-        # sampling - that's what makes a non-integer scroll speed pan
-        # smoothly instead of shimmering on the 3-3-3-4 whole-pixel cadence.
-        # See docs/PHYSICS.md "Frame Timing & Smooth Motion".
-        self._subpixel_x = 0.0
-        self._subpixel_y = 0.0
         # World-render magnification. CAMERA_ZOOM is the default; a story can
         # override it (story.json's "camera_zoom") via set_camera_zoom() so a
         # bigger or more cramped map frames sensibly. UI scale ignores this.
@@ -53,17 +37,6 @@ class Camera:
     def set_offset(self, x, y):
         self.offset_x = x
         self.offset_y = y
-        # Split the camera pan into a whole-pixel part (baked into the
-        # floored world-surface projection below) and a sub-pixel remainder
-        # (applied at composite time). Between two consecutive frames the
-        # floored projection then only ever changes by whole pixels, so the
-        # world layer's content translates cleanly and the smooth motion
-        # lives entirely in _subpixel_x/y.
-        scale = self.get_scale()
-        pan_x = x * scale
-        pan_y = y * scale
-        self._subpixel_x = pan_x - math.floor(pan_x)
-        self._subpixel_y = pan_y - math.floor(pan_y)
 
     def set_zoom(self, zoom):
         self.zoom = zoom
@@ -114,30 +87,13 @@ class Camera:
         return (offset_x, offset_y)
 
     def to_screen(self, x, y):
-        """Convert world coordinates to a pixel on the world-render surface.
-
-        Ends in `floor(...) + WORLD_MARGIN`, not `round(...)`: the whole-
-        pixel part of the camera pan is already removed (see set_offset), so
-        flooring here pins static geometry to a stable grid that only ever
-        translates by whole pixels between frames, while the sub-pixel scroll
-        is carried by _subpixel_x/y for the compositor. WORLD_MARGIN is the
-        1px bleed border the world surface carries on every side so the
-        compositor's bilinear sample always has a texel to read at the edge.
-        """
+        """Convert world coordinates to screen coordinates."""
         scale = self.get_scale()
         offset_x, offset_y = self.get_world_offset()
         x_camera = x - self.offset_x
         y_camera = y - self.offset_y
         x_camera, y_camera = self._rotate_about_center(x_camera, y_camera)
-        return (math.floor(x_camera * scale + offset_x + self._subpixel_x) + WORLD_MARGIN,
-                math.floor(y_camera * scale + offset_y + self._subpixel_y) + WORLD_MARGIN)
-
-    def subpixel(self):
-        """The camera pan's sub-pixel remainder `(fx, fy)`, each in [0, 1) -
-        read once per frame by main.py's compositor, which slides the world
-        layer by `(-WORLD_MARGIN - fx, -WORLD_MARGIN - fy)` with bilinear
-        sampling."""
-        return (self._subpixel_x, self._subpixel_y)
+        return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
 
     def to_world(self, sx, sy):
         """Convert screen coordinates back to world coordinates - the
@@ -145,8 +101,8 @@ class Camera:
         position to the world position it points at (e.g. click-to-target)."""
         scale = self.get_scale()
         offset_x, offset_y = self.get_world_offset()
-        x_camera = (sx - WORLD_MARGIN - self._subpixel_x - offset_x) / scale
-        y_camera = (sy - WORLD_MARGIN - self._subpixel_y - offset_y) / scale
+        x_camera = (sx - offset_x) / scale
+        y_camera = (sy - offset_y) / scale
         x_camera, y_camera = self._rotate_about_center(x_camera, y_camera, inverse=True)
         return (x_camera + self.offset_x, y_camera + self.offset_y)
 
@@ -244,11 +200,6 @@ def to_screen(x, y):
 def to_world(x, y):
     """Convert screen coordinates back to world coordinates (inverse of to_screen)."""
     return _camera.to_world(x, y)
-
-
-def subpixel():
-    """The camera pan's sub-pixel remainder `(fx, fy)` for the compositor."""
-    return _camera.subpixel()
 
 
 def to_screen_x(x):
