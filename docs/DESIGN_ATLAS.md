@@ -16,7 +16,7 @@ currently exist.
 | Atlas | Scope | URL |
 |---|---|---|
 | **Resin & Rivets** | The two default-story cultures — Vherathi Concord & Drossholt Company: ships, stations, outfits, buildings, decorations. Refines of what ships today + new concepts. | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| **Standard Issue** | The shared `Person` body model (proposed legged redesign) and the culture-neutral outfits in `graphics.json` (`space_suit`, station crew, command tier). | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**) and the culture-neutral outfits in `graphics.json` (`space_suit`, station crew, command tier — still mockups). | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
 Keep this table current. When an atlas is published or its URL changes, edit the
 row.
