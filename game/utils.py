@@ -29,17 +29,38 @@ class Camera:
         self._sin = 0.0
         self.screen_width = screen_width
         self.screen_height = screen_height
+        # While set (by lock_focus / cleared by unlock_focus) every to_screen
+        # result is nudged by this whole-pixel (dx, dy) - used to pin the
+        # followed entity (player ship / on-foot body) rock-steady on screen
+        # while the rest of the world does the snapped-pan judder around it.
+        self._focus_correction = None
+        # The camera pan in whole screen-pixels (see _compute_pan / to_screen).
+        # Recomputed only when offset/angle/zoom/size change, not per point.
+        self._pan_x = 0
+        self._pan_y = 0
         # World-render magnification. CAMERA_ZOOM is the default; a story can
         # override it (story.json's "camera_zoom") via set_camera_zoom() so a
         # bigger or more cramped map frames sensibly. UI scale ignores this.
         self.zoom = CAMERA_ZOOM
 
+    def _compute_pan(self):
+        """Recompute the whole-pixel camera pan cached in `_pan_x/_pan_y`.
+        Called only when the offset / angle / zoom / screen size changes -
+        never per point. See to_screen for what it's for."""
+        scale = self.get_scale()
+        rox = self.offset_x * self._cos - self.offset_y * self._sin
+        roy = self.offset_x * self._sin + self.offset_y * self._cos
+        self._pan_x = round(rox * scale)
+        self._pan_y = round(roy * scale)
+
     def set_offset(self, x, y):
         self.offset_x = x
         self.offset_y = y
+        self._compute_pan()
 
     def set_zoom(self, zoom):
         self.zoom = zoom
+        self._compute_pan()
 
     def set_angle(self, degrees):
         """Set the view rotation (degrees, clockwise on screen). Caches the
@@ -49,6 +70,7 @@ class Camera:
         rad = math.radians(self.angle)
         self._cos = math.cos(rad)
         self._sin = math.sin(rad)
+        self._compute_pan()
 
     def _rotate_about_center(self, x_camera, y_camera, inverse=False):
         """Rotate a camera-space point about the view center (GAME_WIDTH/2,
@@ -74,6 +96,7 @@ class Camera:
     def set_screen_size(self, width, height):
         self.screen_width = width
         self.screen_height = height
+        self._compute_pan()
 
     def get_scale(self):
         """Get rendering scale based on window size."""
@@ -87,13 +110,46 @@ class Camera:
         return (offset_x, offset_y)
 
     def to_screen(self, x, y):
-        """Convert world coordinates to screen coordinates."""
+        """Convert world coordinates to screen coordinates.
+
+        The point is projected (and view-rotated about the centre) with **no
+        camera term inside the round**, then the whole-pixel camera pan
+        (`_pan_x/_pan_y`, snapped to whole pixels) is subtracted. So the
+        whole scene translates as one rigid block - a clean whole-pixel
+        judder - instead of each point rounding independently against a
+        sub-pixel float pan, which is what makes a non-integer scroll speed
+        *shimmer* (neighbouring points rounding different directions frame to
+        frame). The dropped sub-pixel remainder (<=0.5 px) is the judder.
+        `_focus_correction`, when a focus lock is active, pins the followed
+        entity steady on top of that. See docs/PHYSICS.md "Frame Timing &
+        Smooth Motion"."""
         scale = self.get_scale()
         offset_x, offset_y = self.get_world_offset()
-        x_camera = x - self.offset_x
-        y_camera = y - self.offset_y
-        x_camera, y_camera = self._rotate_about_center(x_camera, y_camera)
-        return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
+        qx, qy = self._rotate_about_center(x, y)
+        pan_x, pan_y = self._pan_x, self._pan_y
+        if self._focus_correction is not None:
+            pan_x -= self._focus_correction[0]
+            pan_y -= self._focus_correction[1]
+        return (int(round(qx * scale + offset_x)) - pan_x,
+                int(round(qy * scale + offset_y)) - pan_y)
+
+    def lock_focus(self, world_x, world_y):
+        """Pin (world_x, world_y) - the followed entity's position - to the
+        fixed pixel it maps to with a zero-pan camera, so it's drawn
+        rock-steady while the snapped world pan judders around it. Every
+        to_screen() until unlock_focus() is nudged by the same whole-pixel
+        correction, so the whole sprite (hull, windows, thrusters, label)
+        moves together. Cheap and safe to call every frame."""
+        self._focus_correction = None
+        scale = self.get_scale()
+        offset_x, offset_y = self.get_world_offset()
+        anchor_x = round((GAME_WIDTH / 2) * scale + offset_x)
+        anchor_y = round((GAME_HEIGHT / 2) * scale + offset_y)
+        raw_x, raw_y = self.to_screen(world_x, world_y)
+        self._focus_correction = (anchor_x - raw_x, anchor_y - raw_y)
+
+    def unlock_focus(self):
+        self._focus_correction = None
 
     def to_world(self, sx, sy):
         """Convert screen coordinates back to world coordinates - the
@@ -101,10 +157,9 @@ class Camera:
         position to the world position it points at (e.g. click-to-target)."""
         scale = self.get_scale()
         offset_x, offset_y = self.get_world_offset()
-        x_camera = (sx - offset_x) / scale
-        y_camera = (sy - offset_y) / scale
-        x_camera, y_camera = self._rotate_about_center(x_camera, y_camera, inverse=True)
-        return (x_camera + self.offset_x, y_camera + self.offset_y)
+        qx = (sx + self._pan_x - offset_x) / scale
+        qy = (sy + self._pan_y - offset_y) / scale
+        return self._rotate_about_center(qx, qy, inverse=True)
 
     def to_screen_x(self, x):
         """Convert world X coordinate to screen space."""
@@ -162,6 +217,17 @@ def set_camera_offset(x, y):
 def set_camera_angle(degrees):
     """Set the view rotation about the followed entity (Space View only)."""
     _camera.set_angle(degrees)
+
+
+def lock_camera_focus(world_x, world_y):
+    """Pin the followed entity at (world_x, world_y) steady on screen for
+    the draw calls that follow, until unlock_camera_focus(). See
+    Camera.lock_focus."""
+    _camera.lock_focus(world_x, world_y)
+
+
+def unlock_camera_focus():
+    _camera.unlock_focus()
 
 
 def rotate_camera_vector(dx, dy):

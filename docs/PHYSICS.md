@@ -32,10 +32,15 @@ def get_offset():
     return (offset_x, offset_y)
 
 def to_screen(x, y):
-    # Convert game-space (x,y) to screen-space
+    # Convert game-space (x,y) to screen-space. The point is rounded with no
+    # camera term inside the round(), then a whole-pixel camera pan is
+    # subtracted, so the scene translates rigidly - see "Frame Timing &
+    # Smooth Motion" #2 for why.
     scale = get_scale()
     offset_x, offset_y = get_offset()
-    return (int(round(x * scale + offset_x)), int(round(y * scale + offset_y)))
+    px = int(round(x * scale + offset_x)) - camera._pan_x
+    py = int(round(y * scale + offset_y)) - camera._pan_y
+    return (px, py)
 ```
 
 **Common Mistakes:**
@@ -223,10 +228,11 @@ DESIGN_PATTERNS.md's "One Movement Primitive on the Base Entity".
 
 ## Frame Timing & Smooth Motion — two deliberate tradeoffs
 
-Motion smoothness on this engine runs into two hard constraints. Both are
-currently resolved by a *calibrated compromise*, not a real fix. This section
-records why, and what the real fixes would cost, so a future change is a
-decision and not a surprise.
+Motion smoothness on this engine runs into two hard constraints. Neither has
+a free lunch: #1 drops a sliver of sim time, #2 renders a rigid whole-pixel
+judder rather than truly smooth sub-pixel motion. This section records why,
+and what the real fixes would cost, so a future change is a decision and not
+a surprise.
 
 ### 1. The sim drops a sliver of time to stay visually smooth
 
@@ -253,21 +259,38 @@ surplus is **discarded** rather than banked for a later catch-up frame.
 - **Revisit if:** multiplayer/netcode is added (needs wall-clock-accurate
   sim), or any real-time mechanic is added.
 
-### 2. Non-integer scroll speed shimmers on a whole-pixel grid
+### 2. Non-integer scroll speed on a whole-pixel grid — snapped-pan + pinned focus
 
-`to_screen()` ends in `int(round(...))` — every drawn point snaps to a whole
-pixel. When the camera pans, a fixed world point moves at
-`walking_speed × get_scale()` screen-px/frame; at common window sizes that's
-~3.3 px/frame, which the pixel grid renders as an irregular **3-3-3-4**
-cadence — a faint ~15 Hz shimmer of the *world* (the player stays put,
-centred) while running left/right.
+When the camera pans, a fixed world point moves at `walking_speed ×
+get_scale()` screen-px/frame — at common window sizes a non-integer like
+~3.3 px/frame. `get_scale() = min(w/2400, h/1800) × camera_zoom`, and that
+`min()` term moves with the window, so **no fixed `walking_speed` /
+`camera_zoom` is integer-clean at every size**, and the √2 in diagonal
+movement (`step_toward` normalises it) means you can't make cardinal *and*
+diagonal integer at once anyway.
 
-- **Why it's not just "pick a better number":**
-  `get_scale() = min(w/2400, h/1800) × camera_zoom`, and that `min()` term
-  changes with the window size, so **no fixed `walking_speed` or
-  `camera_zoom` is smooth at every window size.** (`walking_speed 2.5`
-  happened to land near ~4.0 px/frame and was smoother than the current 2.0
-  at ~3.3 — near the worst case. That's luck, not a fix.)
+**What the engine does** (`utils.Camera`):
+
+- `to_screen()` projects each point (and view-rotates it about the centre)
+  **with no camera term inside the `round()`**, then subtracts
+  `_pan_x/_pan_y` — the camera pan **snapped to whole pixels** (`_compute_pan`,
+  recomputed only when the camera moves, not per point). Every point gets the
+  *same integer* subtracted, so the whole scene translates as **one rigid
+  block** — a clean whole-pixel **judder** in the 3-3-3-4 cadence — instead of
+  each point rounding independently against a sub-pixel float pan, which is
+  what made the world **shimmer** (neighbours rounding different directions
+  frame to frame → the "crawl"/"boil"). The dropped remainder (≤0.5 px) *is*
+  the judder.
+- **The followed entity is pinned.** A rigid pan would jitter the player
+  ship / on-foot body ±1 px (its double-`round` against the snapped pan
+  doesn't cancel). `SpaceScreen.draw` / `LocationScreen` wrap the player's
+  own draw in `lock_camera_focus(player.x, player.y)` … `unlock_camera_focus()`
+  — a whole-pixel `_focus_correction` that pins it to an exact anchor pixel
+  (its physics stays sub-pixel; only the draw is nailed down). NPCs, AI
+  ships and the world judder around it.
+- **Residual:** the world still judders (rigid 3-3-3-4). This is not smooth
+  motion — it's shimmer traded for a cleaner-looking rigid step. Truly smooth
+  needs sub-pixel rendering, and:
 - **Why the obvious "sub-pixel rendering" fixes don't work here:**
   - *GPU-textured render path* (`pygame._sdl2.video`) — **tried and reverted**
     (commit d507318, reverted by cc36b89). The idea was: render the world to
@@ -292,11 +315,11 @@ centred) while running left/right.
     linear downscale is **not phase-invariant**, so it only halves the
     breathing, not removes it; 4×+ (which would) is ~16 MP+ per frame to
     upload — well over budget. Not worth it.
-- **Current choice — accept the shimmer.** At 60 FPS vsync'd it's subtle;
-  frame *pacing* was the dominant complaint and that is fixed. `to_screen`'s
-  rounding is also load-bearing for crisp static geometry, and every
-  alternative tried so far trades the faint shimmer for a more visible
-  artifact.
+- **Current choice — snapped pan + pinned focus (above).** Rigid whole-pixel
+  judder with a rock-steady player reads cleaner than the old independent-
+  rounding shimmer, keeps every point pixel-crisp (no resampling anywhere),
+  and costs nothing (`to_screen` is byte-for-byte the same speed). It is
+  *not* smooth motion — the judder is still there.
 - **Revisit only if** a future pygame exposes `SDL_RenderGeometry` (or an
   equivalent float-positioned textured draw), *or* the game moves to a
   genuinely resolution-independent renderer where the whole scene (sprites
@@ -305,8 +328,10 @@ centred) while running left/right.
 ## Performance Considerations
 
 **Optimization done:**
-- Integer rounding on screen coordinates (no subpixel rendering — see
-  "Frame Timing & Smooth Motion" above for the tradeoff this carries)
+- Integer screen coordinates (no subpixel rendering — see "Frame Timing &
+  Smooth Motion" #2 for the rigid-pan/pinned-focus scheme this uses and the
+  judder it carries)
+- Camera pan snapped to whole pixels once per move, not per point (`_compute_pan`)
 - Scaled once per update cycle, cached
 - Viewport letterboxing (only render once)
 

@@ -957,7 +957,14 @@ class LocationScreen(ScreenBase):
             drawables.append((self.player.y, self.player.draw))
             drawables.sort(key=lambda item: item[0])
             for _, draw_fn in drawables:
-                draw_fn(surface)
+                if draw_fn == self.player.draw:
+                    # Pin the on-foot player steady while the snapped world
+                    # pan judders around it (see utils.Camera.lock_focus).
+                    utils.lock_camera_focus(self.player.x, self.player.y)
+                    draw_fn(surface)
+                    utils.unlock_camera_focus()
+                else:
+                    draw_fn(surface)
 
         # Highlight the manually targeted NPC (see _cycle_npc_target/
         # _select_person_target_at - unrelated to who's talkable right now)
