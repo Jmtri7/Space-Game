@@ -1362,11 +1362,7 @@ class SpaceScreen(ScreenBase):
             self.asteroid_field.draw(surface)
             for ai_ship in self.ai_ships:
                 ai_ship.draw(surface)
-            # Pin the player ship steady while the snapped world pan judders
-            # around it (see utils.Camera.lock_focus).
-            utils.lock_camera_focus(self.player.x, self.player.y)
             self.player.draw(surface)
-            utils.unlock_camera_focus()
 
         # Debug markers for entity positions
         if constants.DEBUG_MODE:
