@@ -268,20 +268,39 @@ centred) while running left/right.
   `camera_zoom` is smooth at every window size.** (`walking_speed 2.5`
   happened to land near ~4.0 px/frame and was smoother than the current 2.0
   at ~3.3 — near the worst case. That's luck, not a fix.)
-- **The real fix — sub-pixel rendering:**
-  - *GPU-textured render path* (`pygame._sdl2.video`): render the world to a
-    texture, draw it at float coordinates with bilinear sampling. Smooth
-    sub-pixel scroll at native resolution. Cost: move the composite (or the
-    whole draw path) onto pygame's still-semi-experimental SDL2 renderer API.
-  - *Supersample:* render 2× to an offscreen surface, `pygame.transform.
-    smoothscale` down — averages the 3/4 error away. Cost: ~4× fill rate
-    (current ~5 ms render → ~20 ms, over the 16.7 ms budget). 1.5× is
-    borderline and only half-helps. Not worth it.
-- **Current choice — accept it.** At 60 FPS vsync'd it's subtle; frame
-  *pacing* was the dominant complaint and that is fixed. `to_screen`'s
-  rounding is also load-bearing for crisp static geometry.
-- **Revisit if:** it's demonstrably bothering players, or a render-path
-  change happens for another reason.
+- **Why the obvious "sub-pixel rendering" fixes don't work here:**
+  - *GPU-textured render path* (`pygame._sdl2.video`) — **tried and reverted**
+    (commit d507318, reverted by cc36b89). The idea was: render the world to
+    a texture and draw it at a fractional destination with bilinear sampling.
+    It doesn't: **every SDL2 render backend on Windows** (direct3d/11,
+    opengl, opengles2, software) quantises `SDL_RenderCopyF`'s destination
+    position to whole pixels — verified directly. The workaround (draw the
+    world into an 8×-window *logical* space offset by whole logical pixels,
+    let SDL's linear logical→window downscale produce the fractional shift)
+    *does* shift sub-pixel, but produces two new artifacts worse than the
+    shimmer it fixes: (a) **texture "breathing"** — every world texture pulses
+    crisp↔blurry as the sub-pixel phase sweeps 0→1 (crisp when the pan lands
+    on a whole pixel because `to_screen` still floors, blurry at half-pixel),
+    and (b) **sprite wobble** — the player ship / on-foot body, which are
+    pinned to screen centre, sawtooth ±~0.5 px because the floor in
+    `to_screen` and the bilinear composite shift don't cancel for a
+    camera-locked point. `pygame._sdl2.video.Renderer` in pygame 2.6.1
+    exposes no `RenderGeometry` (float UVs would remove the need for the
+    logical-size trick), so there is no clean version of this on the current
+    stack.
+  - *Supersample:* render 2×+ to an offscreen surface and downscale. A 2:1
+    linear downscale is **not phase-invariant**, so it only halves the
+    breathing, not removes it; 4×+ (which would) is ~16 MP+ per frame to
+    upload — well over budget. Not worth it.
+- **Current choice — accept the shimmer.** At 60 FPS vsync'd it's subtle;
+  frame *pacing* was the dominant complaint and that is fixed. `to_screen`'s
+  rounding is also load-bearing for crisp static geometry, and every
+  alternative tried so far trades the faint shimmer for a more visible
+  artifact.
+- **Revisit only if** a future pygame exposes `SDL_RenderGeometry` (or an
+  equivalent float-positioned textured draw), *or* the game moves to a
+  genuinely resolution-independent renderer where the whole scene (sprites
+  included) is consistently sampled every frame.
 
 ## Performance Considerations
 
