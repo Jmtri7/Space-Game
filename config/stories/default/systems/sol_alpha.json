@@ -27,21 +27,6 @@
     "x": 0.15,
     "y": 0.2,
     "name": "Alpha Station",
-    "size": 40,
-    "color": [100, 200, 255],
-    "core_color": [150, 220, 255],
-    "rotation_speed": 0.5,
-    "landing_distance": 50,
-    "shape": "hexapod",
-    "local_points": [
-      [0, -32],
-      [16, -12],
-      [20, 12],
-      [8, 24],
-      [-8, 24],
-      [-20, 12],
-      [-16, -12]
-    ],
     "interiors": {
       "default": {
         "label": "Alpha Station",

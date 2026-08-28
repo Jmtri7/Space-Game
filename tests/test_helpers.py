@@ -1135,6 +1135,32 @@ class TestPersonWalkCycle(unittest.TestCase):
         self.assertEqual(ankles, ((0.0, 0.0), (0.0, 0.0)))
 
 
+class TestStationWindowsAndCulture(unittest.TestCase):
+    """Stations resolve their palette from their culture (like ships/
+    buildings) and draw a light at each "windows" point, turning with the
+    hull - see Landable._draw_station."""
+
+    def test_station_alpha_inherits_the_vherathi_palette(self):
+        g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
+        self.assertEqual(tuple(g["color"]), (72, 48, 96))          # vherathi metal_color
+        self.assertEqual(tuple(g["core_color"]), (120, 255, 200))  # vherathi glass_color
+
+    def test_station_delta_inherits_the_drossholt_glass_not_a_hardcode(self):
+        g = utils.get_graphics_asset("default", "space_stations", "station_delta")
+        self.assertEqual(tuple(g["core_color"]), (255, 200, 80))   # drossholt glass_color
+
+    def test_draw_station_draws_one_light_per_window_point_plus_the_core(self):
+        with patch("game.world.landable.pygame") as mock_pygame:
+            g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
+            Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
+            self.assertEqual(mock_pygame.draw.circle.call_count, len(g["windows"]) + 1)
+
+    def test_a_station_with_no_windows_draws_only_the_core(self):
+        with patch("game.world.landable.pygame") as mock_pygame:
+            Landable(0, 0, graphics={"rotation_speed": 0.5, "size": 30})._draw_station(MagicMock(), 1.0)
+            self.assertEqual(mock_pygame.draw.circle.call_count, 1)
+
+
 class TestPossessions(unittest.TestCase):
     """Test Possessions - credits/ships/loans, composed onto every Person
     (see game/world/person.py), not just the player."""

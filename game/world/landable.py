@@ -1,4 +1,5 @@
 """Landable space objects (stations and celestial bodies)."""
+import math
 import pygame
 import game.constants as constants
 from game.constants import GREEN
@@ -46,6 +47,14 @@ class Landable(WorldObject):
             self.core_color = tuple(self.graphics.get("core_color", [150, 220, 255]))
             self.rotation_speed = self.graphics.get("rotation_speed", 0.5)
             self.local_points = self.graphics.get("local_points", self._default_station_points())
+            # Culture windows/lights - [lx, ly] points in the same absolute
+            # local space as local_points, turning with the hull. Colour
+            # falls back to the (culture-resolved) core glow. Same dark
+            # near-hull outline ships use. A station with no "windows" entry
+            # draws none, exactly as before.
+            self.outline_color = tuple(self.graphics.get("outline_color", (20, 18, 25)))
+            self.window_color = tuple(self.graphics.get("window_color", self.core_color))
+            self.windows = self.graphics.get("windows", [])
 
         # Moon-specific properties
         else:
@@ -146,8 +155,18 @@ class Landable(WorldObject):
             pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 
     def _draw_station(self, surface, scale):
-        """Draw a rotating space station."""
-        self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color)
+        """Draw a rotating space station: an outlined hull polygon, any
+        culture windows/lights, then the glowing core - all turning with
+        self.rotation."""
+        self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color, outline_color=self.outline_color)
+        if self.windows:
+            rad = math.radians(self.rotation)
+            cos_a, sin_a = math.cos(rad), math.sin(rad)
+            radius = max(1, int(round(self.size * 0.05 * scale)))
+            for lx, ly in self.windows:
+                wx = self.x + (lx * cos_a - ly * sin_a)
+                wy = self.y + (lx * sin_a + ly * cos_a)
+                pygame.draw.circle(surface, self.window_color, to_screen(wx, wy), radius)
         pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
     def _draw_moon(self, surface, scale):
