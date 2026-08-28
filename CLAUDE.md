@@ -111,6 +111,18 @@ story's version whenever you make a change that fits the warning criteria above 
 that's what actually gives the warning teeth instead of it silently staying accurate
 by accident.
 
+## For Agents: Design Atlases
+
+**Visual mockups of asset families (ships, outfits, buildings, stations, the
+character model) live as published Artifacts, not committed files.** Before
+creating or editing one, read [docs/DESIGN_ATLAS.md](docs/DESIGN_ATLAS.md) — it
+has the current list (with URLs), the plate/rubric structure, the specimen-SVG
+conventions, and a set of hard technical rules (no SVG blur filters, no infinite
+animations, no scroll-gated visibility, no `background-attachment: fixed`) that
+each caused an unrenderable page the first time. Extend the right existing atlas
+rather than starting a new one for the same subject, and keep its spec blocks
+and the doc's atlas table honest when `config/` changes.
+
 ## For Agents: Pattern Recognition & Contributions
 
 **Read this:** When implementing features or fixes, watch for opportunities to **generalize solutions into reusable patterns**. If you notice:

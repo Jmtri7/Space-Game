@@ -13,6 +13,7 @@ Navigation hub for architecture, design patterns, and implementation details.
 - **[UI_FLOW.md](UI_FLOW.md)** — Menu state machine, screen transitions
 - **[SOUND.md](SOUND.md)** — Runtime-synthesized audio (the sound board) and where sounds are triggered
 - **[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)** — Reusable solutions and architectural decisions
+- **[DESIGN_ATLAS.md](DESIGN_ATLAS.md)** — How to build & maintain the visual design atlases (Artifacts), and the list of current ones
 - **[BACKLOG.md](BACKLOG.md)** — Running list of known bugs and planned features
 - **[BUILD.md](BUILD.md)** — Packaging a standalone Windows build with PyInstaller
 
