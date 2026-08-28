@@ -240,26 +240,19 @@ class DockRoutine:
 
     def _step_toward(self, person):
         """Move person one step toward the next waypoint in self._waypoints
-        (see IndoorPathfinder), respecting self._location's walls
-        (wall-sliding: try the full diagonal step, then each axis alone, so
-        a wall corner deflects the walk instead of the pilot clipping
-        straight through it) - the same walkable-area check the player's
-        own movement uses (LocationScreen.can_move_to). Advances through
-        waypoints already reached without waiting a frame; returns True
-        once the final waypoint (the real destination) is reached."""
+        (see IndoorPathfinder) via the shared on-foot primitive
+        (Person.step_toward), which wall-slides against self._location's
+        walls using the same LocationScreen.can_move_to the player's own
+        movement uses. Advances through waypoints already reached without
+        waiting a frame; returns True once the final waypoint (the real
+        destination) is reached."""
         while self._waypoints:
             target_x, target_y = self._waypoints[0]
-            dx, dy = target_x - person.x, target_y - person.y
-            dist = math.hypot(dx, dy)
-            if dist <= ARRIVAL_DISTANCE:
+            if math.hypot(target_x - person.x, target_y - person.y) <= ARRIVAL_DISTANCE:
                 self._waypoints.pop(0)
                 continue
-            step = min(getattr(self._location, "speed", WALK_SPEED), dist)
-            step_x, step_y = dx / dist * step, dy / dist * step
-            for candidate_x, candidate_y in ((person.x + step_x, person.y + step_y), (person.x + step_x, person.y), (person.x, person.y + step_y)):
-                if self._location.can_move_to(candidate_x, candidate_y):
-                    person.x, person.y = candidate_x, candidate_y
-                    break
+            speed = getattr(self._location, "speed", WALK_SPEED)
+            person.step_toward(target_x, target_y, speed, self._location.can_move_to)
             return False
         return True
 

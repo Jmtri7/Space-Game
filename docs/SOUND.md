@@ -84,16 +84,39 @@ this to sit well below the rest).
 | `menu` | slow, contemplative — a 24 s four-chord pad cycle (Am9 → Fmaj7 → Cmaj7 → Gadd9), detuned sine voices, sub bass, faint shimmer | main menu, story select, pilot name, load |
 | `ingame` | sparser and quieter — a 28 s two-chord drift (Gsus2 ↔ Em add9), slower LFO, no shimmer, lower normalization | everything else (space, interiors, star map, pause, shops…) |
 
-`render_ambient_loop()` builds a **seamless** loop: every frequency is snapped
-so it completes a whole number of cycles per loop, the chord windows wrap
-circularly, and the LFO rate is snapped too - so it plays with `loops=-1` and
-no seam. It's synthesized on a **background thread** (~2-3 s each) so startup
-isn't blocked; the track fades in when ready.
+The loop is **seamless**: every frequency is snapped so it completes a whole
+number of cycles per loop, the chord windows wrap circularly, and the LFO
+rate is snapped too - so it plays with `loops=-1` and no seam.
 
-`main.py` calls `music.set_scene(current_screen)` once per frame;
-`MusicPlayer` crossfades (2 s) when the mapped track changes. The loop uses a
-dedicated high mixer channel (`MUSIC_CHANNEL = 15`, with the pool widened to
-16) so SFX `Sound.play()` auto-allocation never collides with it.
+That render is a few seconds of pure-Python math. It is done **incrementally
+on the main thread**: `_ambient_loop_frames()` is a generator that `yield`s
+~every 512 samples, and `MusicPlayer.pump()` (called once per frame from
+`main.py`) drives it forward by `RENDER_BUDGET_MS` (~4 ms) per frame. So a
+track takes ~10-15 s of real time to build, stays silent until then, and
+fades in when done - but no single frame ever pays more than a few ms, and
+there is **no worker thread** (an earlier threaded version stuttered the 60
+FPS loop badly on Windows - GIL contention the throttle/priority tricks
+couldn't fully hide - showing up as a "freeze then skip forward" in the menu
+backdrop and right after entering a station). `render_ambient_loop()` drains
+the same generator in one call for tests and any synchronous use.
+
+Two things keep that build cost off the player's back entirely:
+
+- **`music.prerender_all()`** (called once at startup) queues *both* tracks,
+  so `pump()` builds them during menu idle time instead of the first time
+  each is needed. `pump()` advances the track you currently want first.
+- **Disk cache.** A finished render is written to `MUSIC_CACHE_DIR/`
+  (`music_cache/`, gitignored) as raw PCM, filename keyed by a hash of the
+  recipe + sample rate + a format version. On every later launch `pump()`
+  loads that ~2 MB file (chunked across frames) instead of synthesizing -
+  so only the very first launch on a machine pays the render cost. Edit a
+  recipe and the key stops matching, so it re-renders automatically; a
+  missing / truncated / wrong-length file is ignored and re-rendered.
+
+`main.py` calls `music.set_scene(current_screen)` and `music.pump()` once per
+frame; `MusicPlayer` crossfades (2 s) when the mapped track changes. The loop
+uses a dedicated high mixer channel (`MUSIC_CHANNEL = 15`, with the pool
+widened to 16) so SFX `Sound.play()` auto-allocation never collides with it.
 
 ## Mute
 

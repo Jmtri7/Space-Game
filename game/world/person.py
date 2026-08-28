@@ -283,3 +283,32 @@ class Person:
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
+
+    def step_toward(self, target_x, target_y, speed, can_move_to):
+        """Move up to `speed` game-units toward (target_x, target_y),
+        wall-sliding off anything `can_move_to(x, y)` rejects: try the full
+        step, then the x component alone, then the y component alone, so a
+        wall or corner deflects the walk instead of stopping it dead.
+        Returns True if the body actually moved.
+
+        The single on-foot movement primitive - the player
+        (`LocationScreen._handle_movement`), wandering NPCs (`WanderRoutine`),
+        and dock-errand pilots (`DockRoutine`) all walk through this, so they
+        share one notion of walls, corners, and (normalized) diagonal speed.
+        Distance is capped at the remaining distance to the target, so
+        arriving never overshoots."""
+        dx, dy = target_x - self.x, target_y - self.y
+        dist = math.hypot(dx, dy)
+        if dist < 1e-9:
+            return False
+        step = min(speed, dist)
+        step_x, step_y = dx / dist * step, dy / dist * step
+        for cand_x, cand_y in (
+            (self.x + step_x, self.y + step_y),
+            (self.x + step_x, self.y),
+            (self.x, self.y + step_y),
+        ):
+            if (cand_x, cand_y) != (self.x, self.y) and can_move_to(cand_x, cand_y):
+                self.x, self.y = cand_x, cand_y
+                return True
+        return False

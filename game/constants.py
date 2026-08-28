@@ -9,13 +9,17 @@ GAME_WIDTH = 2400
 GAME_HEIGHT = 1800
 CAMERA_ZOOM = 3.0  # Zoom to keep objects at same visual scale despite larger world
 SAVE_DIR = "saves"
+# Where MusicPlayer caches its procedurally-rendered tracks so they only
+# have to be synthesized once per machine (see game/audio/music.py).
+MUSIC_CACHE_DIR = "music_cache"
 
-# On-foot walking speed (world units/frame), inside a station/moon
-# interior - shared by LocationScreen (the player) and DockRoutine (an AI
-# pilot walking to/from their ship) so both move at the same pace. Lives
-# here, not duplicated as a literal in each, since game/world (DockRoutine)
-# can't import game/screens (LocationScreen) the other way around.
-WALKING_SPEED = 2.5
+# On-foot walking speed (world units per 1/60 s sim-step), inside a
+# station/moon interior - shared by LocationScreen (the player) and
+# DockRoutine (an AI pilot walking to/from their ship) so both move at the
+# same pace. Lives here, not duplicated as a literal in each, since
+# game/world (DockRoutine) can't import game/screens (LocationScreen) the
+# other way around. A story's story.json "walking_speed" overrides it.
+WALKING_SPEED = 2.0
 
 # Grid resolution (world units) for interior navigation - the walkability
 # grid LocationScreen.plan_path builds once per interior and runs A* over

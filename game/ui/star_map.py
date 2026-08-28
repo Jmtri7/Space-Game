@@ -1,7 +1,7 @@
 """Galaxy-scale star map overlay: pan around, select a system to jump to."""
 import pygame
 from game.constants import WHITE, YELLOW, GREEN, CYAN
-from game.utils import get_ui_scale, get_star_systems
+from game.utils import get_ui_scale, get_star_systems, get_font
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel
 
@@ -104,9 +104,9 @@ class StarMap(MenuBase):
         ui_scale = get_ui_scale()
         center_x, center_y = surface.get_width() / 2, surface.get_height() / 2
 
-        font_label = pygame.font.Font(None, int(20 * ui_scale))
-        font_title = pygame.font.Font(None, int(32 * ui_scale))
-        font_tag = pygame.font.Font(None, int(16 * ui_scale))
+        font_label = get_font(int(20 * ui_scale))
+        font_title = get_font(int(32 * ui_scale))
+        font_tag = get_font(int(16 * ui_scale))
 
         self._screen_positions = {}
         for system_id, sysdata in self.systems.items():

@@ -709,6 +709,45 @@ structure.
 
 ---
 
+## Pattern: One Movement Primitive on the Base Entity
+
+**Problem:** Three different callers move a body on foot through an interior -
+the player (input-driven), wandering NPCs (`WanderRoutine`), and dock-errand
+pilots (`DockRoutine`, following pathfinder waypoints). Each had its own
+step-and-slide loop. Two were copy-pasted; the player's was a worse variant
+(no wall-slide - stopped dead against an angled wall - and full speed on each
+axis, so diagonals were 1.41x faster). Fixing a movement bug meant finding and
+fixing it in up to three places, and "how a person walks" wasn't actually one
+thing.
+
+**Solution:** Put the primitive on the base class every mover already shares
+(`Person`): `step_toward(target_x, target_y, speed, can_move_to) -> bool`.
+It normalizes the step, caps it at the distance to the target (no overshoot),
+and wall-slides (full step, then x-only, then y-only) against the supplied
+`can_move_to` oracle. Every caller reduces to *computing a target and a speed*
+and calling it:
+
+- `WanderRoutine` / `DockRoutine`: `person.step_toward(tx, ty, speed, can_move_to)`,
+  using the return value to know when to re-plan (blocked → repick / restring).
+- The player: `LocationScreen._handle_movement` turns the held direction keys
+  into a target one step away and calls the same method - so the player now
+  wall-slides and has speed-correct diagonals too, for free.
+
+**Implementation:** `Person.step_toward` (`game/world/person.py`), consumed by
+`LocationScreen._handle_movement`, `WanderRoutine.run`, `DockRoutine._step_toward`.
+Pace: `LocationScreen.speed` (story.json `walking_speed`); `WanderRoutine` keeps
+its own slower `WANDER_SPEED`.
+
+**Benefits:** one place to fix a movement bug; the player inherits the good
+behaviour instead of a hand-rolled subset; "walking" is genuinely one concept.
+
+**Use case:** any behaviour that several entity kinds do slightly differently
+because it was written separately each time - if they share a base class, that's
+where the canonical version goes (see also "Base Class for Reusable Entity
+Logic").
+
+---
+
 ## Pattern: Config-Driven Screen Dispatch ("shop" NPCs)
 
 **Problem:** Several different screen classes need to open from the same

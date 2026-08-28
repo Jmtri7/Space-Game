@@ -11,6 +11,9 @@ venv/
 # Player save files - local progress, never committed
 saves/
 
+# Cached procedurally-rendered music tracks (regenerated on demand)
+music_cache/
+
 # Runtime logs from launching the game for manual verification
 game_stdout.log
 game_stderr.log

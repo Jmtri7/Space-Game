@@ -9,7 +9,7 @@
   "starting_mission_trigger": "ship_purchase",
   "default_outfit": "space_suit",
   "camera_zoom": 3.0,
-  "walking_speed": 2.5,
+  "walking_speed": 2.0,
   "start": {
     "location": "station",
     "interior": "default",

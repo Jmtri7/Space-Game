@@ -1,6 +1,6 @@
 """Dialogue system for NPC interaction - a small conversation tree."""
 import pygame
-from game.utils import _wrap_text
+from game.utils import _wrap_text, get_font
 from game.world.mission import abandon_mission
 
 
@@ -175,8 +175,8 @@ class Dialogue:
         reason are drawn dim with the reason appended, instead of the
         normal selected/unselected colors - used for actions the player
         can't currently take (can't afford, already have a loan, etc.)."""
-        font_title = pygame.font.Font(None, int(24 * scale))
-        font_text = pygame.font.Font(None, int(18 * scale))
+        font_title = get_font(int(24 * scale))
+        font_text = get_font(int(18 * scale))
 
         screen_w = surface.get_width()
         screen_h = surface.get_height()

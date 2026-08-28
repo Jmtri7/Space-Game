@@ -435,6 +435,16 @@ union of the room polygons, minus building footprints). The player's movement,
 `WanderRoutine`, and `DockRoutine` (via `plan_path`) all go through it — never
 reimplement the bounds test.
 
+### On-foot movement
+`Person.step_toward(target_x, target_y, speed, can_move_to)` is the one on-foot
+movement primitive — moves up to `speed` toward a point, wall-sliding (full
+step, then each axis alone) off anything `can_move_to` rejects, normalized so a
+diagonal isn't faster. The player (`LocationScreen._handle_movement`, which
+turns the held keys into a target), `WanderRoutine`, and `DockRoutine` all call
+it — don't hand-roll another step-and-slide loop. Pace comes from
+`LocationScreen.speed` (story.json `walking_speed`, default `constants.WALKING_SPEED`);
+`WanderRoutine` uses its own slower `WANDER_SPEED`.
+
 ### Save Dialog
 - Shows ALL saves in directory (not filtered by pilot)
 - Scrolls 5 at a time with ↑/↓ indicators

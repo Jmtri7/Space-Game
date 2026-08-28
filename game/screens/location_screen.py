@@ -761,7 +761,7 @@ class LocationScreen(ScreenBase):
             self._draw_decorations(surface, "floor")
 
             if self.rooms:
-                font_room_label = pygame.font.Font(None, max(10, int(16 * scale)))
+                font_room_label = get_font(max(10, int(16 * scale)))
                 for room in self.rooms:
                     if not room["label"]:
                         continue
@@ -795,7 +795,7 @@ class LocationScreen(ScreenBase):
         # close enough for L to actually use it, so proximity isn't a
         # guessing game.
         active_portal = self._nearby_portal()
-        font_portal_label = pygame.font.Font(None, max(10, int(15 * scale)))
+        font_portal_label = get_font(max(10, int(15 * scale)))
         for portal in self.portals:
             px, py = to_screen(portal["x"], portal["y"])
             pad_w, pad_h = max(2, int(28 * scale)), max(1, int(10 * scale))
@@ -1181,25 +1181,25 @@ class LocationScreen(ScreenBase):
         return None
 
     def _handle_movement(self, keys, can_move_func=None):
-        """Generalized movement input handling"""
-        new_x = self.player.x
-        new_y = self.player.y
-
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            new_y -= self.speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            new_y += self.speed
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            new_x -= self.speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            new_x += self.speed
-
-        # Check bounds
-        can_move = can_move_func(new_x, new_y) if can_move_func else self.can_move_to(new_x, new_y)
-
-        if can_move:
-            self.player.x = new_x
-            self.player.y = new_y
+        """Turn the held direction keys into one call to the shared on-foot
+        movement primitive (Person.step_toward), so the player walks with the
+        same walls/corners/diagonal handling as wandering NPCs and dock
+        pilots. step_toward normalizes the step, so a diagonal is no longer
+        1.41x faster than a cardinal, and it wall-slides instead of stopping
+        dead against an angled wall."""
+        dir_x = (keys[pygame.K_RIGHT] or keys[pygame.K_d]) - (keys[pygame.K_LEFT] or keys[pygame.K_a])
+        dir_y = (keys[pygame.K_DOWN] or keys[pygame.K_s]) - (keys[pygame.K_UP] or keys[pygame.K_w])
+        if not dir_x and not dir_y:
+            return
+        can_move = can_move_func or self.can_move_to
+        # Aim one full step away in the input direction; step_toward caps the
+        # move at that distance and normalizes, so holding two keys isn't faster.
+        self.player.step_toward(
+            self.player.x + dir_x * self.speed,
+            self.player.y + dir_y * self.speed,
+            self.speed,
+            can_move,
+        )
 
     def can_move_to(self, x, y):
         """Whether (x, y) is inside this location's walkable area - the

@@ -449,6 +449,15 @@ This separation makes it easy to test input handlers independently.
    (modal screens redraw the frozen backdrop with `draw_hud=False`, then
    their overlay), then `pygame.display.flip()`.
 
+The window is opened by `main.open_window()` with `RESIZABLE | SCALED` and
+`vsync=1` (falling back to plain `RESIZABLE` if a driver refuses it), so the
+flip is paced to the monitor's refresh. Without vsync a horizontal camera pan
+tears: `clock.tick(FPS)` holds ~60 FPS but doesn't phase-lock to the display,
+so a flip periodically lands mid-scanout. `SCALED` is the flag that makes SDL2
+apply vsync to a non-OpenGL window; `open_window()` is also the `VIDEORESIZE`
+handler, recreating the surface at the new size so world/UI scaling stays
+crisp rather than being upscaled from a fixed backbuffer.
+
 `SIM_STEP` **must stay 1/60**: every physics constant and per-step timer is
 already calibrated to a 1/60 s step, so on a machine holding 60 FPS phase 2
 runs exactly once and the result is byte-identical to the old

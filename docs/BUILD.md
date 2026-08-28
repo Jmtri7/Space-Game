@@ -15,7 +15,10 @@ under `build\` for hygiene, separate from the `packaging\` source files that bui
 Ship the whole `SpaceGame\` folder - `SpaceGame.exe` needs `config\`
 sitting next to it, since the game loads story config from relative paths like
 `config/stories/{story}/...` at runtime rather than anything bundled into the exe).
-A `saves\` folder is created next to the exe the first time the player saves.
+A `saves\` folder is created next to the exe the first time the player saves;
+a `music_cache\` folder likewise, holding the procedurally-rendered background
+tracks so they're only synthesized once per machine (safe to delete - it just
+re-renders).
 
 ## Why `--onedir`, not `--onefile`
 

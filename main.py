@@ -30,7 +30,35 @@ from game.ui.star_map import StarMap
 
 # Initialize pygame and display
 pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
+
+
+def open_window(size):
+    """(Re)create the game window at `size`, requesting vsync so
+    `display.flip()` is paced to the monitor's refresh.
+
+    Without vsync a plain resizable window tears visibly when the interior/
+    space camera pans horizontally - `clock.tick(FPS)` holds ~60 FPS but
+    doesn't phase-lock to the display, so a flip periodically lands
+    mid-scanout and you get a moving horizontal seam.
+
+    `SCALED` is what makes SDL2 actually apply vsync to a non-OpenGL window
+    (it backs the window with a GPU renderer); the logical surface still
+    tracks the window size because we recreate on resize, so nothing is
+    upscaled. Each fallback drops one capability if the driver won't do it:
+    SCALED+vsync -> vsync only -> plain resizable."""
+    for flags, kwargs in (
+        (pygame.RESIZABLE | pygame.SCALED, {"vsync": 1}),
+        (pygame.RESIZABLE, {"vsync": 1}),
+        (pygame.RESIZABLE, {}),
+    ):
+        try:
+            return pygame.display.set_mode(size, flags, **kwargs)
+        except pygame.error:
+            continue
+    return pygame.display.set_mode(size, pygame.RESIZABLE)
+
+
+screen = open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen.fill((0, 0, 0))
 pygame.display.flip()
 pygame.display.set_caption("Space Game")
@@ -240,6 +268,10 @@ def main():
     """Main game loop."""
     global screen
     try:
+        # Build both music tracks (or load them from the on-disk cache)
+        # during menu time, so neither has to render the first time it's
+        # actually needed. pump(), called each frame below, drives this.
+        music.prerender_all()
         menu = main_menu()
         story_selector = None
         game_screen = None
@@ -297,7 +329,7 @@ def main():
                 if event.type == pygame.VIDEORESIZE:
                     new_width, new_height = event.size
                     set_screen_size(new_width, new_height)
-                    screen = pygame.display.set_mode((new_width, new_height), pygame.RESIZABLE)
+                    screen = open_window((new_width, new_height))
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
@@ -681,8 +713,10 @@ def main():
             # Background music follows the screen: the "menu" loop on the
             # menu/story/pilot/load screens, the sparser "ingame" loop
             # everywhere else. set_scene() is a cheap no-op when the track
-            # isn't changing.
+            # isn't changing; pump() advances a track's incremental synthesis
+            # by a few ms (a no-op once both tracks are built).
             music.set_scene(current_screen)
+            music.pump()
 
             t_after_input = time.perf_counter()
 

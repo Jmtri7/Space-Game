@@ -16,9 +16,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 pygame_mock = MagicMock()
 pygame_mock.K_UP = 273
 pygame_mock.K_DOWN = 274
+pygame_mock.K_LEFT = 276
+pygame_mock.K_RIGHT = 275
 pygame_mock.K_w = 119
 pygame_mock.K_s = 115
 pygame_mock.K_a = 97
+pygame_mock.K_d = 100
 
 # Mock display.Info to avoid display issues
 info_mock = MagicMock()
@@ -888,7 +891,7 @@ class TestDockRoutineRespectsWalls(unittest.TestCase):
         routine._set_waypoints(ai_ship.pilot_person, (500, 500))  # the NPC, in the far corner of the L
 
         frames = 0
-        while frames < 500:
+        while frames < 2000:
             if routine._step_toward(ai_ship.pilot_person):
                 break
             self.assertTrue(
@@ -897,7 +900,7 @@ class TestDockRoutineRespectsWalls(unittest.TestCase):
             )
             frames += 1
         else:
-            self.fail("Pilot never arrived within 500 frames")
+            self.fail("Pilot never arrived within 2000 frames")
 
 
 class TestBuildingFootprintCollision(unittest.TestCase):
@@ -981,7 +984,7 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
         routine._set_waypoints(person, (target_x, target_y))
 
         frames = 0
-        while frames < 500:
+        while frames < 2000:
             if routine._step_toward(person):
                 break
             self.assertTrue(
@@ -990,7 +993,7 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
             )
             frames += 1
         else:
-            self.fail("Pilot never arrived within 500 frames")
+            self.fail("Pilot never arrived within 2000 frames")
         # _step_toward's ARRIVAL_DISTANCE (10) means arrival can land up to
         # that far from the exact target, not pixel-perfect on it.
         self.assertLessEqual(math.hypot(person.x - target_x, person.y - target_y), 10)
@@ -1039,6 +1042,43 @@ class TestWanderRoutineRespectsWalls(unittest.TestCase):
         for _ in range(2000):
             character.routine.run(character)
             self.assertTrue(location.can_move_to(person.x, person.y))
+
+
+class TestPersonStepToward(unittest.TestCase):
+    """Person.step_toward - the one on-foot movement primitive shared by the
+    player (LocationScreen._handle_movement), WanderRoutine, and DockRoutine."""
+
+    def test_moves_a_full_step_toward_a_far_target(self):
+        p = Person(0.0, 0.0)
+        moved = p.step_toward(100.0, 0.0, 3.0, lambda x, y: True)
+        self.assertTrue(moved)
+        self.assertAlmostEqual(p.x, 3.0)
+        self.assertAlmostEqual(p.y, 0.0)
+
+    def test_diagonal_step_is_normalized_not_faster(self):
+        p = Person(0.0, 0.0)
+        p.step_toward(100.0, 100.0, 5.0, lambda x, y: True)
+        self.assertAlmostEqual(math.hypot(p.x, p.y), 5.0)  # not 5*sqrt(2)
+
+    def test_never_overshoots_a_near_target(self):
+        p = Person(0.0, 0.0)
+        p.step_toward(2.0, 0.0, 10.0, lambda x, y: True)
+        self.assertAlmostEqual(p.x, 2.0)  # capped at the distance to the target
+
+    def test_wall_slides_along_a_blocked_axis(self):
+        p = Person(0.0, 0.0)
+        # can't increase x past 0, but y is free - a step aimed up-right
+        # should slide straight up instead of stopping.
+        moved = p.step_toward(10.0, 10.0, 4.0, lambda x, y: x <= 0.0001)
+        self.assertTrue(moved)
+        self.assertAlmostEqual(p.x, 0.0)
+        self.assertGreater(p.y, 0.0)
+
+    def test_returns_false_and_does_not_move_when_fully_boxed_in(self):
+        p = Person(5.0, 5.0)
+        moved = p.step_toward(10.0, 10.0, 3.0, lambda x, y: False)
+        self.assertFalse(moved)
+        self.assertEqual((p.x, p.y), (5.0, 5.0))
 
 
 class TestPossessions(unittest.TestCase):
@@ -2720,6 +2760,33 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         self.assertNotEqual((wanderer.x, wanderer.y), before)
 
 
+class TestLocationScreenDrawDoesNoPerFrameFontConstruction(unittest.TestCase):
+    """Regression: LocationScreen.draw() built two `pygame.font.Font(None, ...)`
+    objects every frame (room-label + portal-label fonts). Each construction
+    opens pygame's bundled default-font file, and on Windows that file open
+    has a fat latency tail (real-time AV scan) - the sporadic ~0.5 s freeze
+    while walking around a station. Fonts must come from the cached
+    `get_font()` helper, so a steady-state frame constructs none."""
+
+    def test_per_frame_draw_paths_use_the_cached_get_font_helper(self):
+        import inspect
+        from game.screens import location_screen
+        from game.world import dialogue as dialogue_mod
+        from game.ui import star_map
+
+        for label, fn in (
+            ("LocationScreen.draw", location_screen.LocationScreen.draw),
+            ("Dialogue.draw", dialogue_mod.Dialogue.draw),
+            ("StarMap.draw_content", star_map.StarMap.draw_content),
+        ):
+            src = inspect.getsource(fn)
+            self.assertNotIn(
+                "pygame.font.Font", src,
+                f"{label} constructs a font every frame - route it through utils.get_font() "
+                f"so a slow (AV-scanned) font-file open can't stall the frame",
+            )
+
+
 class TestLocationScreenClickTargeting(unittest.TestCase):
     """Test LocationScreen._select_person_target_at() - click-to-target for
     NPCs/visitors on foot, the interior counterpart to SpaceScreen's own
@@ -2855,9 +2922,9 @@ class TestLocationScreenTouchingRoomBoundary(unittest.TestCase):
     """Regression test: two touching rooms (e.g. Entrance Hall y:300-600 and
     Bar y:0-300, sharing the line y=300) both used strict "<" bounds, so a
     step that landed exactly on the shared boundary was invalid in *both*
-    rooms at once - an invisible wall stranding the player one step short,
-    for roughly a third of all positions (everything is integer-valued and
-    speed is a fixed 3, so this isn't a rare float-precision fluke)."""
+    rooms at once - an invisible wall stranding the player one step short.
+    point_in_polygon now counts an on-edge point as inside, so a step
+    landing exactly on the seam is valid in at least one room."""
 
     def _make_two_room_screen(self):
         config = {
@@ -2876,10 +2943,11 @@ class TestLocationScreenTouchingRoomBoundary(unittest.TestCase):
 
     def test_can_cross_from_hall_into_bar_at_every_starting_y(self):
         screen = self._make_two_room_screen()
+        keys = {pygame_mock.K_UP: True, pygame_mock.K_w: False, pygame_mock.K_DOWN: False, pygame_mock.K_s: False, pygame_mock.K_LEFT: False, pygame_mock.K_a: False, pygame_mock.K_RIGHT: False, pygame_mock.K_d: False}
+        max_steps = int((400 - 200) / screen.speed) + 5   # enough to walk from y=399 well past y=300
         for start_y in range(301, 400):
             screen.player.x, screen.player.y = 400, start_y
-            for _ in range(60):
-                keys = {pygame_mock.K_UP: True, pygame_mock.K_w: False, pygame_mock.K_DOWN: False, pygame_mock.K_s: False, pygame_mock.K_LEFT: False, pygame_mock.K_a: False, pygame_mock.K_RIGHT: False, pygame_mock.K_d: False}
+            for _ in range(max_steps):
                 screen._handle_movement(keys)
                 if screen.player.y <= 250:
                     break
@@ -3105,7 +3173,7 @@ class TestStoryTuningConfig(unittest.TestCase):
 
     def test_location_screen_walking_speed_from_story(self):
         screen = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
-        self.assertEqual(screen.speed, 2.5)
+        self.assertEqual(screen.speed, 2.0)  # story.json's walking_speed
 
 
 class TestSpaceScreenMissionIntegration(unittest.TestCase):
@@ -4114,6 +4182,24 @@ class TestBackgroundMusic(unittest.TestCase):
     """Procedural ambient loop synthesis (game/audio/music.py) and the
     scene -> track mapping main.py drives."""
 
+    def setUp(self):
+        # Redirect the on-disk track cache into a throwaway dir so cache
+        # tests (and any pump() that finishes a render) never touch the real
+        # music_cache/ next to the project.
+        import tempfile
+        from game.audio import music as music_mod
+        self._cache_dir = tempfile.mkdtemp(prefix="musictest_")
+        self._cache_patch = patch.object(music_mod, "MUSIC_CACHE_DIR", self._cache_dir)
+        self._cache_patch.start()
+
+    def tearDown(self):
+        import shutil
+        self._cache_patch.stop()
+        shutil.rmtree(self._cache_dir, ignore_errors=True)
+
+    def _small_spec(self):
+        return {"loop": 0.5, "root": 110.0, "chords": [[0, 7]], "peak": 0.7}
+
     def test_render_ambient_loop_is_seamless_length_and_in_range(self):
         from game.audio.music import render_ambient_loop
         spec = {"loop": 2.0, "root": 110.0, "chords": [[0, 7, 12], [-3, 4, 9]], "peak": 0.7}
@@ -4121,6 +4207,109 @@ class TestBackgroundMusic(unittest.TestCase):
         self.assertEqual(len(samples), int(4000 * 2.0) * 2)  # stereo
         self.assertLessEqual(max(abs(s) for s in samples), 32767)
         self.assertGreater(max(abs(s) for s in samples), 32767 * 0.4)  # normalized, not silent
+
+    def test_incremental_render_matches_the_one_shot_render(self):
+        """The track is built incrementally (a few ms per frame via
+        MusicPlayer.pump / _ambient_loop_frames) so it never blocks a frame
+        or fights the GIL from a thread. Draining the generator by hand must
+        produce exactly what the one-shot render_ambient_loop does."""
+        from game.audio.music import render_ambient_loop, _ambient_loop_frames
+        spec = {"loop": 2.0, "root": 110.0, "chords": [[0, 7, 12], [-3, 4, 9]], "peak": 0.7}
+        one_shot = render_ambient_loop(spec, sample_rate=4000)
+        gen = _ambient_loop_frames(spec, sample_rate=4000)
+        yields = 0
+        try:
+            while True:
+                next(gen)
+                yields += 1
+        except StopIteration as done:
+            incremental = done.value
+        self.assertGreater(yields, 5)          # actually pauses many times
+        self.assertEqual(one_shot, incremental)
+
+    def _drain(self, player, track, limit=5000):
+        for _ in range(limit):
+            player.pump()
+            if track not in player._renders:
+                return
+        self.fail(f"render of {track!r} never finished")
+
+    def test_pump_finishes_a_render_and_starts_it(self):
+        """pump() advances the in-progress render and, on completion, wraps
+        the PCM in a Sound and starts playback of the wanted track."""
+        from game.audio.music import MusicPlayer
+        player = MusicPlayer()
+        player.enabled = True
+        player._recipes["menu"] = self._small_spec()
+        with patch.object(MusicPlayer, "_start") as mock_start:
+            player.set_scene("menu")                     # queues an incremental render
+            self.assertIn("menu", player._renders)
+            self._drain(player, "menu")
+            self.assertIn("menu", player._rendered)
+            mock_start.assert_called_once()
+
+    def test_prerender_all_queues_every_track(self):
+        """Called at startup so both tracks build during menu time, not the
+        first time each is needed."""
+        from game.audio.music import MusicPlayer
+        player = MusicPlayer()
+        player.enabled = True
+        player.prerender_all()
+        self.assertEqual(set(player._renders), {"menu", "ingame"})
+
+    def test_finished_render_is_cached_and_the_next_run_loads_it(self):
+        """First build writes a .raw to MUSIC_CACHE_DIR; a fresh player then
+        loads that file instead of re-synthesizing, and gets identical PCM."""
+        import os
+        from game.audio.music import MusicPlayer, _cache_path, render_ambient_loop
+
+        spec = self._small_spec()
+        first = MusicPlayer()
+        first.enabled = True
+        first._recipes["menu"] = spec
+        captured = {}
+        with patch.object(MusicPlayer, "_start"), \
+             patch("game.audio.music.pygame.mixer.Sound",
+                   side_effect=lambda buffer=b"": captured.setdefault("first", bytes(buffer))):
+            first._ensure_render("menu")
+            self._drain(first, "menu")
+
+        self.assertTrue(os.path.exists(_cache_path("menu", spec)))
+
+        second = MusicPlayer()
+        second.enabled = True
+        second._recipes["menu"] = spec
+        with patch.object(MusicPlayer, "_start"), \
+             patch("game.audio.music.pygame.mixer.Sound",
+                   side_effect=lambda buffer=b"": captured.setdefault("second", bytes(buffer))):
+            second._ensure_render("menu")
+            self._drain(second, "menu")
+
+        self.assertEqual(captured["first"], captured["second"])
+        self.assertEqual(captured["first"], render_ambient_loop(spec).tobytes())
+
+    def test_a_corrupt_cache_file_is_ignored_and_re_rendered(self):
+        from game.audio.music import MusicPlayer, _cache_path
+        import os
+
+        spec = self._small_spec()
+        os.makedirs(self._cache_dir, exist_ok=True)
+        with open(_cache_path("menu", spec), "wb") as f:
+            f.write(b"\x01\x02\x03")            # wrong length -> must be rejected
+
+        player = MusicPlayer()
+        player.enabled = True
+        player._recipes["menu"] = spec
+        with patch.object(MusicPlayer, "_start"):
+            player._ensure_render("menu")
+            self._drain(player, "menu")
+        self.assertIn("menu", player._rendered)   # recovered via a real render
+
+    def test_cache_path_depends_on_the_recipe(self):
+        from game.audio.music import _cache_path
+        a = _cache_path("menu", {"loop": 2.0, "root": 110.0, "chords": [[0, 7]]})
+        b = _cache_path("menu", {"loop": 2.0, "root": 110.0, "chords": [[0, 8]]})
+        self.assertNotEqual(a, b)
 
     def test_set_scene_maps_menu_screens_to_the_menu_track(self):
         from game.audio.music import MusicPlayer

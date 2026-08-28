@@ -211,6 +211,14 @@ world rect. AI walking (`DockRoutine`) uses `plan_path()` - a grid A* over
 this same `can_move_to` (see ARCHITECTURE.md's "Walkability-oracle
 navigation").
 
+Actual on-foot motion - player, wanderers, and dock pilots alike - goes
+through `Person.step_toward(tx, ty, speed, can_move_to)`: one normalized step
+(diagonals aren't faster), capped at the distance to the target, wall-sliding
+(full step → x-only → y-only) off whatever `can_move_to` rejects. `speed` is
+`LocationScreen.speed` (story.json `walking_speed`, world units per 1/60 s
+step); `WanderRoutine` uses its own slower `WANDER_SPEED`. See
+DESIGN_PATTERNS.md's "One Movement Primitive on the Base Entity".
+
 ## Performance Considerations
 
 **Optimization done:**
