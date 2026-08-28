@@ -303,9 +303,15 @@ the currently defined cultures (e.g. the Vherathi Concord).
 
 **Base Class: `Person`**
 - Stores position, appearance, an `outfit`, and a `Possessions`
-- Implements `draw(surface)` — head + body, with the outfit's colors and
-  accessory pieces drawn over the shared body shape (see below)
+- Implements `draw(surface)` — a face-on foot-to-head stack (two boots, two
+  legs, a tapering torso, a head), with the outfit's colors and accessory
+  pieces drawn over the shared body shape (see below)
 - Provides `get_distance(x, y)` for interaction checks
+- Owns the shared **walk cycle**: `step_toward()` → `_advance_walk()` advances
+  `walk_phase` by the distance walked and ramps `walk_intensity`; `draw()`
+  eases `walk_intensity` back to 0 on idle frames, so the legs swing/lift and
+  the body bobs while any of the player / `WanderRoutine` / `DockRoutine` is
+  moving them, then settle to a neutral stance. `WALK_*` constants tune it.
 
 `outfit` is a resolved `graphics.json` "outfits" asset (see
 `get_graphics_asset(story, "outfits", outfit_id)`), same pattern as ship/
@@ -319,7 +325,8 @@ decorated variants (`marshal`, `vherathi_honor_guard`, `merchant_prince`,
 …).
 
 Every outfit key is just a color. `helmet_color` / `suit_color` /
-`boot_color` recolor the base body (helmet optional). Optional accessory
+`boot_color` / `leg_color` recolor the base body (helmet optional;
+`leg_color` defaults to a darker shade of the suit). Optional accessory
 keys each add one layered piece, drawn by `Person._draw_back_accessories`
 (behind the body: `backpack_color`, `spike_color` shoulder spikes,
 `antenna_color`) and `_draw_front_accessories` (over the torso:

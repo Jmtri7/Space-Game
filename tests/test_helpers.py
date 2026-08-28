@@ -459,7 +459,7 @@ class TestPersonOutfitRendering(unittest.TestCase):
     band) and catches a typo'd color key in graphics.json, not the pixels."""
 
     KNOWN_OUTFIT_KEYS = {
-        "helmet_color", "suit_color", "boot_color",
+        "helmet_color", "suit_color", "boot_color", "leg_color",
         "shoulder_color", "spike_color", "collar_color", "chest_plate_color",
         "sash_color", "belt_color", "badge_color", "backpack_color",
         "antenna_color", "visor_color",
@@ -1080,6 +1080,49 @@ class TestPersonStepToward(unittest.TestCase):
         moved = p.step_toward(10.0, 10.0, 3.0, lambda x, y: False)
         self.assertFalse(moved)
         self.assertEqual((p.x, p.y), (5.0, 5.0))
+
+
+class TestPersonWalkCycle(unittest.TestCase):
+    """The leg walk animation: walk_phase advances with distance walked,
+    walk_intensity ramps in while moving and eases back out on idle draw()
+    frames, and a still Person stands in a neutral stance."""
+
+    def test_walking_advances_phase_and_ramps_intensity(self):
+        p = Person(0.0, 0.0)
+        self.assertEqual(p.walk_phase, 0.0)
+        self.assertEqual(p.walk_intensity, 0.0)
+        p.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
+        self.assertGreater(p.walk_phase, 0.0)
+        self.assertGreater(p.walk_intensity, 0.0)
+
+    def test_phase_advance_is_proportional_to_distance_walked(self):
+        slow, fast = Person(0.0, 0.0), Person(0.0, 0.0)
+        slow.step_toward(100.0, 0.0, 1.0, lambda x, y: True)
+        fast.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
+        self.assertAlmostEqual(fast.walk_phase, slow.walk_phase * 4.0, places=5)
+
+    def test_a_blocked_step_does_not_advance_the_cycle(self):
+        p = Person(5.0, 5.0)
+        p.step_toward(9.0, 9.0, 3.0, lambda x, y: False)
+        self.assertEqual(p.walk_phase, 0.0)
+        self.assertEqual(p.walk_intensity, 0.0)
+
+    def test_idle_draw_frames_ease_the_animation_back_out(self):
+        p = Person(0.0, 0.0)
+        p.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
+        walking = p.walk_intensity
+        p.draw(MagicMock())  # the frame we moved on - not idle, no decay yet
+        self.assertEqual(p.walk_intensity, walking)
+        p.draw(MagicMock())  # first genuinely idle frame - eases out
+        self.assertLess(p.walk_intensity, walking)
+        for _ in range(60):
+            p.draw(MagicMock())
+        self.assertEqual(p.walk_intensity, 0.0)
+
+    def test_a_still_person_stands_in_a_neutral_stance(self):
+        hip_dy, ankles = Person(0.0, 0.0)._leg_stance()
+        self.assertEqual(hip_dy, 0.0)
+        self.assertEqual(ankles, ((0.0, 0.0), (0.0, 0.0)))
 
 
 class TestPossessions(unittest.TestCase):

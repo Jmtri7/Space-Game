@@ -171,7 +171,7 @@ class LocationScreen(ScreenBase):
 
     # Game-space units above a person's feet (self.y) their floating name/
     # role label is anchored to - clears the head/helmet drawn by Person.draw().
-    LABEL_HEIGHT_ABOVE = 38
+    LABEL_HEIGHT_ABOVE = 42
 
     def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
