@@ -228,6 +228,10 @@ class SpaceScreen(ScreenBase):
         # (_post_message).
         self.message_log_scroll = 0
         self._message_log_rect = None
+        # Set by _draw_hud from draw_message_log's return each frame - see the
+        # matching field/usage in LocationScreen (drives the
+        # "scrolled_message_log" tutorial flag).
+        self._message_log_max_scroll = 0
         self.info_panel_scroll = 0
         self._info_panel_rect = None
         # Frames left on the Message Log's blinking red "new message" light
@@ -585,8 +589,24 @@ class SpaceScreen(ScreenBase):
                 self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
 
         for event in events:
+            # An open hail is mouse-only and swallows all input: hover
+            # highlights an option, a click picks it, the ✕ closes.
+            if self.active_dialogue:
+                if event.type == pygame.MOUSEMOTION:
+                    hovered = self.active_dialogue.option_at(event.pos)
+                    if hovered is not None:
+                        self.active_dialogue.selected_option = hovered
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.active_dialogue.close_at(event.pos):
+                        self.active_dialogue = None
+                    else:
+                        picked = self.active_dialogue.option_at(event.pos)
+                        if picked is not None:
+                            self._choose_hail_option(picked)
+                continue
+
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_target_at(*to_world(*event.pos))
                 continue
 
@@ -599,46 +619,13 @@ class SpaceScreen(ScreenBase):
                 mouse_pos = pygame.mouse.get_pos()
                 if self._message_log_rect and self._message_log_rect.collidepoint(mouse_pos):
                     self.message_log_scroll = max(0, self.message_log_scroll - event.y)
+                    if self._message_log_max_scroll > 0:
+                        self.player.person.possessions.flags["scrolled_message_log"] = True
                 elif self._info_panel_rect and self._info_panel_rect.collidepoint(mouse_pos):
                     self.info_panel_scroll = max(0, self.info_panel_scroll - event.y)
                 continue
 
             if event.type != pygame.KEYDOWN:
-                continue
-
-            if self.active_dialogue:
-                # While a hail is open, input drives the dialogue box
-                # instead of flight - mirrors LocationScreen's own
-                # active_dialogue branch (see there for why flags is
-                # fetched fresh each time rather than cached).
-                # A hail option's action is never a LocationScreen-only one
-                # (buy_ship:/take_loan don't make sense mid-flight) - just
-                # the shared set_flag/give_item/spend_credits actions (see
-                # apply_shared_actions) - and none of those ever block on
-                # affordability the way a ship purchase can, so unlike
-                # LocationScreen, cycling/choosing here is a plain index
-                # walk over whatever current_options(flags) returns, with
-                # no "skip the blocked ones" pass needed.
-                possessions = self.player.person.possessions
-                flags = possessions.flags
-                options = self.active_dialogue.current_options(flags)
-                if event.key in (pygame.K_UP, pygame.K_w) and options:
-                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option - 1) % len(options)
-                elif event.key in (pygame.K_DOWN, pygame.K_s) and options:
-                    self.active_dialogue.selected_option = (self.active_dialogue.selected_option + 1) % len(options)
-                elif event.key == pygame.K_RETURN and options:
-                    option = options[self.active_dialogue.selected_option]
-                    for action in option_actions(option):
-                        apply_shared_actions(action, possessions, self.missions_config)
-                    # advance(option), not choose(index, flags) - see
-                    # Dialogue.advance's docstring (LocationScreen's own
-                    # dialogue handling has the same comment).
-                    if self.active_dialogue.advance(option):
-                        self.active_dialogue = None
-                    else:
-                        self.active_dialogue.selected_option = 0
-                elif event.key == pygame.K_ESCAPE:
-                    self.active_dialogue = None
                 continue
 
             # Cancel autopilot on any key press (except ESC which handles
@@ -1005,6 +992,24 @@ class SpaceScreen(ScreenBase):
         # every physics frame for as long as the conversation stays open.
         self.player.thrust = 0
 
+    def _choose_hail_option(self, index):
+        """Act on the visible hail option at `index` (a mouse click on it).
+        A hail option's action is only ever a shared one (set_flag/give_item/
+        spend_credits - buy_ship:/take_loan don't make sense mid-flight), and
+        none of those block on affordability, so there's no "skip blocked"
+        pass like LocationScreen's."""
+        possessions = self.player.person.possessions
+        options = self.active_dialogue.current_options(possessions.flags)
+        if not 0 <= index < len(options):
+            return
+        option = options[index]
+        for action in option_actions(option):
+            apply_shared_actions(action, possessions, self.missions_config)
+        if self.active_dialogue.advance(option):
+            self.active_dialogue = None
+        else:
+            self.active_dialogue.selected_option = 0
+
     def _show_toast(self, text, color=CYAN):
         """Flash a short, self-clearing message in the center of the screen
         (see _draw_hud) - used for jump completion and mission events
@@ -1280,7 +1285,9 @@ class SpaceScreen(ScreenBase):
             completed_before = set(possessions.completed_missions)
             for advanced_stage in check_mission_progress(self.missions_config, possessions):
                 self._deliver_stage_message(advanced_stage)
-                self._show_toast("Mission stage complete", GREEN)
+                mission_id, stage_index = advanced_stage
+                total = len(self.missions_config.get(mission_id, {}).get("stages", []))
+                self._show_toast(f"Step {stage_index + 1}/{total} - see Mission Log (N)", GREEN)
             for mission_id in possessions.completed_missions:
                 if mission_id not in completed_before:
                     title = self.missions_config.get(mission_id, {}).get("title", mission_id)
@@ -1567,6 +1574,7 @@ class SpaceScreen(ScreenBase):
             # Clamp now that the real wrapped-line count is known (window
             # resize or a shrinking log can leave the stored offset too big).
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
+            self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect
 
         # Cached for handle_input()'s mouse-click targeting, so a click on

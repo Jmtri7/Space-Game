@@ -439,6 +439,18 @@ def get_save_files():
     return _list_files_by_pattern(SAVE_DIR, "save_", ".json")
 
 
+def save_display_name(filename):
+    """A save file's on-screen name: the raw `save_<name>.json` on disk with
+    the `save_` prefix and `.json` suffix stripped. Safe to call on an
+    already-clean name too."""
+    name = filename
+    if name.startswith("save_"):
+        name = name[len("save_"):]
+    if name.endswith(".json"):
+        name = name[:-len(".json")]
+    return name
+
+
 def create_save_file(pilot_name, name, system_data, station_data, game_state=None):
     """Create and save a game save file.
 

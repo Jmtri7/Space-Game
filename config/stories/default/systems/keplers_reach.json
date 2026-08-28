@@ -45,6 +45,15 @@
           {"layer": "floor", "shape": "rect", "rect": [640, 380, 100, 90], "color": [150, 118, 82]},
           {"layer": "floor", "shape": "line", "points": [[360, 300], [770, 300]], "color": [225, 195, 150], "width": 2}
         ],
+        "structures": [
+          {"x": 430, "y": 235, "building_type": "drossholt_desk"},
+          {"x": 440, "y": 415, "building_type": "drossholt_crate"},
+          {"x": 398, "y": 392, "building_type": "drossholt_crate"},
+          {"x": 560, "y": 455, "building_type": "drossholt_barrel"},
+          {"x": 708, "y": 250, "building_type": "drossholt_planter"},
+          {"x": 400, "y": 175, "building_type": "drossholt_lamp"},
+          {"x": 748, "y": 395, "building_type": "drossholt_lamp"}
+        ],
         "npcs": [
           {
             "name": "Doss Kallen",
@@ -123,7 +132,25 @@
           {"x": 650, "y": 600, "building_type": "drossholt_bunker"},
           {"x": 1100, "y": 500, "building_type": "drossholt_tower"},
           {"x": 300, "y": 950, "building_type": "drossholt_bunker"},
-          {"x": 950, "y": 900, "building_type": "drossholt_warehouse"}
+          {"x": 950, "y": 900, "building_type": "drossholt_warehouse"},
+          {"x": 700, "y": 755, "building_type": "drossholt_crate"},
+          {"x": 625, "y": 778, "building_type": "drossholt_barrel"},
+          {"x": 600, "y": 795, "building_type": "drossholt_bench"},
+          {"x": 950, "y": 795, "building_type": "drossholt_bench"},
+          {"x": 802, "y": 950, "building_type": "drossholt_bench"},
+          {"x": 1000, "y": 620, "building_type": "drossholt_crate"},
+          {"x": 960, "y": 640, "building_type": "drossholt_crate"},
+          {"x": 1020, "y": 600, "building_type": "drossholt_crate"},
+          {"x": 560, "y": 620, "building_type": "drossholt_barrel"},
+          {"x": 590, "y": 640, "building_type": "drossholt_barrel"},
+          {"x": 400, "y": 400, "building_type": "drossholt_planter"},
+          {"x": 1150, "y": 300, "building_type": "drossholt_planter"},
+          {"x": 400, "y": 1200, "building_type": "drossholt_planter"},
+          {"x": 1260, "y": 1000, "building_type": "drossholt_planter"},
+          {"x": 520, "y": 740, "building_type": "drossholt_lamp"},
+          {"x": 1080, "y": 740, "building_type": "drossholt_lamp"},
+          {"x": 800, "y": 1040, "building_type": "drossholt_lamp"},
+          {"x": 800, "y": 380, "building_type": "drossholt_lamp"}
         ],
         "npcs": [
           {

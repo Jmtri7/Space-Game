@@ -128,37 +128,41 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 
 ## For Agents: Design Principles & Code Patterns
 
-### Menu Discoverability
-**Rule:** A modal's primary actions are `draw_button` widgets in its own panel
-(`buttons()`); controls that *aren't* buttons (grid browsing, drag-to-install,
-map panning) go in the one-line dim `hint_text()` under the button bar. Update
-both when you add/change an action. No modal uses the top-left Controls pane -
-that's the in-world HUD's.
+### Menus & dialogs are mouse-only and self-explanatory
+**Rule:** Every full-screen modal in `game/ui/` is **mouse-only** - hover
+highlights a `draw_button` widget, left-click presses it. The keyboard does
+**nothing** in a modal except type into a text field (`PilotNameDialog`,
+`SaveBrowser`'s name-entry sub-mode); it never moves a selection, presses a
+button, or closes a modal. There is **no ESC-to-close** and **no dim hint
+line** - every modal has a visible Close/Cancel/Resume/Back button and is
+expected to read as self-explanatory from its buttons and labels. When you
+add an action, add a **button** for it (or a click/double-click/wheel
+affordance on the thing itself); don't add explanatory text under the panel.
+Long content scrolls with the mouse wheel (`ReportMenu`, `IconGrid.scroll()`,
+`SelectableList.scroll()`). The NPC conversation box (`Dialogue.draw`) follows
+the same rule: click an option, or the `X` to leave.
 
-**Menu vs. Dialog (`MenuBase` / `DialogBase`):** every full-screen modal in
-`game/ui/` is one of two kinds. **Neither draws a Controls pane** - that pane
-belongs to the in-world HUD (`SpaceScreen`/`LocationScreen`) only. Every
-modal shows its actions as `ui_theme.draw_button` widgets **inside its own
-panel**, driven by mouse (hover + click) and keyboard (Tab / arrows move
-button focus, Enter presses). See docs/DESIGN_PATTERNS.md's "Menu vs. Dialog".
+**Menu vs. Dialog (`MenuBase` / `DialogBase`):** **Neither draws a Controls
+pane** - that pane belongs to the in-world HUD (`SpaceScreen`/`LocationScreen`)
+only. See docs/DESIGN_PATTERNS.md's "Menu vs. Dialog".
 
 - A **menu** (`MenuBase`, `is_dialog = False`) is one you *dwell in* -
-  navigating or acting inside it doesn't close it (a Close/Resume button,
-  ESC, or a hotkey does). → `BackdropMenu`, `PauseMenu`, `SaveBrowser`,
-  `ShopMenu`, `OutfittingMenu`, `ShipBrowserMenu`, `ReportMenu`, `StarMap`.
+  acting inside it doesn't close it; its Close/Resume button does. →
+  `BackdropMenu`, `PauseMenu`, `SaveBrowser`, `ShopMenu`, `OutfittingMenu`,
+  `ShipBrowserMenu`, `ReportMenu`, `StarMap`.
 - A **dialog** (`DialogBase`, `is_dialog = True`) sits *over* another modal
-  and closes as soon as you pick one of its `buttons()`. → `ConfirmDialog`,
+  and closes as soon as you click one of its `buttons()`. → `ConfirmDialog`,
   `PilotNameDialog`, `ChoiceDialog`.
 
 Subclasses implement `draw_content()` (the panel), `buttons()` (the action
 bar), `button_bar_rects()` (where those go - default is a centred row along
-the panel bottom; corner-Close menus override it), `panel_rect()` (so the
-default bar + `hint_text()` line can anchor). `MenuBase.draw()` is a template
-method that draws the content then the buttons + hint. A grid menu whose
-Enter drives the grid (not the button) uses `handle_button_click()`
-(mouse-only) rather than the full `handle_button_event()`. A menu with a
-sub-dialog on top (`ShipBrowserMenu`'s purchase `ConfirmDialog`) returns it
-from `active_popup()` so `MenuBase.draw` defers to it.
+the panel bottom, `max_width`-clamped; corner-Close menus override it),
+`panel_rect()` (so the default bar can anchor). `MenuBase.draw()` is a
+template method: content → `active_popup()` if a sub-dialog is up → buttons.
+`handle_button_event()` (alias `handle_button_click`) is hover + left-click
+only. A menu with a sub-dialog on top (`ShipBrowserMenu`'s purchase
+`ConfirmDialog`) returns it from `active_popup()` so `MenuBase.draw` defers
+to it.
 
 `main.py` builds `Menu`/`StorySelector` from `BackdropMenu`,
 `LocationSelector`/`ExitMenu` from `ChoiceDialog`, `PossessionsMenu`/

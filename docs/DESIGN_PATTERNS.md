@@ -922,22 +922,25 @@ classes (`Menu`/`StorySelector`, `LocationSelector`/`ExitMenu`,
 
 **Solution:** No modal draws a Controls pane (that pane is the in-world HUD's
 alone). Every modal presents its actions as `ui_theme.draw_button` widgets
-inside its own panel, mouse- and keyboard-driven. Two base classes:
+inside its own panel, and **is mouse-only** - hover highlights, left-click
+presses; the keyboard is used only to type into a text field (pilot name,
+new save name), never to move a selection or press a button, and there is no
+ESC-to-close (every modal has a visible Close/Cancel/Resume/Back button).
+There is no dim hint line - a modal is expected to be self-explanatory from
+its buttons and labels. Two base classes:
 
 - **`MenuBase`** (`game/ui/menu_base.py`) - a **menu** you *dwell in*;
-  navigating/acting doesn't close it. Owns all the button infrastructure:
-  `buttons()` → `[(id, label, accent, disabled), ...]`, `button_bar_rects()`
-  → where they go (default: a centred row along the panel bottom; a corner
-  Close menu overrides it), `panel_rect()` → the glass panel so the default
-  bar and the dim `hint_text()` line can anchor. `draw()` is a template
-  method (content → `active_popup()` if a sub-dialog is up → buttons + hint).
-  `handle_button_event()` does arrows/Tab/Enter/hover/click; the keyboard
-  path builds no geometry (testable without real pygame). `handle_button_
-  click()` is the mouse-only variant for grid menus where Enter drives the
-  grid, not the button.
+  acting doesn't close it. Owns all the button infrastructure: `buttons()` →
+  `[(id, label, accent, disabled), ...]`, `button_bar_rects()` → where they
+  go (default: a centred row along the panel bottom, `max_width`-clamped to
+  the panel; a corner-Close menu overrides it), `panel_rect()` → the glass
+  panel the default bar anchors to. `draw()` is a template method (content →
+  `active_popup()` if a sub-dialog is up → buttons). `handle_button_event()`
+  (alias `handle_button_click`) does hover + left-click only. `_is_double_
+  click()` lets a list/grid treat a double-click as "activate".
 - **`DialogBase(MenuBase)`** - a **dialog** shown *over* another modal that
-  closes as soon as you pick one of its `buttons()`. Adds nothing but
-  `is_dialog = True` and the "picking closes" semantics.
+  closes as soon as you click one of its `buttons()`. Adds nothing but
+  `is_dialog = True` and the "clicking closes" semantics.
 
 **Why this works:**
 - One `draw()` template + one button-input path, not 15 copies of chrome.
@@ -945,9 +948,10 @@ inside its own panel, mouse- and keyboard-driven. Two base classes:
   stays open through delete/scroll/mode-switch → menu; `ChoiceDialog`
   pick-and-go → dialog.
 - One widget per shape instead of per screen: `BackdropMenu(title, rows,
-  seed, allow_cancel)` covers the main menu and story picker;
-  `ChoiceDialog(title, options)` covers moon-landing and exit-door picking;
-  `ReportMenu(title, columns, hotkey, hotkey_label)` + a builder fn covers
+  seed, allow_cancel)` covers the main menu and story picker (a **Back**
+  button appears when `allow_cancel`); `ChoiceDialog(title, options)` covers
+  moon-landing and exit-door picking (a **Cancel** button is always
+  appended); `ReportMenu(title, columns, tabs=None)` + a builder fn covers
   the possessions and mission read-outs; `SaveBrowser(mode)` covers load and
   save. `main.py` builds the data, the widget doesn't know the domain.
 

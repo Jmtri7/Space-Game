@@ -10,7 +10,7 @@ from game.constants import (
 )
 from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json, get_story,
-    advance_accumulator
+    advance_accumulator, save_display_name
 )
 from game.world.player_controller import PlayerController
 from game.audio.sound_board import sound_board
@@ -502,7 +502,7 @@ def main():
                             # "opened from pause" link is spent either way.
                             load_return_screen = None
                     elif action == "delete":
-                        delete_confirm_dialog = ConfirmDialog("Delete Save?", filename[:50], context_data=filename)
+                        delete_confirm_dialog = ConfirmDialog("Delete Save?", save_display_name(filename)[:50], context_data=filename)
                     elif action == "cancel":
                         if load_return_screen == "pause":
                             current_screen = "pause"
@@ -718,7 +718,7 @@ def main():
                         is_overwriting = save_name in save_dialog.existing_saves
                         if is_overwriting:
                             # Show confirmation dialog for overwrite
-                            overwrite_confirm_dialog = ConfirmDialog("Overwrite Save?", save_name[:50], context_data=save_name)
+                            overwrite_confirm_dialog = ConfirmDialog("Overwrite Save?", save_display_name(save_name)[:50], context_data=save_name)
                             save_dialog = None
                         else:
                             save_description = save_name
@@ -737,7 +737,7 @@ def main():
                     elif dialog_action == "cancel":
                         save_dialog = None
                     elif dialog_action == "delete":
-                        delete_confirm_dialog = ConfirmDialog("Delete Save?", save_name[:50], context_data=save_name)
+                        delete_confirm_dialog = ConfirmDialog("Delete Save?", save_display_name(save_name)[:50], context_data=save_name)
 
                 if not dialog_was_open:
                     action = pause_menu.handle_input(events)

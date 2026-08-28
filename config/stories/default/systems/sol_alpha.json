@@ -50,12 +50,12 @@
           {"x": 1320, "y": 690, "connected_locations": [], "return_to_ship": true}
         ],
         "rooms": [
-          {"label": "Concourse", "shape": "circle", "center": [800, 600], "radius": 320, "sides": 40},
+          {"label": "Concourse", "shape": "circle", "center": [800, 600], "radius": 270, "sides": 40},
           {"label": "The Long Vein", "shape": "circle", "center": [800, 300], "radius": 210, "sides": 32},
-          {"label": "Credit Union", "shape": "circle", "center": [280, 600], "radius": 280, "sides": 32},
-          {"label": "West Gallery", "polygon": [[360, 540], [560, 540], [560, 660], [360, 660]]},
-          {"label": "Ship Dock", "shape": "circle", "center": [1320, 600], "radius": 280, "sides": 32},
-          {"label": "East Gallery", "polygon": [[1040, 540], [1240, 540], [1240, 660], [1040, 660]]},
+          {"label": "Credit Union", "shape": "circle", "center": [230, 600], "radius": 230, "sides": 32},
+          {"label": "West Gallery", "polygon": [[420, 540], [580, 540], [580, 660], [420, 660]]},
+          {"label": "Ship Dock", "shape": "circle", "center": [1370, 600], "radius": 230, "sides": 32},
+          {"label": "East Gallery", "polygon": [[1020, 540], [1180, 540], [1180, 660], [1020, 660]]},
           {"label": "Resin Quarter", "polygon": [[660, 820], [940, 820], [910, 1130], [690, 1130]]}
         ],
         "decorations": [
@@ -63,7 +63,31 @@
           {"layer": "floor", "shape": "circle", "center": [800, 600], "radius": 60, "color": [128, 255, 205], "width": 4},
           {"layer": "wall", "shape": "line", "points": [[600, 140], [690, 64]], "color": [120, 255, 200], "width": 6},
           {"layer": "wall", "shape": "line", "points": [[1000, 140], [910, 64]], "color": [120, 255, 200], "width": 6},
+          {"layer": "floor", "shape": "line", "points": [[500, 600], [560, 600]], "color": [128, 255, 205], "width": 3},
+          {"layer": "floor", "shape": "line", "points": [[1090, 600], [1150, 600]], "color": [128, 255, 205], "width": 3},
           {"layer": "floor", "shape": "line", "points": [[1320, 600], [1320, 690]], "color": [128, 255, 205], "width": 4}
+        ],
+        "structures": [
+          {"x": 800, "y": 800, "building_type": "vherathi_concierge_desk"},
+          {"x": 600, "y": 705, "building_type": "vherathi_seat_pod"},
+          {"x": 670, "y": 812, "building_type": "vherathi_planter"},
+          {"x": 930, "y": 812, "building_type": "vherathi_planter"},
+          {"x": 600, "y": 510, "building_type": "vherathi_lamp"},
+          {"x": 600, "y": 690, "building_type": "vherathi_lamp"},
+          {"x": 1140, "y": 510, "building_type": "vherathi_lamp"},
+          {"x": 1140, "y": 690, "building_type": "vherathi_lamp"},
+          {"x": 640, "y": 350, "building_type": "vherathi_bench"},
+          {"x": 960, "y": 340, "building_type": "vherathi_planter"},
+          {"x": 1460, "y": 545, "building_type": "vherathi_planter"},
+          {"x": 1475, "y": 675, "building_type": "vherathi_bench"},
+          {"x": 1425, "y": 640, "building_type": "vherathi_lamp"},
+          {"x": 175, "y": 690, "building_type": "vherathi_bench"},
+          {"x": 135, "y": 495, "building_type": "vherathi_planter"},
+          {"x": 330, "y": 490, "building_type": "vherathi_lamp"},
+          {"x": 720, "y": 955, "building_type": "vherathi_planter"},
+          {"x": 875, "y": 920, "building_type": "vherathi_seat_pod"},
+          {"x": 735, "y": 860, "building_type": "vherathi_lamp"},
+          {"x": 880, "y": 860, "building_type": "vherathi_lamp"}
         ],
         "npcs": [
           {
@@ -74,8 +98,8 @@
             "outfit": "station_official",
             "escort_flag": "station_guide_escorting",
             "ambient": {
-              "range": 190,
-              "message": "New face on the ring? I'm Sela, station concierge. Walk over and press T when you've got a minute - I'll show you around and get you flight-ready."
+              "range": 700,
+              "message": "New face on the ring? This is the concierge desk, middle of the concourse - straight ahead as you come off the dock. Move with WASD or the arrow keys, walk over and press T, and I'll get you flight-ready."
             },
             "dialogue_tree": {
               "root": "start",
@@ -85,14 +109,14 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Welcome to Alpha Station. First time out here, I'd guess. Want the quick tour? I'll walk you through the controls, help you line up a loan, and get you into a ship of your own.",
+                  "text": "Welcome to Alpha Station - you've found the concierge desk. First time out here, I'd guess. Want the quick tour? I'll walk you through the controls, help you line up a loan, and get you into a ship of your own.",
                   "options": [
                     {"label": "Yes, show me around.", "next": "accepted", "actions": ["set_flag:station_tour_accepted", "start_mission:station_tour"]},
                     {"label": "Maybe later.", "next": null}
                   ]
                 },
                 "accepted": {
-                  "text": "Good call. Close the comm and stay near me - every step shows up in your Mission Log as we go.",
+                  "text": "Good call. Close the comm and lead the way - I'll be right behind you, and every step shows up in your Mission Log as we go.",
                   "options": [
                     {"label": "Lead on.", "next": null}
                   ]
@@ -278,8 +302,8 @@
           },
           {
             "name": "Adjutant Ondra",
-            "x": 460,
-            "y": 600,
+            "x": 300,
+            "y": 560,
             "role": "clerk",
             "outfit": "station_official",
             "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
@@ -296,7 +320,7 @@
           },
           {
             "name": "Jax Miren",
-            "x": 1144,
+            "x": 1190,
             "y": 600,
             "role": "dockworker",
             "outfit": "dockworker",
@@ -343,7 +367,25 @@
           {"x": 750, "y": 650, "building_type": "vherathi_spire"},
           {"x": 1150, "y": 550, "building_type": "vherathi_bloompod"},
           {"x": 450, "y": 1000, "building_type": "vherathi_hall"},
-          {"x": 1300, "y": 750, "building_type": "vherathi_spire"}
+          {"x": 1300, "y": 750, "building_type": "vherathi_spire"},
+          {"x": 900, "y": 802, "building_type": "vherathi_bench"},
+          {"x": 700, "y": 802, "building_type": "vherathi_bench"},
+          {"x": 802, "y": 950, "building_type": "vherathi_bench"},
+          {"x": 802, "y": 560, "building_type": "vherathi_bench"},
+          {"x": 740, "y": 740, "building_type": "vherathi_lamp"},
+          {"x": 860, "y": 740, "building_type": "vherathi_lamp"},
+          {"x": 740, "y": 862, "building_type": "vherathi_lamp"},
+          {"x": 860, "y": 862, "building_type": "vherathi_lamp"},
+          {"x": 400, "y": 400, "building_type": "vherathi_planter"},
+          {"x": 1150, "y": 300, "building_type": "vherathi_planter"},
+          {"x": 400, "y": 1150, "building_type": "vherathi_planter"},
+          {"x": 1150, "y": 1150, "building_type": "vherathi_planter"},
+          {"x": 1000, "y": 700, "building_type": "vherathi_seat_pod"},
+          {"x": 550, "y": 850, "building_type": "vherathi_seat_pod"},
+          {"x": 600, "y": 500, "building_type": "vherathi_lamp"},
+          {"x": 1000, "y": 500, "building_type": "vherathi_lamp"},
+          {"x": 600, "y": 1100, "building_type": "vherathi_lamp"},
+          {"x": 1000, "y": 1100, "building_type": "vherathi_lamp"}
         ],
         "npcs": [
           {

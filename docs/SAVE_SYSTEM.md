@@ -199,7 +199,14 @@ finished every stage. The mission's own title/stage text/stage order is
 static per-story config (`missions.json`, via `get_missions()`), never
 duplicated into the save - same story/save split as everything else here.
 A save made before this existed has no `"missions"`/`"completed_missions"`
-keys; both default to `{}`/`[]`.
+keys; both default to `{}`/`[]`. Because the stored value is a bare **stage
+index**, inserting or reordering stages in a `missions.json` mission changes
+what an in-progress save of that mission resumes into - `check_mission_progress()`
+re-evaluates on load (a stage whose `complete_flag` is already set auto-advances),
+so it self-heals rather than crashing, but a player mid-mission can see one
+stage they've effectively already done. Treat a stage insert/reorder as a
+save-affecting change: bump `story.json`'s `version` so the load-time mismatch
+warning fires.
 
 `message_log` (`[{"sender": ..., "text": ...}, ...]`, newest first) is the
 history behind the Space View's bottom-left Messages pane - one-way hails

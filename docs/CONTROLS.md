@@ -67,13 +67,15 @@ The **Message Log** pane (bottom-left, same one as the Space View) shows up
 in interiors too - an NPC can drop a line into it unprompted when you get
 close (a config `"ambient"` message), and a mission guide's step-by-step
 instructions arrive there as you go. A short banner under the location
-title announces each new one; scroll the pane with the wheel.
+title announces each new one; scroll the pane with the wheel while the
+pointer is over it (the guided walkthrough has a step for this).
 
 **Guided walkthrough:** on a fresh game you start on Alpha Station with no
 ship. Sela Cordova, the concierge on the concourse, offers a tour that
-walks you through the interior controls, taking out a loan, and buying your
-first ship - accept it (**T**, then "Yes, show me around") and she trails
-you on foot, posting each step to the Message Log and Mission Log. It's the
+walks you through the interior controls (moving, targeting, talking, the
+Mission Log, Possessions, scrolling the Message Log), taking out a loan, and
+buying your first ship - accept it (**T**, then "Yes, show me around") and she
+trails you on foot, posting each step to the Message Log and Mission Log. It's the
 on-foot counterpart to Kade Marsh's flying lesson once you launch.
 
 ### NPC Targeting vs. Talking
@@ -106,11 +108,13 @@ up at a distance, not for choosing who to talk to.
 
 ## Dialogue
 
+The NPC conversation box is **mouse-only**, like every other modal:
+
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Navigate options |
-| **Enter** | Choose selected option - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
-| **ESC** | Close the conversation immediately |
+| **Hover** an option | Highlights it |
+| **Click** an option | Choose it - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
+| **Click** the **X** (top-right of the box) | Leave the conversation |
 
 Most NPCs offer a flat greeting plus a couple of closing options ("Thanks" /
 "Leave"). A few (e.g. the Bartender, the spaceport's ship salesman, the loan
@@ -132,7 +136,7 @@ you've bought him a round once. See `game/world/dialogue.py`.
 | Control | Action |
 |---------|--------|
 | **H** (Space View) | Hail the currently targeted ship |
-| **W/↑** or **S/↓**, **Enter**, **ESC** | Same as Dialogue above, once a hail is open |
+| Hover / click an option, click the **X** | Same as Dialogue above, once a hail is open (mouse-only) |
 
 Hailing reuses the exact same conversation UI as talking to someone
 face-to-face, but requires a targeted AI ship first (SHIPS target mode -
@@ -195,18 +199,23 @@ points at always agree.
 | Control | Action |
 |---------|--------|
 | **N**, **ESC**, or the **Close** button (top-right) | Close |
+| **[** / **]**, **Left** / **Right**, or **Click** a tab | Switch between the Active and Completed tabs |
+| **Mouse wheel**, **Up** / **Down**, **PageUp** / **PageDown**, **Home** / **End** | Scroll a report longer than the panel |
 
 Read-only, opened from space, a station interior, or a moon interior, over
 whichever screen it was opened from (same shape as the Possessions menu).
-Lists every mission that's ever been started: an active mission shows its
-stages so far completed (`[x]`) and its current stage (`->`) - stages you
-haven't reached yet stay hidden until you unlock them; a finished mission
-shows every stage done, marked "(Complete)". Opening the log also flips the
-`viewed_mission_log` gameplay-event flag, so a mission stage can require the
-player to actually check it (see `first_flight`).
+Two tabs: **Active** and **Completed**. Each mission's stages are **numbered**
+(`1.`, `2.`, ...) and marked - an active mission shows the stages so far
+completed (`[x]`) and its current stage (`->`), with stages you haven't
+reached yet kept hidden until you unlock them; a completed mission shows
+every stage done. A report taller than the fixed panel scrolls (blue
+`^ more` / `v more` hints show when there's more). Opening the log also flips
+the `viewed_mission_log` gameplay-event flag, so a mission stage can require
+the player to actually check it (see `first_flight`).
 
 Starting a mission, completing a stage, and finishing a mission each flash a
-brief center-screen toast in the Space View (see `SpaceScreen._show_toast`). A story opts a new pilot into a mission automatically -
+brief center-screen toast in the Space View (see `SpaceScreen._show_toast`) -
+a stage-complete toast reads `Step N/M - see Mission Log (N)`. A story opts a new pilot into a mission automatically -
 by default the first time they buy a ship, or at new-game start if
 `story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it). Either way it holds until the player
 next launches into space (so the opening toast and hail land in the
@@ -227,165 +236,133 @@ returning to their normal routine once it ends - see ARCHITECTURE.md's
 
 ## Menus
 
-Every full-screen modal shows its actions as **buttons inside its own
-panel** - click them, or Tab / arrow to move button focus and Enter to
-press. No modal uses the top-left Controls pane (that belongs to the space
-view and interiors); a one-line dim hint under the buttons covers anything
-that isn't a button (browsing a grid, dragging an outfit, panning the map).
-While a modal is open the base screen's Controls pane and bottom status
-prompt ("Press T to talk to X") are hidden.
+**Every menu and dialog is mouse-only.** Actions are `draw_button` widgets
+inside the panel - hover highlights, left-click presses. The keyboard does
+**nothing** in a menu except type into a text field (naming a pilot or a
+new save); it never moves a selection, presses a button, or closes a modal.
+There is no dim hint line under the buttons any more - a menu is meant to
+be self-explanatory from its buttons and labels. Every menu has a visible
+**Close** / **Cancel** / **Resume** / **Back** button; there is no
+ESC-to-close. No modal uses the top-left Controls pane (that belongs to the
+space view and interiors); while a modal is open the base screen's Controls
+pane and bottom status prompt are hidden. A four-button bar (the Save menu)
+shrinks its buttons to stay inside the panel. Long reports and lists scroll
+with the **mouse wheel** (or by clicking the `^ more` / `v more`
+indicators).
+
+The keys **P** / **N** / **M** / **L** still *open* menus from the space
+view or an interior (they're HUD controls, listed above) - they just have
+no effect once a menu is up.
 
 Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
 
-- a **menu** you navigate and leave explicitly - Possessions, Missions,
-  Shop, Shipyard, Outfitting, Star Map, Save/Load, Pause, the main and story
-  menus. Acting inside it doesn't close it; a Close/Resume button or ESC
-  does.
-- a **dialog** shown *over* another modal that closes the moment you pick a
-  button - Yes/No confirmations, the pilot-name entry, the "where to?" and
-  landing-spot pickers.
+- a **menu** you dwell in and leave with its Close/Resume button -
+  Possessions, Missions, Shop, Shipyard, Outfitting, Star Map, Save/Load,
+  Pause, the main and story menus.
+- a **dialog** shown *over* another modal that closes the moment you click
+  one of its buttons - Yes/No confirmations, the pilot-name entry, the
+  "where to?" and landing-spot pickers.
 
-### Possessions Menu (P)
-| Control | Action |
-|---------|--------|
-| **P**, **ESC**, or the **Close** button (top-right) | Close |
-
+### Possessions Menu (open with P)
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
-cargo, personal items, and installed/spare ship outfits. Opens from space,
-a station interior, or a moon interior, over whichever screen it was
-opened from.
+cargo, personal items, and installed/spare ship outfits. Two columns; wheel
+to scroll if it overflows. The **Close** button (top-right) closes it.
+
+### Mission Log (open with N)
+Two tabs - **Active** and **Completed** - clicked to switch. Each mission's
+stages are **numbered** and marked `[x]` done / `->` current; unreached
+stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **Close**
+button top-right.
 
 ### Shop Menu (T, on an NPC with a shop)
 | Control | Action |
 |---------|--------|
-| **Tab** or **Click** a tab | Switch between Buy and Sell |
-| **Arrow keys**, **W/S**, or **Click** an item | Browse the item grid (click just selects, same as browsing) |
-| **Enter** | Buy/sell one unit of the selected item |
-| **ESC** or the **Close** button (top-left) | Close |
+| **Click** a Buy / Sell tab label | Switch tab |
+| **Click** an item | Select it (updates the readout) |
+| **Buy** / **Sell** button, or **double-click** an item | Buy/sell one unit of the selected item |
+| **Mouse wheel** | Scroll the item grid |
+| **Close** button (top-left) | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
 opens this instead of a conversation. Buy lists the shop's stock, priced from
 `commodities.json`/`items.json`; Sell lists whatever you're currently
-carrying in that category, at a fraction of its price. Both are shown as a
-grid of icons with the item's name and its price (Buy) or quantity held and
-sell price (Sell) - see `icon_shape`/`icon_color` in those two config files;
-an item with neither just gets a plain default crate icon. Browsing the grid
-(by arrow key or by clicking an item) is never blocked by affordability, and
-never transacts by itself - only Enter (the actual purchase) does. A
-commodities shop also shows your ship's cargo hold usage, and blocks
-purchases past capacity. Personal items aren't capacity-limited. A successful
-buy shows a brief fading "Bought 1 `<item>`" pill-shaped confirmation near
-the bottom of the panel. Ships and ship outfits get their own dedicated
-menus rather than this one.
+carrying in that category, at a fraction of its price. Both are a grid of
+icons with the item's name and price (Buy) or quantity held and sell price
+(Sell). A single click only selects - the green **Buy**/**Sell** button (or a
+double-click) is what actually trades, so a stray click can't buy. A
+commodities shop shows your ship's cargo hold usage and blocks purchases past
+capacity; personal items aren't capacity-limited. A successful buy shows a
+brief fading "Bought 1 `<item>`" confirmation. Ships and ship outfits get
+their own dedicated menus.
 
 ### Shipyard Menu (T, on an NPC with a `"shop"` of type "ships")
 | Control | Action |
 |---------|--------|
-| **Arrow keys**, **W/S**, or **Click** a ship | Browse the ship grid (click just selects/previews) |
-| **Enter** | Open a Yes/No purchase confirmation for the selected ship |
-| **Y** / **N** or **ESC** | Confirm / cancel the pending purchase |
-| **ESC** or the **Close** button (top-left) | Close (when nothing is pending confirmation) |
+| **Click** a ship | Select it (updates the live preview + stat readout) |
+| **Buy** button, or **double-click** a ship | Open a Yes/No purchase confirmation |
+| **Mouse wheel** | Scroll the ship grid |
+| **Click** a **Yes** / **No** button | Confirm / cancel the pending purchase |
+| **Close** button (top-left) | Close (when nothing is pending confirmation) |
 
-Shows the shop's stock ship types as a grid - each cell a static silhouette,
-name, cost, and (if you already own one) an "(own N)" note. Whichever cell is
-selected also gets a bigger live preview off to the side, with a full stat
-readout (how many you already own, thrust, max velocity, rotation, cargo
-capacity, an "Approximate Size" bucketed from the ship's `graphics.json`
-`size`, and cost). Unlike the grid's static icons, that preview slowly
-rotates and cycles its thrusters on/off, and draws window portholes when the
-ship type's graphics define any (see `windows` in `graphics.json`'s ship
-entries). Browsing the grid (arrow keys or clicking a ship) is never blocked
-by affordability and never opens the purchase confirmation by itself - only
-Enter does that. The confirmation is a dialog (Left/Right + Enter, Y/N/ESC
-shortcuts, or click a button) shown over the menu with its own Yes/No
-buttons, until you resolve it. A confirmed purchase shows a brief fading
-"Bought 1 `<ship>`" confirmation.
-Replaces the old dialogue-tree ship purchase for any NPC whose config uses a
-`"shop"` block instead of a `dialogue_tree` with `buy_ship:<id>` options (the
-spaceport's ship salesman now works this way).
+Shows the shop's stock as a grid - each cell a static silhouette, name, cost,
+and an "(own N)" note if you already have one. The selected cell also gets a
+bigger live preview with a full stat readout. Selecting a ship never checks
+affordability; only the **Buy** button / double-click does, and it opens a
+Yes/No `ConfirmDialog` over the menu. A confirmed purchase shows a brief
+fading "Bought 1 `<ship>`" confirmation.
 
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |
 |---------|--------|
-| **Tab** or **Click** a tab | Switch between Buy and Install |
-| **Arrow keys**, **W/S**, or **Click** an outfit (Buy tab) | Browse the outfit grid (click just selects) |
-| **Enter** (Buy tab) | Buy the selected outfit |
-| **Mouse drag** (Install tab) | Drag a spare outfit onto a slot to equip it, or drag an installed slot back out to unequip |
-| **Click** a slot or spare outfit (Install tab, no drag) | Move keyboard focus there without installing/uninstalling |
-| **Left/Right** (Install tab) | Switch keyboard focus between the slot diagram and the spare-outfits grid |
-| **W/↑** or **S/↓** (Install tab) | Navigate the focused column |
-| **Enter** on an empty focused slot | Open a list of compatible spare outfits to install |
-| **Enter** on an occupied focused slot | Uninstall it back to spares |
-| **ESC** or the **Close** button (top-left) | Close (cancels an open install picker first, if one is open) |
+| **Click** a Buy / Install tab label | Switch tab |
+| **Click** an outfit (Buy tab) | Select it |
+| **Buy** button, or **double-click** an outfit (Buy tab) | Buy the selected outfit |
+| **Mouse wheel** | Scroll the outfit grid |
+| **Drag** a spare outfit onto a slot (Install tab) | Equip it |
+| **Drag** an installed slot out to empty space (Install tab) | Unequip it |
+| **Click** an empty slot (Install tab) | Open the compatible-spares picker |
+| **Double-click** an occupied slot (Install tab) | Uninstall it back to spares |
+| **Click** an outfit in the picker | Install it (click **Cancel** / off a row to dismiss) |
+| **Close** button (top-left) | Close (dismisses an open picker first) |
 
-Buy shows the shop's stock as a grid of icons - a weapon/engine/shield/
-utility outfit gets a default icon for its slot type unless its own config
-sets an `icon_shape`/`icon_color` (see `SLOT_ICON_SHAPES` in
-`game/ui/outfitting_menu.py`). Each cell also shows how many you already own
-(spares plus whatever's currently installed), which slot type it uses, and
-whether your current ship can actually fit one - "Fits your ship", "Equipped"
-(you already have one mounted), "Doesn't fit your ship" (no slot of that
-type), or "No ship yet" if you don't own a ship at all. Browsing (arrow keys
-or clicking an outfit) is never blocked by affordability and never buys by
-itself; only Enter does. Buying adds outfits to your spares
-(`owned_outfits`) - they aren't equipped until installed into a matching
-slot type on the Install tab. A successful buy shows a brief fading
-"Bought 1 `<outfit>`" confirmation.
-
-While the Install tab's compatible-outfit picker popup is open (after
-pressing Enter on an empty slot), the hint line switches to just the
-picker's own controls (Up/Down, Enter, ESC) and the Close button is
-inactive - the Buy/Install tab's normal controls don't apply until the
-picker is dismissed.
-
-Install shows a diagram of the current ship's slots - an occupied slot draws
-that outfit's own icon inside it (plus its name below) - next to a grid of
-your spare (uninstalled) outfits, each shown as an icon with its name/slot
-type. Installing/uninstalling takes effect immediately - thrust, max
-velocity, rotation, and cargo capacity all update right away, not just after
-a reload.
+Buy shows the shop's stock as a grid of icons; each cell shows how many you
+own, its slot type, and whether your ship can fit one. Buying adds an outfit
+to your spares (`owned_outfits`) - not equipped until installed on the
+Install tab, where installing/uninstalling takes effect immediately (thrust,
+velocity, rotation, cargo all update at once).
 
 ### Main Menu / Story Selector
+Each row is a button (with its story blurb under it). The Story Selector adds
+a **Back** button that returns to the Main Menu. Click a row to pick it.
+
+### Save / Load Menus
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Move between the option buttons |
-| **Enter** or **Click** | Select (NEW / LOAD / QUIT, or a story) |
-| **ESC** | (Story Selector only) back to Main Menu |
+| **Click** a save | Select it in the list |
+| **Load** / **Overwrite** button, or **double-click** a save | Load / overwrite the selected save |
+| **New Save** button | Switch to typing a new save name (save mode) |
+| **Delete** button | Delete the selected save (opens a Yes/No confirm) |
+| **Mouse wheel** | Scroll the save list |
+| **Cancel** button | Close |
+| *(name-entry sub-mode)* type / Backspace | Edit the save name - the only keyboard use in any menu |
 
-Both are the same widget (`BackdropMenu`) - each row is a button with the
-story's blurb under it; a hint line sits at the panel's bottom.
-
-### Save/Load Menus
-| Control | Action |
-|---------|--------|
-| **W/↑** or **S/↓** or **Click** a save | Select a save in the list |
-| **Enter**, or the **Load** / **Overwrite** button | Load / overwrite the selected save |
-| **N** or the **New Save** button | Switch to typing a new save name (save mode) |
-| **D** or the **Delete** button | Delete the selected save |
-| **ESC** or the **Cancel** button | Close |
-
-Load and Save are one widget (`SaveBrowser`, `mode="load"` / `"save"`); the
-verbs are buttons along the panel bottom. Deleting a save opens a Yes/No
-confirmation dialog over it.
+Load and Save are one widget (`SaveBrowser`). Save names are shown **without**
+the on-disk `save_` prefix or `.json` suffix. When typing a new name the
+field is pre-filled with `<pilot> - <timestamp>` (so **Save** works with no
+typing); the first keystroke clears it so you can type your own.
 
 ### Pause Menu
+A column of buttons - **Resume** / **Save Game** / **Load Game** / **Quit to
+Menu**. Click one. **Load Game** opens the same `SaveBrowser`; its **Cancel**
+returns to the pause menu, and loading replaces the running game. (ESC opens
+the pause menu from gameplay, but does not close it - use **Resume**.)
+
+### Exit Menu (interior, when the entrance leads to more than one place)
 | Control | Action |
 |---------|--------|
-| **W/↑** or **S/↓** | Move between the buttons |
-| **Enter** or **Click** | Resume / Save Game / Load Game / Quit to Menu |
-| **ESC** | Resume game |
-
-**Load Game** opens the same `SaveBrowser` as the Main Menu; cancelling it
-(ESC) returns to the pause menu, and loading a save replaces the running
-game.
-
-### Exit Menu (interior location, when the entrance leads to more than one place)
-| Control | Action |
-|---------|--------|
-| **W/↑** or **S/↓** | Move between destination buttons |
-| **Enter** or **Click** | Go to that destination (a connected location, or "Return to Ship") |
-| **ESC** | Cancel, stay put |
+| **Click** a destination button | Go there (a connected location, or "Return to Ship") |
+| **Cancel** button | Stay put |
 
 A dialog (`ChoiceDialog`) - each destination is a button in its own panel,
 unavailable ones dimmed. Shown instead of leaving immediately when a

@@ -1,13 +1,10 @@
-"""Galaxy-scale star map overlay: pan around, select a system to jump to."""
+"""Galaxy-scale star map overlay: drag to pan, click a system to select it.
+Mouse-only."""
 import pygame
 from game.constants import WHITE, YELLOW, GREEN, CYAN
 from game.utils import get_ui_scale, get_star_systems, get_font
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel
-
-# Keyboard pan speed, in star-map-space units/frame (unrelated to ui_scale -
-# see handle_input).
-PAN_SPEED = 10
 
 
 class StarMap(MenuBase):
@@ -38,10 +35,7 @@ class StarMap(MenuBase):
         self.button_index = 0
 
     def buttons(self):
-        return [("close", "Close Map (M)", (235, 235, 240), False)]
-
-    def hint_text(self):
-        return "Click a system to select  ·  drag or WASD/arrows to pan"
+        return [("close", "Close Map", (235, 235, 240), False)]
 
     def panel_rect(self, scale):
         import game.utils as _u
@@ -53,12 +47,9 @@ class StarMap(MenuBase):
 
     def handle_input(self, events):
         for event in events:
-            if self.handle_button_click(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
+            if self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
                 return "close"
-            if event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_ESCAPE, pygame.K_m):
-                    return "close"
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     continue
                 clicked = self._system_at(event.pos)
@@ -76,21 +67,6 @@ class StarMap(MenuBase):
                 dy = (event.pos[1] - self.drag_start_mouse[1]) / ui_scale
                 self.pan_x = self.drag_start_pan[0] - dx
                 self.pan_y = self.drag_start_pan[1] - dy
-
-        # Keyboard scrolling - called every frame regardless of events (the
-        # map has no update() of its own; main.py calls handle_input() once
-        # per frame while the map is open), so held keys pan continuously.
-        # Not scaled by ui_scale: pan_x/pan_y live in star-map space, not
-        # screen pixels.
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.pan_x -= PAN_SPEED
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.pan_x += PAN_SPEED
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.pan_y -= PAN_SPEED
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.pan_y += PAN_SPEED
         return None
 
     def _system_at(self, mouse_pos, radius=16):

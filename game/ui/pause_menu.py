@@ -1,4 +1,5 @@
-"""Pause menu during gameplay (see MenuBase) - a column of action buttons."""
+"""Pause menu during gameplay (see MenuBase) - a column of action buttons.
+Mouse-only; **Resume** is the button, there is no ESC-to-resume."""
 import pygame
 import game.utils as utils
 from game.utils import get_ui_scale, get_ui_offset, get_font
@@ -12,9 +13,8 @@ QUIT_ACCENT = (230, 160, 150)
 
 class PauseMenu(MenuBase):
     """Resume / Save Game / Load Game / Quit to Menu, as buttons. `handle_input`
-    returns the picked button's action string (`"resume"` / `"save"` /
+    returns the clicked button's action string (`"resume"` / `"save"` /
     `"load"` / `"quit"`) or `None`."""
-    button_layout = "column"
 
     def __init__(self):
         self._buttons = [
@@ -43,8 +43,6 @@ class PauseMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return "resume"
             pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
             if pressed is not None:
                 return pressed

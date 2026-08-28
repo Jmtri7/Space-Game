@@ -1,5 +1,4 @@
-"""Generic yes/no confirmation dialog (see DialogBase)."""
-import pygame
+"""Generic yes/no confirmation dialog (see DialogBase). Mouse-only."""
 from game.constants import WHITE, YELLOW
 from game.utils import get_ui_scale, get_ui_offset, _center_text_x, get_font
 from game.ui.dialog_base import DialogBase
@@ -8,23 +7,16 @@ from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 YES_ACCENT = (120, 220, 140)   # green
 NO_ACCENT = (230, 150, 150)    # muted red
 
-# Buttons are [Yes, No]; index 1 (No) is the default - two of the three uses
-# (delete / overwrite a save) are destructive, so the safe choice starts
-# focused. Y still confirms instantly; hovering/clicking Yes needs no keyboard.
-_NO_INDEX = 1
-
 
 class ConfirmDialog(DialogBase):
-    """Yes/No confirmation. Move between the two with Left/Right (or Tab),
-    Enter picks the focused one; Y / N / ESC are shortcuts; both buttons are
-    clickable. `handle_input` returns `(action, context_data)` with action
-    `"confirm"` / `"cancel"` / `None`."""
+    """Yes/No confirmation - click a button. `handle_input` returns
+    `(action, context_data)` with action `"confirm"` / `"cancel"` / `None`."""
 
     def __init__(self, title, message, context_data=None):
         self.title = title
         self.message = message
         self.context_data = context_data
-        self.button_index = _NO_INDEX
+        self.button_index = 1  # hover-highlight starts on the safer "No"
 
     def buttons(self):
         return [
@@ -32,16 +24,13 @@ class ConfirmDialog(DialogBase):
             ("cancel", "No", NO_ACCENT, False),
         ]
 
-    def hint_text(self):
-        return "Left/Right or Y / N   ·   Enter confirms   ·   ESC cancels"
-
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.24, 0.8, 0.5)
 
     def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)
         cy = panel.y + int(panel.height * 0.58)
-        return self.button_row_rects(panel.centerx, cy, 2, scale)
+        return self.button_row_rects(panel.centerx, cy, 2, scale, max_width=panel.width - int(32 * scale))
 
     def _result(self, button_id):
         if button_id == "confirm":
@@ -52,11 +41,6 @@ class ConfirmDialog(DialogBase):
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_y:
-                    return ("confirm", self.context_data)
-                if event.key in (pygame.K_n, pygame.K_ESCAPE):
-                    return ("cancel", None)
             result = self._result(self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())))
             if result is not None:
                 return result

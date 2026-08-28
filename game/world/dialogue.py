@@ -105,7 +105,12 @@ class Dialogue:
         self.root = root
         self.conditional_roots = conditional_roots or []
         self.current_node = root
-        self.selected_option = 0
+        self.selected_option = 0  # the option the pointer is hovering
+        # Screen-space hit rects, refreshed by draw() each frame - the
+        # conversation box is mouse-only (click an option, or the ✕ to
+        # leave). See LocationScreen / SpaceScreen handle_input.
+        self._option_rects = []   # [(visible_index, pygame.Rect), ...]
+        self._close_rect = None
 
     @classmethod
     def from_flat(cls, npc_name, greeting, options):
@@ -173,6 +178,18 @@ class Dialogue:
         self.selected_option = 0
         return False
 
+    def option_at(self, pos):
+        """Visible-option index under a screen point (from the last draw()),
+        or None."""
+        for index, rect in self._option_rects:
+            if rect.collidepoint(pos):
+                return index
+        return None
+
+    def close_at(self, pos):
+        """True when `pos` is on the box's ✕ close control."""
+        return self._close_rect is not None and self._close_rect.collidepoint(pos)
+
     def choose(self, index, flags=None):
         """Convenience wrapper for callers with no actions to apply first
         (see the tests, and from_flat's plain closing options) - resolves
@@ -221,20 +238,32 @@ class Dialogue:
         title = font_title.render(self.npc_name, True, (200, 200, 255))
         surface.blit(title, (box_x + text_x_margin, box_y + 10))
 
+        # ✕ close control, top-right of the box (mouse-only exit).
+        close_surf = font_title.render("X", True, (220, 180, 180))
+        close_pos = (box_x + box_width - text_x_margin - close_surf.get_width(), box_y + 10)
+        surface.blit(close_surf, close_pos)
+        self._close_rect = pygame.Rect(close_pos[0] - int(6 * scale), close_pos[1] - int(4 * scale),
+                                       close_surf.get_width() + int(12 * scale), close_surf.get_height() + int(8 * scale))
+
         text_y = box_y + header_height - int(10 * scale)
         for line in text_lines:
             line_surf = font_text.render(line, True, (200, 200, 200))
             surface.blit(line_surf, (box_x + text_x_margin, text_y))
             text_y += text_line_height
 
+        self._option_rects = []
         options_top = box_y + header_height + text_block_height + options_top_gap
         for i, option in enumerate(self.current_options(flags)):
             reason = status_fn(option) if status_fn else None
+            row_y = options_top + i * option_line_height
             if reason:
                 color = (120, 70, 70)
-                label = f"> {option['label']} ({reason})"
+                label = f"{option['label']} ({reason})"
             else:
                 color = (255, 255, 0) if i == self.selected_option else (150, 150, 150)
-                label = f"> {option['label']}"
-            text = font_text.render(label, True, color)
-            surface.blit(text, (box_x + text_x_margin + int(10 * scale), options_top + i * option_line_height))
+                label = option['label']
+                self._option_rects.append((i, pygame.Rect(
+                    box_x + text_x_margin, row_y - int(3 * scale),
+                    box_width - text_x_margin * 2, option_line_height)))
+            text = font_text.render(("> " if not reason and i == self.selected_option else "  ") + label, True, color)
+            surface.blit(text, (box_x + text_x_margin + int(10 * scale), row_y))

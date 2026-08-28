@@ -44,6 +44,17 @@ class SelectableList:
         self.selected = max(0, min(self.selected, len(self.items) - 1))
         self.scroll_offset = max(0, min(self.scroll_offset, max(0, len(self.items) - self.max_visible)))
 
+    def scroll(self, delta):
+        """Move the selection `delta` rows (mouse-wheel handler) and keep it
+        inside the visible window - the mouse-only equivalent of Up/Down."""
+        if not self.items:
+            return
+        self.selected = max(0, min(self.selected + delta, len(self.items) - 1))
+        if self.selected < self.scroll_offset:
+            self.scroll_offset = self.selected
+        elif self.selected >= self.scroll_offset + self.max_visible:
+            self.scroll_offset = self.selected - self.max_visible + 1
+
     def handle_key(self, key, disabled_fn=None):
         """Update selection/scroll for an UP/DOWN/W/S keypress.
 

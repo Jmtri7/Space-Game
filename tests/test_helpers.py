@@ -1515,11 +1515,70 @@ class TestMissionLog(unittest.TestCase):
     implicitly by TestMissionProgress's data (mission_status_lines) and isn't
     worth testing against a mocked pygame surface here."""
 
-    def test_escape_and_n_both_close(self):
+    MISSIONS = {
+        "m1": {"title": "First", "stages": [
+            {"text": "Do A", "complete_flag": "a"},
+            {"text": "Do B", "complete_flag": "b"},
+            {"text": "Do C", "complete_flag": "c"}]},
+        "m2": {"title": "Second", "stages": [{"text": "Only step", "complete_flag": "x"}]},
+    }
+
+    def test_has_a_close_button_and_no_hotkey_label(self):
         menu = ReportMenu(*mission_report({}, Possessions()))
-        for key in (pygame_mock.K_ESCAPE, pygame_mock.K_n):
-            event = SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
-            self.assertEqual(menu.handle_input([event]), "close")
+        self.assertEqual([b[0] for b in menu.buttons()], ["close"])
+        self.assertEqual(menu.buttons()[0][1], "Close")  # not "Close (N)" anymore
+
+    def test_keyboard_does_nothing(self):
+        menu = ReportMenu(*mission_report(self.MISSIONS, Possessions()))
+        for key in (pygame_mock.K_ESCAPE, pygame_mock.K_n, pygame_mock.K_RIGHTBRACKET, pygame_mock.K_DOWN):
+            self.assertIsNone(menu.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)]))
+        self.assertEqual(menu.tab_index, 0)
+        self.assertEqual(menu.scroll, 0)
+
+    def test_report_splits_active_and_completed_onto_tabs(self):
+        possessions = Possessions()
+        possessions.missions["m1"] = 1
+        possessions.completed_missions.append("m2")
+        title, columns, tabs = mission_report(self.MISSIONS, possessions)
+        self.assertEqual([t[0] for t in tabs], ["Active", "Completed"])
+        active_headings = [sec[0] for sec in tabs[0][1][0]]
+        done_headings = [sec[0] for sec in tabs[1][1][0]]
+        self.assertIn("First", active_headings)
+        self.assertIn("Second", done_headings)
+
+    def test_stage_lines_are_numbered_and_marked(self):
+        possessions = Possessions()
+        possessions.missions["m1"] = 1  # step 1 done, on step 2
+        _, _, tabs = mission_report(self.MISSIONS, possessions)
+        first_section_lines = [line for line, _color in tabs[0][1][0][0][1]]
+        self.assertEqual(first_section_lines, ["[x] 1. Do A", "-> 2. Do B"])
+
+    def test_empty_tabs_show_a_placeholder(self):
+        _, _, tabs = mission_report(self.MISSIONS, Possessions())
+        self.assertEqual(tabs[0][1][0][0][1][0][0], "No active missions.")
+        self.assertEqual(tabs[1][1][0][0][1][0][0], "No completed missions yet.")
+
+    def test_selecting_a_tab_switches_and_resets_scroll(self):
+        menu = ReportMenu(*mission_report(self.MISSIONS, Possessions()))
+        menu.scroll = 5
+        menu._select_tab(1)
+        self.assertEqual(menu.tab_index, 1)
+        self.assertEqual(menu.scroll, 0)
+        menu._select_tab(2)  # wraps
+        self.assertEqual(menu.tab_index, 0)
+
+    def test_mouse_wheel_scrolls_within_bounds(self):
+        menu = ReportMenu(*mission_report(self.MISSIONS, Possessions()))
+        menu._max_scroll = 3  # normally set by draw()
+        menu.handle_input([SimpleNamespace(type=pygame_mock.MOUSEWHEEL, y=-5)])
+        self.assertEqual(menu.scroll, 3)
+        menu.handle_input([SimpleNamespace(type=pygame_mock.MOUSEWHEEL, y=10)])
+        self.assertEqual(menu.scroll, 0)
+
+    def test_possessions_report_has_no_tabs(self):
+        result = possessions_report(Possessions())
+        self.assertEqual(len(result), 2)
+        self.assertIsNone(ReportMenu(*result).tabs)
 
 
 class TestMenuDialogClassification(unittest.TestCase):
@@ -1547,50 +1606,48 @@ class TestMenuDialogClassification(unittest.TestCase):
 
 
 class TestChoiceDialog(unittest.TestCase):
-    """ChoiceDialog (was LocationSelector + ExitMenu): pick a key, or cancel;
-    a disabled option can't be committed."""
+    """ChoiceDialog (was LocationSelector + ExitMenu): mouse-only - every
+    option plus an always-present Cancel are buttons; a disabled option
+    can't be committed; the keyboard does nothing."""
 
     def _key(self, key):
         return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
 
-    def test_enter_returns_the_focused_key(self):
+    def test_options_plus_cancel_are_all_buttons(self):
         dialog = ChoiceDialog("Where To?", [("bar", "Bar", None), ("dorm", "Dormitory", None)])
-        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
-        dialog.handle_input([self._key(pygame_mock.K_DOWN)])
-        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "dorm")
+        self.assertEqual([b[0] for b in dialog.buttons()], ["bar", "dorm", "cancel"])
 
-    def test_escape_cancels(self):
-        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None)])
-        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_ESCAPE)]), "cancel")
-
-    def test_focus_never_lands_on_a_disabled_option(self):
+    def test_disabled_option_is_marked_disabled(self):
         dialog = ChoiceDialog("Where To?", [("ship", "Return to Ship", "no ship owned"), ("bar", "Bar", None)])
-        # Starts off the disabled first entry...
-        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
-        # ...and navigation skips over it rather than stopping on it.
-        for _ in range(3):
-            dialog.handle_input([self._key(pygame_mock.K_UP)])
-            self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
+        by_id = {b[0]: b for b in dialog.buttons()}
+        self.assertTrue(by_id["ship"][3])   # disabled
+        self.assertFalse(by_id["bar"][3])
+        self.assertFalse(by_id["cancel"][3])
+
+    def test_keyboard_does_nothing(self):
+        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None)])
+        for key in (pygame_mock.K_RETURN, pygame_mock.K_ESCAPE, pygame_mock.K_DOWN):
+            self.assertIsNone(dialog.handle_input([self._key(key)]))
 
 
 class TestBackdropMenu(unittest.TestCase):
-    """BackdropMenu (was Menu + StorySelector): Enter returns the focused
-    row's value; ESC only cancels when the menu allows it."""
+    """BackdropMenu (was Menu + StorySelector): mouse-only - each row is a
+    button, and a Back button is appended when `allow_cancel`."""
 
     def _key(self, key):
         return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
 
-    def test_enter_returns_row_value(self):
-        menu = BackdropMenu("MAIN", [("new", "NEW", None), ("quit", "QUIT", None)])
-        self.assertEqual(menu.handle_input([self._key(pygame_mock.K_RETURN)]), "new")
-        menu.handle_input([self._key(pygame_mock.K_DOWN)])
-        self.assertEqual(menu.handle_input([self._key(pygame_mock.K_RETURN)]), "quit")
-
-    def test_escape_only_cancels_when_allowed(self):
-        no_cancel = BackdropMenu("MAIN", [("new", "NEW", None)])
-        self.assertIsNone(no_cancel.handle_input([self._key(pygame_mock.K_ESCAPE)]))
+    def test_rows_are_buttons_and_back_appears_only_when_allowed(self):
+        plain = BackdropMenu("MAIN", [("new", "NEW", None), ("quit", "QUIT", None)])
+        self.assertEqual([b[0] for b in plain.buttons()], ["new", "quit"])
         cancelable = BackdropMenu("STORY", [("a", "A", None)], allow_cancel=True)
-        self.assertEqual(cancelable.handle_input([self._key(pygame_mock.K_ESCAPE)]), "cancel")
+        self.assertEqual([b[0] for b in cancelable.buttons()], ["a", "cancel"])
+        self.assertEqual(cancelable.buttons()[-1][1], "Back")
+
+    def test_keyboard_does_nothing(self):
+        menu = BackdropMenu("MAIN", [("new", "NEW", None)], allow_cancel=True)
+        for key in (pygame_mock.K_RETURN, pygame_mock.K_ESCAPE, pygame_mock.K_DOWN):
+            self.assertIsNone(menu.handle_input([self._key(key)]))
 
 
 class TestPossessionsInventory(unittest.TestCase):
@@ -1789,31 +1846,29 @@ class TestShopMenu(unittest.TestCase):
         self.assertEqual(possessions.credits, 50)
         self.assertEqual(possessions.items, {"repair_kit": 1})
 
-    def test_tab_toggles_buy_sell_mode(self):
-        possessions = Possessions()
-        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]})
-        self.assertEqual(shop.mode, "buy")
-        import pygame as mocked_pygame
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
-        self.assertEqual(shop.mode, "sell")
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
-        self.assertEqual(shop.mode, "buy")
-
-    def test_left_right_browse_the_grid_without_changing_mode(self):
-        """Left/Right/Up/Down navigate the icon grid now (see IconGrid) -
-        they used to toggle Buy/Sell, which Tab does instead."""
-        possessions = Possessions()
-        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"]})
-        import pygame as mocked_pygame
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
-        self.assertEqual(shop.mode, "buy")
-        self.assertEqual(shop.buy_list.current(), "medicine")
-
-    def test_escape_closes(self):
-        import pygame as mocked_pygame
+    def test_clicking_a_tab_label_toggles_buy_sell_mode(self):
         shop = ShopMenu(Possessions(), "default", {"type": "commodities", "stock": ["ore"]})
-        result = shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
-        self.assertEqual(result, "close")
+        self.assertEqual(shop.mode, "buy")
+        shop._sell_tab_rect = SimpleNamespace(collidepoint=lambda p: True)
+        shop._buy_tab_rect = SimpleNamespace(collidepoint=lambda p: False)
+        shop._handle_click((0, 0))
+        self.assertEqual(shop.mode, "sell")
+
+    def test_wheel_scrolls_the_grid_without_changing_mode(self):
+        shop = ShopMenu(Possessions(), "default", {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells", "water", "ice"]})
+        import pygame as mocked_pygame
+        shop.handle_input([self._event(mocked_pygame.MOUSEWHEEL, y=-1)])
+        self.assertEqual(shop.mode, "buy")
+        self.assertNotEqual(shop.buy_list.selected, 0)
+
+    def test_keyboard_does_not_close_or_transact(self):
+        import pygame as mocked_pygame
+        possessions = Possessions(credits=100)
+        shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        for key in (mocked_pygame.K_ESCAPE, mocked_pygame.K_RETURN, mocked_pygame.K_TAB):
+            self.assertIsNone(shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=key)]))
+        self.assertEqual(possessions.cargo, {})
+        self.assertIn("close", [b[0] for b in shop.buttons()])
 
     def test_empty_stock_shop_can_still_sell_owned_cargo_at_a_premium(self):
         """A shop with an empty "stock" (e.g. sol_alpha.json's Ilsa Farrow,
@@ -1831,12 +1886,25 @@ class TestShopMenu(unittest.TestCase):
         self.assertEqual(possessions.credits, 14)  # 12cr base_price * 1.2, truncated
         self.assertEqual(possessions.cargo, {"ore": 1})
 
-    def test_enter_transacts_the_selected_item(self):
-        import pygame as mocked_pygame
+    def test_buy_button_press_transacts_the_selected_item(self):
         possessions = Possessions(credits=100)
         shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
-        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        shop._transact(shop._current_list().current())  # what pressing Buy / double-clicking does
         self.assertEqual(possessions.cargo, {"ore": 1})
+
+    def test_panel_exposes_a_buy_button_that_reflects_affordability(self):
+        rich = ShopMenu(Possessions(credits=100), "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        ids = [b[0] for b in rich.buttons()]
+        self.assertIn("buy", ids)
+        self.assertFalse(dict((b[0], b[3]) for b in rich.buttons())["buy"])  # affordable -> enabled
+        broke = ShopMenu(Possessions(credits=0), "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
+        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["buy"])  # can't afford -> disabled
+
+    def test_panel_buy_button_becomes_a_sell_button_on_the_sell_tab(self):
+        shop = ShopMenu(Possessions(cargo={"ore": 1}), "default", {"type": "commodities", "stock": ["ore"]})
+        shop.mode = "sell"
+        self.assertIn("sell", [b[0] for b in shop.buttons()])
+        self.assertEqual([b[1] for b in shop.buttons() if b[0] == "sell"], ["Sell"])
 
 
 class TestShipBrowserMenu(unittest.TestCase):
@@ -1848,54 +1916,56 @@ class TestShipBrowserMenu(unittest.TestCase):
     def _event(self, type_, **kwargs):
         return SimpleNamespace(type=type_, **kwargs)
 
-    def test_enter_opens_a_confirm_dialog_instead_of_buying_immediately(self):
-        import pygame as mocked_pygame
+    def test_open_confirm_shows_a_dialog_instead_of_buying_immediately(self):
         bought = []
         possessions = Possessions(credits=1200)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu._open_confirm(menu.grid.current())  # what the Buy button / double-click does
         self.assertIsNotNone(menu.confirm)
         self.assertEqual(bought, [])  # not yet - still waiting on confirmation
         self.assertEqual(possessions.credits, 1200)
 
     def test_confirming_calls_on_buy_with_the_selected_ship_type(self):
-        import pygame as mocked_pygame
         bought = []
-        possessions = Possessions(credits=1200)
-        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_y)])
+        menu = ShipBrowserMenu(Possessions(credits=1200), "default", {"stock": ["shuttle"]}, on_buy=bought.append)
+        menu._open_confirm(menu.grid.current())
+        self.assertEqual(menu.confirm.context_data, "shuttle")
+        # the confirm dialog resolves "Yes"
+        menu.confirm = SimpleNamespace(handle_input=lambda evs: ("confirm", "shuttle"))
+        menu.handle_input([self._event(pygame_mock.MOUSEBUTTONDOWN, button=1, pos=(0, 0))])
         self.assertEqual(bought, ["shuttle"])
         self.assertIsNone(menu.confirm)
 
-    def test_cannot_afford_blocks_enter_from_opening_confirm(self):
-        import pygame as mocked_pygame
+    def test_cannot_afford_blocks_the_confirm_from_opening(self):
         bought = []
         possessions = Possessions(credits=0)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu._open_confirm(menu.grid.current())
         self.assertIsNone(menu.confirm)
         self.assertEqual(bought, [])
 
-    def test_escape_closes(self):
+    def test_keyboard_does_nothing(self):
         import pygame as mocked_pygame
         menu = ShipBrowserMenu(Possessions(), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
-        result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
-        self.assertEqual(result, "close")
+        for key in (mocked_pygame.K_ESCAPE, mocked_pygame.K_RETURN, mocked_pygame.K_DOWN):
+            self.assertIsNone(menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=key)]))
+        self.assertIsNone(menu.confirm)
 
-    def test_navigation_does_not_skip_unaffordable_ships(self):
-        """Regression test: the preview used to be tied to a cursor that
-        skipped over unaffordable ships whenever at least one WAS
-        affordable, so you couldn't preview (or even see) a ship you
-        couldn't yet buy. shuttle costs 1200cr, freighter costs 4500cr -
-        affording the shuttle only must not block navigating onto/
-        previewing the freighter."""
+    def test_wheel_scrolls_without_skipping_unaffordable_ships(self):
+        """shuttle costs 1200cr, freighter costs 4500cr - affording the
+        shuttle only must not block scrolling onto/previewing the freighter."""
         import pygame as mocked_pygame
         possessions = Possessions(credits=1200)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle", "freighter"]}, on_buy=lambda x: None)
         self.assertEqual(menu.grid.current(), "shuttle")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_DOWN)])
+        menu.handle_input([self._event(mocked_pygame.MOUSEWHEEL, y=-1)])
         self.assertEqual(menu.grid.current(), "freighter")
+
+    def test_panel_exposes_a_buy_button_gated_on_affordability(self):
+        rich = ShipBrowserMenu(Possessions(credits=5000), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("buy"), False)
+        broke = ShipBrowserMenu(Possessions(credits=0), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["buy"])
 
 
 class TestApproximateSizeLabel(unittest.TestCase):
@@ -1976,44 +2046,49 @@ class TestOutfittingMenu(unittest.TestCase):
         self.assertEqual(menu._compatible_owned_outfits("engine"), ["afterburner"])
         self.assertEqual(menu._compatible_owned_outfits("shield"), [])
 
-    def test_enter_on_empty_slot_opens_picker_filtered_to_compatible_outfits(self):
-        import pygame as mocked_pygame
+    def _click_slot(self, menu, slot_id):
+        menu._slot_rects = {slot_id: SimpleNamespace(collidepoint=lambda pos: True)}
+        menu._handle_mouse_down((5, 5))
+
+    def test_clicking_an_empty_slot_opens_picker_filtered_to_compatible_outfits(self):
         possessions = Possessions(owned_outfits=["laser_cannon", "afterburner"])
         menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
-        menu.slot_focus = 0  # weapon_1, per ship_types.json's patrol entry
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu.tab = "install"
+        weapon_slot = next(s["id"] for s in menu.slots if s["type"] == "weapon")
+        menu.slot_focus = next(i for i, s in enumerate(menu.slots) if s["id"] == weapon_slot)
+        self._click_slot(menu, weapon_slot)
         self.assertIsNotNone(menu.picker)
         self.assertEqual(menu.picker.items, ["laser_cannon"])
 
-    def test_picker_enter_installs_and_calls_outfits_changed_callback(self):
-        import pygame as mocked_pygame
+    def test_picker_click_installs_and_calls_outfits_changed_callback(self):
         changed = []
         possessions = Possessions(owned_outfits=["laser_cannon"])
         menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol", on_outfits_changed=lambda: changed.append(True))
-        menu.slot_focus = 0
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
-        self.assertEqual(possessions.installed_outfits, {"weapon_1": "laser_cannon"})
+        weapon_slot = next(s["id"] for s in menu.slots if s["type"] == "weapon")
+        menu.slot_focus = next(i for i, s in enumerate(menu.slots) if s["id"] == weapon_slot)
+        menu.tab = "install"
+        self._click_slot(menu, weapon_slot)
+        menu.picker._row_rects = [(0, SimpleNamespace(collidepoint=lambda pos: True))]
+        menu._handle_mouse_down((5, 5))
+        self.assertEqual(possessions.installed_outfits, {weapon_slot: "laser_cannon"})
         self.assertEqual(possessions.owned_outfits, [])
         self.assertEqual(changed, [True])
 
-    def test_enter_on_occupied_slot_uninstalls_and_calls_callback(self):
-        import pygame as mocked_pygame
+    def test_uninstall_returns_the_outfit_and_calls_callback(self):
         changed = []
         possessions = Possessions(installed_outfits={"weapon_1": "laser_cannon"})
         menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol", on_outfits_changed=lambda: changed.append(True))
-        menu.slot_focus = 0
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu._uninstall("weapon_1")  # what dragging a slot out / double-clicking it does
         self.assertEqual(possessions.installed_outfits, {})
         self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
         self.assertEqual(changed, [True])
 
-    def test_enter_on_empty_slot_with_no_compatible_outfits_does_not_open_picker(self):
-        import pygame as mocked_pygame
+    def test_clicking_an_empty_slot_with_no_compatible_outfits_does_not_open_picker(self):
         possessions = Possessions(owned_outfits=["afterburner"])  # engine, not weapon
         menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
-        menu.slot_focus = 0  # weapon_1
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        menu.tab = "install"
+        weapon_slot = next(s["id"] for s in menu.slots if s["type"] == "weapon")
+        self._click_slot(menu, weapon_slot)
         self.assertIsNone(menu.picker)
 
     def test_buying_an_outfit_spends_credits_and_adds_to_owned(self):
@@ -2023,16 +2098,13 @@ class TestOutfittingMenu(unittest.TestCase):
         self.assertEqual(possessions.credits, 200)  # 1000 - 800cr
         self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
 
-    def test_buy_grid_navigation_does_not_skip_unaffordable_outfits(self):
-        """laser_cannon costs 800cr, afterburner costs 1500cr - affording
-        only the cannon must not block browsing onto the afterburner (same
-        preview-vs-selection fix as ShopMenu/ShipBrowserMenu)."""
+    def test_wheel_scrolls_the_buy_grid_without_skipping_unaffordable_outfits(self):
         import pygame as mocked_pygame
         possessions = Possessions(credits=800)
-        menu = OutfittingMenu(possessions, "default", {"stock": ["laser_cannon", "afterburner"]}, None)
+        menu = OutfittingMenu(possessions, "default", {"stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion"]}, None)
         self.assertEqual(menu.buy_grid.current(), "laser_cannon")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RIGHT)])
-        self.assertEqual(menu.buy_grid.current(), "afterburner")
+        menu.handle_input([self._event(mocked_pygame.MOUSEWHEEL, y=-1)])
+        self.assertNotEqual(menu.buy_grid.current(), "laser_cannon")
 
     def test_icon_for_defaults_to_slot_type_when_outfit_has_no_icon_shape(self):
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, None)
@@ -2040,21 +2112,20 @@ class TestOutfittingMenu(unittest.TestCase):
         self.assertEqual(icon_shape, "blade")
         self.assertEqual(icon_color, SLOT_COLORS["weapon"])
 
-    def test_left_right_switches_focus_column(self):
-        """Left/Right switches slot-diagram-vs-owned-list focus on the
-        Install tab now (Tab moved to the top-level Buy/Install switch, to
-        free Left/Right for the Buy tab's icon grid navigation)."""
-        import pygame as mocked_pygame
-        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
-        self.assertEqual(menu.focus_column, "slots")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_LEFT)])
+    def test_clicking_the_owned_grid_moves_focus_there(self):
+        menu = OutfittingMenu(Possessions(owned_outfits=["laser_cannon"]), "default", {"stock": []}, "patrol")
+        menu.tab = "install"
+        menu._slot_rects = {}
+        menu.owned_grid.last_rects = {0: SimpleNamespace(collidepoint=lambda pos: True)}
+        menu._handle_mouse_down((5, 5))
         self.assertEqual(menu.focus_column, "owned")
 
-    def test_tab_switches_buy_install_tab(self):
-        import pygame as mocked_pygame
+    def test_clicking_a_tab_label_switches_buy_install(self):
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
         self.assertEqual(menu.tab, "install")
-        menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_TAB)])
+        menu._buy_tab_rect = SimpleNamespace(collidepoint=lambda pos: True)
+        menu._install_tab_rect = SimpleNamespace(collidepoint=lambda pos: False)
+        menu._handle_mouse_down((5, 5))
         self.assertEqual(menu.tab, "buy")
 
     def test_no_ship_defaults_to_buy_tab(self):
@@ -2062,11 +2133,60 @@ class TestOutfittingMenu(unittest.TestCase):
         self.assertEqual(menu.tab, "buy")
         self.assertEqual(menu.slots, [])
 
-    def test_escape_closes(self):
+    def test_keyboard_does_nothing_and_close_is_a_button(self):
         import pygame as mocked_pygame
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, "patrol")
-        result = menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_ESCAPE)])
-        self.assertEqual(result, "close")
+        for key in (mocked_pygame.K_ESCAPE, mocked_pygame.K_RETURN, mocked_pygame.K_TAB):
+            self.assertIsNone(menu.handle_input([self._event(mocked_pygame.KEYDOWN, key=key)]))
+        self.assertIn("close", [b[0] for b in menu.buttons()])
+
+    def test_buy_tab_has_a_buy_button_the_install_tab_does_not(self):
+        menu = OutfittingMenu(Possessions(credits=1000), "default", {"stock": ["laser_cannon"]}, "patrol")
+        menu.tab = "buy"
+        self.assertIn("buy", [b[0] for b in menu.buttons()])
+        menu.tab = "install"
+        self.assertNotIn("buy", [b[0] for b in menu.buttons()])
+
+    def test_clicking_an_empty_slot_opens_the_picker(self):
+        possessions = Possessions(owned_outfits=["laser_cannon"])
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
+        menu.tab = "install"
+        weapon_slot = next(s["id"] for s in menu.slots if s["type"] == "weapon")
+        menu._slot_rects = {weapon_slot: SimpleNamespace(collidepoint=lambda pos: True)}
+        menu._handle_mouse_down((5, 5))
+        self.assertIsNotNone(menu.picker)
+        self.assertEqual(menu.picker.items, ["laser_cannon"])
+
+    def test_clicking_a_picker_row_installs_that_outfit(self):
+        possessions = Possessions(owned_outfits=["laser_cannon"])
+        menu = OutfittingMenu(possessions, "default", {"stock": []}, "patrol")
+        menu.tab = "install"
+        menu.slot_focus = next(i for i, s in enumerate(menu.slots) if s["type"] == "weapon")
+        menu.picker = SelectableList(["laser_cannon"], max_visible=6)
+        menu.picker._row_rects = [(0, SimpleNamespace(collidepoint=lambda pos: True))]
+        menu._handle_mouse_down((5, 5))
+        self.assertIsNone(menu.picker)
+        self.assertEqual(possessions.installed_outfits, {menu.slots[menu.slot_focus]["id"]: "laser_cannon"})
+
+
+class TestPilotNameDialog(unittest.TestCase):
+    def _event(self, type_, **kwargs):
+        return SimpleNamespace(type=type_, **kwargs)
+
+    def test_name_is_prefilled_so_start_is_enabled_for_a_mouse_only_player(self):
+        from game.ui.pilot_name_dialog import PilotNameDialog
+        dialog = PilotNameDialog()
+        self.assertTrue(dialog.pilot_name)
+        self.assertFalse(dict((b[0], b[3]) for b in dialog.buttons())["start"])  # not disabled
+
+    def test_first_keystroke_replaces_the_default_then_appends(self):
+        import pygame as mocked_pygame
+        from game.ui.pilot_name_dialog import PilotNameDialog
+        dialog = PilotNameDialog()
+        dialog.handle_input([self._event(mocked_pygame.TEXTINPUT, text="A")])
+        self.assertEqual(dialog.pilot_name, "A")
+        dialog.handle_input([self._event(mocked_pygame.TEXTINPUT, text="b")])
+        self.assertEqual(dialog.pilot_name, "Ab")
 
 
 class TestDialogue(unittest.TestCase):
@@ -2887,19 +3007,24 @@ class TestStoryVersioning(unittest.TestCase):
     that a save's story config or this game's state-handling code has
     changed since the save was made."""
 
+    # Read the live version from story.json rather than pinning a literal, so
+    # a routine version bump (see CLAUDE.md's story-versioning rules) doesn't
+    # need a test edit - these assert the plumbing, not the number.
+    CURRENT_VERSION = utils.get_story("default")["version"]
+
     def test_space_screen_reads_story_version_from_story_json(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        self.assertEqual(game_screen.story_version, "1.7.0")
+        self.assertEqual(game_screen.story_version, self.CURRENT_VERSION)
 
     def test_build_save_game_state_records_story_version(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_state, _ = build_save_game_state(game_screen, "game", None, None)
-        self.assertEqual(game_state["story_version"], "1.7.0")
+        self.assertEqual(game_state["story_version"], self.CURRENT_VERSION)
 
     def test_matching_version_prints_no_warning(self):
         captured = io.StringIO()
         with patch("sys.stderr", captured):
-            warn_if_story_version_mismatch("default", "1.7.0")
+            warn_if_story_version_mismatch("default", self.CURRENT_VERSION)
         self.assertEqual(captured.getvalue(), "")
 
     def test_mismatched_version_warns(self):
@@ -2907,7 +3032,7 @@ class TestStoryVersioning(unittest.TestCase):
         with patch("sys.stderr", captured):
             warn_if_story_version_mismatch("default", "0.9.0")
         self.assertIn("0.9.0", captured.getvalue())
-        self.assertIn("1.7.0", captured.getvalue())
+        self.assertIn(self.CURRENT_VERSION, captured.getvalue())
 
     def test_missing_version_warns(self):
         """A save made before story versioning existed has no
@@ -3600,11 +3725,12 @@ class TestStationTour(unittest.TestCase):
         self.assertEqual(possessions.missions["station_tour"], 1)
 
         for flag in ["walked_interior", "targeted_person", "talked_to_npc",
-                     "viewed_mission_log", "viewed_possessions", "took_loan"]:
+                     "viewed_mission_log", "viewed_possessions",
+                     "scrolled_message_log", "took_loan"]:
             possessions.flags[flag] = True
             check_mission_progress(missions, possessions)
-        # 6 flag-driven stages consumed -> now on the "buy a ship" stage
-        self.assertEqual(possessions.missions["station_tour"], 7)
+        # 7 flag-driven stages consumed -> now on the "buy a ship" stage
+        self.assertEqual(possessions.missions["station_tour"], 8)
 
         possessions.flags["bought_ship"] = True
         check_mission_progress(missions, possessions)  # -> farewell stage
@@ -3638,6 +3764,28 @@ class TestStationTour(unittest.TestCase):
         keys[pygame_mock.K_d] = True  # move right, into open concourse
         concourse._handle_movement(keys)
         self.assertTrue(concourse.player.possessions.flags.get("walked_interior"))
+
+    def _wheel_over_log(self, concourse, max_scroll):
+        """Simulate a mouse-wheel tick with the pointer over a drawn,
+        `max_scroll`-deep Message Log pane."""
+        concourse._message_log_rect = SimpleNamespace(collidepoint=lambda pos: True)
+        concourse._message_log_max_scroll = max_scroll
+        pygame_mock.mouse.get_pos.return_value = (10, 10)
+        concourse.handle_input([SimpleNamespace(type=pygame_mock.MOUSEWHEEL, y=-1)])
+
+    def test_scrolling_the_message_log_sets_the_scrolled_flag(self):
+        concourse, _ = self._concourse()
+        self._wheel_over_log(concourse, max_scroll=3)
+        self.assertTrue(concourse.player.possessions.flags.get("scrolled_message_log"))
+
+    def test_scrolling_an_unscrollable_log_does_not_set_the_flag(self):
+        concourse, _ = self._concourse()
+        self._wheel_over_log(concourse, max_scroll=0)
+        self.assertFalse(concourse.player.possessions.flags.get("scrolled_message_log"))
+
+    def test_scroll_message_log_is_a_station_tour_stage(self):
+        stages = utils.get_missions("default")["station_tour"]["stages"]
+        self.assertIn("scrolled_message_log", [s.get("complete_flag") for s in stages])
 
 
 class TestLocationScreenEconomy(unittest.TestCase):
@@ -3748,34 +3896,29 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen._apply_dialogue_action("take_loan")
         self.assertTrue(screen.player.possessions.flags.get("took_loan"))
 
-    def test_navigation_skips_blocked_dialogue_options(self):
-        """Regression test: the cursor used to be able to move onto (and
-        then Enter-confirm) a dialogue option that was drawn dim/blocked -
-        e.g. cycling DOWN past an unaffordable ship onto a second
-        unaffordable ship. _next_selectable_option must skip it."""
+    def test_first_selectable_option_skips_blocked_ones_for_the_initial_hover(self):
         screen = self._make_screen(credits=0)
         options = [
             {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"},
             {"label": "Patrol - 3500cr", "action": "buy_ship:patrol"},
             {"label": "Leave"},
         ]
-        # Both ships are unaffordable at 0 credits - DOWN from "Leave"
-        # should wrap straight back to "Leave" itself, never landing on
-        # either blocked option.
-        self.assertEqual(screen._next_selectable_option(options, 2, 1), 2)
-        # First selectable when nothing is affordable is "Leave" (index 2).
-        self.assertEqual(screen._first_selectable_option(options), 2)
+        self.assertEqual(screen._first_selectable_option(options), 2)  # only "Leave" is takeable
+        self.assertEqual(self._make_screen(credits=1200)._first_selectable_option(options), 0)
 
-    def test_navigation_lands_on_the_one_affordable_option(self):
-        screen = self._make_screen(credits=1200)
-        options = [
+    def test_clicking_a_blocked_dialogue_option_does_nothing(self):
+        """Regression: a dim/blocked option (e.g. an unaffordable ship)
+        must not be actionable, whether cursored onto or clicked."""
+        screen = self._make_screen(credits=0)
+        nodes = {"start": {"text": "hi", "options": [
             {"label": "Shuttle - 1200cr", "action": "buy_ship:shuttle"},
-            {"label": "Patrol - 3500cr", "action": "buy_ship:patrol"},
-            {"label": "Leave"},
-        ]
-        self.assertEqual(screen._first_selectable_option(options), 0)
-        # DOWN from Shuttle should skip the unaffordable Patrol and land on Leave.
-        self.assertEqual(screen._next_selectable_option(options, 0, 1), 2)
+            {"label": "Leave", "next": None},
+        ]}}
+        screen.active_dialogue = Dialogue("Dax", nodes)
+        screen._choose_dialogue_option(0)  # the unaffordable ship
+        self.assertIsNotNone(screen.active_dialogue)  # still open, nothing bought
+        screen._choose_dialogue_option(1)  # "Leave"
+        self.assertIsNone(screen.active_dialogue)
 
 
 class TestSelectableListDisabledNavigation(unittest.TestCase):
@@ -3876,74 +4019,58 @@ class TestCreateSaveFileNameCollision(unittest.TestCase):
         self.assertEqual(path1, path2)
 
 
-class TestSaveDialogNewSaveKey(unittest.TestCase):
-    """Regression test: pressing N to start a new save emits both a KEYDOWN
-    and a TEXTINPUT("n") event in the same pygame frame. handle_input() used
-    to process the KEYDOWN (switching into input_mode) and then the
-    TEXTINPUT from the very same keypress, appending a stray "n" to the
-    pre-populated save name. See game/ui/save_browser.py's _suppress_next_text."""
+class TestSaveBrowserNameEntry(unittest.TestCase):
+    """Typing a new save name - the one place the keyboard is still used in a
+    menu (input_mode only, and only to edit the text field)."""
 
     def _event(self, type_, **kwargs):
         return SimpleNamespace(type=type_, **kwargs)
 
-    def test_pressing_n_does_not_append_n_to_save_name(self):
-        dialog = SaveBrowser("save", pilot_name="Test")
-        dialog.list.items = ["existing_save"]
-        dialog.input_mode = False
-        name_before = dialog.save_name
+    def test_first_keystroke_replaces_the_prefilled_default_then_appends(self):
+        b = SaveBrowser("save", pilot_name="Test")
+        b._enter_input_mode()  # e.g. clicking "New Save"
+        self.assertTrue(b.save_name)  # pre-filled
+        b.handle_input([self._event(pygame_mock.TEXTINPUT, text="x")])
+        self.assertEqual(b.save_name, "x")
+        b.handle_input([self._event(pygame_mock.TEXTINPUT, text="y")])
+        self.assertEqual(b.save_name, "xy")
 
-        events = [
-            self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n),
-            self._event(pygame_mock.TEXTINPUT, text="n"),
-        ]
-        dialog.handle_input(events)
-
-        self.assertTrue(dialog.input_mode)
-        self.assertEqual(dialog.save_name, name_before)
-
-    def test_textinput_still_works_after_the_suppressed_one(self):
-        dialog = SaveBrowser("save", pilot_name="Test")
-        dialog.list.items = ["existing_save"]
-        dialog.input_mode = False
-
-        dialog.handle_input([
-            self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n),
-            self._event(pygame_mock.TEXTINPUT, text="n"),
-        ])
-        name_after_n = dialog.save_name
-        dialog.handle_input([self._event(pygame_mock.TEXTINPUT, text="x")])
-
-        self.assertEqual(dialog.save_name, name_after_n + "x")
+    def test_typing_does_nothing_while_browsing_the_list(self):
+        b = SaveBrowser("save", pilot_name="Test")
+        b.list.items = ["save_old.json"]
+        b.input_mode = False
+        before = b.save_name
+        b.handle_input([self._event(pygame_mock.TEXTINPUT, text="z")])
+        self.assertEqual(b.save_name, before)
 
 
 class TestSaveBrowserContract(unittest.TestCase):
-    """The (action, payload) tuples main.py's load/pause branches switch on."""
-
-    def _event(self, type_, **kwargs):
-        return SimpleNamespace(type=type_, **kwargs)
+    """The (action, payload) tuples main.py's load/pause branches switch on -
+    driven by the button `_press()` now that the menu is mouse-only."""
 
     def test_load_mode_actions(self):
         b = SaveBrowser("load")
         b.list.items = ["save_a.json", "save_b.json"]
-        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("load", "save_a.json"))
-        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_d)]), ("delete", "save_a.json"))
-        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_ESCAPE)]), ("cancel", None))
+        b.list.selected = 0
+        self.assertEqual(b._press("act"), ("load", "save_a.json"))
+        self.assertEqual(b._press("delete"), ("delete", "save_a.json"))
+        self.assertEqual(b._press("cancel"), ("cancel", None))
+        self.assertNotIn("new", [btn[0] for btn in b.buttons()])
 
     def test_save_mode_overwrite_vs_new(self):
         b = SaveBrowser("save", pilot_name="Kai")
         b.list.items = ["save_old.json"]
         b.input_mode = False
-        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("save", "save_old.json"))
-        # N drops into text entry; Enter there returns the typed name.
-        b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n)])
+        b.list.selected = 0
+        self.assertEqual(b._press("act"), ("save", "save_old.json"))
+        b._press("new")
         self.assertTrue(b.input_mode)
-        self.assertEqual(b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_RETURN)]), ("save", b.save_name))
+        self.assertEqual(b._press("save"), ("save", b.save_name))
 
-    def test_load_mode_has_no_new_save_key(self):
-        b = SaveBrowser("load")
-        b.list.items = ["save_a.json"]
-        b.handle_input([self._event(pygame_mock.KEYDOWN, key=pygame_mock.K_n)])
-        self.assertFalse(b.input_mode)
+    def test_display_name_strips_prefix_and_suffix(self):
+        from game.utils import save_display_name
+        self.assertEqual(save_display_name("save_Kai - 2026-01-02 0900.json"), "Kai - 2026-01-02 0900")
+        self.assertEqual(save_display_name("already clean"), "already clean")
 
 
 class TestAdvanceAccumulator(unittest.TestCase):

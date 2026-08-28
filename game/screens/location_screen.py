@@ -354,6 +354,12 @@ class LocationScreen(ScreenBase):
         self.message_banner = None
         self.message_banner_timer = 0
         self._message_log_rect = None
+        # Set by draw() each frame from draw_message_log's return - how many
+        # lines the log can scroll past its visible window right now. Used by
+        # handle_input to only count a wheel-scroll toward the
+        # "scrolled_message_log" tutorial flag when there was actually
+        # something to scroll.
+        self._message_log_max_scroll = 0
 
     def _build_local_character(self, cfg):
         """Build one config-driven local resident: a Person (with a
@@ -602,18 +608,6 @@ class LocationScreen(ScreenBase):
             if not self._option_blocked_reason(option):
                 return i
         return 0  # every option blocked - nothing better to land on
-
-    def _next_selectable_option(self, options, current, direction):
-        """Index reached by moving `current` by `direction` (+1/-1, with
-        wraparound), skipping any option _option_blocked_reason blocks -
-        the cursor should never be able to land on (and thus Enter-confirm)
-        one, matching how a blocked option is drawn (dim, not selectable)."""
-        index = current
-        for _ in range(len(options)):
-            index = (index + direction) % len(options)
-            if not self._option_blocked_reason(options[index]):
-                return index
-        return current  # every option blocked - stay put
 
     def _targetable_people(self):
         """NPCs plus any visiting AI pilots currently in this location -
@@ -1088,6 +1082,7 @@ class LocationScreen(ScreenBase):
             message_log_rect, message_log_max_scroll = draw_message_log(
                 surface, messages, ui_scale, self.message_log_scroll, alert=self.message_alert_timer > 0)
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
+            self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
@@ -1112,24 +1107,35 @@ class LocationScreen(ScreenBase):
         building_type = get_building_type(self.story, building_type_id)
         metal_color = tuple(building_type.get("color", (150, 150, 150)))
         glass_color = tuple(building_type.get("window_color", (255, 255, 0)))
+        # A near-black outline on every hull shape so furniture and buildings
+        # read as distinct objects instead of melting into the floor / each
+        # other (they're all drawn in the same culture metal_color). Scales
+        # with zoom but never vanishes.
+        outline_color = (12, 10, 16)
+        outline_w = max(1, int(round(2 * scale)))
         anchor_x, anchor_y = structure["x"], structure["y"]
         shape = building_type.get("shape", "rect")
 
         if shape == "circle":
             radius = building_type.get("radius", 50)
             cx, cy = to_screen(anchor_x, anchor_y)
-            pygame.draw.circle(surface, metal_color, (cx, cy), max(1, int(radius * scale)))
+            r = max(1, int(radius * scale))
+            pygame.draw.circle(surface, metal_color, (cx, cy), r)
+            pygame.draw.circle(surface, outline_color, (cx, cy), r, outline_w)
         elif shape == "polygon":
             local_points = building_type.get("local_points", [])
             screen_points = [to_screen(anchor_x + lx, anchor_y + ly) for lx, ly in local_points]
             if len(screen_points) >= 3:
                 pygame.draw.polygon(surface, metal_color, screen_points)
+                pygame.draw.polygon(surface, outline_color, screen_points, outline_w)
         else:  # rect
             width = building_type.get("width", 100)
             height = building_type.get("height", 100)
             x1, y1 = to_screen(anchor_x, anchor_y)
             x2, y2 = to_screen(anchor_x + width, anchor_y + height)
-            pygame.draw.rect(surface, metal_color, (x1, y1, x2 - x1, y2 - y1))
+            rect = (x1, y1, x2 - x1, y2 - y1)
+            pygame.draw.rect(surface, metal_color, rect)
+            pygame.draw.rect(surface, outline_color, rect, outline_w)
 
         window_shape = building_type.get("window_shape", "rect")
         window_size = building_type.get("window_size", 12)
@@ -1235,11 +1241,48 @@ class LocationScreen(ScreenBase):
 
         return lambda surface: None
 
+    def _choose_dialogue_option(self, index):
+        """Act on the visible option at `index` (a mouse click on it) - apply
+        its actions, then advance/close the conversation. Shared by the click
+        handler; mirrors the old Enter path."""
+        flags = self.player.possessions.flags
+        options = self.active_dialogue.current_options(flags)
+        if not 0 <= index < len(options):
+            return
+        option = options[index]
+        if self._option_blocked_reason(option):
+            return
+        for action in option_actions(option):
+            self._apply_dialogue_action(action)
+        # advance(option), not choose(index, flags) - an action just applied
+        # (e.g. "set_flag:") can change what current_options(flags) returns.
+        if self.active_dialogue.advance(option):
+            self.active_dialogue = None
+        else:
+            self.active_dialogue.selected_option = self._first_selectable_option(
+                self.active_dialogue.current_options(flags))
+
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
+            # A conversation is mouse-only and swallows all input while open:
+            # hover highlights an option, a click picks it, the ✕ closes.
+            if self.active_dialogue:
+                if event.type == pygame.MOUSEMOTION:
+                    hovered = self.active_dialogue.option_at(event.pos)
+                    if hovered is not None:
+                        self.active_dialogue.selected_option = hovered
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.active_dialogue.close_at(event.pos):
+                        self.active_dialogue = None
+                    else:
+                        picked = self.active_dialogue.option_at(event.pos)
+                        if picked is not None:
+                            self._choose_dialogue_option(picked)
+                continue
+
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not self.active_dialogue and not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
+                if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_person_target_at(*to_world(*event.pos))
                 continue
 
@@ -1250,40 +1293,15 @@ class LocationScreen(ScreenBase):
                 # bound is clamped against max_scroll in draw().
                 if self._message_log_rect and self._message_log_rect.collidepoint(pygame.mouse.get_pos()):
                     self.message_log_scroll = max(0, self.message_log_scroll - event.y)
+                    # Generic gameplay-event flag (mirrors "walked_interior" /
+                    # "targeted_person") - lets a tutorial stage use
+                    # "scrolled_message_log" as its complete_flag. Only counts
+                    # when the log actually had a backlog to scroll.
+                    if self._message_log_max_scroll > 0:
+                        self.player.possessions.flags["scrolled_message_log"] = True
                 continue
 
             if event.type != pygame.KEYDOWN:
-                continue
-
-            if self.active_dialogue:
-                # While talking, input drives the dialogue box instead of movement.
-                # flags gates which options even show up (see Dialogue.current_options) -
-                # fetched fresh from the live Possessions each time, not cached, so a
-                # flag set mid-conversation (via "set_flag:" below) is reflected the
-                # instant the option list is next read.
-                flags = self.player.possessions.flags
-                options = self.active_dialogue.current_options(flags)
-                if event.key in (pygame.K_UP, pygame.K_w):
-                    self.active_dialogue.selected_option = self._next_selectable_option(options, self.active_dialogue.selected_option, -1)
-                elif event.key in (pygame.K_DOWN, pygame.K_s):
-                    self.active_dialogue.selected_option = self._next_selectable_option(options, self.active_dialogue.selected_option, 1)
-                elif event.key == pygame.K_RETURN:
-                    option = options[self.active_dialogue.selected_option]
-                    if not self._option_blocked_reason(option):
-                        for action in option_actions(option):
-                            self._apply_dialogue_action(action)
-                        # advance(option), not choose(index, flags) - an
-                        # action just applied above (e.g. "set_flag:") can
-                        # change what current_options(flags) itself returns
-                        # (see Dialogue.advance's docstring), so re-deriving
-                        # the filtered list now and re-indexing into it
-                        # could silently pick the wrong option.
-                        if self.active_dialogue.advance(option):
-                            self.active_dialogue = None
-                        else:
-                            self.active_dialogue.selected_option = self._first_selectable_option(self.active_dialogue.current_options(flags))
-                elif event.key == pygame.K_ESCAPE:
-                    self.active_dialogue = None
                 continue
 
             if event.key == pygame.K_l:

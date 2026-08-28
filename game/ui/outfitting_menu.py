@@ -182,70 +182,27 @@ class OutfittingMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
-            if self.picker is None and self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
-                return "close"
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.picker is None:
+                pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
+                if pressed == "close":
+                    return "close"
+                if pressed == "buy" and self.buy_grid.current():
+                    self._buy_outfit(self.buy_grid.current())
+                    continue
+            if event.type == pygame.MOUSEWHEEL:
+                if self.picker is not None:
+                    self.picker.scroll(-event.y)
+                elif self.tab == "buy":
+                    self.buy_grid.scroll(-event.y)
+                else:
+                    self.owned_grid.scroll(-event.y)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._handle_mouse_down(event.pos)
             elif event.type == pygame.MOUSEMOTION and self.dragging_outfit:
                 self.drag_pos = event.pos
                 self.hover_slot = self._slot_at(event.pos)
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.dragging_outfit:
                 self._handle_drop(event.pos)
-            elif event.type == pygame.KEYDOWN:
-                result = self._handle_key(event.key)
-                if result:
-                    return result
-        return None
-
-    def _handle_key(self, key):
-        if self.picker is not None:
-            if key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s):
-                self.picker.handle_key(key)
-            elif key == pygame.K_RETURN:
-                outfit_id = self.picker.current()
-                if outfit_id:
-                    self._install(self.slots[self.slot_focus]["id"], outfit_id)
-                self.picker = None
-            elif key == pygame.K_ESCAPE:
-                self.picker = None
-            return None
-
-        if key == pygame.K_ESCAPE:
-            return "close"
-        elif key == pygame.K_TAB:
-            self.tab = "buy" if self.tab == "install" else "install"
-        elif self.tab == "buy":
-            if key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
-                # No disabled_fn: browsing the grid stays free even over
-                # outfits you can't currently afford - only Enter is
-                # gated, same reasoning as ShopMenu/ShipBrowserMenu.
-                self.buy_grid.handle_key(key)
-            elif key == pygame.K_RETURN:
-                outfit_id = self.buy_grid.current()
-                if outfit_id:
-                    self._buy_outfit(outfit_id)
-        else:  # install tab
-            if key in (pygame.K_LEFT, pygame.K_RIGHT):
-                self.focus_column = "owned" if self.focus_column == "slots" else "slots"
-            elif key in (pygame.K_UP, pygame.K_w) and self.slots:
-                if self.focus_column == "slots":
-                    self.slot_focus = (self.slot_focus - 1) % len(self.slots)
-                else:
-                    self.owned_grid.handle_key(pygame.K_UP)
-            elif key in (pygame.K_DOWN, pygame.K_s) and self.slots:
-                if self.focus_column == "slots":
-                    self.slot_focus = (self.slot_focus + 1) % len(self.slots)
-                else:
-                    self.owned_grid.handle_key(pygame.K_DOWN)
-            elif key == pygame.K_RETURN and self.focus_column == "slots" and self.slots:
-                slot = self.slots[self.slot_focus]
-                installed = self.possessions.installed_outfits.get(slot["id"])
-                if installed:
-                    self._uninstall(slot["id"])
-                else:
-                    compatible = self._compatible_owned_outfits(slot["type"])
-                    if compatible:
-                        self.picker = SelectableList(compatible, max_visible=6)
         return None
 
     def _slot_at(self, pos):
@@ -255,42 +212,61 @@ class OutfittingMenu(MenuBase):
         return None
 
     def _handle_mouse_down(self, pos):
-        """Click routing for both tabs: tab labels always work first; a
-        picker popup (keyboard/ESC only) swallows clicks underneath it so
-        one doesn't accidentally start a drag through it; the Buy grid
-        clicks-to-buy (mirroring Enter); the Install tab's slots/owned grid
-        both move keyboard focus to whatever was clicked and - if it's
-        occupied - start a drag, so a plain click-and-release just selects
-        (matches _handle_drop's "dropped back where it came from" no-op)
-        while a click-and-drag installs/uninstalls."""
+        """Click routing for both tabs: while the compatible-outfit picker
+        popup is up it swallows every click (pick a row to install, or the
+        Cancel row / click-away to dismiss). Otherwise: tab labels first;
+        the Buy grid selects a cell (double-click buys); the Install tab's
+        slots/owned grid select what was clicked and - if it's occupied -
+        start a drag, so click-and-release just selects while click-and-drag
+        installs/uninstalls."""
+        if self.picker is not None:
+            index = self.picker.index_at(pos)
+            if index is not None:
+                self.picker.selected = index
+                outfit_id = self.picker.current()
+                if outfit_id:
+                    self._install(self.slots[self.slot_focus]["id"], outfit_id)
+            self.picker = None  # picked one, hit Cancel, or clicked away
+            return
         if self._buy_tab_rect and self._buy_tab_rect.collidepoint(pos):
             self.tab = "buy"
             return
         if self._install_tab_rect and self._install_tab_rect.collidepoint(pos):
             self.tab = "install"
             return
-        if self.picker is not None:
-            return
 
         if self.tab == "buy":
-            # Click only selects, same as arrow-key browsing - it used to
-            # also buy immediately, but that made a stray click too easy
-            # to mistake for a purchase. Enter (still) buys the selection.
+            # A single click only selects (like arrow-key browsing); a
+            # double-click buys it, same as the Buy button or Enter - so a
+            # stray click can't buy.
             index = self.buy_grid.index_at(pos)
             if index is not None:
+                double = self._is_double_click(pos)
                 self.buy_grid.selected = index
+                if double and self.buy_grid.current():
+                    self._buy_outfit(self.buy_grid.current())
             return
 
         for i, slot in enumerate(self.slots):
             rect = self._slot_rects.get(slot["id"])
             if rect and rect.collidepoint(pos):
+                double = self._is_double_click(pos)
                 self.focus_column = "slots"
                 self.slot_focus = i
                 outfit_id = self.possessions.installed_outfits.get(slot["id"])
                 if outfit_id:
-                    self.dragging_outfit = outfit_id
-                    self.drag_source = ("slot", slot["id"])
-                    self.drag_pos = pos
+                    if double:
+                        self._uninstall(slot["id"])  # mouse alt to dragging it out
+                    else:
+                        self.dragging_outfit = outfit_id
+                        self.drag_source = ("slot", slot["id"])
+                        self.drag_pos = pos
+                else:
+                    # Empty slot: open the compatible-outfit picker, same as
+                    # keyboard Enter - so installing needs no drag.
+                    compatible = self._compatible_owned_outfits(slot["type"])
+                    if compatible:
+                        self.picker = SelectableList(compatible, max_visible=6)
                 return
         index = self.owned_grid.index_at(pos)
         if index is not None:
@@ -359,8 +335,7 @@ class OutfittingMenu(MenuBase):
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
-        # The Close button + hint line are drawn by MenuBase.draw via
-        # buttons()/hint_text().
+        # The Close/Buy buttons are drawn by MenuBase.draw via buttons().
         if self.message_timer > 0:
             self.message_timer -= 1
             draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(58 * scale), scale)
@@ -370,28 +345,24 @@ class OutfittingMenu(MenuBase):
             surface.blit(drag_text, (self.drag_pos[0] - drag_text.get_width() // 2, self.drag_pos[1] - drag_text.get_height() // 2))
 
     def buttons(self):
-        return [("close", "Close", (235, 235, 240), False)]
+        close = ("close", "Close", (235, 235, 240), False)
+        if self.tab == "buy" and self.picker is None:
+            outfit_id = self.buy_grid.current()
+            disabled = not outfit_id or bool(self._buy_disabled_reason(outfit_id))
+            return [close, ("buy", "Buy", (150, 220, 160), disabled)]
+        return [close]
 
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.08, 0.84, 0.84)
 
-    def _button_rects(self, scale):
+    def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)
         w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
-        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
-
-    def button_bar_rects(self, scale):
-        return self._button_rects(scale)
-
-    def hint_text(self):
-        """Condensed control reminder under the panel, tab-dependent - the
-        Install tab has both a drag-and-drop and a keyboard path."""
-        if self.picker is not None:
-            return "Up/Down + Enter to install into the slot  ·  ESC to cancel"
-        if self.tab == "buy":
-            return "Tab: switch tab  ·  arrows/click: browse  ·  Enter: buy  ·  ESC: close"
-        return ("Tab: switch tab  ·  drag a spare onto a slot to install  ·  "
-                "Left/Right + Up/Down + Enter also work  ·  ESC: close")
+        rects = [pygame.Rect(panel.x + m, panel.y + m, w, h)]
+        if len(self.buttons()) > 1:
+            aw = int(150 * scale)
+            rects.append(pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale)))
+        return rects
 
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
         grid = self.buy_grid
@@ -511,8 +482,11 @@ class OutfittingMenu(MenuBase):
             surface.blit(down_indicator, (owned_x - down_indicator.get_width() // 2, owned_grid_bottom + int(4 * scale)))
 
         if self.picker is not None:
-            picker_rect = pygame.Rect(panel_rect.centerx - int(150 * scale), panel_rect.centery - int(100 * scale), int(300 * scale), int(200 * scale))
+            picker_rect = pygame.Rect(panel_rect.centerx - int(150 * scale), panel_rect.centery - int(110 * scale), int(300 * scale), int(230 * scale))
             draw_glass_panel(surface, picker_rect, scale)
-            picker_title = font_info.render("Choose an outfit", True, YELLOW)
+            picker_title = font_info.render("Click an outfit to install it", True, YELLOW)
             surface.blit(picker_title, (picker_rect.centerx - picker_title.get_width() // 2, picker_rect.y + int(10 * scale)))
             self.picker.draw(surface, font_text, picker_rect.centerx, picker_rect.y + int(50 * scale), int(28 * scale), scale, label_fn=self._owned_label)
+            # A click anywhere off a row cancels; this just labels that.
+            cancel = font_info.render("Cancel", True, (210, 210, 220))
+            surface.blit(cancel, (picker_rect.centerx - cancel.get_width() // 2, picker_rect.bottom - int(28 * scale)))

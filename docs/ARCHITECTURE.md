@@ -578,9 +578,17 @@ point-in-any-polygon test (concave-safe). `plan_path()` routes a walking body
 (the player's own movement wall-slides; `DockRoutine` pilots use this) across
 that area with a grid A* + string-pull (`IndoorPathfinder` / `NavGrid`, one
 cached raster per interior, `can_move_to` as its oracle). `decorations` are
-cosmetic floor/wall decals (`normalize_decoration`); each culture's
-`interior_decoration` generator (`edge_veins` / `seam_rivets`) stamps a pack
-onto every room automatically. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
+cosmetic floor/wall decals (`normalize_decoration`) with **no collision**;
+each culture's `interior_decoration` generator (`edge_veins` / `seam_rivets`)
+stamps a pack onto every room automatically. `structures` that name a
+`building_type` are solid: anything with a `footprint` block (spires, halls,
+and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
+`*_seat_pod`, `*_crate`, `*_barrel`) contributes a ground-level collision box
+to `building_footprints`, which `can_move_to` (and therefore `plan_path`'s nav
+grid) rejects. Keep furniture footprints clear of NPC spawn points, portals,
+and the necks between rooms — `tests/test_helpers.py`'s
+`TestStationInteriorLayout` walks a real path across Alpha Station and fails if
+a placement pinches it shut. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
 "Walkability-oracle navigation".
 
 **Why `get_state()`/`restore_state()` on every screen?**

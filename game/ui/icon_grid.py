@@ -49,6 +49,16 @@ class IconGrid:
         self._clamp()
         return self.items[self.selected] if self.items else None
 
+    def scroll(self, delta):
+        """Move the selection `delta` rows (mouse-wheel handler); `_clamp()`
+        then pulls `scroll_row` along so it stays visible - the mouse-only
+        equivalent of Up/Down."""
+        if not self.items:
+            return
+        self._clamp()
+        self.selected = max(0, min(self.selected + delta * self.columns, len(self.items) - 1))
+        self._clamp()
+
     def handle_key(self, key):
         """Move the selection one step for an UP/DOWN/LEFT/RIGHT (or W/S)
         keypress, wrapping at the ends of the item list. Left/Right step

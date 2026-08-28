@@ -71,34 +71,30 @@ class ShopMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
-            if self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+            pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
+            if pressed == "close":
                 return "close"
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                self._handle_click(event.pos)
-                continue
-            if event.type != pygame.KEYDOWN:
-                continue
-            if event.key == pygame.K_ESCAPE:
-                return "close"
-            elif event.key == pygame.K_TAB:
-                self.mode = "sell" if self.mode == "buy" else "buy"
-            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
-                # No disabled_fn: browsing the grid stays free even over
-                # items you can't currently afford/hold - only Enter is
-                # gated, same reasoning as ShipBrowserMenu's preview list.
-                self._current_list().handle_key(event.key)
-            elif event.key == pygame.K_RETURN:
+            if pressed in ("buy", "sell"):
                 item_id = self._current_list().current()
                 if item_id:
                     self._transact(item_id)
+                continue
+            if event.type == pygame.MOUSEWHEEL:
+                self._current_list().scroll(-event.y)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                double = self._is_double_click(event.pos)
+                grid = self._current_list()
+                on_item = grid.index_at(event.pos) is not None
+                self._handle_click(event.pos)
+                # Double-click an item = transact it; a single click still
+                # just selects, so a stray click can't buy.
+                if double and on_item and grid.current():
+                    self._transact(grid.current())
         return None
 
     def _handle_click(self, pos):
-        """Click equivalent of Tab (on a tab label) or of moving the arrow-
-        key cursor to a grid cell (on an item) - click only selects, same
-        as browsing with the keyboard. It used to also transact
-        immediately, but that made a stray click too easy to mistake for a
-        purchase; Enter (still) transacts the selected item."""
+        """A click on a tab label switches tab; a click on a grid cell
+        selects it (a double-click transacts it - see handle_input)."""
         if self._buy_tab_rect and self._buy_tab_rect.collidepoint(pos):
             self.mode = "buy"
             return
@@ -131,21 +127,25 @@ class ShopMenu(MenuBase):
                 self.possessions.remove_item(item_id, 1)
 
     def buttons(self):
-        return [("close", "Close", (235, 235, 240), False)]
-
-    def hint_text(self):
-        return "Tab/click: Buy/Sell tab  ·  arrows/click: browse  ·  Enter: transact"
+        item_id = self._current_list().current()
+        if self.mode == "buy":
+            disabled = not item_id or bool(self._buy_disabled_reason(item_id))
+            action = ("buy", "Buy", (150, 220, 160), disabled)
+        else:
+            disabled = not item_id
+            action = ("sell", "Sell", (235, 205, 150), disabled)
+        return [("close", "Close", (235, 235, 240), False), action]
 
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.1, 0.76, 0.8)
 
-    def _button_rects(self, scale):
+    def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)
         w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
-        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
-
-    def button_bar_rects(self, scale):
-        return self._button_rects(scale)
+        close_rect = pygame.Rect(panel.x + m, panel.y + m, w, h)
+        aw = int(150 * scale)
+        action_rect = pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale))
+        return [close_rect, action_rect]
 
     def draw_content(self, surface):
         scale = get_ui_scale()
@@ -202,7 +202,7 @@ class ShopMenu(MenuBase):
 
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(64 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(100 * scale), scale)
 
     def _draw_cell(self, surface, rect, item_id, is_selected, reason, scale):
         """cell_draw_fn for the buy/sell IconGrid - an icon, the item's

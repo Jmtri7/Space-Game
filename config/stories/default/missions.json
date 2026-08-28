@@ -12,11 +12,7 @@
       {
         "text": "Walk around the concourse - WASD or the arrow keys.",
         "complete_flag": "walked_interior",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Sela Cordova",
-          "text": "Close the comm and stay near me. First, get a feel for moving around - WASD or the arrow keys. Take a lap of the concourse."
-        }
+        "reset_on_activation": true
       },
       {
         "text": "Target one of the people here - press [ or ] to cycle, or click them.",
@@ -52,6 +48,15 @@
         "one_way_message": {
           "sender": "Sela Cordova",
           "text": "Now press P for your Possessions - credits, ships, cargo, outfits. Pretty bare right now. Let's fix that."
+        }
+      },
+      {
+        "text": "Scroll back through the Message Log - mouse wheel while pointing at the bottom-left pane.",
+        "complete_flag": "scrolled_message_log",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "Piling up a few comms? Everything I send lands in the Message Log, bottom-left. Point at that pane and roll the mouse wheel to scroll back through it - the blue arrows show when there's more above or below."
         }
       },
       {

@@ -74,36 +74,30 @@ class ShipBrowserMenu(MenuBase):
             return None
 
         for event in events:
-            if self.handle_button_click(event, lambda: self._button_rects(get_ui_scale())) == "close":
+            pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
+            if pressed == "close":
                 return "close"
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # Click only selects (and updates the live preview) - it
-                # used to also open the buy confirmation immediately, but
-                # that made a stray click too easy to mistake for "buy".
-                # Enter (still) opens the confirmation.
+            if pressed == "buy":
+                self._open_confirm(self.grid.current())
+                continue
+            if event.type == pygame.MOUSEWHEEL:
+                self.grid.scroll(-event.y)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # A single click only selects (and updates the live
+                # preview); a double-click opens the buy confirmation, the
+                # same as the Buy button - so a stray click can't start a
+                # purchase.
+                double = self._is_double_click(event.pos)
                 index = self.grid.index_at(event.pos)
                 if index is not None:
                     self.grid.selected = index
-                continue
-            if event.type != pygame.KEYDOWN:
-                continue
-            if event.key == pygame.K_ESCAPE:
-                return "close"
-            elif event.key in (pygame.K_UP, pygame.K_w, pygame.K_DOWN, pygame.K_s, pygame.K_LEFT, pygame.K_RIGHT):
-                # No disabled_fn: the preview is tied to this same cursor,
-                # so skipping unaffordable ships during navigation would
-                # make them unpreviewable whenever at least one ship IS
-                # affordable. Browsing stays free; only Enter checks
-                # affordability.
-                self.grid.handle_key(event.key)
-            elif event.key == pygame.K_RETURN:
-                self._open_confirm(self.grid.current())
+                    if double:
+                        self._open_confirm(self.grid.current())
         return None
 
     def _open_confirm(self, ship_type_id):
         """Open the Yes/No purchase confirmation for ship_type_id - shared
-        by Enter and a grid click, same as clicking a Menu item is
-        equivalent to selecting it then pressing Enter."""
+        by the Buy button and a double-click on the grid."""
         if ship_type_id and not self._disabled_reason(ship_type_id):
             ship_type = get_ship_type(self.story, ship_type_id)
             self.confirm = ConfirmDialog(
@@ -113,21 +107,21 @@ class ShipBrowserMenu(MenuBase):
             )
 
     def buttons(self):
-        return [("close", "Close", (235, 235, 240), False)]
-
-    def hint_text(self):
-        return "Arrows/click: browse  ·  Enter: buy"
+        ship_id = self.grid.current()
+        disabled = not ship_id or bool(self._disabled_reason(ship_id))
+        return [("close", "Close", (235, 235, 240), False),
+                ("buy", "Buy", (150, 220, 160), disabled)]
 
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.1, 0.8, 0.8)
 
-    def _button_rects(self, scale):
+    def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)
         w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
-        return [pygame.Rect(panel.x + m, panel.y + m, w, h)]
-
-    def button_bar_rects(self, scale):
-        return self._button_rects(scale)
+        close_rect = pygame.Rect(panel.x + m, panel.y + m, w, h)
+        aw = int(150 * scale)
+        buy_rect = pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale))
+        return [close_rect, buy_rect]
 
     def active_popup(self):
         return self.confirm
@@ -166,7 +160,7 @@ class ShipBrowserMenu(MenuBase):
         if selected_id:
             ship_type = get_ship_type(self.story, selected_id)
             graphics = get_graphics_asset(self.story, "ships", selected_id)
-            preview_center_y = panel_rect.y + int(160 * scale)
+            preview_center_y = panel_rect.y + int(140 * scale)
             # Slowly spin the preview and cycle its thrusters on/off so a
             # browsed ship's silhouette, windows, and engine mounts are all
             # visible without needing to buy it first. Driven off the clock
@@ -191,18 +185,17 @@ class ShipBrowserMenu(MenuBase):
                 f"Cargo Capacity: {ship_type.get('cargo_capacity', 0)}",
                 f"Cost: {ship_type.get('cost', 0)}cr",
             ]
-            stat_y = preview_center_y + int(70 * scale)
+            stat_y = preview_center_y + int(62 * scale)
             for line in stats:
                 text = font_info.render(line, True, GRAY if line != stats[-1] else YELLOW)
                 surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
-                stat_y += int(26 * scale)
+                stat_y += int(23 * scale)
 
-        # The Close button + hint line, and deferring to the purchase
-        # ConfirmDialog while it's up, are handled by MenuBase.draw via
-        # buttons()/hint_text()/active_popup().
+        # The Close/Buy buttons, and deferring to the purchase ConfirmDialog
+        # while it's up, are handled by MenuBase.draw via buttons()/active_popup().
         if self.message_timer > 0:
             self.message_timer -= 1
-            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(64 * scale), scale)
+            draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(100 * scale), scale)
 
     def _draw_cell(self, surface, rect, ship_type_id, is_selected, reason, scale):
         """cell_draw_fn for the ship IconGrid - a static silhouette (no

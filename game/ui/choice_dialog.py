@@ -1,23 +1,22 @@
 """`ChoiceDialog` - a one-shot "pick one" pop-up: a title and a column of
 button choices, each of which closes the dialog and returns its key to
-whatever opened it (ESC returns `"cancel"`).
+whatever opened it. A **Cancel** button (returns `"cancel"`) is always added
+at the bottom, so the dialog is fully mouse-operable with no ESC shortcut.
 
 Replaces the old `LocationSelector` (moon landing spot) and `ExitMenu`
 (which interior door to leave by). `main.py` builds the `options` list; this
 class doesn't know what the keys mean.
 """
-import pygame
 from game.constants import WHITE
 from game.utils import get_ui_scale, get_ui_offset, get_font
 from game.ui.dialog_base import DialogBase
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 
 CHOICE_ACCENT = (170, 200, 235)
+CANCEL_ACCENT = (210, 210, 220)
 
 
 class ChoiceDialog(DialogBase):
-    button_layout = "column"
-
     def __init__(self, title, options):
         """`options`: `[(key, label, disabled_reason_or_None), ...]`."""
         self.title = title
@@ -28,15 +27,16 @@ class ChoiceDialog(DialogBase):
                 self.button_index = i
                 break
 
+    def _rows(self):
+        return self.options + [("cancel", "Cancel", None)]
+
     def buttons(self):
         out = []
-        for key, label, reason in self.options:
+        for key, label, reason in self._rows():
             text = f"{label}  ({reason})" if reason else label
-            out.append((key, text, CHOICE_ACCENT, bool(reason)))
+            accent = CANCEL_ACCENT if key == "cancel" else CHOICE_ACCENT
+            out.append((key, text, accent, bool(reason)))
         return out
-
-    def hint_text(self):
-        return "Up/Down + Enter, click, or ESC to cancel"
 
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.22, 0.72, 0.58)
@@ -44,12 +44,10 @@ class ChoiceDialog(DialogBase):
     def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)
         top_y = int(panel.y + panel.height * 0.32)
-        return self.button_column_rects(panel.centerx, top_y, len(self.options), scale)
+        return self.button_column_rects(panel.centerx, top_y, len(self._rows()), scale)
 
     def handle_input(self, events):
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return "cancel"
             result = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
             if result is not None:
                 return result
