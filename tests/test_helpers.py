@@ -4257,6 +4257,20 @@ class TestBackgroundMusic(unittest.TestCase):
         player.prerender_all()
         self.assertEqual(set(player._renders), {"menu", "ingame"})
 
+    def test_pump_uses_a_smaller_budget_and_still_finishes_during_gameplay(self):
+        """In gameplay the per-frame render budget is smaller (a busy frame
+        plus a full budget can miss the vblank), but pump() still drives the
+        render to completion - just over more frames."""
+        from game.audio.music import MusicPlayer
+        self.assertLess(MusicPlayer.INGAME_RENDER_BUDGET_MS, MusicPlayer.RENDER_BUDGET_MS)
+        player = MusicPlayer()
+        player.enabled = True
+        player._recipes["ingame"] = self._small_spec()
+        with patch.object(MusicPlayer, "_start"):
+            player.set_scene("game")            # _current -> "ingame", smaller budget
+            self._drain(player, "ingame")
+            self.assertIn("ingame", player._rendered)
+
     def test_finished_render_is_cached_and_the_next_run_loads_it(self):
         """First build writes a .raw to MUSIC_CACHE_DIR; a fresh player then
         loads that file instead of re-synthesizing, and gets identical PCM."""

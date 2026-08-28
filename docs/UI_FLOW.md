@@ -452,11 +452,19 @@ This separation makes it easy to test input handlers independently.
 The window is opened by `main.open_window()` with `RESIZABLE | SCALED` and
 `vsync=1` (falling back to plain `RESIZABLE` if a driver refuses it), so the
 flip is paced to the monitor's refresh. Without vsync a horizontal camera pan
-tears: `clock.tick(FPS)` holds ~60 FPS but doesn't phase-lock to the display,
-so a flip periodically lands mid-scanout. `SCALED` is the flag that makes SDL2
-apply vsync to a non-OpenGL window; `open_window()` is also the `VIDEORESIZE`
-handler, recreating the surface at the new size so world/UI scaling stays
-crisp rather than being upscaled from a fixed backbuffer.
+tears: a flip periodically lands mid-scanout. `SCALED` is the flag that makes
+SDL2 apply vsync to a non-OpenGL window; `open_window()` is also the
+`VIDEORESIZE` handler, recreating the surface at the new size so world/UI
+scaling stays crisp rather than being upscaled from a fixed backbuffer.
+
+**Frame cap ↔ vsync:** `open_window()` records whether `SCALED` actually
+stuck in `main.vsync_display`. When it did, the vsync'd `flip()` is the frame
+pacer and `clock.tick()` only enforces a loose safety cap (`FPS * 4`) - a
+tight `clock.tick(FPS)` on top of vsync makes `SDL_Delay` overshoot into the
+next vblank, stretching that frame to two refreshes (judder on a pan). With
+no vsync, `clock.tick(FPS)` is the only thing holding 60. The fixed-timestep
+accumulator (below) is unaffected either way - it consumes whatever real time
+elapsed.
 
 `SIM_STEP` **must stay 1/60**: every physics constant and per-step timer is
 already calibrated to a 1/60 s step, so on a machine holding 60 FPS phase 2

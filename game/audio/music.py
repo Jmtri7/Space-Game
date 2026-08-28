@@ -286,7 +286,12 @@ class MusicPlayer:
     the ~10-15 s it takes to build, then fades in - which is the intended
     behaviour anyway."""
 
-    RENDER_BUDGET_MS = 4.0   # synthesis work permitted per pump() / per frame
+    # Synthesis work permitted per pump() / per frame. Generous on a menu
+    # (cheap frames, ~6 ms of headroom, want the track ready fast); small
+    # during gameplay, where 4 ms on top of a busy frame can tip past the
+    # vblank and judder - a cold ingame track just fades in a bit later.
+    RENDER_BUDGET_MS = 4.0
+    INGAME_RENDER_BUDGET_MS = 1.5
 
     def __init__(self, menu_volume=0.5, ingame_volume=0.38):
         self.enabled = False
@@ -340,14 +345,16 @@ class MusicPlayer:
             self._ensure_render(track)
 
     def pump(self):
-        """Advance the in-progress track renders by up to RENDER_BUDGET_MS of
-        work total. Call once per frame from the main loop (cheap no-op when
-        there's nothing rendering). The track the player currently wants is
-        advanced first; a finished render is cached to disk, wrapped in a
-        Sound, and started if it's still the wanted track."""
+        """Advance the in-progress track renders by a small time budget (see
+        RENDER_BUDGET_MS - less while in gameplay). Call once per frame from
+        the main loop (cheap no-op when there's nothing rendering). The track
+        the player currently wants is advanced first; a finished render is
+        cached to disk, wrapped in a Sound, and started if it's still the
+        wanted track."""
         if not self.enabled or not self._renders:
             return
-        deadline = time.perf_counter() + self.RENDER_BUDGET_MS / 1000.0
+        budget = self.RENDER_BUDGET_MS if self._current in (None, "menu") else self.INGAME_RENDER_BUDGET_MS
+        deadline = time.perf_counter() + budget / 1000.0
         # Current track first, so what's actually about to be heard finishes
         # before a track that's only being pre-warmed for later.
         for track in sorted(self._renders, key=lambda t: t != self._current):

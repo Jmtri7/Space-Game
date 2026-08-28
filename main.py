@@ -31,31 +31,47 @@ from game.ui.star_map import StarMap
 # Initialize pygame and display
 pygame.init()
 
+# Set True by open_window() when the window comes back GPU-backed (SCALED),
+# which is what actually gets vsync applied. When it's on, the main loop lets
+# the vsync'd flip pace the frame rate instead of also capping with
+# clock.tick(FPS) - the two beat against each other otherwise (clock.tick's
+# SDL_Delay overshoots a hair, misses a vblank, and that frame stretches to
+# two refreshes = judder on a camera pan). A generous safety cap still runs
+# in case a driver reports SCALED but silently doesn't sync.
+vsync_display = False
+VSYNC_SAFETY_FPS = FPS * 4
+
 
 def open_window(size):
     """(Re)create the game window at `size`, requesting vsync so
     `display.flip()` is paced to the monitor's refresh.
 
     Without vsync a plain resizable window tears visibly when the interior/
-    space camera pans horizontally - `clock.tick(FPS)` holds ~60 FPS but
-    doesn't phase-lock to the display, so a flip periodically lands
-    mid-scanout and you get a moving horizontal seam.
+    space camera pans horizontally - a flip periodically lands mid-scanout
+    and you get a moving horizontal seam.
 
     `SCALED` is what makes SDL2 actually apply vsync to a non-OpenGL window
     (it backs the window with a GPU renderer); the logical surface still
     tracks the window size because we recreate on resize, so nothing is
     upscaled. Each fallback drops one capability if the driver won't do it:
-    SCALED+vsync -> vsync only -> plain resizable."""
+    SCALED+vsync -> vsync only -> plain resizable. Records whether SCALED
+    stuck in the module-level `vsync_display` (see the frame-cap logic in
+    the main loop)."""
+    global vsync_display
     for flags, kwargs in (
         (pygame.RESIZABLE | pygame.SCALED, {"vsync": 1}),
         (pygame.RESIZABLE, {"vsync": 1}),
         (pygame.RESIZABLE, {}),
     ):
         try:
-            return pygame.display.set_mode(size, flags, **kwargs)
+            surface = pygame.display.set_mode(size, flags, **kwargs)
+            vsync_display = bool(surface.get_flags() & pygame.SCALED)
+            return surface
         except pygame.error:
             continue
-    return pygame.display.set_mode(size, pygame.RESIZABLE)
+    surface = pygame.display.set_mode(size, pygame.RESIZABLE)
+    vsync_display = False
+    return surface
 
 
 screen = open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -309,7 +325,11 @@ def main():
 
         while running:
             events = pygame.event.get()
-            frame_ms = clock.tick(FPS)
+            # With a vsync'd display the flip() itself paces the frame rate;
+            # capping again at exactly FPS makes clock.tick fight the vblank
+            # (judder). Only a loose safety cap then. Without vsync, the FPS
+            # cap is the only thing holding 60.
+            frame_ms = clock.tick(VSYNC_SAFETY_FPS if vsync_display else FPS)
             # Frame-timing metrics (perf_metrics.metrics): started here, after
             # the clock.tick() FPS-cap sleep, so the sleep isn't charged to any
             # phase. Split into input / sim / render / present below; shown

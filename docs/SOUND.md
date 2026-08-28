@@ -91,9 +91,12 @@ rate is snapped too - so it plays with `loops=-1` and no seam.
 That render is a few seconds of pure-Python math. It is done **incrementally
 on the main thread**: `_ambient_loop_frames()` is a generator that `yield`s
 ~every 512 samples, and `MusicPlayer.pump()` (called once per frame from
-`main.py`) drives it forward by `RENDER_BUDGET_MS` (~4 ms) per frame. So a
-track takes ~10-15 s of real time to build, stays silent until then, and
-fades in when done - but no single frame ever pays more than a few ms, and
+`main.py`) drives it forward by a small time budget per frame -
+`RENDER_BUDGET_MS` (~4 ms) on a menu, `INGAME_RENDER_BUDGET_MS` (~1.5 ms)
+during gameplay, where a busy frame plus a full budget can tip past the
+vblank. So a track takes ~10-20 s of real time to build, stays silent until
+then, and fades in when done - but no single frame ever pays more than a few
+ms, and
 there is **no worker thread** (an earlier threaded version stuttered the 60
 FPS loop badly on Windows - GIL contention the throttle/priority tricks
 couldn't fully hide - showing up as a "freeze then skip forward" in the menu
