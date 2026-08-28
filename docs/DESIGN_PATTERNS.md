@@ -489,13 +489,23 @@ render(...)           # once, paints the latest state
 ```
 `advance_accumulator` clamps `real_dt` (hitch protection) and caps `n_steps`
 (spiral-of-death protection), and is pure — no clock, no globals — so the
-step arithmetic is unit-testable on its own.
+step arithmetic is unit-testable on its own. Feed it a `time.perf_counter()`
+delta, not the frame limiter's whole-millisecond return — that quantization
+alone is enough to cost the sim a step and stutter a pan.
 
-**Keep `SIM_STEP` fixed (here: exactly 1/60 s).** The constants are already
-calibrated to that step, so at a held frame rate `n_steps == 1` every frame
-and the result is byte-identical to the old loop. It only diverges when the
-machine can't keep up, running catch-up steps so the sim stays correct while
-rendering gets choppy.
+**Keep `SIM_STEP` fixed (here: exactly 1/60 s).** The constants are
+calibrated to that step, so at a held frame rate `n_steps == 1` every frame.
+
+**Snap to one step, don't `floor`.** A textbook `floor(accumulator / step)`
+emits a 0-step frame next to a 2-step frame under ordinary frame-time jitter,
+and a "60 Hz" display that's really 59.94 makes that happen every ~20 s
+(60 sim steps/s vs 59.94 frames/s — the surplus has to surface somewhere).
+A 2-step frame is a visible lurch on a camera pan. Instead, run *exactly one*
+step for any frame worth ~0.5–2.5 steps; multi-step catch-up only on a
+sustained slowdown. The trade: a persistent sub-step surplus is dropped
+rather than caught up, so the sim tracks the *display* rate not the wall
+clock (< 0.1% drift). Fine for a single-player game where every timer is
+frame-count based and there's no netcode; revisit if either changes.
 
 **One simulation entry point.** All per-step work (physics, AI, background
 locations, countdown timers) goes through a single `step_world()` so it's

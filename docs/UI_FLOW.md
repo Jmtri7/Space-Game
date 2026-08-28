@@ -457,23 +457,29 @@ SDL2 apply vsync to a non-OpenGL window; `open_window()` is also the
 `VIDEORESIZE` handler, recreating the surface at the new size so world/UI
 scaling stays crisp rather than being upscaled from a fixed backbuffer.
 
-**Frame cap ↔ vsync:** `open_window()` records whether `SCALED` actually
-stuck in `main.vsync_display`. When it did, the vsync'd `flip()` is the frame
-pacer and `clock.tick()` only enforces a loose safety cap (`FPS * 4`) - a
-tight `clock.tick(FPS)` on top of vsync makes `SDL_Delay` overshoot into the
+**Frame cap ↔ vsync:** `open_window()` *measures* whether a requested vsync
+mode is actually pacing flips (a short burst — the `SCALED` flag alone lies)
+and records it in `main.vsync_display`. When vsync is real, the flip is the
+frame pacer and `clock.tick()` only enforces a loose safety cap (`FPS * 4`) —
+a tight `clock.tick(FPS)` on top of vsync makes the sleep overshoot into the
 next vblank, stretching that frame to two refreshes (judder on a pan). With
-no vsync, `clock.tick(FPS)` is the only thing holding 60. The fixed-timestep
-accumulator (below) is unaffected either way - it consumes whatever real time
-elapsed.
+no vsync, `clock.tick(FPS)` is the only thing holding 60. Either way the
+accumulator is fed `real_dt` from a `time.perf_counter()` delta, not
+`clock.tick()`'s whole-millisecond return (16 vs 17 for a true 16.667 ms
+frame is enough quantization to cost the sim a step).
 
 `SIM_STEP` **must stay 1/60**: every physics constant and per-step timer is
-already calibrated to a 1/60 s step, so on a machine holding 60 FPS phase 2
-runs exactly once and the result is byte-identical to the old
-one-step-per-frame loop. It only diverges on a machine that can't keep up,
-where it runs 2–5 catch-up steps per render (`MAX_STEPS_PER_FRAME` clamps
-the spiral of death; `MAX_FRAME_TIME` clamps a debugger/asset-load hitch).
-This is frame-rate *independence*, not render interpolation — motion is not
-smoother at >60 Hz, `draw()` still paints the latest sim state.
+calibrated to a 1/60 s step. On a machine holding ~60 FPS phase 2 runs
+exactly once per render. `advance_accumulator` deliberately runs **exactly
+one step** for any frame worth 0.5–2.5 steps (not `floor`): a plain Fiedler
+accumulator emits a 0-step frame next to a 2-step one under normal jitter,
+and a "60 Hz" panel that's really 59.94 guarantees that ~every 20 s — a
+visible lurch on a pan. Multi-step catch-up (up to `MAX_STEPS_PER_FRAME`)
+only kicks in on a *sustained* slowdown; `MAX_FRAME_TIME` still clamps a
+debugger/asset-load hitch. The cost is that a persistent sub-step surplus is
+dropped — the sim tracks the display rate, not the wall clock, drifting
+<0.1% (nothing measures real seconds). This is frame-rate *independence*,
+not render interpolation — `draw()` still paints the latest sim state.
 
 Menu/dialog animations (`pause_menu.update()`'s success-banner countdown)
 are render-side and stay in phase 3 — they're not simulation.

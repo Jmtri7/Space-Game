@@ -31,47 +31,63 @@ from game.ui.star_map import StarMap
 # Initialize pygame and display
 pygame.init()
 
-# Set True by open_window() when the window comes back GPU-backed (SCALED),
-# which is what actually gets vsync applied. When it's on, the main loop lets
-# the vsync'd flip pace the frame rate instead of also capping with
-# clock.tick(FPS) - the two beat against each other otherwise (clock.tick's
-# SDL_Delay overshoots a hair, misses a vblank, and that frame stretches to
-# two refreshes = judder on a camera pan). A generous safety cap still runs
-# in case a driver reports SCALED but silently doesn't sync.
+# Windows' default timer granularity is ~15.6 ms, so a sleep-based frame
+# limiter (clock.tick) overshoots and frame times jitter (visible as a
+# pacing stutter on a camera pan). Ask for 1 ms granularity for the process
+# lifetime so clock.tick actually holds the target, and hand it back on
+# exit. Harmless / no-op off Windows.
+if sys.platform == "win32":
+    try:
+        import ctypes
+        import atexit
+        ctypes.windll.winmm.timeBeginPeriod(1)
+        atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
+    except Exception:
+        pass
+
+# Set True by open_window() when a vsync'd display mode is actually pacing
+# flips (measured, not just requested). When it is, the main loop leaves the
+# frame rate to the vsync'd flip and clock.tick() only enforces a loose
+# safety cap - a tight clock.tick(FPS) on top of vsync makes the sleep
+# overshoot into the next vblank, stretching that frame to two refreshes
+# (judder on a camera pan).
 vsync_display = False
 VSYNC_SAFETY_FPS = FPS * 4
 
 
 def open_window(size):
     """(Re)create the game window at `size`, requesting vsync so
-    `display.flip()` is paced to the monitor's refresh.
+    `display.flip()` is paced to the monitor's refresh - without it a plain
+    resizable window tears on a horizontal camera pan (a flip lands
+    mid-scanout).
 
-    Without vsync a plain resizable window tears visibly when the interior/
-    space camera pans horizontally - a flip periodically lands mid-scanout
-    and you get a moving horizontal seam.
-
-    `SCALED` is what makes SDL2 actually apply vsync to a non-OpenGL window
-    (it backs the window with a GPU renderer); the logical surface still
-    tracks the window size because we recreate on resize, so nothing is
-    upscaled. Each fallback drops one capability if the driver won't do it:
-    SCALED+vsync -> vsync only -> plain resizable. Records whether SCALED
-    stuck in the module-level `vsync_display` (see the frame-cap logic in
-    the main loop)."""
+    `SCALED` is what lets SDL2 apply vsync to a non-OpenGL window (it backs
+    the window with a GPU renderer); the logical surface still tracks the
+    window size because we recreate on resize, so nothing is upscaled.
+    Whether vsync actually engaged is *measured* (a short burst of flips -
+    the SCALED flag alone lies, it can be stripped from get_flags() while
+    vsync still works) and recorded in the module-level `vsync_display`.
+    Falls back to a plain resizable window (clock.tick does the pacing) if
+    nothing syncs."""
     global vsync_display
-    for flags, kwargs in (
-        (pygame.RESIZABLE | pygame.SCALED, {"vsync": 1}),
-        (pygame.RESIZABLE, {"vsync": 1}),
-        (pygame.RESIZABLE, {}),
-    ):
+
+    def _is_synced(surface):
+        t0 = time.perf_counter()
+        for _ in range(24):
+            surface.fill((0, 0, 0))
+            pygame.display.flip()
+        return 24 / max(time.perf_counter() - t0, 1e-6) < 200.0
+
+    for flags in (pygame.RESIZABLE | pygame.SCALED, pygame.SCALED, pygame.RESIZABLE):
         try:
-            surface = pygame.display.set_mode(size, flags, **kwargs)
-            vsync_display = bool(surface.get_flags() & pygame.SCALED)
-            return surface
+            surface = pygame.display.set_mode(size, flags, vsync=1)
         except pygame.error:
             continue
-    surface = pygame.display.set_mode(size, pygame.RESIZABLE)
+        if _is_synced(surface):
+            vsync_display = True
+            return surface
     vsync_display = False
-    return surface
+    return pygame.display.set_mode(size, pygame.RESIZABLE)
 
 
 screen = open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -322,19 +338,26 @@ def main():
         # elapsed time through step_world() in fixed 1/60 s chunks, render
         # once. accumulator carries the sub-step remainder between frames.
         sim_accumulator = 0.0
+        prev_frame_start = time.perf_counter()
 
         while running:
             events = pygame.event.get()
             # With a vsync'd display the flip() itself paces the frame rate;
-            # capping again at exactly FPS makes clock.tick fight the vblank
-            # (judder). Only a loose safety cap then. Without vsync, the FPS
-            # cap is the only thing holding 60.
-            frame_ms = clock.tick(VSYNC_SAFETY_FPS if vsync_display else FPS)
+            # a tight clock.tick(FPS) on top of it just fights the vblank
+            # (judder), so only a loose safety cap runs then. Without vsync,
+            # the FPS cap is the only thing holding 60.
+            clock.tick(VSYNC_SAFETY_FPS if vsync_display else FPS)
             # Frame-timing metrics (perf_metrics.metrics): started here, after
             # the clock.tick() FPS-cap sleep, so the sleep isn't charged to any
             # phase. Split into input / sim / render / present below; shown
             # bottom-left when DEBUG_MODE is on. See docs/UI_FLOW.md.
             t_frame_start = time.perf_counter()
+            # Feed the accumulator the real elapsed time at full precision -
+            # clock.tick()'s own return value is whole milliseconds, and that
+            # quantization (16 vs 17 for a true 16.667 ms frame) is enough to
+            # cost the sim a step here and there = stutter.
+            real_dt = t_frame_start - prev_frame_start
+            prev_frame_start = t_frame_start
 
             # Handle window close button globally (all screens automatically support it)
             for event in events:
@@ -749,7 +772,7 @@ def main():
             # clamped so it can't spiral. A step that itself triggers a
             # screen change (autopilot auto-land) stops the drain.
             # ========================================================
-            sim_accumulator, n_steps = advance_accumulator(sim_accumulator, frame_ms / 1000.0)
+            sim_accumulator, n_steps = advance_accumulator(sim_accumulator, real_dt)
             for _ in range(n_steps):
                 step_transition = step_world(current_screen, game_screen, station_interior, moon_interior)
                 if step_transition == "land":

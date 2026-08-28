@@ -532,7 +532,8 @@ def _handle_scrolling_input(key, selected, items, scroll_offset, max_visible):
 
 def advance_accumulator(accumulator, real_dt, step=SIM_STEP,
                         max_steps=MAX_STEPS_PER_FRAME, max_frame_time=MAX_FRAME_TIME):
-    """Fixed-timestep accumulator core (Glenn Fiedler, "Fix Your Timestep").
+    """Fixed-timestep loop core, tuned for a vsync'd single-player game:
+    smooth motion first, wall-clock fidelity second.
 
     Given `accumulator` (leftover seconds carried from the last frame) and
     `real_dt` (real wall-clock seconds since the last frame), return
@@ -545,14 +546,50 @@ def advance_accumulator(accumulator, real_dt, step=SIM_STEP,
     the leftover is discarded (accumulator reset to 0) rather than left to
     grow forever on a machine that simply can't keep up - the spiral-of-
     death clamp. Pure: no clock, no globals, so it's directly testable.
+
+    **Why not a plain Fiedler `floor(accumulator / step)`:** it runs 0 steps
+    on a slightly-short frame and 2 on the next slightly-long one, and on a
+    "60 Hz" panel that's really 59.94 Hz it's *guaranteed* to hit that every
+    ~20 s (the sim wants 60 steps/s, the display delivers 59.94 frames/s -
+    the difference has to come out somewhere). A 2-step frame is a visible
+    lurch on a camera pan.
+
+    Instead: any frame worth less than ~2.5 steps runs *exactly one* step;
+    only a sustained slowdown (ratio >= 2.5) triggers real multi-step catch-
+    up. The carried remainder is bounded to a fraction of a step, so an
+    isolated long frame (a missed vblank) never turns into a later catch-up
+    lurch either. The cost is that a persistent sub-step surplus is dropped
+    rather than caught up - the sim then tracks the *display* rate, not the
+    wall clock, drifting well under 0.1%. Nothing here measures real seconds
+    (every timer is frame-count based, there's no netcode), so that's free.
     """
     accumulator += min(real_dt, max_frame_time)
-    n_steps = 0
-    while accumulator >= step and n_steps < max_steps:
-        accumulator -= step
-        n_steps += 1
+    ratio = accumulator / step
+    if ratio < 0.5:
+        # Rendering ahead of the sim (high-refresh display) - skip this
+        # frame's step; the leftover carries and a step lands within a
+        # frame or two.
+        n_steps = 0
+    elif ratio < 2.5:
+        # One frame, one step. This band is wide on purpose: an isolated
+        # long frame (a missed vblank - ~2x) runs a *single* step, not two,
+        # so the world never double-jumps. The extra time is carried as a
+        # bounded "lag" (see the clamp below), invisible, instead of being
+        # spent as a lurch. Only a *sustained* slowdown pushes ratio past
+        # this and into real catch-up.
+        n_steps = 1
+    else:
+        n_steps = min(int(ratio), max_steps)
+    accumulator -= n_steps * step
     if n_steps >= max_steps:
         accumulator = 0.0
+    else:
+        # Cap the positive remainder well under one step, so `ratio` on the
+        # next normal frame can't reach the catch-up threshold - an isolated
+        # long frame stays a single step. The negative side is left alone: a
+        # mildly negative accumulator is the debt that makes a high-refresh
+        # display skip the odd step and hold the right rate.
+        accumulator = min(accumulator, 0.75 * step)
     return accumulator, n_steps
 
 

@@ -3959,15 +3959,38 @@ class TestAdvanceAccumulator(unittest.TestCase):
         self.assertEqual(n, 1)
         self.assertAlmostEqual(acc, 0.0, places=9)
 
-    def test_sub_step_frames_accumulate_then_catch_up(self):
-        """Two back-to-back 10 ms frames (< 1/60 s each) run 0 then 1 step;
-        the leftover from the first isn't lost."""
-        acc, n = utils.advance_accumulator(0.0, 0.010)
-        self.assertEqual(n, 0)
-        self.assertAlmostEqual(acc, 0.010, places=9)
-        acc, n = utils.advance_accumulator(acc, 0.010)
+    def test_sub_step_frames_average_out_to_one_step_per_step_of_real_time(self):
+        """Frames a bit under 1/60 s each: the steady-state snap runs one
+        step per frame while it can (10 ms is 0.6 steps, inside the snap
+        band), letting the accumulator go slightly negative, then a 0-step
+        frame when it's drained - so N frames of ~1/60 s run ~N steps total
+        and no single frame ever jumps two steps."""
+        acc, total, twos = 0.0, 0, 0
+        for _ in range(600):
+            acc, n = utils.advance_accumulator(acc, 0.010)
+            total += n
+            twos += (n >= 2)
+        self.assertEqual(twos, 0)                 # never a 2-step frame
+        self.assertAlmostEqual(total, 600 * 0.010 / self.STEP, delta=2)  # ~360 steps
+
+    def test_slight_refresh_mismatch_never_produces_a_two_step_frame(self):
+        """A 59.94 Hz panel with no vsync feeds ~16.68 ms frames while the
+        sim wants 16.667 ms. floor() would emit a 0-then-2 hitch every
+        ~20 s; the snap keeps it at exactly one step per frame."""
+        acc = 0.0
+        for _ in range(6000):  # ~100 s of frames
+            acc, n = utils.advance_accumulator(acc, 1.0 / 59.94)
+            self.assertEqual(n, 1)
+
+    def test_isolated_missed_vblank_stays_one_step(self):
+        """A single ~2x frame (a dropped vblank on an otherwise smooth 60 Hz
+        machine) runs ONE step, not two - the world must not double-jump on
+        top of the frame the display already held twice. The next normal
+        frame stays at one step too (no delayed catch-up lurch)."""
+        acc, n = utils.advance_accumulator(0.0, 0.033)
         self.assertEqual(n, 1)
-        self.assertAlmostEqual(acc, 0.020 - self.STEP, places=9)
+        acc, n = utils.advance_accumulator(acc, self.STEP)
+        self.assertEqual(n, 1)
 
     def test_slow_frame_runs_multiple_steps(self):
         """A 50 ms frame (3x the budget) runs 3 catch-up steps."""
