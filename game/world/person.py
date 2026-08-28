@@ -75,6 +75,10 @@ class Person:
     # neutral stance instead of freezing mid-stride. Amplitudes are in
     # game-space units, except WALK_STRIDE_DEG (leg swing about the hip).
     WALK_PACE = 0.7             # radians of walk_phase per game-unit walked
+    WALK_MAX_STEP = 0.36       # cap on phase advance per move - a fast walker
+                              # (player / dock pilot at ~2.0 u/frame) would
+                              # otherwise blur; a stroller (WanderRoutine at
+                              # 0.5 u/frame) stays below the cap unchanged
     WALK_LIFT = 2.6           # peak rise of the swinging leg's boot
     WALK_STRIDE_DEG = 6       # peak fore/aft swing of each leg about the hip
     WALK_BOB = 0.8           # body rise as a foot passes under
@@ -160,7 +164,8 @@ class Person:
         DockRoutine all animate identically off the one primitive."""
         if distance <= 0:
             return
-        self.walk_phase = (self.walk_phase + distance * self.WALK_PACE) % (2 * math.pi)
+        advance = min(distance * self.WALK_PACE, self.WALK_MAX_STEP)
+        self.walk_phase = (self.walk_phase + advance) % (2 * math.pi)
         self.walk_intensity = min(1.0, self.walk_intensity + self.WALK_INTENSITY_GAIN)
         self._walked_this_frame = True
 

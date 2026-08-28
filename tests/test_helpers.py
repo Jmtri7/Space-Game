@@ -1095,11 +1095,21 @@ class TestPersonWalkCycle(unittest.TestCase):
         self.assertGreater(p.walk_phase, 0.0)
         self.assertGreater(p.walk_intensity, 0.0)
 
-    def test_phase_advance_is_proportional_to_distance_walked(self):
+    def test_phase_advance_scales_with_distance_below_the_cap(self):
         slow, fast = Person(0.0, 0.0), Person(0.0, 0.0)
-        slow.step_toward(100.0, 0.0, 1.0, lambda x, y: True)
-        fast.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
-        self.assertAlmostEqual(fast.walk_phase, slow.walk_phase * 4.0, places=5)
+        slow.step_toward(100.0, 0.0, 0.2, lambda x, y: True)
+        fast.step_toward(100.0, 0.0, 0.4, lambda x, y: True)
+        self.assertAlmostEqual(fast.walk_phase, slow.walk_phase * 2.0, places=5)
+
+    def test_a_fast_walker_is_capped_to_a_brisk_cadence(self):
+        # player / dock-pilot speed (~2 units/frame) must not spin the legs
+        # faster than a stroller's - both land on WALK_MAX_STEP per frame.
+        fast = Person(0.0, 0.0)
+        fast.step_toward(100.0, 0.0, 5.0, lambda x, y: True)
+        self.assertAlmostEqual(fast.walk_phase, Person.WALK_MAX_STEP, places=6)
+        stroll = Person(0.0, 0.0)
+        stroll.step_toward(100.0, 0.0, 0.5, lambda x, y: True)  # WanderRoutine
+        self.assertLess(stroll.walk_phase, Person.WALK_MAX_STEP)
 
     def test_a_blocked_step_does_not_advance_the_cycle(self):
         p = Person(5.0, 5.0)
