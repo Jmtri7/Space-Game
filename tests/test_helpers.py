@@ -1157,18 +1157,19 @@ class TestStationWindowsAndCulture(unittest.TestCase):
             Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
             self.assertEqual(mock_pygame.draw.circle.call_count, len(g["windows"]) + 1)
 
-    def test_a_parts_station_skips_the_flat_hull_and_window_dots(self):
-        """A "parts" silhouette from the atlas already includes the hull and
-        viewports - _draw_station must not also stroke the flat local_points
-        polygon or scatter window circles under it (that just shows the old
-        shape bleeding past the new one). Only the core beacon is drawn by
-        landable itself."""
+    def test_a_parts_station_skips_the_flat_hull_window_dots_and_core(self):
+        """A "parts" silhouette from the atlas is the whole drawn station - it
+        already includes the hull, the viewports, its own hub/core, and any
+        see-through gap. _draw_station must not also stroke the flat
+        local_points polygon, scatter window circles, or stamp the plain core
+        beacon on top (each just shows the old shape bleeding past the new
+        one). Everything is delegated to draw_parts."""
         with patch("game.world.landable.pygame") as mock_pygame:
             g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
             self.assertTrue(g.get("parts"))
             Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
             mock_pygame.draw.polygon.assert_not_called()
-            self.assertEqual(mock_pygame.draw.circle.call_count, 1)  # core only
+            mock_pygame.draw.circle.assert_not_called()
 
     def test_a_station_with_no_windows_draws_only_the_core(self):
         with patch("game.world.landable.pygame") as mock_pygame:

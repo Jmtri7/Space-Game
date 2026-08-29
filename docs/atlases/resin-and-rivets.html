@@ -1859,8 +1859,16 @@
           <rect x="112" y="176" width="16" height="18" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
           <circle cx="120" cy="12" r="2.6" fill="#ff8c3c"/>
           <circle cx="120" cy="190" r="2.6" fill="#ff8c3c"/>
-          <path fill-rule="evenodd" d="M196,100 L174,154 L120,176 L66,154 L44,100 L66,46 L120,24 L174,46 Z M166,100 L152,132 L120,146 L88,132 L74,100 L88,68 L120,54 L152,68 Z" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
-          <polygon points="174,154 120,176 120,146 152,132" fill="#8a6845"/>
+          <!-- octagonal ring drawn as 8 discrete welded plate segments so the
+               centre is genuinely open (extraction can't do evenodd holes) -->
+          <polygon points="196,100 174,154 152,132 166,100" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="174,154 120,176 120,146 152,132" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="120,176 66,154 88,132 120,146" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="66,154 44,100 74,100 88,132" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="44,100 66,46 88,68 74,100" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="66,46 120,24 120,54 88,68" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="120,24 174,46 152,68 120,54" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <polygon points="174,46 196,100 166,100 152,68" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
           <g stroke="#5a4130" stroke-width="2.2">
             <line x1="196" y1="100" x2="166" y2="100"/><line x1="174" y1="154" x2="152" y2="132"/>
             <line x1="120" y1="176" x2="120" y2="146"/><line x1="66" y1="154" x2="88" y2="132"/>

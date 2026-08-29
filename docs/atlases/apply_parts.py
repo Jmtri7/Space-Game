@@ -49,7 +49,10 @@ T = [
     ("issue_bollard", SI, "issue bollard", 88, 74, 0.62, 0, "parts", B),
     ("issue_bench",   SI, "issue bench",   52, 118, 1.15, 0, "parts", B),
     ("station_alpha", RR, "station-alpha", 121, 108, 0.44, 0, "hull", G),
-    ("station_delta", RR, "station-delta", 120, 100, 0.36, 0, "hull", G),
+    # "parts" not "hull": the ring is 8 discrete segments now (no single hull
+    # polygon), so keep the existing hand/prior octagon local_points and just
+    # refresh the drawn parts. Centre stays open - see-through by design.
+    ("station_delta", RR, "station-delta", 120, 100, 0.36, 0, "parts", G),
     ("station_ring",  SI, "standard ring", 120, 100, 0.42, 0, "hull", G),
     ("vherathi_courier", RR, "spinewing", 120, 100, 0.0125, 0, "hull", G),
     ("vherathi_tender",  RR, "chorus-tender", 120, 100, 0.0125, 0, "hull", G),
