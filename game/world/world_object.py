@@ -4,6 +4,70 @@ import pygame
 from game.utils import to_screen, get_scale
 
 
+def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
+               outline_color=(12, 10, 16)):
+    """Draw a composite-shape "parts" list about world point (ox, oy). Each
+    part is one of:
+      {"points": [[x, y], ...], "color": <c>}   filled polygon
+      {"circle": [cx, cy, r], "color": <c>}     filled circle
+      {"line": [[x1, y1], ...], "color": <c>, "width": w}  polyline
+
+    Coords (and a line's `width`) are multiplied by `unit` - 1 for a
+    building's absolute local units, `size` for a ship/station whose base
+    points are fractions of size - then rotated `angle` degrees. Lets one
+    config entry carry the multi-polygon designs a single base shape can't
+    (see the design atlases). Colours resolve via _resolve_part_color:
+    an [r,g,b], "metal", "glass", or "shade:<n>"."""
+    if not parts:
+        return
+    rad = math.radians(angle)
+    cos_a, sin_a = math.cos(rad), math.sin(rad)
+    scale = get_scale()
+    outline_w = max(1, int(round(1.6 * scale)))
+
+    def project(x, y):
+        x, y = x * unit, y * unit
+        return to_screen(ox + (x * cos_a - y * sin_a), oy + (x * sin_a + y * cos_a))
+
+    for part in parts:
+        color = _resolve_part_color(part.get("color"), metal_color, glass_color)
+        if "circle" in part:
+            cx, cy, r = part["circle"]
+            center = project(cx, cy)
+            radius = max(1, int(round(r * unit * scale)))
+            pygame.draw.circle(surface, color, center, radius)
+            pygame.draw.circle(surface, outline_color, center, radius, outline_w)
+        elif "line" in part:
+            pts = [project(px, py) for px, py in part["line"]]
+            if len(pts) >= 2:
+                pygame.draw.lines(surface, color, False, pts,
+                                  max(1, int(round(part.get("width", 2) * unit * scale))))
+        else:
+            pts = [project(px, py) for px, py in part.get("points", [])]
+            if len(pts) >= 3:
+                pygame.draw.polygon(surface, color, pts)
+                pygame.draw.polygon(surface, outline_color, pts, outline_w)
+
+
+def _resolve_part_color(spec, metal_color, glass_color):
+    """A part's "color": an [r,g,b], or one of the names "metal" / "glass",
+    or "shade:<n>" (metal nudged by n per channel). Defaults to metal."""
+    if isinstance(spec, str):
+        if spec == "metal":
+            return tuple(metal_color)
+        if spec == "glass":
+            return tuple(glass_color)
+        if spec.startswith("shade:"):
+            try:
+                d = int(spec[6:])
+            except ValueError:
+                d = 0
+            return tuple(max(0, min(255, c + d)) for c in metal_color)
+    if spec:
+        return tuple(spec)
+    return tuple(metal_color)
+
+
 class WorldObject:
     """Base class for anything with a position in the game world (ships, landables)."""
     def __init__(self, x, y, graphics=None):
@@ -55,3 +119,8 @@ class WorldObject:
 
         pygame.draw.polygon(surface, color, points)
         return points
+
+    def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color):
+        """Composite "parts" detail about this object's own (x, y) - see the
+        module-level draw_parts()."""
+        draw_parts(surface, parts, self.x, self.y, angle, unit, metal_color, glass_color)

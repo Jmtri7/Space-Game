@@ -131,6 +131,13 @@ class Ship(WorldObject):
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
         outline_color = tuple(self.graphics.get("outline_color", (20, 18, 25)))
         self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
+        # Optional composite detail (livery stripes, hazard chevrons, mounted
+        # blocks) - fractions of ship_size, turning with the hull. See the
+        # design atlases and WorldObject._draw_parts.
+        parts = self.graphics.get("parts")
+        if parts:
+            glass_color = tuple(self.graphics.get("window_color", (200, 230, 255)))
+            self._draw_parts(surface, parts, self.angle, ship_size, color, glass_color)
         self._draw_windows(surface, ship_size)
 
         if self.thrust > 0.05:

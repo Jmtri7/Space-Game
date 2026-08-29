@@ -9,6 +9,7 @@ from game.perf_metrics import metrics as perf
 from game.audio.sound_board import sound_board
 from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, draw_message_log, draw_glow_message, center_panel_max_width
 from game.screens.screen_base import ScreenBase
+from game.world.world_object import draw_parts
 from game.world.character import Character, resolve_routine_class
 from game.world.person import Person
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
@@ -1116,7 +1117,14 @@ class LocationScreen(ScreenBase):
         anchor_x, anchor_y = structure["x"], structure["y"]
         shape = building_type.get("shape", "rect")
 
-        if shape == "circle":
+        # A "parts" list (multi-polygon detail - see the design atlases and
+        # WorldObject.draw_parts) replaces the single base shape when present;
+        # windows still layer on top. The top-level shape/dims stay only for
+        # the footprint/depth math (see _building_footprint/_structure_depth).
+        parts = building_type.get("parts")
+        if parts:
+            draw_parts(surface, parts, anchor_x, anchor_y, 0, 1, metal_color, glass_color)
+        elif shape == "circle":
             radius = building_type.get("radius", 50)
             cx, cy = to_screen(anchor_x, anchor_y)
             r = max(1, int(radius * scale))

@@ -55,6 +55,7 @@ class Landable(WorldObject):
             self.outline_color = tuple(self.graphics.get("outline_color", (20, 18, 25)))
             self.window_color = tuple(self.graphics.get("window_color", self.core_color))
             self.windows = self.graphics.get("windows", [])
+            self.parts = self.graphics.get("parts", [])
 
         # Moon-specific properties
         else:
@@ -155,10 +156,12 @@ class Landable(WorldObject):
             pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 
     def _draw_station(self, surface, scale):
-        """Draw a rotating space station: an outlined hull polygon, any
-        culture windows/lights, then the glowing core - all turning with
-        self.rotation."""
+        """Draw a rotating space station: an outlined hull polygon, optional
+        composite "parts" detail, any culture windows/lights, then the
+        glowing core - all turning with self.rotation."""
         self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color, outline_color=self.outline_color)
+        if self.parts:
+            self._draw_parts(surface, self.parts, self.rotation, 1, self.color, self.window_color)
         if self.windows:
             rad = math.radians(self.rotation)
             cos_a, sin_a = math.cos(rad), math.sin(rad)
