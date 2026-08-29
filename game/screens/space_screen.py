@@ -1555,23 +1555,28 @@ class SpaceScreen(ScreenBase):
         # stacked directly below it.
         minimap_rect = self._draw_minimap(surface, target_obj)
 
-        # Always every line (placeholder "None" for target/jump target
-        # rather than omitting them) so the panel doesn't resize or
-        # appear/disappear as targeting and jump selection change - only
-        # colors change.
-        speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
+        # Always every line (placeholder "None" for the target rather than
+        # omitting it) so the panel doesn't resize or appear/disappear as
+        # targeting and jump selection change - only colors change. Lines
+        # are (label, value, value_color) two-tone pairs (see
+        # draw_info_panel) so the labels read distinctly from the values.
         target_name = self._get_target_name()
         mode_label = TARGET_MODES[self.target_mode_index]
+
+        # selected_system_id is never None (see __init__) - it defaults to
+        # the current system, so this always names somewhere. Jump Target
+        # leads the pane: it's the one readout that's meaningful even with
+        # nothing targeted.
+        systems = get_star_systems(self.story)
+        selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
+        jump_value = selected_name + (" (current)" if self.selected_system_id == self.system_id else "")
+
         lines = [
-            (f"Credits: {self.player.person.possessions.credits}", (255, 220, 100)),
-            (f"Speed: {speed:.2f}", WHITE),
-            (f"Mode: {mode_label}", WHITE),
+            ("Jump Target:", jump_value, CYAN),
+            ("Targeting Mode:", mode_label, WHITE),
         ]
         if target_obj and target_name:
-            distance = self.player.get_distance(target_obj.x, target_obj.y)
-            lines.append(("Target:", GREEN))
-            lines.append((f"  Distance: {distance:.0f}", GREEN))
-            lines.append((f"  {target_name}", GREEN))
+            lines.append(("Target:", target_name, GREEN))
             # Ships show their pilot; landing sites (station/moon) list what's
             # inside them so the player can see where they'll end up before
             # committing to land; other bodies show a hazard note if any -
@@ -1579,24 +1584,15 @@ class SpaceScreen(ScreenBase):
             if isinstance(target_obj, Character):
                 pilot_name = target_obj.person.name
                 if pilot_name:
-                    lines.append((f"  Pilot: {pilot_name}", GREEN))
+                    lines.append(("  Pilot:", pilot_name, WHITE))
             elif isinstance(target_obj, LandingSite):
-                lines.append(("  Locations:", GREEN))
+                lines.append(("  Locations:", GRAY))
                 for label in target_obj.get_interior_labels():
                     lines.append((f"    - {label}", GRAY))
             elif getattr(target_obj, "hazardous", False):
                 lines.append(("  Hazardous - not a landing site", YELLOW))
         else:
-            lines.append(("Target: None", GRAY))
-
-        # selected_system_id is never None (see __init__) - it defaults to
-        # the current system, so this line always names somewhere.
-        systems = get_star_systems(self.story)
-        selected_name = systems.get(self.selected_system_id, {}).get("name", self.selected_system_id)
-        jump_label = selected_name
-        if self.selected_system_id == self.system_id:
-            jump_label += " (current)"
-        lines.append((f"Jump Target: {jump_label}", CYAN))
+            lines.append(("Target:", "None", GRAY))
 
         info_rect, info_max_scroll = draw_info_panel(surface, lines, ui_scale, (utils.screen_width - margin, minimap_rect.bottom + margin), scroll=self.info_panel_scroll)
         self.info_panel_scroll = max(0, min(self.info_panel_scroll, info_max_scroll))
@@ -1666,6 +1662,7 @@ class SpaceScreen(ScreenBase):
                 if self.player.autopilot_target is not None:
                     status_lines.append((f"Approaching: {self._approaching_label(self.player.autopilot_target)}", GREEN))
             else:
+                speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
                 if self.landing_text > 0:
                     status_lines.append(("Press L to Land", GREEN))
                 elif speed >= 0.4 and (

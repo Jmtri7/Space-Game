@@ -198,18 +198,28 @@ def draw_controls_pane(surface, x, y, title, items, ui_scale, collapsed=False):
     return rect
 
 
+INFO_LABEL_COLOR = (150, 170, 210)  # muted blue-grey for "Label:" prefixes - values keep their own color
+
+
 def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
-    """Draw a top-right-anchored glass panel of aligned (text, color) lines -
-    the ship-status/targeting readout style SpaceScreen's HUD uses and
-    interior locations now share for their own credits/target readout.
-    `lines` is a list of (text, color) tuples; `topright` is the (x, y)
-    screen point for the panel's own top-right corner.
+    """Draw a top-right-anchored glass panel of aligned text lines - the
+    ship-status/targeting readout style SpaceScreen's HUD uses and interior
+    locations now share for their own credits/target readout.
+    `topright` is the (x, y) screen point for the panel's own top-right
+    corner. Each entry in `lines` is either:
+
+      (text, color)             - a plain single-colour line
+      (label, value, value_col) - a two-tone line: `label` drawn in
+                                  INFO_LABEL_COLOR, then `value` in
+                                  `value_col`, so labels read distinctly
+                                  from the values beside them
 
     A line can carry real story content (a target's name, an interior
-    label) rather than fixed UI text, so each line is wrapped (see
-    _wrap_text) to fit. The panel is a fixed side_panel_width() wide so it
-    fills its quarter of the window to the same edge as the Controls /
-    Messages panes regardless of how long that content happens to be.
+    label) rather than fixed UI text, so it's wrapped (see _wrap_text) to
+    fit; a two-tone line wraps its value with a hanging indent under the
+    label. The panel is a fixed side_panel_width() wide so it fills its
+    quarter of the window to the same edge as the Controls / Messages
+    panes regardless of how long that content happens to be.
 
     Fixed maximum height: at most INFO_PANEL_VISIBLE_LINES wrapped lines are
     shown; a longer readout (many locations inside a targeted station, say)
@@ -221,10 +231,28 @@ def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
     line_height = int(22 * ui_scale)
     panel_width = side_panel_width(ui_scale)
     text_max_width = panel_width - pad_x * 2
-    wrapped = [(_wrap_text(font, text, text_max_width), color) for text, color in lines]
-    rendered = [(font.render(line, True, color), color) for lines, color in wrapped for line in lines]
+    space_w = font.size(" ")[0]
 
-    total = len(rendered)
+    # Flatten every entry into rows, each a list of (surface, x_offset).
+    rows = []
+    for entry in lines:
+        if len(entry) == 3:
+            label, value, value_color = entry
+            label_surf = font.render(f"{label} ", True, INFO_LABEL_COLOR)
+            indent = label_surf.get_width()
+            value_lines = _wrap_text(font, value, max(space_w, text_max_width - indent))
+            for i, vline in enumerate(value_lines):
+                value_surf = font.render(vline, True, value_color)
+                if i == 0:
+                    rows.append([(label_surf, 0), (value_surf, indent)])
+                else:
+                    rows.append([(value_surf, indent)])
+        else:
+            text, color = entry
+            for wline in _wrap_text(font, text, text_max_width):
+                rows.append([(font.render(wline, True, color), 0)])
+
+    total = len(rows)
     visible = min(total, INFO_PANEL_VISIBLE_LINES)
     max_scroll = max(0, total - visible)
     scroll = max(0, min(scroll, max_scroll))
@@ -241,8 +269,9 @@ def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
         if scroll > 0:
             surface.blit(font.render("^ more  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
         y += hint_height
-    for text, _ in rendered[scroll:scroll + visible]:
-        surface.blit(text, (rect.x + pad_x, y))
+    for row in rows[scroll:scroll + visible]:
+        for surf, dx in row:
+            surface.blit(surf, (rect.x + pad_x + dx, y))
         y += line_height
     if scrollable and scroll < max_scroll:
         surface.blit(font.render("v more  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
