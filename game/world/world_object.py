@@ -10,6 +10,8 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
     part is one of:
       {"points": [[x, y], ...], "color": <c>}   filled polygon
       {"circle": [cx, cy, r], "color": <c>}     filled circle
+      {"circle": [cx, cy, r], "color": <c>, "width": w}  ring (annulus), hole
+                                                        stays transparent
       {"line": [[x1, y1], ...], "color": <c>, "width": w}  polyline
 
     Coords (and a line's `width`) are multiplied by `unit` - 1 for a
@@ -44,9 +46,17 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
             cx, cy, r = part["circle"]
             center = project(cx, cy)
             radius = max(1, int(round(r * unit * scale)))
-            pygame.draw.circle(surface, color, center, radius)
-            if ol:
-                pygame.draw.circle(surface, ol, center, radius, outline_w)
+            ring_w = part.get("width")
+            if ring_w:
+                # A stroke-only circle in the plate is a ring - draw just the
+                # band so the hole stays transparent (docking collars, the
+                # ring-module stations), never a filled disc.
+                pygame.draw.circle(surface, color, center, radius,
+                                   max(1, int(round(ring_w * unit * scale))))
+            else:
+                pygame.draw.circle(surface, color, center, radius)
+                if ol:
+                    pygame.draw.circle(surface, ol, center, radius, outline_w)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
             if len(pts) >= 2:

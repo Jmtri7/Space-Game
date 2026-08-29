@@ -519,6 +519,11 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, 
     def _rotate(lx, ly):
         return lx * cos_a - ly * sin_a, lx * sin_a + ly * cos_a
 
+    # Thruster flame first, so the hull (or an extracted thruster port in
+    # `parts`) is drawn over its root - matches Ship.draw()'s order.
+    if thrust > 0.05:
+        _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a, thrust)
+
     # A "parts" list is a complete multi-polygon silhouette (see the design
     # atlases / WorldObject.draw_parts) - when present it fully replaces the
     # base polygon and the window dots, exactly as Ship.draw does, so the
@@ -542,8 +547,6 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, 
         pygame.draw.polygon(surface, outline_color, outline_points)
         pygame.draw.polygon(surface, color, points)
         _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a)
-    if thrust > 0.05:
-        _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a, thrust)
 
 
 def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
@@ -571,9 +574,14 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
             cx, cy, r = part["circle"]
             center = project(cx, cy)
             radius = max(1, round(r * pixel_size))
-            pygame.draw.circle(surface, color, center, radius)
-            if ol:
-                pygame.draw.circle(surface, ol, center, radius, outline_w)
+            ring_w = part.get("width")
+            if ring_w:
+                pygame.draw.circle(surface, color, center, radius,
+                                   max(1, round(ring_w * pixel_size)))
+            else:
+                pygame.draw.circle(surface, color, center, radius)
+                if ol:
+                    pygame.draw.circle(surface, ol, center, radius, outline_w)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
             if len(pts) >= 2:
@@ -611,12 +619,12 @@ def _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos
     (e.g. the shuttle) whose flame would otherwise dwarf the glyph and
     run into whatever's drawn below the preview."""
     thruster_points = graphics.get("thrusters", [(0, 0.6)])
-    thruster_width = graphics.get("thruster_width", 0.15)
+    thruster_width = graphics.get("thruster_width", 0.09)
     thruster_length = graphics.get("thruster_length", 38)
     thrust_color = tuple(graphics.get("thrust_color", YELLOW))
     world_size = graphics.get("size", 15) or 15
     flame_length = min(thrust * thruster_length * (pixel_size / world_size), pixel_size * 0.6)
-    half_width = max(2, pixel_size * thruster_width)
+    half_width = max(0.6, pixel_size * thruster_width)
 
     back_x_dir, back_y_dir = -sin_a, cos_a
     right_x_dir, right_y_dir = cos_a, sin_a

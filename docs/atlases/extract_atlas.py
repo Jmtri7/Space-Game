@@ -5,6 +5,12 @@ T A Z, absolute + relative; curves/arcs flattened to short segments).
 A filled shape keeps its SVG `stroke` as a per-part `"outline"`; a filled
 shape with no stroke is emitted with `"outline": "none"` so it renders
 un-outlined (WorldObject.draw_parts otherwise falls back to a dark outline).
+A `fill="none"` stroked <circle> becomes a ring part ({"circle", "width"}) so
+its hole stays transparent, not a filled disc.
+
+Any element (or group) tagged `class="flame"` is skipped entirely: the
+thruster exhaust stays procedural (`Ship._draw_thrusters`), so only the
+drawn port lands in `parts`. See docs/DESIGN_ATLAS.md, "Thruster ports".
 
 Usage: python extract_atlas.py "<atlas.html>" "<vlabel substring>" [transform]
 where transform is  cx cy scale flipy  applied as
@@ -181,6 +187,8 @@ class A:
 
 def walk(el, inh):
     """inh: dict of inherited fill/stroke/stroke-width."""
+    if "flame" in (el.get("class") or "").split():
+        return  # exhaust flame: stays procedural, never extracted
     style = dict(inh)
     for k in ("fill", "stroke", "stroke-width"):
         if el.get(k) is not None:
@@ -227,8 +235,13 @@ def emit(tag, el, style):
         poly(tf([(x, y), (x + w, y), (x + w, y + h), (x, y + h)]))
     elif tag == "circle":
         c = tf([(g(el, "cx"), g(el, "cy"))])[0]
-        d = {"circle": [c[0], c[1], round(g(el, "r") * SCALE, 3)], "color": col,
-             "outline": outline or "none"}
+        d = {"circle": [c[0], c[1], round(g(el, "r") * SCALE, 3)], "color": col}
+        if fill is None and swv:
+            # stroke-only circle -> a ring: carry the band width, no fill,
+            # so draw_parts leaves the hole transparent
+            d["width"] = round(float(swv) * SCALE, 3)
+        else:
+            d["outline"] = outline or "none"
         parts.append(d)
     elif tag == "line":
         pts = tf([(g(el, "x1"), g(el, "y1")), (g(el, "x2"), g(el, "y2"))])

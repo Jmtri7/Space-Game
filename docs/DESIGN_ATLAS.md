@@ -34,6 +34,11 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   whole *pile*, so the hand-placed crate/barrel clusters in `keplers_reach` were
   thinned to match; and a strokeless atlas shape now extracts with
   `"outline": "none"` so glow dots stop picking up a black ring.
+  Every ship plate (01·A / 02·A) also has an explicit drawn **thruster port** at
+  each mount, extracted into `parts` (with `fill="none"` ring circles for the
+  station ring-modules / docking collars); the exhaust flame stays procedural
+  via the `class="flame"` skip. See "Turning a plate into config" for the three
+  engine-side rules that keep the flame on the nozzle.
 - **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
   **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
   look. The `standard_issue` culture, its ships/station, the **Procyon Gate**
@@ -44,6 +49,9 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   figure renderer first. So does the 05·D **hazard-chevron floor decal**: the
   `decorations` system has no `parts`, so it's still authored as plain
   hazard-colour floor rects in the system JSON, not literal chevrons.
+  The 05·A ship plates carry explicit thruster ports + `class="flame"` exhausts
+  too, extracted the same way; the Standard Ring's ring modules and the Issue
+  Tender's docking collar extract as transparent-hole ring parts.
 
 ### Updating a published atlas
 
@@ -107,6 +115,18 @@ Keep every specimen consistent so silhouettes compare directly:
 - **Flat bright fills on void-black.** The game renders sprites as flat polygons
   with no bloom — match that. Bright `glass_color` on near-black already reads
   as "lit"; don't fake a glow.
+- **Thruster ports, and the flame that isn't one.** Draw a **port** at every
+  `thrusters` mount: a nozzle shape in the culture's `metal_color` (a darker
+  derived shade is fine) with its edge colour as a hairline `stroke`. Culture
+  cue: Vherathi = a grown asymmetric resin flare, odd-count clusters; Drossholt
+  = a bolted rectangular housing with rivet dots, mirrored pairs; Standard Issue
+  = a rounded-corner regulation nozzle with an amber hazard chevron over the
+  throat (this is the reference the other two adapt). The **exhaust flame** is a
+  *separate* shape — or a `<g>` — carrying `class="flame"`: `thrust_color`,
+  **narrower** than the port mouth, rooted *inside* the port and drawn *before*
+  it so the port occludes its base and only the tail of the jet shows past the
+  port's aft edge. Ports are real silhouette and get extracted; `class="flame"`
+  shapes are skipped by `extract_atlas.py` (see "Turning a plate into config").
 - **Committed dark theme is fine** for a sprite atlas (the sprites are authored
   against black), but paint every colour explicitly so the page holds on any
   host background.
@@ -139,7 +159,9 @@ A specimen SVG is mostly polygons/paths/circles, and the engine can consume
 that directly: `graphics.json` (ships, `space_stations`) and
 `building_types.json` entries take an optional **`parts`** list —
 `{"points": [...], "color": ..., "outline": ...}` /
-`{"circle": [cx, cy, r], ...}` / `{"line": [...], "width": w, ...}`.
+`{"circle": [cx, cy, r], ...}` (filled) or `{"circle": [cx, cy, r], "width":
+w}` (a **ring** — a `fill="none"` stroked circle in the plate, hole left
+transparent) / `{"line": [...], "width": w, ...}`.
 `WorldObject.draw_parts()` renders the list **and nothing else** — a `parts`
 list is a *complete* silhouette, so the flat base polygon and the circular
 `windows` dots are **not** also drawn under/over it (that just shows the old
@@ -168,6 +190,24 @@ Tooling lives beside the atlas HTML: [`docs/atlases/extract_atlas.py`](atlases/e
 (one plate → parts JSON) and [`docs/atlases/apply_parts.py`](atlases/apply_parts.py)
 (the asset→plate table + targeted JSON injection; run from repo root, it's
 idempotent). Add a row to `apply_parts.py`'s `T` table for a new asset.
+
+**The thruster flame is not extracted.** Any specimen shape (or `<g>`) tagged
+`class="flame"` is dropped by `extract_atlas.py` — only the drawn **port**
+polygon lands in `parts`; the exhaust stays procedural in
+`Ship._draw_thrusters()`. Three engine-side things keep the live flame reading
+as firing *from* that port (all shipped):
+
+1. **Draw order.** `Ship.draw()` (and `draw_ship_glyph`) draw the flame
+   *before* the hull `parts`, so the port occludes its root and only the jet
+   aft of the port lip shows.
+2. **Width.** The flame half-width is `max(0.6, thruster_width · size)` (game
+   units); `thruster_width` is `0.055` for every atlas ship (default `0.09`),
+   comfortably under the ~`0.08·size` port-mouth half-width.
+3. **Origin.** Each ship's `thrusters` mount is the plate's **port aft-edge
+   point** mapped through that entry's `apply_parts.py` transform, so the flame
+   starts at the drawn nozzle mouth at any thrust level. These are hand-kept in
+   sync — if you move a port in a plate, re-derive its `thrusters` entry
+   (`((plate_x − cx)·scale, (plate_y − cy)·scale)`).
 
 ## Maintaining an atlas
 

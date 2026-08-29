@@ -142,6 +142,16 @@ class Ship(WorldObject):
         # the old shape bleeding past the new one). local_points/shape stay
         # authoritative for collision and target-bracket sizing, just not draw.
         parts = self.graphics.get("parts") if self.graphics else None
+
+        # Thruster flame is drawn *under* the hull, so an extracted thruster
+        # "port" in `parts` frames it and the jet reads as coming out of the
+        # nozzle rather than being painted on top of the ship. The mount points
+        # sit at the port throat and the flame is kept narrower than the port
+        # mouth (see thruster_width / docs/DESIGN_ATLAS.md). force_thrusters
+        # keeps the flame lit through a jump, when self.thrust is 0.
+        if self.thrust > 0.05 or self.force_thrusters:
+            self._draw_thrusters(surface, ship_size)
+
         if parts:
             glass_color = tuple(self.graphics.get("window_color", (200, 230, 255)))
             self._draw_parts(surface, parts, self.angle, ship_size, color,
@@ -149,9 +159,6 @@ class Ship(WorldObject):
         else:
             self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
             self._draw_windows(surface, ship_size)
-
-        if self.thrust > 0.05 or self.force_thrusters:
-            self._draw_thrusters(surface, ship_size)
 
     def _draw_windows(self, surface, ship_size):
         """Draw small viewport/window details at each configured window point.
@@ -185,9 +192,12 @@ class Ship(WorldObject):
         (opposite the ship's facing), like a small exhaust cone. Width (fraction of
         ship_size) and max length (world units, at full thrust) are both tunable
         per ship via the "thruster_width"/"thruster_length" graphics fields.
+        The flame is drawn *under* the hull (see draw()), so keep thruster_width
+        below the ship's extracted port-mouth half-width (~0.08 of size) - the
+        jet then reads as firing out of the nozzle.
         """
         thruster_points = self.graphics.get("thrusters", [(0, 0.6)])
-        thruster_width = self.graphics.get("thruster_width", 0.15)
+        thruster_width = self.graphics.get("thruster_width", 0.09)
         thruster_length = self.graphics.get("thruster_length", 38)
         thrust_color = tuple(self.graphics.get("thrust_color", YELLOW))
 
@@ -198,7 +208,7 @@ class Ship(WorldObject):
         # full-length flame in that case.
         effective_thrust = self.acceleration_magnitude if self.force_thrusters else self.thrust
         flame_length = effective_thrust * thruster_length
-        half_width = max(2, ship_size * thruster_width)
+        half_width = max(0.6, ship_size * thruster_width)
 
         # World-space unit vectors for this ship's current heading: "backward"
         # (opposite the nose) and "right" (perpendicular, for the flame's base).

@@ -369,6 +369,10 @@
       multi-polygon hulls with the plate's own edge colours. <code style="font-family:inherit">story.json</code>
       is at <code style="font-family:inherit">1.10.0</code>; a save from before warns
       on load. See <a href="#wiring">What shipped</a> for the file-by-file map.
+      Every ship plate (01·A / 02·A) also carries a drawn <b>thruster port</b> at each
+      mount, extracted into <code style="font-family:inherit">parts</code>; the exhaust
+      flame stays procedural (<code style="font-family:inherit">Ship._draw_thrusters</code>),
+      drawn under the port and starting at the nozzle mouth.
     </div>
 
     <dl class="legend" id="read">
@@ -415,6 +419,17 @@
     <!-- ---- Vherathi ships ---- -->
     <p class="subhead">01·A — Ships</p>
 
+    <div class="status" style="margin:0 0 26px">
+      <b>Thruster ports.</b> Every mount in <code style="font-family:inherit">thrusters</code>
+      now carries a drawn <b>port</b> — for the Concord, a grown asymmetric resin flare
+      lined with a glass-vein hairline, in odd-count clusters (directive 3). The magenta
+      <b>flame</b> is a separate shape tagged <code style="font-family:inherit">class="flame"</code>:
+      it is <em>not</em> extracted into <code style="font-family:inherit">parts</code> —
+      <code style="font-family:inherit">Ship._draw_thrusters</code> still draws it live —
+      but it is drawn narrower than the port mouth and rooted inside it, so in game the
+      jet reads as firing out of the nozzle.
+    </div>
+
     <article class="plate reveal">
       <div class="viewport">
         <svg viewBox="0 0 240 200" role="img" aria-label="Top-down view of the Resin Skiff: an asymmetric dart with a longer starboard flank, a glowing dorsal ridge and one offset thruster.">
@@ -424,7 +439,8 @@
           <path d="M132,28 L120,148" stroke="#7dffca" stroke-width="1.7" fill="none" class="v-glow"/>
           <circle cx="140" cy="56" r="2.4" fill="#7dffca" class="v-glow"/>
           <circle cx="147" cy="78" r="2.1" fill="#7dffca" class="v-glow"/>
-          <path d="M112,150 L108,186 L122,186 L118,150 Z" fill="#dd5aff"/>
+          <path class="flame" d="M112,148 L115,180 L118,148 Z" fill="#dd5aff"/>
+          <path d="M108,146 Q106,158 110.5,163 L119.5,163 Q124,157 122,146 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">resin-skiff · top</span>
         <span class="vscale">size 10</span>
@@ -464,9 +480,12 @@
           <circle cx="112" cy="66" r="2.6" fill="#7dffca" class="v-glow"/>
           <circle cx="118" cy="96" r="2.6" fill="#7dffca" class="v-glow"/>
           <circle cx="110" cy="128" r="2.2" fill="#7dffca" class="v-glow"/>
-          <path d="M92,168 L86,192 L100,192 L98,168 Z" fill="#dd5aff"/>
-          <path d="M112,172 L110,198 L122,198 L120,172 Z" fill="#dd5aff"/>
-          <path d="M132,170 L134,190 L144,190 L142,170 Z" fill="#dd5aff"/>
+          <path class="flame" d="M92,166 L95,190 L98,166 Z" fill="#dd5aff"/>
+          <path d="M89,164 Q87,174 91,179 L99,179 Q103,173 101,164 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M113,170 L116,196 L119,170 Z" fill="#dd5aff"/>
+          <path d="M110,168 Q108,179 112,184 L120,184 Q124,178 122,168 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M134,168 L137,188 L140,168 Z" fill="#dd5aff"/>
+          <path d="M131,166 Q129.5,175 133,180 L141,180 Q144.5,175 143,166 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">reliquary-hauler · top</span>
         <span class="vscale">size 35</span>
@@ -504,8 +523,10 @@
           <path d="M124,50 L188,118" stroke="#7dffca" stroke-width="1.2" fill="none" class="v-glow"/>
           <circle cx="120" cy="62" r="2.3" fill="#7dffca" class="v-glow"/>
           <rect x="115" y="14" width="8" height="12" rx="2" fill="#7d6290" stroke="#7dffca" stroke-width="0.8"/>
-          <path d="M104,140 L100,168 L112,168 L110,140 Z" fill="#dd5aff"/>
-          <path d="M132,132 L134,152 L144,152 L142,132 Z" fill="#dd5aff"/>
+          <path class="flame" d="M104,138 L107,166 L110,138 Z" fill="#dd5aff"/>
+          <path d="M101,136 Q99,147 103,152 L111,152 Q115,146 113,136 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M134,130 L137,150 L140,130 Z" fill="#dd5aff"/>
+          <path d="M131,128 Q129.5,137 133,142 L141,142 Q144.5,137 143,128 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">thornwing · top</span>
         <span class="vscale">size 13</span>
@@ -543,7 +564,8 @@
           <path d="M120,16 L118,164" stroke="#7dffca" stroke-width="2.4" fill="none" class="v-glow"/>
           <path d="M126,104 L154,122" stroke="#7dffca" stroke-width="1" fill="none" class="v-glow"/>
           <circle cx="117" cy="52" r="1.9" fill="#7dffca" class="v-glow"/>
-          <path d="M108,168 L102,198 L134,198 L126,168 Z" fill="#dd5aff"/>
+          <path class="flame" d="M112,166 L117,200 L122,166 Z" fill="#dd5aff"/>
+          <path d="M106,164 Q103,178 110,184 L124,184 Q131,177 128,164 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">spinewing · top</span>
         <span class="vscale">size 8</span>
@@ -587,8 +609,10 @@
           </g>
           <circle cx="112" cy="70" r="2.4" fill="#7dffca" class="v-glow"/>
           <circle cx="106" cy="98" r="2.4" fill="#7dffca" class="v-glow"/>
-          <path d="M86,166 L80,190 L94,190 L96,166 Z" fill="#dd5aff"/>
-          <path d="M112,170 L114,194 L128,194 L124,170 Z" fill="#dd5aff"/>
+          <path class="flame" d="M88,164 L91,188 L94,164 Z" fill="#dd5aff"/>
+          <path d="M85,162 Q83,173 87,178 L95,178 Q99,172 97,162 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M115,168 L118,192 L121,168 Z" fill="#dd5aff"/>
+          <path d="M112,166 Q110,177 114,182 L122,182 Q126,176 124,166 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">chorus-tender · top</span>
         <span class="vscale">size 26</span>
@@ -631,10 +655,14 @@
             <circle cx="112" cy="104" r="2.3"/><circle cx="108" cy="128" r="2.3"/>
             <circle cx="112" cy="150" r="2.3"/>
           </g>
-          <path d="M84,178 L78,200 L90,200 L92,178 Z" fill="#dd5aff"/>
-          <path d="M102,184 L100,204 L112,204 L112,184 Z" fill="#dd5aff"/>
-          <path d="M120,182 L122,202 L134,202 L130,182 Z" fill="#dd5aff"/>
-          <path d="M138,176 L142,194 L152,194 L148,176 Z" fill="#dd5aff"/>
+          <path class="flame" d="M85,176 L88,202 L91,176 Z" fill="#dd5aff"/>
+          <path d="M81,174 Q79,185 84,190 L92,190 Q97,184 95,174 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M104,182 L107,206 L110,182 Z" fill="#dd5aff"/>
+          <path d="M101,180 Q99.5,190 103,195 L111,195 Q114.5,189 113,180 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M122,180 L125,202 L128,180 Z" fill="#dd5aff"/>
+          <path d="M119,178 Q117,188 121,193 L129,193 Q133,187 131,178 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
+          <path class="flame" d="M140,174 L143,194 L146,174 Z" fill="#dd5aff"/>
+          <path d="M137,172 Q135.5,181 139,186 L147,186 Q150.5,181 149,172 Z" fill="#5a3f72" stroke="#7dffca" stroke-width="0.9"/>
         </svg>
         <span class="vlabel">pale-ark · top</span>
         <span class="vscale">size 48</span>
@@ -1240,6 +1268,15 @@
     <!-- ---- Drossholt ships ---- -->
     <p class="subhead">02·A — Ships</p>
 
+    <div class="status" style="margin:0 0 26px">
+      <b>Thruster ports.</b> Each mount gets a bolted rectangular <b>nozzle housing</b>
+      in patch-metal with a riveted edge — mirrored pairs, dead even (directives 2·3).
+      The orange <b>flame</b> is tagged <code style="font-family:inherit">class="flame"</code>
+      and stays procedural (<code style="font-family:inherit">Ship._draw_thrusters</code>);
+      in the plate it is drawn narrower than the housing and beneath it, so the exhaust
+      appears to fire from the throat.
+    </div>
+
     <article class="plate reveal">
       <div class="viewport">
         <svg viewBox="0 0 240 200" role="img" aria-label="Top-down view of the Drossholt Hauler: a blunt long rectangle crossed by three riveted seams, mirrored window rows, one mismatched darker patch panel and mirrored twin thrusters.">
@@ -1249,8 +1286,11 @@
           <g stroke="#5a4130" stroke-width="2.5"><line x1="88" y1="70" x2="152" y2="70"/><line x1="88" y1="110" x2="152" y2="110"/><line x1="88" y1="150" x2="152" y2="150"/></g>
           <g fill="#5a4130"><circle cx="94" cy="70" r="1.6"/><circle cx="106" cy="70" r="1.6"/><circle cx="118" cy="70" r="1.6"/><circle cx="134" cy="70" r="1.6"/><circle cx="146" cy="70" r="1.6"/><circle cx="94" cy="110" r="1.6"/><circle cx="146" cy="110" r="1.6"/><circle cx="94" cy="150" r="1.6"/><circle cx="106" cy="150" r="1.6"/><circle cx="134" cy="150" r="1.6"/><circle cx="146" cy="150" r="1.6"/></g>
           <g fill="#ffc94f"><rect x="98" y="44" width="6" height="6"/><rect x="136" y="44" width="6" height="6"/><rect x="98" y="126" width="6" height="6"/><rect x="136" y="126" width="6" height="6"/></g>
-          <rect x="100" y="174" width="14" height="20" fill="#ff8c3c"/>
-          <rect x="126" y="174" width="14" height="20" fill="#ff8c3c"/>
+          <path class="flame" d="M104,172 L107,196 L110,172 Z" fill="#ff8c3c"/>
+          <path class="flame" d="M130,172 L133,196 L136,172 Z" fill="#ff8c3c"/>
+          <rect x="100" y="169" width="14" height="13" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <rect x="126" y="169" width="14" height="13" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <g fill="#5a4130"><circle cx="103.5" cy="173" r="1.3"/><circle cx="110.5" cy="173" r="1.3"/><circle cx="129.5" cy="173" r="1.3"/><circle cx="136.5" cy="173" r="1.3"/></g>
         </svg>
         <span class="vlabel">drossholt-hauler · top</span>
         <span class="vscale">size 35</span>
@@ -1290,8 +1330,11 @@
           <g fill="#ffc94f"><rect x="104" y="70" width="7" height="7"/><rect x="129" y="70" width="7" height="7"/></g>
           <circle cx="98" cy="88" r="2.6" fill="#ff8c3c"/>
           <circle cx="142" cy="88" r="2.6" fill="#ff8c3c"/>
-          <rect x="100" y="150" width="12" height="18" fill="#ff8c3c"/>
-          <rect x="128" y="150" width="12" height="18" fill="#ff8c3c"/>
+          <path class="flame" d="M103,148 L106,170 L109,148 Z" fill="#ff8c3c"/>
+          <path class="flame" d="M131,148 L134,170 L137,148 Z" fill="#ff8c3c"/>
+          <rect x="99" y="146" width="14" height="12" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <rect x="127" y="146" width="14" height="12" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <g fill="#5a4130"><circle cx="102.5" cy="149.5" r="1.2"/><circle cx="109.5" cy="149.5" r="1.2"/><circle cx="130.5" cy="149.5" r="1.2"/><circle cx="137.5" cy="149.5" r="1.2"/></g>
         </svg>
         <span class="vlabel">drossholt-cutter · top</span>
         <span class="vscale">size 13</span>
@@ -1331,7 +1374,9 @@
           <path d="M84,40 L72,34 M156,40 L168,34" stroke="#5a4130" stroke-width="4" stroke-linecap="round"/>
           <rect x="108" y="92" width="24" height="14" rx="2" fill="#8a6845" stroke="#5a4130" stroke-width="1.5"/>
           <g fill="#ffc94f"><rect x="90" y="80" width="6" height="6"/><rect x="144" y="80" width="6" height="6"/></g>
-          <g fill="#ff8c3c"><rect x="88" y="156" width="11" height="18"/><rect x="104" y="156" width="11" height="18"/><rect x="126" y="156" width="11" height="18"/><rect x="142" y="156" width="11" height="18"/></g>
+          <g class="flame" fill="#ff8c3c"><path d="M90.5,154 L93.5,176 L96.5,154 Z"/><path d="M106.5,154 L109.5,176 L112.5,154 Z"/><path d="M128.5,154 L131.5,176 L134.5,154 Z"/><path d="M144.5,154 L147.5,176 L150.5,154 Z"/></g>
+          <g fill="#8a6845" stroke="#5a4130" stroke-width="2"><rect x="87" y="152" width="13" height="12"/><rect x="103" y="152" width="13" height="12"/><rect x="125" y="152" width="13" height="12"/><rect x="141" y="152" width="13" height="12"/></g>
+          <g fill="#5a4130"><circle cx="90" cy="155" r="1.1"/><circle cx="97" cy="155" r="1.1"/><circle cx="106" cy="155" r="1.1"/><circle cx="113" cy="155" r="1.1"/><circle cx="128" cy="155" r="1.1"/><circle cx="135" cy="155" r="1.1"/><circle cx="144" cy="155" r="1.1"/><circle cx="151" cy="155" r="1.1"/></g>
         </svg>
         <span class="vlabel">sledge-tug · top</span>
         <span class="vscale">size 22</span>
@@ -1373,8 +1418,11 @@
           <g stroke="#5a4130" stroke-width="2.5"><line x1="86" y1="130" x2="154" y2="130"/></g>
           <g fill="#5a4130"><circle cx="92" cy="130" r="1.6"/><circle cx="108" cy="130" r="1.6"/><circle cx="124" cy="130" r="1.6"/><circle cx="140" cy="130" r="1.6"/></g>
           <g fill="#ffc94f"><rect x="94" y="140" width="6" height="6"/><rect x="112" y="140" width="6" height="6"/><rect x="130" y="140" width="6" height="6"/></g>
-          <rect x="98" y="170" width="13" height="18" fill="#ff8c3c"/>
-          <rect x="128" y="170" width="13" height="18" fill="#ff8c3c"/>
+          <path class="flame" d="M101.5,168 L104.5,190 L107.5,168 Z" fill="#ff8c3c"/>
+          <path class="flame" d="M131.5,168 L134.5,190 L137.5,168 Z" fill="#ff8c3c"/>
+          <rect x="97.5" y="166" width="14" height="12" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <rect x="127.5" y="166" width="14" height="12" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <g fill="#5a4130"><circle cx="101" cy="169.5" r="1.2"/><circle cx="108" cy="169.5" r="1.2"/><circle cx="131" cy="169.5" r="1.2"/><circle cx="138" cy="169.5" r="1.2"/></g>
         </svg>
         <span class="vlabel">ratchet-prospector · top</span>
         <span class="vscale">size 30</span>
@@ -1416,7 +1464,9 @@
           <rect x="158" y="92" width="18" height="26" rx="2" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
           <g stroke="#5a4130" stroke-width="2.5"><line x1="82" y1="100" x2="158" y2="100"/><line x1="82" y1="130" x2="158" y2="130"/></g>
           <g fill="#ffc94f"><rect x="90" y="112" width="5" height="5"/><rect x="106" y="112" width="5" height="5"/><rect x="129" y="112" width="5" height="5"/><rect x="145" y="112" width="5" height="5"/></g>
-          <g fill="#ff8c3c"><rect x="88" y="158" width="10" height="16"/><rect x="102" y="158" width="10" height="16"/><rect x="128" y="158" width="10" height="16"/><rect x="142" y="158" width="10" height="16"/></g>
+          <g class="flame" fill="#ff8c3c"><path d="M90,156 L93,178 L96,156 Z"/><path d="M104,156 L107,178 L110,156 Z"/><path d="M130,156 L133,178 L136,156 Z"/><path d="M144,156 L147,178 L150,156 Z"/></g>
+          <g fill="#8a6845" stroke="#5a4130" stroke-width="2"><rect x="86.5" y="154" width="13" height="12"/><rect x="100.5" y="154" width="13" height="12"/><rect x="126.5" y="154" width="13" height="12"/><rect x="140.5" y="154" width="13" height="12"/></g>
+          <g fill="#5a4130"><circle cx="89.5" cy="157" r="1.1"/><circle cx="96.5" cy="157" r="1.1"/><circle cx="103.5" cy="157" r="1.1"/><circle cx="110.5" cy="157" r="1.1"/><circle cx="129.5" cy="157" r="1.1"/><circle cx="136.5" cy="157" r="1.1"/><circle cx="143.5" cy="157" r="1.1"/><circle cx="150.5" cy="157" r="1.1"/></g>
         </svg>
         <span class="vlabel">bulwark-gunship · top</span>
         <span class="vscale">size 20</span>

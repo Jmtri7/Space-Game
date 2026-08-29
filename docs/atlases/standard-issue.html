@@ -37,6 +37,7 @@
        factory-painted, colour-coded, spec-built */
     --si-hull:#41506a;   --si-hull-lo:#2a3444;  --si-panel:#5a6b82;
     --si-glass:#cfe0f0;  --si-stripe:#dfe6ee;   --si-hazard:#f2b23a;
+    --si-thrust:#8cb9ff; /* thrust_color (140,185,255) — the live exhaust flame */
 
     --maxw:1120px;
   }
@@ -297,6 +298,10 @@
       Only the culture-neutral <b>outfit redraws</b> (Chapters 02–04) are still
       mockups: the <code class="f">Person</code> renderer is colour-key driven, not
       per-outfit geometry, so those wait on a parts-style figure renderer.
+      The ship plates (05·A) also carry explicit thruster <b>ports</b>, extracted into
+      <code class="f">parts</code>; the Standard Ring's ring modules and the Issue
+      Tender's docking collar extract as transparent-hole rings, and the pale-blue
+      exhaust stays procedural, drawn from the nozzle mouth.
     </div>
 
     <dl class="legend" id="read">
@@ -1075,6 +1080,17 @@
     <!-- ---- ships ---- -->
     <p class="subhead">05·A — Ships</p>
 
+    <div class="status" style="margin:0 0 26px">
+      <b>Thruster ports.</b> The regulation nozzle — a rounded-corner housing in
+      <code class="f">si_panel</code> grey with a dark outline and an amber hazard
+      chevron painted over the throat — is the reference the other cultures adapt for
+      their own <code class="f">thrusters</code> mounts. The pale-blue <b>flame</b>
+      (<code class="f">thrust_color</code>) is tagged <code class="f">class="flame"</code>,
+      stays procedural (<code class="f">Ship._draw_thrusters</code>), and is drawn
+      narrower than the nozzle and beneath it — so it is <em>not</em> pulled into
+      <code class="f">parts</code>, only the port is.
+    </div>
+
     <div class="plate">
       <div class="viewport fig">
         <svg viewBox="0 0 200 200" role="img" aria-label="Top-down Issue Shuttle: a rounded-rectangle hull with a white centreline stripe, one window row, a single centred thruster with an amber hazard chevron, and a stencilled registration.">
@@ -1082,6 +1098,7 @@
           <rect x="78" y="34" width="44" height="120" rx="14" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
           <rect x="97" y="40" width="6" height="108" fill="#dfe6ee"/>
           <g fill="#cfe0f0"><rect x="84" y="54" width="7" height="7" rx="1"/><rect x="109" y="54" width="7" height="7" rx="1"/></g>
+          <path class="flame" d="M96,152 L100,184 L104,152 Z" fill="#8cb9ff"/>
           <path d="M92,158 l8,10 l8,-10 Z" fill="#f2b23a"/>
           <rect x="93" y="154" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
           <text x="100" y="120" fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7" text-anchor="middle">SF-04</text>
@@ -1115,6 +1132,7 @@
           <g stroke="#2a3444" stroke-width="2"><line x1="72" y1="72" x2="128" y2="72"/><line x1="72" y1="122" x2="128" y2="122"/></g>
           <rect x="97" y="26" width="6" height="142" fill="#dfe6ee"/>
           <g fill="#cfe0f0"><rect x="80" y="40" width="6" height="6"/><rect x="114" y="40" width="6" height="6"/><rect x="80" y="90" width="6" height="6"/><rect x="114" y="90" width="6" height="6"/><rect x="80" y="140" width="6" height="6"/><rect x="114" y="140" width="6" height="6"/></g>
+          <g class="flame" fill="#8cb9ff"><path d="M81,170 L85,202 L89,170 Z"/><path d="M111,170 L115,202 L119,170 Z"/></g>
           <path d="M78,176 l7,9 l7,-9 Z" fill="#f2b23a"/><path d="M108,176 l7,9 l7,-9 Z" fill="#f2b23a"/>
           <rect x="78" y="172" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
           <rect x="108" y="172" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
@@ -1151,6 +1169,7 @@
           <rect x="92" y="26" width="16" height="10" rx="2" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
           <circle cx="100" cy="20" r="3" fill="#e15a5a"/>
           <g fill="#cfe0f0"><rect x="82" y="56" width="7" height="7" rx="1"/><rect x="111" y="56" width="7" height="7" rx="1"/></g>
+          <g class="flame" fill="#8cb9ff"><path d="M85,152 L88,182 L91,152 Z"/><path d="M109,152 L112,182 L115,152 Z"/></g>
           <path d="M82,158 l6,8 l6,-8 Z" fill="#f2b23a"/><path d="M106,158 l6,8 l6,-8 Z" fill="#f2b23a"/>
           <rect x="82" y="154" width="12" height="18" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
           <rect x="106" y="154" width="12" height="18" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
@@ -1187,6 +1206,7 @@
           <g fill="#f2b23a"><rect x="74" y="96" width="52" height="5"/><rect x="74" y="112" width="52" height="5"/></g>
           <path d="M74,64 h52 v-4 h-52 Z M74,150 h52 v4 h-52 Z" fill="#f2b23a" opacity="0.9"/>
           <rect x="97" y="66" width="6" height="84" fill="#dfe6ee"/>
+          <g class="flame" fill="#8cb9ff"><path d="M75,150 L77.5,176 L80,150 Z"/><path d="M91,150 L93.5,176 L96,150 Z"/><path d="M105,150 L107.5,176 L110,150 Z"/><path d="M121,150 L123.5,176 L126,150 Z"/></g>
           <g fill="#f2b23a"><path d="M74,156 l5,7 l5,-7 Z"/><path d="M90,156 l5,7 l5,-7 Z"/><path d="M104,156 l5,7 l5,-7 Z"/><path d="M120,156 l5,7 l5,-7 Z"/></g>
           <g fill="#5a6b82" stroke="#2a3444" stroke-width="2"><rect x="72" y="152" width="11" height="16" rx="2"/><rect x="88" y="152" width="11" height="16" rx="2"/><rect x="102" y="152" width="11" height="16" rx="2"/><rect x="118" y="152" width="11" height="16" rx="2"/></g>
         </svg>
