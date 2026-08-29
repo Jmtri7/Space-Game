@@ -1,33 +1,33 @@
 {
   "vherathi_spire": {
     "name": "Vherathi Spire",
-    "description": "A tapering residential/administrative tower, asymmetric from base to tip.",
+    "description": "A tapering residential/administrative tower - it commits to the lean, base to tip, and clusters its light near the crown.",
     "culture": "vherathi",
     "shape": "polygon",
-    "local_points": [[-55, 0], [65, 0], [35, -300], [-15, -330]],
-    "windows": [[10, -250], [-5, -280], [20, -300], [5, -320]],
+    "local_points": [[-52, 0], [64, 0], [46, -160], [30, -330], [-26, -360], [-40, -140]],
+    "windows": [[8, -262], [-6, -300], [16, -330], [-2, -350]],
     "window_size": 12,
     "window_shape": "circle",
     "footprint": {"width": 100, "depth": 90}
   },
   "vherathi_bloompod": {
     "name": "Vherathi Bloompod",
-    "description": "A rounded, organic communal dwelling, grown rather than built.",
+    "description": "A grown communal dwelling - an egg, taller and fuller on one flank as if it grew toward a light, its windows following that side.",
     "culture": "vherathi",
-    "shape": "circle",
-    "radius": 85,
-    "windows": [[-30, -40], [25, -55], [45, 10], [-50, 15]],
+    "shape": "polygon",
+    "local_points": [[-72, 20], [-78, -30], [-58, -78], [-14, -100], [40, -92], [74, -50], [80, 10], [66, 60], [26, 88], [-24, 82], [-58, 50]],
+    "windows": [[30, -60], [56, -20], [58, 24], [30, 60], [-4, 76]],
     "window_size": 14,
     "window_shape": "circle",
     "footprint": {"width": 140, "depth": 140}
   },
   "vherathi_hall": {
     "name": "Vherathi Gathering Hall",
-    "description": "A wide, low, asymmetric structure leaning toward one side - markets and meeting spaces.",
+    "description": "A wide, low market/meeting hall - the left eave sweeps far higher than the right, and the windows huddle low under it.",
     "culture": "vherathi",
     "shape": "polygon",
-    "local_points": [[-140, 0], [160, 0], [130, -100], [-90, -130]],
-    "windows": [[-70, -50], [-40, -70], [-10, -90], [60, -60]],
+    "local_points": [[-150, 0], [160, 0], [140, -70], [-110, -160]],
+    "windows": [[-100, -60], [-72, -80], [-44, -100], [10, -80]],
     "window_size": 12,
     "window_shape": "circle",
     "footprint": {"width": 260, "depth": 110}
@@ -58,15 +58,15 @@
   },
   "vherathi_planter": {
     "name": "Vherathi Fern Basin",
-    "description": "A grown basin, drawn in 3/4 view, where pale resin-ferns cluster and glow. Furniture: a small collision footprint.",
+    "description": "A grown basin in 3/4 view - the resin-ferns crowd and spill over one lip and thin out across it, and the basin itself is pinched narrower on the crowded side. Furniture: a small collision footprint.",
     "shape": "polygon",
     "color": [60, 88, 70],
-    "local_points": [[-22, 0], [22, 0], [30, -14], [34, -26], [24, -34], [2, -37], [-20, -34], [-32, -26], [-28, -12]],
+    "local_points": [[-32, 0], [16, 0], [22, -12], [22, -24], [14, -32], [-6, -36], [-28, -34], [-38, -22], [-36, -10]],
     "window_color": [150, 255, 180],
-    "windows": [[-10, -44], [6, -53], [19, -41], [-2, -32], [25, -30], [-23, -35], [9, -34]],
+    "windows": [[-34, -50], [-20, -58], [-6, -50], [-24, -40], [-10, -36], [10, -42], [16, -32]],
     "window_size": 10,
     "window_shape": "circle",
-    "footprint": {"width": 58, "depth": 46}
+    "footprint": {"width": 60, "depth": 46}
   },
   "vherathi_lamp": {
     "name": "Vherathi Light Column",
@@ -83,12 +83,12 @@
   },
   "vherathi_seat_pod": {
     "name": "Vherathi Lounge Pod",
-    "description": "A rounded lounge seat, open toward one side. Furniture: a small collision footprint.",
+    "description": "A grown lounge seat with a clear mouth on one side and the opposite rim swept up thick like a headrest, its glow nodes marching along that raised back. Furniture: a small collision footprint.",
     "culture": "vherathi",
-    "shape": "circle",
+    "shape": "polygon",
     "color": [111, 82, 140],
-    "radius": 40,
-    "windows": [[-15, -11], [7, -17], [19, 6]],
+    "local_points": [[-12, 30], [-30, 14], [-36, -12], [-24, -34], [2, -42], [28, -32], [38, -8], [36, 20], [22, 30], [18, 8], [8, -14], [-10, -22], [-26, -10], [-24, 14]],
+    "windows": [[-18, -24], [4, -32], [24, -22]],
     "window_size": 7,
     "window_shape": "circle",
     "footprint": {"width": 74, "depth": 74}
@@ -212,14 +212,14 @@
   },
   "drossholt_crate": {
     "name": "Drossholt Cargo Stack",
-    "description": "A lashed stack of shipping crates, corners scuffed to bare metal. Furniture: a small collision footprint.",
+    "description": "A lashed stack of shipping crates, corners scuffed to bare metal, stencilled on the faces. Furniture: a small collision footprint.",
     "culture": "drossholt",
     "shape": "rect",
     "width": 68,
     "height": 58,
     "color": [150, 112, 74],
     "window_color": [255, 200, 80],
-    "windows": [[12, 12], [36, 12], [12, 38], [36, 38]],
+    "windows": [[10, 10], [34, 8], [10, 40], [50, 34]],
     "window_size": 8,
     "window_shape": "rect",
     "footprint": {"width": 70, "depth": 60}
@@ -315,5 +315,18 @@
     "window_shape": "rect",
     "windows": [[16, 4], [40, 4], [72, 4], [96, 4]],
     "footprint": {"width": 112, "depth": 26}
+  },
+  "issue_desk": {
+    "name": "Issue Duty Desk",
+    "description": "A moulded Federation service counter with a white edge and a row of status lamps. Furniture: a low collision footprint.",
+    "culture": "standard_issue",
+    "shape": "rect",
+    "width": 150,
+    "height": 44,
+    "window_color": [255, 214, 130],
+    "windows": [[22, 16], [56, 16], [90, 16], [124, 16]],
+    "window_size": 7,
+    "window_shape": "rect",
+    "footprint": {"width": 150, "depth": 40}
   }
 }

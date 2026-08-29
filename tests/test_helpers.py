@@ -4387,6 +4387,8 @@ class TestStationInteriorLayout(unittest.TestCase):
             ("sol_alpha", "moon", "city"),
             ("keplers_reach", "station", "default"),
             ("keplers_reach", "moon", "city"),
+            ("procyon_gate", "station", "default"),
+            ("procyon_gate", "moon", "city"),
         ]:
             interior = self._interior(system_id, attr, key)
             for character in interior.npcs:

@@ -109,5 +109,38 @@
     "faction": "The Vherathi Concord",
     "role": "explorer",
     "personality": "Never stays anywhere long, already thinking about whatever's over the next horizon."
+  },
+  "commander_ackley": {
+    "name": "Commander Ackley",
+    "faction": "Sol Federation Navy",
+    "role": "patrol_officer",
+    "personality": "Correct, unhurried, and quietly certain the regulations exist for a reason.",
+    "hail_dialogue_tree": {
+      "root": "start",
+      "nodes": {
+        "start": {
+          "text": "Procyon Gate control. State your business - and keep your transponder lit through the lanes.",
+          "options": [
+            {"label": "Just passing through.", "next": "pass"},
+            {"label": "Ask about the Gate.", "next": "gate"},
+            {"label": "End transmission.", "next": null}
+          ]
+        },
+        "pass": {
+          "text": "Then pass. Cleanly. We log everything through here.",
+          "options": [{"label": "Understood.", "next": null}]
+        },
+        "gate": {
+          "text": "Federation customs and the frontier garrison. If you're headed out past the Reach, this is the last stamped port you'll see.",
+          "options": [{"label": "Good to know.", "next": null}]
+        }
+      }
+    }
+  },
+  "petty_officer_lund": {
+    "name": "Petty Officer Lund",
+    "faction": "Sol Federation Navy",
+    "role": "freighter_pilot",
+    "personality": "Talks like a manifest - flat, exact, and faintly relieved when a run goes to plan."
   }
 }

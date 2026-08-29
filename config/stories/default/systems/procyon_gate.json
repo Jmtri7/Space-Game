@@ -1,0 +1,295 @@
+{
+  "name": "Procyon Gate",
+  "description": "The Sol Federation's frontier control system - a customs ring on the approach lanes and a garrison settlement on the moon.",
+  "star_map_position": {"x": -320, "y": 200},
+  "station_asset": "station_ring",
+  "moon_asset": "moon_silver",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Procyon",
+    "size": 90,
+    "color": [210, 225, 255]
+  },
+  "player_start": {
+    "x": 0.35,
+    "y": 0.65
+  },
+  "star_seed": 313,
+  "asteroid_field": {
+    "per_chunk_range": [1, 2],
+    "types": [
+      {"type": "gray_rock", "weight": 3, "size_range": [3, 6], "speed_range": [0.05, 0.25]},
+      {"type": "brown_rock", "weight": 1, "size_range": [4, 8], "speed_range": [0.05, 0.2]}
+    ]
+  },
+  "station": {
+    "x": 0.7,
+    "y": 0.28,
+    "name": "Procyon Ring",
+    "interiors": {
+      "default": {
+        "label": "Procyon Ring",
+        "culture": "standard_issue",
+        "portals": [
+          {"x": 370, "y": 300, "connected_locations": [], "return_to_ship": true}
+        ],
+        "rooms": [
+          {"label": "Concourse", "polygon": [[180, 500], [1420, 500], [1420, 700], [180, 700]]},
+          {"label": "Dock", "polygon": [[260, 200], [480, 200], [480, 540], [260, 540]]},
+          {"label": "Administration", "polygon": [[560, 200], [780, 200], [780, 540], [560, 540]]},
+          {"label": "Customs", "polygon": [[860, 200], [1080, 200], [1080, 540], [860, 540]]},
+          {"label": "Med Bay", "polygon": [[1140, 200], [1360, 200], [1360, 540], [1140, 540]]},
+          {"label": "Berth", "polygon": [[260, 660], [480, 660], [480, 1000], [260, 1000]]},
+          {"label": "Stores", "polygon": [[560, 660], [780, 660], [780, 1000], [560, 1000]]},
+          {"label": "Operations", "polygon": [[860, 660], [1080, 660], [1080, 1000], [860, 1000]]},
+          {"label": "Comms", "polygon": [[1140, 660], [1360, 660], [1360, 1000], [1140, 1000]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "line", "points": [[200, 600], [1400, 600]], "color": [242, 178, 58], "width": 3},
+          {"layer": "floor", "shape": "rect", "rect": [352, 512, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [652, 512, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [952, 512, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [1232, 512, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [352, 672, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [652, 672, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [952, 672, 36, 16], "color": [242, 178, 58]},
+          {"layer": "floor", "shape": "rect", "rect": [1232, 672, 36, 16], "color": [242, 178, 58]}
+        ],
+        "structures": [
+          {"x": 340, "y": 380, "building_type": "issue_desk"},
+          {"x": 300, "y": 300, "building_type": "issue_bollard"},
+          {"x": 440, "y": 300, "building_type": "issue_bollard"},
+          {"x": 280, "y": 648, "building_type": "issue_bench"},
+          {"x": 640, "y": 648, "building_type": "issue_bench"},
+          {"x": 1000, "y": 648, "building_type": "issue_bench"},
+          {"x": 1300, "y": 648, "building_type": "issue_bench"},
+          {"x": 520, "y": 540, "building_type": "issue_bollard"},
+          {"x": 820, "y": 540, "building_type": "issue_bollard"},
+          {"x": 1120, "y": 540, "building_type": "issue_bollard"},
+          {"x": 300, "y": 780, "building_type": "issue_bench"},
+          {"x": 300, "y": 900, "building_type": "issue_bench"},
+          {"x": 620, "y": 780, "building_type": "issue_bollard"},
+          {"x": 720, "y": 900, "building_type": "issue_bollard"},
+          {"x": 940, "y": 780, "building_type": "issue_bench"},
+          {"x": 1040, "y": 920, "building_type": "issue_bollard"},
+          {"x": 1200, "y": 780, "building_type": "issue_bollard"},
+          {"x": 1300, "y": 940, "building_type": "issue_bench"}
+        ],
+        "npcs": [
+          {
+            "name": "Administrator Kwe",
+            "x": 660,
+            "y": 340,
+            "role": "stationmaster",
+            "outfit": "station_command",
+            "greeting": "Procyon Ring administration. Everything through this system is logged, stamped, and accounted for. Welcome.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Officer Reyes",
+            "x": 960,
+            "y": 360,
+            "role": "guard",
+            "outfit": "security",
+            "greeting": "Customs. If your manifest matches your hold, this takes a minute. If it doesn't, it takes a lot longer.",
+            "dialogue_options": ["All clear", "Leave"]
+          },
+          {
+            "name": "Deckhand Voll",
+            "x": 430,
+            "y": 460,
+            "role": "dockworker",
+            "outfit": "dockworker",
+            "greeting": "Mind the amber line - the tender swings a wide arc when it's mating a hull.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Medtech Ansel",
+            "x": 1240,
+            "y": 360,
+            "role": "medic",
+            "outfit": "medic",
+            "greeting": "Med bay's stocked to regulation. Try to keep it that way.",
+            "dialogue_options": ["Noted", "Leave"]
+          },
+          {
+            "name": "Quartermaster Idris",
+            "x": 660,
+            "y": 800,
+            "role": "quartermaster",
+            "outfit": "quartermaster",
+            "greeting": "Federation stores. Fair prices, fixed prices, and a receipt for every one.",
+            "dialogue_options": ["Thanks", "Leave"],
+            "shop": {"type": "commodities", "stock": ["fuel_cells", "medicine"], "sell_multiplier": 1.0}
+          },
+          {
+            "name": "Nell Draba",
+            "x": 960,
+            "y": 720,
+            "role": "ship_salesman",
+            "outfit": "guild_trader",
+            "greeting": "Licensed Federation hulls - shuttle, lighter, cutter, and the tender if you're doing station work.",
+            "shop": {"type": "ships", "stock": ["issue_shuttle", "issue_lighter", "issue_cutter", "issue_tender"]}
+          },
+          {
+            "name": "Signals Tech Oro",
+            "x": 1240,
+            "y": 820,
+            "role": "technician",
+            "outfit": "flight_suit",
+            "greeting": "Comms relay for the whole approach. If your transponder drops, I'm the one who notices.",
+            "dialogue_options": ["Got it", "Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.22,
+    "y": 0.76,
+    "name": "Gate Moon",
+    "interiors": {
+      "city": {
+        "label": "Garrison Row",
+        "description": "A Sol Federation garrison settlement - prefab blocks and sheds on a painted grid",
+        "culture": "standard_issue",
+        "background_color": [150, 150, 150],
+        "connected_locations": ["wilderness"],
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "rooms": [
+          {"label": "Garrison Row", "polygon": [[140, 140], [1460, 140], [1460, 1460], [140, 1460]]}
+        ],
+        "decorations": [
+          {"layer": "floor", "shape": "rect", "rect": [180, 537, 1240, 44], "color": [78, 92, 112]},
+          {"layer": "floor", "shape": "rect", "rect": [180, 977, 1240, 44], "color": [78, 92, 112]},
+          {"layer": "floor", "shape": "rect", "rect": [457, 180, 44, 1240], "color": [78, 92, 112]},
+          {"layer": "floor", "shape": "rect", "rect": [1017, 180, 44, 1240], "color": [78, 92, 112]},
+          {"layer": "floor", "shape": "line", "points": [[200, 559], [1400, 559]], "color": [242, 178, 58], "width": 3},
+          {"layer": "floor", "shape": "line", "points": [[479, 200], [479, 1400]], "color": [242, 178, 58], "width": 3},
+          {"layer": "floor", "shape": "circle", "center": [800, 800], "radius": 80, "color": [78, 92, 112]}
+        ],
+        "structures": [
+          {"x": 260, "y": 470, "building_type": "issue_block"},
+          {"x": 760, "y": 470, "building_type": "issue_block"},
+          {"x": 1180, "y": 470, "building_type": "issue_block"},
+          {"x": 220, "y": 980, "building_type": "issue_shed"},
+          {"x": 1000, "y": 980, "building_type": "issue_shed"},
+          {"x": 640, "y": 900, "building_type": "issue_bench"},
+          {"x": 900, "y": 900, "building_type": "issue_bench"},
+          {"x": 720, "y": 1040, "building_type": "issue_bench"},
+          {"x": 479, "y": 559, "building_type": "issue_bollard"},
+          {"x": 1039, "y": 559, "building_type": "issue_bollard"},
+          {"x": 479, "y": 999, "building_type": "issue_bollard"},
+          {"x": 1039, "y": 999, "building_type": "issue_bollard"},
+          {"x": 800, "y": 559, "building_type": "issue_bollard"},
+          {"x": 800, "y": 999, "building_type": "issue_bollard"},
+          {"x": 300, "y": 720, "building_type": "issue_bench"},
+          {"x": 1180, "y": 760, "building_type": "issue_bench"},
+          {"x": 320, "y": 300, "building_type": "issue_bollard"},
+          {"x": 1220, "y": 300, "building_type": "issue_bollard"},
+          {"x": 320, "y": 1280, "building_type": "issue_bollard"},
+          {"x": 1220, "y": 1280, "building_type": "issue_bollard"}
+        ],
+        "npcs": [
+          {
+            "name": "Marshal Otile",
+            "x": 860,
+            "y": 820,
+            "role": "guard",
+            "outfit": "marshal",
+            "greeting": "Federation marshal, Gate Moon garrison. Keep it civil on the Row and we'll get along.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Ranger Sube",
+            "x": 400,
+            "y": 300,
+            "role": "ranger",
+            "outfit": "ranger",
+            "greeting": "I run the perimeter past the wire. Wilderness gate's south if you want a look - stay on the marked track.",
+            "dialogue_options": ["Thanks", "Leave"]
+          },
+          {
+            "name": "Flight Officer Dane",
+            "x": 900,
+            "y": 350,
+            "role": "pilot",
+            "outfit": "flight_suit",
+            "greeting": "Grounded between rotations. Nice to have the Row underfoot instead of a deck for once.",
+            "dialogue_options": ["Safe flights", "Leave"]
+          },
+          {
+            "name": "Corporal Vane",
+            "x": 1200,
+            "y": 620,
+            "role": "resident",
+            "outfit": "station_official",
+            "greeting": "Off shift. Barracks are that block - not that you asked.",
+            "dialogue_options": ["Right", "Leave"]
+          },
+          {
+            "name": "Halda Corte",
+            "x": 320,
+            "y": 900,
+            "role": "traveler",
+            "outfit": "civilian",
+            "greeting": "Waiting on a transit stamp. Been waiting a while.",
+            "dialogue_options": ["Good luck", "Leave"]
+          },
+          {
+            "name": "Supply Sgt. Pell",
+            "x": 340,
+            "y": 880,
+            "role": "quartermaster",
+            "outfit": "deck_chief",
+            "greeting": "Everything in that shed is on a manifest. If it's not on the manifest, it's not in the shed.",
+            "dialogue_options": ["Understood", "Leave"]
+          }
+        ]
+      },
+      "wilderness": {
+        "label": "Gate Moon Wilderness",
+        "description": "Grey regolith and Federation survey markers",
+        "background_color": [150, 150, 150],
+        "entrance": {"x": 200, "y": 200},
+        "structures": [
+          {"type": "circle", "x": 320, "y": 420, "radius": 48, "color": [95, 92, 88]},
+          {"type": "circle", "x": 820, "y": 620, "radius": 58, "color": [95, 92, 88]},
+          {"type": "circle", "x": 1220, "y": 500, "radius": 52, "color": [95, 92, 88]},
+          {"type": "circle", "x": 500, "y": 1020, "radius": 44, "color": [95, 92, 88]},
+          {"type": "circle", "x": 150, "y": 200, "radius": 12, "color": [70, 78, 92]},
+          {"type": "circle", "x": 400, "y": 260, "radius": 12, "color": [70, 78, 92]},
+          {"type": "circle", "x": 700, "y": 340, "radius": 12, "color": [70, 78, 92]},
+          {"type": "circle", "x": 1000, "y": 240, "radius": 12, "color": [70, 78, 92]}
+        ]
+      }
+    }
+  },
+  "celestial_bodies": [
+    {"name": "Marker One", "x": 0.55, "y": 0.52, "size": 12, "color": [150, 160, 175], "body_type": "rocky"},
+    {"name": "Halbegg", "x": 0.06, "y": 0.9, "size": 24, "color": [220, 230, 245], "body_type": "ice"},
+    {"name": "Wardwatch", "x": 0.94, "y": 0.1, "size": 48, "color": [200, 205, 220], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 195, 210]}
+  ],
+  "ai_ships": [
+    {
+      "name": "Gate Patrol",
+      "x": 0.6,
+      "y": 0.35,
+      "ship_type": "issue_cutter",
+      "pilot": "commander_ackley",
+      "route": ["station", "moon"]
+    },
+    {
+      "name": "Supply Run",
+      "x": 0.4,
+      "y": 0.6,
+      "ship_type": "issue_lighter",
+      "pilot": "petty_officer_lund",
+      "route": ["station", "moon"]
+    }
+  ]
+}
