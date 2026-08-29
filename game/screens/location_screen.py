@@ -1137,10 +1137,14 @@ class LocationScreen(ScreenBase):
             pygame.draw.rect(surface, metal_color, rect)
             pygame.draw.rect(surface, outline_color, rect, outline_w)
 
+        # A "parts" silhouette is complete (its own lit viewports are already
+        # in the list) - drawing the legacy "windows" dots on top of it just
+        # shows the old shape bleeding past the new one, exactly as the ship /
+        # station paths avoid (see ship.py / landable.py _draw_station).
         window_shape = building_type.get("window_shape", "rect")
         window_size = building_type.get("window_size", 12)
         half = max(1, int(window_size * scale / 2))
-        for wx, wy in building_type.get("windows", []):
+        for wx, wy in ([] if parts else building_type.get("windows", [])):
             px, py = to_screen(anchor_x + wx, anchor_y + wy)
             if window_shape == "circle":
                 pygame.draw.circle(surface, glass_color, (px, py), half)
