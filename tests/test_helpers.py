@@ -1703,10 +1703,12 @@ class TestChoiceDialog(unittest.TestCase):
         self.assertFalse(by_id["bar"][3])
         self.assertFalse(by_id["cancel"][3])
 
-    def test_keyboard_does_nothing(self):
-        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None)])
-        for key in (pygame_mock.K_RETURN, pygame_mock.K_ESCAPE, pygame_mock.K_DOWN):
+    def test_only_enter_does_anything_on_the_keyboard(self):
+        dialog = ChoiceDialog("Where To?", [("bar", "Bar", None), ("dorm", "Dorm", None)])
+        for key in (pygame_mock.K_ESCAPE, pygame_mock.K_DOWN, pygame_mock.K_UP, pygame_mock.K_TAB):
             self.assertIsNone(dialog.handle_input([self._key(key)]))
+        # Enter presses the highlighted button (starts on the first enabled option)
+        self.assertEqual(dialog.handle_input([self._key(pygame_mock.K_RETURN)]), "bar")
 
 
 class TestBackdropMenu(unittest.TestCase):
@@ -1723,10 +1725,11 @@ class TestBackdropMenu(unittest.TestCase):
         self.assertEqual([b[0] for b in cancelable.buttons()], ["a", "cancel"])
         self.assertEqual(cancelable.buttons()[-1][1], "Back")
 
-    def test_keyboard_does_nothing(self):
-        menu = BackdropMenu("MAIN", [("new", "NEW", None)], allow_cancel=True)
-        for key in (pygame_mock.K_RETURN, pygame_mock.K_ESCAPE, pygame_mock.K_DOWN):
+    def test_only_enter_does_anything_on_the_keyboard(self):
+        menu = BackdropMenu("MAIN", [("new", "NEW", None), ("quit", "QUIT", None)], allow_cancel=True)
+        for key in (pygame_mock.K_ESCAPE, pygame_mock.K_DOWN, pygame_mock.K_UP):
             self.assertIsNone(menu.handle_input([self._key(key)]))
+        self.assertEqual(menu.handle_input([self._key(pygame_mock.K_RETURN)]), "new")  # highlighted row
 
 
 class TestPossessionsInventory(unittest.TestCase):
@@ -1940,14 +1943,16 @@ class TestShopMenu(unittest.TestCase):
         self.assertEqual(shop.mode, "buy")
         self.assertNotEqual(shop.buy_list.selected, 0)
 
-    def test_keyboard_does_not_close_or_transact(self):
+    def test_escape_and_tab_do_nothing_enter_trades_the_selection(self):
         import pygame as mocked_pygame
         possessions = Possessions(credits=100)
         shop = ShopMenu(possessions, "default", {"type": "commodities", "stock": ["ore"]}, cargo_capacity=10)
-        for key in (mocked_pygame.K_ESCAPE, mocked_pygame.K_RETURN, mocked_pygame.K_TAB):
+        for key in (mocked_pygame.K_ESCAPE, mocked_pygame.K_TAB):
             self.assertIsNone(shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=key)]))
         self.assertEqual(possessions.cargo, {})
-        self.assertIn("close", [b[0] for b in shop.buttons()])
+        # Enter trades the highlighted grid item, not the button bar.
+        shop.handle_input([self._event(mocked_pygame.KEYDOWN, key=mocked_pygame.K_RETURN)])
+        self.assertEqual(possessions.cargo, {"ore": 1})
 
     def test_empty_stock_shop_can_still_sell_owned_cargo_at_a_premium(self):
         """A shop with an empty "stock" (e.g. sol_alpha.json's Ilsa Farrow,
@@ -2461,21 +2466,19 @@ class TestHudZoneWidths(unittest.TestCase):
     def tearDown(self):
         utils.set_screen_size(*self._original_size)
 
-    def test_side_is_one_quarter_of_screen_width(self):
+    def test_side_is_one_fifth_of_screen_width(self):
         utils.set_screen_size(1859, 1024)  # the reported bug's window size
-        self.assertEqual(side_panel_max_width(), 1859 // 4)
+        self.assertEqual(side_panel_max_width(), 1859 // 5)
 
-    def test_center_leaves_a_full_margin_gap_from_each_side_zone(self):
+    def test_center_zone_stays_clear_of_the_side_zones(self):
         utils.set_screen_size(1859, 1024)
         ui_scale = utils.get_ui_scale()
         self.assertLess(center_panel_max_width(ui_scale), 1859 / 2)
         self.assertEqual(center_panel_max_width(ui_scale), 1859 // 2 - 2 * hud_margin(ui_scale))
-        # A centred pane this wide reaches to within ~hud_margin() of the
-        # quarter line (where a left/right side pane begins), never past it.
+        # A centred pane this wide never reaches the line where a side pane begins.
         centre_right_edge = 1859 / 2 + center_panel_max_width(ui_scale) / 2
-        quarter_line = 1859 - side_panel_max_width()  # right side pane's inner edge
-        self.assertLessEqual(centre_right_edge, quarter_line)
-        self.assertAlmostEqual(quarter_line - centre_right_edge, hud_margin(ui_scale), delta=2)
+        side_line = 1859 - side_panel_max_width()  # right side pane's inner edge
+        self.assertLess(centre_right_edge, side_line)
 
     def test_zones_track_window_width_directly_not_ui_scale(self):
         """The whole point: on a wide-but-short window, ui_scale is capped
@@ -2486,11 +2489,11 @@ class TestHudZoneWidths(unittest.TestCase):
         utils.set_screen_size(1859, 1024)
         ui_scale = utils.get_ui_scale()
         self.assertLess(ui_scale, 1859 / 800, "fixture must reproduce the height-capped case")
-        self.assertEqual(side_panel_max_width(), 1859 // 4)
+        self.assertEqual(side_panel_max_width(), 1859 // 5)
 
-    def test_side_panel_width_fills_quarter_from_margin_to_the_line(self):
+    def test_side_panel_width_fills_the_zone_from_margin_to_the_line(self):
         """An edge-anchored pane at hud_margin() from the edge, this wide,
-        has its inner edge exactly on the quarter line."""
+        has its inner edge exactly on the side-zone line."""
         utils.set_screen_size(1859, 1024)
         ui_scale = utils.get_ui_scale()
         self.assertEqual(hud_margin(ui_scale) + side_panel_width(ui_scale), side_panel_max_width())
@@ -3320,6 +3323,51 @@ class TestSpaceScreenHailing(unittest.TestCase):
         self.assertEqual(game_screen.player.person.possessions.message_log, [])
 
 
+class TestSpaceScreenMinimapTargeting(unittest.TestCase):
+    """Minimap click-to-target + hover text (see SpaceScreen._select_target /
+    _minimap_blip_at / _minimap_label, and the minimap branch in
+    handle_input). Exercised against the default story's real sol_alpha
+    config, so station/moon/pilot fixtures are real, not doubles."""
+
+    def _first_ship(self, game_screen):
+        self.assertTrue(game_screen.ai_ships, "sol_alpha should have AI ships")
+        return game_screen.ai_ships[0]
+
+    def test_select_target_switches_mode_and_points_at_the_object(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.target_mode_index = TARGET_MODES.index("LANDABLES")
+        ship = self._first_ship(game_screen)
+        game_screen._select_target(ship)
+        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "SHIPS")
+        self.assertIs(game_screen._get_target_object(), ship)
+
+    def test_select_target_on_a_landable_switches_to_landables_mode(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
+        game_screen._select_target(game_screen.moon)
+        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "LANDABLES")
+        self.assertIs(game_screen._get_target_object(), game_screen.moon)
+
+    def test_minimap_blip_at_returns_the_closest_blip_within_its_hit_radius(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        ship = self._first_ship(game_screen)
+        # (screen_x, screen_y, hit_radius, obj) - the shape _draw_minimap builds.
+        game_screen._minimap_blips = [
+            (100, 100, 10, game_screen.station),
+            (105, 100, 10, ship),
+        ]
+        self.assertIs(game_screen._minimap_blip_at((104, 100)), ship)
+        self.assertIs(game_screen._minimap_blip_at((97, 100)), game_screen.station)
+        self.assertIsNone(game_screen._minimap_blip_at((500, 500)))
+
+    def test_minimap_label_names_the_object_and_pilot(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        self.assertEqual(game_screen._minimap_label(game_screen.station), game_screen.station.name)
+        ship = self._first_ship(game_screen)
+        label = game_screen._minimap_label(ship)
+        self.assertIn(ship.person.name, label)
+
+
 class TestSpaceScreenStartConfig(unittest.TestCase):
     """story.json's "start" block + starting_mission_trigger - the player's
     state and world placement at the beginning of a brand-new game (see
@@ -3433,18 +3481,16 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen = self._boarded_screen()
         self.assertEqual(game_screen.player.person.possessions.missions.get("first_flight"), 0)
 
-    def test_starting_the_tutorial_makes_kade_escort_immediately(self):
-        """first_flight's "on_start_flags" sets kade_escorting the moment
-        the mission begins (on launch, board_ship()), so _sync_escorts pulls
-        Kade into OrbitPlayerRoutine right away - not only once the player
-        accepts his offer mid-conversation."""
+    def test_kade_does_not_escort_until_the_player_accepts_and_he_pulls_alongside(self):
+        """kade_escorting is no longer an on_start_flag - it's set by the
+        "Sounds good" option after Kade says he'll pull alongside, so he
+        only starts orbiting once the conversation about it is done."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        self.assertTrue(possessions.flags.get("kade_escorting"))
+        self.assertFalse(possessions.flags.get("kade_escorting"))
         game_screen.update_physics()
         kade = next(s for state in game_screen.systems.values() for s in state.ai_ships if s.person.name == "Kade Marsh")
-        self.assertTrue(kade.escorting)
-        self.assertIsInstance(kade.routine, OrbitPlayerRoutine)
+        self.assertFalse(kade.escorting)
 
     def test_buying_a_second_ship_does_not_restart_the_mission(self):
         game_screen = self._boarded_screen()
@@ -3464,27 +3510,31 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
             game_screen._cycle_target_mode()
         self.assertTrue(game_screen.player.person.possessions.flags.get("used_ships_target_mode"))
 
-    def test_turning_advances_past_the_turning_stage(self):
+    def test_turning_both_ways_advances_past_the_turning_stage(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 4  # skip straight to the turning stage
+        possessions.missions["first_flight"] = 3  # the turning stage (mission-log stage removed)
 
         keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT, pygame_mock.K_d, pygame_mock.K_UP, pygame_mock.K_w, pygame_mock.K_DOWN, pygame_mock.K_s)}
-        keys[pygame_mock.K_a] = True
+        keys[pygame_mock.K_a] = True  # left only
         game_screen.player.handle_input(keys)
         game_screen.update_physics()
-        self.assertTrue(possessions.flags.get("used_turn"))
-        self.assertEqual(possessions.missions["first_flight"], 5)
+        self.assertEqual(possessions.missions["first_flight"], 3, "one direction isn't enough")
+        keys[pygame_mock.K_a], keys[pygame_mock.K_d] = False, True  # now right
+        game_screen.player.handle_input(keys)
+        game_screen.update_physics()
+        self.assertTrue(possessions.flags.get("turned_both_ways"))
+        self.assertEqual(possessions.missions["first_flight"], 4)
 
     def test_thrusting_advances_past_the_flying_stage(self):
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 5  # skip straight to the thrust stage
+        possessions.missions["first_flight"] = 4  # skip straight to the thrust stage
 
         game_screen.player.thrust = 0.2
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("used_thrust"))
-        self.assertEqual(possessions.missions["first_flight"], 6)
+        self.assertEqual(possessions.missions["first_flight"], 5)
 
     def test_engaging_autopilot_on_a_ship_sets_the_flag(self):
         game_screen = self._boarded_screen()
@@ -3501,6 +3551,24 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         game_screen._mark_landed()
         self.assertTrue(game_screen.player.person.possessions.flags.get("landed_on_landable"))
 
+    def test_autopilot_to_the_station_always_finishes_by_landing(self):
+        """Regression (item G "autopilot landing seems to vary"): whether
+        SeekMode reaches has_arrived() at the top of a frame (update()'s
+        pre-check) or inside update_physics() (it then disengages itself),
+        update() must return "land" - not leave the ship parked-but-not-
+        landed for the player to press L."""
+        for offset in ((300, 0), (140, 140), (0, 250), (-200, -80)):
+            game_screen = self._boarded_screen()
+            st = game_screen.station
+            game_screen.player.ship.x, game_screen.player.ship.y = st.x + offset[0], st.y + offset[1]
+            game_screen.player.ship.velocity_x = game_screen.player.ship.max_velocity  # arriving at full speed
+            game_screen.player.engage_seek(st)
+            for _ in range(2000):
+                if game_screen.update() == "land":
+                    break
+            self.assertEqual(game_screen.landing_target, "station", f"offset {offset} never landed")
+            self.assertFalse(game_screen.player.autopilot_active)
+
     def test_braking_below_threshold_sets_the_flag_and_advances_the_stage(self):
         """S/Down (point_to_reverse_velocity - see PlayerController.handle_input)
         sets "used_brake"; combined with "used_thrust" and a low enough
@@ -3508,7 +3576,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         the tutorial's braking stage completes on."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
-        possessions.missions["first_flight"] = 6  # skip straight to the braking stage
+        possessions.missions["first_flight"] = 5  # skip straight to the braking stage
         possessions.flags["used_thrust"] = True
         game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0  # already slow
 
@@ -3519,14 +3587,13 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
 
         game_screen.update_physics()
         self.assertTrue(possessions.flags.get("braked_below_threshold"))
-        self.assertEqual(possessions.missions["first_flight"], 7)
+        self.assertEqual(possessions.missions["first_flight"], 6)
 
-    def test_accepting_kades_help_sets_flags_and_starts_the_escort(self):
-        """Choosing "Sure, show me the ropes." in Kade's hail dialogue sets
-        both accepted_kade_help (advances the mission past the
-        conversation stage) and kade_escorting (see
-        SpaceScreen._sync_escorts) - all from one dialogue option's
-        "actions" list."""
+    def test_accepting_kades_help_advances_the_stage_and_the_close_starts_the_escort(self):
+        """"Sure, show me the ropes." sets accepted_kade_help (advances past
+        the conversation stage). kade_escorting - and so the escort itself -
+        only fires once the player closes the follow-up "give me a second to
+        pull alongside" line with "Sounds good"."""
         game_screen = self._boarded_screen()
         possessions = game_screen.player.person.possessions
         possessions.missions["first_flight"] = 2  # skip straight to the conversation stage
@@ -3538,18 +3605,25 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
                 game_screen.current_target = i
         game_screen._start_hail()
         dialogue = game_screen.active_dialogue
-        self.assertEqual(dialogue.current_node, "start")
 
-        option = dialogue.current_options(possessions.flags)[0]
-        self.assertEqual(option["label"], "Sure, show me the ropes.")
-        for action in option_actions(option):
+        accept = dialogue.current_options(possessions.flags)[0]
+        self.assertEqual(accept["label"], "Sure, show me the ropes.")
+        for action in option_actions(accept):
             apply_shared_actions(action, possessions, game_screen.missions_config)
-        dialogue.advance(option)
-
+        dialogue.advance(accept)  # -> "accepted" node
         self.assertTrue(possessions.flags.get("accepted_kade_help"))
-        self.assertTrue(possessions.flags.get("kade_escorting"))
+        self.assertFalse(possessions.flags.get("kade_escorting"))  # not yet
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 3)
+        self.assertFalse(kade_char.escorting)
+
+        done = dialogue.current_options(possessions.flags)[0]
+        self.assertEqual(done["label"], "Sounds good.")
+        for action in option_actions(done):
+            apply_shared_actions(action, possessions, game_screen.missions_config)
+        dialogue.advance(done)
+        self.assertTrue(possessions.flags.get("kade_escorting"))
+        game_screen.update_physics()
         self.assertTrue(kade_char.escorting)
         self.assertIsInstance(kade_char.routine, OrbitPlayerRoutine)
 
@@ -3625,33 +3699,29 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         self.assertEqual(possessions.missions["first_flight"], 2)
 
         possessions.flags["accepted_kade_help"] = True
-        possessions.flags["kade_escorting"] = True
+        possessions.flags["kade_escorting"] = True  # (set on the "Sounds good" close in-game)
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 3)
         self.assertTrue(kade_char.escorting)
 
-        possessions.flags["viewed_mission_log"] = True
+        possessions.flags["turned_both_ways"] = True
         game_screen.update_physics()
         self.assertEqual(possessions.missions["first_flight"], 4)
 
-        possessions.flags["used_turn"] = True
-        game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 5)
-
         game_screen.player.thrust = 0.2
         game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 6)
+        self.assertEqual(possessions.missions["first_flight"], 5)
 
         possessions.flags["used_brake"] = True
         game_screen.player.velocity_x, game_screen.player.velocity_y = 0, 0
         game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 7)
+        self.assertEqual(possessions.missions["first_flight"], 6)
 
         game_screen.jump_state = {"phase": "travel", "heading": 0, "timer": 0, "destination": game_screen.system_id}
         game_screen._complete_jump()
         self.assertTrue(possessions.flags.get("completed_jump"))
         game_screen.update_physics()
-        self.assertEqual(possessions.missions["first_flight"], 8)
+        self.assertEqual(possessions.missions["first_flight"], 7)
 
         game_screen._mark_landed()
         game_screen.update_physics()

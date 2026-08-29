@@ -137,13 +137,21 @@ class MenuBase:
         return button_id
 
     def handle_button_event(self, event, rects_fn):
-        """Hover highlights a button, a left-click presses it. `rects_fn` is a
-        0-arg callable returning the button rects. Returns the pressed
-        button `id`, or `None`. Mouse only - the keyboard never reaches a
-        menu button."""
+        """Hover highlights a button, a left-click presses it. **Enter**
+        presses whichever button is currently highlighted (`button_index`) -
+        the one concession to the keyboard, for confirming a choice already
+        made with the mouse. `rects_fn` is a 0-arg callable returning the
+        button rects. Returns the pressed button `id`, or `None`."""
+        entries = self.buttons()
+        if not entries:
+            return None
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            i = self.button_index if 0 <= self.button_index < len(entries) else 0
+            _id, _l, _a, disabled = entries[i]
+            return None if disabled else self._button_pressed(_id)
         if event.type not in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN):
             return None
-        for i, ((_id, _l, _a, disabled), rect) in enumerate(zip(self.buttons(), rects_fn())):
+        for i, ((_id, _l, _a, disabled), rect) in enumerate(zip(entries, rects_fn())):
             if rect.collidepoint(event.pos) and not disabled:
                 self.button_index = i
                 if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "button", 1) == 1:

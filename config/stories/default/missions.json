@@ -88,7 +88,6 @@
   "first_flight": {
     "title": "First Flight",
     "escort_flag": "kade_escorting",
-    "on_start_flags": ["kade_escorting"],
     "on_end_flags": ["kade_tutorial_done"],
     "stages": [
       {
@@ -108,21 +107,13 @@
         "complete_flag": "accepted_kade_help"
       },
       {
-        "text": "Open your Mission Log (N) - it lists every objective as you go.",
-        "complete_flag": "viewed_mission_log",
+        "text": "Turn your ship both ways - left (A / Left arrow), then right (D / Right arrow).",
+        "complete_flag": "turned_both_ways",
         "reset_on_activation": true,
+        "reset_flags": ["turned_left", "turned_right"],
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "First thing - press N to open your Mission Log. Every step I give you shows up there, so you'll never have to guess what's next. Go ahead and take a look."
-        }
-      },
-      {
-        "text": "Turn your ship - A/D or the Left/Right arrow keys.",
-        "complete_flag": "used_turn",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Kade Marsh",
-          "text": "Alright, let's start simple. Turn left with A or the left arrow, and right with D or the right arrow. Get a feel for it."
+          "text": "Alright, let's start simple. Turn left with A or the left arrow, then right with D or the right arrow - give me both so I know your thrusters are good."
         }
       },
       {

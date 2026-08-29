@@ -182,6 +182,9 @@ class OutfittingMenu(MenuBase):
 
     def handle_input(self, events):
         for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self._enter_pressed()
+                continue
             if self.picker is None:
                 pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
                 if pressed == "close":
@@ -204,6 +207,30 @@ class OutfittingMenu(MenuBase):
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.dragging_outfit:
                 self._handle_drop(event.pos)
         return None
+
+    def _enter_pressed(self):
+        """Enter confirms the current selection (the one keyboard concession -
+        see MenuBase): install the picked spare, buy the selected outfit, or
+        act on the focused slot."""
+        if self.picker is not None:
+            outfit_id = self.picker.current()
+            if outfit_id:
+                self._install(self.slots[self.slot_focus]["id"], outfit_id)
+            self.picker = None
+            return
+        if self.tab == "buy":
+            outfit_id = self.buy_grid.current()
+            if outfit_id and not self._buy_disabled_reason(outfit_id):
+                self._buy_outfit(outfit_id)
+            return
+        if self.focus_column == "slots" and self.slots:
+            slot = self.slots[self.slot_focus]
+            if self.possessions.installed_outfits.get(slot["id"]):
+                self._uninstall(slot["id"])
+            else:
+                compatible = self._compatible_owned_outfits(slot["type"])
+                if compatible:
+                    self.picker = SelectableList(compatible, max_visible=6)
 
     def _slot_at(self, pos):
         for slot_id, rect in self._slot_rects.items():

@@ -74,6 +74,9 @@ class ShipBrowserMenu(MenuBase):
             return None
 
         for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self._open_confirm(self.grid.current())  # Enter = the selected ship
+                continue
             pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
             if pressed == "close":
                 return "close"

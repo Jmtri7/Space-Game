@@ -9,6 +9,13 @@ class ScreenBase(ABC):
     surfacing the gap when that particular method finally gets called."""
     def __init__(self, pilot_name=""):
         self.pilot_name = pilot_name
+        # Top-left Controls pane starts collapsed to just its title + a
+        # "C : Show controls" line - the full reference is a keypress away
+        # but out of the way by default. Toggled with C in either screen.
+        self.controls_collapsed = True
+
+    def _toggle_controls(self):
+        self.controls_collapsed = not self.controls_collapsed
 
     @abstractmethod
     def handle_input(self, events):

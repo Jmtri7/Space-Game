@@ -143,7 +143,8 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
 
   | flag | set when | set by |
   |---|---|---|
-  | `used_turn` | rotate the ship | `PlayerController` |
+  | `used_turn` | rotate the ship (either direction) | `PlayerController` |
+  | `turned_left` / `turned_right` / `turned_both_ways` | rotate left / right / both since the flags were last cleared | `PlayerController` |
   | `used_brake` | press brake/reverse | `PlayerController` |
   | `used_thrust` | thrust forward | `SpaceScreen.update_physics` |
   | `braked_below_threshold` | speed drops below `brake_slow_threshold` after thrust+brake | `SpaceScreen.update_physics` |
