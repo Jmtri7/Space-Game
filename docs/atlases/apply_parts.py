@@ -22,25 +22,32 @@ T = [
     ("vherathi_vein_arch",   RR, "vein-arch",   120, 182, 1.0, 0, "parts", B),
     ("drossholt_gantry_rig", RR, "gantry-rig",  120, 178, 1.2, 0, "parts", B),
     ("drossholt_pipe_rail",  RR, "pipe-rail",   120, 146, 1.0, 0, "parts", B),
-    # Decoration / furniture refines (02·D / 01·D) - elevation & top specimens
-    # mapped so the piece stands on its placed anchor (see _draw_culture_building).
-    ("vherathi_lamp",     RR, "light-column", 120, 180, 0.62, 0, "parts", B),
-    ("vherathi_planter",  RR, "fern-basin",   120, 174, 0.70, 0, "parts", B),
-    ("vherathi_seat_pod", RR, "lounge-pod",   122, 103, 0.78, 0, "parts", B),
-    ("drossholt_lamp",    RR, "work-light",   120, 172, 0.62, 0, "parts", B),
-    ("drossholt_crate",   RR, "cargo-stack",  122, 162, 0.66, 0, "parts", B),
-    ("drossholt_barrel",  RR, "drum · elev",  120, 115, 0.72, 0, "parts", B),
-    ("vherathi_concierge_desk", RR, "concierge-desk", 118, 118, 0.88, 0, "parts", B),
-    # Culture building refines (01·C / 02·C). Polygon entries: ground-at-anchor,
-    # cy on the specimen's floor line. Rect entries (tower/bunker/warehouse):
-    # anchor is the box's top-left corner (matches _building_footprint), scale
-    # by the config height so the specimen floor lands at anchor + height.
-    ("vherathi_spire",      RR, "concord-spire",  120, 186, 1.9,  0, "parts", B),
-    ("vherathi_bloompod",   RR, "bloompod",       124, 115, 1.1,  0, "parts", B),
-    ("vherathi_hall",       RR, "gathering-hall", 120, 172, 1.7,  0, "parts", B),
-    ("drossholt_tower",     RR, "watch-tower",     96,  40, 1.59, 0, "parts", B),
-    ("drossholt_bunker",    RR, "bunker",          52,  96, 1.05, 0, "parts", B),
-    ("drossholt_warehouse", RR, "warehouse",       26,  92, 1.38, 0, "parts", B),
+    # Decoration / furniture + building refines. The transform maps the atlas
+    # specimen into each entry's own local space, which depends on its `shape`
+    # (see _draw_culture_building / _building_footprint):
+    #   polygon/circle -> authored about the anchor; put the specimen's visual
+    #     centre (top view) or floor line (elevation) at (cx, cy).
+    #   rect -> authored top-left, footprint ground at anchor+height; put the
+    #     specimen's top-left content corner at (cx, cy) and scale by the
+    #     config height so the specimen floor lands at local y == height.
+    ("vherathi_lamp",     RR, "light-column", 120, 180, 0.62, 0, "parts", B),  # polygon
+    ("vherathi_planter",  RR, "fern-basin",   120, 174, 0.70, 0, "parts", B),  # polygon
+    ("vherathi_seat_pod", RR, "lounge-pod",   122, 103, 0.78, 0, "parts", B),  # polygon (top)
+    ("vherathi_concierge_desk", RR, "concierge-desk", 118, 118, 0.88, 0, "parts", B),  # polygon (top)
+    ("drossholt_barrel",  RR, "drum · elev",  120, 115, 0.72, 0, "parts", B),  # circle
+    ("drossholt_lamp",    RR, "work-light",    98,  40, 0.56, 0, "parts", B),  # rect
+    ("drossholt_crate",   RR, "cargo-stack",   72,  66, 0.60, 0, "parts", B),  # rect
+    ("vherathi_spire",      RR, "concord-spire",  120, 186, 1.9,  0, "parts", B),  # polygon
+    ("vherathi_bloompod",   RR, "bloompod",       124, 115, 1.1,  0, "parts", B),  # polygon
+    ("vherathi_hall",       RR, "gathering-hall", 120, 172, 1.7,  0, "parts", B),  # polygon
+    ("drossholt_tower",     RR, "watch-tower",     96,  40, 1.59, 0, "parts", B),  # rect
+    ("drossholt_bunker",    RR, "bunker",          52,  96, 1.05, 0, "parts", B),  # rect
+    ("drossholt_warehouse", RR, "warehouse",       26,  92, 1.38, 0, "parts", B),  # rect
+    # Standard Issue buildings (05·C) + furniture (05·D). All rect entries.
+    ("issue_block",   SI, "issue block",   66, 24, 1.27, 0, "parts", B),
+    ("issue_shed",    SI, "issue shed",    22, 72, 1.15, 0, "parts", B),
+    ("issue_bollard", SI, "issue bollard", 88, 74, 0.62, 0, "parts", B),
+    ("issue_bench",   SI, "issue bench",   52, 118, 1.15, 0, "parts", B),
     ("station_alpha", RR, "station-alpha", 121, 108, 0.44, 0, "hull", G),
     ("station_delta", RR, "station-delta", 120, 100, 0.36, 0, "hull", G),
     ("station_ring",  SI, "standard ring", 120, 100, 0.42, 0, "hull", G),
