@@ -22,6 +22,14 @@ T = [
     ("vherathi_vein_arch",   RR, "vein-arch",   120, 182, 1.0, 0, "parts", B),
     ("drossholt_gantry_rig", RR, "gantry-rig",  120, 178, 1.2, 0, "parts", B),
     ("drossholt_pipe_rail",  RR, "pipe-rail",   120, 146, 1.0, 0, "parts", B),
+    # Decoration / furniture refines (02·D / 01·D) - elevation & top specimens
+    # mapped so the piece stands on its placed anchor (see _draw_culture_building).
+    ("vherathi_lamp",     RR, "light-column", 120, 180, 0.62, 0, "parts", B),
+    ("vherathi_planter",  RR, "fern-basin",   120, 174, 0.70, 0, "parts", B),
+    ("vherathi_seat_pod", RR, "lounge-pod",   122, 103, 0.78, 0, "parts", B),
+    ("drossholt_lamp",    RR, "work-light",   120, 172, 0.62, 0, "parts", B),
+    ("drossholt_crate",   RR, "cargo-stack",  122, 162, 0.66, 0, "parts", B),
+    ("drossholt_barrel",  RR, "drum · elev",  120, 115, 0.72, 0, "parts", B),
     ("station_alpha", RR, "station-alpha", 121, 108, 0.44, 0, "hull", G),
     ("station_delta", RR, "station-delta", 120, 100, 0.36, 0, "hull", G),
     ("station_ring",  SI, "standard ring", 120, 100, 0.42, 0, "hull", G),

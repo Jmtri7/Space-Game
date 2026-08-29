@@ -7,6 +7,7 @@ from game.constants import YELLOW, WHITE, GRAY
 from game.utils import get_font, _wrap_text, get_ui_scale
 import game.utils as utils
 from game.world.ship import Ship
+from game.world.world_object import _resolve_part_color
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
@@ -434,21 +435,72 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, 
     def _rotate(lx, ly):
         return lx * cos_a - ly * sin_a, lx * sin_a + ly * cos_a
 
-    margin = 2
-    outline_points = []
-    points = []
-    for lx, ly in local_points:
-        dist = math.hypot(lx, ly) or 1
-        orx, ory = _rotate(lx * (dist + margin) / dist, ly * (dist + margin) / dist)
-        outline_points.append((center_x + orx, center_y + ory))
-        rx, ry = _rotate(lx, ly)
-        points.append((center_x + rx, center_y + ry))
+    # A "parts" list is a complete multi-polygon silhouette (see the design
+    # atlases / WorldObject.draw_parts) - when present it fully replaces the
+    # base polygon and the window dots, exactly as Ship.draw does, so the
+    # shop icon/preview matches the ship the player flies away in.
+    parts = graphics.get("parts")
+    if parts:
+        _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts,
+                          _rotate, color, tuple(graphics.get("window_color", (200, 230, 255))),
+                          outline_color)
+    else:
+        margin = 2
+        outline_points = []
+        points = []
+        for lx, ly in local_points:
+            dist = math.hypot(lx, ly) or 1
+            orx, ory = _rotate(lx * (dist + margin) / dist, ly * (dist + margin) / dist)
+            outline_points.append((center_x + orx, center_y + ory))
+            rx, ry = _rotate(lx, ly)
+            points.append((center_x + rx, center_y + ry))
 
-    pygame.draw.polygon(surface, outline_color, outline_points)
-    pygame.draw.polygon(surface, color, points)
-    _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a)
+        pygame.draw.polygon(surface, outline_color, outline_points)
+        pygame.draw.polygon(surface, color, points)
+        _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a)
     if thrust > 0.05:
         _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a, thrust)
+
+
+def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
+                      metal_color, glass_color, outline_color):
+    """Screen-pixel twin of WorldObject.draw_parts for draw_ship_glyph: each
+    part's coords are fractions of the ship's "size" (pixel_size stands in
+    for size here), rotated by the same `rotate` closure the base polygon
+    uses. Colours resolve exactly as in-world (_resolve_part_color)."""
+    outline_w = max(1, round(pixel_size / 22))
+
+    def project(x, y):
+        rx, ry = rotate(x * pixel_size, y * pixel_size)
+        return (center_x + rx, center_y + ry)
+
+    for part in parts:
+        color = _resolve_part_color(part.get("color"), metal_color, glass_color)
+        ol_spec = part.get("outline")
+        if ol_spec == "none":
+            ol = None
+        elif ol_spec is not None:
+            ol = _resolve_part_color(ol_spec, metal_color, glass_color)
+        else:
+            ol = outline_color
+        if "circle" in part:
+            cx, cy, r = part["circle"]
+            center = project(cx, cy)
+            radius = max(1, round(r * pixel_size))
+            pygame.draw.circle(surface, color, center, radius)
+            if ol:
+                pygame.draw.circle(surface, ol, center, radius, outline_w)
+        elif "line" in part:
+            pts = [project(px, py) for px, py in part["line"]]
+            if len(pts) >= 2:
+                pygame.draw.lines(surface, color, False, pts,
+                                  max(1, round(part.get("width", 2) * pixel_size)))
+        else:
+            pts = [project(px, py) for px, py in part.get("points", [])]
+            if len(pts) >= 3:
+                pygame.draw.polygon(surface, color, pts)
+                if ol:
+                    pygame.draw.polygon(surface, ol, pts, outline_w)
 
 
 def _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a):

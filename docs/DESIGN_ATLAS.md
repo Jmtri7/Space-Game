@@ -20,9 +20,13 @@ is the how: how to make one, how to keep it honest, and which ones exist.
 
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
-  shipped** as of story `1.10.0` — every ship/station/building/outfit plate is in
-  `config/`, both station interiors and both moon cities rebuilt to the floor-plan
-  model, and the specimen SVGs were extracted into each entry's `parts` list.
+  shipped** as of story `1.10.0` — every ship/station/building/outfit/furniture
+  plate is in `config/`, both station interiors and both moon cities rebuilt to
+  the floor-plan model, and every specimen SVG (including the 01·D / 02·D
+  decoration & furniture refines — light-column, fern-basin, lounge-pod,
+  work-light, cargo-stack, drum) was extracted into its entry's `parts` list.
+  The cargo-stack / drum refines turn one entry into a whole pile, so the
+  hand-placed crate/barrel clusters in `keplers_reach` were thinned to match.
 - **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
   **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
   look. The `standard_issue` culture, its ships/station/buildings, and the
