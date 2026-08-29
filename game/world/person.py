@@ -19,7 +19,8 @@ class Person:
         self.possessions = possessions or Possessions()
         # A resolved graphics.json "outfits" asset (see get_graphics_asset),
         # drawn over the shared body below - helmet_color/suit_color/
-        # boot_color/leg_color, any of which may be absent. None/{} means
+        # boot_color/leg_color/sleeve_color, any of which may be absent.
+        # None/{} means
         # bare body, no outfit. The body shape itself stays shared across
         # everyone for now; an outfit recolors it, adds a helmet, and can
         # bolt on optional accessory pieces - each just another color key
@@ -42,11 +43,12 @@ class Person:
     # shoulders - matches where collision/arrival distance checks treat
     # them as being). The bare body is a face-on foot-to-head stack - two
     # boots, two tapering legs rising to a hip line, a tapering rounded-
-    # shoulder torso polygon, and a head circle - shaded from one skin tone
-    # as if lit from above (head lightest, boots darkest). An outfit (see
-    # self.outfit) recolors the shapes and adds a thick helmet ring around
-    # the head, but never changes this shape - see draw(). The legs also
-    # carry the walk cycle (WALK_* below, driven by step_toward).
+    # shoulder torso polygon with an arm hanging from each shoulder, and a
+    # head circle - shaded from one skin tone as if lit from above (head
+    # lightest, boots darkest). An outfit (see self.outfit) recolors the
+    # shapes and adds a thick helmet ring around the head, but never
+    # changes this shape - see draw(). The legs and arms carry the walk
+    # cycle (WALK_* below, driven by step_toward): the arms counter-swing.
     BOOT_RADIUS_X = 2.6      # boot oval - wider than tall, like the old foot
     BOOT_RADIUS_Y = 1.9
     LEG_HEIGHT = 11        # hip line down to the ankle (boot centre) at rest
@@ -58,6 +60,15 @@ class Person:
     BASE_HALF_WIDTH = 4.5    # torso half-width at the base - covers the leg tops
     SHOULDER_RADIUS = 3.5    # rounding radius of each shoulder corner
     SHOULDER_SEGMENTS = 4    # polygon segments approximating each shoulder's curve
+    # Arms: a tapered sleeve quad from each shoulder down to a small hand
+    # circle, ~the length of a leg. They swing fore/aft opposite the legs
+    # while walking (see _arm_swing / WALK_ARM_DEG); at rest they hang
+    # straight. sleeve_color defaults to suit_color; hands are head-toned.
+    ARM_LENGTH = 9.0          # shoulder joint down to the wrist, at rest
+    ARM_HALF_WIDTH = 1.55
+    ARM_SEPARATION = 6.4     # each arm's shoulder joint, out from the centreline
+    ARM_SHOULDER_DROP = 1.6  # shoulder joint below the torso top
+    HAND_RADIUS = 1.4
     HEAD_RADIUS = 5.5        # slightly large, so it overlaps the shoulders below
     HEAD_OVERLAP = 0.1       # how far the head sinks between the shoulders
     HELMET_THICKNESS = 2.4   # ring width of a helmet outside the face, when outfitted
@@ -81,6 +92,8 @@ class Person:
                               # 0.5 u/frame) stays below the cap unchanged
     WALK_LIFT = 2.6           # peak rise of the swinging leg's boot
     WALK_STRIDE_DEG = 6       # peak fore/aft swing of each leg about the hip
+    WALK_ARM_DEG = 9         # peak fore/aft arm swing about the shoulder,
+                            # opposite the same-side leg (natural counter-swing)
     WALK_BOB = 0.8           # body rise as a foot passes under
     WALK_INTENSITY_GAIN = 0.34  # per moving frame, up to 1.0
     WALK_INTENSITY_DECAY = 0.82  # per idle frame, back toward 0
@@ -157,6 +170,29 @@ class Person:
             (ankle_x - half_width * 0.82, ankle_y),
         ]
 
+    def _arm_swing(self):
+        """Per-frame fore/aft wrist offset (dx) for the left arm then the
+        right. Each arm swings opposite its same-side leg - the left leg
+        leads the stride while sin(walk_phase) > 0, so the left arm leads
+        (moves forward) while it's < 0 - which reads as a natural gait.
+        Returns (0.0, 0.0) at rest so a still Person's arms hang straight."""
+        amt = self.walk_intensity
+        if not amt:
+            return 0.0, 0.0
+        swing = math.sin(self.walk_phase)
+        dx = math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
+        return -dx, dx
+
+    def _arm_quad(self, shoulder_x, shoulder_y, wrist_x, wrist_y, half_width):
+        """Four points of one arm: a lightly tapered sleeve from the
+        shoulder joint down to the wrist."""
+        return [
+            (shoulder_x - half_width, shoulder_y),
+            (shoulder_x + half_width, shoulder_y),
+            (wrist_x + half_width * 0.8, wrist_y),
+            (wrist_x - half_width * 0.8, wrist_y),
+        ]
+
     def _advance_walk(self, distance):
         """Advance the walk cycle by the distance just walked and ramp the
         animation in; draw() eases it back out once movement stops. Lives on
@@ -225,6 +261,23 @@ class Person:
         pygame.draw.polygon(surface, self.OUTLINE_COLOR, outline_torso_points)
         torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y)]
         pygame.draw.polygon(surface, torso_color, torso_points)
+
+        # Arms: hang from the shoulders and swing opposite the legs. Drawn
+        # over the torso so the fore/aft swing stays visible; the front
+        # accessories (pauldrons especially) then cover the shoulder joint.
+        sleeve_color = self.outfit.get("sleeve_color", torso_color)
+        arm_dx_l, arm_dx_r = self._arm_swing()
+        shoulder_y = body_top_y + self.ARM_SHOULDER_DROP
+        wrist_y = shoulder_y + self.ARM_LENGTH
+        for shoulder_x, wrist_dx in (
+            (self.x - self.ARM_SEPARATION, arm_dx_l),
+            (self.x + self.ARM_SEPARATION, arm_dx_r),
+        ):
+            wrist_x = shoulder_x + wrist_dx
+            self._fill_poly(surface, self._arm_quad(shoulder_x, shoulder_y, wrist_x, wrist_y, self.ARM_HALF_WIDTH + margin), self.OUTLINE_COLOR, border_px=0)
+            self._fill_poly(surface, self._arm_quad(shoulder_x, shoulder_y, wrist_x, wrist_y, self.ARM_HALF_WIDTH), sleeve_color, border_px=0)
+            self._fill_circle(surface, wrist_x, wrist_y, self.HAND_RADIUS + margin, self.OUTLINE_COLOR, scale, border_px=0)
+            self._fill_circle(surface, wrist_x, wrist_y, self.HAND_RADIUS, head_color, scale, border_px=0)
 
         if helmet_color:
             pygame.draw.circle(surface, self.OUTLINE_COLOR, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS + margin) * scale)))

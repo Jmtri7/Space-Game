@@ -342,6 +342,39 @@
       "backpack_color": [48, 62, 58],
       "belt_color": [40, 50, 48],
       "badge_color": [235, 205, 95]
+    },
+    "vherathi_steward": {
+      "suit_color": [110, 85, 125],
+      "boot_color": [74, 48, 96],
+      "collar_color": [150, 255, 215],
+      "badge_color": [150, 255, 215]
+    },
+    "vherathi_factor": {
+      "suit_color": [96, 70, 116],
+      "boot_color": [150, 120, 170],
+      "sash_color": [120, 255, 200],
+      "belt_color": [74, 48, 96]
+    },
+    "vherathi_dockhand": {
+      "helmet_color": [150, 255, 215],
+      "suit_color": [110, 85, 125],
+      "boot_color": [46, 30, 62],
+      "shoulder_color": [74, 48, 96],
+      "belt_color": [46, 30, 62]
+    },
+    "vherathi_healer": {
+      "helmet_color": [206, 210, 220],
+      "suit_color": [210, 205, 225],
+      "boot_color": [150, 120, 170],
+      "collar_color": [150, 255, 215],
+      "badge_color": [120, 255, 200]
+    },
+    "drossholt_medic": {
+      "helmet_color": [255, 200, 80],
+      "suit_color": [214, 214, 208],
+      "boot_color": [90, 65, 45],
+      "chest_plate_color": [190, 190, 184],
+      "badge_color": [225, 90, 90]
     }
   },
   "ships": {

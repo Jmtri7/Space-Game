@@ -105,7 +105,7 @@
             "x": 950,
             "y": 600,
             "role": "medic",
-            "outfit": "surgeon",
+            "outfit": "drossholt_medic",
             "greeting": "One infirmary bunk and a crate of supplies. Try not to need either.",
             "dialogue_options": ["Will do", "Leave"]
           },
@@ -191,7 +191,7 @@
             "x": 750,
             "y": 550,
             "behavior": "wander",
-            "outfit": "prospector",
+            "outfit": "drossholt_hauler",
             "greeting": "Found some good salvage out past the ridge.",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -200,7 +200,7 @@
             "x": 1150,
             "y": 450,
             "behavior": "wander",
-            "outfit": "quartermaster",
+            "outfit": "drossholt_tallyman",
             "greeting": "Prices are fair. Mostly.",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -209,7 +209,7 @@
             "x": 500,
             "y": 800,
             "role": "miner",
-            "outfit": "miner",
+            "outfit": "drossholt_vacsuit",
             "greeting": "Rock's rich near the south ridge, but the seams flood. Everything out here's a trade-off.",
             "dialogue_options": ["Right", "Leave"]
           },
@@ -218,7 +218,7 @@
             "x": 800,
             "y": 720,
             "role": "deck_chief",
-            "outfit": "deck_chief",
+            "outfit": "drossholt_foreman",
             "greeting": "I run the loading yard. If it's on a pallet, it goes through me.",
             "dialogue_options": ["Got it", "Leave"]
           },
@@ -245,7 +245,7 @@
             "x": 1150,
             "y": 1150,
             "role": "fixer",
-            "outfit": "smuggler",
+            "outfit": "drossholt_coveralls",
             "greeting": "I know people who move things quietly. If you're asking, you already need one.",
             "dialogue_options": ["Not today", "Leave"]
           }

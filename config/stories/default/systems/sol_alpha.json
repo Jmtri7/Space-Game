@@ -96,7 +96,7 @@
             "x": 850,
             "y": 700,
             "role": "concierge",
-            "outfit": "station_official",
+            "outfit": "vherathi_steward",
             "escort_flag": "station_guide_escorting",
             "ambient": {
               "range": 700,
@@ -149,7 +149,7 @@
             "x": 800,
             "y": 200,
             "role": "bartender",
-            "outfit": "bartender",
+            "outfit": "vherathi_steward",
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
@@ -233,7 +233,7 @@
             "x": 1290,
             "y": 556,
             "role": "ship_salesman",
-            "outfit": "ship_dealer",
+            "outfit": "vherathi_factor",
             "greeting": "Looking for a ship? Concord hulls, a couple of Federation issues - take your pick.",
             "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter", "vherathi_skiff", "vherathi_courier", "vherathi_thornwing", "vherathi_tender", "vherathi_reliquary", "vherathi_ark"]}
           },
@@ -251,7 +251,7 @@
             "x": 660,
             "y": 600,
             "role": "quartermaster",
-            "outfit": "quartermaster",
+            "outfit": "vherathi_factor",
             "greeting": "Bring me goods from the outer systems and I'll make it worth your trip.",
             "dialogue_options": ["Thanks", "Leave"],
             "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
@@ -261,7 +261,7 @@
             "x": 1120,
             "y": 600,
             "role": "guard",
-            "outfit": "marshal",
+            "outfit": "vherathi_vault_warden",
             "greeting": "Welcome to the station. Dock's right behind me.",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -270,7 +270,7 @@
             "x": 904,
             "y": 700,
             "role": "traveler",
-            "outfit": "civilian",
+            "outfit": "vherathi_softsuit",
             "greeting": "Safe travels!",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -306,7 +306,7 @@
             "x": 300,
             "y": 560,
             "role": "clerk",
-            "outfit": "station_official",
+            "outfit": "vherathi_steward",
             "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
             "dialogue_options": ["Understood", "Leave"]
           },
@@ -315,7 +315,7 @@
             "x": 1320,
             "y": 536,
             "role": "stationmaster",
-            "outfit": "station_command",
+            "outfit": "vherathi_magistrate",
             "greeting": "I run this ring. Keep your approach clean and we won't have words.",
             "dialogue_options": ["Noted", "Leave"]
           },
@@ -324,7 +324,7 @@
             "x": 1190,
             "y": 600,
             "role": "dockworker",
-            "outfit": "dockworker",
+            "outfit": "vherathi_dockhand",
             "greeting": "Mind the clamps - that gantry swings wide when a hull's coming in.",
             "dialogue_options": ["Thanks", "Leave"]
           }
@@ -405,7 +405,7 @@
             "name": "Ezra Kondo",
             "x": 700,
             "y": 150,
-            "outfit": "researcher"
+            "outfit": "vherathi_softsuit"
           },
           {
             "name": "Livia Marchetti",
@@ -445,7 +445,7 @@
             "x": 650,
             "y": 1150,
             "role": "medic",
-            "outfit": "medic",
+            "outfit": "vherathi_healer",
             "greeting": "Clinic's this quarter. Decompression cases mostly - people forget to check their seals.",
             "dialogue_options": ["Noted", "Leave"]
           },
@@ -454,7 +454,7 @@
             "x": 400,
             "y": 1250,
             "role": "ranger",
-            "outfit": "ranger",
+            "outfit": "vherathi_hardsuit",
             "greeting": "I run the trails out past the dome. Wilderness gate's south if you want a look.",
             "dialogue_options": ["Thanks", "Leave"]
           },
@@ -463,7 +463,7 @@
             "x": 1150,
             "y": 950,
             "role": "merchant",
-            "outfit": "merchant_prince",
+            "outfit": "vherathi_envoy",
             "greeting": "I move rare resin and rarer favors. Everything has a price; most of them are reasonable.",
             "dialogue_options": ["Maybe later", "Leave"]
           },
@@ -472,7 +472,7 @@
             "x": 1250,
             "y": 1150,
             "role": "oracle",
-            "outfit": "void_oracle",
+            "outfit": "vherathi_magistrate",
             "greeting": "The lattice hums a little louder near you. Make of that what you will.",
             "dialogue_options": ["Strange", "Leave"]
           }

@@ -462,7 +462,7 @@ class TestPersonOutfitRendering(unittest.TestCase):
     band) and catches a typo'd color key in graphics.json, not the pixels."""
 
     KNOWN_OUTFIT_KEYS = {
-        "helmet_color", "suit_color", "boot_color", "leg_color",
+        "helmet_color", "suit_color", "boot_color", "leg_color", "sleeve_color",
         "shoulder_color", "spike_color", "collar_color", "chest_plate_color",
         "sash_color", "belt_color", "badge_color", "backpack_color",
         "antenna_color", "visor_color",
@@ -485,13 +485,16 @@ class TestPersonOutfitRendering(unittest.TestCase):
             self.assertEqual(unknown, set(), f"{outfit_id} has unknown key(s): {unknown}")
 
     def test_visor_replaces_the_eyes(self):
-        with patch("game.world.person.pygame") as mock_pygame:
-            Person(0, 0, outfit={"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]}).draw(MagicMock())
-            polygons = mock_pygame.draw.polygon.call_count
-            circles = mock_pygame.draw.circle.call_count
-        self.assertGreater(polygons, 0)
-        # Head + its outline = 2 circles; a bare body would add 2 eye circles.
-        self.assertEqual(circles, 2)
+        def circle_count(outfit):
+            with patch("game.world.person.pygame") as mock_pygame:
+                Person(0, 0, outfit=outfit).draw(MagicMock())
+                return mock_pygame.draw.polygon.call_count, mock_pygame.draw.circle.call_count
+        polys_visor, circles_visor = circle_count({"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]})
+        _, circles_plain = circle_count({"suit_color": [10, 10, 10]})
+        self.assertGreater(polys_visor, 0)
+        # The only circle difference between the two is the pair of eyes the
+        # visor covers - everything else (head, hands, ...) is unchanged.
+        self.assertEqual(circles_plain - circles_visor, 2)
 
 
 class TestLocationExitOptions(unittest.TestCase):
@@ -1136,6 +1139,24 @@ class TestPersonWalkCycle(unittest.TestCase):
         hip_dy, ankles = Person(0.0, 0.0)._leg_stance()
         self.assertEqual(hip_dy, 0.0)
         self.assertEqual(ankles, ((0.0, 0.0), (0.0, 0.0)))
+
+    def test_a_still_persons_arms_hang_straight(self):
+        self.assertEqual(Person(0.0, 0.0)._arm_swing(), (0.0, 0.0))
+
+    def test_arms_swing_opposite_the_legs_while_walking(self):
+        p = Person(0.0, 0.0)
+        p.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
+        # partway into a stride: pick a phase where the left leg is clearly
+        # leading (forward), then check the left arm is trailing (dx < 0).
+        p.walk_phase = math.pi / 2  # sin = 1 -> left leg fully forward
+        p.walk_intensity = 1.0
+        _, ((leg_dx_l, _), (leg_dx_r, _)) = p._leg_stance()
+        arm_dx_l, arm_dx_r = p._arm_swing()
+        self.assertGreater(leg_dx_l, 0.0)          # left leg forward
+        self.assertLess(arm_dx_l, 0.0)             # left arm back
+        self.assertLess(leg_dx_r, 0.0)             # right leg back
+        self.assertGreater(arm_dx_r, 0.0)          # right arm forward
+        self.assertAlmostEqual(arm_dx_l, -arm_dx_r, places=6)
 
 
 class TestStationWindowsAndCulture(unittest.TestCase):
