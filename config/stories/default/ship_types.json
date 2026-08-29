@@ -78,5 +78,173 @@
       {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
     ]
+  },
+  "vherathi_courier": {
+    "name": "Spinewing Skiff",
+    "description": "A grown needle - all spine and one outrigger fin. Fastest turn in the system, negligible hold.",
+    "max_thrust": 0.4,
+    "max_velocity": 5.5,
+    "rotation_speed": 9,
+    "size": 8,
+    "color": [74, 48, 96],
+    "shape": "rectangle",
+    "cost": 2200,
+    "cargo_capacity": 4,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55}
+    ]
+  },
+  "vherathi_tender": {
+    "name": "Chorus Tender",
+    "description": "A broad grown coral-fan hull that mothers a flight of skiffs - logistics, not combat.",
+    "max_thrust": 0.11,
+    "max_velocity": 1.9,
+    "rotation_speed": 2,
+    "size": 26,
+    "color": [74, 48, 96],
+    "shape": "rectangle",
+    "cost": 5200,
+    "cargo_capacity": 40,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5},
+      {"id": "utility_3", "type": "utility", "x": 0.5, "y": 0.3}
+    ]
+  },
+  "vherathi_ark": {
+    "name": "Pale Ark",
+    "description": "A grown cathedral that leans to port - a mobile embassy and liner. Turns like a moon.",
+    "max_thrust": 0.07,
+    "max_velocity": 1.6,
+    "rotation_speed": 0.8,
+    "size": 48,
+    "color": [74, 48, 96],
+    "shape": "long_rectangle",
+    "cost": 18000,
+    "cargo_capacity": 60,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.35, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.65, "y": 0.5}
+    ]
+  },
+  "drossholt_tug": {
+    "name": "Sledge Tug",
+    "description": "A short, brutally heavy salvage tug with oversized forward tow clamps. The ship you bring to a derelict.",
+    "max_thrust": 0.09,
+    "max_velocity": 1.6,
+    "rotation_speed": 1.5,
+    "size": 22,
+    "color": [200, 150, 100],
+    "shape": "rectangle",
+    "cost": 6000,
+    "cargo_capacity": 30,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "drossholt_miner": {
+    "name": "Ratchet Prospector",
+    "description": "A bolted mining barge with crusher jaws and an on-board refinery. Mines the belt one rock at a time.",
+    "max_thrust": 0.09,
+    "max_velocity": 1.7,
+    "rotation_speed": 1,
+    "size": 30,
+    "color": [200, 150, 100],
+    "shape": "long_rectangle",
+    "cost": 8000,
+    "cargo_capacity": 70,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "drossholt_gunship": {
+    "name": "Bulwark Gunship",
+    "description": "An armoured slab with mirrored twin cannons and blister turrets. Slow, tanky, mean.",
+    "max_thrust": 0.16,
+    "max_velocity": 3.0,
+    "rotation_speed": 3,
+    "size": 20,
+    "color": [200, 150, 100],
+    "shape": "rectangle",
+    "cost": 9500,
+    "cargo_capacity": 12,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.4, "y": 0.15},
+      {"id": "weapon_2", "type": "weapon", "x": 0.6, "y": 0.15},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.7},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.7}
+    ]
+  },
+  "issue_shuttle": {
+    "name": "Issue Shuttle",
+    "description": "The Federation civil pattern for a starter craft - a plain painted box, one centreline stripe, regulation everything.",
+    "max_thrust": 0.12,
+    "max_velocity": 2.0,
+    "rotation_speed": 4,
+    "size": 10,
+    "color": [65, 80, 106],
+    "shape": "rectangle",
+    "cost": 1400,
+    "cargo_capacity": 10,
+    "slots": [
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  },
+  "issue_lighter": {
+    "name": "Issue Lighter",
+    "description": "The Federation civil freighter - three identical cargo modules on one spine, off a production line.",
+    "max_thrust": 0.1,
+    "max_velocity": 2.0,
+    "rotation_speed": 1,
+    "size": 35,
+    "color": [65, 80, 106],
+    "shape": "long_rectangle",
+    "cost": 4800,
+    "cargo_capacity": 80,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "issue_cutter": {
+    "name": "Issue Cutter",
+    "description": "The Federation customs / port-authority cutter - painted to be seen, with a light bar and a bow mount.",
+    "max_thrust": 0.35,
+    "max_velocity": 5.0,
+    "rotation_speed": 7,
+    "size": 13,
+    "color": [65, 80, 106],
+    "shape": "rectangle",
+    "cost": 3800,
+    "cargo_capacity": 15,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  },
+  "issue_tender": {
+    "name": "Issue Tender",
+    "description": "The Federation utility craft - a docking-collar ring, a hazard-striped work deck, and four thrusters for station-keeping.",
+    "max_thrust": 0.12,
+    "max_velocity": 1.8,
+    "rotation_speed": 3,
+    "size": 18,
+    "color": [65, 80, 106],
+    "shape": "rectangle",
+    "cost": 5000,
+    "cargo_capacity": 25,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
   }
 }

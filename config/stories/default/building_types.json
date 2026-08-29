@@ -93,6 +93,27 @@
     "window_shape": "circle",
     "footprint": {"width": 74, "depth": 74}
   },
+  "vherathi_dock_antler": {
+    "name": "Vherathi Dock Antler",
+    "description": "A grown ship-berth arm: one thick trunk splitting into uneven prongs, the longest traced with light. Anchored at ground level.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-12, 0], [12, 0], [18, -110], [70, -200], [54, -212], [12, -140], [8, -252], [-8, -252], [-10, -150], [-48, -202], [-62, -188], [-14, -110]],
+    "windows": [[2, -234], [42, -184], [-32, -178], [4, -122]],
+    "window_size": 13,
+    "window_shape": "circle",
+    "footprint": {"width": 78, "depth": 54}
+  },
+  "vherathi_vein_arch": {
+    "name": "Vherathi Vein Arch",
+    "description": "A grown archway over a corridor, one leg thicker than the other, brightest at an off-centre keystone. Decorative: no collision, walk under it.",
+    "culture": "vherathi",
+    "shape": "polygon",
+    "local_points": [[-70, 0], [-46, 0], [-40, -100], [-14, -150], [22, -150], [44, -104], [50, 0], [74, 0], [66, -120], [30, -178], [-24, -178], [-58, -128]],
+    "windows": [[6, -170], [-30, -130], [34, -120]],
+    "window_size": 12,
+    "window_shape": "circle"
+  },
   "drossholt_bunker": {
     "name": "Drossholt Bunker",
     "description": "A squat, riveted storage bunker - blunt plate armor bolted over whatever's inside.",
@@ -214,5 +235,85 @@
     "window_size": 6,
     "window_shape": "rect",
     "footprint": {"width": 46, "depth": 46}
+  },
+  "drossholt_gantry_rig": {
+    "name": "Drossholt Gantry Rig",
+    "description": "A bolted scaffold gantry straddling a ship berth on a mirrored pair of legs. Decorative: no collision, walk under it.",
+    "culture": "drossholt",
+    "shape": "polygon",
+    "local_points": [[-92, 0], [-74, 0], [-74, -140], [74, -140], [74, 0], [92, 0], [92, -158], [-92, -158]],
+    "window_color": [255, 224, 150],
+    "windows": [[-82, -148], [-30, -150], [30, -150], [82, -148]],
+    "window_size": 9,
+    "window_shape": "rect"
+  },
+  "drossholt_pipe_rail": {
+    "name": "Drossholt Pipe Rail",
+    "description": "A bolted scaffold-pipe railing on evenly spaced uprights. Furniture: a thin collision footprint so you can't walk through it.",
+    "culture": "drossholt",
+    "shape": "rect",
+    "width": 184,
+    "height": 10,
+    "color": [150, 118, 82],
+    "window_color": [90, 65, 45],
+    "windows": [[22, 5], [62, 5], [102, 5], [142, 5], [162, 5]],
+    "window_size": 5,
+    "window_shape": "rect",
+    "footprint": {"width": 184, "depth": 16}
+  },
+  "issue_block": {
+    "name": "Issue Block",
+    "description": "A Federation residential/admin tower - identical floor modules stacked, rounded corners, a regular window grid.",
+    "culture": "standard_issue",
+    "shape": "rect",
+    "width": 96,
+    "height": 210,
+    "window_size": 11,
+    "window_shape": "rect",
+    "windows": [
+      [18, 24], [44, 24], [70, 24],
+      [18, 66], [44, 66], [70, 66],
+      [18, 108], [44, 108], [70, 108],
+      [18, 150], [44, 150], [70, 150]
+    ],
+    "footprint": {"width": 96, "depth": 84}
+  },
+  "issue_shed": {
+    "name": "Issue Shed",
+    "description": "A Federation hangar/warehouse module - a wide low box with a rounded roll-door and a clerestory window band.",
+    "culture": "standard_issue",
+    "shape": "rect",
+    "width": 210,
+    "height": 108,
+    "window_size": 12,
+    "window_shape": "rect",
+    "windows": [[24, 20], [52, 20], [80, 20], [130, 20], [158, 20], [186, 20]],
+    "footprint": {"width": 190, "depth": 96}
+  },
+  "issue_bollard": {
+    "name": "Issue Bollard",
+    "description": "A Federation marker post with an amber cap light and a reflective band - lighting only. Furniture: a tiny footprint.",
+    "culture": "standard_issue",
+    "shape": "rect",
+    "width": 14,
+    "height": 62,
+    "window_color": [255, 214, 130],
+    "window_size": 11,
+    "window_shape": "rect",
+    "windows": [[7, 6]],
+    "footprint": {"width": 22, "depth": 22}
+  },
+  "issue_bench": {
+    "name": "Issue Bench",
+    "description": "A Federation moulded seat shell on two standard legs, painted hull-blue with a white edge. Furniture: a low footprint.",
+    "culture": "standard_issue",
+    "shape": "rect",
+    "width": 112,
+    "height": 22,
+    "window_color": [223, 230, 238],
+    "window_size": 4,
+    "window_shape": "rect",
+    "windows": [[16, 4], [40, 4], [72, 4], [96, 4]],
+    "footprint": {"width": 112, "depth": 26}
   }
 }

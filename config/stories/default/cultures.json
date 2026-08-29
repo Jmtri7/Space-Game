@@ -22,5 +22,17 @@
     "wall_trim_color": [90, 65, 45],
     "interior_decoration": {"generator": "seam_rivets", "color": [225, 195, 150], "spacing": 44, "length": 12, "width": 3},
     "theme": "Drossholt hulls and buildings are blunt rectangular volumes bolted together along visible seams - the functional opposite of a grown Vherathi structure, with no tapering or asymmetry for its own sake. Windows and warning lights run in even, evenly-spaced rows along structural seams rather than clustering organically. Thrusters and fixtures come in mirrored, evenly-spaced pairs, not odd counts. When adding a new Drossholt ship, building, or interior, pull the hull/wall color from metal_color, the window/light glow from glass_color, the thrust glow from thrust_color, and interior wall/floor tones from wall_color/floor_color rather than hardcoding new ones, so every Drossholt outpost reads as the same weathered, practical company. Drossholt interior rooms are plain rectangles and wide straight corridors joined at right angles; the seam_rivets interior_decoration studs every room edge with evenly-spaced bolt ticks."
+  },
+  "standard_issue": {
+    "name": "The Sol Federation",
+    "description": "The civil authority that runs the neutral stations and licenses the ships. Where the Vherathi grow their hardware and the Drossholt bolt theirs, the Federation issues it - factory-painted, colour-coded, built from interchangeable modules to one spec and stencilled with a registration number.",
+    "metal_color": [65, 80, 106],
+    "glass_color": [207, 224, 240],
+    "thrust_color": [140, 185, 255],
+    "wall_color": [42, 52, 68],
+    "floor_color": [90, 104, 124],
+    "wall_trim_color": [200, 214, 226],
+    "interior_decoration": {"generator": "edge_veins", "color": [242, 178, 58], "inset": 12, "width": 2},
+    "theme": "Standard Issue hardware is prefab and painted: a hull is a spine of identical bays, a station identical rings on a spine, a building identical floors stacked - interchangeable, replaceable, and stencilled with a registration number (SF-###). Every corner carries one consistent small fillet - rounded rectangles, not the Vherathi organic curve or the Drossholt raw right angle. The livery is body colour plus a white contrast stripe along the centreline and amber hazard chevrons at every thruster, hatch and edge. Symmetry is clean: flush panels, no visible patch plates, windows in a regular grid. Pull hull/wall from metal_color, windows/lights from glass_color, thrust glow from thrust_color. Interiors are a straight central concourse with identical rounded-rect rooms budding off both sides at a regular pitch; the edge_veins interior_decoration traces every room with a painted amber safety line, and a hazard-chevron decoration marks each doorway."
   }
 }
