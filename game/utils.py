@@ -266,13 +266,40 @@ def handle_menu_navigation(event, current_index, list_length):
     return None
 
 
-def load_json(filename):
-    """Load JSON file, return None if error."""
+_json_file_cache = {}
+
+
+def load_json(filename, cache=True):
+    """Load a JSON file, return None on error.
+
+    Results are cached by path (`cache=True`, the default) - every config
+    file under config/ is immutable for the life of a session, and the
+    per-frame interior/space draw resolves building/culture/ship graphics
+    dozens of times a frame; without this each one re-read and re-parsed the
+    whole file off disk (measured: ~10 ms/frame of the interior budget on a
+    busy station). Save files change under us, so `load_save_file` passes
+    `cache=False`.
+
+    The cached value is the shared parsed object - callers that mutate it
+    (get_graphics_asset / get_building_type via _resolve_culture_palette)
+    already take a `dict(...)` copy of the entry first; the rest read only.
+    """
+    if cache and filename in _json_file_cache:
+        return _json_file_cache[filename]
     try:
         with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return None
+            data = json.load(f)
+    except Exception:
+        data = None
+    if cache:
+        _json_file_cache[filename] = data
+    return data
+
+
+def clear_json_cache():
+    """Drop the load_json() cache - for tests that write a config file and
+    expect the next load to see it."""
+    _json_file_cache.clear()
 
 
 def save_json(filename, data):
@@ -481,9 +508,9 @@ def create_save_file(pilot_name, name, system_data, station_data, game_state=Non
 
 
 def load_save_file(filename):
-    """Load a save file."""
+    """Load a save file. Not cached - a save can be overwritten in-session."""
     filepath = f"{SAVE_DIR}/{filename}"
-    return load_json(filepath)
+    return load_json(filepath, cache=False)
 
 
 def delete_save_file(filename):

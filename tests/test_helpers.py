@@ -2986,6 +2986,25 @@ class TestLocationScreenDrawDoesNoPerFrameFontConstruction(unittest.TestCase):
                 f"so a slow (AV-scanned) font-file open can't stall the frame",
             )
 
+    def test_config_getters_are_cached_so_the_draw_loop_reads_no_files(self):
+        """Regression: LocationScreen.draw() resolves a building_type per
+        structure (twice - draw + depth sort) plus a culture; each re-opened
+        and re-parsed the whole JSON off disk. On a busy station (35
+        structures) that was ~10 ms/frame = the 30 FPS interior. utils.load_json
+        caches config reads, so the second resolve of anything opens no file."""
+        import builtins
+        utils.clear_json_cache()
+        for fn in (lambda: utils.get_building_type("default", "vherathi_lamp"),
+                   lambda: utils.get_culture("default", "vherathi"),
+                   lambda: utils.get_graphics_asset("default", "ships", "shuttle"),
+                   lambda: utils.get_ship_type("default", "shuttle")):
+            fn()  # warm
+            real_open = builtins.open
+            opens = []
+            with patch("builtins.open", side_effect=lambda *a, **k: opens.append(a[0]) or real_open(*a, **k)):
+                fn()
+            self.assertEqual(opens, [], f"a repeat config resolve re-opened {opens}")
+
 
 class TestLocationScreenClickTargeting(unittest.TestCase):
     """Test LocationScreen._select_person_target_at() - click-to-target for
