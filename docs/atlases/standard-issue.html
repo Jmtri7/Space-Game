@@ -1,0 +1,1554 @@
+<meta charset="utf-8">
+<title>Standard Issue</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+
+<style>
+  /* ---------------------------------------------------------------
+     Standard Issue — companion atlas to Resin & Rivets. Same visual
+     system (Instrument Serif / Archivo / IBM Plex Mono, void-black,
+     flat specimens) but its own subject: the ONE shared Person body
+     and the culture-neutral outfits. Committed dark theme; every
+     colour painted explicitly.
+  ----------------------------------------------------------------*/
+  :root{
+    --void:#0a0a0e;
+    --panel:#131319;
+    --panel-2:#17171e;
+    --ink:#ece9f4;
+    --ink-2:#a5a2b6;
+    --ink-3:#6d6a7e;
+    --line:#292935;
+    --line-2:#35333f;
+
+    /* the shared body palette — straight from person.py */
+    --skin:#e1b491;      /* Person.SKIN_COLOR (225,180,145) */
+    --skin-hi:#f4d0ab;   /* head: _shade(SKIN, +30) */
+    --skin-lo:#bd8f6a;   /* feet/legs: _shade(SKIN, -35) */
+    --body-out:#141219;  /* Person.OUTLINE_COLOR (20,18,25) */
+    --eye:#281e1e;
+
+    --issue:#8fb9c8;     /* atlas accent — instrument steel-cyan */
+    --warn:#f2962a;      /* hi-vis, used as a semantic not the accent */
+
+    /* the "Standard Issue" hardware livery — the civil-authority look:
+       factory-painted, colour-coded, spec-built */
+    --si-hull:#41506a;   --si-hull-lo:#2a3444;  --si-panel:#5a6b82;
+    --si-glass:#cfe0f0;  --si-stripe:#dfe6ee;   --si-hazard:#f2b23a;
+
+    --maxw:1120px;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--void);color:var(--ink);
+    font-family:"Archivo","Segoe UI",system-ui,sans-serif;
+    font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1000px 560px at 82% -10%, rgba(143,185,200,.12), transparent 60%),
+      radial-gradient(880px 520px at 8% 106%, rgba(225,180,145,.10), transparent 62%);
+    background-repeat:no-repeat;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  ::selection{background:rgba(143,185,200,.28);color:#fff}
+  :focus-visible{outline:2px solid var(--issue);outline-offset:3px;border-radius:2px}
+
+  .topbar{position:sticky;top:0;z-index:40;background:#0c0c11;border-bottom:1px solid var(--line)}
+  .topbar .wrap{display:flex;align-items:center;gap:20px;height:56px}
+  .mark{font-family:"Instrument Serif",Georgia,serif;font-size:1.28rem;white-space:nowrap}
+  .mark em{font-style:italic;color:var(--ink-2)}
+  .navlinks{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+  .navlinks a{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;
+    text-transform:uppercase;letter-spacing:.16em;color:var(--ink-3);
+    text-decoration:none;padding:4px 0;border-bottom:1px solid transparent;
+    transition:color .15s,border-color .15s;
+  }
+  .navlinks a:hover,.navlinks a:focus-visible{color:var(--ink);border-color:var(--line-2)}
+  @media (max-width:720px){.navlinks{display:none}}
+  .tag-wip{
+    font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--issue);
+    border:1px solid rgba(143,185,200,.35);border-radius:2px;padding:3px 7px;white-space:nowrap;
+  }
+
+  .hero{padding:76px 0 40px}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;text-transform:uppercase;
+    letter-spacing:.22em;color:var(--ink-3);margin:0 0 20px;
+  }
+  .hero h1{
+    font-family:"Instrument Serif",Georgia,serif;font-weight:400;
+    font-size:clamp(2.9rem,8vw,5.2rem);line-height:1;margin:0 0 18px;
+    text-wrap:balance;letter-spacing:-.005em;
+  }
+  .hero h1 em{font-style:italic;color:var(--issue)}
+  .dek{font-size:1.14rem;color:var(--ink-2);max-width:62ch;margin:0 0 26px}
+  .status{
+    border:1px solid var(--line);border-left:2px solid var(--issue);
+    background:var(--panel);border-radius:3px;padding:14px 18px;max-width:66ch;
+    font-size:.92rem;color:var(--ink-2);
+  }
+  .status b{color:var(--ink);font-weight:600}
+  code.f{font-family:"IBM Plex Mono",monospace;font-size:.84em;color:var(--issue)}
+
+  .legend{
+    margin:44px 0 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  }
+  .legend div{background:var(--panel);padding:16px 18px}
+  .legend dt{
+    font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;
+  }
+  .legend dd{margin:0;font-size:.92rem;color:var(--ink-2)}
+
+  .chapter{padding:92px 0 8px;scroll-margin-top:72px}
+  .chapter-kicker{
+    font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ink-3);margin:0 0 10px;
+  }
+  .chapter h2{
+    font-family:"Instrument Serif",Georgia,serif;font-weight:400;
+    font-size:clamp(2.1rem,5vw,3.4rem);line-height:1.02;margin:0 0 20px;text-wrap:balance;
+  }
+  .chapter h2 em{color:var(--issue);font-style:italic}
+  .lead{max-width:66ch;color:var(--ink-2);margin:0 0 12px}
+  .lead b{color:var(--ink);font-weight:600}
+
+  .subhead{
+    font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ink-3);
+    margin:52px 0 20px;padding-bottom:10px;border-bottom:1px solid var(--line);
+  }
+
+  .plate{
+    display:grid;grid-template-columns:300px minmax(0,1fr);gap:34px;
+    padding:30px 0;border-top:1px solid var(--line);
+  }
+  .plate:first-of-type{border-top:none}
+  .plate.wide{grid-template-columns:1fr}
+  @media (max-width:760px){.plate{grid-template-columns:1fr;gap:20px}}
+
+  .viewport{
+    position:relative;border:1px solid var(--line);border-radius:3px;
+    background:radial-gradient(circle at 50% 40%, #16161f 0%, #0c0c11 72%, #090a0d 100%);
+    overflow:hidden;
+  }
+  .viewport.fig{aspect-ratio:3/4}
+  .viewport.diagram{aspect-ratio:13/10}
+  .viewport svg{position:absolute;inset:0;width:100%;height:100%}
+  .viewport .vlabel{
+    position:absolute;left:10px;bottom:8px;font-family:"IBM Plex Mono",monospace;
+    font-size:.58rem;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;
+  }
+  .isnew{
+    position:absolute;right:0;top:0;font-family:"IBM Plex Mono",monospace;
+    font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;padding:4px 8px;
+    background:var(--issue);color:#06171d;font-weight:500;border-bottom-left-radius:3px;
+  }
+
+  .plate-body h3{
+    font-family:"Archivo",sans-serif;font-weight:600;font-size:1.32rem;
+    margin:2px 0 3px;letter-spacing:-.01em;
+  }
+  .role{
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.16em;
+    text-transform:uppercase;color:#7ba0ad;margin:0 0 14px;
+  }
+  .plate-body p{margin:0 0 14px;font-size:.96rem;color:var(--ink-2);max-width:60ch}
+  .plate-body p b{color:var(--ink);font-weight:600}
+
+  .spec{
+    margin:16px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:3px;
+    background:var(--panel);display:grid;grid-template-columns:auto 1fr;gap:4px 16px;
+    font-family:"IBM Plex Mono",monospace;font-size:.74rem;
+  }
+  .spec dt{color:var(--ink-3);letter-spacing:.04em}
+  .spec dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+  .spec .full{
+    grid-column:1/-1;color:var(--ink-2);letter-spacing:0;padding-top:8px;margin-top:4px;
+    border-top:1px solid var(--line);
+  }
+
+  .keys{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+  .keys span{
+    font-family:"IBM Plex Mono",monospace;font-size:.63rem;letter-spacing:.06em;
+    padding:3px 7px;border:1px solid var(--line-2);border-radius:2px;color:var(--ink-2);
+  }
+  .keys span b{color:var(--ink);font-weight:500}
+
+  /* ---- identity spread + rubric (hardware chapter) ---- */
+  .identity{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:34px;margin:0 0 20px;align-items:start}
+  @media (max-width:820px){.identity{grid-template-columns:1fr;gap:24px}}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px}
+  .sw{width:110px}
+  .sw i{display:block;height:52px;border-radius:3px;border:1px solid rgba(255,255,255,.09)}
+  .sw span{display:block;margin-top:6px;font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--ink-3)}
+  .sw span b{display:block;color:var(--ink-2);letter-spacing:.1em;text-transform:uppercase;font-size:.58rem;font-weight:500}
+  .directives{margin:0;padding:0;list-style:none;counter-reset:d}
+  .directives li{position:relative;padding:10px 0 10px 42px;border-top:1px solid var(--line);font-size:.94rem;color:var(--ink-2)}
+  .directives li:last-child{border-bottom:1px solid var(--line)}
+  .directives li::before{
+    counter-increment:d;content:counter(d);position:absolute;left:0;top:9px;
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;width:26px;height:22px;
+    display:grid;place-items:center;border:1px solid rgba(143,185,200,.3);border-radius:2px;color:var(--issue);
+  }
+  .directives li b{color:var(--ink);font-weight:600}
+  .plate.plan{grid-template-columns:1fr;gap:22px}
+  .viewport.plan{aspect-ratio:8/5}
+  .planbody{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:26px}
+  @media (max-width:640px){.planbody{grid-template-columns:1fr}}
+  .rulelist{margin:0;padding:0;list-style:none}
+  .rulelist li{padding:9px 0;border-top:1px solid var(--line);font-size:.9rem;color:var(--ink-2)}
+  .rulelist li:last-child{border-bottom:1px solid var(--line)}
+  .rulelist li b{color:var(--ink);font-weight:600}
+
+  /* contact sheet */
+  .contact{
+    margin:8px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+    gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  }
+  .contact figure{background:var(--panel);margin:0;padding:16px 8px 12px;text-align:center}
+  .contact svg{width:78px;height:118px;display:block;margin:0 auto}
+  .contact figcaption{
+    margin-top:8px;font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.04em;
+    color:var(--ink-2);
+  }
+  .contact figcaption b{display:block;color:var(--ink-3);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+
+  .wiring{padding:90px 0 40px}
+  .wiring h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 22px}
+  .wiring-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;
+  }
+  .wiring-grid section{background:var(--panel);padding:20px}
+  .wiring-grid h4{margin:0 0 8px;font-size:.95rem;font-weight:600}
+  .wiring-grid p{margin:0;font-size:.9rem;color:var(--ink-2)}
+  .risk{
+    margin:26px 0 0;border:1px solid rgba(242,150,42,.35);border-left:2px solid var(--warn);
+    background:var(--panel);border-radius:3px;padding:16px 18px;max-width:70ch;
+    font-size:.94rem;color:var(--ink-2);
+  }
+  .risk b{color:var(--ink);font-weight:600}
+
+  footer{
+    border-top:1px solid var(--line);padding:26px 0 60px;
+    font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+    color:var(--ink-3);text-transform:uppercase;
+  }
+</style>
+
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse">
+      <path d="M15 0H0V15" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+    <radialGradient id="floorglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="mark">Standard <em>Issue</em></span>
+    <nav class="navlinks">
+      <a href="#read">How to read</a>
+      <a href="#body">The body</a>
+      <a href="#crew">Crew</a>
+      <a href="#command">Command</a>
+      <a href="#rest">The rest</a>
+      <a href="#hardware">Hardware</a>
+      <a href="#wiring">Wiring in</a>
+    </nav>
+    <span class="tag-wip">Body + hardware shipped · outfit redraws mockup</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">Default story — the shared body &amp; the culture-neutral kit</p>
+    <h1>One body, <em>issued</em> a hundred ways</h1>
+    <p class="dek">
+      Every character in the game — the player on foot, every station NPC, every
+      ship's pilot — is drawn from a <b>single <code class="f">Person</code> body</b>:
+      a foot oval, a tapering torso, a head. An outfit only recolours it and bolts
+      on flat accessory pieces. This atlas gave that body <b>legs</b> (shipped),
+      and re-draws the <code class="f">graphics.json</code> outfits that aren't
+      tied to a culture — the standard suit, the station crew, the command tier —
+      on the new model.
+    </p>
+    <div class="status">
+      <b>The legged body and the hardware shipped.</b> Chapter 01's redesign is in
+      <code class="f">person.py</code> (legs, boots, hip line, shared walk cycle),
+      with <code class="f">leg_color</code> as an optional outfit key. Chapter 05's
+      <b>Standard Issue</b> ships, station and buildings are in
+      <code class="f">config/stories/default</code> — silhouettes extracted from
+      these plates into <code class="f">parts</code> — and the <b>Procyon Gate</b>
+      system makes the <code class="f">standard_issue</code> culture live in game.
+      Only the culture-neutral <b>outfit redraws</b> (Chapters 02–04) are still
+      mockups: the <code class="f">Person</code> renderer is colour-key driven, not
+      per-outfit geometry, so those wait on a parts-style figure renderer.
+    </div>
+
+    <dl class="legend" id="read">
+      <div><dt>Left — specimen</dt><dd>Front-view figure at a fixed height against void-black, so silhouettes and palettes compare directly. Anatomy plates are wider diagrams.</dd></div>
+      <div><dt>LIVE / SHIPPED</dt><dd>Chapter 01's body and Chapter 05's hardware plates are in the game. The outfit plates (02–04) carry no badge — they re-imagine existing <code class="f">graphics.json</code> entries and aren't built yet.</dd></div>
+      <div><dt>Spec block</dt><dd>Real field names. Body plates list the <code class="f">person.py</code> constants that change; outfit plates list the <code class="f">*_color</code> keys the entry sets.</dd></div>
+      <div><dt>Keys row</dt><dd>Which optional outfit accessory keys the design uses — every one is just another colour in the JSON, no new draw code.</dd></div>
+    </dl>
+  </section>
+
+  <!-- ============================ THE BODY ============================ -->
+  <section class="chapter" id="body">
+    <p class="chapter-kicker">Chapter 01 — The shared body</p>
+    <h2>Give the <em>Person</em> legs</h2>
+    <p class="lead">
+      The body was deliberately minimal: three shapes, shaded from one skin tone,
+      never changed by an outfit. But a single foot-oval read more like a chess
+      pawn than a person once you stood next to it. <b>This shipped</b> — the
+      shared <code class="f">Person</code> now stands on two legs and two boots
+      and walks with them, so the change landed once and every character got it.
+    </p>
+
+    <article class="plate wide">
+      <div class="viewport diagram">
+        <svg viewBox="0 0 260 200" role="img" aria-label="Side-by-side comparison: the current Person body is a single foot oval, a tapering torso and a head; the proposed body replaces the foot oval with a hip line, two legs and two boots.">
+          <rect width="260" height="200" fill="url(#grid)"/>
+          <line x1="130" y1="20" x2="130" y2="184" stroke="#2b2b38" stroke-width="1"/>
+          <!-- CURRENT (left) -->
+          <text x="66" y="30" fill="#6d6a7e" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing="1.5" text-anchor="middle">CURRENT</text>
+          <ellipse cx="66" cy="176" rx="26" ry="6" fill="url(#floorglow)"/>
+          <circle cx="66" cy="58" r="15" fill="#f4d0ab" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="61" cy="59" r="1.6" fill="#281e1e"/><circle cx="71" cy="59" r="1.6" fill="#281e1e"/>
+          <path d="M46,84 C46,74 55,69 66,69 C77,69 86,74 86,84 L80,150 C80,153 78,154 76,154 L56,154 C54,154 52,153 52,150 Z" fill="#e1b491" stroke="#141219" stroke-width="1.8"/>
+          <ellipse cx="66" cy="166" rx="14" ry="10" fill="#bd8f6a" stroke="#141219" stroke-width="1.8"/>
+          <!-- PROPOSED (right) -->
+          <text x="194" y="30" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="8" letter-spacing="1.5" text-anchor="middle">PROPOSED</text>
+          <ellipse cx="194" cy="182" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="194" cy="52" r="15" fill="#f4d0ab" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="189" cy="53" r="1.6" fill="#281e1e"/><circle cx="199" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M174,78 C174,68 183,63 194,63 C205,63 214,68 214,78 L208,132 C208,135 206,136 204,136 L184,136 C182,136 180,135 180,132 Z" fill="#e1b491" stroke="#141219" stroke-width="1.8"/>
+          <rect x="184" y="134" width="9" height="40" rx="2" fill="#bd8f6a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="195" y="134" width="9" height="40" rx="2" fill="#bd8f6a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="178" y="170" width="17" height="12" rx="3" fill="#bd8f6a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="193" y="170" width="17" height="12" rx="3" fill="#bd8f6a" stroke="#141219" stroke-width="1.6"/>
+          <line x1="180" y1="133" x2="208" y2="133" stroke="#8fb9c8" stroke-width="1" stroke-dasharray="2 2"/>
+          <text x="230" y="132" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="6.5">hip line</text>
+        </svg>
+        <span class="vlabel">person · current vs proposed</span>
+      </div>
+      <div class="plate-body">
+        <h3>Current vs. proposed <span style="color:var(--issue);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">SHIPPED</span></h3>
+        <p class="role">person.py · Person.draw()</p>
+        <p>
+          The torso and head are unchanged. The <b>foot oval was replaced</b> by a
+          <b>hip line</b> at the base of a slightly shorter torso, <b>two tapered
+          legs</b>, and <b>two boots</b>. <code class="f">boot_color</code> now
+          fills both boots; <code class="f">leg_color</code> (new, optional) fills
+          the legs, defaulting to a darker shade of the suit. The oversized
+          dark-silhouette trick that keeps the body off the ground extends to the
+          new shapes.
+        </p>
+        <dl class="spec">
+          <dt>removed</dt><dd>FOOT_RADIUS_X / _Y, FOOT_OVERLAP</dd>
+          <dt>added</dt><dd>LEG_HEIGHT, LEG_HALF_WIDTH, LEG_SEPARATION, HIP_OVERLAP, BOOT_RADIUS_X / _Y, WALK_*</dd>
+          <dt>changed</dt><dd>BODY_HEIGHT 13 → 11; LocationScreen.LABEL_HEIGHT_ABOVE 38 → 42</dd>
+          <dt>colour</dt><dd>boot_color → both boots; leg_color (opt) or _shade(suit, -22)</dd>
+          <dd class="full">One rewrite of <code class="f">Person.draw()</code> + its outline pass, one label-height bump. No save impact (outfits/NPCs are story config, rebuilt on load). No graphics.json change needed for existing outfits.</dd>
+        </dl>
+        <div class="keys"><span><b>affects</b> player · every NPC · every AI pilot</span></div>
+      </div>
+    </article>
+
+    <article class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="The proposed legged Person body: head, a faint dashed helmet ring, a round-shouldered tapering torso ending at a hip line, two tapered legs, two boots, and an accent dot at the ground contact point.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="7" fill="url(#floorglow)"/>
+          <circle cx="70" cy="52" r="19" fill="none" stroke="#8fb9c8" stroke-width="1.4" stroke-dasharray="3 3" opacity="0.7"/>
+          <circle cx="70" cy="54" r="15" fill="#f4d0ab" stroke="#141219" stroke-width="2"/>
+          <circle cx="64" cy="55" r="1.7" fill="#281e1e"/><circle cx="76" cy="55" r="1.7" fill="#281e1e"/>
+          <path d="M48,82 C48,70 58,64 70,64 C82,64 92,70 92,82 L86,150 C86,153 84,154 82,154 L58,154 C56,154 54,153 54,150 Z" fill="#e1b491" stroke="#141219" stroke-width="2"/>
+          <line x1="54" y1="150" x2="86" y2="150" stroke="#8fb9c8" stroke-width="1" stroke-dasharray="2 2"/>
+          <rect x="58" y="152" width="10" height="40" rx="2" fill="#bd8f6a" stroke="#141219" stroke-width="1.8"/>
+          <rect x="72" y="152" width="10" height="40" rx="2" fill="#bd8f6a" stroke="#141219" stroke-width="1.8"/>
+          <rect x="51" y="188" width="19" height="13" rx="3" fill="#bd8f6a" stroke="#141219" stroke-width="1.8"/>
+          <rect x="70" y="188" width="19" height="13" rx="3" fill="#bd8f6a" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="200" r="2.6" fill="#8fb9c8"/>
+        </svg>
+        <span class="vlabel">person · anatomy</span>
+        <span class="isnew">Live</span>
+      </div>
+      <div class="plate-body">
+        <h3>Anatomy <span style="color:var(--issue);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">SHIPPED</span></h3>
+        <p class="role">person.py · body constants</p>
+        <p>
+          Read top to bottom: <b>head</b> (unchanged), a <b>helmet ring</b> when
+          outfitted (dashed here), the <b>round-shouldered torso</b> tapering to
+          the new <b>hip line</b>, then <b>two legs</b> and <b>two boots</b>.
+          Everything is still measured up from <code class="f">self.x/self.y</code>
+          — the accent dot — so collision and arrival checks don't move. The
+          <b>stance width</b> (<code class="f">LEG_SEPARATION</code>) is what lets
+          the legs swing without the layout shifting.
+        </p>
+        <dl class="spec">
+          <dt>HEAD_RADIUS</dt><dd>5.5 · unchanged</dd>
+          <dt>SHOULDER_HALF_WIDTH</dt><dd>7 · unchanged</dd>
+          <dt>BODY_HEIGHT</dt><dd>13 → 11 (ends at the hips)</dd>
+          <dt>LEG_HEIGHT</dt><dd>11 · new</dd>
+          <dt>LEG_HALF_WIDTH</dt><dd>1.7 · new</dd>
+          <dt>LEG_SEPARATION</dt><dd>2.8 · new</dd>
+          <dt>BOOT_RADIUS_X × _Y</dt><dd>2.6 × 1.9 · new</dd>
+          <dt>HIP_OVERLAP</dt><dd>1.5 · leg tops tuck under the torso base</dd>
+          <dd class="full">The walk cycle (WALK_PACE / WALK_LIFT / WALK_STRIDE_DEG / WALK_BOB / WALK_INTENSITY_*) alternates each leg's swing + lift and bobs the body; the hip line hides the pivot.</dd>
+        </dl>
+        <div class="keys"><span><b>new keys</b> none required</span><span><b>leg_color</b> optional</span></div>
+      </div>
+    </article>
+
+    <article class="plate">
+      <div class="viewport fig">
+        <svg viewBox="42 8 150 200" role="img" aria-label="One figure with every optional outfit accessory piece drawn in neutral grey: backpack behind the torso, two shoulder spikes, a helmet antenna, a collar, two shoulder pads, a chest plate, a one-sided sash, a diamond badge, a belt with buckle, and a visor.">
+          <rect x="42" y="8" width="150" height="200" fill="url(#grid)"/>
+          <ellipse cx="120" cy="196" rx="34" ry="7" fill="url(#floorglow)"/>
+          <rect x="98" y="60" width="44" height="86" rx="3" fill="#3a3a44" stroke="#141219" stroke-width="1.6"/>
+          <path d="M96,80 L104,80 L92,60 Z" fill="#4a4a55" stroke="#141219" stroke-width="1.2"/>
+          <path d="M144,80 L136,80 L148,60 Z" fill="#4a4a55" stroke="#141219" stroke-width="1.2"/>
+          <line x1="134" y1="34" x2="142" y2="18" stroke="#4a4a55" stroke-width="2.5"/><circle cx="142" cy="18" r="2" fill="#4a4a55"/>
+          <circle cx="120" cy="50" r="18" fill="#3a3a44" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="120" cy="52" r="12" fill="#f4d0ab"/>
+          <path d="M98,80 C98,68 108,62 120,62 C132,62 142,68 142,80 L135,150 C135,153 133,154 131,154 L109,154 C107,154 105,153 105,150 Z" fill="#55555f" stroke="#141219" stroke-width="1.8"/>
+          <rect x="109" y="152" width="10" height="40" rx="2" fill="#3f3f48" stroke="#141219" stroke-width="1.6"/>
+          <rect x="121" y="152" width="10" height="40" rx="2" fill="#3f3f48" stroke="#141219" stroke-width="1.6"/>
+          <rect x="102" y="188" width="19" height="13" rx="3" fill="#333" stroke="#141219" stroke-width="1.6"/>
+          <rect x="119" y="188" width="19" height="13" rx="3" fill="#333" stroke="#141219" stroke-width="1.6"/>
+          <path d="M106,62 L134,62 L132,74 L108,74 Z" fill="#6a6a75" stroke="#141219" stroke-width="1.2"/>
+          <circle cx="99" cy="80" r="6" fill="#6a6a75" stroke="#141219" stroke-width="1.4"/>
+          <circle cx="141" cy="80" r="6" fill="#6a6a75" stroke="#141219" stroke-width="1.4"/>
+          <path d="M104,76 L136,76 L131,116 L109,116 Z" fill="#63636e" stroke="#141219" stroke-width="1.3"/>
+          <path d="M100,76 L112,150 L120,150 L108,76 Z" fill="#75757f" stroke="#141219" stroke-width="1"/>
+          <path d="M126,98 l4,4 l-4,4 l-4,-4 Z" fill="#8a8a94" stroke="#141219" stroke-width="0.8"/>
+          <rect x="104" y="142" width="32" height="9" fill="#4a4a54" stroke="#141219" stroke-width="1.2"/>
+          <rect x="116" y="144" width="8" height="5" fill="#7a7a84"/>
+          <path d="M104,48 h32 l-3,8 h-26 Z" fill="#5a5a64" stroke="#141219" stroke-width="1"/>
+        </svg>
+        <span class="vlabel">outfit · accessory slot map</span>
+      </div>
+      <div class="plate-body">
+        <h3>Accessory slots</h3>
+        <p class="role">graphics.json → outfits · optional keys</p>
+        <p>
+          Every decorated outfit is <b>just colour keys</b> layered over
+          <code class="f">helmet_color</code> / <code class="f">suit_color</code> /
+          <code class="f">boot_color</code>; an absent key skips that piece. The
+          legged model <b>adds and moves nothing</b> — legs sit below the belt, so
+          belt, sash and badge all land where they do now. This figure sets every
+          key at once (neutral grey).
+        </p>
+        <dl class="spec">
+          <dt>backpack_color</dt><dd>slab behind the whole torso</dd>
+          <dt>spike_color</dt><dd>two shoulder spikes, behind</dd>
+          <dt>antenna_color</dt><dd>helmet whip + tip (needs helmet)</dd>
+          <dt>collar_color</dt><dd>band at the neckline</dd>
+          <dt>shoulder_color</dt><dd>two round pauldrons</dd>
+          <dt>chest_plate_color</dt><dd>trapezoid over the upper torso</dd>
+          <dt>sash_color</dt><dd>one diagonal band, shoulder to hip</dd>
+          <dt>badge_color</dt><dd>small diamond, upper chest</dd>
+          <dt>belt_color</dt><dd>band at the waist + lighter buckle</dd>
+          <dt>visor_color</dt><dd>face bar, replaces the eyes</dd>
+          <dd class="full">Draw order: back pieces → body → helmet → front pieces → head → visor, per <code class="f">Person._draw_back_accessories</code> / <code class="f">_draw_front_accessories</code>. A new decorated outfit is still a pure <code class="f">graphics.json</code> edit.</dd>
+        </dl>
+        <div class="keys"><span><b>new draw code</b> none</span></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================ CREW ============================ -->
+  <section class="chapter" id="crew">
+    <p class="chapter-kicker">Chapter 02 — Standard suits &amp; crew</p>
+    <h2>The everyday <em>kit</em></h2>
+    <p class="lead">
+      The suits and working outfits an NPC wears to do a job. All exist in
+      <code class="f">graphics.json</code> today with the same colours — these
+      plates just show them on the legged model, with a note on what each one is
+      <em>for</em> in the world.
+    </p>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the standard space suit on the legged model: grey sealed helmet, mid-grey suit, dark grey boots.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#96969b" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#5a5a60" stroke="#141219" stroke-width="1.8"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#46464a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#46464a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#46464a" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#46464a" stroke="#141219" stroke-width="1.6"/>
+          <path d="M60,66 h20 v4 h-20 Z" fill="#7c7c82"/>
+        </svg>
+        <span class="vlabel">space_suit · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Space Suit</h3>
+        <p class="role">default_outfit — what the player starts in</p>
+        <p>
+          The neutral baseline every other suit is a variation on. Sealed helmet,
+          unmarked mid-grey pressure suit, heavy boots. On the legged model it
+          finally reads as a person in a suit rather than a bollard — which
+          matters, since it's the <b>first thing the player sees themselves as</b>.
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#96969B</dd>
+          <dt>suit_color</dt><dd>#5A5A60</dd>
+          <dt>boot_color</dt><dd>#46464A</dd>
+          <dd class="full">graphics.json outfits.space_suit — unchanged. story.json <code class="f">default_outfit</code>.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the flight suit: pale silver helmet, deep blue-grey suit, dark boots.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#ced2dc" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#3a4658" stroke="#141219" stroke-width="1.8"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#282e38" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#282e38" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#282e38" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#282e38" stroke="#141219" stroke-width="1.6"/>
+          <path d="M56,92 L84,120 M84,92 L56,120" stroke="#2b3542" stroke-width="4"/>
+        </svg>
+        <span class="vlabel">flight_suit · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Flight Suit</h3>
+        <p class="role">pilots · anyone who flies</p>
+        <p>
+          Trim, dark, no bulk — the counterpart to the pressure suit for people
+          who spend the day in a cockpit. A subtle <b>cross-harness</b> on the
+          chest is the only marking. Kade Marsh and the guild couriers wear this.
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#CED2DC</dd>
+          <dt>suit_color</dt><dd>#3A4658</dd>
+          <dt>boot_color</dt><dd>#282E38</dd>
+          <dd class="full">graphics.json outfits.flight_suit — unchanged. Harness is a suggested addition (a thin darker stroke, no new key).</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the mechanic: amber hard hat, olive-grey coveralls, dark boots, a tool belt.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#f0aa37" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#524e48" stroke="#141219" stroke-width="1.8"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#2e2a26" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#2e2a26" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#2e2a26" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#2e2a26" stroke="#141219" stroke-width="1.6"/>
+          <rect x="54" y="142" width="32" height="8" fill="#3a352f" stroke="#141219" stroke-width="1.2"/>
+          <rect x="63" y="150" width="6" height="10" fill="#3a352f"/><rect x="76" y="150" width="5" height="8" fill="#3a352f"/>
+        </svg>
+        <span class="vlabel">mechanic · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Mechanic</h3>
+        <p class="role">outfitting bay · repair</p>
+        <p>
+          Amber <b>hard hat</b> (the only bright thing), worn coveralls, a tool
+          belt with a couple of pouches hanging off it. The person you talk to
+          about ship outfits — reads as hands-on the moment you see them.
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#F0AA37</dd>
+          <dt>suit_color</dt><dd>#524E48</dd>
+          <dt>boot_color</dt><dd>#2E2A26</dd>
+          <dd class="full">graphics.json outfits.mechanic — colours unchanged. A <code class="f">belt_color</code> key would add the pouched belt shown here.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · <i>+belt (suggested)</i></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the dockworker: bright orange hi-vis hard hat, blue-grey suit with a hi-vis chest band, dark boots.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#f2962a" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#464e5a" stroke="#141219" stroke-width="1.8"/>
+          <path d="M50,104 L90,104 L88,116 L52,116 Z" fill="#f2962a" stroke="#141219" stroke-width="1"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#282c34" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#282c34" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#282c34" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#282c34" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">dockworker · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Dockworker</h3>
+        <p class="role">spaceport · loading &amp; berths</p>
+        <p>
+          Same blue-grey base as station crew, plus a <b>hi-vis band</b> across
+          the chest that matches the hard hat — the one outfit that's about being
+          <em>seen</em> near moving ships. Uses <code class="f">chest_plate_color</code>
+          set to the hi-vis orange rather than a plate tone.
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#F2962A</dd>
+          <dt>suit_color</dt><dd>#464E5A</dd>
+          <dt>boot_color</dt><dd>#282C34</dd>
+          <dd class="full">graphics.json outfits.dockworker — add <code class="f">chest_plate_color: #F2962A</code> for the band (currently helmet+suit+boot only).</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · <i>+chest_plate (suggested)</i></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the medic: pale mint helmet, near-white suit, pale boots, a red cross badge.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#d2ece6" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#e0e4e4" stroke="#141219" stroke-width="1.8"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#b0bcbc" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#b0bcbc" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#b0bcbc" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#b0bcbc" stroke="#141219" stroke-width="1.6"/>
+          <path d="M67,94 h6 v6 h6 v6 h-6 v6 h-6 v-6 h-6 v-6 h6 Z" fill="#e15a5a" stroke="#141219" stroke-width="0.8"/>
+        </svg>
+        <span class="vlabel">medic · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Medic</h3>
+        <p class="role">infirmary · anywhere someone's hurt</p>
+        <p>
+          Near-white, pale mint helmet, and a single <b>red cross</b> — the one
+          outfit that's readable across a whole concourse. The cross uses
+          <code class="f">badge_color</code> (a plus shape instead of the default
+          diamond would sell it further).
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#D2ECE6</dd>
+          <dt>suit_color</dt><dd>#E0E4E4</dd>
+          <dt>boot_color</dt><dd>#B0BCBC</dd>
+          <dd class="full">graphics.json outfits.medic — add <code class="f">badge_color: #E15A5A</code>. See also <code class="f">surgeon</code> (the command-tier version).</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · <i>+badge (suggested)</i></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of security: slate helmet with a dark visor, dark slate armour suit, black boots.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#606874" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#3a3f48" stroke="#141219" stroke-width="1.8"/>
+          <path d="M56,66 L84,66 L82,74 L58,74 Z" fill="#2f333a"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#24272e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#24272e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#24272e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#24272e" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">security · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Security</h3>
+        <p class="role">station enforcement · patrol decks</p>
+        <p>
+          Dark, matte, slightly armoured across the shoulders — deliberately
+          plain so the decorated <b>Marshal</b> (below) reads as the rank above
+          it. No bright colour anywhere; this outfit's job is to look
+          unremarkable and immovable.
+        </p>
+        <dl class="spec">
+          <dt>helmet_color</dt><dd>#606874</dd>
+          <dt>suit_color</dt><dd>#3A3F48</dd>
+          <dt>boot_color</dt><dd>#24272E</dd>
+          <dd class="full">graphics.json outfits.security — unchanged.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ COMMAND ============================ -->
+  <section class="chapter" id="command">
+    <p class="chapter-kicker">Chapter 03 — Command &amp; specialist</p>
+    <h2>Where the <em>accessory keys</em> earn their keep</h2>
+    <p class="lead">
+      These outfits already set the optional keys — <code class="f">chest_plate</code>,
+      <code class="f">collar</code>, <code class="f">shoulder</code>,
+      <code class="f">sash</code>, <code class="f">spike</code>,
+      <code class="f">visor</code>, <code class="f">backpack</code>,
+      <code class="f">badge</code>. Each plate below is picked to show a
+      different combination on the legged model.
+    </p>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of station command: silver helmet, navy suit, a steel-blue chest plate, pale collar, dark shoulder pads, a gold diamond badge.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="50" r="18" fill="#ced2dc" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#2e384a" stroke="#141219" stroke-width="1.8"/>
+          <path d="M56,64 L84,64 L82,74 L58,74 Z" fill="#dce1eb" stroke="#141219" stroke-width="1"/>
+          <circle cx="49" cy="80" r="6" fill="#28303e" stroke="#141219" stroke-width="1.4"/>
+          <circle cx="91" cy="80" r="6" fill="#28303e" stroke="#141219" stroke-width="1.4"/>
+          <path d="M56,76 L84,76 L80,112 L60,112 Z" fill="#465266" stroke="#141219" stroke-width="1.3"/>
+          <path d="M74,90 l4,4 l-4,4 l-4,-4 Z" fill="#ebcd5f" stroke="#141219" stroke-width="0.8"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#222832" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#222832" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#222832" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#222832" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">station_command · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Station Command</h3>
+        <p class="role">station authority · the one who runs the place</p>
+        <p>
+          Navy suit, a <b>steel chest plate</b>, pale dress <b>collar</b>, dark
+          <b>shoulder</b> boards and a gold <b>badge</b> — a full formal loadout
+          without a single bright field. This is the accessory system doing its
+          whole job: same body, same three base colours as the crew, read as
+          "in charge" purely from the added pieces.
+        </p>
+        <dl class="spec">
+          <dt>helmet / suit / boot</dt><dd>#CED2DC · #2E384A · #222832</dd>
+          <dt>chest_plate_color</dt><dd>#465266</dd>
+          <dt>collar_color</dt><dd>#DCE1EB</dd>
+          <dt>shoulder_color</dt><dd>#28303E</dd>
+          <dt>badge_color</dt><dd>#EBCD5F</dd>
+          <dd class="full">graphics.json outfits.station_command — unchanged.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · chest_plate · collar · shoulder · badge</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the marshal: slate helmet with an orange visor, dark suit, grey shoulder spikes, chest plate, dark belt and gold badge.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <path d="M52,74 L60,74 L47,54 Z" fill="#96a0af" stroke="#141219" stroke-width="1.2"/>
+          <path d="M88,74 L80,74 L93,54 Z" fill="#96a0af" stroke="#141219" stroke-width="1.2"/>
+          <circle cx="70" cy="50" r="18" fill="#606874" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <path d="M57,47 h26 l-3,8 h-20 Z" fill="#eb785a" stroke="#141219" stroke-width="1"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#32363e" stroke="#141219" stroke-width="1.8"/>
+          <path d="M56,74 L84,74 L80,110 L60,110 Z" fill="#424854" stroke="#141219" stroke-width="1.3"/>
+          <path d="M76,88 l4,4 l-4,4 l-4,-4 Z" fill="#ebcd5f" stroke="#141219" stroke-width="0.8"/>
+          <rect x="54" y="142" width="32" height="9" fill="#1e2128" stroke="#141219" stroke-width="1.2"/>
+          <rect x="66" y="144" width="8" height="5" fill="#4a4f58"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#1e2128" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#1e2128" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#1e2128" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#1e2128" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">marshal · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Marshal</h3>
+        <p class="role">senior law · sector enforcement</p>
+        <p>
+          Security's outfit, ranked up: an orange <b>visor</b> instead of eyes,
+          two grey shoulder <b>spikes</b>, a chest plate, and a heavy dark
+          <b>belt</b> with a buckle. The visor is the tell — a face you can't
+          read is deliberate.
+        </p>
+        <dl class="spec">
+          <dt>helmet / suit / boot</dt><dd>#606874 · #32363E · #1E2128</dd>
+          <dt>visor_color</dt><dd>#EB785A</dd>
+          <dt>spike_color</dt><dd>#96A0AF</dd>
+          <dt>chest_plate_color</dt><dd>#424854</dd>
+          <dt>belt_color</dt><dd>#1E2128</dd>
+          <dt>badge_color</dt><dd>#EBCD5F</dd>
+          <dd class="full">graphics.json outfits.marshal — unchanged.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · visor · spike · chest_plate · belt · badge</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the prospector: gold helmet, tan suit, a large backpack, shoulder pads and a tool belt.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <rect x="50" y="60" width="40" height="82" rx="3" fill="#62523a" stroke="#141219" stroke-width="1.6"/>
+          <circle cx="70" cy="50" r="18" fill="#ebcd5f" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <circle cx="65" cy="53" r="1.6" fill="#281e1e"/><circle cx="75" cy="53" r="1.6" fill="#281e1e"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#7a6648" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="49" cy="80" r="6" fill="#62523a" stroke="#141219" stroke-width="1.4"/>
+          <circle cx="91" cy="80" r="6" fill="#62523a" stroke="#141219" stroke-width="1.4"/>
+          <rect x="54" y="142" width="32" height="9" fill="#483828" stroke="#141219" stroke-width="1.2"/>
+          <rect x="66" y="144" width="8" height="5" fill="#6a563c"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#483828" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#483828" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#483828" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#483828" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">prospector · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Prospector</h3>
+        <p class="role">independent miners · the belt</p>
+        <p>
+          The <b>backpack</b> key at full size — a hauled life-support and ore
+          kit that sits behind the whole torso — plus shoulder pads and a tool
+          belt. Same family as <code class="f">miner</code> but rigged for going
+          out alone and staying out. Oskar Lindqvist's crews.
+        </p>
+        <dl class="spec">
+          <dt>helmet / suit / boot</dt><dd>#EBCD5F · #7A6648 · #483828</dd>
+          <dt>backpack_color</dt><dd>#62523A</dd>
+          <dt>shoulder_color</dt><dd>#62523A</dd>
+          <dt>belt_color</dt><dd>#483828</dd>
+          <dd class="full">graphics.json outfits.prospector — unchanged. Pairs with the Ratchet Prospector in Resin &amp; Rivets.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · backpack · shoulder · belt</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the merchant prince: no helmet, deep wine robe, a gold sash across the body, a gold collar, dark belt and a pale gold badge.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <circle cx="70" cy="48" r="15" fill="#f4d0ab" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="64" cy="49" r="1.6" fill="#281e1e"/><circle cx="76" cy="49" r="1.6" fill="#281e1e"/>
+          <path d="M46,80 C46,66 56,60 70,60 C84,60 94,66 94,80 L88,152 C88,155 86,156 84,156 L56,156 C54,156 52,155 52,152 Z" fill="#6e3442" stroke="#141219" stroke-width="1.8"/>
+          <path d="M54,64 L86,64 L82,74 L58,74 Z" fill="#d6aa5a" stroke="#141219" stroke-width="1"/>
+          <path d="M50,72 L66,154 L76,154 L60,72 Z" fill="#d6aa5a" stroke="#141219" stroke-width="1"/>
+          <path d="M74,96 l4,4 l-4,4 l-4,-4 Z" fill="#ffe196" stroke="#141219" stroke-width="0.8"/>
+          <rect x="54" y="146" width="34" height="9" fill="#281c20" stroke="#141219" stroke-width="1.2"/>
+          <rect x="67" y="148" width="8" height="5" fill="#4a3238"/>
+          <rect x="59" y="154" width="10" height="38" rx="2" fill="#281c20" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="154" width="10" height="38" rx="2" fill="#281c20" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#281c20" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#281c20" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">merchant_prince · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Merchant Prince</h3>
+        <p class="role">the money · whoever owns the concourse</p>
+        <p>
+          No helmet — the point is being recognised. A wine robe, a gold
+          <b>sash</b> running corner to corner (the one asymmetric piece in the
+          neutral set), a gold <b>collar</b>, and a pale badge. This is the
+          decorated <em>civilian</em> — same base as a bartender, dressed to
+          out-rank the room.
+        </p>
+        <dl class="spec">
+          <dt>suit_color</dt><dd>#6E3442</dd>
+          <dt>boot_color</dt><dd>#281C20</dd>
+          <dt>sash_color</dt><dd>#D6AA5A</dd>
+          <dt>collar_color</dt><dd>#D6AA5A</dd>
+          <dt>belt_color</dt><dd>#281C20</dd>
+          <dt>badge_color</dt><dd>#FFE196</dd>
+          <dd class="full">graphics.json outfits.merchant_prince — unchanged. No helmet key → bare head + eyes.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> suit · boot · sash · collar · belt · badge</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the void oracle: no helmet, near-black robe, cyan collar and shoulder spikes, a blue-violet sash, a white badge.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <path d="M52,74 L60,74 L46,50 Z" fill="#96ffd7" stroke="#141219" stroke-width="1.2"/>
+          <path d="M88,74 L80,74 L94,50 Z" fill="#96ffd7" stroke="#141219" stroke-width="1.2"/>
+          <circle cx="70" cy="48" r="15" fill="#f4d0ab" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="64" cy="49" r="1.6" fill="#281e1e"/><circle cx="76" cy="49" r="1.6" fill="#281e1e"/>
+          <path d="M46,80 C46,66 56,60 70,60 C84,60 94,66 94,80 L88,154 C88,157 86,158 84,158 L56,158 C54,158 52,157 52,154 Z" fill="#282242" stroke="#141219" stroke-width="1.8"/>
+          <path d="M54,62 L86,62 L82,73 L58,73 Z" fill="#96ffd7" stroke="#141219" stroke-width="1"/>
+          <path d="M50,72 L66,156 L76,156 L60,72 Z" fill="#7878ff" stroke="#141219" stroke-width="1"/>
+          <path d="M74,98 l4,4 l-4,4 l-4,-4 Z" fill="#ffffff" stroke="#141219" stroke-width="0.8"/>
+          <rect x="59" y="156" width="10" height="36" rx="2" fill="#1a162e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="156" width="10" height="36" rx="2" fill="#1a162e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#1a162e" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#1a162e" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">void_oracle · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Void Oracle</h3>
+        <p class="role">the strange one · fringe belief</p>
+        <p>
+          The outlier in the neutral set — near-black robe, <b>cyan</b> collar
+          and spikes, a <b>blue-violet sash</b>, a stark white badge. It borrows
+          the Vherathi glass-green but isn't Concord; it's the outfit that tells
+          the player the setting has room for the uncanny.
+        </p>
+        <dl class="spec">
+          <dt>suit_color</dt><dd>#282242</dd>
+          <dt>boot_color</dt><dd>#1A162E</dd>
+          <dt>collar_color</dt><dd>#96FFD7</dd>
+          <dt>spike_color</dt><dd>#96FFD7</dd>
+          <dt>sash_color</dt><dd>#7878FF</dd>
+          <dt>badge_color</dt><dd>#FFFFFF</dd>
+          <dd class="full">graphics.json outfits.void_oracle — unchanged.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> suit · boot · collar · spike · sash · badge</span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the bounty hunter: dark helmet with an orange visor, near-black armour, a backpack, chest plate, shoulder pads and a heavy belt.">
+          <rect width="140" height="210" fill="url(#grid)"/>
+          <ellipse cx="70" cy="196" rx="30" ry="6" fill="url(#floorglow)"/>
+          <rect x="50" y="60" width="40" height="80" rx="3" fill="#282a30" stroke="#141219" stroke-width="1.6"/>
+          <circle cx="70" cy="50" r="18" fill="#3c4046" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="70" cy="52" r="12" fill="#f4d0ab"/>
+          <path d="M57,47 h26 l-3,8 h-20 Z" fill="#eb785a" stroke="#141219" stroke-width="1"/>
+          <path d="M48,80 C48,68 58,62 70,62 C82,62 92,68 92,80 L85,150 C85,153 83,154 81,154 L59,154 C57,154 55,153 55,150 Z" fill="#2c2e34" stroke="#141219" stroke-width="1.8"/>
+          <circle cx="49" cy="80" r="6" fill="#34363e" stroke="#141219" stroke-width="1.4"/>
+          <circle cx="91" cy="80" r="6" fill="#34363e" stroke="#141219" stroke-width="1.4"/>
+          <path d="M56,76 L84,76 L80,112 L60,112 Z" fill="#3a3c44" stroke="#141219" stroke-width="1.3"/>
+          <rect x="54" y="142" width="32" height="9" fill="#1c1e22" stroke="#141219" stroke-width="1.2"/>
+          <rect x="66" y="144" width="8" height="5" fill="#44464e"/>
+          <rect x="59" y="152" width="10" height="40" rx="2" fill="#1c1e22" stroke="#141219" stroke-width="1.6"/>
+          <rect x="71" y="152" width="10" height="40" rx="2" fill="#1c1e22" stroke="#141219" stroke-width="1.6"/>
+          <rect x="52" y="188" width="19" height="13" rx="3" fill="#1c1e22" stroke="#141219" stroke-width="1.6"/>
+          <rect x="69" y="188" width="19" height="13" rx="3" fill="#1c1e22" stroke="#141219" stroke-width="1.6"/>
+        </svg>
+        <span class="vlabel">bounty_hunter · front</span>
+      </div>
+      <div class="plate-body">
+        <h3>Bounty Hunter</h3>
+        <p class="role">freelance · the bounty board (when it exists)</p>
+        <p>
+          The most fully loaded outfit in the neutral set — visor, backpack,
+          chest plate, shoulders, belt, all in near-black with one orange visor
+          slit. Effectively the <b>Marshal's kit stripped of insignia</b>: same
+          silhouette, no badge, no allegiance.
+        </p>
+        <dl class="spec">
+          <dt>helmet / suit / boot</dt><dd>#3C4046 · #2C2E34 · #1C1E22</dd>
+          <dt>visor_color</dt><dd>#EB785A</dd>
+          <dt>backpack_color</dt><dd>#282A30</dd>
+          <dt>chest_plate_color</dt><dd>#3A3C44</dd>
+          <dt>shoulder_color</dt><dd>#34363E</dd>
+          <dt>belt_color</dt><dd>#1C1E22</dd>
+          <dd class="full">graphics.json outfits.bounty_hunter — unchanged.</dd>
+        </dl>
+        <div class="keys"><span><b>keys</b> helmet · suit · boot · visor · backpack · chest_plate · shoulder · belt</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ THE REST ============================ -->
+  <section class="chapter" id="rest">
+    <p class="chapter-kicker">Chapter 04 — The rest of the roster</p>
+    <h2>Everyone else, on the new <em>legs</em></h2>
+    <p class="lead">
+      The remaining culture-neutral outfits — mostly a <code class="f">suit_color</code>
+      and a <code class="f">boot_color</code>, a few with one accent piece. Shown
+      small, because the point is just that the <b>legged silhouette carries all
+      of them</b> without any per-outfit work. Colours are exactly what
+      <code class="f">graphics.json</code> sets today.
+    </p>
+
+    <div class="contact">
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="bartender: dark slate suit"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#404852" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#282624" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#282624" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#282624" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#282624" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Bartender<b>concourse bar</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="loan officer: dark navy suit"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#2a2e44" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#1a1a22" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#1a1a22" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#1a1a22" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#1a1a22" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Loan Officer<b>loan desk</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="ship dealer: wine suit"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#7a3a4a" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#2c1e22" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#2c1e22" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#2c1e22" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#2c1e22" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Ship Dealer<b>ship browser</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="quartermaster: olive suit"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#6c603e" stroke="#141219" stroke-width="1.4"/><rect x="34" y="90" width="22" height="6" fill="#463826"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#463826" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Quartermaster<b>stores</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="miner: gold helmet, tan suit"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="30" r="13" fill="#ebcd5f" stroke="#141219" stroke-width="1.4"/><circle cx="45" cy="31" r="8.5" fill="#f4d0ab"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#7a6648" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#483828" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#483828" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#483828" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#483828" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Miner<b>asteroid crews</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="civilian: slate blue clothes"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#606e78" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#3c4248" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#3c4248" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#3c4248" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#3c4248" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Civilian<b>just passing through</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="researcher: pale grey coat"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L57,100 C57,102 56,103 54,103 L36,103 C34,103 33,102 33,100 Z" fill="#808c98" stroke="#141219" stroke-width="1.4"/><rect x="37" y="103" width="7" height="16" rx="1.5" fill="#5c626c" stroke="#141219" stroke-width="1.2"/><rect x="46" y="103" width="7" height="16" rx="1.5" fill="#5c626c" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#5c626c" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#5c626c" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Researcher<b>labs</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="smuggler: dark green-grey clothes"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#2e3431" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#1e211f" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#1e211f" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#1e211f" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#1e211f" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Smuggler<b>back rooms</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="station official: blue-grey uniform"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#363c4e" stroke="#141219" stroke-width="1.4"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#222630" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#222630" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#222630" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#222630" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Station Official<b>front desk</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="deck chief: orange hard hat, blue-grey suit, orange shoulder"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="30" r="13" fill="#f2962a" stroke="#141219" stroke-width="1.4"/><circle cx="45" cy="31" r="8.5" fill="#f4d0ab"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#404854" stroke="#141219" stroke-width="1.4"/><circle cx="31" cy="52" r="4" fill="#f2962a" stroke="#141219" stroke-width="1.1"/><circle cx="59" cy="52" r="4" fill="#f2962a" stroke="#141219" stroke-width="1.1"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#262a32" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#262a32" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#262a32" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#262a32" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Deck Chief<b>dock supervisor</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="surgeon: pale mint, white coat, red badge"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="30" r="13" fill="#d2ece6" stroke="#141219" stroke-width="1.4"/><circle cx="45" cy="31" r="8.5" fill="#f4d0ab"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L57,100 C57,102 56,103 54,103 L36,103 C34,103 33,102 33,100 Z" fill="#e6eaea" stroke="#141219" stroke-width="1.4"/><path d="M36,44 L54,44 L52,52 L38,52 Z" fill="#8cc8be"/><path d="M43,58 h4 v4 h4 v4 h-4 v4 h-4 v-4 h-4 v-4 h4 Z" fill="#e15a5a" stroke="#141219" stroke-width="0.6"/><rect x="37" y="103" width="7" height="16" rx="1.5" fill="#b0bcbc" stroke="#141219" stroke-width="1.2"/><rect x="46" y="103" width="7" height="16" rx="1.5" fill="#b0bcbc" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#b0bcbc" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#b0bcbc" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Surgeon<b>infirmary lead</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="guild trader: olive suit, tan sash"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><circle cx="45" cy="32" r="11" fill="#f4d0ab" stroke="#141219" stroke-width="1.4"/><circle cx="41" cy="33" r="1.2" fill="#281e1e"/><circle cx="49" cy="33" r="1.2" fill="#281e1e"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#6c603e" stroke="#141219" stroke-width="1.4"/><path d="M32,45 L43,98 L49,98 L38,45 Z" fill="#b4965a" stroke="#141219" stroke-width="0.7"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#463826" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#463826" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Guild Trader<b>Frontier Traders Guild</b></figcaption>
+      </figure>
+      <figure>
+        <svg viewBox="0 0 90 130" aria-label="ranger: silver helmet, deep green suit, backpack"><ellipse cx="45" cy="122" rx="20" ry="4" fill="url(#floorglow)"/><rect x="32" y="42" width="26" height="52" rx="2" fill="#303e3a" stroke="#141219" stroke-width="1.3"/><circle cx="45" cy="30" r="13" fill="#ced2dc" stroke="#141219" stroke-width="1.4"/><circle cx="45" cy="31" r="8.5" fill="#f4d0ab"/><path d="M30,52 C30,44 37,40 45,40 C53,40 60,44 60,52 L56,96 C56,98 55,99 53,99 L37,99 C35,99 34,98 34,96 Z" fill="#3a4a46" stroke="#141219" stroke-width="1.4"/><rect x="34" y="90" width="22" height="5" fill="#283230"/><rect x="37" y="99" width="7" height="20" rx="1.5" fill="#283230" stroke="#141219" stroke-width="1.2"/><rect x="46" y="99" width="7" height="20" rx="1.5" fill="#283230" stroke="#141219" stroke-width="1.2"/><rect x="33" y="117" width="12" height="8" rx="2" fill="#283230" stroke="#141219" stroke-width="1.2"/><rect x="45" y="117" width="12" height="8" rx="2" fill="#283230" stroke="#141219" stroke-width="1.2"/></svg>
+        <figcaption>Ranger<b>wilderness / moons</b></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============================ HARDWARE ============================ -->
+  <section class="chapter" id="hardware">
+    <p class="chapter-kicker">Chapter 05 — Standard Issue hardware</p>
+    <h2>Not grown, not scavenged — <em>issued</em></h2>
+    <p class="lead">
+      The command tier implies a third party: a civil authority that runs the
+      neutral stations, licenses the ships, and stencils a registration number on
+      everything. Where the Vherathi <b>grow</b> their hardware and the Drossholt
+      <b>bolt</b> theirs, this faction <b>issues</b> it — factory-painted,
+      colour-coded, built from interchangeable modules to one spec. This chapter
+      gives that look ships, a station, buildings, props, and an interior, so
+      "Standard Issue" is a design language and not just a rack of grey suits.
+    </p>
+
+    <div class="identity">
+      <div>
+        <div class="swatches">
+          <div class="sw"><i style="background:#41506a"></i><span><b>hull / wall</b>#41506A</span></div>
+          <div class="sw"><i style="background:#5a6b82"></i><span><b>panel</b>#5A6B82</span></div>
+          <div class="sw"><i style="background:#cfe0f0"></i><span><b>glass</b>#CFE0F0</span></div>
+          <div class="sw"><i style="background:#dfe6ee"></i><span><b>livery stripe</b>#DFE6EE</span></div>
+          <div class="sw"><i style="background:#f2b23a"></i><span><b>hazard</b>#F2B23A</span></div>
+          <div class="sw"><i style="background:#2a3444"></i><span><b>shadow</b>#2A3444</span></div>
+        </div>
+      </div>
+      <ol class="directives">
+        <li><b>Prefab modules.</b> A hull is a spine of identical bays; a station is identical rings on a spine; a building is identical floors stacked. Interchangeable, replaceable, numbered.</li>
+        <li><b>One corner radius.</b> Rounded rectangles everywhere — machined and finished. Not the Vherathi organic curve, not the Drossholt raw right angle; a consistent small fillet on every corner.</li>
+        <li><b>Painted livery.</b> Body colour + a contrast stripe along the centreline + amber hazard chevrons at every thruster, hatch and edge. A stencilled registration (<code class="f">SF-###</code>) on the hull.</li>
+        <li><b>Clean symmetry.</b> Mirrored and evenly spaced like Drossholt, but flush — no visible patch plates, no mismatched shades, windows in a regular grid.</li>
+        <li><b>Interiors: spine and bays.</b> A straight central concourse with identical rooms budding off both sides at regular intervals; every doorway marked with a painted safety line and hazard chevrons.</li>
+      </ol>
+    </div>
+
+    <!-- ---- ships ---- -->
+    <p class="subhead">05·A — Ships</p>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Top-down Issue Shuttle: a rounded-rectangle hull with a white centreline stripe, one window row, a single centred thruster with an amber hazard chevron, and a stencilled registration.">
+          <rect width="200" height="200" fill="url(#grid)"/>
+          <rect x="78" y="34" width="44" height="120" rx="14" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <rect x="97" y="40" width="6" height="108" fill="#dfe6ee"/>
+          <g fill="#cfe0f0"><rect x="84" y="54" width="7" height="7" rx="1"/><rect x="109" y="54" width="7" height="7" rx="1"/></g>
+          <path d="M92,158 l8,10 l8,-10 Z" fill="#f2b23a"/>
+          <rect x="93" y="154" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <text x="100" y="120" fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7" text-anchor="middle">SF-04</text>
+        </svg>
+        <span class="vlabel">issue shuttle · top</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Shuttle</h3>
+        <p class="role">civil pattern for "shuttle"</p>
+        <p>
+          The rental-lot starter as a licensed vehicle: a plain <b>rounded box</b>,
+          one white <b>centreline stripe</b>, a mirrored window pair, one thruster
+          with an amber <b>chevron</b> painted over the exhaust, and <code class="f">SF-04</code>
+          stencilled on the flank. Nothing on it that isn't regulation.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded_rectangle</dd>
+          <dt>livery</dt><dd>centreline stripe + 1 chevron</dd>
+          <dt>windows</dt><dd>2, mirrored</dd>
+          <dd class="full">graphics.json ships: a neutral <code class="f">culture</code> ("standard_issue") + rounded local_points; stripe/chevron/registration as decoration geometry.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Top-down Issue Lighter: a long rounded hull built from three identical flush cargo modules with painted seams, a regular window grid, and a mirrored pair of thrusters each with a hazard chevron.">
+          <rect width="200" height="200" fill="url(#grid)"/>
+          <rect x="72" y="22" width="56" height="150" rx="14" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <g stroke="#2a3444" stroke-width="2"><line x1="72" y1="72" x2="128" y2="72"/><line x1="72" y1="122" x2="128" y2="122"/></g>
+          <rect x="97" y="26" width="6" height="142" fill="#dfe6ee"/>
+          <g fill="#cfe0f0"><rect x="80" y="40" width="6" height="6"/><rect x="114" y="40" width="6" height="6"/><rect x="80" y="90" width="6" height="6"/><rect x="114" y="90" width="6" height="6"/><rect x="80" y="140" width="6" height="6"/><rect x="114" y="140" width="6" height="6"/></g>
+          <path d="M78,176 l7,9 l7,-9 Z" fill="#f2b23a"/><path d="M108,176 l7,9 l7,-9 Z" fill="#f2b23a"/>
+          <rect x="78" y="172" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <rect x="108" y="172" width="14" height="20" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <text x="100" y="150" fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7" text-anchor="middle">SF-217</text>
+        </svg>
+        <span class="vlabel">issue lighter · top</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Lighter</h3>
+        <p class="role">civil pattern for "freighter"</p>
+        <p>
+          <b>Three identical cargo modules</b> on one spine — the seams are
+          painted, not welded, and every module is the same part. Window grid,
+          twin thrusters, twin chevrons, registration amidships. The Drossholt
+          Hauler patched from scrap; this one came off a line.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded long_rectangle</dd>
+          <dt>modules</dt><dd>3 identical, flush seams</dd>
+          <dt>windows</dt><dd>6, even grid</dd>
+          <dd class="full">graphics.json ships: long rounded hull; the 2 painted seams + window grid + 2 chevrons are decoration geometry, not structure.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> · <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Top-down Issue Cutter: a compact rounded hull with a chamfered bow, an amber-and-white customs stripe, a roof light bar, a bow weapon nub, and a mirrored pair of thrusters.">
+          <rect width="200" height="200" fill="url(#grid)"/>
+          <path d="M84,36 L116,36 L124,52 L124,150 Q124,158 116,158 L84,158 Q76,158 76,150 L76,52 Z" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <rect x="76" y="88" width="48" height="10" fill="#f2b23a"/>
+          <rect x="76" y="98" width="48" height="6" fill="#dfe6ee"/>
+          <rect x="92" y="26" width="16" height="10" rx="2" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <circle cx="100" cy="20" r="3" fill="#e15a5a"/>
+          <g fill="#cfe0f0"><rect x="82" y="56" width="7" height="7" rx="1"/><rect x="111" y="56" width="7" height="7" rx="1"/></g>
+          <path d="M82,158 l6,8 l6,-8 Z" fill="#f2b23a"/><path d="M106,158 l6,8 l6,-8 Z" fill="#f2b23a"/>
+          <rect x="82" y="154" width="12" height="18" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <rect x="106" y="154" width="12" height="18" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <text x="100" y="132" fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7" text-anchor="middle">SF-88</text>
+        </svg>
+        <span class="vlabel">issue cutter · top</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Cutter</h3>
+        <p class="role">civil pattern for "patrol" — customs / port authority</p>
+        <p>
+          The enforcement hull, painted to be recognised at a distance: a
+          full-width <b>amber-and-white band</b> across the beam, a roof
+          <b>light bar</b> with a red beacon, a small bow weapon mount. Chamfered
+          bow, twin thrusters, twin chevrons. Reads "pull over" without a word.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded rect, chamfered bow</dd>
+          <dt>livery</dt><dd>full-beam hazard band + light bar</dd>
+          <dt>weapon</dt><dd>1, bow-centred</dd>
+          <dd class="full">graphics.json ships + ship_types.json (patrol stats). The band + bar + beacon are decoration; the weapon is a real slot.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Top-down Issue Tender: a short boxy rounded hull with a docking-collar ring on the bow, a hazard-striped work deck, and a mirrored set of four thrusters with chevrons.">
+          <rect width="200" height="200" fill="url(#grid)"/>
+          <rect x="70" y="60" width="60" height="94" rx="14" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <circle cx="100" cy="52" r="16" fill="none" stroke="#5a6b82" stroke-width="6"/>
+          <circle cx="100" cy="52" r="16" fill="none" stroke="#2a3444" stroke-width="1.5"/>
+          <g fill="#f2b23a"><rect x="74" y="96" width="52" height="5"/><rect x="74" y="112" width="52" height="5"/></g>
+          <path d="M74,64 h52 v-4 h-52 Z M74,150 h52 v4 h-52 Z" fill="#f2b23a" opacity="0.9"/>
+          <rect x="97" y="66" width="6" height="84" fill="#dfe6ee"/>
+          <g fill="#f2b23a"><path d="M74,156 l5,7 l5,-7 Z"/><path d="M90,156 l5,7 l5,-7 Z"/><path d="M104,156 l5,7 l5,-7 Z"/><path d="M120,156 l5,7 l5,-7 Z"/></g>
+          <g fill="#5a6b82" stroke="#2a3444" stroke-width="2"><rect x="72" y="152" width="11" height="16" rx="2"/><rect x="88" y="152" width="11" height="16" rx="2"/><rect x="102" y="152" width="11" height="16" rx="2"/><rect x="118" y="152" width="11" height="16" rx="2"/></g>
+        </svg>
+        <span class="vlabel">issue tender · top</span>
+        <span class="isnew" style="background:var(--si-hazard);color:#241a06">Shipped</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Tender</h3>
+        <p class="role">station service — refuel · repair · crew shuttle</p>
+        <p>
+          The civil fleet's utility craft: a stubby box with a <b>docking-collar
+          ring</b> on the bow to mate any hull, a hazard-striped <b>work deck</b>,
+          and <b>four thrusters</b> for close-quarters station-keeping. The
+          neutral answer to the Chorus Tender and the Sledge Tug — same job,
+          issued instead of grown or improvised.
+        </p>
+        <dl class="spec">
+          <dt>max_thrust / velocity</dt><dd>0.12 / 1.8</dd>
+          <dt>rotation_speed</dt><dd>3 (4 thrusters)</dd>
+          <dt>size / cargo</dt><dd>18 / 25</dd>
+          <dt>slots</dt><dd>engine ×1 · utility ×2</dd>
+          <dd class="full">New in ship_types.json + graphics.json ("standard_issue" culture). Role niche: the ship that comes to you at a station.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> · <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <!-- ---- station ---- -->
+    <p class="subhead">05·B — Station</p>
+
+    <article class="plate">
+      <div class="viewport">
+        <svg viewBox="0 0 240 200" role="img" aria-label="Top-down Standard Ring station: a straight spine with three identical toroidal ring modules stacked along it, a hazard-chevron band on each ring, a regular window grid, and docking collars at both spine ends.">
+          <rect width="240" height="200" fill="url(#grid)"/>
+          <rect x="112" y="18" width="16" height="164" rx="4" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <g>
+            <circle cx="120" cy="58" r="30" fill="none" stroke="#41506a" stroke-width="12"/>
+            <circle cx="120" cy="100" r="30" fill="none" stroke="#41506a" stroke-width="12"/>
+            <circle cx="120" cy="142" r="30" fill="none" stroke="#41506a" stroke-width="12"/>
+          </g>
+          <g fill="none" stroke="#2a3444" stroke-width="1.5">
+            <circle cx="120" cy="58" r="36"/><circle cx="120" cy="58" r="24"/>
+            <circle cx="120" cy="100" r="36"/><circle cx="120" cy="100" r="24"/>
+            <circle cx="120" cy="142" r="36"/><circle cx="120" cy="142" r="24"/>
+          </g>
+          <g fill="#f2b23a">
+            <path d="M150,54 l6,4 l-6,4 Z"/><path d="M90,54 l-6,4 l6,4 Z"/>
+            <path d="M150,96 l6,4 l-6,4 Z"/><path d="M90,96 l-6,4 l6,4 Z"/>
+            <path d="M150,138 l6,4 l-6,4 Z"/><path d="M90,138 l-6,4 l6,4 Z"/>
+          </g>
+          <g fill="#cfe0f0">
+            <rect x="118" y="26" width="4" height="4"/><rect x="118" y="66" width="4" height="4"/><rect x="118" y="108" width="4" height="4"/><rect x="118" y="150" width="4" height="4"/>
+          </g>
+          <rect x="108" y="12" width="24" height="8" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <rect x="108" y="180" width="24" height="8" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+        </svg>
+        <span class="vlabel">standard ring · top</span>
+        <span class="isnew" style="background:var(--si-hazard);color:#241a06">Shipped</span>
+      </div>
+      <div class="plate-body">
+        <h3>Standard Ring</h3>
+        <p class="role">civil-authority station</p>
+        <p>
+          <b>Three identical ring modules</b> on a common spine, each a rotating
+          torus with a hazard-chevron band and a window grid, docking collars
+          capping both ends. Grow a Vherathi station and it's asymmetric; bolt a
+          Drossholt one and it's a patched octagon; <b>this one you add a ring at
+          a time</b>, and every ring is the same part number.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>spine + N ring modules</dd>
+          <dt>size / rotation</dt><dd>38 / 0.6</dd>
+          <dt>landing_distance</dt><dd>48</dd>
+          <dt>colour</dt><dd>from culture ("standard_issue")</dd>
+          <dd class="full">graphics.json space_stations. Needs the same <code class="f">_draw_station</code> upgrade as the R&amp;R stations — reads <code class="f">culture</code> + a repeated-module list.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> · <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </article>
+
+    <!-- ---- buildings ---- -->
+    <p class="subhead">05·C — Buildings</p>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 210" role="img" aria-label="Elevation of an Issue Block: a tower of four identical floor modules with rounded corners, a regular window grid, a livery stripe up one edge, and a hazard-chevron band at the base.">
+          <rect width="200" height="210" fill="url(#grid)"/>
+          <ellipse cx="100" cy="192" rx="60" ry="8" fill="url(#floorglow)"/>
+          <g>
+            <rect x="66" y="150" width="68" height="40" rx="6" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+            <rect x="66" y="108" width="68" height="40" rx="6" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+            <rect x="66" y="66" width="68" height="40" rx="6" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+            <rect x="66" y="24" width="68" height="40" rx="6" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          </g>
+          <rect x="70" y="24" width="6" height="166" fill="#dfe6ee"/>
+          <g fill="#cfe0f0">
+            <rect x="88" y="34" width="9" height="9"/><rect x="106" y="34" width="9" height="9"/><rect x="122" y="34" width="8" height="9"/>
+            <rect x="88" y="76" width="9" height="9"/><rect x="106" y="76" width="9" height="9"/><rect x="122" y="76" width="8" height="9"/>
+            <rect x="88" y="118" width="9" height="9"/><rect x="106" y="118" width="9" height="9"/><rect x="122" y="118" width="8" height="9"/>
+            <rect x="88" y="160" width="9" height="9"/><rect x="106" y="160" width="9" height="9"/><rect x="122" y="160" width="8" height="9"/>
+          </g>
+          <g fill="#f2b23a"><path d="M66,188 l0,-6 l6,3 Z"/><path d="M78,188 l0,-6 l6,3 Z"/><path d="M90,188 l0,-6 l6,3 Z"/><path d="M102,188 l0,-6 l6,3 Z"/><path d="M114,188 l0,-6 l6,3 Z"/><path d="M126,188 l0,-6 l6,3 Z"/></g>
+        </svg>
+        <span class="vlabel">issue block · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Block</h3>
+        <p class="role">residential / admin — civil pattern for a tower</p>
+        <p>
+          Four <b>identical floor modules</b> stacked, rounded corners, a window
+          grid that repeats exactly per floor, a white livery stripe up the front
+          edge, and a hazard-chevron kick at the base. Add a floor by adding a
+          module. The neutral counterpart to the Vherathi Spire.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>N stacked rounded rects</dd>
+          <dt>windows</dt><dd>3 per floor, identical grid</dd>
+          <dt>footprint</dt><dd>~90 × 80</dd>
+          <dd class="full">building_types.json, culture "standard_issue". The stripe + base chevrons are window/decoration geometry on the entry.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> · <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 210" role="img" aria-label="Elevation of an Issue Shed: a wide low hall with rounded corners, a shallow curved roof, a big rounded roll-door with an amber frame, and a clerestory window band.">
+          <rect width="200" height="210" fill="url(#grid)"/>
+          <ellipse cx="100" cy="184" rx="86" ry="8" fill="url(#floorglow)"/>
+          <path d="M22,176 L22,92 Q22,72 100,72 Q178,72 178,92 L178,176 Z" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <path d="M22,92 Q100,64 178,92" fill="none" stroke="#5a6b82" stroke-width="6"/>
+          <rect x="72" y="112" width="56" height="64" rx="8" fill="#5a6b82" stroke="#2a3444" stroke-width="2.5"/>
+          <rect x="70" y="110" width="60" height="8" rx="3" fill="#f2b23a"/>
+          <g stroke="#2a3444" stroke-width="1.5"><line x1="72" y1="130" x2="128" y2="130"/><line x1="72" y1="148" x2="128" y2="148"/></g>
+          <g fill="#cfe0f0"><rect x="36" y="98" width="9" height="7"/><rect x="54" y="98" width="9" height="7"/><rect x="137" y="98" width="9" height="7"/><rect x="155" y="98" width="9" height="7"/></g>
+          <rect x="26" y="90" width="6" height="86" fill="#dfe6ee"/>
+        </svg>
+        <span class="vlabel">issue shed · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Shed</h3>
+        <p class="role">hangar / warehouse — civil pattern for a wide hall</p>
+        <p>
+          A wide low module with a shallow <b>curved roof rib</b>, rounded
+          corners, a big rounded <b>roll-door</b> under an amber frame, and a
+          clerestory window band either side. The neutral counterpart to the
+          Drossholt Warehouse — same job, finished instead of welded.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded rect + roof arc</dd>
+          <dt>door</dt><dd>central roll-up, amber frame</dd>
+          <dt>windows</dt><dd>4, clerestory</dd>
+          <dt>footprint</dt><dd>~150 × 90</dd>
+          <dd class="full">building_types.json, culture "standard_issue".</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </div>
+
+    <!-- ---- decorations ---- -->
+    <p class="subhead">05·D — Decorations &amp; furniture</p>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 210" role="img" aria-label="Elevation of an Issue Bollard: a short rounded post with an amber cap light and a reflective band, on a flat base.">
+          <rect width="200" height="210" fill="url(#grid)"/>
+          <ellipse cx="100" cy="176" rx="26" ry="6" fill="url(#floorglow)"/>
+          <rect x="88" y="168" width="24" height="8" rx="2" fill="#2a3444"/>
+          <rect x="92" y="86" width="16" height="84" rx="7" fill="#41506a" stroke="#2a3444" stroke-width="2"/>
+          <rect x="92" y="120" width="16" height="7" fill="#dfe6ee"/>
+          <path d="M90,86 q10,-14 20,0 Z" fill="#f2b23a"/>
+          <circle cx="100" cy="80" r="6" fill="#ffd98a"/>
+        </svg>
+        <span class="vlabel">issue bollard · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Bollard</h3>
+        <p class="role">lighting / marker — civil pattern</p>
+        <p>
+          A short rounded post with an <b>amber cap light</b>, one reflective
+          band, bolted to a flat base plate. Placed at doorways and the edges of
+          keep-clear zones. The neutral counterpart to the Vherathi Light Column
+          and the Drossholt Work Light.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded post + cap</dd>
+          <dt>light</dt><dd>1, amber, at the crown</dd>
+          <dt>footprint</dt><dd>24 × 24 (tiny)</dd>
+          <dd class="full">building_types.json furniture, culture "standard_issue".</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> · <b>3</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 210" role="img" aria-label="Elevation of an Issue Bench: a single moulded rounded seat on two legs, painted hull-blue with a white edge.">
+          <rect width="200" height="210" fill="url(#grid)"/>
+          <ellipse cx="100" cy="168" rx="44" ry="7" fill="url(#floorglow)"/>
+          <path d="M52,132 Q52,118 66,118 L134,118 Q148,118 148,132 L148,140 L52,140 Z" fill="#41506a" stroke="#2a3444" stroke-width="2.5"/>
+          <rect x="52" y="118" width="96" height="5" fill="#dfe6ee"/>
+          <rect x="62" y="140" width="10" height="26" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+          <rect x="128" y="140" width="10" height="26" rx="3" fill="#5a6b82" stroke="#2a3444" stroke-width="2"/>
+        </svg>
+        <span class="vlabel">issue bench · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Issue Bench</h3>
+        <p class="role">seating — civil pattern</p>
+        <p>
+          One <b>moulded seat shell</b> with a consistent fillet, a white edge
+          line, on two standard legs. Identical wherever it appears. The neutral
+          counterpart to the Vherathi Resin Bench and the Drossholt Plate Bench.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>rounded shell + 2 legs</dd>
+          <dt>footprint</dt><dd>~110 × 26 (low)</dd>
+          <dd class="full">building_types.json furniture, culture "standard_issue".</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> · <b>3</b></span></div>
+      </div>
+    </div>
+
+    <div class="plate">
+      <div class="viewport fig">
+        <svg viewBox="0 0 200 160" role="img" aria-label="A floor decal of alternating amber and dark hazard chevrons marking a keep-clear threshold.">
+          <rect width="200" height="160" fill="url(#grid)"/>
+          <rect x="30" y="50" width="140" height="60" rx="4" fill="#2a3444"/>
+          <g fill="#f2b23a">
+            <path d="M40,50 l18,30 l-18,30 l-10,0 l18,-30 l-18,-30 Z"/>
+            <path d="M70,50 l18,30 l-18,30 l-10,0 l18,-30 l-18,-30 Z"/>
+            <path d="M100,50 l18,30 l-18,30 l-10,0 l18,-30 l-18,-30 Z"/>
+            <path d="M130,50 l18,30 l-18,30 l-10,0 l18,-30 l-18,-30 Z"/>
+          </g>
+        </svg>
+        <span class="vlabel">hazard chevron · floor decal</span>
+      </div>
+      <div class="plate-body">
+        <h3>Hazard Chevron decal</h3>
+        <p class="role">threshold marker — the SI edge accent</p>
+        <p>
+          Standard Issue doesn't trace room rims like <code class="f">edge_veins</code>
+          or stud them like <code class="f">seam_rivets</code> — it paints
+          <b>chevron thresholds</b> at doorways and keep-clear zones. A placed
+          <code class="f">decoration</code>, not a generator: amber chevrons on a
+          dark ground, applied at each opening in the spine.
+        </p>
+        <dl class="spec">
+          <dt>type</dt><dd>decoration, layer "floor"</dd>
+          <dt>where</dt><dd>every doorway + hazard zone</dd>
+          <dt>colour</dt><dd>#F2B23A on #2A3444</dd>
+          <dd class="full">Per-interior in the system JSON. If it's wanted everywhere, a "chevron_thresholds" <code class="f">interior_decoration</code> generator could place them at each room-overlap seam.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>3</b> · <b>5</b></span></div>
+      </div>
+    </div>
+
+    <!-- ---- interior ---- -->
+    <p class="subhead">05·E — Interior: spine and bays</p>
+
+    <article class="plate plan">
+      <div class="viewport plan">
+        <svg viewBox="0 0 320 200" role="img" aria-label="Top-down floor plan of a Standard Issue station interior: a straight central concourse rectangle with identical rounded-rect rooms budding off both sides at regular intervals — dock, offices, quarters, medical — a painted safety line down the spine, hazard chevrons at every doorway, and the ship portal at one end.">
+          <rect width="320" height="200" fill="url(#grid)"/>
+          <rect x="40" y="82" width="240" height="36" rx="6" fill="#4a5c76"/>
+          <g fill="#4a5c76">
+            <rect x="70" y="30" width="52" height="54" rx="8"/>
+            <rect x="134" y="30" width="52" height="54" rx="8"/>
+            <rect x="198" y="30" width="52" height="54" rx="8"/>
+            <rect x="70" y="116" width="52" height="54" rx="8"/>
+            <rect x="134" y="116" width="52" height="54" rx="8"/>
+            <rect x="198" y="116" width="52" height="54" rx="8"/>
+          </g>
+          <line x1="44" y1="100" x2="276" y2="100" stroke="#f2b23a" stroke-width="2"/>
+          <g fill="#f2b23a">
+            <path d="M92,80 l0,-6 l5,3 Z"/><path d="M156,80 l0,-6 l5,3 Z"/><path d="M220,80 l0,-6 l5,3 Z"/>
+            <path d="M92,120 l0,6 l5,-3 Z"/><path d="M156,120 l0,6 l5,-3 Z"/><path d="M220,120 l0,6 l5,-3 Z"/>
+          </g>
+          <circle cx="292" cy="100" r="4.5" fill="#8fb9c8"/>
+          <path d="M300,100 l14,0 M310,96 l4,4 l-4,4" stroke="#8fb9c8" stroke-width="1.4" fill="none"/>
+          <g fill="#c7d0de" font-family="IBM Plex Mono, monospace" font-size="6" letter-spacing="0.3">
+            <text x="96" y="60" text-anchor="middle">DOCK</text>
+            <text x="160" y="60" text-anchor="middle">OFFICES</text>
+            <text x="224" y="60" text-anchor="middle">MED</text>
+            <text x="96" y="148" text-anchor="middle">QUARTERS</text>
+            <text x="160" y="148" text-anchor="middle">STORES</text>
+            <text x="224" y="148" text-anchor="middle">QUARTERS</text>
+            <text x="160" y="104" text-anchor="middle">CONCOURSE</text>
+          </g>
+        </svg>
+        <span class="vlabel">standard issue station · plan</span>
+      </div>
+      <div class="planbody">
+        <div>
+          <h3>One spine, identical bays</h3>
+          <p style="margin:0 0 12px;font-size:.94rem;color:var(--ink-2)">
+            A single straight <b>concourse</b> runs the length of the module;
+            every service is an <b>identical rounded-rect room</b> budded off it at
+            a regular pitch, alternating sides. You always know where you are —
+            dock at one end, the portal past it; med, offices, quarters, stores
+            in fixed slots. A <b>painted safety line</b> runs the spine and a
+            <b>hazard chevron</b> marks each doorway.
+          </p>
+        </div>
+        <div>
+          <dl class="spec">
+            <dt>concourse</dt><dd>one rounded rect, full length</dd>
+            <dt>rooms</dt><dd>identical rounded rects, fixed pitch, both sides</dd>
+            <dt>doorways</dt><dd>where each room overlaps the spine</dd>
+            <dt>accent</dt><dd>spine safety line + per-doorway chevron decals</dd>
+            <dd class="full">Per-interior in a system JSON. Placement: desk faces the portal, benches flush to the concourse walls, bollards at each doorway, everything on the grid.</dd>
+          </dl>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================ WIRING ============================ -->
+  <section class="wiring" id="wiring">
+    <h2>What landed, and what's left</h2>
+    <div class="wiring-grid">
+      <section>
+        <h4>The body shape — done</h4>
+        <p><code class="f">game/world/person.py</code>: the foot-oval draw is now two legs + two boots, <code class="f">BODY_HEIGHT</code> 13→11, new leg/boot constants, and the outline pass extended. <code class="f">LocationScreen.LABEL_HEIGHT_ABOVE</code> 38→42.</p>
+      </section>
+      <section>
+        <h4>The walk cycle — done</h4>
+        <p><code class="f">step_toward</code> → <code class="f">_advance_walk</code> advances <code class="f">walk_phase</code> by distance walked and ramps <code class="f">walk_intensity</code>; <code class="f">draw()</code> eases it out on idle frames. 5 tests in <code class="f">TestPersonWalkCycle</code>.</p>
+      </section>
+      <section>
+        <h4>leg_color key — done</h4>
+        <p>New optional outfit key, one <code class="f">.get("leg_color", _shade(suit,-22))</code> in <code class="f">draw()</code> — same pattern as every other accessory key. No existing outfit sets it yet.</p>
+      </section>
+      <section>
+        <h4>Outfit colour adds — shipped</h4>
+        <p><code class="f">graphics.json</code> → <code class="f">outfits</code>: the suggested one-key adds all landed — dockworker <code class="f">chest_plate</code> (hi-vis band), medic <code class="f">badge</code> (cross), mechanic <code class="f">belt</code>. The full outfit <em>redraws</em> stay mockups (they need a parts-style figure renderer first).</p>
+      </section>
+      <section>
+        <h4>Standard Issue hardware — shipped</h4>
+        <p>The <code class="f">standard_issue</code> culture (Sol Federation) is in <code class="f">cultures.json</code>; <code class="f">issue_shuttle/lighter/cutter/tender</code>, <code class="f">station_ring</code>, and <code class="f">issue_block/shed/bollard/bench</code> are in the usual files, each with <code class="f">parts</code> extracted from its plate here. The <b>Procyon Gate</b> system (Procyon Ring station + Garrison Row moon, story <code class="f">1.10.0</code>) places all of it in a live system — the culture-neutral kit and the Sol Federation now exist in game.</p>
+      </section>
+    </div>
+
+    <div class="risk">
+      <b>It was a shape change, not a config edit.</b> The single
+      <code class="f">Person</code> body is shared by the player, every station
+      and moon NPC, and every AI ship's pilot — so this one change redrew
+      <em>everyone</em> at once, in every interior. No save impact: outfits and
+      NPCs are rebuilt fresh from story config on every load, never stored — so
+      an old save just loads its people on the new legs.
+    </div>
+
+    <p class="lead" style="margin-top:30px">
+      Companion atlas: <b>Resin &amp; Rivets</b> covers the two cultures'
+      ships, stations, buildings and their <em>culture-specific</em> outfits
+      (Vherathi hardsuits, Drossholt vacsuits, honour guards). Same body model —
+      so the legs land there too.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">Standard Issue · shared body &amp; neutral kit · body + hardware shipped (1.10.0) · default story</div>
+</footer>

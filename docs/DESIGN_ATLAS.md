@@ -7,19 +7,38 @@ can look at a whole set at once and decide what to build. It is a **design
 tool, not a spec**: nothing in an atlas is wired into the game until someone
 does it deliberately, and every plate says so.
 
-Atlases live outside the repo (they're Artifacts, not committed files). This doc
-is the committed part: how to make one, how to keep it honest, and which ones
-currently exist.
+Each atlas's HTML **source is committed** under [`docs/atlases/`](atlases/); the
+published Claude Artifact is a *render* of that file, at a stable URL. This doc
+is the how: how to make one, how to keep it honest, and which ones exist.
 
 ## Current atlases
 
-| Atlas | Scope | URL |
+| Atlas | Source | Published URL |
 |---|---|---|
-| **Resin & Rivets** | The two default-story cultures — Vherathi Concord & Drossholt Company: ships, stations, outfits, buildings, decorations, and interiors (floor-plan model + moon-city plans). **Mostly shipped** as of story `1.9.0` — new ships/outfits/buildings in `config/`, both station interiors and moon cities rebuilt to the model. | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**), the culture-neutral outfits, and the **"Standard Issue" third design language** (Sol Federation, civil-authority). The `standard_issue` culture + its ships/station/buildings shipped in `1.9.0`, and the **Procyon Gate** system makes it live; the outfit redraws stay mockups. | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Resin & Rivets** | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
+| **Standard Issue** | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
-Keep this table current. When an atlas is published or its URL changes, edit the
-row.
+- **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
+  Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
+  shipped** as of story `1.10.0` — every ship/station/building/outfit plate is in
+  `config/`, both station interiors and both moon cities rebuilt to the floor-plan
+  model, and the specimen SVGs were extracted into each entry's `parts` list.
+- **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
+  **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
+  look. The `standard_issue` culture, its ships/station/buildings, and the
+  **Procyon Gate** system that makes it live all shipped in `1.10.0`. The
+  culture-neutral **outfit redraws** (Chapters 02–04) stay mockups — the `Person`
+  renderer is colour-key driven, so they need a parts-style figure renderer first.
+
+### Updating a published atlas
+
+1. Edit the file in `docs/atlases/`.
+2. Re-publish it to its **existing** URL — `Artifact` with `url:` set to the row
+   above (from any conversation), or just re-publish the same file path in the
+   conversation that last published it. Publishing *without* the URL creates a
+   separate artifact and orphans the link.
+3. Commit the HTML change, and update this table / the notes above if scope or
+   URL moved.
 
 ## When to make one
 
@@ -127,8 +146,10 @@ fill, drawn) and a copy in `local_points` (collision only), and lifts that
 polygon's `stroke` to the entry's `outline_color`. Every filled sub-shape
 keeps its own `stroke` as a per-part `outline`, so the plate's coloured
 edges survive into the game rather than collapsing to one black stroke.
-Scratchpad tooling: `extract_atlas.py` (one plate → parts JSON) and
-`apply_parts.py` (the asset→plate table + targeted JSON injection).
+Tooling lives beside the atlas HTML: [`docs/atlases/extract_atlas.py`](atlases/extract_atlas.py)
+(one plate → parts JSON) and [`docs/atlases/apply_parts.py`](atlases/apply_parts.py)
+(the asset→plate table + targeted JSON injection; run from repo root, it's
+idempotent). Add a row to `apply_parts.py`'s `T` table for a new asset.
 
 ## Maintaining an atlas
 
@@ -139,11 +160,12 @@ Scratchpad tooling: `extract_atlas.py` (one plate → parts JSON) and
   `config/` or code, either mark that plate done or drop it — an atlas full of
   already-shipped work stops being a design tool. Mention the atlas in the
   commit (`atlas:` prefix) so the next agent knows to reconcile it.
-- **Republish, don't re-create.** Update the existing Artifact (same URL) so the
-  link in the table above keeps working. Only make a new URL for a genuinely
-  new subject.
+- **Edit the source, then republish.** The HTML in `docs/atlases/` is the master;
+  update it and re-publish to the **same URL** (see "Updating a published atlas"
+  above) so the table's link keeps working. Only mint a new URL for a genuinely
+  new subject. Commit the HTML change with the `atlas:` prefix.
 - **Keep the table.** The "Current atlases" table here is the index; a new atlas
-  isn't done until its row exists.
+  isn't done until its row (source path + URL) exists.
 
 See also: [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) for in-engine drawing
 conventions, and the per-culture `theme` strings in

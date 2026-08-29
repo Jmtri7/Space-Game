@@ -114,14 +114,17 @@ by accident.
 ## For Agents: Design Atlases
 
 **Visual mockups of asset families (ships, outfits, buildings, stations, the
-character model) live as published Artifacts, not committed files.** Before
-creating or editing one, read [docs/DESIGN_ATLAS.md](docs/DESIGN_ATLAS.md) — it
-has the current list (with URLs), the plate/rubric structure, the specimen-SVG
-conventions, and a set of hard technical rules (no SVG blur filters, no infinite
-animations, no scroll-gated visibility, no `background-attachment: fixed`) that
-each caused an unrenderable page the first time. Extend the right existing atlas
-rather than starting a new one for the same subject, and keep its spec blocks
-and the doc's atlas table honest when `config/` changes.
+character model) are HTML documents committed under `docs/atlases/`, each
+published to a stable Claude Artifact URL.** Before creating or editing one,
+read [docs/DESIGN_ATLAS.md](docs/DESIGN_ATLAS.md) — it has the current list
+(source paths + URLs), how to re-publish an edit to the same URL, the
+plate/rubric structure, the specimen-SVG conventions, the SVG→`parts` extraction
+tooling (`docs/atlases/*.py`), and a set of hard technical rules (no SVG blur
+filters, no infinite animations, no scroll-gated visibility, no
+`background-attachment: fixed`) that each caused an unrenderable page the first
+time. Extend the right existing atlas rather than starting a new one for the
+same subject, and keep its spec blocks and the doc's atlas table honest when
+`config/` changes.
 
 ## For Agents: Pattern Recognition & Contributions
 
