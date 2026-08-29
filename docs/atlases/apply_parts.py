@@ -35,6 +35,7 @@ T = [
     ("vherathi_seat_pod", RR, "lounge-pod",   122, 103, 0.78, 0, "parts", B),  # polygon (top)
     ("vherathi_concierge_desk", RR, "concierge-desk", 118, 118, 0.88, 0, "parts", B),  # polygon (top)
     ("vherathi_bench",    RR, "resin-bench",    122, 118, 0.75, 0, "parts", B),  # polygon (top)
+    ("drossholt_planter", RR, "scrub-tub",      120, 164, 0.68, 0, "parts", B),  # polygon
     ("drossholt_bench",   RR, "plate-bench",     48,  96, 0.89, 0, "parts", B),  # rect
     ("drossholt_desk",    RR, "trade-counter",   40,  86, 0.90, 0, "parts", B),  # rect
     ("issue_desk",        SI, "issue service counter", 26, 74, 0.70, 0, "parts", B),  # rect
