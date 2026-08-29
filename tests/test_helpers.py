@@ -34,14 +34,17 @@ sys.modules['pygame'] = pygame_mock
 
 import game.utils as utils
 from game.world.ship import Ship
-from game.world.landable import Landable
+from game.world.landing_site import LandingSite
 from game.world.person import Person
 from game.world.possessions import Possessions
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.mission import start_mission, check_mission_progress, mission_status_lines, abandon_mission
 from game.world.follow_player_routine import FollowPlayerRoutine
 from game.ui.report_menu import ReportMenu, mission_report, possessions_report
-from game.ui.ui_theme import side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin
+from game.ui.ui_theme import (
+    side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin,
+    message_alert_state, MESSAGE_ALERT_FRAMES, MESSAGE_ALERT_BLINKS, MESSAGE_ALERT_BLINK_FRAMES,
+)
 from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
@@ -61,7 +64,7 @@ from game.ui.icon_grid import IconGrid
 from game.ui.outfitting_menu import OutfittingMenu, SLOT_COLORS
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
 from game.constants import GAME_WIDTH, GAME_HEIGHT
-from main import build_save_game_state, warn_if_story_version_mismatch
+from main import build_save_game_state, warn_if_story_version_mismatch, _pressed_any
 
 
 class TestHandleScrollingInput(unittest.TestCase):
@@ -294,15 +297,15 @@ class TestCenterTextX(unittest.TestCase):
 
 
 class TestAutopilotPhysics(unittest.TestCase):
-    """Test seek-mode autopilot arrives at a landable with precise position
-    and velocity, using the real Ship/Autopilot/Landable classes and the
+    """Test seek-mode autopilot arrives at a landing_site with precise position
+    and velocity, using the real Ship/Autopilot/LandingSite classes and the
     same engage_seek() + ship.update() flow the game itself drives - not a
     reimplementation of the landing condition, so this can't drift out of
     sync with autopilot.py's actual disengage logic."""
 
     def simulate_autopilot_to_landing(self, ship, target_x, target_y, landing_distance=100, max_frames=2000):
         """Simulate ship autopilot from start to landing using real game physics"""
-        target = Landable(target_x, target_y, graphics={"landing_distance": landing_distance})
+        target = LandingSite(target_x, target_y, graphics={"landing_distance": landing_distance})
         ship.x = 0
         ship.y = 0
         ship.angle = 0
@@ -354,7 +357,7 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
-                        f"Shuttle distance {result['distance']:.1f} - should arrive close to the landable's center")
+                        f"Shuttle distance {result['distance']:.1f} - should arrive close to the landing_site's center")
         self.assertEqual(result['speed'], 0,
                         f"Shuttle velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
@@ -371,7 +374,7 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
-                        f"Freighter distance {result['distance']:.1f} - should arrive close to the landable's center")
+                        f"Freighter distance {result['distance']:.1f} - should arrive close to the landing_site's center")
         self.assertEqual(result['speed'], 0,
                         f"Freighter velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
@@ -388,7 +391,7 @@ class TestAutopilotPhysics(unittest.TestCase):
 
         self.assertTrue(result['landed'], f"Autopilot failed to land (frames: {result['frames']})")
         self.assertLess(result['distance'], 20,
-                        f"Patrol distance {result['distance']:.1f} - should arrive close to the landable's center")
+                        f"Patrol distance {result['distance']:.1f} - should arrive close to the landing_site's center")
         self.assertEqual(result['speed'], 0,
                         f"Patrol velocity {result['speed']:.3f} - should be fully parked (zero velocity)")
         self.assertFalse(result['oscillated'],
@@ -574,16 +577,16 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         self._register_test_role("test_multi_stop_role", ["wilderness", "city", "ship"])
         city_config = {"label": "City", "connected_locations": ["wilderness"], "npcs": []}
         wilderness_config = {"label": "Wilderness", "connected_locations": ["city"], "npcs": []}
-        stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
+        stop = LandingSite(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
 
         interior_cache = {}
-        def get_interior_screen(landable, key):
-            cache_key = (id(landable), key)
+        def get_interior_screen(landing_site, key):
+            cache_key = (id(landing_site), key)
             if cache_key not in interior_cache:
-                config = landable.interiors.get(key)
+                config = landing_site.interiors.get(key)
                 if not config:
                     return None
-                world_width, world_height = landable.interior_world_size
+                world_width, world_height = landing_site.interior_world_size
                 interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
             return interior_cache[cache_key]
 
@@ -625,16 +628,16 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         (person.x/y) well enough for DockRoutine to drive both ends of it."""
         city_config = {"label": "City", "connected_locations": ["wilderness"], "npcs": []}
         wilderness_config = {"label": "Wilderness", "connected_locations": ["city"], "npcs": []}
-        stop = Landable(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
+        stop = LandingSite(0, 0, graphics={}, interiors={"city": city_config, "wilderness": wilderness_config})
 
         interior_cache = {}
-        def get_interior_screen(landable, key):
-            cache_key = (id(landable), key)
+        def get_interior_screen(landing_site, key):
+            cache_key = (id(landing_site), key)
             if cache_key not in interior_cache:
-                config = landable.interiors.get(key)
+                config = landing_site.interiors.get(key)
                 if not config:
                     return None
-                world_width, world_height = landable.interior_world_size
+                world_width, world_height = landing_site.interior_world_size
                 interior_cache[cache_key] = LocationScreen(config_data=config, world_width=world_width, world_height=world_height)
             return interior_cache[cache_key]
 
@@ -664,13 +667,13 @@ class TestDockRoutineExitChoice(unittest.TestCase):
         "ship" isn't directly reachable from the room a freighter lands in
         (only the spaceport offers it), so the routine must hop through
         whichever connected location actually leads to the ship - found by
-        searching the interiors graph (Landable.interior_adjacency /
+        searching the interiors graph (LandingSite.interior_adjacency /
         get_ship_entry_key, resolved via TOWARD_SHIP), not wander into an
         unrelated dead end first."""
         hub_config = {"label": "Hub", "connected_locations": ["dead_end", "spaceport"], "return_to_ship": False, "npcs": []}
         dead_end_config = {"label": "Dead End", "connected_locations": ["hub"], "return_to_ship": False, "npcs": []}
         spaceport_config = {"label": "Spaceport", "connected_locations": ["hub"], "return_to_ship": True, "npcs": []}
-        stop = Landable(0, 0, graphics={}, interiors={
+        stop = LandingSite(0, 0, graphics={}, interiors={
             "hub": hub_config, "dead_end": dead_end_config, "spaceport": spaceport_config,
         })
         routine = DockRoutine(route=[stop])
@@ -688,13 +691,13 @@ class TestDockRoutineExitChoice(unittest.TestCase):
     def test_routes_to_the_ship_room_regardless_of_its_name(self):
         """The room that leads back to the ship isn't necessarily called
         "spaceport" - a different station could name it anything, as long
-        as its own return_to_ship is set (Landable.get_ship_entry_key).
+        as its own return_to_ship is set (LandingSite.get_ship_entry_key).
         Routing has to key off that, not a literal string - this is the
         scenario that would have failed under the old hardcoded
         ROLE_EXIT_PREFERENCE = ["spaceport", "ship"]."""
         hub_config = {"label": "Hub", "connected_locations": ["docking_bay"], "return_to_ship": False, "npcs": []}
         docking_bay_config = {"label": "Docking Bay", "connected_locations": ["hub"], "return_to_ship": True, "npcs": []}
-        stop = Landable(0, 0, graphics={}, interiors={"hub": hub_config, "docking_bay": docking_bay_config})
+        stop = LandingSite(0, 0, graphics={}, interiors={"hub": hub_config, "docking_bay": docking_bay_config})
         routine = DockRoutine(route=[stop])
         routine._location = SimpleNamespace(interior_key="hub", all_exit_options=lambda: ["docking_bay"])
         routine._visited_this_stop = {"hub"}
@@ -1138,7 +1141,7 @@ class TestPersonWalkCycle(unittest.TestCase):
 class TestStationWindowsAndCulture(unittest.TestCase):
     """Stations resolve their palette from their culture (like ships/
     buildings) and draw a light at each "windows" point, turning with the
-    hull - see Landable._draw_station."""
+    hull - see LandingSite._draw_station."""
 
     def test_station_alpha_inherits_the_vherathi_palette(self):
         g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
@@ -1150,11 +1153,11 @@ class TestStationWindowsAndCulture(unittest.TestCase):
         self.assertEqual(tuple(g["core_color"]), (255, 200, 80))   # drossholt glass_color
 
     def test_a_windowed_station_with_no_parts_draws_one_light_per_window_plus_core(self):
-        with patch("game.world.landable.pygame") as mock_pygame:
+        with patch("game.world.landing_site.pygame") as mock_pygame:
             g = {"rotation_speed": 0.5, "size": 30,
                  "local_points": [[-10, -10], [10, -10], [10, 10], [-10, 10]],
                  "windows": [[0, -5], [0, 5], [5, 0]]}
-            Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
+            LandingSite(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
             self.assertEqual(mock_pygame.draw.circle.call_count, len(g["windows"]) + 1)
 
     def test_a_parts_station_skips_the_flat_hull_window_dots_and_core(self):
@@ -1164,16 +1167,16 @@ class TestStationWindowsAndCulture(unittest.TestCase):
         local_points polygon, scatter window circles, or stamp the plain core
         beacon on top (each just shows the old shape bleeding past the new
         one). Everything is delegated to draw_parts."""
-        with patch("game.world.landable.pygame") as mock_pygame:
+        with patch("game.world.landing_site.pygame") as mock_pygame:
             g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
             self.assertTrue(g.get("parts"))
-            Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
+            LandingSite(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
             mock_pygame.draw.polygon.assert_not_called()
             mock_pygame.draw.circle.assert_not_called()
 
     def test_a_station_with_no_windows_draws_only_the_core(self):
-        with patch("game.world.landable.pygame") as mock_pygame:
-            Landable(0, 0, graphics={"rotation_speed": 0.5, "size": 30})._draw_station(MagicMock(), 1.0)
+        with patch("game.world.landing_site.pygame") as mock_pygame:
+            LandingSite(0, 0, graphics={"rotation_speed": 0.5, "size": 30})._draw_station(MagicMock(), 1.0)
             self.assertEqual(mock_pygame.draw.circle.call_count, 1)
 
 
@@ -1273,6 +1276,56 @@ class TestPossessionsMissions(unittest.TestCase):
         possessions = Possessions.from_state({"credits": 10})
         self.assertEqual(possessions.missions, {})
         self.assertEqual(possessions.completed_missions, [])
+
+
+class TestMessageAlertSchedule(unittest.TestCase):
+    """message_alert_state() drives the Message Log's unread light + ping:
+    exactly MESSAGE_ALERT_BLINKS blinks, one ping at the start of each, then
+    quiet and dark (replaced a ~10s wall-clock flash with a single ping)."""
+
+    def _run(self):
+        """Every (blink_on, pings_due) the way a screen sees it: timer set to
+        FRAMES, then decremented once per sim step until it hits 0."""
+        out = []
+        timer = MESSAGE_ALERT_FRAMES
+        while timer > 0:
+            timer -= 1
+            out.append(message_alert_state(timer))
+        out.append(message_alert_state(timer))  # the frame timer is 0
+        return out
+
+    def test_exactly_three_pings_one_per_blink(self):
+        states = self._run()
+        # pings_due is monotonic and ends at exactly MESSAGE_ALERT_BLINKS
+        pings = [p for _, p in states]
+        self.assertEqual(pings, sorted(pings))
+        self.assertEqual(pings[-1], MESSAGE_ALERT_BLINKS)
+        self.assertEqual(max(pings), 3)
+
+    def test_each_ping_lands_while_the_light_is_on(self):
+        # The frame pings_due first reaches N, the light must be lit - that's
+        # what "in sync with the light" means.
+        seen = 0
+        for blink_on, pings_due in self._run():
+            if pings_due > seen:
+                self.assertTrue(blink_on, f"ping {pings_due} fired with the light off")
+                seen = pings_due
+
+    def test_light_blinks_then_goes_dark(self):
+        states = self._run()
+        # It actually toggles (some on, some off) during the alert...
+        self.assertIn(True, [b for b, _ in states])
+        self.assertIn(False, [b for b, _ in states])
+        # ...and is dark once the timer is spent.
+        self.assertEqual(message_alert_state(0), (False, MESSAGE_ALERT_BLINKS))
+        self.assertEqual(message_alert_state(-5), (False, MESSAGE_ALERT_BLINKS))
+
+    def test_frame_rate_hitch_still_totals_three(self):
+        # A slow frame that jumps the timer straight past the end still only
+        # ever asks for MESSAGE_ALERT_BLINKS pings total.
+        _, pings_due = message_alert_state(1)
+        self.assertLessEqual(pings_due, MESSAGE_ALERT_BLINKS)
+        self.assertEqual(message_alert_state(0)[1], MESSAGE_ALERT_BLINKS)
 
 
 class TestPossessionsMessageLog(unittest.TestCase):
@@ -2673,8 +2726,8 @@ class TestExplorerRoutine(unittest.TestCase):
 
     @staticmethod
     def _make_system(offset_x, offset_y):
-        station = Landable(offset_x, offset_y, graphics={}, interiors={})
-        moon = Landable(offset_x + 500, offset_y, graphics={}, interiors={})
+        station = LandingSite(offset_x, offset_y, graphics={}, interiors={})
+        moon = LandingSite(offset_x + 500, offset_y, graphics={}, interiors={})
         return SystemState(station, moon, central_star=None, celestial_bodies=[], ai_ships=[])
 
     def test_starts_by_orbiting_something_in_its_home_system(self):
@@ -2941,6 +2994,40 @@ class TestMultiSystemSimulation(unittest.TestCase):
         self.assertIn("Juno Vale", [o.person.name for _, o in game_screen._filtered_targets()])
 
 
+class TestJumpDrive(unittest.TestCase):
+    """try_jump() (shared by K_J in the space view and J on the Star Map, via
+    main.py) and the force_thrusters draw flag it sets for the jump's duration."""
+
+    def test_try_jump_to_another_system_begins_a_jump_and_fires_thrusters(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        game_screen.selected_system_id = "keplers_reach"
+        game_screen.try_jump()
+        self.assertIsNotNone(game_screen.jump_state)
+        self.assertTrue(game_screen.player.ship.force_thrusters,
+                        "Thrusters must draw as active for the whole jump")
+
+    def test_completing_a_jump_clears_force_thrusters(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        game_screen.selected_system_id = "keplers_reach"
+        game_screen.try_jump()
+        for _ in range(4000):
+            if game_screen.jump_state is None:
+                break
+            game_screen._update_jump()
+        self.assertIsNone(game_screen.jump_state)
+        self.assertEqual(game_screen.system_id, "keplers_reach")
+        self.assertFalse(game_screen.player.ship.force_thrusters)
+
+    def test_self_jump_from_near_the_centre_is_refused(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
+        cx, cy = GAME_WIDTH / 2, GAME_HEIGHT / 2
+        game_screen.player.x, game_screen.player.y = cx, cy
+        game_screen.selected_system_id = game_screen.system_id
+        game_screen.try_jump()
+        self.assertIsNone(game_screen.jump_state, "Too close to centre - no jump")
+        self.assertGreater(game_screen.jump_message_timer, 0, "Shows the 'too close' notice")
+
+
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
     """Regression test: every other NPC in the room kept wandering around
     even while the player was mid-conversation with one of them - only the
@@ -3028,7 +3115,7 @@ class TestLocationScreenDrawDoesNoPerFrameFontConstruction(unittest.TestCase):
 class TestLocationScreenClickTargeting(unittest.TestCase):
     """Test LocationScreen._select_person_target_at() - click-to-target for
     NPCs/visitors on foot, the interior counterpart to SpaceScreen's own
-    click-to-target over ships/landables."""
+    click-to-target over ships/landing sites."""
 
     def _make_screen(self):
         config = {
@@ -3068,6 +3155,30 @@ class TestLocationScreenClickTargeting(unittest.TestCase):
         self.assertEqual(screen._get_npc_target().name, "Near")
         screen._select_person_target_at(505, 500)
         self.assertEqual(screen._get_npc_target().name, "Far")
+
+
+class TestPressedAny(unittest.TestCase):
+    """main._pressed_any drives the M/P/N + ESC close affordance for the
+    Star Map / Possessions / Mission Log overlays in main.py's state machine."""
+
+    def _keydown(self, key):
+        return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
+
+    def test_matches_a_listed_key(self):
+        events = [self._keydown("a"), self._keydown("m")]
+        self.assertTrue(_pressed_any(events, "m", "esc"))
+
+    def test_no_match_when_key_absent(self):
+        events = [self._keydown("a"), self._keydown("j")]
+        self.assertFalse(_pressed_any(events, "m", "esc"))
+
+    def test_ignores_keyup_and_other_event_types(self):
+        events = [SimpleNamespace(type=pygame_mock.KEYUP, key="m"),
+                  SimpleNamespace(type=pygame_mock.MOUSEBUTTONDOWN, button=1, pos=(0, 0))]
+        self.assertFalse(_pressed_any(events, "m"))
+
+    def test_empty_events(self):
+        self.assertFalse(_pressed_any([], "m"))
 
 
 class TestBuildSaveGameState(unittest.TestCase):
@@ -3241,10 +3352,10 @@ class TestSpaceScreenParkAt(unittest.TestCase):
     walking-position dict (game_state["player"]) into the ship's x/y as if
     it were the ship's space position - scattering the ship to wherever
     that (unrelated, much smaller-scale) interior coordinate happened to
-    be instead of docking it at the landable. main.py now calls
+    be instead of docking it at the landing_site. main.py now calls
     restore_possessions() + park_at() for station/moon loads instead."""
 
-    def test_park_at_places_the_ship_exactly_on_the_landable(self):
+    def test_park_at_places_the_ship_exactly_on_the_landing_site(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="keplers_reach")
         game_screen.park_at(game_screen.moon)
         self.assertEqual((game_screen.player.x, game_screen.player.y), (game_screen.moon.x, game_screen.moon.y))
@@ -3351,17 +3462,17 @@ class TestSpaceScreenMinimapTargeting(unittest.TestCase):
 
     def test_select_target_switches_mode_and_points_at_the_object(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        game_screen.target_mode_index = TARGET_MODES.index("LANDABLES")
+        game_screen.target_mode_index = TARGET_MODES.index("LANDING SITES")
         ship = self._first_ship(game_screen)
         game_screen._select_target(ship)
         self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "SHIPS")
         self.assertIs(game_screen._get_target_object(), ship)
 
-    def test_select_target_on_a_landable_switches_to_landables_mode(self):
+    def test_select_target_on_a_landing_site_switches_to_landing_sites_mode(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
         game_screen._select_target(game_screen.moon)
-        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "LANDABLES")
+        self.assertEqual(TARGET_MODES[game_screen.target_mode_index], "LANDING SITES")
         self.assertIs(game_screen._get_target_object(), game_screen.moon)
 
     def test_minimap_blip_at_returns_the_closest_blip_within_its_hit_radius(self):
@@ -3470,7 +3581,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     on first ship purchase and advanced by the generic gameplay-event
     flags SpaceScreen/PlayerController set (used_ships_target_mode/
     used_turn/used_thrust/braked_below_threshold/used_autopilot_on_ship/
-    landed_on_landable/completed_jump) alongside "hailed_pilot:<name>"
+    landed_on_landing_site/completed_jump) alongside "hailed_pilot:<name>"
     (set by _start_hail) and "accepted_kade_help" (set by Kade Marsh's own
     hail_dialogue_tree once the player agrees to be walked through it) -
     see docs/BACKLOG.md's tutorial mission item and game/world/mission.py."""
@@ -3565,7 +3676,7 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
     def test_landing_sets_the_flag(self):
         game_screen = self._boarded_screen()
         game_screen._mark_landed()
-        self.assertTrue(game_screen.player.person.possessions.flags.get("landed_on_landable"))
+        self.assertTrue(game_screen.player.person.possessions.flags.get("landed_on_landing_site"))
 
     def test_autopilot_to_the_station_always_finishes_by_landing(self):
         """Regression (item G "autopilot landing seems to vary"): whether
@@ -4448,7 +4559,7 @@ class TestStepWorld(unittest.TestCase):
 
     def test_autopilot_arrival_propagates_land_out_of_the_step(self):
         """When SpaceScreen.update() returns "land" (autopilot reached a
-        landable) from inside a sim step, step_world() must surface it so
+        landing_site) from inside a sim step, step_world() must surface it so
         the accumulator loop can stop and open the interior - the old loop
         dropped this return value and the auto-dock never happened."""
         from main import step_world, begin_landing
@@ -4475,10 +4586,10 @@ class TestStationInteriorLayout(unittest.TestCase):
     docs/BACKLOG.md). Guards the authored floor plans: every NPC spawns on
     the walkable area, and a visiting pilot can path clear across it."""
 
-    def _interior(self, system_id, landable_attr, key="default"):
+    def _interior(self, system_id, landing_site_attr, key="default"):
         system = utils.load_json(f"config/stories/default/systems/{system_id}.json")
         game_screen = SpaceScreen(system, pilot_name="Test", story="default", system_id=system_id)
-        return game_screen.get_interior_screen(getattr(game_screen, landable_attr), key)
+        return game_screen.get_interior_screen(getattr(game_screen, landing_site_attr), key)
 
     def test_alpha_station_is_one_interior_with_a_single_ship_portal(self):
         interior = self._interior("sol_alpha", "station")
@@ -4522,7 +4633,7 @@ class TestStationInteriorLayout(unittest.TestCase):
     def test_old_station_save_key_resumes_at_the_ship_entry_interior(self):
         """An old save recorded station_location="dormitory" etc.; those
         keys are gone now. The load path never trusts that key - it
-        re-derives the ship-entry room (Landable.get_ship_entry_key) and
+        re-derives the ship-entry room (LandingSite.get_ship_entry_key) and
         arrive_from("ship")s, so the player lands at the dock portal
         regardless of what the save said or where it left their body."""
         game_screen = SpaceScreen(pilot_name="Test", story="default")
@@ -4628,7 +4739,7 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
 
     def test_engaging_autopilot_plays_confirm(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        game_screen.target_mode_index = TARGET_MODES.index("LANDABLES")
+        game_screen.target_mode_index = TARGET_MODES.index("LANDING SITES")
         game_screen.current_target = 0
         ev = SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE, mod=0)
         with patch("game.screens.space_screen.sound_board") as mock_board:
@@ -4641,6 +4752,20 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
         with patch("game.screens.space_screen.sound_board") as mock_board:
             game_screen._cycle_target_mode()
             mock_board.play.assert_called_once_with("blip")
+
+    def test_unread_message_pings_exactly_three_times_from_update(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        # Silence the other per-frame message sources so we count only the
+        # alert's own pings.
+        game_screen.ai_ships = []
+        game_screen.missions_config = {}
+        with patch("game.screens.space_screen.sound_board") as mock_board:
+            game_screen._post_message("Kade Marsh", "Come in.")
+            for _ in range(MESSAGE_ALERT_FRAMES + 10):
+                game_screen.update()
+            pings = [c for c in mock_board.play.call_args_list if c.args == ("ping",)]
+        self.assertEqual(len(pings), 3)
+        self.assertEqual(game_screen.message_alert_timer, 0)
 
 
 class TestBackgroundMusic(unittest.TestCase):

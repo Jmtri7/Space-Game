@@ -71,7 +71,7 @@ new bug even though it isn't reachable in normal play yet.
 
 ## The standard battery
 
-Headless simulation, not the live window - construct real `Ship`/`Landable` objects and drive
+Headless simulation, not the live window - construct real `Ship`/`LandingSite` objects and drive
 `.update()` in a loop. This is the only way to run hundreds of scenario permutations; doing it
 by hand in the live game is not practical and won't catch angle-specific bugs.
 

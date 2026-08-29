@@ -13,13 +13,13 @@ All interactive controls and their bindings. **Update this document when adding 
 | **Q** / **E** | Rotate the view left / right (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
 | **]** | Cycle forward through targetable objects in the current target mode |
 | **[** | Cycle backward through targetable objects in the current target mode |
-| **T** | Cycle target mode: SHIPS (AI ships only) → LANDABLES (station/moon only) → MISC (celestial bodies, star). Starts on LANDABLES. |
+| **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star). Starts on LANDING SITES. |
 | **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Hover** a minimap blip | Show its name in a label by the cursor |
 | **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
-| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landable from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
-| **L** | Land - on the targeted landable if already in range, otherwise on whatever's nearby (never engages autopilot) |
+| **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
+| **L** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
@@ -39,16 +39,21 @@ Message Log) are each capped at one fifth of the window width.
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
-| **Close Map** button (top-left) | Close the map (selection persists) |
+| **J** | Close the map and jump to the selected system |
+| **M**, **ESC**, or the **Close Map** button (top-left) | Close the map (selection persists) |
 
-The map is mouse-only. It opens centered on your current system, with a "You
+The map is otherwise mouse-only. It opens centered on your current system,
+with a "You
 are here" tag next to it. A **Close Map** button (top-left) and the selected
 system's station/moon panel (top-right) share the space view's HUD look. The selected
 system is shown back in the space view as "Jump Target:" - it defaults to
 (and resets to, after a jump) your current system, so it's never empty.
-Pressing **J** starts the jump if the target is a different system, or the
-current one while far enough from its center (`JUMP_SELF_MIN_DISTANCE`).
+Pressing **J** (either on the map or back in the space view) starts the jump
+if the target is a different system, or the current one while far enough
+from its center (`JUMP_SELF_MIN_DISTANCE`); from too close to the center a
+self-jump just flashes a brief "too close" notice instead.
 Completing a jump flashes a brief "arrived at ..." toast in the space view.
+Your thrusters draw as firing for the whole jump.
 
 ## Station Interior
 
@@ -191,9 +196,10 @@ every one-way message ever received, newest at the top, as
 pane has a fixed maximum height (`MESSAGE_LOG_VISIBLE_LINES`); once the
 backlog is longer than that, scroll it with the **mouse wheel** while the
 pointer is over it (blue `^ newer (scroll)` / `v older (scroll)` hints show
-which way there's more). A new message snaps it back to the top and lights
-a **blinking red dot** in the pane's top-right corner for ~10 seconds
-(`MESSAGE_ALERT_FRAMES`) so an arrival is hard to miss. The
+which way there's more). A new message snaps it back to the top and blinks
+a **red dot** in the pane's top-right corner **three times**, with the UI
+**ping** sounding once per blink, then goes quiet and dark
+(`MESSAGE_ALERT_BLINKS` / `message_alert_state` in `ui_theme.py`). The
 top-right targeting/info pane scrolls the same way when a target's readout
 (e.g. a station's full location list) is longer than
 `INFO_PANEL_VISIBLE_LINES`. See `Possessions.message_log`/`add_message()`
@@ -260,11 +266,18 @@ inside the panel - hover highlights, left-click presses. The keyboard does
 **nothing** in a menu except: type into a text field (naming a pilot or a
 new save), and **Enter**, which presses whichever button is currently
 highlighted (or trades/confirms the selected grid item) - a shortcut for
-confirming a choice already made with the mouse. Arrows, Tab, ESC, and letter
+confirming a choice already made with the mouse. Arrows, Tab, and letter
 hotkeys do nothing. There is no dim hint line under the buttons any more - a
 menu is meant to
 be self-explanatory from its buttons and labels. Every menu has a visible
-**Close** / **Cancel** / **Resume** / **Back** button; there is no
+**Close** / **Cancel** / **Resume** / **Back** button. The exception to
+"keyboard does nothing" is the four modals opened by a single key - the
+**Pause menu** (ESC), the **Star Map** (M), **Possessions** (P), and the
+**Mission Log** (N): each also closes on the key that opened it, so all four
+close on **ESC** (the pause menu resumes; the overlays close). Handled in
+`main.py`'s state machine (`_pressed_any`), not the menu classes. A
+save/load sub-dialog stacked on the pause menu swallows ESC until it's
+closed with its own button. No other modal has
 ESC-to-close. No modal uses the top-left Controls pane (that belongs to the
 space view and interiors); while a modal is open the base screen's Controls
 pane and bottom status prompt are hidden. A four-button bar (the Save menu)
@@ -272,9 +285,10 @@ shrinks its buttons to stay inside the panel. Long reports and lists scroll
 with the **mouse wheel** (or by clicking the `^ more` / `v more`
 indicators).
 
-The keys **P** / **N** / **M** / **L** still *open* menus from the space
-view or an interior (they're HUD controls, listed above) - they just have
-no effect once a menu is up.
+The keys **P** / **N** / **M** / **L** *open* menus from the space
+view or an interior (they're HUD controls, listed above). **P**, **N**, and
+**M** also *close* the overlay they opened (as does **ESC**); once any other
+menu is up, all four keys do nothing.
 
 Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
 
@@ -289,13 +303,14 @@ Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
 cargo, personal items, and installed/spare ship outfits. Two columns; wheel
-to scroll if it overflows. The **Close** button (top-right) closes it.
+to scroll if it overflows. **P**, **ESC**, or the **Close** button
+(top-right) closes it.
 
 ### Mission Log (open with N)
 Two tabs - **Active** and **Completed** - clicked to switch. Each mission's
 stages are **numbered** and marked `[x]` done / `->` current; unreached
-stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **Close**
-button top-right.
+stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **N**,
+**ESC**, or the **Close** button (top-right) closes it.
 
 ### Shop Menu (T, on an NPC with a shop)
 | Control | Action |
@@ -401,7 +416,8 @@ automatically, based on their role, instead of getting this menu.
 | **Ctrl + M** | Mute / unmute all audio (SFX + background music) — works on every screen |
 
 All sound is synthesized at runtime (no asset files) — see [SOUND.md](SOUND.md).
-The UI **ping** plays on menu button presses and incoming messages; **confirm**
+The UI **ping** plays on menu button presses, and three times (once per
+blink of the Message Log's unread light) on an incoming message; **confirm**
 on engaging autopilot (Space); **blip** on cycling/clicking a target (`[` `]`
 `T`, click) - mixed deliberately quiet since it fires on every target
 keypress. Two ambient background tracks (menu / in-game) fade in and cross-
@@ -430,7 +446,11 @@ averages and peaks over the last ~2 seconds. See
 ## Notes
 
 - **Arrow keys and WASD are interchangeable** for movement and navigation
-- **ESC always pauses** the game (from any screen)
+- **ESC pauses** the game from the space view and interiors, and **ESC
+  again resumes** from the pause menu; in the Star Map, Possessions, and
+  Mission Log overlays it closes the overlay. Every other menu/dialog has
+  no ESC binding (a save/load sub-dialog on top of the pause menu also
+  swallows ESC - close it with its own button first)
 - **Ctrl + M mutes/unmutes all audio** (handled globally in `main.py`, like the debug toggle)
 - Every menu and dialog shows its actions as **buttons in its own panel**
   (click, or Tab/arrow + Enter); the top-left Controls pane is the space

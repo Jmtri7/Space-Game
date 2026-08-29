@@ -12,7 +12,7 @@ from game.utils import (
 import game.utils as utils
 from game.perf_metrics import metrics as perf
 from game.audio.sound_board import sound_board
-from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin
+from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_pane, draw_status_pane, draw_info_panel, draw_message_log, side_panel_width, hud_margin, MESSAGE_ALERT_FRAMES, message_alert_state
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
@@ -21,7 +21,7 @@ from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
-from game.world.landable import Landable
+from game.world.landing_site import LandingSite
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
 from game.world.celestial_body import CelestialBody
@@ -56,8 +56,9 @@ JUMP_SELF_MIN_DISTANCE = 3200   # must be at least this far from center to jump 
 
 # ~4s at 60fps a transient toast (jump done, mission start/stage/finish) stays up
 TOAST_FRAMES = 240
-# ~10s at 60fps the Message Log's blinking "unread" light stays lit after a message
-MESSAGE_ALERT_FRAMES = 600
+# MESSAGE_ALERT_FRAMES (how long the Message Log's "unread" light is active
+# after a message) now lives in ui_theme alongside the blink/ping schedule -
+# imported above.
 SYSTEM_CENTER = (GAME_WIDTH / 2, GAME_HEIGHT / 2)
 
 # Degrees per frame the view rotates while Q/E is held (see handle_input).
@@ -69,10 +70,10 @@ CAMERA_ROTATE_SPEED = 2
 MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 
 # Targeting modes - cycled with Tab, filters what T/[/] can select.
-# "MISC" covers everything that's neither a ship nor a landable (celestial
-# bodies, the central star). LANDABLES is the default since finding and
+# "MISC" covers everything that's neither a ship nor a landing site (celestial
+# bodies, the central star). LANDING SITES is the default since finding and
 # landing on the station is the first thing a new pilot needs to target.
-TARGET_MODES = ["SHIPS", "LANDABLES", "MISC"]
+TARGET_MODES = ["SHIPS", "LANDING SITES", "MISC"]
 
 
 class SpaceScreen(ScreenBase):
@@ -242,8 +243,11 @@ class SpaceScreen(ScreenBase):
         self.info_panel_scroll = 0
         self._info_panel_rect = None
         # Frames left on the Message Log's blinking red "new message" light
-        # (see MESSAGE_ALERT_FRAMES / _post_message / draw_message_log).
+        # (see MESSAGE_ALERT_FRAMES / _post_message / draw_message_log), and
+        # how many of the MESSAGE_ALERT_BLINKS pings have sounded for the
+        # current alert (reset in _post_message, advanced in update()).
         self.message_alert_timer = 0
+        self._message_alert_pings_played = 0
 
     def _build_asteroid_types(self, config):
         """Resolve a system's "asteroid_field.types" entries (each just a
@@ -281,17 +285,17 @@ class SpaceScreen(ScreenBase):
 
         station_cfg = config.get("station", {})
         station_graphics = get_graphics_asset(self.story, "space_stations", station_asset_id)
-        station = Landable(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}), name=station_cfg.get("name", "Station"))
+        station = LandingSite(GAME_WIDTH * station_cfg.get("x", 0.75), GAME_HEIGHT * station_cfg.get("y", 0.3), graphics=station_graphics, interiors=station_cfg.get("interiors", {}), name=station_cfg.get("name", "Station"))
 
         moon_cfg = config.get("moon", {})
         moon_graphics = get_graphics_asset(self.story, "moons", moon_asset_id)
-        moon = Landable(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}), name=moon_cfg.get("name", "Moon"))
+        moon = LandingSite(GAME_WIDTH * moon_cfg.get("x", 0.2), GAME_HEIGHT * moon_cfg.get("y", 0.4), graphics=moon_graphics, interiors=moon_cfg.get("interiors", {}), name=moon_cfg.get("name", "Moon"))
 
-        # Central star (optional, drawn but not landable/targetable)
+        # Central star (optional, drawn but not a landing site/targetable)
         central_star_cfg = config.get("central_star")
         central_star = CentralStar(GAME_WIDTH * central_star_cfg.get("x", 0.5), GAME_HEIGHT * central_star_cfg.get("y", 0.5), graphics=central_star_cfg) if central_star_cfg else None
 
-        # Non-landable planets/ice balls/gas giants - just scenery to fly near,
+        # Non-landing-site planets/ice balls/gas giants - just scenery to fly near,
         # never something you can dock at (see CelestialBody.hazardous, used
         # by the HUD's targeting note).
         celestial_bodies = [
@@ -314,15 +318,15 @@ class SpaceScreen(ScreenBase):
         # self.systems the moment the first explorer is constructed.
         self.systems[system_id] = state
 
-        # Landables that an AI ship's route config can reference by key
-        landable_lookup = {"station": station, "moon": moon}
+        # LandingSites that an AI ship's route config can reference by key
+        landing_site_lookup = {"station": station, "moon": moon}
 
         for ai_cfg in config.get("ai_ships", []):
             ship_type_id = ai_cfg.get("ship_type", "freighter")
             ship_type = get_ship_type(self.story, ship_type_id)
             ship_graphics = get_graphics_asset(self.story, "ships", ship_type_id)
             pilot = get_pilot(self.story, ai_cfg["pilot"]) if "pilot" in ai_cfg else None
-            route = [landable_lookup[key] for key in ai_cfg.get("route", []) if key in landable_lookup]
+            route = [landing_site_lookup[key] for key in ai_cfg.get("route", []) if key in landing_site_lookup]
             ai_ship = Character.for_ai_pilot(
                 GAME_WIDTH * ai_cfg.get("x", 0.75),
                 GAME_HEIGHT * ai_cfg.get("y", 0.1),
@@ -364,7 +368,7 @@ class SpaceScreen(ScreenBase):
         self.ai_ship = state.ai_ships[0] if state.ai_ships else None
 
         self.current_target = None
-        self.target_mode_index = TARGET_MODES.index("LANDABLES")
+        self.target_mode_index = TARGET_MODES.index("LANDING SITES")
         self.targetable_objects = [
             (self.station.name, self.station),
             (self.moon.name, self.moon),
@@ -388,41 +392,41 @@ class SpaceScreen(ScreenBase):
     def _approaching_label(self, obj):
         """Short name for whatever the autopilot is currently seeking, for
         the "Approaching: ..." status line - a ship's type display name
-        (matching the targeting HUD's own label), or a landable/body's
+        (matching the targeting HUD's own label), or a landing site / body's
         own name."""
         if isinstance(obj, Character):
             return self._ship_target_label(obj)
         return getattr(obj, "name", "target")
 
-    def get_interior_screen(self, landable, key):
-        """Return the persistent LocationScreen for one of landable's
+    def get_interior_screen(self, landing_site, key):
+        """Return the persistent LocationScreen for one of landing_site's
         interiors (key = "default" for a station, "city"/"wilderness" for
-        the moon), creating and caching it on landable.interior_screens the
+        the moon), creating and caching it on landing_site.interior_screens the
         first time it's visited. Later visits reuse the same instance, so
         NPCs and the player's position within it persist instead of
         resetting every time - and it can keep simulating in the
         background (see update_physics() calls in main.py) while the
         player is elsewhere. Returns None if the interior isn't configured.
-        Sized from landable.interior_world_size, not a caller-supplied
+        Sized from landing_site.interior_world_size, not a caller-supplied
         width/height - every call site used to pass the same 800x600/
-        1600x1600 pair derived from is_station itself; asking the landable
+        1600x1600 pair derived from is_station itself; asking the landing_site
         keeps that in one place.
         """
-        world_width, world_height = landable.interior_world_size
-        if key in landable.interior_screens:
-            return landable.interior_screens[key]
+        world_width, world_height = landing_site.interior_world_size
+        if key in landing_site.interior_screens:
+            return landing_site.interior_screens[key]
 
-        interior_config = landable.interiors.get(key)
+        interior_config = landing_site.interiors.get(key)
         if not interior_config:
             return None
 
         # Display name for every sibling interior this location's portals
         # might connect to (see LocationScreen._display_name) - built from
-        # landable.interiors directly rather than lazily inside
+        # landing_site.interiors directly rather than lazily inside
         # LocationScreen, since that dict (and any config files it points
-        # to) belongs to the landable, not to any one interior within it.
+        # to) belongs to the landing_site, not to any one interior within it.
         location_labels = {}
-        for sibling_key, sibling_config in landable.interiors.items():
+        for sibling_key, sibling_config in landing_site.interiors.items():
             sibling_config = load_json(sibling_config) if isinstance(sibling_config, str) else sibling_config
             location_labels[sibling_key] = (sibling_config or {}).get("label", sibling_key)
 
@@ -435,7 +439,7 @@ class SpaceScreen(ScreenBase):
         # station_location / moon_location (see main.py's
         # build_save_game_state; only moon_location is honoured on load).
         screen.interior_key = key
-        landable.interior_screens[key] = screen
+        landing_site.interior_screens[key] = screen
         return screen
 
     def _apply_ship_type(self, ship_type_id):
@@ -499,7 +503,7 @@ class SpaceScreen(ScreenBase):
         would never get a chance to). Returns (location, interior_key) for
         main.py - where to drop the player: ("space", None),
         ("station", <key>) or ("moon", <key>). Parks a starting ship at
-        that landable so boarding out from the interior works the same as
+        that landing_site so boarding out from the interior works the same as
         after a purchase."""
         start = self.start_config
         location = start.get("location", "station")
@@ -563,14 +567,14 @@ class SpaceScreen(ScreenBase):
             self.player.person.possessions.flags["starting_mission_armed"] = False
             self._start_tutorial_mission()
 
-    def park_at(self, landable):
-        """Position the player's ship at `landable`'s own space position
+    def park_at(self, landing_site):
+        """Position the player's ship at `landing_site`'s own space position
         and stop it - used both right after a purchase and when loading
         directly into a station/moon save (no actual flight/landing
         happened this session, so the ship has to be placed there
         explicitly rather than restored from a save - see
         restore_possessions() and main.py's load handling)."""
-        self.player.x, self.player.y = landable.x, landable.y
+        self.player.x, self.player.y = landing_site.x, landing_site.y
         self.player.park()
         self.in_flight = False
 
@@ -664,7 +668,7 @@ class SpaceScreen(ScreenBase):
                 self._start_hail()
             elif event.key == pygame.K_l:
                 # Land only - never engages autopilot (see K_SPACE below
-                # for that). If a landable is targeted and already in
+                # for that). If a landing site is targeted and already in
                 # range, land on it directly; otherwise fall back to a
                 # pure proximity check, which also covers an AI ship
                 # being targeted or nothing being targeted at all.
@@ -688,7 +692,7 @@ class SpaceScreen(ScreenBase):
                     return "land"
             elif event.key == pygame.K_SPACE:
                 # Engage autopilot toward the current target - follows an
-                # AI ship, or approaches a landable from any range (L
+                # AI ship, or approaches a landing site from any range (L
                 # only lands once you're already close).
                 target_obj = self._get_target_object()
                 if target_obj and self.current_target is not None:
@@ -704,7 +708,7 @@ class SpaceScreen(ScreenBase):
             elif event.key == pygame.K_m and not self.jump_state:
                 return "star_map"
             elif event.key == pygame.K_j and not self.jump_state:
-                self._try_jump()
+                self.try_jump()
             elif event.key == pygame.K_p:
                 return "possessions"
             elif event.key == pygame.K_n:
@@ -718,12 +722,12 @@ class SpaceScreen(ScreenBase):
         return None
 
     def _mark_landed(self):
-        """Set the generic "landed_on_landable" gameplay-event flag -
+        """Set the generic "landed_on_landing_site" gameplay-event flag -
         called from every path that actually lands the ship (manual L,
         and update()'s auto-land-on-autopilot-arrival). See K_SPACE's own
         comment above for why this lives on Possessions.flags rather than
         a SpaceScreen-only field."""
-        self.player.person.possessions.flags["landed_on_landable"] = True
+        self.player.person.possessions.flags["landed_on_landing_site"] = True
         self.in_flight = False  # main.py is about to swap to the interior screen
 
     def _select_target_at(self, world_x, world_y):
@@ -751,7 +755,7 @@ class SpaceScreen(ScreenBase):
         carries no mode of its own). current_target is an index into the
         filtered list for that mode (see _filtered_targets). No-op if obj
         somehow isn't in that list."""
-        mode = "SHIPS" if isinstance(obj, Character) else "LANDABLES" if isinstance(obj, Landable) else "MISC"
+        mode = "SHIPS" if isinstance(obj, Character) else "LANDING SITES" if isinstance(obj, LandingSite) else "MISC"
         self.target_mode_index = TARGET_MODES.index(mode)
         for i, (_, candidate) in enumerate(self._filtered_targets()):
             if candidate is obj:
@@ -786,7 +790,7 @@ class SpaceScreen(ScreenBase):
 
     def _filtered_targets(self):
         """targetable_objects narrowed to the current target mode - SHIPS
-        (AI ships only), LANDABLES (station/moon only), or MISC (everything
+        (AI ships only), LANDING SITES (station/moon only), or MISC (everything
         else - celestial bodies, the central star). current_target is
         always an index into *this* list, not the master one, so switching
         modes changes what index 0 means. Departed AI ships are pruned from
@@ -795,9 +799,9 @@ class SpaceScreen(ScreenBase):
         mode = TARGET_MODES[self.target_mode_index]
         if mode == "SHIPS":
             return [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
-        elif mode == "LANDABLES":
-            return [entry for entry in self.targetable_objects if isinstance(entry[1], Landable)]
-        return [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, Landable))]
+        elif mode == "LANDING SITES":
+            return [entry for entry in self.targetable_objects if isinstance(entry[1], LandingSite)]
+        return [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, LandingSite))]
 
     def _cycle_target(self, direction=1):
         """Cycle through targetable objects in the current target mode - direction=1 for T/], -1 for [."""
@@ -894,7 +898,7 @@ class SpaceScreen(ScreenBase):
         brackets, leaving the brackets floating deep inside the target
         instead of framing it. Character (AI ships) wrap a Ship, whose
         actual drawn size is Ship.size (see draw()'s own ship_size
-        resolution); everything else (Landable, CelestialBody, CentralStar)
+        resolution); everything else (LandingSite, CelestialBody, CentralStar)
         already exposes its drawn radius directly as `.size`."""
         world_radius = target_obj.ship.size if isinstance(target_obj, Character) else getattr(target_obj, "size", 20)
         padding = 12
@@ -1118,14 +1122,13 @@ class SpaceScreen(ScreenBase):
         incoming banner can't visually collide with the dialogue box - the
         Messages pane still shows it once the conversation closes."""
         self.player.person.possessions.add_message(sender, text)
-        # Audible "you've got a message" cue - the same UI ping a menu
-        # button press makes (see game/audio/sound_board.py). Fires even
-        # while a hail conversation is open and the banner is suppressed.
-        sound_board.play("ping")
-        # Snap the Message Log back to the newest entry and fire its blinking
-        # red light (see draw_message_log).
+        # Snap the Message Log back to the newest entry and (re)start its
+        # unread alert: the light blinks MESSAGE_ALERT_BLINKS times and the
+        # "ping" cue sounds once per blink, driven from update() so the audio
+        # stays in sync with the light (see message_alert_state).
         self.message_log_scroll = 0
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
+        self._message_alert_pings_played = 0
         if self.active_dialogue:
             return
         # Banner just announces the transmission - the message body itself
@@ -1217,14 +1220,16 @@ class SpaceScreen(ScreenBase):
         """Whether the player has flown far enough from this system's
         center that jumping back (open the Star Map, select this system,
         J) is both possible and worth calling out - see _draw_hud's
-        status-pane hint. Uses the exact same threshold _try_jump already
+        status-pane hint. Uses the exact same threshold try_jump already
         requires for a self-jump back to this system, so the hint and the
         mechanic it's pointing at agree by construction."""
         cx, cy = SYSTEM_CENTER
         return math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2) >= self.jump_self_min_distance
 
-    def _try_jump(self):
-        """Validate the current star map selection/distance, then start a jump if valid."""
+    def try_jump(self):
+        """Validate the current star map selection/distance, then start a jump
+        if valid. Called both by K_J in the space view and by main.py when the
+        player presses J to leave the Star Map with a destination selected."""
         if not self.selected_system_id:
             return
         cx, cy = SYSTEM_CENTER
@@ -1265,6 +1270,7 @@ class SpaceScreen(ScreenBase):
         self.player.autopilot_active = False
         self.player.autopilot_target = None
         self.player.thrust = 0
+        self.player.ship.force_thrusters = True  # cleared in _complete_jump
         self.jump_state = {
             "phase": "align",
             "heading": heading,
@@ -1323,6 +1329,7 @@ class SpaceScreen(ScreenBase):
         ship.velocity_x = math.sin(heading_rad) * arrival_speed
         ship.velocity_y = -math.cos(heading_rad) * arrival_speed
         ship.thrust = 0
+        ship.force_thrusters = False
 
         self.jump_state = None
         # Reset the jump target to wherever we just arrived (never None) -
@@ -1420,7 +1427,7 @@ class SpaceScreen(ScreenBase):
             self.player.park()
             self.player.autopilot_active = False
             self.player.autopilot_target = None
-            # Only try to land on landables, not ships
+            # Only try to land on landing sites, not ships
             if target == self.station:
                 self.landing_target = "station"
                 self._mark_landed()
@@ -1435,7 +1442,7 @@ class SpaceScreen(ScreenBase):
         # The autopilot disengaged itself this frame (SeekMode's own arrival /
         # stall-bailout inside update_physics(), which uses a looser stop than
         # has_arrived()) - if it left us stopped within landing range of the
-        # landable it was seeking, finish the landing rather than leave the
+        # landing site it was seeking, finish the landing rather than leave the
         # ship parked-but-not-landed for the player to press L.
         if pending is not None and not self.player.autopilot_active:
             speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
@@ -1450,6 +1457,17 @@ class SpaceScreen(ScreenBase):
         # then) is still on screen when the player launches back into space.
         if self.toast_timer > 0:
             self.toast_timer -= 1
+
+        # The unread-message ping sounds once per blink of the Message Log
+        # light, exactly MESSAGE_ALERT_BLINKS times. Driven here (active
+        # screen only, like the toast) rather than in update_physics(), which
+        # also runs for background interiors - the alert timer itself still
+        # counts down there. The while loop catches up if a slow frame ran
+        # several sim steps at once.
+        _, pings_due = message_alert_state(self.message_alert_timer)
+        while self._message_alert_pings_played < pings_due:
+            sound_board.play("ping")
+            self._message_alert_pings_played += 1
 
         # Update camera to follow player, at the current view rotation
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
@@ -1554,7 +1572,7 @@ class SpaceScreen(ScreenBase):
             lines.append(("Target:", GREEN))
             lines.append((f"  Distance: {distance:.0f}", GREEN))
             lines.append((f"  {target_name}", GREEN))
-            # Ships show their pilot; landables (station/moon) list what's
+            # Ships show their pilot; landing sites (station/moon) list what's
             # inside them so the player can see where they'll end up before
             # committing to land; other bodies show a hazard note if any -
             # these are mutually exclusive categories of targetable_objects.
@@ -1562,12 +1580,12 @@ class SpaceScreen(ScreenBase):
                 pilot_name = target_obj.person.name
                 if pilot_name:
                     lines.append((f"  Pilot: {pilot_name}", GREEN))
-            elif isinstance(target_obj, Landable):
+            elif isinstance(target_obj, LandingSite):
                 lines.append(("  Locations:", GREEN))
                 for label in target_obj.get_interior_labels():
                     lines.append((f"    - {label}", GRAY))
             elif getattr(target_obj, "hazardous", False):
-                lines.append(("  Hazardous - not landable", YELLOW))
+                lines.append(("  Hazardous - not a landing site", YELLOW))
         else:
             lines.append(("Target: None", GRAY))
 
@@ -1657,7 +1675,7 @@ class SpaceScreen(ScreenBase):
                     status_lines.append(("Slow down to land", RED))
                 # Jump Target is never None now (see __init__). A jump to a
                 # *different* system is always allowed; a jump back to the
-                # current one needs distance from center first (see _try_jump/
+                # current one needs distance from center first (see try_jump/
                 # JUMP_SELF_MIN_DISTANCE), so only prompt for it once that's
                 # actually true.
                 if self.selected_system_id != self.system_id:
@@ -1679,7 +1697,7 @@ class SpaceScreen(ScreenBase):
         message_log_rect = None
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.person.possessions.message_log]
-            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=self.message_alert_timer > 0)
+            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=message_alert_state(self.message_alert_timer)[0])
             # Clamp now that the real wrapped-line count is known (window
             # resize or a shrinking log can leave the stored offset too big).
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))

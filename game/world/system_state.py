@@ -40,7 +40,7 @@ class SystemState:
             ai_ship.update()
 
     def orbit_targets(self):
-        """Every landable/celestial object in this system that something
+        """Every landing site / celestial object in this system that something
         could plausibly orbit - used by ExplorerRoutine to pick a random
         destination once it arrives."""
         targets = [self.station, self.moon]

@@ -149,6 +149,14 @@ def build_save_game_state(game_screen, previous_screen, station_interior, moon_i
     return game_state, system_config_snapshot
 
 
+def _pressed_any(events, *keys):
+    """True if this frame's events contain a KEYDOWN for any of `keys`. Used
+    so the overlay each key opens (M jump map, P possessions, N mission log)
+    also closes on that same key, and any of them closes on ESC - these
+    overlays are otherwise mouse-only (see docs/DESIGN_PATTERNS.md)."""
+    return any(e.type == pygame.KEYDOWN and e.key in keys for e in events)
+
+
 def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed):
     """Which menu class a "shop" config opens - ShipBrowserMenu for ships
     (needs a live preview and a purchase callback, not a flat price list),
@@ -229,8 +237,8 @@ def update_background_locations(game_screen, active_location):
     if not game_screen:
         return
     for system_state in game_screen.systems.values():
-        for landable in (system_state.station, system_state.moon):
-            for interior in landable.interior_screens.values():
+        for landing_site in (system_state.station, system_state.moon):
+            for interior in landing_site.interior_screens.values():
                 if interior is not active_location:
                     interior.update_physics()
 
@@ -326,7 +334,7 @@ def main():
         moon_interior = None
         location_selector = None
         exit_menu = None
-        exit_menu_landable = None  # game_screen.station or game_screen.moon - whichever this exit_menu is for
+        exit_menu_landing_site = None  # game_screen.station or game_screen.moon - whichever this exit_menu is for
         exit_menu_return_screen = None  # "station" or "moon" - where ESC/cancel goes back to
         possessions_menu = None
         possessions_return_screen = None  # "game" / "station" / "moon" - where P/ESC closes back to
@@ -563,9 +571,18 @@ def main():
 
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
-                if action == "close":
+                if _pressed_any(events, pygame.K_m, pygame.K_ESCAPE):
+                    action = "close"
+                elif _pressed_any(events, pygame.K_j):
+                    action = "jump"
+                if action in ("close", "jump"):
                     game_screen.selected_system_id = star_map.selected_system_id
                     current_screen = "game"
+                    if action == "jump":
+                        # Same path as pressing J in the space view - validates
+                        # the selection/distance and shows "too close" feedback
+                        # for a self-jump from near the system centre.
+                        game_screen.try_jump()
                 # Unlike docking at the station/moon, opening the jump map
                 # fully pauses the simulation (matches PauseMenu) - step_world()
                 # does nothing for "star_map".
@@ -582,7 +599,7 @@ def main():
                     current_screen = "game"
                 elif action == "exit_menu":
                     exit_menu = ChoiceDialog("Where To?", exit_options(station_interior.get_exit_options(), game_screen.station.interiors, station_interior.get_exit_disabled_reasons()))
-                    exit_menu_landable = game_screen.station
+                    exit_menu_landing_site = game_screen.station
                     exit_menu_return_screen = "station"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
@@ -622,9 +639,9 @@ def main():
                 elif choice == "cancel":
                     current_screen = exit_menu_return_screen
                 elif choice:
-                    is_station = exit_menu_landable is game_screen.station
+                    is_station = exit_menu_landing_site is game_screen.station
                     origin_key = (station_interior if is_station else moon_interior).interior_key
-                    interior = game_screen.get_interior_screen(exit_menu_landable, choice)
+                    interior = game_screen.get_interior_screen(exit_menu_landing_site, choice)
                     interior.arrive_from(origin_key)
                     if is_station:
                         station_interior = interior
@@ -638,6 +655,8 @@ def main():
 
             elif current_screen == "possessions":
                 action = possessions_menu.handle_input(events)
+                if _pressed_any(events, pygame.K_p, pygame.K_ESCAPE):
+                    action = "close"
                 if action == "close":
                     current_screen = possessions_return_screen
                 # A modal menu, like PauseMenu - the world stays frozen
@@ -645,6 +664,8 @@ def main():
 
             elif current_screen == "missions":
                 action = mission_log.handle_input(events)
+                if _pressed_any(events, pygame.K_n, pygame.K_ESCAPE):
+                    action = "close"
                 if action == "close":
                     current_screen = missions_return_screen
                 # Modal - world frozen (step_world() does nothing here).
@@ -667,7 +688,7 @@ def main():
                     current_screen = "pause"
                 elif action == "exit_menu":
                     exit_menu = ChoiceDialog("Where To?", exit_options(moon_interior.get_exit_options(), game_screen.moon.interiors, moon_interior.get_exit_disabled_reasons()))
-                    exit_menu_landable = game_screen.moon
+                    exit_menu_landing_site = game_screen.moon
                     exit_menu_return_screen = "moon"
                     current_screen = "exit_menu"
                 elif action and action.startswith("exit_to:"):
@@ -763,6 +784,12 @@ def main():
 
                 if not dialog_was_open:
                     action = pause_menu.handle_input(events)
+                    if _pressed_any(events, pygame.K_ESCAPE):
+                        # ESC opened the pause menu (from the space view / an
+                        # interior) - pressing it again resumes, same toggle
+                        # affordance the M/P/N overlays have. Only when no
+                        # save/load sub-dialog is on top.
+                        action = "resume"
                     if action == "resume":
                         current_screen = previous_screen
                     elif action == "save":

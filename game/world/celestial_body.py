@@ -1,11 +1,11 @@
-"""A non-landable planet, ice ball, or gas giant drifting in a system."""
+"""A planet, ice ball, or gas giant drifting in a system - never a landing site."""
 import pygame
 from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
 
 
 class CelestialBody(WorldObject):
-    """Visible and targetable like a station or moon, but never landable -
+    """Visible and targetable like a station or moon, but never a landing site -
     see SpaceScreen's hazard note in the HUD when one is targeted."""
     hazardous = True
 
@@ -16,8 +16,8 @@ class CelestialBody(WorldObject):
         self.color = tuple(self.graphics.get("color", [150, 150, 150]))
         self.has_ring = self.graphics.get("has_ring", False)
         self.ring_color = tuple(self.graphics.get("ring_color", [200, 190, 150]))
-        # Not landable, but still gives the autopilot/HUD a sane approach
-        # distance to work with, the same way Landable.landing_distance does.
+        # Not a landing site, but still gives the autopilot/HUD a sane approach
+        # distance to work with, the same way LandingSite.landing_distance does.
         self.landing_distance = self.size * 2.5
 
     def update(self):

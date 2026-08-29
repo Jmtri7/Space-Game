@@ -7,7 +7,7 @@ from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_mar
 import game.utils as utils
 from game.perf_metrics import metrics as perf
 from game.audio.sound_board import sound_board
-from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, draw_message_log, draw_glow_message, center_panel_max_width
+from game.ui.ui_theme import draw_controls_pane, draw_status_pane, draw_info_panel, draw_glass_panel, draw_message_log, draw_glow_message, center_panel_max_width, MESSAGE_ALERT_FRAMES, message_alert_state
 from game.screens.screen_base import ScreenBase
 from game.world.world_object import draw_parts
 from game.world.character import Character, resolve_routine_class
@@ -18,12 +18,11 @@ from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 
 
-# Frames an interior message banner / unread light stays lit after a
-# message arrives (see _refresh_messages). Mirrors SpaceScreen's own
-# ONE_WAY_HAIL_BANNER_FRAMES / MESSAGE_ALERT_FRAMES - kept as local
-# constants rather than imported, since space_screen imports this module.
+# Frames an interior message banner stays lit after a message arrives (see
+# _refresh_messages). MESSAGE_ALERT_FRAMES (the unread light's lifetime) and
+# its blink/ping schedule live in ui_theme now - imported above - so the
+# space view and interiors share exactly one definition.
 MESSAGE_BANNER_FRAMES = 300   # ~5s
-MESSAGE_ALERT_FRAMES = 600    # ~10s blinking unread light
 
 
 # Default vertex count for a "circle"-shaped room/decoration - a regular
@@ -177,7 +176,7 @@ class LocationScreen(ScreenBase):
     def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
         # {interior_key: display label} for every sibling interior at the
-        # same landable (see SpaceScreen.get_interior_screen) - used only to
+        # same landing site (see SpaceScreen.get_interior_screen) - used only to
         # render portal labels (see _display_name/_portal_label), so a
         # LocationScreen built without one (e.g. directly in a test) just
         # falls back to prettified keys instead of failing.
@@ -243,7 +242,7 @@ class LocationScreen(ScreenBase):
         # (see get_interior_screen callable injection on AIShip for the
         # same one-directional-dependency idiom).
         self.on_ship_purchased = on_ship_purchased
-        # Which key in the landable's interiors dict this is (e.g.
+        # Which key in the landing site's interiors dict this is (e.g.
         # "dormitory", "default") - set by SpaceScreen.get_interior_screen;
         # None when constructed standalone (e.g. in tests).
         self.interior_key = None
@@ -352,6 +351,10 @@ class LocationScreen(ScreenBase):
         self._seen_message_count = len(self.player.possessions.message_log)
         self.message_log_scroll = 0
         self.message_alert_timer = 0
+        # How many of the MESSAGE_ALERT_BLINKS unread pings have sounded for
+        # the current alert - reset in _refresh_messages, advanced in update()
+        # (active screen only; the timer itself counts down in update_physics).
+        self._message_alert_pings_played = 0
         self.message_banner = None
         self.message_banner_timer = 0
         self._message_log_rect = None
@@ -646,7 +649,7 @@ class LocationScreen(ScreenBase):
         world_x/world_y falls within (closest one wins on overlap) - the
         click-to-target counterpart to cycling with []. Mirrors
         SpaceScreen._select_target_at, but over people on foot instead of
-        ships/landables, and with a fixed click radius since Person has no
+        ships/landing sites, and with a fixed click radius since Person has no
         drawn "size" of its own."""
         people = self._targetable_people()
         best_index, best_dist = None, None
@@ -713,6 +716,16 @@ class LocationScreen(ScreenBase):
         self.update_camera()
         self.update_physics()
 
+        # Unread-message ping: once per blink of the Message Log light,
+        # exactly MESSAGE_ALERT_BLINKS times, driven only from the active
+        # screen (update_physics runs for background interiors too, and just
+        # counts the timer down). The while loop catches up across a slow
+        # frame's extra sim steps.
+        _, pings_due = message_alert_state(self.message_alert_timer)
+        while self._message_alert_pings_played < pings_due:
+            sound_board.play("ping")
+            self._message_alert_pings_played += 1
+
     def update_physics(self):
         """Advance just the NPCs - safe to call on a location that isn't
         the active screen. Paused while a conversation is open here
@@ -739,12 +752,11 @@ class LocationScreen(ScreenBase):
                 character.update()
 
     def _post_local_message(self, sender, text):
-        """Add a one-way message to the shared log from an interior NPC and
-        play the same "you've got a message" ping the Space View uses -
-        _refresh_messages() picks it up next frame for the banner + unread
-        light, exactly as it does for a message that arrived while flying."""
+        """Add a one-way message to the shared log from an interior NPC.
+        _refresh_messages() picks it up next frame and raises the banner +
+        unread alert (light + pings), exactly as it does for a message that
+        arrived while flying."""
         self.player.possessions.add_message(sender, text)
-        sound_board.play("ping")
 
     def _refresh_messages(self):
         """Notice any message that's been appended to the shared
@@ -762,6 +774,7 @@ class LocationScreen(ScreenBase):
         self._seen_message_count = len(log)
         newest = log[0]
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
+        self._message_alert_pings_played = 0
         self.message_log_scroll = 0
         if not self.active_dialogue:
             self.message_banner = (f"Incoming message - {newest['sender']} (see Message Log)", CYAN)
@@ -1073,7 +1086,8 @@ class LocationScreen(ScreenBase):
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.possessions.message_log]
             message_log_rect, message_log_max_scroll = draw_message_log(
-                surface, messages, ui_scale, self.message_log_scroll, alert=self.message_alert_timer > 0)
+                surface, messages, ui_scale, self.message_log_scroll,
+                alert=message_alert_state(self.message_alert_timer)[0])
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
             self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect
@@ -1140,7 +1154,7 @@ class LocationScreen(ScreenBase):
         # A "parts" silhouette is complete (its own lit viewports are already
         # in the list) - drawing the legacy "windows" dots on top of it just
         # shows the old shape bleeding past the new one, exactly as the ship /
-        # station paths avoid (see ship.py / landable.py _draw_station).
+        # station paths avoid (see ship.py / landing_site.py _draw_station).
         window_shape = building_type.get("window_shape", "rect")
         window_size = building_type.get("window_size", 12)
         half = max(1, int(window_size * scale / 2))

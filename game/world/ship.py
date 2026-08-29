@@ -23,6 +23,11 @@ class Ship(WorldObject):
         self.velocity_x = 0
         self.velocity_y = 0
         self.thrust = 0
+        # When True, thrusters draw at full flame regardless of self.thrust -
+        # SpaceScreen sets this for the duration of a jump so the drive reads
+        # as firing even though the jump animation moves the ship directly
+        # rather than through thrust physics.
+        self.force_thrusters = False
         self.acceleration_magnitude = 0.1
         self.max_velocity = 4.0
         self.rotation_speed = 5
@@ -145,7 +150,7 @@ class Ship(WorldObject):
             self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
             self._draw_windows(surface, ship_size)
 
-        if self.thrust > 0.05:
+        if self.thrust > 0.05 or self.force_thrusters:
             self._draw_thrusters(surface, ship_size)
 
     def _draw_windows(self, surface, ship_size):
@@ -189,7 +194,10 @@ class Ship(WorldObject):
         rad = math.radians(self.angle)
         cos_a = math.cos(rad)
         sin_a = math.sin(rad)
-        flame_length = self.thrust * thruster_length
+        # During a jump self.thrust is 0 but force_thrusters is set - show a
+        # full-length flame in that case.
+        effective_thrust = self.acceleration_magnitude if self.force_thrusters else self.thrust
+        flame_length = effective_thrust * thruster_length
         half_width = max(2, ship_size * thruster_width)
 
         # World-space unit vectors for this ship's current heading: "backward"

@@ -148,9 +148,16 @@ See [docs/README.md#for-agents](docs/README.md#for-agents-pattern-recognition--c
 highlights a `draw_button` widget, left-click presses it. The keyboard does
 **nothing** in a modal except type into a text field (`PilotNameDialog`,
 `SaveBrowser`'s name-entry sub-mode); it never moves a selection, presses a
-button, or closes a modal. There is **no ESC-to-close** and **no dim hint
+button, or closes a modal. There is **no dim hint
 line** - every modal has a visible Close/Cancel/Resume/Back button and is
-expected to read as self-explanatory from its buttons and labels. When you
+expected to read as self-explanatory from its buttons and labels. **No
+ESC-to-close**, with one deliberate exception: the four modals each opened
+by a single key - the Pause menu (`ESC`), Star Map (`M`), Possessions
+(`P`), the Mission Log (`N`) - also close on the key that opened them, so
+all four respond to `ESC` (pause resumes, the overlays close). Handled in
+`main.py`'s state machine (`_pressed_any`), never in the menu classes
+themselves; a save/load sub-dialog on top of the pause menu still swallows
+`ESC`. When you
 add an action, add a **button** for it (or a click/double-click/wheel
 affordance on the thing itself); don't add explanatory text under the panel.
 Long content scrolls with the mouse wheel (`ReportMenu`, `IconGrid.scroll()`,
@@ -297,9 +304,9 @@ space-game/
 │   ├── constants.py          # Colors, game dimensions, UI configuration
 │   ├── utils.py               # Coordinate conversion, rendering helpers, file I/O, camera management
 │   ├── world/
-│   │   ├── world_object.py    # WorldObject base (position, drawing) — Ship and Landable extend it
+│   │   ├── world_object.py    # WorldObject base (position, drawing) — Ship and LandingSite extend it
 │   │   ├── ship.py, ai_ship.py, player_controller.py, autopilot.py   # Ship physics, AI behavior, input, flight computer
-│   │   └── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landable.py,
+│   │   └── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landing_site.py,
 │   │       person.py, npc.py, dialogue.py                            # World objects and NPCs
 │   ├── screens/
 │   │   └── screen_base.py, space_screen.py, location_screen.py       # ScreenBase and the two concrete screens
@@ -383,7 +390,7 @@ convention above.
 }
 ```
 
-**Interior layout** (per key in a landable's `interiors`, in the system JSON): a
+**Interior layout** (per key in a landing site's `interiors`, in the system JSON): a
 `culture`, one or more `rooms` (each a `{"rect": [...]}`, `{"polygon": [[x,y],…]}`,
 or `{"shape": "circle", "center": […], "radius": r}` — walkable area is their
 union), `portals` (usually one, `{"x", "y", "return_to_ship": true}` for a
@@ -498,7 +505,7 @@ python run_tests.py
   - `_list_files_by_pattern()` — 6 tests covering file filtering, sorting, directory creation
   - `_center_text_x()` — 3 tests covering horizontal centering and offset handling
 - Autopilot physics (3 tests): `TestAutopilotPhysics` drives a real `Ship` through `engage_seek()` +
-  `ship.update()` toward a real `Landable`, using `ship.autopilot_active` (not a reimplemented distance/speed
+  `ship.update()` toward a real `LandingSite`, using `ship.autopilot_active` (not a reimplemented distance/speed
   check) as the landing signal - one case per ship_types.json stat preset (shuttle/freighter/patrol), each
   asserting it lands, arrives close, stops, and doesn't oscillate.
 

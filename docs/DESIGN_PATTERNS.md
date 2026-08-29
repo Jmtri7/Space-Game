@@ -117,7 +117,7 @@ if speed > max_velocity:
 
 ## Pattern: Base Class for Reusable Entity Logic
 
-**Problem:** Multiple entity types (`Ship`, `Landable`) duplicate position/
+**Problem:** Multiple entity types (`Ship`, `LandingSite`) duplicate position/
 distance/rotate-and-draw-polygon logic.
 
 **Solution:** Extract shared logic into a base class (`WorldObject`), same
@@ -926,6 +926,14 @@ inside its own panel, and **is mouse-only** - hover highlights, left-click
 presses; the keyboard is used only to type into a text field (pilot name,
 new save name), never to move a selection or press a button, and there is no
 ESC-to-close (every modal has a visible Close/Cancel/Resume/Back button).
+The four modals opened by a single key - the Pause menu (`ESC`), Star Map
+(`M`), Possessions (`P`), and Mission Log (`N`) - are the one exception:
+each also closes on the key that opened it, so all four close on `ESC` (the
+pause menu resumes; the overlays close). Handled in `main.py`'s state
+machine (`_pressed_any`), not in the menu classes, which stay strictly
+mouse-only; it's a toggle affordance for the key that opened them, not
+general keyboard control. A save/load `SaveBrowser` stacked on the pause
+menu still swallows `ESC` (`dialog_was_open`) - close it with its button.
 There is no dim hint line - a modal is expected to be self-explanatory from
 its buttons and labels. Two base classes:
 

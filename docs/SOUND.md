@@ -49,7 +49,7 @@ this to sit well below the rest).
 
 | Name | Character | Triggered by |
 |------|-----------|--------------|
-| `ping` | bright two-note blip | **every menu/dialog button press**, and **every one-way message received** |
+| `ping` | bright two-note blip | **every menu/dialog button press**, and **one-way messages** — three times per message, once per blink of the Message Log's unread light (see `ui_theme.message_alert_state`) |
 | `blip` | single square-wave tick (mixed quiet, `volume=0.4`) | **cycling or clicking a target** — `[` / `]` / `T` in the space view, `[` / `]` / click in an interior |
 | `confirm` | rising perfect-fifth chime | **engaging autopilot** (Space, space view) |
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
@@ -61,10 +61,13 @@ this to sit well below the rest).
   [`game/ui/menu_base.py`](../game/ui/menu_base.py) - every button press
   (keyboard Enter and mouse click alike) funnels through it, so one hook covers
   every menu and dialog. Button *navigation* (arrows/Tab) is silent.
-- **Messages:** `SpaceScreen._post_message()` in
-  [`game/screens/space_screen.py`](../game/screens/space_screen.py) - covers
-  both proximity one-way hails (`_check_one_way_hails`) and mission-stage
-  messages (`_deliver_stage_message`).
+- **Messages:** driven off the unread-light timer, not the message post
+  itself - each screen's `update()` (active screen only) plays `ping` once
+  per blink, `MESSAGE_ALERT_BLINKS` times, via `ui_theme.message_alert_state()`.
+  `SpaceScreen._post_message()` / `LocationScreen._refresh_messages()` just
+  (re)start that timer. Covers proximity one-way hails
+  (`_check_one_way_hails`), mission-stage messages (`_deliver_stage_message`),
+  and interior-NPC lines (`_post_local_message`).
 - **Targeting / autopilot:** `_cycle_target`, `_cycle_target_mode`,
   `_select_target_at` and the `K_SPACE` branch in
   [`game/screens/space_screen.py`](../game/screens/space_screen.py);

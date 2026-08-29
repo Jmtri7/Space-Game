@@ -1,4 +1,4 @@
-"""Landable space objects (stations and celestial bodies)."""
+"""Landing sites the player can dock at (space stations and moons)."""
 import math
 import pygame
 import game.constants as constants
@@ -7,8 +7,8 @@ from game.utils import get_scale, to_screen, load_json
 from game.world.world_object import WorldObject
 
 
-class Landable(WorldObject):
-    """A landable object in the game world (space station or moon)."""
+class LandingSite(WorldObject):
+    """A landing site in the game world (space station or moon)."""
     def __init__(self, x, y, graphics=None, interiors=None, name=""):
         super().__init__(x, y, graphics=graphics)
         self.name = name
@@ -16,7 +16,7 @@ class Landable(WorldObject):
         # Live LocationScreen cache, keyed by interior key ("default" for
         # stations, "city"/"wilderness" for moons) - populated lazily by
         # SpaceScreen.get_interior_screen(). Kept here (not constructed
-        # here) since Landable is a world object and shouldn't depend on
+        # here) since LandingSite is a world object and shouldn't depend on
         # game.screens; this just lets the interior's state (NPCs, player
         # position within it) persist across visits instead of resetting
         # every time, and lets it keep simulating in the background while
@@ -25,12 +25,12 @@ class Landable(WorldObject):
 
         # Determine type: if graphics has rotation_speed or shape="hexapod/octagon", it's a station
         self.is_station = "rotation_speed" in self.graphics or self.graphics.get("shape") in ["hexapod", "octagon"]
-        # Fixed logical size of this landable's interior LocationScreens -
+        # Fixed logical size of this landing site's interior LocationScreens -
         # a station's rooms are laid out at 1600x1200, a moon's at 1600x1600
         # (moons cover far more ground: outdoor structures/wander routines
         # need the room). Lives here, not re-derived from is_station at
         # every call site (main.py and DockRoutine both used to), so both
-        # player and AI code just ask this landable. Only the no-"rooms"
+        # player and AI code just ask this landing site. Only the no-"rooms"
         # fallback bounds actually read this - an authored interior with
         # "rooms" is bounded by the room polygons themselves (see
         # LocationScreen.can_move_to / plan_path).
@@ -84,7 +84,7 @@ class Landable(WorldObject):
         in here, not wherever a save/route happened to leave off - matches
         the fiction that walking out of your ship always puts you in the
         same docking-bay doorway. Lives here (not on SpaceScreen/Character)
-        since it's purely a property of this landable's own interior
+        since it's purely a property of this landing site's own interior
         layout - the player and AI shouldn't each need their own copy of
         the logic that figures it out. Falls back to "default" if nothing
         in self.interiors declares a return_to_ship path, so a story that
@@ -125,7 +125,7 @@ class Landable(WorldObject):
     def get_interior_labels(self):
         """Display label for each configured interior (station's "default",
         or a moon's "city"/"wilderness"), for the targeting HUD and any
-        other place that needs to list what's inside this landable."""
+        other place that needs to list what's inside this landing site."""
         labels = []
         for key, interior_config in self.interiors.items():
             if isinstance(interior_config, dict):
@@ -142,7 +142,7 @@ class Landable(WorldObject):
             self.phase = (self.phase + 0.1) % 360
 
     def draw(self, surface):
-        """Draw the landable object."""
+        """Draw the landing site."""
         scale = get_scale()
 
         if self.is_station:

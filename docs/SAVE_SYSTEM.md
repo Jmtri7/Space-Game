@@ -97,10 +97,10 @@ always passed as `{}`; when saving from a `LocationScreen` it instead carries
 where the load browser sends you. Station saves add `game_state["station_location"]`
 and moon saves add `game_state["moon_location"]` - both read straight from
 `LocationScreen.interior_key` (set by `SpaceScreen.get_interior_screen()` -
-which key this actually is in the landable's own `interiors` config), falling
+which key this actually is in the landing site's own `interiors` config), falling
 back to `"default"`/`"city"` respectively if the key is missing or no longer
 valid. **`station_location` is only advisory** - the station **load** path
-ignores it entirely and always resumes at `Landable.get_ship_entry_key()` +
+ignores it entirely and always resumes at `LandingSite.get_ship_entry_key()` +
 `arrive_from("ship")` (you walk out of your ship into the same dock doorway,
 same as landing fresh). So collapsing the default story's five station
 interiors into one (story `1.5.0`) is save-safe: an old save that recorded
@@ -190,7 +190,15 @@ docs/CONTROLS.md's Hailing section. Lives on `Possessions` - not a separate
 save key - specifically so it's captured/restored for free by the same
 shared-by-reference plumbing `credits`/`cargo`/etc. already use, and so a
 flag set while talking to a station NPC is visible when hailing a ship in
-space later (and vice versa). A save made before this existed simply has no
+space later (and vice versa). Renaming a flag is save-affecting: an old
+save keeps the *old* key, so anything (a mission stage's `complete_flag`, a
+dialogue `requires_flag`) that now looks for the new name sees it unset and
+that progress is effectively lost. Story `1.11.0` renamed the
+`landed_on_landable` gameplay-event flag to `landed_on_landing_site` (part
+of the game-wide "Landable" → "LandingSite" rename); an old save mid-
+`first_flight` re-does that one step. Bump `story.json`'s `version` for any
+such rename so the load-time mismatch warning fires. A save made before
+flags existed simply has no
 `"flags"` key; `Possessions.restore_from()`/`from_state()` default it to
 `{}`.
 
@@ -226,7 +234,7 @@ position instead - a completely different, much smaller-scale coordinate
 system with no relationship to where the ship actually is parked in space. A
 real bug shipped from conflating these: loading directly into a station/moon
 save fed the interior's local x/y into the ship's space x/y, scattering the
-ship to an arbitrary point in space instead of docking it at the landable.
+ship to an arbitrary point in space instead of docking it at the landing site.
 
 ## State Capture & Restoration
 
@@ -328,8 +336,8 @@ game_screen.park_at(game_screen.station)     # or .moon - docks the ship there e
 ```
 `restore_possessions()` is the part of the old `restore_state()` that's safe
 to reuse regardless of where the save came from - it only ever reads
-`state["possessions"]`, never `state["player"]`. `park_at(landable)` puts the
-ship exactly at that landable's own space position with zero velocity, since
+`state["possessions"]`, never `state["player"]`. `park_at(landing_site)` puts the
+ship exactly at that landing site's own space position with zero velocity, since
 no actual flight/landing happened this session to put it there - the same
 thing `_on_ship_purchased()` already needed to do right after a purchase, so
 it calls `park_at()` too.

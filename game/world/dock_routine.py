@@ -15,8 +15,8 @@ TALK_FRAMES = 180        # ~3 seconds at 60fps
 
 # Sentinel usable inside a ROLE_EXIT_PREFERENCE list: resolves at each
 # stop to the next hop along the shortest path (see _next_hop_toward_ship,
-# which searches Landable.interior_adjacency) toward whichever interior
-# actually leads back to the ship (Landable.get_ship_entry_key) - not a
+# which searches LandingSite.interior_adjacency) toward whichever interior
+# actually leads back to the ship (LandingSite.get_ship_entry_key) - not a
 # literal interior key, since that room's name is specific to one story's
 # layout (sol_alpha calls it "spaceport"; nothing requires another story
 # to). Resolves to None (no candidate) once already standing in that
@@ -30,7 +30,7 @@ TOWARD_SHIP = "toward_ship"
 # DEFAULT_EXIT_PREFERENCE, i.e. they head straight back to the ship exactly
 # like before connected_locations existed.
 #
-# TOWARD_SHIP is here because a multi-interior landable's landing room
+# TOWARD_SHIP is here because a multi-interior landing site's landing room
 # doesn't always offer "ship" directly - a freighter pilot landing
 # somewhere else needs an explicit route to whichever interior does, not
 # just a preference that happens to be offered at the current stop. (The
@@ -118,7 +118,7 @@ class DockRoutine:
         stop = self.route[self._route_index]
         if stop.is_station:
             # Walk in through the same doorway a ship actually docks at
-            # (see Landable.get_ship_entry_key), not always "default" -
+            # (see LandingSite.get_ship_entry_key), not always "default" -
             # otherwise a pilot arriving fresh lands at whichever portal
             # happens to be listed first in that room's config (e.g. the
             # concourse's corridor/dormitory-side portal), not the
@@ -166,9 +166,9 @@ class DockRoutine:
 
     def _next_hop_toward_ship(self):
         """Resolve TOWARD_SHIP: a breadth-first search of the current
-        stop's interior graph (Landable.interior_adjacency) from the room
+        stop's interior graph (LandingSite.interior_adjacency) from the room
         we're standing in toward whichever room actually leads back to the
-        ship (Landable.get_ship_entry_key), returning just the first hop -
+        ship (LandingSite.get_ship_entry_key), returning just the first hop -
         or None if we're already there (nothing to route to) or no path
         exists. Only fetches self.route[self._route_index] when actually
         needed, so a role/test that never resolves TOWARD_SHIP (the common

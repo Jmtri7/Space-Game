@@ -8,7 +8,7 @@ Class hierarchy, entity patterns, and extensibility points for the space game.
 ```
 WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
 ├── Ship (physics, rotation; owns an Autopilot via composition)
-└── Landable (space station or moon — config decides which)
+└── LandingSite (space station or moon — config decides which)
 
 Person (base — x, y, draw(), get_distance(), owns a Possessions)
 ```
@@ -150,7 +150,7 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   | `braked_below_threshold` | speed drops below `brake_slow_threshold` after thrust+brake | `SpaceScreen.update_physics` |
   | `used_ships_target_mode` | cycle targeting to SHIPS | `SpaceScreen._cycle_target_mode` |
   | `used_autopilot_on_ship` | engage autopilot toward a ship | `SpaceScreen` |
-  | `landed_on_landable` | land at a station/moon | `SpaceScreen._check_landing` |
+  | `landed_on_landing_site` | land at a station/moon | `SpaceScreen._check_landing` |
   | `completed_jump` | finish a jump | `SpaceScreen._complete_jump` |
   | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
   | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
@@ -180,7 +180,7 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   and `config/stories/default/missions.json`'s `"first_flight"` for a
   worked example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
-- `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, non-landable)
+- `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, can't be landed on)
 - `game/perf_metrics.py` — `PerfMetrics` + a shared `metrics` instance and
   `draw_overlay()` (module-level, same shared-instance rationale as
   `utils.Camera`). `main.py`'s loop calls `metrics.record()` once per frame
@@ -201,7 +201,7 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
 
 ## Entity Design Pattern
 
-`WorldObject` factors out what `Ship` and `Landable` both need:
+`WorldObject` factors out what `Ship` and `LandingSite` both need:
 
 ```python
 class WorldObject:
@@ -290,7 +290,7 @@ low velocity + low rotation + high size; small/agile ships (`patrol`) pair mediu
 medium-high velocity + medium-high rotation + low size. Values well outside these ranges will
 still work (nothing enforces them) but will feel very different from the rest of the fleet.
 
-**Culture and material palette:** if a ship (or building — see `Landable`/`LocationScreen`
+**Culture and material palette:** if a ship (or building — see `LandingSite`/`LocationScreen`
 below) belongs to an existing culture, set `"culture": "<culture_id>"` in its `graphics.json`/
 `building_types.json` entry instead of hardcoding `color`. `get_graphics_asset()`/
 `get_building_type()` (in `utils.py`) automatically fill in `color`, `core_color`/
@@ -423,9 +423,9 @@ system's list and appending to another's, then repositioning - see
 enough (every system reuses the same game-space coordinates, and only the
 active one is ever drawn/given a camera).
 
-## Landable: Stations & Moons
+## LandingSite: Stations & Moons
 
-**Class: `Landable(WorldObject)`**
+**Class: `LandingSite(WorldObject)`**
 - One class, two visual modes — decided at construction by inspecting `graphics`:
   `is_station = "rotation_speed" in graphics or graphics.get("shape") in ["hexapod", "octagon"]`
 - Station mode: rotates (`rotation_speed`), drawn as a polygon with a glowing core
@@ -505,7 +505,7 @@ BackdropMenu(main) → BackdropMenu(story) → PilotNameDialog → LocationScree
 SpaceScreen → ChoiceDialog (landing spot) → LocationScreen (moon: city ←→ wilderness, L) ←→ PauseMenu
 ```
 A default-story station is a **single** `LocationScreen` — one connected
-walkable area with just one portal (the ship dock). Multi-interior landables
+walkable area with just one portal (the ship dock). Multi-interior landing sites
 (the moon's city/wilderness, or another story's station) still work: each
 interior is its own cached `LocationScreen` and `portals` wire them together.
 A new pilot never sees `SpaceScreen` at all until they own a ship - see
@@ -519,7 +519,7 @@ A new pilot never sees `SpaceScreen` at all until they own a ship - see
 ## Extensibility Points
 
 ### Adding a New Entity Type
-1. Create a class extending `Ship`, `Landable`, or `Person` - or, for a new
+1. Create a class extending `Ship`, `LandingSite`, or `Person` - or, for a new
    *character*, prefer a new `Routine` (see below) over a new class
 2. Override `update()` and/or `draw()`
 3. Add to `SpaceScreen` (or a location's NPC list)
@@ -568,7 +568,7 @@ except where a story clearly needs it; code holds the default.
 
 ## Design Decisions
 
-**Why `WorldObject` as a base for `Ship` & `Landable`?**
+**Why `WorldObject` as a base for `Ship` & `LandingSite`?**
 - DRY: both needed position, `get_distance()`, and rotate-and-draw-polygon logic
 - Added when the arrow-around-ship HUD feature surfaced the duplication directly
 
@@ -599,7 +599,7 @@ polylines (each with its own `color` and optional `outline`) drawn by
 `WorldObject.draw_parts()` for multi-shape detail the single base silhouette
 can't express (extracted from the design-atlas SVGs; see
 [DESIGN_ATLAS.md](DESIGN_ATLAS.md)). When `parts` is present it is the
-*whole* drawn silhouette — `Ship.draw` / `Landable._draw_station` skip the
+*whole* drawn silhouette — `Ship.draw` / `LandingSite._draw_station` skip the
 flat base polygon and the `windows` dots entirely — but `shape` / dims /
 `local_points` still drive `_building_footprint` / `_structure_depth` /
 collision / target brackets regardless. Keep furniture footprints clear of NPC spawn points, portals,

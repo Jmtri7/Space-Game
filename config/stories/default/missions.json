@@ -145,12 +145,12 @@
         }
       },
       {
-        "text": "Target the station/moon (T for LANDABLES, then [ ]), autopilot in (Space), land (L).",
-        "complete_flag": "landed_on_landable",
+        "text": "Target the station/moon (T for LANDING SITES, then [ ]), autopilot in (Space), land (L).",
+        "complete_flag": "landed_on_landing_site",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDABLES for stations and moons, MISC for the rest. Set it to LANDABLES, then [ or ] to pick the station or moon. With it targeted, hit Space and the autopilot flies you in and sets you down - or fly it yourself and press L once you're close and slow. Good luck out there, pilot."
+          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDING SITES for stations and moons, MISC for the rest. Set it to LANDING SITES, then [ or ] to pick the station or moon. With it targeted, hit Space and the autopilot flies you in and sets you down - or fly it yourself and press L once you're close and slow. Good luck out there, pilot."
         }
       }
     ]

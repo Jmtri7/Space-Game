@@ -210,7 +210,7 @@ class SeekMode:
 
         # Step 1: Landing/arrival condition check (see has_arrived - tight
         # enough that the autopilot keeps braking all the way in to (near)
-        # the landable's exact middle, not just its generous manual-landing
+        # the landing site's exact middle, not just its generous manual-landing
         # radius, floored so it stays reachable for slow/sluggish ships).
         # The watchdog is checked alongside it: a real arrival is always
         # preferred, but past MAX_SEEK_FRAMES, stop wherever we are rather
@@ -244,7 +244,7 @@ class SeekMode:
         # Step 2a: cross-track kill. Retrograde thrust only cancels
         # whatever velocity currently exists - if most of it is sideways
         # (e.g. the ship was already moving fast in some unrelated
-        # direction when it targeted the landable), braking immediately
+        # direction when it targeted the landing site), braking immediately
         # just freezes that sideways drift in place instead of correcting
         # it, stopping the ship well off to the side on the very first
         # attempt (up to ~360 units off, measured). Null the cross-track
@@ -368,7 +368,7 @@ class OrbitMode:
     actively regulate speed at all. The settled circle ends up a bit larger
     than radius (a faster ship needs a wider turn to hold a circle with a
     fixed turn rate) - harmless, since it's still centered on the same
-    landables and just orbits them with more clearance.
+    landing sites and just orbits them with more clearance.
     """
     def __init__(self, center_x, center_y, radius):
         self.center_x = center_x

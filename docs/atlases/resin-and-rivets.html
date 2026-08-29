@@ -1198,7 +1198,7 @@
           <dt>rotation_speed</dt><dd>0.5</dd>
           <dt>windows</dt><dd>4, clustered on the spur</dd>
           <dt>core_color</dt><dd>#78FFC8 · from culture glass_color</dd>
-          <dd class="full">graphics.json space_stations.station_alpha. <code style="font-family:'IBM Plex Mono',monospace;font-size:.82em">Landable._draw_station</code> gained the outline + windows pass.</dd>
+          <dd class="full">graphics.json space_stations.station_alpha. <code style="font-family:'IBM Plex Mono',monospace;font-size:.82em">LandingSite._draw_station</code> gained the outline + windows pass.</dd>
         </dl>
         <div class="rules"><span>Rules: <b>1</b> · <b>2</b> · <b>3</b> · <b>4</b> · <b>5</b></span></div>
       </div>
@@ -2464,7 +2464,7 @@
       </section>
       <section>
         <h4>Stations</h4>
-        <p><code>graphics.json</code> → <code>space_stations</code> — <code>shape</code>, <code>local_points</code>, <code>size</code>, <code>rotation_speed</code>, <code>landing_distance</code>, plus <code>parts</code> + <code>outline_color</code> from the plate. <code>Landable._draw_station</code> now draws the <code>parts</code> silhouette directly (the flat hull + window dots are skipped when <code>parts</code> is present).</p>
+        <p><code>graphics.json</code> → <code>space_stations</code> — <code>shape</code>, <code>local_points</code>, <code>size</code>, <code>rotation_speed</code>, <code>landing_distance</code>, plus <code>parts</code> + <code>outline_color</code> from the plate. <code>LandingSite._draw_station</code> now draws the <code>parts</code> silhouette directly (the flat hull + window dots are skipped when <code>parts</code> is present).</p>
       </section>
       <section>
         <h4>Interiors</h4>

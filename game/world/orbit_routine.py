@@ -1,9 +1,9 @@
-"""Routine: continuously circle a point enclosing every landable in the
+"""Routine: continuously circle a point enclosing every landing site in the
 route - a standing patrol."""
 
 
 class OrbitRoutine:
-    """Continuously circle a point enclosing every landable in the route."""
+    """Continuously circle a point enclosing every landing site in the route."""
     def __init__(self, route):
         self.route = route
 
@@ -16,12 +16,12 @@ class OrbitRoutine:
         pass  # engage_orbit already put the ship into a standing autopilot mode that runs itself every frame
 
     @staticmethod
-    def _compute_orbit(landables):
-        """Center and radius of a circle that encloses every landable in the list."""
-        center_x = sum(landable.x for landable in landables) / len(landables)
-        center_y = sum(landable.y for landable in landables) / len(landables)
+    def _compute_orbit(landing_sites):
+        """Center and radius of a circle that encloses every landing site in the list."""
+        center_x = sum(site.x for site in landing_sites) / len(landing_sites)
+        center_y = sum(site.y for site in landing_sites) / len(landing_sites)
         radius = 0
-        for landable in landables:
-            margin = getattr(landable, 'landing_distance', 0)
-            radius = max(radius, landable.get_distance(center_x, center_y) + margin)
+        for site in landing_sites:
+            margin = getattr(site, 'landing_distance', 0)
+            radius = max(radius, site.get_distance(center_x, center_y) + margin)
         return center_x, center_y, radius

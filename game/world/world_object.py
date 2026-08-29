@@ -83,7 +83,7 @@ def _resolve_part_color(spec, metal_color, glass_color):
 
 
 class WorldObject:
-    """Base class for anything with a position in the game world (ships, landables)."""
+    """Base class for anything with a position in the game world (ships, landing sites)."""
     def __init__(self, x, y, graphics=None):
         self.x = x
         self.y = y

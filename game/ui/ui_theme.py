@@ -12,6 +12,11 @@ from game.world.world_object import _resolve_part_color
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
 DISABLED_TEXT_COLOR = (150, 90, 90)
+# Message Log sender-name styling (underlined + coloured, distinct from the
+# message body) - brighter for the newest entry, dimmer for older ones, to
+# match the WHITE/GRAY body treatment.
+MESSAGE_SENDER_COLOR = (120, 210, 255)
+MESSAGE_SENDER_COLOR_DIM = (95, 145, 180)
 
 
 def side_panel_max_width():
@@ -287,6 +292,33 @@ MESSAGE_LOG_VISIBLE_LINES = 7  # text lines drawn at once; the rest scroll (mous
 SCROLL_HINT_COLOR = (120, 200, 255)  # "^ newer" / "v older" arrows - a distinct blue, not the dim GRAY of older text
 INFO_PANEL_VISIBLE_LINES = 8  # draw_info_panel lines shown at once before it scrolls
 
+# Unread-message alert: the bottom-left Message Log's red light blinks
+# exactly MESSAGE_ALERT_BLINKS times (on for MESSAGE_ALERT_BLINK_FRAMES,
+# then off for the same) and the "ping" sound fires once at the start of
+# each blink, then it goes quiet and dark. Both screens drive this off
+# message_alert_timer counting down from MESSAGE_ALERT_FRAMES; the blink
+# state and ping schedule come from message_alert_state() so they stay in
+# sync. (Was a flat ~10s / ~14-blink wall-clock flash with a single ping.)
+MESSAGE_ALERT_BLINKS = 3
+MESSAGE_ALERT_BLINK_FRAMES = 21  # ~0.35s at 60fps per half-cycle (matches the old blink rate)
+MESSAGE_ALERT_FRAMES = MESSAGE_ALERT_BLINKS * 2 * MESSAGE_ALERT_BLINK_FRAMES
+
+
+def message_alert_state(frames_remaining):
+    """Map message_alert_timer (counts down MESSAGE_ALERT_FRAMES -> 0) to
+    `(blink_on, pings_due)`: whether the unread light is lit this frame, and
+    how many pings should have sounded so far (0..MESSAGE_ALERT_BLINKS). The
+    caller plays `pings_due` minus however many it has already played, so a
+    frame-rate hitch that skips a blink still gets the right total. Returns
+    `(False, MESSAGE_ALERT_BLINKS)` once the alert has run its course."""
+    if frames_remaining <= 0:
+        return False, MESSAGE_ALERT_BLINKS
+    elapsed = MESSAGE_ALERT_FRAMES - frames_remaining
+    cycle = 2 * MESSAGE_ALERT_BLINK_FRAMES
+    blink_on = (elapsed % cycle) < MESSAGE_ALERT_BLINK_FRAMES
+    pings_due = min(MESSAGE_ALERT_BLINKS, elapsed // cycle + 1)
+    return blink_on, pings_due
+
 
 def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     """Bottom-left glass panel of received one-way messages (see
@@ -304,6 +336,10 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     is over this panel. `^ newer` / `v older` hints show when there's more
     in either direction.
 
+    `alert` is this frame's on/off state for the red "unread" light (the
+    caller resolves it via message_alert_state()); pass False to leave it
+    dark.
+
     Returns `(rect, max_scroll)` so the caller can clamp its own stored
     scroll offset; returns `(None, 0)` when there are no messages yet (a
     fresh game shows no empty box - same pattern as draw_status_pane).
@@ -319,15 +355,19 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     margin = hud_margin(ui_scale)
     box_width = side_panel_width(ui_scale)
 
-    # Every message flattened to (line, is_newest_entry) - each entry wraps
-    # as one "Sender: text" unit (not sender/text independently, so a short
-    # message stays on one line without a lone "Sender:" above it). The
+    # Every message flattened to (line, is_newest_entry, sender_prefix) -
+    # each entry wraps as one "Sender: text" unit (not sender/text
+    # independently, so a short message stays on one line without a lone
+    # "Sender:" above it). sender_prefix ("Sender: ") is carried on the
+    # first wrapped line of each entry only, so the draw loop can pick the
+    # sender name back out and style it (underlined, its own colour). The
     # newest entry's lines stay bright and the rest dim, kept as a cue even
     # after scrolling.
     flat = []
     for i, (sender, text) in enumerate(messages):
-        for line in _wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2):
-            flat.append((line, i == 0))
+        prefix = f"{sender}: "
+        for j, line in enumerate(_wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2)):
+            flat.append((line, i == 0, prefix if j == 0 else None))
 
     total = len(flat)
     visible = min(total, MESSAGE_LOG_VISIBLE_LINES)
@@ -348,10 +388,11 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     draw_glass_panel(surface, rect, ui_scale)
 
     surface.blit(title_rendered, (rect.x + pad_x, rect.y + pad_y))
-    # Blinking red "unread" light in the panel's top-right corner - the
-    # caller passes alert=True for ~10s after a message lands (see
-    # SpaceScreen.message_alert_timer / MESSAGE_ALERT_FRAMES).
-    if alert and (pygame.time.get_ticks() // 350) % 2 == 0:
+    # Red "unread" light in the panel's top-right corner. The caller passes
+    # `alert` already resolved to this frame's on/off blink state (see
+    # message_alert_state / message_alert_timer) - it blinks MESSAGE_ALERT_
+    # BLINKS times in sync with the ping, then stays dark.
+    if alert:
         r = max(3, int(5 * ui_scale))
         cx = rect.right - pad_x - r
         cy = rect.y + pad_y + title_rendered.get_height() // 2
@@ -362,8 +403,22 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
         if scroll > 0:
             surface.blit(font_text.render("^ newer  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
         y += hint_height
-    for line, is_newest in flat[scroll:scroll + visible]:
-        surface.blit(font_text.render(line, True, WHITE if is_newest else GRAY), (rect.x + pad_x, y))
+    for line, is_newest, prefix in flat[scroll:scroll + visible]:
+        text_color = WHITE if is_newest else GRAY
+        x = rect.x + pad_x
+        if prefix and line.startswith(prefix):
+            # First line of an entry: draw the sender name underlined and in
+            # the sender colour, then ": <message>" in the normal text colour.
+            name = prefix[:-2]  # drop the ": " separator
+            sender_color = MESSAGE_SENDER_COLOR if is_newest else MESSAGE_SENDER_COLOR_DIM
+            font_text.set_underline(True)
+            name_surf = font_text.render(name, True, sender_color)
+            font_text.set_underline(False)
+            surface.blit(name_surf, (x, y))
+            surface.blit(font_text.render(": " + line[len(prefix):], True, text_color),
+                         (x + name_surf.get_width(), y))
+        else:
+            surface.blit(font_text.render(line, True, text_color), (x, y))
         y += line_height
     if scrollable and scroll < max_scroll:
         surface.blit(font_text.render("v older  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
