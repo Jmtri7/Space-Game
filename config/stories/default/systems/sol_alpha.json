@@ -208,7 +208,7 @@
             "x": 280,
             "y": 600,
             "role": "loan_officer",
-            "outfit": "loan_officer",
+            "outfit": "vherathi_vault_warden",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
@@ -235,14 +235,14 @@
             "role": "ship_salesman",
             "outfit": "ship_dealer",
             "greeting": "Looking for a ship? Concord hulls, a couple of Federation issues - take your pick.",
-            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter", "vherathi_courier", "vherathi_tender", "vherathi_ark", "issue_shuttle", "issue_cutter", "issue_tender"]}
+            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter", "vherathi_skiff", "vherathi_courier", "vherathi_thornwing", "vherathi_tender", "vherathi_reliquary", "vherathi_ark"]}
           },
           {
             "name": "Reeve Katic",
             "x": 1376,
             "y": 660,
             "role": "outfitter",
-            "outfit": "mechanic",
+            "outfit": "vherathi_reefwright",
             "greeting": "Need to fit your ship out with something new?",
             "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
           },
@@ -436,7 +436,7 @@
             "x": 300,
             "y": 450,
             "role": "pilot",
-            "outfit": "flight_suit",
+            "outfit": "vherathi_tide_pilot",
             "greeting": "Grounded till my transit clears. Nice to stretch my legs off the flight deck for once.",
             "dialogue_options": ["Safe flights", "Leave"]
           },
@@ -517,7 +517,7 @@
       "name": "Freighter One",
       "x": 0.65,
       "y": 0.6,
-      "ship_type": "freighter",
+      "ship_type": "vherathi_reliquary",
       "pilot": "elena_voss",
       "route": ["station", "moon"]
     },
@@ -525,7 +525,7 @@
       "name": "Patrol One",
       "x": 0.5,
       "y": 0.1,
-      "ship_type": "issue_cutter",
+      "ship_type": "vherathi_thornwing",
       "pilot": "kade_marsh",
       "route": ["station", "moon"]
     },

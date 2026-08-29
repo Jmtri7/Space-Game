@@ -595,10 +595,14 @@ and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
 to `building_footprints`, which `can_move_to` (and therefore `plan_path`'s nav
 grid) rejects. A `building_type` (and a ship/station in `graphics.json`) may
 also carry an optional **`parts`** list — filled polygons / circles /
-polylines drawn by `WorldObject.draw_parts()` for multi-shape detail the
-single base silhouette can't express (extracted from the design-atlas SVGs;
-see [DESIGN_ATLAS.md](DESIGN_ATLAS.md)). The base `shape`/dims still drive
-`_building_footprint` / `_structure_depth` regardless. Keep furniture footprints clear of NPC spawn points, portals,
+polylines (each with its own `color` and optional `outline`) drawn by
+`WorldObject.draw_parts()` for multi-shape detail the single base silhouette
+can't express (extracted from the design-atlas SVGs; see
+[DESIGN_ATLAS.md](DESIGN_ATLAS.md)). When `parts` is present it is the
+*whole* drawn silhouette — `Ship.draw` / `Landable._draw_station` skip the
+flat base polygon and the `windows` dots entirely — but `shape` / dims /
+`local_points` still drive `_building_footprint` / `_structure_depth` /
+collision / target brackets regardless. Keep furniture footprints clear of NPC spawn points, portals,
 and the necks between rooms — `tests/test_helpers.py`'s
 `TestStationInteriorLayout` walks a real path across Alpha Station and fails if
 a placement pinches it shut. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s

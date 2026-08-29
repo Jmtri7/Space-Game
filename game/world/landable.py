@@ -156,20 +156,27 @@ class Landable(WorldObject):
             pygame.draw.circle(surface, GREEN, to_screen(self.x, self.y), landing_radius_screen, 1)
 
     def _draw_station(self, surface, scale):
-        """Draw a rotating space station: an outlined hull polygon, optional
-        composite "parts" detail, any culture windows/lights, then the
-        glowing core - all turning with self.rotation."""
-        self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color, outline_color=self.outline_color)
+        """Draw a rotating space station - all turning with self.rotation.
+
+        A "parts" list is a complete multi-polygon silhouette pulled from the
+        design atlas: when present it fully replaces the flat hull polygon and
+        the circular "windows" dots (drawing those too just shows the old
+        shape bleeding past the new one). local_points stays authoritative for
+        collision/size math, just not for drawing. The glowing core is always
+        drawn on top as a docking beacon."""
         if self.parts:
-            self._draw_parts(surface, self.parts, self.rotation, 1, self.color, self.window_color)
-        if self.windows:
-            rad = math.radians(self.rotation)
-            cos_a, sin_a = math.cos(rad), math.sin(rad)
-            radius = max(1, int(round(self.size * 0.05 * scale)))
-            for lx, ly in self.windows:
-                wx = self.x + (lx * cos_a - ly * sin_a)
-                wy = self.y + (lx * sin_a + ly * cos_a)
-                pygame.draw.circle(surface, self.window_color, to_screen(wx, wy), radius)
+            self._draw_parts(surface, self.parts, self.rotation, 1, self.color,
+                             self.window_color, self.outline_color)
+        else:
+            self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color, outline_color=self.outline_color)
+            if self.windows:
+                rad = math.radians(self.rotation)
+                cos_a, sin_a = math.cos(rad), math.sin(rad)
+                radius = max(1, int(round(self.size * 0.05 * scale)))
+                for lx, ly in self.windows:
+                    wx = self.x + (lx * cos_a - ly * sin_a)
+                    wy = self.y + (lx * sin_a + ly * cos_a)
+                    pygame.draw.circle(surface, self.window_color, to_screen(wx, wy), radius)
         pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
     def _draw_moon(self, surface, scale):

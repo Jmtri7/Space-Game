@@ -16,8 +16,10 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
     building's absolute local units, `size` for a ship/station whose base
     points are fractions of size - then rotated `angle` degrees. Lets one
     config entry carry the multi-polygon designs a single base shape can't
-    (see the design atlases). Colours resolve via _resolve_part_color:
-    an [r,g,b], "metal", "glass", or "shade:<n>"."""
+    (see the design atlases). Colours (`color`, and an optional per-part
+    `outline` - `"none"` to omit it, else defaults to `outline_color`)
+    resolve via _resolve_part_color: an [r,g,b], "#rrggbb", "metal",
+    "glass", or "shade:<n>"."""
     if not parts:
         return
     rad = math.radians(angle)
@@ -31,12 +33,20 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
 
     for part in parts:
         color = _resolve_part_color(part.get("color"), metal_color, glass_color)
+        ol_spec = part.get("outline")
+        if ol_spec == "none":
+            ol = None
+        elif ol_spec is not None:
+            ol = _resolve_part_color(ol_spec, metal_color, glass_color)
+        else:
+            ol = outline_color
         if "circle" in part:
             cx, cy, r = part["circle"]
             center = project(cx, cy)
             radius = max(1, int(round(r * unit * scale)))
             pygame.draw.circle(surface, color, center, radius)
-            pygame.draw.circle(surface, outline_color, center, radius, outline_w)
+            if ol:
+                pygame.draw.circle(surface, ol, center, radius, outline_w)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
             if len(pts) >= 2:
@@ -46,7 +56,8 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
                 pygame.draw.polygon(surface, color, pts)
-                pygame.draw.polygon(surface, outline_color, pts, outline_w)
+                if ol:
+                    pygame.draw.polygon(surface, ol, pts, outline_w)
 
 
 def _resolve_part_color(spec, metal_color, glass_color):
@@ -123,7 +134,9 @@ class WorldObject:
         pygame.draw.polygon(surface, color, points)
         return points
 
-    def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color):
+    def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color,
+                    outline_color=(12, 10, 16)):
         """Composite "parts" detail about this object's own (x, y) - see the
         module-level draw_parts()."""
-        draw_parts(surface, parts, self.x, self.y, angle, unit, metal_color, glass_color)
+        draw_parts(surface, parts, self.x, self.y, angle, unit, metal_color,
+                   glass_color, outline_color)

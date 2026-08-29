@@ -70,7 +70,7 @@
             "x": 560,
             "y": 300,
             "role": "quartermaster",
-            "outfit": "guild_trader",
+            "outfit": "drossholt_tallyman",
             "greeting": "Supplies are thin out here, but we make do.",
             "dialogue_options": ["Thanks", "Leave"],
             "shop": {"type": "commodities", "stock": ["ore", "medicine", "fuel_cells"], "sell_multiplier": 0.6}
@@ -98,7 +98,7 @@
             "x": 560,
             "y": 240,
             "role": "security",
-            "outfit": "security",
+            "outfit": "drossholt_cutterman",
             "greeting": "Company security. We don't get many visitors this far out, so I'll be watching.",
             "dialogue_options": ["Understood", "Leave"]
           },
@@ -241,7 +241,7 @@
             "x": 450,
             "y": 1150,
             "role": "bounty_hunter",
-            "outfit": "bounty_hunter",
+            "outfit": "drossholt_gun_bosun",
             "greeting": "I'm between contracts. Stay clean and you'll stay off my list.",
             "dialogue_options": ["Fair enough", "Leave"]
           },

@@ -130,6 +130,55 @@
       {"id": "utility_2", "type": "utility", "x": 0.65, "y": 0.5}
     ]
   },
+  "vherathi_skiff": {
+    "name": "Resin Skiff",
+    "description": "A grown-crooked starter courier - one dorsal stress ridge, ports clustered at the bow, the lone thruster set left of centre.",
+    "max_thrust": 0.12,
+    "max_velocity": 2.0,
+    "rotation_speed": 4,
+    "size": 10,
+    "color": [74, 48, 96],
+    "shape": "rectangle",
+    "cost": 1800,
+    "cargo_capacity": 6,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55}
+    ]
+  },
+  "vherathi_reliquary": {
+    "name": "Reliquary Hauler",
+    "description": "Bulk cargo hull that tapers from a tall grown reliquary vault at the bow to an uneven engine cluster; the window spine curves along the load path.",
+    "max_thrust": 0.10,
+    "max_velocity": 2.0,
+    "rotation_speed": 1,
+    "size": 35,
+    "color": [74, 48, 96],
+    "shape": "long_rectangle",
+    "cost": 4800,
+    "cargo_capacity": 80,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "vherathi_thornwing": {
+    "name": "Thornwing Corvette",
+    "description": "The patrol hull swept into a single thorn - one long starboard wing to a point, the port side clipped to a stub, a grown weapon nub at the bow.",
+    "max_thrust": 0.35,
+    "max_velocity": 5.0,
+    "rotation_speed": 7,
+    "size": 13,
+    "color": [74, 48, 96],
+    "shape": "rectangle",
+    "cost": 3600,
+    "cargo_capacity": 15,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
+    ]
+  },
   "drossholt_tug": {
     "name": "Sledge Tug",
     "description": "A short, brutally heavy salvage tug with oversized forward tow clamps. The ship you bring to a derelict.",

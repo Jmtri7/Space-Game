@@ -1149,11 +1149,26 @@ class TestStationWindowsAndCulture(unittest.TestCase):
         g = utils.get_graphics_asset("default", "space_stations", "station_delta")
         self.assertEqual(tuple(g["core_color"]), (255, 200, 80))   # drossholt glass_color
 
-    def test_draw_station_draws_one_light_per_window_point_plus_the_core(self):
+    def test_a_windowed_station_with_no_parts_draws_one_light_per_window_plus_core(self):
         with patch("game.world.landable.pygame") as mock_pygame:
-            g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
+            g = {"rotation_speed": 0.5, "size": 30,
+                 "local_points": [[-10, -10], [10, -10], [10, 10], [-10, 10]],
+                 "windows": [[0, -5], [0, 5], [5, 0]]}
             Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
             self.assertEqual(mock_pygame.draw.circle.call_count, len(g["windows"]) + 1)
+
+    def test_a_parts_station_skips_the_flat_hull_and_window_dots(self):
+        """A "parts" silhouette from the atlas already includes the hull and
+        viewports - _draw_station must not also stroke the flat local_points
+        polygon or scatter window circles under it (that just shows the old
+        shape bleeding past the new one). Only the core beacon is drawn by
+        landable itself."""
+        with patch("game.world.landable.pygame") as mock_pygame:
+            g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
+            self.assertTrue(g.get("parts"))
+            Landable(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
+            mock_pygame.draw.polygon.assert_not_called()
+            self.assertEqual(mock_pygame.draw.circle.call_count, 1)  # core only
 
     def test_a_station_with_no_windows_draws_only_the_core(self):
         with patch("game.world.landable.pygame") as mock_pygame:

@@ -104,19 +104,31 @@ unrenderable page during the first build:
 A specimen SVG is mostly polygons/paths/circles, and the engine can consume
 that directly: `graphics.json` (ships, `space_stations`) and
 `building_types.json` entries take an optional **`parts`** list —
-`{"points": [...], "color": ...}` / `{"circle": [cx, cy, r], ...}` /
-`{"line": [...], "width": w, ...}` — drawn in order over (ships/stations) or
-instead of (buildings) the base silhouette by `WorldObject.draw_parts()`.
-Colours are `[r,g,b]`, `"#rrggbb"`, `"metal"`, `"glass"`, or `"shade:<n>"`.
-Ship/station part coords are fractions of `size` / absolute local units
-respectively, matching that entry's `local_points`; building coords are
-absolute local units with y negative going up from the ground anchor.
+`{"points": [...], "color": ..., "outline": ...}` /
+`{"circle": [cx, cy, r], ...}` / `{"line": [...], "width": w, ...}`.
+`WorldObject.draw_parts()` renders the list **and nothing else** — a `parts`
+list is a *complete* silhouette, so the flat base polygon and the circular
+`windows` dots are **not** also drawn under/over it (that just shows the old
+shape bleeding past the new one). `local_points` / `shape` / `footprint`
+stay authoritative for collision, depth sort, and target-bracket sizing, but
+not for drawing. Colours (`color`, and an optional per-part `outline` —
+`"none"` to omit it, else the entry-level `outline_color`) are `[r,g,b]`,
+`"#rrggbb"`, `"metal"`, `"glass"`, or `"shade:<n>"`. Ship/station part coords
+are fractions of `size` / absolute local units respectively; building coords
+are absolute local units with y negative going up from the ground anchor.
 
 So a detailed plate can be **extracted rather than re-drawn**: parse the
-specimen SVG, flatten its paths to short segments, and map atlas-viewBox
-coords into the entry's local space (one `(cx, cy, scale, flip)` transform
-per asset). The base `shape` / `local_points` / `footprint` still need to be
-present for collision and depth math even when `parts` drives the visual.
+specimen SVG, flatten its paths to short segments (real cubic/quadratic
+bézier sampling; SVG arcs `A` are approximated linearly — avoid them in a
+plate you mean to extract), and map atlas-viewBox coords into the entry's
+local space (one `(cx, cy, scale, flip)` transform per asset). The
+extractor keeps the largest filled polygon as **both** `parts[0]` (the hull
+fill, drawn) and a copy in `local_points` (collision only), and lifts that
+polygon's `stroke` to the entry's `outline_color`. Every filled sub-shape
+keeps its own `stroke` as a per-part `outline`, so the plate's coloured
+edges survive into the game rather than collapsing to one black stroke.
+Scratchpad tooling: `extract_atlas.py` (one plate → parts JSON) and
+`apply_parts.py` (the asset→plate table + targeted JSON injection).
 
 ## Maintaining an atlas
 

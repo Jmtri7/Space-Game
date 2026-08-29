@@ -130,15 +130,20 @@ class Ship(WorldObject):
         # fall back to a named built-in shape.
         local_points = self._get_shape_points(ship_size, shape if self.graphics else "triangle")
         outline_color = tuple(self.graphics.get("outline_color", (20, 18, 25)))
-        self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
-        # Optional composite detail (livery stripes, hazard chevrons, mounted
-        # blocks) - fractions of ship_size, turning with the hull. See the
-        # design atlases and WorldObject._draw_parts.
-        parts = self.graphics.get("parts")
+        # A "parts" list is a complete multi-polygon silhouette pulled from the
+        # design atlas - it already includes the hull and viewports, so when
+        # one is present it fully replaces the flat base polygon and the
+        # circular "windows" dots (drawing those underneath/on top just shows
+        # the old shape bleeding past the new one). local_points/shape stay
+        # authoritative for collision and target-bracket sizing, just not draw.
+        parts = self.graphics.get("parts") if self.graphics else None
         if parts:
             glass_color = tuple(self.graphics.get("window_color", (200, 230, 255)))
-            self._draw_parts(surface, parts, self.angle, ship_size, color, glass_color)
-        self._draw_windows(surface, ship_size)
+            self._draw_parts(surface, parts, self.angle, ship_size, color,
+                             glass_color, outline_color)
+        else:
+            self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
+            self._draw_windows(surface, ship_size)
 
         if self.thrust > 0.05:
             self._draw_thrusters(surface, ship_size)
