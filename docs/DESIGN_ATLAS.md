@@ -20,19 +20,30 @@ is the how: how to make one, how to keep it honest, and which ones exist.
 
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
-  shipped** as of story `1.10.0` — every ship/station/building/outfit/furniture
-  plate is in `config/`, both station interiors and both moon cities rebuilt to
-  the floor-plan model, and every specimen SVG (including the 01·D / 02·D
-  decoration & furniture refines — light-column, fern-basin, lounge-pod,
-  work-light, cargo-stack, drum) was extracted into its entry's `parts` list.
-  The cargo-stack / drum refines turn one entry into a whole pile, so the
-  hand-placed crate/barrel clusters in `keplers_reach` were thinned to match.
+  shipped** as of story `1.10.0` — both station interiors and both moon cities are
+  rebuilt to the floor-plan model, and **every** ship / station / building /
+  furniture plate has had its specimen SVG extracted into that entry's `parts`
+  list. That includes every 01·D / 02·D decoration & furniture plate (light-column,
+  fern-basin, lounge-pod, resin-bench, concierge-desk, work-light, cargo-stack,
+  drum, scrub-tub, plate-bench, trade-counter) and the concord-spire / bloompod /
+  gathering-hall / watch-tower / bunker / warehouse building refines. The
+  concierge-desk, resin-bench, plate-bench, trade-counter and scrub-tub plates
+  were authored fresh (those entries had no plate). No `building_type` in
+  `config/stories/default` is on the plain shape + window-dot fallback any more.
+  Two gotchas that came out of this: cargo-stack / drum turn one entry into a
+  whole *pile*, so the hand-placed crate/barrel clusters in `keplers_reach` were
+  thinned to match; and a strokeless atlas shape now extracts with
+  `"outline": "none"` so glow dots stop picking up a black ring.
 - **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
   **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
-  look. The `standard_issue` culture, its ships/station/buildings, and the
-  **Procyon Gate** system that makes it live all shipped in `1.10.0`. The
-  culture-neutral **outfit redraws** (Chapters 02–04) stay mockups — the `Person`
-  renderer is colour-key driven, so they need a parts-style figure renderer first.
+  look. The `standard_issue` culture, its ships/station, the **Procyon Gate**
+  system, and all of its **buildings + furniture** (issue_block, issue_shed,
+  issue_bollard, issue_bench, issue_desk — the last one a fresh plate) shipped
+  into `parts` too. The culture-neutral **outfit redraws** (Chapters 02–04) stay
+  mockups — the `Person` renderer is colour-key driven, so they need a parts-style
+  figure renderer first. So does the 05·D **hazard-chevron floor decal**: the
+  `decorations` system has no `parts`, so it's still authored as plain
+  hazard-colour floor rects in the system JSON, not literal chevrons.
 
 ### Updating a published atlas
 
