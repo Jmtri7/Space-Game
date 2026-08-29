@@ -1089,6 +1089,39 @@
     <article class="plate reveal">
       <div class="viewport">
         <span class="isnew">Shipped</span>
+        <svg viewBox="0 0 240 200" role="img" aria-label="Top-down view of the Vherathi Resin Bench: a gently curved grown seat drawn longer at one end, its back edge traced with a single glow vein and three glow nodes spaced along the seat.">
+          <rect width="240" height="200" fill="url(#grid)"/>
+          <ellipse cx="120" cy="122" rx="94" ry="16" fill="url(#floorglow)"/>
+          <path d="M34,132 C40,112 58,100 96,96 C140,91 188,96 210,110 C214,116 214,122 208,126 C186,116 144,112 104,116 C70,119 52,128 44,140 C40,146 34,142 34,132 Z" fill="#4a3060" stroke="#2f1e3c" stroke-width="2.4"/>
+          <path d="M36,128 C44,110 62,99 98,95 C142,90 188,96 210,110" stroke="#7dffca" stroke-width="2" fill="none" class="v-glow"/>
+          <g fill="#7dffca" class="v-glow">
+            <circle cx="66" cy="122" r="2.8"/><circle cx="118" cy="110" r="2.8"/><circle cx="168" cy="110" r="2.4"/>
+          </g>
+        </svg>
+        <span class="vlabel">resin-bench · top</span>
+      </div>
+      <div class="plate-body">
+        <h3>Vherathi Resin Bench</h3>
+        <p class="role">Seating — refines "vherathi_bench"</p>
+        <p>
+          The config is a near-straight 8-point slab. The refine gives it the
+          Concord's <b>asymmetric curve</b> — one end drawn longer, the whole
+          seat bowing gently as if grown to follow a room's wall arc — and
+          traces the <b>back edge with a single vein</b> the glow nodes sit on.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>polygon, shallow arc</dd>
+          <dt>windows</dt><dd>3, along the seat</dd>
+          <dt>footprint</dt><dd>132 × 30</dd>
+          <dd class="full">building_types.json: bow the local_points into a shallow uneven arc; keep the 3-node "windows" run on the back edge.</dd>
+        </dl>
+        <div class="rules"><span>Rules: <b>1</b> · <b>4</b> · <b>5</b></span></div>
+      </div>
+    </article>
+
+    <article class="plate reveal">
+      <div class="viewport">
+        <span class="isnew">Shipped</span>
         <svg viewBox="0 0 240 200" role="img" aria-label="Elevation of the Vein Arch: a grown archway over a corridor, one leg noticeably thicker than the other, brightest at an off-centre keystone.">
           <rect width="240" height="200" fill="url(#grid)"/>
           <ellipse cx="120" cy="182" rx="70" ry="8" fill="url(#floorglow)"/>
@@ -1806,6 +1839,75 @@
           <dt>detail</dt><dd>lid rivets · dent · stencil</dd>
           <dt>footprint</dt><dd>46 × 46</dd>
           <dd class="full">building_types.json furniture: add lid ellipse + banding rects + one concave dent polygon.</dd>
+        </dl>
+        <div class="rules"><span>Rules: <b>1</b> · <b>3</b> · <b>4</b></span></div>
+      </div>
+    </article>
+
+    <article class="plate reveal">
+      <div class="viewport">
+        <span class="isnew">Shipped</span>
+        <svg viewBox="0 0 240 200" role="img" aria-label="Elevation of the Drossholt Plate Bench: two planks bolted across a mirrored pair of welded pipe legs, the lower plank a paler salvage shade, a hazard stripe along the front edge.">
+          <rect width="240" height="200" fill="url(#grid)"/>
+          <ellipse cx="120" cy="150" rx="78" ry="8" fill="url(#floorglow)"/>
+          <rect x="48" y="96" width="144" height="12" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <rect x="48" y="108" width="144" height="12" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
+          <rect x="48" y="118" width="144" height="4" fill="#ffc94f"/>
+          <rect x="62" y="120" width="9" height="28" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <rect x="169" y="120" width="9" height="28" fill="#8a6845" stroke="#5a4130" stroke-width="2"/>
+          <g fill="#5a4130"><circle cx="66" cy="102" r="2"/><circle cx="120" cy="102" r="2"/><circle cx="174" cy="102" r="2"/><circle cx="66" cy="114" r="2"/><circle cx="174" cy="114" r="2"/></g>
+        </svg>
+        <span class="vlabel">plate-bench · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Drossholt Plate Bench</h3>
+        <p class="role">Seating — refines "drossholt_bench"</p>
+        <p>
+          The Company read on a bench: <b>two planks</b> bolted across a
+          <b>mirrored pair of welded pipe legs</b>, the lower plank a paler
+          salvage shade, bolt heads showing on every plank, and a <b>hazard
+          stripe</b> painted along the front lip. Boxy, doubled, patched.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>2 plank rects + 2 legs</dd>
+          <dt>windows</dt><dd>4, bolt heads</dd>
+          <dt>footprint</dt><dd>128 × 26</dd>
+          <dd class="full">building_types.json: two offset plank rects with mixed colour + mirrored leg rects + a thin hazard rect.</dd>
+        </dl>
+        <div class="rules"><span>Rules: <b>1</b> · <b>3</b></span></div>
+      </div>
+    </article>
+
+    <article class="plate reveal">
+      <div class="viewport">
+        <span class="isnew">Shipped</span>
+        <svg viewBox="0 0 240 200" role="img" aria-label="Elevation of the Drossholt Trade Counter: a heavy bolted counter, a thick top slab over a riveted kick panel with one salvage-shade end patch, a hazard stripe along the customer edge and two amber terminal lights on top.">
+          <rect width="240" height="200" fill="url(#grid)"/>
+          <ellipse cx="120" cy="152" rx="88" ry="8" fill="url(#floorglow)"/>
+          <rect x="40" y="86" width="160" height="16" fill="#c89664" stroke="#5a4130" stroke-width="2.5"/>
+          <rect x="46" y="102" width="148" height="44" fill="#b98a58" stroke="#5a4130" stroke-width="2.5"/>
+          <rect x="150" y="102" width="44" height="44" fill="#8a6845"/>
+          <rect x="46" y="102" width="148" height="6" fill="#5a4130"/>
+          <rect x="40" y="98" width="160" height="4" fill="#ffc94f"/>
+          <g fill="#5a4130"><circle cx="54" cy="124" r="2"/><circle cx="92" cy="124" r="2"/><circle cx="130" cy="124" r="2"/><circle cx="184" cy="124" r="2"/></g>
+          <g fill="#ffc94f"><rect x="70" y="78" width="10" height="8"/><rect x="150" y="78" width="10" height="8"/></g>
+        </svg>
+        <span class="vlabel">trade-counter · elevation</span>
+      </div>
+      <div class="plate-body">
+        <h3>Drossholt Trade Counter</h3>
+        <p class="role">Service counter — refines "drossholt_desk"</p>
+        <p>
+          The quartermaster's counter, armoured like everything else: a thick
+          bolted <b>top slab</b>, a riveted <b>kick panel</b> with one whole end
+          in salvage shade, a <b>hazard stripe</b> along the customer edge, and
+          a pair of amber <b>terminal lights</b> on the deck.
+        </p>
+        <dl class="spec">
+          <dt>shape</dt><dd>slab rect + kick rect</dd>
+          <dt>windows</dt><dd>4, rivets + 2 amber lights</dd>
+          <dt>footprint</dt><dd>150 × 40</dd>
+          <dd class="full">building_types.json: slab rect + kick rect + end-patch rect + hazard rect; move "windows" to two amber lamp rects on top.</dd>
         </dl>
         <div class="rules"><span>Rules: <b>1</b> · <b>3</b> · <b>4</b></span></div>
       </div>
