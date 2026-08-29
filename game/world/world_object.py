@@ -50,8 +50,9 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
 
 
 def _resolve_part_color(spec, metal_color, glass_color):
-    """A part's "color": an [r,g,b], or one of the names "metal" / "glass",
-    or "shade:<n>" (metal nudged by n per channel). Defaults to metal."""
+    """A part's "color": an [r,g,b], a "#rrggbb" hex string, or one of the
+    names "metal" / "glass", or "shade:<n>" (metal nudged n per channel).
+    Defaults to metal."""
     if isinstance(spec, str):
         if spec == "metal":
             return tuple(metal_color)
@@ -63,6 +64,8 @@ def _resolve_part_color(spec, metal_color, glass_color):
             except ValueError:
                 d = 0
             return tuple(max(0, min(255, c + d)) for c in metal_color)
+        if spec.startswith("#"):
+            return tuple(pygame.Color(spec))[:3]
     if spec:
         return tuple(spec)
     return tuple(metal_color)
