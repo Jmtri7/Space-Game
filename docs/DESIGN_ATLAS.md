@@ -39,6 +39,12 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   station ring-modules / docking collars); the exhaust flame stays procedural
   via the `class="flame"` skip. See "Turning a plate into config" for the three
   engine-side rules that keep the flame on the nozzle.
+  **As of 2026-08-29 the whole page was redrawn strokeless** — only `<polygon>`
+  + `<circle>`, no `stroke`, matching Standard Issue (see "Strokeless specimens"
+  below); the Vherathi glass-green edge is now each hull's outline colour, the
+  bloom `<filter>` defs are gone, and the six outfits moved to the shared
+  legged + armed body. Design unchanged — but re-running `apply_parts.py` would
+  restyle the shipped `parts`, so it's left un-run (a design pass).
 - **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
   **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
   look. The `standard_issue` culture, its ships/station, the **Procyon Gate**
@@ -52,6 +58,19 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   The 05·A ship plates carry explicit thruster ports + `class="flame"` exhausts
   too, extracted the same way; the Standard Ring's ring modules and the Issue
   Tender's docking collar extract as transparent-hole ring parts.
+  **Every specimen in `standard-issue.html` is drawn with only `<polygon>` and
+  `<circle>`, no stroke** (outline = an evenly-offset copy of the shape behind
+  it; ovals/curves = many-sided polygons; straight + dashed lines = long thin
+  polygons; a ring/torus = radial quad segments so the centre is never covered
+  and the hole is genuinely transparent; `<text>` kept only for
+  labels/registrations). The figures carry **arms + hands** — shipped into
+  `person.py` (a `sleeve_color` sleeve quad per shoulder, counter-swinging on
+  the walk cycle) along with the culture-neutral kit becoming the Sol
+  Federation look in each system.
+  This is a superset of nothing the extractor can't already read, so the plates
+  map to `parts` with no strokeless/black-ring special-casing — but the shapes
+  are re-authored, so re-running `apply_parts.py` would restyle the shipped
+  `issue_*` / `station_ring` art. Left un-run deliberately; it's a design pass.
 
 ### Updating a published atlas
 
@@ -152,6 +171,54 @@ unrenderable page during the first build:
   mojibake.
 - Prefer no `<script>` at all. If you must, the page has to be correct without
   it.
+
+## Strokeless specimens: outlines and holes
+
+**Both atlases** (`standard-issue.html` and `resin-and-rivets.html`) are drawn
+with **only `<polygon>` and `<circle>`, no `stroke` anywhere** — it maps 1:1 to
+what `extract_atlas.py` reads, so plates extract with no black-ring
+special-casing. `scratchpad/gen_si.py` bakes Standard Issue from scratch;
+`scratchpad/gen_rr.py` imports its primitives + `figure_parts` and (a) rebuilds
+the six R&R culture outfits on the shared body, (b) runs a **mechanical
+converter** over every other R&R specimen — `path`/`rect`/`ellipse`/`line` →
+polygon/circle, each stroke → a mitre outline behind, a `fill:none` stroked
+circle → a `ring_strip`, bloom `<filter>` dropped — so the design is preserved
+exactly. Two things needed a real technique to look right:
+
+**Outlines — offset the polygon, don't inflate it.** The obvious approach —
+copy the shape, push every vertex away from the centroid by `d`, draw that
+behind in the outline colour — gives a **top-heavy outline** on any shape
+that isn't roughly circular: a tall thin rectangle's end vertices move mostly
+vertically, so the outline is thick on the ends and thin on the sides. What
+works is a **constant-perpendicular mitre offset**: for each vertex, take the
+two adjacent edge directions, average their outward normals to get the mitre
+direction `m`, and move the vertex out by `d / (m · n)` where `n` is one
+edge's normal (this is the standard mitre-join formula). Clamp `m · n` to
+~`0.3` so a sharp corner doesn't shoot a spike. Then sanity-check that the
+result actually grew (sum of vertex-distance-from-centroid went up) and flip
+the sign if it didn't — that catches winding-order surprises. One extra
+`<polygon>` behind the shape, uniform width on every edge. Circles are the
+easy case: a bigger circle behind is already uniform.
+
+**Transparent ring holes — build the torus from radial strips.** A single
+"keyhole" annulus polygon (outer loop → bridge → reversed inner loop, one
+`<polygon>`) technically has a hole, but against the dark viewport it reads as
+a *filled dark disc* — indistinguishable from a solid fill, because there's
+nothing bright behind it — and the self-touching bridge can fill oddly. The
+fix that unambiguously reads as open: build the ring as **N radial quad
+segments** (`ring_strip`), each a trapezoid from inner radius to outer radius
+over one angular slice. Nothing is ever painted in the centre, so the page's
+grid pattern shows straight through and it is visibly a hole. For several
+**overlapping** rings on a spine (the Standard Ring station), draw *all* the
+outer rims first, then *all* the bodies in one flat colour — the bodies merge
+where they overlap, so the modules read as **joined at the intersections**
+rather than stacked discs. Same `ring_strip` for the Issue Tender's docking
+collar.
+
+**Everything else:** ovals/curves = many-sided polygons; a straight or dashed
+line = a long thin polygon (a run of short ones for dashes); a dotted circle
+= a ring of small `<circle>` dots; `<text>` is allowed for annotation only
+(corner tags, `SF-###` registrations, floor-plan room labels).
 
 ## Turning a plate into config
 
