@@ -30,6 +30,17 @@ T = [
     ("drossholt_lamp",    RR, "work-light",   120, 172, 0.62, 0, "parts", B),
     ("drossholt_crate",   RR, "cargo-stack",  122, 162, 0.66, 0, "parts", B),
     ("drossholt_barrel",  RR, "drum · elev",  120, 115, 0.72, 0, "parts", B),
+    ("vherathi_concierge_desk", RR, "concierge-desk", 118, 118, 0.88, 0, "parts", B),
+    # Culture building refines (01·C / 02·C). Polygon entries: ground-at-anchor,
+    # cy on the specimen's floor line. Rect entries (tower/bunker/warehouse):
+    # anchor is the box's top-left corner (matches _building_footprint), scale
+    # by the config height so the specimen floor lands at anchor + height.
+    ("vherathi_spire",      RR, "concord-spire",  120, 186, 1.9,  0, "parts", B),
+    ("vherathi_bloompod",   RR, "bloompod",       124, 115, 1.1,  0, "parts", B),
+    ("vherathi_hall",       RR, "gathering-hall", 120, 172, 1.7,  0, "parts", B),
+    ("drossholt_tower",     RR, "watch-tower",     96,  40, 1.59, 0, "parts", B),
+    ("drossholt_bunker",    RR, "bunker",          52,  96, 1.05, 0, "parts", B),
+    ("drossholt_warehouse", RR, "warehouse",       26,  92, 1.38, 0, "parts", B),
     ("station_alpha", RR, "station-alpha", 121, 108, 0.44, 0, "hull", G),
     ("station_delta", RR, "station-delta", 120, 100, 0.36, 0, "hull", G),
     ("station_ring",  SI, "standard ring", 120, 100, 0.42, 0, "hull", G),
