@@ -1027,20 +1027,17 @@ class LocationScreen(ScreenBase):
                 color=self.message_banner[1], shadow_color=(20, 30, 40),
             )
 
-        # Top-right targeting/credits pane (see draw_info_panel) - same
-        # design as SpaceScreen's own info panel, minus the speed/mode
-        # lines that don't apply while on foot.
-        info_lines = [(f"Credits: {self.player.possessions.credits}", (255, 220, 100))]
+        # Top-right targeting pane (see draw_info_panel) - same design and
+        # (label, value, value_color) two-tone lines as SpaceScreen's own
+        # info panel, minus the jump-target / mode lines that don't apply
+        # while on foot.
         if target_npc:
-            distance = target_npc.get_distance(self.player.x, self.player.y)
-            info_lines.append(("Target:", GREEN))
-            info_lines.append((f"  Distance: {distance:.0f}", GREEN))
-            info_lines.append((f"  {target_npc.name}", GREEN))
+            info_lines = [("Target:", target_npc.name, GREEN)]
             target_role = self._role_label(target_npc)
             if target_role:
-                info_lines.append((f"  {target_role}", GREEN))
+                info_lines.append(("  Role:", target_role, WHITE))
         else:
-            info_lines.append(("Target: None", GRAY))
+            info_lines = [("Target:", "None", GRAY)]
         info_rect, _ = draw_info_panel(surface, info_lines, ui_scale, (utils.screen_width - control_margin, control_margin))
 
         # Top-left control-reference pane - same design as SpaceScreen's
