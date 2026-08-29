@@ -149,7 +149,10 @@ extractor keeps the largest filled polygon as **both** `parts[0]` (the hull
 fill, drawn) and a copy in `local_points` (collision only), and lifts that
 polygon's `stroke` to the entry's `outline_color`. Every filled sub-shape
 keeps its own `stroke` as a per-part `outline`, so the plate's coloured
-edges survive into the game rather than collapsing to one black stroke.
+edges survive into the game rather than collapsing to one black stroke —
+and a sub-shape with **no** `stroke` in the SVG is emitted with
+`"outline": "none"` (not the entry default), so an atlas glow dot / flat
+accent stays un-outlined in game instead of gaining a black ring.
 Tooling lives beside the atlas HTML: [`docs/atlases/extract_atlas.py`](atlases/extract_atlas.py)
 (one plate → parts JSON) and [`docs/atlases/apply_parts.py`](atlases/apply_parts.py)
 (the asset→plate table + targeted JSON injection; run from repo root, it's

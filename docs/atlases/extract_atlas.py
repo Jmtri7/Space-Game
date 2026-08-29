@@ -2,6 +2,10 @@
 `parts` lists. Handles polygon / rect / circle / line / path (M L H V C S Q
 T A Z, absolute + relative; curves/arcs flattened to short segments).
 
+A filled shape keeps its SVG `stroke` as a per-part `"outline"`; a filled
+shape with no stroke is emitted with `"outline": "none"` so it renders
+un-outlined (WorldObject.draw_parts otherwise falls back to a dark outline).
+
 Usage: python extract_atlas.py "<atlas.html>" "<vlabel substring>" [transform]
 where transform is  cx cy scale flipy  applied as
    out = ((atlasX - cx) * scale, (atlasY - cy) * scale * (flipy? -1:1))
@@ -208,9 +212,7 @@ def emit(tag, el, style):
         return float(v) if v is not None else default
 
     def poly(pts):
-        d = {"points": pts, "color": col}
-        if outline:
-            d["outline"] = outline
+        d = {"points": pts, "color": col, "outline": outline or "none"}
         parts.append(d)
 
     if tag == "polygon":
@@ -225,9 +227,8 @@ def emit(tag, el, style):
         poly(tf([(x, y), (x + w, y), (x + w, y + h), (x, y + h)]))
     elif tag == "circle":
         c = tf([(g(el, "cx"), g(el, "cy"))])[0]
-        d = {"circle": [c[0], c[1], round(g(el, "r") * SCALE, 3)], "color": col}
-        if outline:
-            d["outline"] = outline
+        d = {"circle": [c[0], c[1], round(g(el, "r") * SCALE, 3)], "color": col,
+             "outline": outline or "none"}
         parts.append(d)
     elif tag == "line":
         pts = tf([(g(el, "x1"), g(el, "y1")), (g(el, "x2"), g(el, "y2"))])
