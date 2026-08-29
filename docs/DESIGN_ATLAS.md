@@ -16,7 +16,7 @@ currently exist.
 | Atlas | Scope | URL |
 |---|---|---|
 | **Resin & Rivets** | The two default-story cultures — Vherathi Concord & Drossholt Company: ships, stations, outfits, buildings, decorations, and interiors (floor-plan model + moon-city plans). **Mostly shipped** as of story `1.9.0` — new ships/outfits/buildings in `config/`, both station interiors and moon cities rebuilt to the model. | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**), the culture-neutral outfits, and the **"Standard Issue" third design language** (Sol Federation, civil-authority). The `standard_issue` culture + its ships/station/buildings **shipped** to `config/` in `1.9.0` but aren't placed in a live system yet; the outfit redraws stay mockups. | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**), the culture-neutral outfits, and the **"Standard Issue" third design language** (Sol Federation, civil-authority). The `standard_issue` culture + its ships/station/buildings shipped in `1.9.0`, and the **Procyon Gate** system makes it live; the outfit redraws stay mockups. | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
 Keep this table current. When an atlas is published or its URL changes, edit the
 row.
@@ -98,6 +98,25 @@ unrenderable page during the first build:
   mojibake.
 - Prefer no `<script>` at all. If you must, the page has to be correct without
   it.
+
+## Turning a plate into config
+
+A specimen SVG is mostly polygons/paths/circles, and the engine can consume
+that directly: `graphics.json` (ships, `space_stations`) and
+`building_types.json` entries take an optional **`parts`** list —
+`{"points": [...], "color": ...}` / `{"circle": [cx, cy, r], ...}` /
+`{"line": [...], "width": w, ...}` — drawn in order over (ships/stations) or
+instead of (buildings) the base silhouette by `WorldObject.draw_parts()`.
+Colours are `[r,g,b]`, `"#rrggbb"`, `"metal"`, `"glass"`, or `"shade:<n>"`.
+Ship/station part coords are fractions of `size` / absolute local units
+respectively, matching that entry's `local_points`; building coords are
+absolute local units with y negative going up from the ground anchor.
+
+So a detailed plate can be **extracted rather than re-drawn**: parse the
+specimen SVG, flatten its paths to short segments, and map atlas-viewBox
+coords into the entry's local space (one `(cx, cy, scale, flip)` transform
+per asset). The base `shape` / `local_points` / `footprint` still need to be
+present for collision and depth math even when `parts` drives the visual.
 
 ## Maintaining an atlas
 
