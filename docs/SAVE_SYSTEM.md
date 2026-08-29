@@ -112,8 +112,11 @@ only advisory: `arrive_from("ship")` overwrites it on the station load path,
 and `LocationScreen.restore_state()` additionally snaps the player to the
 primary portal if the stored point isn't inside the walkable area at all
 (e.g. the floor plan was rescaled since - the default story's Alpha Station
-interior was doubled in size in story `1.7.0`, which is why that version
-bumped even though no save *key* changed meaning). **Do not** re-derive this from a label/config-file text guess (e.g.
+interior was doubled in size in story `1.7.0`, and every station interior and
+moon-city floor plan in the default story was rebuilt to the Resin & Rivets
+model in `1.9.0`; both bumps happened even though no save *key* changed
+meaning, precisely so an older save warns and its snapped-to-portal spawn is
+expected rather than surprising). **Do not** re-derive this from a label/config-file text guess (e.g.
 "does the label contain the word 'city'") - a real bug shipped exactly that
 way, since not every story names its interiors so obligingly (Kepler's Reach's
 moon city interior is labeled "Rust Moon Settlement"). `game_state["story"]`

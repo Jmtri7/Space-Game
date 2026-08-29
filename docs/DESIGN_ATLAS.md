@@ -15,8 +15,8 @@ currently exist.
 
 | Atlas | Scope | URL |
 |---|---|---|
-| **Resin & Rivets** | The two default-story cultures — Vherathi Concord & Drossholt Company: ships, stations, outfits, buildings, decorations, and **interiors** (floor-plan model, edge accents, decoration-placement rules). Refines of what ships today + new concepts. | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**), the culture-neutral outfits, and a **"Standard Issue" third design language** (civil-authority: ships, station, buildings, decorations, interior — all mockups). | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Resin & Rivets** | The two default-story cultures — Vherathi Concord & Drossholt Company: ships, stations, outfits, buildings, decorations, and interiors (floor-plan model + moon-city plans). **Mostly shipped** as of story `1.9.0` — new ships/outfits/buildings in `config/`, both station interiors and moon cities rebuilt to the model. | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
+| **Standard Issue** | The shared `Person` body model (**legged redesign + walk cycle shipped**), the culture-neutral outfits, and the **"Standard Issue" third design language** (Sol Federation, civil-authority). The `standard_issue` culture + its ships/station/buildings **shipped** to `config/` in `1.9.0` but aren't placed in a live system yet; the outfit redraws stay mockups. | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
 Keep this table current. When an atlas is published or its URL changes, edit the
 row.
