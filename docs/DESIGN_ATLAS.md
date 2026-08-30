@@ -193,15 +193,33 @@ copy the shape, push every vertex away from the centroid by `d`, draw that
 behind in the outline colour — gives a **top-heavy outline** on any shape
 that isn't roughly circular: a tall thin rectangle's end vertices move mostly
 vertically, so the outline is thick on the ends and thin on the sides. What
-works is a **constant-perpendicular mitre offset**: for each vertex, take the
-two adjacent edge directions, average their outward normals to get the mitre
-direction `m`, and move the vertex out by `d / (m · n)` where `n` is one
-edge's normal (this is the standard mitre-join formula). Clamp `m · n` to
-~`0.3` so a sharp corner doesn't shoot a spike. Then sanity-check that the
-result actually grew (sum of vertex-distance-from-centroid went up) and flip
-the sign if it didn't — that catches winding-order surprises. One extra
-`<polygon>` behind the shape, uniform width on every edge. Circles are the
-easy case: a bigger circle behind is already uniform.
+works is a **constant-perpendicular offset** (`offset_poly` in `gen_si.py`,
+mirrored exactly by `expand_polygon` in the engine — keep the two in
+lockstep): push each *edge* out along its own outward normal by `d`, then
+close the gap this opens at each corner. The corner treatment is the same
+choice SVG makes with `stroke-linejoin` + `stroke-miterlimit`:
+
+- **Mitre** (default): extend both offset edges until they intersect — one
+  sharp point that keeps the corner's original shape. Vertex moves out along
+  the angle bisector `m` by `d / (m · n)`, `n` = an adjacent edge's normal
+  (`m · n` = `cos(½ the corner's turn)`). This is right for rectangles,
+  panels, gently-faceted hulls — a 90° corner stays a 90° corner, just bigger.
+- **Bevel** (fallback): `d / (m · n)` blows up as the corner sharpens
+  (`→ ∞` at a needle point), so when it would exceed `miter_limit · d`
+  (`miter_limit = 2.0`, i.e. corners sharper than ~60°) emit **one point per
+  edge** instead — a short flat cap ~`d` beyond the tip. A blade, a thruster
+  nozzle, a tapered wedge caps cleanly rather than shooting a long spike.
+
+Offset direction comes from the polygon's **signed area** (winding), not a
+"did it grow? then flip" guess on one vertex — so it's stable no matter how
+the shape is rotated (an earlier one-vertex check let a rotating hull's
+thruster-port outline flip and "spin"). One extra `<polygon>` behind the
+shape, uniform width on every edge; a bevelled corner just adds a vertex.
+Circles are the easy case: a bigger circle behind is already uniform.
+
+*Authoring implication:* a sharp point in a plate is fine — it caps, it
+doesn't spike, and the engine does the identical thing, so the plate predicts
+the game. (Before the miter limit, a pointy specimen spiked in both.)
 
 **Transparent ring holes — build the torus from radial strips.** A single
 "keyhole" annulus polygon (outer loop → bridge → reversed inner loop, one
