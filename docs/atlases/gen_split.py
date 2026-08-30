@@ -54,9 +54,10 @@ CULTURES = {
           "(<code class=\"f\">config/stories/default</code>, story <code class=\"f\">1.10.0</code>) "
           "&mdash; Procyon Ring station, Garrison Row moon, every ship / station / "
           "building silhouette extracted into <code class=\"f\">parts</code>. The "
-          "hardware plates below are those shipped SVGs. The <b>crew outfit "
-          "redraws are a MOCKUP</b> &mdash; the Federation signature (visor slit, "
-          "centreline stripe, SF-### stencil) is new figure geometry.",
+          "hardware plates below are those shipped SVGs, and the crew outfit "
+          "redraws now ship too &mdash; the Federation signature (visor slit, "
+          "centreline stripe, SF-### stencil) is baked into "
+          "<code class=\"f\">figure_signatures.py</code>.",
  ),
  "vherathi": dict(
    file="vherathi-concord.html", title="Vherathi Concord", mark="Vherathi <em>Concord</em>",
@@ -88,9 +89,9 @@ CULTURES = {
           "(story <code class=\"f\">1.10.0</code>) &mdash; Alpha Station and its "
           "moon rebuilt to the grown floor-plan model, every hull / building / "
           "furniture silhouette extracted into <code class=\"f\">parts</code>. The "
-          "hardware plates below are those shipped SVGs. The <b>outfit redraws "
-          "are a MOCKUP</b> &mdash; the eye-bubble helm clusters and resin-vein "
-          "tracery are new figure geometry.",
+          "hardware plates below are those shipped SVGs, and the outfit redraws "
+          "now ship too &mdash; the eye-bubble helm clusters and resin-bead glow "
+          "are baked into <code class=\"f\">figure_signatures.py</code>.",
  ),
  "drossholt": dict(
    file="drossholt-company.html", title="Drossholt Company", mark="Drossholt <em>Company</em>",
@@ -121,9 +122,9 @@ CULTURES = {
           "(story <code class=\"f\">1.10.0</code>) &mdash; the outpost and its moon "
           "rebuilt to the bolted floor-plan model, every hull / building / "
           "furniture silhouette extracted into <code class=\"f\">parts</code>. The "
-          "hardware plates below are those shipped SVGs. The <b>outfit redraws "
-          "are a MOCKUP</b> &mdash; the riveted patch-plates and box respirator "
-          "are new figure geometry.",
+          "hardware plates below are those shipped SVGs, and the outfit redraws "
+          "now ship too &mdash; the riveted patch-plates and box respirator are "
+          "baked into <code class=\"f\">figure_signatures.py</code>.",
  ),
 }
 
@@ -208,7 +209,7 @@ def build(key):
 <header class="topbar"><div class="wrap">
   <span class="mark">{c['mark']}</span>
   <nav class="navlinks">{nav}</nav>
-  <span class="tag-wip">Hardware shipped &middot; outfit redraws mockup</span>
+  <span class="tag-wip">Hardware &amp; outfit signatures shipped</span>
 </div></header>
 
 <main class="wrap">
@@ -219,7 +220,7 @@ def build(key):
     <div class="status">{c['status']}</div>
     <dl class="legend" id="read">
       <div><dt>Hardware &mdash; shipped</dt><dd>Ship / station / building / furniture / layout plates are the current in-game SVGs, silhouettes extracted into <code class="f">parts</code>.</dd></div>
-      <div><dt>Outfits &mdash; mockup</dt><dd>Redrawn on the cinched-waist body with this culture's <b>signature</b> geometry. The recolour is buildable now; the signature waits on a <code class="f">figure_signature</code> table.</dd></div>
+      <div><dt>Outfits &mdash; shipped</dt><dd>Redrawn on the cinched-waist body with this culture's <b>signature</b> geometry. The recolour is a <code class="f">graphics.json</code> outfit; the signature is baked into <code class="f">game/world/figure_signatures.py</code> and drawn by <code class="f">Person.draw()</code>.</dd></div>
       <div><dt>Shapes only</dt><dd>Every specimen is <code class="f">&lt;polygon&gt;</code> + <code class="f">&lt;circle&gt;</code>, no stroke.</dd></div>
       <div><dt>Identity spread</dt><dd>The <code class="f">cultures.json</code> palette + a numbered rubric of silhouette directives from the <code class="f">theme</code> string.</dd></div>
     </dl>
@@ -235,20 +236,20 @@ def build(key):
   {section("station", "Station", plate_grid_from(stations))}
   {section("buildings", "Buildings", plate_grid_from(buildings))}
   {section("furniture", "Furniture &amp; decorations", plate_grid_from(deco))}
-  {section("outfits", "Outfits", '<p class="lead">Every role redrawn on the current body, each carrying the culture signature &mdash; ' + c['rubric'][0][0].lower().rstrip('.') + ', ' + c['rubric'][1][0].lower().rstrip('.') + '. <span class="mk">MOCKUP</span></p><div class="grid-outfits">' + outfits + '</div>')}
+  {section("outfits", "Outfits", '<p class="lead">Every role redrawn on the current body, each carrying the culture signature &mdash; ' + c['rubric'][0][0].lower().rstrip('.') + ', ' + c['rubric'][1][0].lower().rstrip('.') + '. <span class="mk">SHIPPED</span></p><div class="grid-outfits">' + outfits + '</div>')}
   {section("layouts", "Station &amp; city layouts", plate_grid_from(layouts))}
 
   <section class="wiring" id="wiring">
     <h2>Wiring in</h2>
     <div class="wiring-grid">
       <section><h4>Hardware &mdash; shipped</h4><p>Ships (<code class="f">graphics.json</code>), station (<code class="f">graphics.json</code> &rarr; <code class="f">space_stations</code>), buildings (<code class="f">building_types.json</code>), furniture, decorations and both layouts are in <code class="f">config/stories/default</code>, silhouettes extracted from these plates into <code class="f">parts</code> by <code class="f">apply_parts.py</code>.</p></section>
-      <section><h4>Outfits &mdash; the redraw</h4><p>Each outfit's recoloured base is a <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry (buildable now). The <b>signature geometry</b> is new &mdash; it needs a <code class="f">figure_signature</code> table keyed by outfit id, fed the way <code class="f">gen_si.figure_parts</code> already produces data. That one addition lands every culture's redraws at once.</p></section>
+      <section><h4>Outfits &mdash; the redraw</h4><p>Each outfit's recoloured base is a <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry with a <code class="f">"signature"</code> key. <code class="f">build_figure_signatures.py</code> bakes each signature function's geometry into <code class="f">game/world/figure_signatures.py</code>, and <code class="f">Person.draw()</code> emits it behind / over the body. Shipped for all three cultures + Common Kit.</p></section>
       <section><h4>The body</h4><p>The cinched waist / rounded shoulders / belts-at-the-waist are shipped in <code class="f">person_figure.py</code>. See the <b>Common Kit</b> atlas.</p></section>
       <section><h4>Retires</h4><p>This atlas + <b>Common Kit</b> (+ the other culture atlases) replace <code class="f">{src}</code> once all are built. Same visual system, same strokeless rule, same body.</p></section>
     </div>
   </section>
 </main>
-<footer><div class="wrap">{c['title']} &middot; hardware shipped, outfit redraws mockup &middot; default story</div></footer>
+<footer><div class="wrap">{c['title']} &middot; hardware &amp; outfit signatures shipped &middot; default story</div></footer>
 """
 
 

@@ -142,7 +142,7 @@ def build():
     <a href="#fringe">Care &amp; fringe</a>
     <a href="#wiring">Wiring in</a>
   </nav>
-  <span class="tag-wip">Body shipped &middot; outfit redraws mockup</span>
+  <span class="tag-wip">Body &amp; outfit signatures shipped</span>
 </div></header>
 
 <main class="wrap">
@@ -159,21 +159,23 @@ def build():
       their own atlas.
     </p>
     <div class="status">
-      <b>The body shipped; the outfit redraws are a <span style="color:var(--accent)">MOCKUP</span>.</b>
+      <b>The body and the outfit redraws both ship.</b>
       The shared <code class="f">Person</code> now stands on two legs, walks
       (<code class="f">person.py</code>'s <code class="f">_leg_stance</code> /
       <code class="f">_arm_swing</code>), has a <b>cinched waist</b> with the
       belts moved up to it, and rounded shoulders the arm connects to
       &mdash; all baked from <code class="f">gen_si.figure_parts</code> into
       <code class="f">person_figure.py</code>. The <em>role-detail</em> pieces
-      below (tool belt, tabard, hood, mask) are new geometry, so the redraws
-      wait on a parts-style figure renderer, the same as the earlier outfit
-      chapters.
+      below (tool belt, tabard, hood, mask) are baked by
+      <code class="f">build_figure_signatures.py</code> into
+      <code class="f">game/world/figure_signatures.py</code>, and
+      <code class="f">Person.draw()</code> renders them from each outfit's
+      <code class="f">"signature"</code> key.
     </div>
     <dl class="legend" id="read">
       <div><dt>Left &mdash; specimen</dt><dd>Front-view figure at a fixed height on void-black, so silhouettes and palettes compare directly.</dd></div>
       <div><dt>Shapes only</dt><dd>Every specimen is <code class="f">&lt;polygon&gt;</code> + <code class="f">&lt;circle&gt;</code>, no stroke &mdash; outline is a larger offset shape behind, curves are many-sided polygons.</dd></div>
-      <div><dt>Body vs. detail</dt><dd>The recoloured base uses existing <code class="f">*_color</code> keys (buildable now). The role detail is the mockup part.</dd></div>
+      <div><dt>Body vs. detail</dt><dd>The recoloured base uses existing <code class="f">*_color</code> keys; the role detail is baked geometry emitted from the outfit's <code class="f">"signature"</code> key.</dd></div>
       <div><dt>Keyline</dt><dd>Under each figure: the <code class="f">graphics.json</code> keys it sets, then <code class="f">+</code> the new detail.</dd></div>
     </dl>
   </section>
@@ -225,8 +227,8 @@ def build():
           <code class="f">suit_color</code> plus <code class="f">boot_color</code>
           plus any of these. <b>No new draw code per outfit</b> &mdash; just more
           colours in the JSON. The role details in the chapters below are the
-          exception: they're new shapes that would need a <code class="f">figure_signature</code>
-          table (see Wiring in).
+          exception: they're baked shapes emitted from the outfit's
+          <code class="f">"signature"</code> key (see Wiring in).
         </p>
         <div class="keys">
           <span>helmet &middot; hat &middot; cap</span><span>visor</span><span>collar</span>
@@ -243,8 +245,8 @@ def build():
     <h2>Wiring in</h2>
     <div class="wiring-grid">
       <section><h4>The body &mdash; shipped</h4><p><code class="f">person.py</code> / <code class="f">person_figure.py</code>: legs, boots, walk cycle, and now the cinched waist + rounded shoulders + belts-at-the-waist, all baked from <code class="f">gen_si.figure_parts</code>. Re-run <code class="f">build_person_figure.py</code> after editing the atlas figure; don't hand-edit <code class="f">person_figure.py</code>.</p></section>
-      <section><h4>Recolour-only outfits &mdash; buildable now</h4><p>Any outfit that only sets <code class="f">*_color</code> keys is a one-line <code class="f">graphics.json</code> entry. The existing <code class="f">space_suit</code> / <code class="f">flight_suit</code> / <code class="f">mechanic</code> / … already are.</p></section>
-      <section><h4>Role detail &mdash; needs a figure renderer</h4><p>The tool belt, tabard, hood, mask, star, bandolier are <b>new geometry</b>. <code class="f">Person.draw</code> is colour-key driven, so these need a parts-style path &mdash; a <code class="f">figure_signature</code> table keyed by outfit id, fed the same way <code class="f">figure_parts</code> already produces data. That one addition lands every redraw here <em>and</em> the culture atlases' signature pieces.</p></section>
+      <section><h4>Recolour-only outfits</h4><p>Any outfit that only sets <code class="f">*_color</code> keys is a one-line <code class="f">graphics.json</code> entry. The existing <code class="f">space_suit</code> / <code class="f">flight_suit</code> / <code class="f">mechanic</code> / … already are.</p></section>
+      <section><h4>Role detail &mdash; shipped</h4><p>The tool belt, tabard, hood, mask, star, bandolier are baked geometry. <code class="f">build_figure_signatures.py</code> turns each signature function into a part list in <code class="f">game/world/figure_signatures.py</code>; <code class="f">Person.draw</code> emits it behind / over the body when the outfit carries a <code class="f">"signature"</code> key. Same path for the culture atlases' signature pieces.</p></section>
       <section><h4>The other atlases</h4><p><b>Sol Federation</b> (the <code class="f">standard_issue</code> hardware &mdash; ships, station, buildings, interior, Federation crew), <b>Vherathi Concord</b> and <b>Drossholt Company</b> (Resin &amp; Rivets, split in two). All four reference this body.</p></section>
     </div>
     <p class="lead" style="margin-top:30px">
@@ -255,7 +257,7 @@ def build():
     </p>
   </section>
 </main>
-<footer><div class="wrap">Common Kit &middot; shared body &amp; culture-neutral outfits &middot; body shipped, redraws mockup &middot; default story</div></footer>
+<footer><div class="wrap">Common Kit &middot; shared body &amp; culture-neutral outfits &middot; body &amp; outfit signatures shipped &middot; default story</div></footer>
 """
 
 

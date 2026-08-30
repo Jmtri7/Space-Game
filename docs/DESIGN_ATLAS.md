@@ -24,7 +24,7 @@ per-atlas accent colour.
 |---|---|---|---|
 | **Common Kit** | Standard Issue ch. 01–04 | shared `Person` body (cinched-waist anatomy + accessory slot map) + the culture-neutral civilian / service outfits, each with a role detail | **built** — `gen_common.py` + `common_kit.py` |
 | **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: issued ships, Standard Ring station, buildings, hazard decal, spine-and-bays interior + Federation crew/command outfits (visor-slit / stencil signature) | **built** — `gen_split.py` + `federation_outfits.py` |
-| **Vherathi Concord** | Resin & Rivets, Vherathi half | 6 grown hulls, reef station, 4 buildings, 6 furniture/deco, 4 layouts + outfits with asymmetric eye-bubble helm clusters + resin-vein tracery | **built** — `gen_split.py` + `vherathi_outfits.py` |
+| **Vherathi Concord** | Resin & Rivets, Vherathi half | 6 grown hulls, reef station, 4 buildings, 6 furniture/deco, 4 layouts + outfits with asymmetric eye-bubble helm clusters + resin-bead glow | **built** — `gen_split.py` + `vherathi_outfits.py` |
 | **Drossholt Company** | Resin & Rivets, Drossholt half | 5 bolted hulls, welded station, 4 buildings, 7 furniture/deco, 2 layouts + outfits with riveted patch-plates + box respirator | **built** — `gen_split.py` + `drossholt_outfits.py` |
 | **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only | done |
 
@@ -37,6 +37,17 @@ superseded** — keep them until their generators (`gen_rr.py`, and the
 non-`figure_parts` half of `gen_si.py`) are pruned, but the four new atlases
 are the record. `gen_si.figure_parts` / `FIG_*` / `figure_shapes` stay — they
 feed `build_person_figure.py`.
+
+**Outfit signatures ship in-game.** Each `*_outfits.py` signature function's
+pre/post SVG is baked by
+[`build_figure_signatures.py`](atlases/build_figure_signatures.py) into
+`game/world/figure_signatures.py` (part lists in Person game units, literal
+`#rrggbb` colours). A `graphics.json` outfit opts in with a `"signature": "<id>"`
+key; `Person.draw()` emits the `pre` parts behind the body and `post` over it.
+Re-run the baker after editing a signature function; `graphics.json` and the
+default story's system NPC rosters carry the `"signature"` keys and Federation
+crew entries. `tests/test_helpers.py` asserts every referenced signature is
+baked.
 
 **Body: the cinched waist.** `figure_parts` now pinches the torso to a waist
 about halfway up the standing figure and flares back to a hip nearly as wide
