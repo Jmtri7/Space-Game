@@ -3,37 +3,15 @@ signature: a grown helmet dome carrying ASYMMETRIC CLUSTERS of circular
 eye-bubbles (never one visor), a branching resin-vein glow tracing up the
 torso and one arm, and one-sided grown fittings. Strokeless.
 """
-import math
 import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import poly, circ, offset_poly, bar, rrect, _u
+from gen_si import poly, circ, offset_poly
 
 OUT = "#141219"
 WAIST = 108
 METAL, GLASS, DARK = "#4a3060", "#8fffcf", "#2f1e3c"
-
-
-def rib(pts, w, col, op=None):
-    pts = [p for i, p in enumerate(pts) if i == 0 or p != pts[i - 1]]
-    if len(pts) < 2:
-        return ""
-    n = len(pts)
-    L, R = [], []
-    for i in range(n):
-        if i == 0:
-            d = _u((pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]))
-        elif i == n - 1:
-            d = _u((pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
-        else:
-            d1 = _u((pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
-            d2 = _u((pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]))
-            d = _u((d1[0] + d2[0], d1[1] + d2[1]))
-        nb = (-d[1], d[0])
-        L.append((pts[i][0] + nb[0] * w, pts[i][1] + nb[1] * w))
-        R.append((pts[i][0] - nb[0] * w, pts[i][1] - nb[1] * w))
-    return poly(L + R[::-1], col, op=op)
 
 
 def op_s(pts, fill, d=1.1, ol=OUT):
@@ -51,17 +29,17 @@ def eye_bubbles(dome=METAL, left=((60, 44, 3.4), (58, 52, 2.6), (64, 50, 2.2), (
     return "".join(o)
 
 
-def veins(from_pt=(70, WAIST), branches=None):
-    """Branching resin-vein glow up the torso + one arm (asymmetric)."""
-    branches = branches or [
-        [(70, WAIST), (66, 120), (60, 96), (56, 76), (52, 62)],
-        [(60, 96), (52, 88), (46, 84)],
-        [(66, 120), (74, 108), (78, 96)],
-        [(44, 80), (44, 108), (46, 116)],
-    ]
-    o = [rib(b, 0.8, GLASS) for b in branches]
-    for vx, vy in ((52, 62), (46, 84), (78, 96), (46, 116)):
-        o.append(circ(vx, vy, 1.3, GLASS))
+def veins(from_pt=(70, WAIST), branches=None, nodes=None):
+    """Resin-node glow up the torso (asymmetric clusters of small grown
+    beads, no connecting filaments - a thin polyline just turns to mint
+    mush at sprite scale, so the beads carry it alone)."""
+    nodes = nodes or [(64, 66, 2.0), (60, 78, 1.5), (67, 88, 1.3),
+                      (58, 100, 1.7), (63, 112, 1.2), (74, 96, 1.4)]
+    o = []
+    for nx, ny, nr in nodes:
+        o.append(circ(nx, ny, nr + 0.8, OUT))
+        o.append(circ(nx, ny, nr, GLASS))
+        o.append(circ(nx - nr * 0.3, ny - nr * 0.3, nr * 0.4, "#e8fff5"))
     return "".join(o)
 
 
@@ -96,7 +74,7 @@ def vault_warden():
                 chest="#3a264e", belt="#2f1e3c")
     post = (eye_bubbles("#7a5c96", left=((59, 42, 3.6), (57, 51, 2.8), (63, 49, 2.2),
                                          (60, 34, 2.6), (65, 40, 1.8)), right=((81, 44, 2.4),))
-            + rib([(38, 56), (46, 56), (49, 128), (45, 148), (40, 140)], 1.2, "#8fffcf")  # grown guard-blade, one arm
+            + op_s([(37, 54), (44, 52), (47, 96), (43, 110), (38, 98)], "#8fffcf")  # grown guard-blade, one arm
             + veins())
     return base, "", post
 

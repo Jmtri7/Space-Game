@@ -81,6 +81,50 @@
     }
   },
   "outfits": {
+    "federation_rating": {
+      "helmet_color": [74, 90, 114],
+      "suit_color": [58, 74, 99],
+      "boot_color": [35, 44, 58],
+      "collar_color": [223, 230, 238],
+      "signature": "federation_rating"
+    },
+    "federation_pilot": {
+      "helmet_color": [206, 214, 220],
+      "suit_color": [58, 70, 88],
+      "boot_color": [40, 46, 56],
+      "signature": "federation_pilot"
+    },
+    "federation_officer": {
+      "helmet_color": [46, 56, 74],
+      "suit_color": [46, 56, 74],
+      "boot_color": [32, 38, 47],
+      "collar_color": [223, 230, 238],
+      "shoulder_color": [40, 48, 62],
+      "signature": "federation_officer"
+    },
+    "federation_marine": {
+      "helmet_color": [60, 69, 80],
+      "suit_color": [44, 51, 62],
+      "boot_color": [26, 30, 36],
+      "visor_color": [143, 185, 200],
+      "backpack_color": [42, 48, 58],
+      "signature": "federation_marine"
+    },
+    "federation_gate_warden": {
+      "helmet_color": [74, 90, 114],
+      "suit_color": [58, 74, 99],
+      "boot_color": [35, 44, 58],
+      "collar_color": [223, 230, 238],
+      "signature": "federation_gate_warden"
+    },
+    "federation_fleet_command": {
+      "helmet_color": [223, 230, 238],
+      "suit_color": [37, 45, 60],
+      "boot_color": [24, 29, 38],
+      "collar_color": [223, 230, 238],
+      "shoulder_color": [223, 230, 238],
+      "signature": "federation_fleet_command"
+    },
     "space_suit": {
       "helmet_color": [150, 150, 155],
       "suit_color": [90, 90, 96],
@@ -90,20 +134,24 @@
     "vherathi_hardsuit": {
       "helmet_color": [120, 255, 200],
       "suit_color": [72, 48, 96],
-      "boot_color": [46, 30, 62]
+      "boot_color": [46, 30, 62],
+      "signature": "vherathi_hardsuit"
     },
     "vherathi_softsuit": {
       "suit_color": [110, 85, 125],
-      "boot_color": [150, 120, 170]
+      "boot_color": [150, 120, 170],
+      "signature": "vherathi_softsuit"
     },
     "drossholt_vacsuit": {
       "helmet_color": [255, 200, 80],
       "suit_color": [150, 110, 72],
-      "boot_color": [90, 65, 45]
+      "boot_color": [90, 65, 45],
+      "signature": "drossholt_vacsuit"
     },
     "drossholt_coveralls": {
       "suit_color": [190, 155, 115],
-      "boot_color": [90, 65, 45]
+      "boot_color": [90, 65, 45],
+      "signature": "drossholt_coveralls"
     },
 
     "vherathi_reefwright": {
@@ -112,7 +160,8 @@
       "shoulder_color": [74, 48, 96],
       "sash_color": [120, 255, 200],
       "collar_color": [150, 255, 215],
-      "badge_color": [255, 255, 255]
+      "badge_color": [255, 255, 255],
+      "signature": "vherathi_reefwright"
     },
     "vherathi_vault_warden": {
       "helmet_color": [120, 255, 200],
@@ -120,14 +169,16 @@
       "boot_color": [46, 30, 62],
       "spike_color": [150, 255, 215],
       "chest_plate_color": [58, 38, 78],
-      "belt_color": [46, 30, 62]
+      "belt_color": [46, 30, 62],
+      "signature": "vherathi_vault_warden"
     },
     "vherathi_tide_pilot": {
       "helmet_color": [206, 210, 220],
       "visor_color": [120, 255, 200],
       "suit_color": [72, 48, 96],
       "boot_color": [46, 30, 62],
-      "collar_color": [150, 255, 215]
+      "collar_color": [150, 255, 215],
+      "signature": "vherathi_tide_pilot"
     },
     "drossholt_cutterman": {
       "helmet_color": [255, 200, 80],
@@ -136,14 +187,16 @@
       "shoulder_color": [90, 65, 45],
       "chest_plate_color": [138, 104, 69],
       "backpack_color": [138, 104, 69],
-      "belt_color": [90, 65, 45]
+      "belt_color": [90, 65, 45],
+      "signature": "drossholt_cutterman"
     },
     "drossholt_tallyman": {
       "suit_color": [218, 180, 131],
       "boot_color": [90, 65, 45],
       "chest_plate_color": [138, 104, 69],
       "belt_color": [90, 65, 45],
-      "badge_color": [255, 224, 150]
+      "badge_color": [255, 224, 150],
+      "signature": "drossholt_tallyman"
     },
     "drossholt_gun_bosun": {
       "helmet_color": [255, 200, 80],
@@ -151,7 +204,8 @@
       "suit_color": [169, 127, 82],
       "boot_color": [90, 65, 45],
       "chest_plate_color": [90, 65, 45],
-      "belt_color": [90, 65, 45]
+      "belt_color": [90, 65, 45],
+      "signature": "drossholt_gun_bosun"
     },
 
     "bartender": {
@@ -170,7 +224,8 @@
       "helmet_color": [240, 170, 55],
       "suit_color": [82, 78, 72],
       "boot_color": [46, 42, 38],
-      "belt_color": [58, 54, 48]
+      "belt_color": [58, 54, 48],
+      "signature": "mechanic"
     },
     "quartermaster": {
       "suit_color": [108, 96, 62],
@@ -179,41 +234,49 @@
     "security": {
       "helmet_color": [96, 104, 116],
       "suit_color": [58, 63, 72],
-      "boot_color": [36, 39, 46]
+      "boot_color": [36, 39, 46],
+      "signature": "security"
     },
     "dockworker": {
       "helmet_color": [242, 150, 42],
       "suit_color": [70, 78, 90],
       "boot_color": [40, 44, 52],
-      "chest_plate_color": [242, 150, 42]
+      "chest_plate_color": [242, 150, 42],
+      "signature": "dockworker"
     },
     "miner": {
       "helmet_color": [235, 205, 95],
       "suit_color": [122, 102, 72],
-      "boot_color": [72, 56, 40]
+      "boot_color": [72, 56, 40],
+      "signature": "miner"
     },
     "flight_suit": {
       "helmet_color": [206, 210, 220],
       "suit_color": [58, 70, 88],
-      "boot_color": [40, 46, 56]
+      "boot_color": [40, 46, 56],
+      "signature": "flight_suit"
     },
     "medic": {
       "helmet_color": [210, 236, 230],
       "suit_color": [224, 228, 228],
       "boot_color": [176, 188, 188],
-      "badge_color": [225, 90, 90]
+      "badge_color": [225, 90, 90],
+      "signature": "medic"
     },
     "civilian": {
       "suit_color": [96, 110, 120],
-      "boot_color": [60, 66, 72]
+      "boot_color": [60, 66, 72],
+      "signature": "civilian"
     },
     "researcher": {
       "suit_color": [128, 140, 152],
-      "boot_color": [92, 98, 108]
+      "boot_color": [92, 98, 108],
+      "signature": "researcher"
     },
     "smuggler": {
       "suit_color": [46, 52, 49],
-      "boot_color": [30, 33, 31]
+      "boot_color": [30, 33, 31],
+      "signature": "smuggler"
     },
     "station_official": {
       "suit_color": [54, 60, 78],
@@ -227,14 +290,16 @@
       "shoulder_color": [58, 38, 78],
       "spike_color": [150, 255, 215],
       "sash_color": [120, 255, 200],
-      "collar_color": [150, 120, 170]
+      "collar_color": [150, 120, 170],
+      "signature": "vherathi_vault_warden"
     },
     "vherathi_envoy": {
       "suit_color": [90, 64, 112],
       "boot_color": [150, 120, 170],
       "collar_color": [150, 255, 215],
       "sash_color": [120, 255, 200],
-      "badge_color": [255, 255, 255]
+      "badge_color": [255, 255, 255],
+      "signature": "vherathi_envoy"
     },
     "vherathi_magistrate": {
       "helmet_color": [150, 120, 170],
@@ -243,7 +308,8 @@
       "chest_plate_color": [96, 74, 110],
       "collar_color": [150, 255, 215],
       "sash_color": [150, 120, 170],
-      "badge_color": [120, 255, 200]
+      "badge_color": [120, 255, 200],
+      "signature": "vherathi_magistrate"
     },
     "drossholt_foreman": {
       "helmet_color": [255, 200, 80],
@@ -251,13 +317,15 @@
       "boot_color": [90, 65, 45],
       "shoulder_color": [120, 88, 58],
       "belt_color": [90, 65, 45],
-      "badge_color": [255, 200, 80]
+      "badge_color": [255, 200, 80],
+      "signature": "drossholt_foreman"
     },
     "drossholt_hauler": {
       "suit_color": [190, 155, 115],
       "boot_color": [90, 65, 45],
       "backpack_color": [150, 118, 82],
-      "belt_color": [90, 65, 45]
+      "belt_color": [90, 65, 45],
+      "signature": "drossholt_hauler"
     },
     "station_command": {
       "helmet_color": [206, 210, 220],
@@ -266,7 +334,8 @@
       "chest_plate_color": [70, 82, 102],
       "collar_color": [220, 225, 235],
       "shoulder_color": [40, 48, 62],
-      "badge_color": [235, 205, 95]
+      "badge_color": [235, 205, 95],
+      "signature": "station_command"
     },
     "marshal": {
       "helmet_color": [96, 104, 116],
@@ -276,7 +345,8 @@
       "spike_color": [150, 160, 175],
       "belt_color": [30, 33, 40],
       "badge_color": [235, 205, 95],
-      "visor_color": [235, 120, 90]
+      "visor_color": [235, 120, 90],
+      "signature": "marshal"
     },
     "deck_chief": {
       "helmet_color": [242, 150, 42],
@@ -292,7 +362,8 @@
       "boot_color": [72, 56, 40],
       "backpack_color": [98, 82, 58],
       "belt_color": [72, 56, 40],
-      "shoulder_color": [98, 82, 58]
+      "shoulder_color": [98, 82, 58],
+      "signature": "miner"
     },
     "surgeon": {
       "helmet_color": [210, 236, 230],
@@ -300,7 +371,8 @@
       "boot_color": [176, 188, 188],
       "chest_plate_color": [205, 224, 224],
       "collar_color": [140, 200, 190],
-      "badge_color": [225, 90, 90]
+      "badge_color": [225, 90, 90],
+      "signature": "surgeon"
     },
     "merchant_prince": {
       "suit_color": [110, 52, 66],
@@ -326,7 +398,8 @@
       "shoulder_color": [52, 54, 62],
       "belt_color": [28, 30, 34],
       "backpack_color": [40, 42, 48],
-      "visor_color": [235, 120, 90]
+      "visor_color": [235, 120, 90],
+      "signature": "bounty_hunter"
     },
     "guild_trader": {
       "suit_color": [108, 96, 62],
@@ -341,40 +414,46 @@
       "boot_color": [40, 50, 48],
       "backpack_color": [48, 62, 58],
       "belt_color": [40, 50, 48],
-      "badge_color": [235, 205, 95]
+      "badge_color": [235, 205, 95],
+      "signature": "ranger"
     },
     "vherathi_steward": {
       "suit_color": [110, 85, 125],
       "boot_color": [74, 48, 96],
       "collar_color": [150, 255, 215],
-      "badge_color": [150, 255, 215]
+      "badge_color": [150, 255, 215],
+      "signature": "vherathi_envoy"
     },
     "vherathi_factor": {
       "suit_color": [96, 70, 116],
       "boot_color": [150, 120, 170],
       "sash_color": [120, 255, 200],
-      "belt_color": [74, 48, 96]
+      "belt_color": [74, 48, 96],
+      "signature": "vherathi_envoy"
     },
     "vherathi_dockhand": {
       "helmet_color": [150, 255, 215],
       "suit_color": [110, 85, 125],
       "boot_color": [46, 30, 62],
       "shoulder_color": [74, 48, 96],
-      "belt_color": [46, 30, 62]
+      "belt_color": [46, 30, 62],
+      "signature": "vherathi_hardsuit"
     },
     "vherathi_healer": {
       "helmet_color": [206, 210, 220],
       "suit_color": [210, 205, 225],
       "boot_color": [150, 120, 170],
       "collar_color": [150, 255, 215],
-      "badge_color": [120, 255, 200]
+      "badge_color": [120, 255, 200],
+      "signature": "vherathi_softsuit"
     },
     "drossholt_medic": {
       "helmet_color": [255, 200, 80],
       "suit_color": [214, 214, 208],
       "boot_color": [90, 65, 45],
       "chest_plate_color": [190, 190, 184],
-      "badge_color": [225, 90, 90]
+      "badge_color": [225, 90, 90],
+      "signature": "drossholt_coveralls"
     }
   },
   "ships": {

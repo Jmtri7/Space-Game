@@ -4,6 +4,7 @@ import game.aa_draw as aa
 from game.utils import to_screen, get_scale
 from game.world.possessions import Possessions
 from game.world import person_figure as fig
+from game.world.figure_signatures import SIGNATURE
 
 
 class Person:
@@ -131,9 +132,15 @@ class Person:
     _MID_LEG_Y = (fig.LEG_HIP_Y + fig.LEG_ANKLE_Y) * 0.5
     _ARM_SPAN_Y = fig.ARM_WRIST_Y - fig.ARM_SHOULDER_Y
 
+    @staticmethod
+    def _hex(s):
+        return (int(s[1:3], 16), int(s[3:5], 16), int(s[5:7], 16))
+
     def _fig_color(self, tok):
         """Resolve a figure colour token against this Person's outfit."""
         o = self.outfit
+        if isinstance(tok, str) and tok.startswith("#"):
+            return self._hex(tok)               # signature pieces carry literal colours
         if tok == "outline":
             return self.OUTLINE_COLOR
         if tok == "suit":
@@ -180,7 +187,7 @@ class Person:
     def _emit(self, surface, parts, stance, arm, scale, dy=0.0):
         for p in parts:
             col = self._fig_color(p["color"])
-            grp = p["group"]
+            grp = p.get("group", "body")     # signature parts ride the torso
             if "points" in p:
                 pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
                        for gx, gy in p["points"]]
@@ -212,10 +219,17 @@ class Person:
         def emit(parts, dy=0.0):
             self._emit(surface, parts, stance, arm, scale, dy)
 
+        # Culture / role signature (eye-bubble helm, patch-plates, tool belt,
+        # ...): "pre" behind the body, "post" over it. Opted in by the outfit's
+        # "signature" key; see game/world/figure_signatures.py.
+        sig = SIGNATURE.get(o.get("signature"))
+
         # Behind the body: backpack, shoulder spikes, helmet antenna.
         for key in ("backpack_color", "spike_color", "antenna_color"):
             if key in o:
                 emit(fig.ACC[key])
+        if sig and sig["pre"]:
+            emit(sig["pre"])
 
         # Torso, arms, hands, legs, boots.
         emit(fig.BASE)
@@ -242,6 +256,9 @@ class Person:
 
         if "badge_color" in o:
             emit(fig.ACC["badge_color"])
+
+        if sig and sig["post"]:
+            emit(sig["post"])
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)

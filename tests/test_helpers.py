@@ -466,6 +466,7 @@ class TestPersonOutfitRendering(unittest.TestCase):
         "shoulder_color", "spike_color", "collar_color", "chest_plate_color",
         "sash_color", "belt_color", "badge_color", "backpack_color",
         "antenna_color", "visor_color",
+        "signature",   # opts the outfit into a baked culture/role signature
     }
 
     def _all_outfit_ids(self):
@@ -483,6 +484,14 @@ class TestPersonOutfitRendering(unittest.TestCase):
         for outfit_id, outfit in outfits.items():
             unknown = set(outfit) - self.KNOWN_OUTFIT_KEYS
             self.assertEqual(unknown, set(), f"{outfit_id} has unknown key(s): {unknown}")
+
+    def test_every_referenced_signature_is_baked(self):
+        from game.world.figure_signatures import SIGNATURE
+        outfits = (utils.load_json("config/stories/default/graphics.json") or {})["outfits"]
+        for outfit_id, outfit in outfits.items():
+            sig = outfit.get("signature")
+            if sig is not None:
+                self.assertIn(sig, SIGNATURE, f"{outfit_id} references unbaked signature {sig!r}")
 
     def test_visor_replaces_the_eyes(self):
         def circle_count(outfit):

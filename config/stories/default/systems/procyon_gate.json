@@ -82,7 +82,7 @@
             "x": 660,
             "y": 340,
             "role": "stationmaster",
-            "outfit": "station_command",
+            "outfit": "federation_fleet_command",
             "greeting": "Procyon Ring administration. Everything through this system is logged, stamped, and accounted for. Welcome.",
             "dialogue_options": ["Understood", "Leave"]
           },
@@ -91,7 +91,7 @@
             "x": 960,
             "y": 360,
             "role": "guard",
-            "outfit": "security",
+            "outfit": "federation_gate_warden",
             "greeting": "Customs. If your manifest matches your hold, this takes a minute. If it doesn't, it takes a lot longer.",
             "dialogue_options": ["All clear", "Leave"]
           },
@@ -137,9 +137,36 @@
             "x": 1240,
             "y": 820,
             "role": "technician",
-            "outfit": "flight_suit",
+            "outfit": "federation_pilot",
             "greeting": "Comms relay for the whole approach. If your transponder drops, I'm the one who notices.",
             "dialogue_options": ["Got it", "Leave"]
+          },
+          {
+            "name": "Lieutenant Cassar",
+            "x": 660,
+            "y": 460,
+            "role": "officer",
+            "outfit": "federation_officer",
+            "greeting": "Ring watch officer. The Federation keeps a light hand on this gate and a long memory. Keep your papers current.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Ensign Marlow",
+            "x": 1000,
+            "y": 900,
+            "role": "crew",
+            "outfit": "federation_rating",
+            "greeting": "Operations rating. I log every hull that crosses the threshold - you're on the board now.",
+            "dialogue_options": ["Fine by me", "Leave"]
+          },
+          {
+            "name": "Sergeant Boah",
+            "x": 430,
+            "y": 620,
+            "role": "marine",
+            "outfit": "federation_marine",
+            "greeting": "Gate detachment. We don't board ships that don't give us a reason. Don't give us a reason.",
+            "dialogue_options": ["Copy", "Leave"]
           }
         ]
       }
@@ -218,7 +245,7 @@
             "x": 900,
             "y": 350,
             "role": "pilot",
-            "outfit": "flight_suit",
+            "outfit": "federation_pilot",
             "greeting": "Grounded between rotations. Nice to have the Row underfoot instead of a deck for once.",
             "dialogue_options": ["Safe flights", "Leave"]
           },
@@ -227,9 +254,27 @@
             "x": 1200,
             "y": 620,
             "role": "resident",
-            "outfit": "station_official",
+            "outfit": "federation_rating",
             "greeting": "Off shift. Barracks are that block - not that you asked.",
             "dialogue_options": ["Right", "Leave"]
+          },
+          {
+            "name": "Captain Ilse",
+            "x": 740,
+            "y": 1160,
+            "role": "officer",
+            "outfit": "federation_officer",
+            "greeting": "Garrison command. The Gate holds because we're boring and reliable. Long may it stay that way.",
+            "dialogue_options": ["Understood", "Leave"]
+          },
+          {
+            "name": "Trooper Gedd",
+            "x": 1150,
+            "y": 1150,
+            "role": "marine",
+            "outfit": "federation_marine",
+            "greeting": "Wall detail. Nothing crosses the wire that I don't see first.",
+            "dialogue_options": ["Copy", "Leave"]
           },
           {
             "name": "Halda Corte",
