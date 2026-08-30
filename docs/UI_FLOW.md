@@ -73,14 +73,51 @@ connected location (→ that location's own `LocationScreen`, staying in
 ## Screen Descriptions
 
 ### Main Menu (`BackdropMenu`)
-**States:** Showing NEW, LOAD, QUIT
+**States:** Showing NEW, LOAD, VIDEO SETTINGS, QUIT
 - `main.py`'s `main_menu()` builds the rows; recreated each time the game
   returns to the menu
 
 **Transitions:**
 - NEW → Story Selector
 - LOAD → `SaveBrowser("load")`
+- VIDEO SETTINGS → Video Settings (`"video_settings"` state; its own
+  Aspect Ratio sub-picker is `"video_aspect"`)
 - QUIT → Exit application
+
+### Video Settings (`BackdropMenu`, `allow_cancel=True`)
+**Shows:** a top **Aspect ratio · <label>** row, then the fixed SCALED logical
+resolutions in that aspect group (`main.resolutions_for_aspect()` — the
+`constants.VIDEO_RESOLUTIONS` in that group that fit the desktop, plus the
+native resolution when it belongs there, sorted small→large), the active one
+marked "Current resolution" and the native one "Native resolution", then
+**Back**. Built by `video_settings_menu(aspect)`; the browsed `aspect` (a
+`main()` local) defaults to `aspect_label(logical_resolution)` and is rebuilt
+after each pick so the markers follow. The first-run / fallback default
+resolution is the native one. Reachable only from the main menu.
+
+**Transitions:**
+- Aspect ratio row → **Aspect Ratio** picker (`"video_aspect"` state)
+- a resolution → `main.apply_resolution()` re-inits the display at that
+  SCALED logical size and writes it to `settings.json`; stays on this screen
+- Back → Main Menu
+
+### Aspect Ratio (`BackdropMenu`, `allow_cancel=True`)
+**Shows:** `main.available_aspects()` — the aspect labels (from `main.ASPECTS`,
+bucketed within 4%) that have at least one fitting resolution, native first.
+The one in use is marked "Selected", the monitor's own "Native" when it isn't
+the selected one. Built by `video_aspect_menu(selected)`.
+
+**Transitions:**
+- an aspect / Back → back to **Video Settings**, resolution list refiltered
+  to the chosen (or unchanged, on Back) aspect. Nothing is applied until a
+  resolution is picked.
+
+The chosen resolution is the **fixed SCALED logical surface** (see "Frame
+timing" below): the game always renders at it and SDL scales the result to
+whatever size the window is dragged to. Switching it needs a full display
+tear-down (`pygame.display.quit()/init()`) because a live SCALED renderer
+can't be re-`set_mode()`'d — ~150 ms, which is why it's a deliberate
+menu-only action rather than something wired to `VIDEORESIZE`.
 
 ### Story Selector (`BackdropMenu`, `allow_cancel=True`)
 **Shows:** List of playable stories, scanned from `config/stories/*/story.json` by `main.py`'s `story_menu_rows()`, with each story's description
@@ -449,16 +486,28 @@ This separation makes it easy to test input handlers independently.
    (modal screens redraw the frozen backdrop with `draw_hud=False`, then
    their overlay), then `pygame.display.flip()`.
 
-The window is opened by `main.open_window()` with `RESIZABLE | SCALED` and
-`vsync=1` (falling back to plain `RESIZABLE` if a driver refuses it), so the
-flip is paced to the monitor's refresh. Without vsync a horizontal camera pan
-tears: a flip periodically lands mid-scanout. `SCALED` is the flag that makes
-SDL2 apply vsync to a non-OpenGL window; `open_window()` is also the
-`VIDEORESIZE` handler, recreating the surface at the new size so world/UI
-scaling stays crisp rather than being upscaled from a fixed backbuffer.
+The window is opened by `main.open_window()` with `pygame.RESIZABLE |
+pygame.SCALED` and `vsync=1`. `SCALED` backs the window with a GPU renderer —
+the only way SDL2 vsyncs a non-OpenGL window on many drivers — and makes the
+**logical surface a fixed size** (one of `constants.VIDEO_RESOLUTIONS`, chosen
+in the main-menu Video Settings, default = the native desktop resolution,
+remembered in `settings.json`). SDL scales that surface to whatever
+size the user drags the window to and remaps mouse coords, so `VIDEORESIZE`
+needs **no handling at all** — the loop ignores it. `SCALED`'s two catches —
+the window can't be dragged below the logical size, and a live SCALED renderer
+can't be re-`set_mode()`'d — are why the resolution is a fixed menu choice
+applied via a full display re-init (`main.apply_resolution()`), not something
+that tracks the window. If `SCALED` won't initialise, `open_window()` falls
+back to plain `RESIZABLE` and `clock.tick(FPS)` paces (a camera pan may tear).
 
-**Frame cap ↔ vsync:** `open_window()` *measures* whether a requested vsync
-mode is actually pacing flips (a short burst — the `SCALED` flag alone lies)
+Trade-off accepted: above the logical size the image is GPU-upscaled (slightly
+soft; exact and crisp at an integer multiple), and an off-aspect window gets
+letterbox bars. The alternative — plain `RESIZABLE` re-`set_mode()`'d on every
+`VIDEORESIZE` — is crisp at every size but gets **no vsync** on drivers that
+only sync `SCALED`, and tears on every pan.
+
+**Frame cap ↔ vsync:** `open_window()` *measures* whether the requested vsync
+is actually pacing flips (a short burst of flips — `vsync=1` is only a request)
 and records it in `main.vsync_display`. When vsync is real, the flip is the
 frame pacer and `clock.tick()` only enforces a loose safety cap (`FPS * 4`) —
 a tight `clock.tick(FPS)` on top of vsync makes the sleep overshoot into the

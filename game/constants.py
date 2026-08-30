@@ -8,6 +8,20 @@ pygame.init()
 GAME_WIDTH = 2400
 GAME_HEIGHT = 1800
 CAMERA_ZOOM = 3.0  # Zoom to keep objects at same visual scale despite larger world
+# Player-adjustable world zoom (mouse wheel over open space - see
+# SpaceScreen/LocationScreen.handle_input). CAMERA_ZOOM above is the default
+# starting level; these bound how far the wheel can push it. The Space View
+# and interiors keep independent ranges so a story can let you pull way back
+# in open space while keeping a station framed tight - each is overridable
+# per story (story.json's "camera_zoom"/"camera_zoom_min"/"camera_zoom_max"
+# and "interior_camera_zoom"/"interior_camera_zoom_min"/"..._max"). The live
+# level is remembered per context for the session and captured in the save.
+CAMERA_ZOOM_MIN = 2.0
+CAMERA_ZOOM_MAX = 5.0
+INTERIOR_CAMERA_ZOOM = 3.0
+INTERIOR_CAMERA_ZOOM_MIN = 2.0
+INTERIOR_CAMERA_ZOOM_MAX = 5.0
+CAMERA_ZOOM_STEP = 0.25  # zoom change per mouse-wheel notch
 SAVE_DIR = "saves"
 # Where MusicPlayer caches its procedurally-rendered tracks so they only
 # have to be synthesized once per machine (see game/audio/music.py).
@@ -30,9 +44,30 @@ NAV_CELL = 24
 
 # Display setup
 info = pygame.display.Info()
+DESKTOP_WIDTH = info.current_w
+DESKTOP_HEIGHT = info.current_h
 SCREEN_WIDTH = info.current_w - 50  # Account for taskbar (~40px) and window title bar (~30px)
 SCREEN_HEIGHT = info.current_h - 100
 FPS = 60
+
+# Resolution candidates for the main-menu Video Settings. The chosen one is
+# the fixed SCALED logical surface (main.open_window): the game renders at it
+# and SDL scales that to the actual window, so it also sets the smallest the
+# window can be dragged. The menu groups these by aspect ratio - the player
+# picks an aspect (their display's by default) and then a resolution within
+# it; only entries that fit the desktop are offered, and the native desktop
+# resolution is always available under its own aspect. See main.py's
+# ASPECTS / aspect_label / resolutions_for_aspect / available_aspects.
+VIDEO_RESOLUTIONS = [
+    (1024, 768), (1280, 960), (1400, 1050), (1600, 1200), (2048, 1536),    # 4:3
+    (1280, 1024),                                                          # 5:4
+    (2160, 1440), (2256, 1504),                                            # 3:2
+    (1280, 800), (1440, 900), (1680, 1050), (1920, 1200), (2560, 1600),    # 16:10
+    (1280, 720), (1366, 768), (1600, 900), (1920, 1080),
+    (2560, 1440), (3200, 1800), (3840, 2160),                              # 16:9
+    (2560, 1080), (3440, 1440), (3840, 1600), (5120, 2160),                # 21:9
+    (3840, 1080), (5120, 1440),                                            # 32:9
+]
 
 # Fixed-timestep simulation (see docs/BACKLOG.md "Fixed-timestep accumulator").
 # The main loop drains an accumulator of real elapsed time in fixed SIM_STEP

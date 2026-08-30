@@ -9,6 +9,11 @@
   "starting_mission_trigger": "ship_purchase",
   "default_outfit": "space_suit",
   "camera_zoom": 3.0,
+  "camera_zoom_min": 1.75,
+  "camera_zoom_max": 5.0,
+  "interior_camera_zoom": 3.0,
+  "interior_camera_zoom_min": 2.25,
+  "interior_camera_zoom_max": 4.5,
   "walking_speed": 2.0,
   "start": {
     "location": "station",

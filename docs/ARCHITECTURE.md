@@ -566,7 +566,8 @@ except where a story clearly needs it; code holds the default.
 | `loan` | `lender` / `amount` / `max_active` for the `take_loan` dialogue action |
 | `jump` | `travel_frames` / `speed` / `arrival_distance` / `self_min_distance` |
 | `brake_slow_threshold` | Speed the tutorial's braking stage completes below |
-| `camera_zoom` | World-render magnification (default `constants.CAMERA_ZOOM`) |
+| `camera_zoom` / `camera_zoom_min` / `camera_zoom_max` | Space View world-render magnification: starting level + mouse-wheel zoom bounds (defaults `constants.CAMERA_ZOOM` / `_MIN` / `_MAX`) |
+| `interior_camera_zoom` / `interior_camera_zoom_min` / `interior_camera_zoom_max` | Same, for interiors - a separate level and range (defaults `constants.INTERIOR_CAMERA_ZOOM` / `_MIN` / `_MAX`) |
 | `walking_speed` | On-foot pace, player + AI dock-walkers (default `constants.WALKING_SPEED`) |
 | `default_outfit` | `graphics.json` `outfits` id for the player + AI pilots |
 | `ships.player_type` | Placeholder ship stats before one is owned (usually `null`) |

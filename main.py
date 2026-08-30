@@ -3,14 +3,16 @@ import pygame
 import sys
 import os
 import time
+import math
 import game.constants as constants
 import game.perf_metrics as perf_metrics
 from game.constants import (
-    GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+    GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, FPS,
+    DESKTOP_WIDTH, DESKTOP_HEIGHT, VIDEO_RESOLUTIONS
 )
 from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json, get_story,
-    advance_accumulator, save_display_name
+    advance_accumulator, save_display_name, load_settings, save_settings
 )
 from game.world.player_controller import PlayerController
 from game.audio.sound_board import sound_board
@@ -50,62 +52,145 @@ if sys.platform == "win32":
 # frame rate to the vsync'd flip and clock.tick() only enforces a loose
 # safety cap - a tight clock.tick(FPS) on top of vsync makes the sleep
 # overshoot into the next vblank, stretching that frame to two refreshes
-# (judder on a camera pan).
+# (judder on a camera pan). When it's False, clock.tick(FPS) is the pacer.
 vsync_display = False
-_display_flags = pygame.RESIZABLE  # the flag combo open_window() settled on
 VSYNC_SAFETY_FPS = FPS * 4
 
 
-def open_window(size, probe=True):
-    """(Re)create the game window at `size`, requesting vsync so
-    `display.flip()` is paced to the monitor's refresh - without it a plain
-    resizable window tears on a horizontal camera pan (a flip lands
-    mid-scanout).
+def _is_synced(surface):
+    """Measure whether display.flip() is actually vblank-paced: a short burst
+    of flips that comes back faster than ~200 FPS isn't syncing (vsync=1 is
+    only a request - plenty of drivers ignore it for a windowed non-GL
+    surface)."""
+    t0 = time.perf_counter()
+    for _ in range(24):
+        surface.fill((0, 0, 0))
+        pygame.display.flip()
+    return 24 / max(time.perf_counter() - t0, 1e-6) < 200.0
 
-    `SCALED` is what lets SDL2 apply vsync to a non-OpenGL window (it backs
-    the window with a GPU renderer); the logical surface still tracks the
-    window size because we recreate on resize, so nothing is upscaled.
 
-    First call (`probe=True`): try the vsync-capable flag combos and keep the
-    first that *measurably* paces flips (the SCALED flag alone lies - it can
-    be stripped from get_flags() while vsync still works), recording the combo
-    and the result in the module globals. Falls back to a plain resizable
-    window if nothing syncs.
+NATIVE_RESOLUTION = (DESKTOP_WIDTH, DESKTOP_HEIGHT)
 
-    A resize passes `probe=False` to just recreate at the new size with that
-    same combo - re-running the 24-flip blanking probe on every VIDEORESIZE
-    event (dozens per second while the user drags a corner) is what made the
-    window feel like it couldn't be resized at all."""
-    global vsync_display, _display_flags
+# Canonical display aspect ratios, for grouping resolutions in Video Settings.
+# aspect_label() buckets a resolution to the closest of these (within 4%), so
+# the two "21:9" panel sizes (2560x1080 = 2.370, 3440x1440 = 2.389) land in
+# one group instead of two near-identical ones.
+ASPECTS = [
+    ("5:4", 5 / 4), ("4:3", 4 / 3), ("3:2", 3 / 2), ("16:10", 16 / 10),
+    ("16:9", 16 / 9), ("21:9", 2560 / 1080), ("32:9", 32 / 9),
+]
 
-    if not probe:
-        try:
-            return pygame.display.set_mode(size, _display_flags, vsync=1 if vsync_display else 0)
-        except pygame.error:
-            return pygame.display.set_mode(size, pygame.RESIZABLE)
 
-    def _is_synced(surface):
-        t0 = time.perf_counter()
-        for _ in range(24):
-            surface.fill((0, 0, 0))
-            pygame.display.flip()
-        return 24 / max(time.perf_counter() - t0, 1e-6) < 200.0
+def resolution_fits(size):
+    """True if `size` is no larger than the desktop in either axis."""
+    return size[0] <= DESKTOP_WIDTH and size[1] <= DESKTOP_HEIGHT
 
-    for flags in (pygame.RESIZABLE | pygame.SCALED, pygame.SCALED, pygame.RESIZABLE):
+
+def aspect_label(size):
+    """The ASPECTS label closest to `size`'s width:height ratio (within 4%),
+    else a reduced `"w:h"` string (an unusual panel gets its own group)."""
+    r = size[0] / size[1]
+    label, ratio = min(ASPECTS, key=lambda a: abs(a[1] - r))
+    if abs(ratio - r) / r <= 0.04:
+        return label
+    g = math.gcd(int(size[0]), int(size[1]))
+    return f"{size[0] // g}:{size[1] // g}"
+
+
+NATIVE_ASPECT = aspect_label(NATIVE_RESOLUTION)
+
+
+def resolutions_for_aspect(label):
+    """Fitting VIDEO_RESOLUTIONS in aspect group `label`, plus the native
+    desktop resolution when it belongs to `label`. Sorted small -> large."""
+    picks = {r for r in VIDEO_RESOLUTIONS
+             if resolution_fits(r) and aspect_label(r) == label}
+    if NATIVE_ASPECT == label:
+        picks.add(NATIVE_RESOLUTION)
+    return sorted(picks, key=lambda s: (s[0], s[1]))
+
+
+def available_aspects():
+    """Aspect labels that have at least one fitting resolution - the native
+    aspect first, then the rest in ASPECTS order."""
+    labels = [lbl for lbl, _r in ASPECTS if resolutions_for_aspect(lbl)]
+    if NATIVE_ASPECT in labels:
+        labels.remove(NATIVE_ASPECT)
+    return [NATIVE_ASPECT] + labels
+
+
+def default_resolution():
+    """Startup pick when nothing valid is saved: the monitor's native
+    resolution."""
+    return NATIVE_RESOLUTION
+
+
+def load_resolution():
+    """The saved video resolution if it still fits and is a known candidate
+    (or the native resolution), else default_resolution()."""
+    saved = load_settings().get("resolution")
+    if isinstance(saved, (list, tuple)) and len(saved) == 2:
+        candidate = (int(saved[0]), int(saved[1]))
+        if resolution_fits(candidate) and (candidate in VIDEO_RESOLUTIONS
+                                           or candidate == NATIVE_RESOLUTION):
+            return candidate
+    return default_resolution()
+
+
+def open_window(size, measure_vsync=True):
+    """Open the game window with a fixed SCALED logical surface of `size`.
+
+    `SCALED` backs the window with a GPU renderer - the only way SDL2 vsyncs a
+    non-OpenGL window on many drivers (this machine included); whether it
+    actually engaged is measured into `vsync_display`. The logical surface
+    stays `size` for the window's whole life: SDL scales it to whatever the
+    user drags the window to and remaps mouse events, so the game needs no
+    `VIDEORESIZE` handling at all. `SCALED`'s catch - the window can't be
+    dragged below the logical size, and a second `set_mode()` on a live SCALED
+    renderer fails - is why `size` is one of a few fixed `VIDEO_RESOLUTIONS`
+    chosen in the main-menu Video Settings (and applied via a full display
+    re-init, see `apply_resolution`), rather than something that tracks the
+    window. Falls back to a plain resizable window (clock.tick paces, a pan
+    may tear) if SCALED won't initialise.
+
+    `measure_vsync=False` (used when re-applying a resolution) keeps the
+    `vsync_display` the startup call already measured - the vsync capability
+    is a property of the driver, not the resolution, and the measurement is a
+    ~0.4 s burst of blank flips not worth repeating."""
+    global vsync_display
+    for flags in (pygame.RESIZABLE | pygame.SCALED, pygame.RESIZABLE):
         try:
             surface = pygame.display.set_mode(size, flags, vsync=1)
+            break
         except pygame.error:
-            continue
-        if _is_synced(surface):
-            vsync_display = True
-            _display_flags = flags
-            return surface
-    vsync_display = False
-    _display_flags = pygame.RESIZABLE
-    return pygame.display.set_mode(size, pygame.RESIZABLE)
+            surface = None
+    if surface is None:
+        surface = pygame.display.set_mode(size, pygame.RESIZABLE)
+    if measure_vsync:
+        vsync_display = _is_synced(surface)
+    return surface
 
 
-screen = open_window((SCREEN_WIDTH, SCREEN_HEIGHT))
+def apply_resolution(size):
+    """Switch the SCALED logical resolution (from the Video Settings menu) and
+    persist it. A live SCALED renderer can't be re-`set_mode()`'d, so the
+    whole display is torn down and re-initialised - safe because this is only
+    reachable from the main menu, where nothing holds a Surface reference."""
+    global screen, logical_resolution
+    pygame.display.quit()
+    pygame.display.init()
+    pygame.display.set_caption("Space Game")
+    screen = open_window(size, measure_vsync=False)
+    set_screen_size(*size)
+    logical_resolution = tuple(size)
+    settings = load_settings()
+    settings["resolution"] = list(size)
+    save_settings(settings)
+
+
+logical_resolution = load_resolution()
+screen = open_window(logical_resolution)
+set_screen_size(*logical_resolution)
 screen.fill((0, 0, 0))
 pygame.display.flip()
 pygame.display.set_caption("Space Game")
@@ -314,9 +399,50 @@ def step_world(current_screen, game_screen, station_interior, moon_interior):
 
 
 def main_menu():
-    """The main menu (NEW / LOAD / QUIT) - rebuilt whenever the game returns
-    to it so the LOAD row reflects the current save situation."""
-    return BackdropMenu("GALAXY RISE", [("new", "NEW", None), ("load", "LOAD", None), ("quit", "QUIT", None)])
+    """The main menu (NEW / LOAD / VIDEO SETTINGS / QUIT) - rebuilt whenever the
+    game returns to it so the LOAD row reflects the current save situation."""
+    return BackdropMenu("GALAXY RISE", [
+        ("new", "NEW", None),
+        ("load", "LOAD", None),
+        ("video", "VIDEO SETTINGS", None),
+        ("quit", "QUIT", None),
+    ])
+
+
+def video_settings_menu(aspect):
+    """Main-menu Video Settings for aspect group `aspect`: a top row that
+    opens the aspect picker, then the fixed SCALED logical resolutions in that
+    group (see open_window) - the active one marked "Current resolution", the
+    native one "Native resolution". A resolution click applies it immediately
+    (apply_resolution); Back returns to the main menu. Mouse-only."""
+    aspect_desc = None if aspect == NATIVE_ASPECT else f"Your display is {NATIVE_ASPECT}"
+    rows = [("aspect", f"Aspect ratio  ·  {aspect}", aspect_desc)]
+    for w, h in resolutions_for_aspect(aspect):
+        if (w, h) == logical_resolution:
+            marker = "Current resolution"
+        elif (w, h) == NATIVE_RESOLUTION:
+            marker = "Native resolution"
+        else:
+            marker = None
+        rows.append((f"{w}x{h}", f"{w} × {h}", marker))
+    return BackdropMenu("VIDEO SETTINGS", rows, allow_cancel=True)
+
+
+def video_aspect_menu(selected):
+    """The aspect-ratio picker reached from Video Settings. One row per
+    available_aspects() entry - the one in use marked "Selected", the
+    monitor's own marked "Native" when it isn't the selected one. Picking one
+    (or Back) returns to Video Settings with its resolution list refiltered."""
+    rows = []
+    for label in available_aspects():
+        if label == selected:
+            marker = "Selected"
+        elif label == NATIVE_ASPECT:
+            marker = "Native"
+        else:
+            marker = None
+        rows.append((label, label, marker))
+    return BackdropMenu("ASPECT RATIO", rows, allow_cancel=True)
 
 
 def main():
@@ -350,6 +476,8 @@ def main():
         load_menu = None
         load_return_screen = None  # "pause" when the Load menu was opened from the pause menu (ESC/load returns there), else None -> main menu
         star_map = None
+        video_menu = None
+        video_aspect = None  # aspect group being browsed in Video Settings
         current_screen = "menu"
         previous_screen = None
         running = True
@@ -391,14 +519,12 @@ def main():
             if not running:
                 break
 
-            # Coalesce the burst of VIDEORESIZE events a corner-drag produces
-            # into one window recreate per frame, at the final size - one
-            # set_mode() per frame is cheap, one per event is not.
-            resize_to = None
+            # The window is freely resizable, but the SCALED logical surface is
+            # fixed (see open_window): SDL scales it to the window and remaps
+            # mouse coords, so VIDEORESIZE needs no handling. The logical size
+            # only changes via the Video Settings menu (apply_resolution).
             for event in events:
-                if event.type == pygame.VIDEORESIZE:
-                    resize_to = event.size
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
                     # Global audio mute (Ctrl+M) - works on every screen, so
@@ -406,11 +532,6 @@ def main():
                     # one screen. Toggles both the SFX board and the music.
                     sound_board.muted = not sound_board.muted
                     music.toggle_mute()
-
-            if resize_to is not None:
-                w, h = max(320, resize_to[0]), max(240, resize_to[1])
-                set_screen_size(w, h)
-                screen = open_window((w, h), probe=False)
 
             # ========================================================
             # PHASE 1 - input & screen transitions (once per iteration)
@@ -429,6 +550,33 @@ def main():
                 elif selection == "load":
                     load_menu = SaveBrowser("load")
                     current_screen = "load"
+                elif selection == "video":
+                    video_aspect = aspect_label(logical_resolution)
+                    video_menu = video_settings_menu(video_aspect)
+                    current_screen = "video_settings"
+
+            elif current_screen == "video_settings":
+                choice = video_menu.handle_input(events)
+                if choice == "cancel":
+                    current_screen = "menu"
+                    menu = main_menu()
+                elif choice == "aspect":
+                    video_menu = video_aspect_menu(video_aspect)
+                    current_screen = "video_aspect"
+                elif choice:
+                    w, h = (int(n) for n in choice.split("x"))
+                    if (w, h) != logical_resolution:
+                        apply_resolution((w, h))  # ~150ms display re-init; menu-only
+                    video_aspect = aspect_label(logical_resolution)
+                    video_menu = video_settings_menu(video_aspect)  # refresh markers
+
+            elif current_screen == "video_aspect":
+                choice = video_menu.handle_input(events)
+                if choice:
+                    if choice != "cancel":
+                        video_aspect = choice
+                    video_menu = video_settings_menu(video_aspect)
+                    current_screen = "video_settings"
 
             elif current_screen == "story_select":
                 story = story_selector.handle_input(events)
@@ -850,6 +998,8 @@ def main():
                 load_menu.draw(screen)
                 if delete_confirm_dialog:
                     delete_confirm_dialog.draw(screen)
+            elif current_screen in ("video_settings", "video_aspect"):
+                video_menu.draw(screen)
             elif current_screen == "game":
                 game_screen.draw(screen)
             elif current_screen == "star_map":

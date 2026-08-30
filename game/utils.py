@@ -6,7 +6,7 @@ import pygame
 import game.constants as constants
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
-    CAMERA_ZOOM, SAVE_DIR, GREEN,
+    CAMERA_ZOOM, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, SAVE_DIR, GREEN,
     SIM_STEP, MAX_STEPS_PER_FRAME, MAX_FRAME_TIME
 )
 
@@ -32,14 +32,26 @@ class Camera:
         # World-render magnification. CAMERA_ZOOM is the default; a story can
         # override it (story.json's "camera_zoom") via set_camera_zoom() so a
         # bigger or more cramped map frames sensibly. UI scale ignores this.
+        # zoom_min/zoom_max bound the player's mouse-wheel zoom and are set
+        # per context (Space View vs. interior) via set_zoom_limits() - every
+        # set_zoom() is clamped to them.
         self.zoom = CAMERA_ZOOM
+        self.zoom_min = CAMERA_ZOOM_MIN
+        self.zoom_max = CAMERA_ZOOM_MAX
 
     def set_offset(self, x, y):
         self.offset_x = x
         self.offset_y = y
 
     def set_zoom(self, zoom):
-        self.zoom = zoom
+        """Set the world-render magnification, clamped to [zoom_min, zoom_max]."""
+        self.zoom = max(self.zoom_min, min(self.zoom_max, zoom))
+
+    def set_zoom_limits(self, lo, hi):
+        """Set the bounds the active screen allows the wheel zoom to reach,
+        then re-clamp the current zoom into the new range."""
+        self.zoom_min, self.zoom_max = lo, hi
+        self.set_zoom(self.zoom)
 
     def set_angle(self, degrees):
         """Set the view rotation (degrees, clockwise on screen). Caches the
@@ -176,10 +188,24 @@ def set_screen_size(width, height):
 
 def set_camera_zoom(zoom):
     """Set the world-render magnification (story.json's "camera_zoom";
-    defaults to constants.CAMERA_ZOOM). Global like the rest of the camera
-    state - SpaceScreen sets it per story at construction, and a game can
-    only ever be in one story at a time."""
+    defaults to constants.CAMERA_ZOOM), clamped to the active limits. Global
+    like the rest of the camera state - the active screen (SpaceScreen /
+    LocationScreen) pushes its remembered level here every frame, and a game
+    can only ever be in one story/context at a time."""
     _camera.set_zoom(zoom)
+
+
+def set_camera_zoom_limits(lo, hi):
+    """Set the min/max the player's wheel zoom may reach for the active
+    context - the Space View and interiors keep independent ranges (see
+    constants.CAMERA_ZOOM_MIN / INTERIOR_CAMERA_ZOOM_MIN and their story.json
+    overrides). The current zoom is re-clamped into the new range."""
+    _camera.set_zoom_limits(lo, hi)
+
+
+def get_camera_zoom():
+    """The current world-render magnification (post-clamp)."""
+    return _camera.zoom
 
 
 def get_scale():
@@ -306,6 +332,23 @@ def save_json(filename, data):
     """Save data to JSON file."""
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+SETTINGS_FILE = "settings.json"
+
+
+def load_settings():
+    """Per-machine player preferences (currently just the video resolution).
+    A plain dict; a missing or unreadable file is an empty dict. Not cached -
+    it's written back during a session and re-read. Kept out of version
+    control (see .gitignore) since it's machine-specific."""
+    data = load_json(SETTINGS_FILE, cache=False)
+    return data if isinstance(data, dict) else {}
+
+
+def save_settings(settings):
+    """Persist the preferences dict from load_settings()."""
+    save_json(SETTINGS_FILE, settings)
 
 
 def get_story(story):

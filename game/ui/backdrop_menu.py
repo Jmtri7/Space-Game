@@ -61,9 +61,26 @@ class BackdropMenu(MenuBase):
         m = self._metrics()
         desc_lines = self._desc_lines(m)
         all_rows = self._all_rows()
-        row_heights = [m["btn_height"] + len(desc_lines[v]) * m["desc_line_height"] + m["row_gap"]
-                       for v, _l, _d in all_rows]
-        panel_height = m["title_area"] + sum(row_heights) + int(28 * m["scale"])
+
+        def _row_heights(mm):
+            return [mm["btn_height"] + len(desc_lines[v]) * mm["desc_line_height"] + mm["row_gap"]
+                    for v, _l, _d in all_rows]
+
+        bottom_pad = int(28 * m["scale"])
+        rows_total = sum(_row_heights(m))
+        panel_height = m["title_area"] + rows_total + bottom_pad
+
+        # Long lists (Video Settings on a big display) can overrun the screen -
+        # BackdropMenu doesn't scroll, so shrink the rows region to fit. Short
+        # menus (main menu, story picker) never reach this.
+        avail = utils.screen_height - 2 * m["panel_top"]
+        if panel_height > avail and rows_total > 0:
+            shrink = max(0.4, (avail - m["title_area"] - bottom_pad) / rows_total)
+            m = dict(m, btn_height=max(1, int(m["btn_height"] * shrink)),
+                     row_gap=int(m["row_gap"] * shrink),
+                     desc_line_height=max(1, int(m["desc_line_height"] * shrink)))
+            panel_height = m["title_area"] + sum(_row_heights(m)) + bottom_pad
+
         panel = pygame.Rect(0, 0, m["panel_width"], panel_height)
         panel.centerx = utils.screen_width // 2
         panel.top = m["panel_top"]

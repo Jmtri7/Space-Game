@@ -2,9 +2,13 @@
 import pygame
 import math
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM, BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
+from game.constants import (
+    GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, CAMERA_ZOOM_STEP,
+    BLACK, YELLOW, WHITE, GREEN, GRAY, CYAN, RED
+)
 from game.utils import (
-    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_angle, set_camera_zoom,
+    get_scale, get_offset, get_ui_scale, load_json, set_camera_offset, set_camera_angle,
+    set_camera_zoom, set_camera_zoom_limits,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
     get_asteroid_type, get_missions, get_story
@@ -120,7 +124,15 @@ class SpaceScreen(ScreenBase):
         # World-render magnification for this story (UI scale is unaffected).
         # Global camera state - safe to set here since a session is only
         # ever in one story, and only a live SpaceScreen renders the world.
-        set_camera_zoom(story_meta.get("camera_zoom", CAMERA_ZOOM))
+        # camera_zoom is the live, player-adjustable level (mouse wheel over
+        # open space, see handle_input); it starts at the story default and
+        # is clamped to [min, max]. Remembered for the session and captured
+        # by get_state(); interiors keep their own separate level.
+        self.camera_zoom_min = story_meta.get("camera_zoom_min", CAMERA_ZOOM_MIN)
+        self.camera_zoom_max = story_meta.get("camera_zoom_max", CAMERA_ZOOM_MAX)
+        self.camera_zoom = self._clamp_zoom(story_meta.get("camera_zoom", CAMERA_ZOOM))
+        set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
+        set_camera_zoom(self.camera_zoom)
         # Per-story tuning overrides (module-level names above are the
         # defaults / JumpDrive's own fallback).
         self.brake_slow_threshold = story_meta.get("brake_slow_threshold", BRAKE_SLOW_THRESHOLD)
@@ -578,6 +590,10 @@ class SpaceScreen(ScreenBase):
         self.player.park()
         self.in_flight = False
 
+    def _clamp_zoom(self, zoom):
+        """Keep a zoom level within this story's Space View range."""
+        return max(self.camera_zoom_min, min(self.camera_zoom_max, zoom))
+
     def handle_input(self, events):
         keys = pygame.key.get_pressed()
         # Manual rotation/thrust are locked out during a jump - _update_jump()
@@ -644,6 +660,12 @@ class SpaceScreen(ScreenBase):
                         self.player.person.possessions.flags["scrolled_message_log"] = True
                 elif self._info_panel_rect and self._info_panel_rect.collidepoint(mouse_pos):
                     self.info_panel_scroll = max(0, self.info_panel_scroll - event.y)
+                elif not any(rect.collidepoint(mouse_pos) for rect in self._hud_click_rects):
+                    # Wheel over open space zooms the world view (wheel up =
+                    # zoom in), clamped to this story's Space View range. The
+                    # level is pushed to the shared camera in update().
+                    self.camera_zoom = self._clamp_zoom(
+                        self.camera_zoom + event.y * CAMERA_ZOOM_STEP)
                 continue
 
             if event.type != pygame.KEYDOWN:
@@ -1469,9 +1491,13 @@ class SpaceScreen(ScreenBase):
             sound_board.play("ping")
             self._message_alert_pings_played += 1
 
-        # Update camera to follow player, at the current view rotation
+        # Update camera to follow player, at the current view rotation and
+        # zoom. Re-asserted every active frame (an interior leaves its own
+        # zoom + limits on the shared camera when the player lands).
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
         set_camera_angle(self.camera_angle)
+        set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
+        set_camera_zoom(self.camera_zoom)
 
         if self.jump_state:
             return  # skip landing checks entirely while jumping
@@ -1486,11 +1512,13 @@ class SpaceScreen(ScreenBase):
         status pane - see LocationScreen.draw's docstring for why (used
         the same way here, when this screen is only being redrawn as the
         backdrop for a modal menu on top of it)."""
-        # Re-assert the view rotation here too, not just in update() - when
-        # this screen is only a backdrop for a modal (pause menu, possessions,
-        # etc.) update() isn't called, but the stored camera angle could have
-        # been left non-zero or reset by another screen in between.
+        # Re-assert the view rotation and zoom here too, not just in update()
+        # - when this screen is only a backdrop for a modal (pause menu,
+        # possessions, etc.) update() isn't called, but the stored camera
+        # angle/zoom could have been left changed by another screen in between.
         set_camera_angle(self.camera_angle)
+        set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
+        set_camera_zoom(self.camera_zoom)
         surface.fill(BLACK)
         with perf.span("render.starfield"):
             self.star_field.draw(surface)
@@ -1717,6 +1745,9 @@ class SpaceScreen(ScreenBase):
                 "thrust": self.player.thrust
             },
             "possessions": self.player.person.possessions.get_state(),
+            # Player's remembered Space View zoom level (mouse wheel). Clamped
+            # back into range on restore in case the story's limits changed.
+            "camera_zoom": self.camera_zoom,
         }
         if self.jump_state:
             state["jump_state"] = dict(self.jump_state)
@@ -1777,6 +1808,8 @@ class SpaceScreen(ScreenBase):
         restore_possessions() for why)."""
         if not state:
             return
+        if "camera_zoom" in state:
+            self.camera_zoom = self._clamp_zoom(state["camera_zoom"])
         if "player" in state:
             player_state = state["player"]
             self.player.x = player_state.get("x", self.player.x)

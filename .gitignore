@@ -20,3 +20,6 @@ game_stderr.log
 
 # Crash dump written by main.py's top-level exception handler
 error.txt
+
+# Per-machine player preferences (video resolution) - see game/utils.load_settings
+settings.json

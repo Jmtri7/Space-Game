@@ -272,7 +272,8 @@ INGAME_TRACK = {
     "peak": 0.5,            # sits well under the SFX and gameplay
 }
 
-MENU_SCENES = {"menu", "story_select", "pilot_name", "load"}
+MENU_SCENES = {"menu", "story_select", "pilot_name", "load",
+               "video_settings", "video_aspect"}
 
 
 class MusicPlayer:

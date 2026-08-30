@@ -63,7 +63,7 @@ from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
 from game.ui.icon_grid import IconGrid
 from game.ui.outfitting_menu import OutfittingMenu, SLOT_COLORS
 from game.screens.space_screen import SpaceScreen, TARGET_MODES
-from game.constants import GAME_WIDTH, GAME_HEIGHT
+from game.constants import GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM_STEP
 from main import build_save_game_state, warn_if_story_version_mismatch, _pressed_any
 
 
@@ -3592,6 +3592,56 @@ class TestStoryTuningConfig(unittest.TestCase):
         screen = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
         self.assertEqual(screen.speed, 2.0)  # story.json's walking_speed
 
+    def test_space_and_interior_camera_zoom_ranges_from_story(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        self.assertEqual((s.camera_zoom_min, s.camera_zoom, s.camera_zoom_max), (1.75, 3.0, 5.0))
+        loc = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
+        self.assertEqual((loc.camera_zoom_min, loc.camera_zoom, loc.camera_zoom_max), (2.25, 3.0, 4.5))
+
+
+class TestCameraZoomControl(unittest.TestCase):
+    """Player-adjustable world zoom - mouse wheel over open space, clamped to
+    the active context's range, remembered per context, saved with the game."""
+
+    def _wheel(self, y):
+        return SimpleNamespace(type=pygame_mock.MOUSEWHEEL, x=0, y=y)
+
+    def test_space_wheel_zoom_clamps_to_story_range(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        for _ in range(20):
+            s.handle_input([self._wheel(1)])   # zoom in, wheel up
+        self.assertEqual(s.camera_zoom, s.camera_zoom_max)
+        for _ in range(40):
+            s.handle_input([self._wheel(-1)])  # zoom out
+        self.assertEqual(s.camera_zoom, s.camera_zoom_min)
+
+    def test_space_wheel_zoom_steps_and_reaches_the_shared_camera(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        start = s.camera_zoom
+        s.handle_input([self._wheel(1)])
+        self.assertAlmostEqual(s.camera_zoom, start + CAMERA_ZOOM_STEP)
+        s.update()
+        self.assertAlmostEqual(utils._camera.zoom, s.camera_zoom)
+
+    def test_interior_wheel_zoom_clamps_to_its_own_range(self):
+        loc = LocationScreen(config_data={"label": "X", "rooms": [{"rect": [0, 0, 800, 600]}]},
+                             world_width=800, world_height=600, story="default")
+        for _ in range(20):
+            loc.handle_input([self._wheel(1)])
+        self.assertEqual(loc.camera_zoom, loc.camera_zoom_max)  # 4.5, not the Space View's 5.0
+
+    def test_zoom_survives_save_round_trip_and_reclamps(self):
+        s = SpaceScreen(pilot_name="T", story="default")
+        s.camera_zoom = 4.5
+        state = s.get_state()
+        self.assertEqual(state["camera_zoom"], 4.5)
+        s2 = SpaceScreen(pilot_name="T", story="default")
+        s2.restore_state(state)
+        self.assertEqual(s2.camera_zoom, 4.5)
+        # A level saved under looser limits is pulled back into range.
+        s2.restore_state({"camera_zoom": 99.0})
+        self.assertEqual(s2.camera_zoom, s2.camera_zoom_max)
+
 
 class TestSpaceScreenMissionIntegration(unittest.TestCase):
     """The default story's "first_flight" tutorial mission - real
@@ -4963,6 +5013,89 @@ class TestBackgroundMusic(unittest.TestCase):
         self.assertTrue(player.muted)
         player.toggle_mute()
         self.assertFalse(player.muted)
+
+
+class TestVideoResolution(unittest.TestCase):
+    """main.py's Video Settings model: the native default, aspect grouping,
+    which aspects/resolutions a given desktop offers, and honouring /
+    rejecting a saved choice. These read module-level NATIVE_* constants, so
+    each desktop-size case recomputes them via _reload()."""
+
+    CANDIDATES = [
+        (1024, 768), (1280, 960), (1600, 1200),                # 4:3
+        (1280, 1024),                                          # 5:4
+        (2160, 1440),                                          # 3:2
+        (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),  # 16:10
+        (1280, 720), (1600, 900), (1920, 1080), (2560, 1440), (3840, 2160),  # 16:9
+        (2560, 1080), (3440, 1440),                            # 21:9
+    ]
+
+    def _reload(self, w, h):
+        """Point main at a `w`x`h` desktop and recompute its NATIVE_* module
+        constants (normally set once at import)."""
+        import main
+        self._stack.enter_context(patch.object(main, "VIDEO_RESOLUTIONS", self.CANDIDATES))
+        self._stack.enter_context(patch.object(main, "DESKTOP_WIDTH", w))
+        self._stack.enter_context(patch.object(main, "DESKTOP_HEIGHT", h))
+        self._stack.enter_context(patch.object(main, "NATIVE_RESOLUTION", (w, h)))
+        self._stack.enter_context(patch.object(main, "NATIVE_ASPECT", main.aspect_label((w, h))))
+        return main
+
+    def setUp(self):
+        import contextlib
+        self._stack = contextlib.ExitStack()
+
+    def tearDown(self):
+        self._stack.close()
+
+    def test_default_is_the_native_desktop_resolution(self):
+        m = self._reload(2560, 1440)
+        self.assertEqual(m.default_resolution(), (2560, 1440))
+
+    def test_aspect_label_buckets_both_ultrawide_sizes_together(self):
+        import main
+        self.assertEqual(main.aspect_label((2560, 1080)), main.aspect_label((3440, 1440)))
+        self.assertEqual(main.aspect_label((1920, 1080)), "16:9")
+        self.assertEqual(main.aspect_label((1920, 1200)), "16:10")
+
+    def test_available_aspects_lists_native_first(self):
+        m = self._reload(2560, 1440)
+        aspects = m.available_aspects()
+        self.assertEqual(aspects[0], "16:9")
+        self.assertIn("16:10", aspects)
+        self.assertIn("4:3", aspects)
+
+    def test_resolutions_for_aspect_are_fitting_and_grouped(self):
+        m = self._reload(2560, 1440)
+        self.assertEqual(m.resolutions_for_aspect("16:9"),
+                         [(1280, 720), (1600, 900), (1920, 1080), (2560, 1440)])
+        self.assertEqual(m.resolutions_for_aspect("16:10"),
+                         [(1280, 800), (1440, 900), (1680, 1050), (1920, 1200)])
+
+    def test_widescreen_desktop_defaults_and_groups_to_ultrawide(self):
+        m = self._reload(3440, 1440)
+        self.assertEqual(m.default_resolution(), (3440, 1440))
+        self.assertEqual(m.available_aspects()[0], "21:9")
+        self.assertEqual(m.resolutions_for_aspect("21:9"), [(2560, 1080), (3440, 1440)])
+
+    def test_native_resolution_is_offered_even_if_not_a_candidate(self):
+        m = self._reload(3000, 2000)  # 3:2, not in CANDIDATES
+        self.assertIn((3000, 2000), m.resolutions_for_aspect(m.NATIVE_ASPECT))
+
+    def test_load_resolution_honours_a_valid_saved_choice(self):
+        m = self._reload(2560, 1440)
+        with patch.object(m, "load_settings", return_value={"resolution": [1920, 1200]}):
+            self.assertEqual(m.load_resolution(), (1920, 1200))  # off-aspect but valid
+
+    def test_load_resolution_rejects_a_now_oversized_saved_choice(self):
+        m = self._reload(2560, 1440)
+        with patch.object(m, "load_settings", return_value={"resolution": [3840, 2160]}):
+            self.assertEqual(m.load_resolution(), m.default_resolution())
+
+    def test_load_resolution_default_when_nothing_saved(self):
+        m = self._reload(2560, 1440)
+        with patch.object(m, "load_settings", return_value={}):
+            self.assertEqual(m.load_resolution(), m.default_resolution())
 
 
 if __name__ == "__main__":

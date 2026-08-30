@@ -3,7 +3,7 @@ import pygame
 import math
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
-from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
+from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, set_camera_zoom, set_camera_zoom_limits, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
 import game.utils as utils
 from game.perf_metrics import metrics as perf
 from game.audio.sound_board import sound_board
@@ -253,6 +253,15 @@ class LocationScreen(ScreenBase):
         # off this) - story.json's "walking_speed" overrides the default so
         # both always match.
         self.speed = get_story(story).get("walking_speed", constants.WALKING_SPEED)
+        # Player-adjustable interior zoom (mouse wheel over open floor, see
+        # handle_input). Its own range, independent of the Space View's -
+        # story.json's "interior_camera_zoom"/"..._min"/"..._max" override the
+        # constants. Remembered for the session and captured by get_state();
+        # pushed to the shared camera by update_camera()/draw().
+        _story_meta = get_story(story)
+        self.camera_zoom_min = _story_meta.get("interior_camera_zoom_min", constants.INTERIOR_CAMERA_ZOOM_MIN)
+        self.camera_zoom_max = _story_meta.get("interior_camera_zoom_max", constants.INTERIOR_CAMERA_ZOOM_MAX)
+        self.camera_zoom = self._clamp_zoom(_story_meta.get("interior_camera_zoom", constants.INTERIOR_CAMERA_ZOOM))
         self.entrance_range = 35  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
         # Cached by handle_input() when L opens the exit menu, so
@@ -873,8 +882,10 @@ class LocationScreen(ScreenBase):
         and visually colliding with the menu's own bottom help text."""
         # Interiors are always north-up, even when only drawn as a modal
         # backdrop (update()/update_camera() may not have run since the
-        # Space View last rotated the shared camera).
+        # Space View last rotated / re-zoomed the shared camera).
         set_camera_angle(0)
+        set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
+        set_camera_zoom(self.camera_zoom)
         surface.fill(self.bg_color)
         scale = get_scale()
 
@@ -1308,7 +1319,8 @@ class LocationScreen(ScreenBase):
                 # over it - mirrors SpaceScreen's own wheel handling. Wheel
                 # up (event.y > 0) moves toward the newest entry; the upper
                 # bound is clamped against max_scroll in draw().
-                if self._message_log_rect and self._message_log_rect.collidepoint(pygame.mouse.get_pos()):
+                mouse_pos = pygame.mouse.get_pos()
+                if self._message_log_rect and self._message_log_rect.collidepoint(mouse_pos):
                     self.message_log_scroll = max(0, self.message_log_scroll - event.y)
                     # Generic gameplay-event flag (mirrors "walked_interior" /
                     # "targeted_person") - lets a tutorial stage use
@@ -1316,6 +1328,12 @@ class LocationScreen(ScreenBase):
                     # when the log actually had a backlog to scroll.
                     if self._message_log_max_scroll > 0:
                         self.player.possessions.flags["scrolled_message_log"] = True
+                elif not any(rect.collidepoint(mouse_pos) for rect in self._hud_click_rects):
+                    # Wheel over open floor zooms the interior view (wheel up
+                    # = zoom in), clamped to this interior's own range. Pushed
+                    # to the shared camera by update_camera().
+                    self.camera_zoom = self._clamp_zoom(
+                        self.camera_zoom + event.y * constants.CAMERA_ZOOM_STEP)
                 continue
 
             if event.type != pygame.KEYDOWN:
@@ -1460,12 +1478,19 @@ class LocationScreen(ScreenBase):
                 self._nav_grid = NavGrid(self.can_move_to, bounds, NAV_CELL)
         return IndoorPathfinder.find_path(self._nav_grid, start, goal)
 
+    def _clamp_zoom(self, zoom):
+        """Keep a zoom level within this interior's allowed range."""
+        return max(self.camera_zoom_min, min(self.camera_zoom_max, zoom))
+
     def update_camera(self):
         """Update global camera to follow player"""
         set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
         # Interiors are always north-up - clear any view rotation the Space
-        # View (Q/E) left on the shared camera.
+        # View (Q/E) left on the shared camera. The zoom range is the
+        # interior's own, separate from the Space View's.
         set_camera_angle(0)
+        set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
+        set_camera_zoom(self.camera_zoom)
 
     def get_state(self):
         """Save player position state for locations"""
@@ -1475,12 +1500,17 @@ class LocationScreen(ScreenBase):
                 "y": self.player.y
             },
             "possessions": self.player.possessions.get_state(),
+            # Player's remembered interior zoom level (mouse wheel). Clamped
+            # back into range on restore in case the story's limits changed.
+            "camera_zoom": self.camera_zoom,
         }
 
     def restore_state(self, state):
         """Restore player position state for locations"""
         if not state:
             return
+        if "camera_zoom" in state:
+            self.camera_zoom = self._clamp_zoom(state["camera_zoom"])
         if "player" in state:
             player_state = state["player"]
             self.player.x = player_state.get("x", self.player.x)

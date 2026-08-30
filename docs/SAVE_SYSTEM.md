@@ -47,6 +47,7 @@ name is kept, the timestamp lives inside it.
     "story_version": "1.0.0",
     "system_id": "sol_alpha",
     "location": "space",
+    "camera_zoom": 3.0,
     "player": {
       "x": 250.5,
       "y": 150.3,
@@ -297,6 +298,14 @@ def get_state(self):
 - Every AI ship, in every system the story defines — position, angle,
   velocity, thrust, and which system it's currently in — keyed by pilot
   name, not list order (see `get_state()` above for why)
+- `game_state["camera_zoom"]` - the player's mouse-wheel zoom level for the
+  context the save was made in (the Space View's for a `"space"` save, that
+  interior's for a `"station"`/`"moon"` save). Written by
+  `SpaceScreen.get_state()` / `LocationScreen.get_state()`, restored (clamped
+  to the story's current range) by the matching `restore_state()`. A save
+  made in one context doesn't carry the *other* context's remembered zoom -
+  each context re-defaults to its story value until the wheel is used there.
+  Older saves with no `camera_zoom` key just start at the story default.
 - Station/moon position (implicitly, via the `system` config snapshot -
   only for `self.system_id`, the system the save was actually made in;
   every other system's station/moon position comes back from its own

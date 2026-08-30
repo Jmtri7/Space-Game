@@ -16,7 +16,7 @@ All interactive controls and their bindings. **Update this document when adding 
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star). Starts on LANDING SITES. |
 | **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Hover** a minimap blip | Show its name in a label by the cursor |
-| **Mouse wheel** | Scroll the HUD pane under the cursor - the Message Log (bottom-left) or the targeting/info pane (top-right) when either has more than fits |
+| **Mouse wheel** | Over a scrollable HUD pane (Message Log bottom-left, targeting/info pane top-right): scroll it. Over open space: zoom the view in (wheel up) / out (wheel down), within the story's Space View zoom range |
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
 | **L** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
@@ -68,7 +68,7 @@ Your thrusters draw as firing for the whole jump.
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane |
-| **Mouse wheel** | Scroll the Message Log (bottom-left) when it has more than fits |
+| **Mouse wheel** | Over the Message Log (bottom-left) when it has more than fits: scroll it. Over open floor: zoom the view in / out, within the story's interior zoom range (separate from the Space View's) |
 | **ESC** | Pause menu |
 
 A default-story station is one connected interior with a single ship portal
@@ -114,6 +114,7 @@ up at a distance, not for choosing who to talk to.
 | **]** / **[** | Cycle through targetable NPCs, forward/backward (City only, for viewing info at a distance - see above) |
 | **Click** a person | Target them directly |
 | **T** | Talk to the closest NPC/pilot in range - see "NPC Targeting vs. Talking" above |
+| **Mouse wheel** | Over the Message Log: scroll it. Over open ground: zoom the view in / out, within the story's interior zoom range |
 | **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |
 | **N** | Open the Mission Log (see Mission Log below) |
@@ -373,6 +374,18 @@ velocity, rotation, cargo all update at once).
 Each row is a button (with its story blurb under it). The Story Selector adds
 a **Back** button that returns to the Main Menu. Click a row to pick it.
 
+### Video Settings (Main Menu → VIDEO SETTINGS)
+The top row, **Aspect ratio · <label>**, opens an aspect-ratio picker
+(16:9, 16:10, 21:9, 4:3, …); it starts on your monitor's own ratio, and the
+others are marked so you can tell which is "Native". Below it are the screen
+resolutions in the chosen aspect that fit your desktop, plus your native
+resolution — the one in use marked "Current resolution". Click a resolution
+to switch: the display re-initialises in place (~150 ms) and the choice is
+remembered in `settings.json`. Picking a non-native aspect just letterboxes
+the view. The game window is always freely resizable by dragging its edges;
+this only sets the render resolution (and the smallest the window can go).
+**Back** returns to the Main Menu.
+
 ### Save / Load Menus
 | Control | Action |
 |---------|--------|
@@ -445,6 +458,14 @@ averages and peaks over the last ~2 seconds. See
 
 ## Notes
 
+- **Mouse-wheel zoom** works over open space in the Space View and over open
+  floor in interiors (not over a HUD pane, where the wheel scrolls instead).
+  The Space View and interiors keep **independent** zoom levels and
+  **independent** min/max ranges - both ranges are per-story
+  (`story.json`'s `camera_zoom` / `camera_zoom_min` / `camera_zoom_max` and
+  `interior_camera_zoom` / `interior_camera_zoom_min` / `interior_camera_zoom_max`,
+  defaults in `constants.py`). Each level is remembered for the session and
+  **saved with the game** (unlike Q/E view rotation, which is not)
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC pauses** the game from the space view and interiors, and **ESC
   again resumes** from the pause menu; in the Star Map, Possessions, and
