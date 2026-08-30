@@ -43,8 +43,10 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   + `<circle>`, no `stroke`, matching Standard Issue (see "Strokeless specimens"
   below); the Vherathi glass-green edge is now each hull's outline colour, the
   bloom `<filter>` defs are gone, and the six outfits moved to the shared
-  legged + armed body. Design unchanged — but re-running `apply_parts.py` would
-  restyle the shipped `parts`, so it's left un-run (a design pass).
+  legged + armed body. `apply_parts.py` was **re-run** off the strokeless
+  atlases (`extract_atlas.py` now folds the strokeless idioms back to compact
+  parts — see "Strokeless specimens"), so the in-game `parts` are current with
+  these plates again.
 - **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
   **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
   look. The `standard_issue` culture, its ships/station, the **Procyon Gate**
@@ -67,10 +69,11 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   `person.py` (a `sleeve_color` sleeve quad per shoulder, counter-swinging on
   the walk cycle) along with the culture-neutral kit becoming the Sol
   Federation look in each system.
-  This is a superset of nothing the extractor can't already read, so the plates
-  map to `parts` with no strokeless/black-ring special-casing — but the shapes
-  are re-authored, so re-running `apply_parts.py` would restyle the shipped
-  `issue_*` / `station_ring` art. Left un-run deliberately; it's a design pass.
+  `apply_parts.py` runs off these plates: `extract_atlas.py`'s
+  `collapse_strokeless` folds an offset-outline pair back into one part with a
+  real `outline`, and a run of `ring_strip` quads back into a
+  `{"circle", "width"}` ring — so the in-game part counts stay ~as small as the
+  old stroked atlas (station rings extract as transparent-hole ring parts).
 
 ### Updating a published atlas
 
@@ -219,6 +222,17 @@ collar.
 line = a long thin polygon (a run of short ones for dashes); a dotted circle
 = a ring of small `<circle>` dots; `<text>` is allowed for annotation only
 (corner tags, `SF-###` registrations, floor-plan room labels).
+
+**Extraction folds both idioms back.** `extract_atlas.py`'s
+`collapse_strokeless` (run automatically; pass `nocollapse` to skip) turns an
+offset-outline polygon + fill polygon back into one part with a real
+`"outline"` colour, and a run of ≥8 same-colour quads back into one
+`{"circle", "width"}` ring per torus (split by edge-adjacency, so a row of
+window squares is left alone). Result: `apply_parts.py` off the strokeless
+atlas gives part counts within ±1 of the old stroked extraction, with the
+station rings as transparent-hole ring parts. The `#888` fallback in
+`gen_rr.py` was removed — a `url(#grid)` fill must pass through, or a second
+run of the (non-idempotent) converter paints the background solid grey.
 
 ## Turning a plate into config
 

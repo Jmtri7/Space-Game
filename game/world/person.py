@@ -172,16 +172,15 @@ class Person:
 
     def _arm_swing(self):
         """Per-frame fore/aft wrist offset (dx) for the left arm then the
-        right. Each arm swings opposite its same-side leg - the left leg
-        leads the stride while sin(walk_phase) > 0, so the left arm leads
-        (moves forward) while it's < 0 - which reads as a natural gait.
-        Returns (0.0, 0.0) at rest so a still Person's arms hang straight."""
+        right. Both arms swing *together* (same direction), counter to the
+        stride - a relaxed side-to-side sway rather than a march. Returns
+        (0.0, 0.0) at rest so a still Person's arms hang straight."""
         amt = self.walk_intensity
         if not amt:
             return 0.0, 0.0
         swing = math.sin(self.walk_phase)
-        dx = math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
-        return -dx, dx
+        dx = -math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
+        return dx, dx
 
     def _arm_quad(self, shoulder_x, shoulder_y, wrist_x, wrist_y, half_width):
         """Four points of one arm: a lightly tapered sleeve from the

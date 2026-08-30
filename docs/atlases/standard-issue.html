@@ -343,8 +343,9 @@
           dark-silhouette trick that keeps the body off the ground extends to the
           new shapes. The <b>arms</b> then shipped too: a tapered
           <code class="f">sleeve_color</code> quad from each shoulder to a small
-          hand, ~a leg long, that swings fore/aft <em>opposite</em> the legs
-          while walking (<code class="f">WALK_ARM_DEG</code> / <code class="f">_arm_swing</code>).
+          hand, ~a leg long. Both arms swing <em>together</em>, counter to the
+          stride — a relaxed sway, not a march
+          (<code class="f">WALK_ARM_DEG</code> / <code class="f">_arm_swing</code>).
         </p>
         <dl class="spec">
           <dt>removed</dt><dd>FOOT_RADIUS_X / _Y, FOOT_OVERLAP</dd>
@@ -386,7 +387,7 @@
           <dt>LEG_SEPARATION</dt><dd>2.8 · new</dd>
           <dt>BOOT_RADIUS_X × _Y</dt><dd>2.6 × 1.9 · new</dd>
           <dt>HIP_OVERLAP</dt><dd>1.5 · leg tops tuck under the torso base</dd>
-          <dt>ARM_LENGTH / _SEPARATION</dt><dd>9 / 6.4 · new; WALK_ARM_DEG 9, opposite the legs</dd>
+          <dt>ARM_LENGTH / _SEPARATION</dt><dd>9 / 6.4 · new; WALK_ARM_DEG 9, both arms sway together</dd>
           <dd class="full">The walk cycle (WALK_PACE / WALK_LIFT / WALK_STRIDE_DEG / WALK_BOB / WALK_INTENSITY_*) alternates each leg's swing + lift and bobs the body; the hip line hides the pivot.</dd>
         </dl>
         <div class="keys"><span><b>new keys</b> none required</span><span><b>leg_color</b> · <b>sleeve_color</b> optional</span></div>

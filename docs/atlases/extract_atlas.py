@@ -262,6 +262,106 @@ def emit(tag, el, style):
 walk(root, {})
 
 
+# ---- collapse the strokeless-atlas idioms back to compact parts --------
+# standard-issue.html / resin-and-rivets.html are drawn with only <polygon>
+# and <circle>, no stroke: an outline is an even offset copy of the shape
+# drawn behind it, and a ring/torus is a run of radial quad segments. Left
+# as-is that's ~2x polygons per shape and hundreds of tiny quads per ring.
+# Fold each idiom back into one part with a real `outline` / a ring circle
+# so the in-game `parts` list stays as small as the old stroked atlas.
+def _bbox(pts):
+    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _covers(outer, inner, slack):
+    ox0, oy0, ox1, oy1 = _bbox(outer)
+    ix0, iy0, ix1, iy1 = _bbox(inner)
+    return (ox0 <= ix0 + slack and oy0 <= iy0 + slack
+            and ox1 >= ix1 - slack and oy1 >= iy1 - slack
+            and (ox1 - ox0) - (ix1 - ix0) < 0.7 * max(ix1 - ix0, 1e-6)
+            and (oy1 - oy0) - (iy1 - iy0) < 0.7 * max(iy1 - iy0, 1e-6))
+
+
+def _ring_from_run(run):
+    """run: polygon parts (4-pt quads), same colour, forming ONE torus ->
+    a {"circle", "width"} ring part (transparent hole)."""
+    vs = [pt for p in run for pt in p["points"]]
+    cx = sum(v[0] for v in vs) / len(vs)
+    cy = sum(v[1] for v in vs) / len(vs)
+    ds = [math.hypot(v[0] - cx, v[1] - cy) for v in vs]
+    r_in, r_out = min(ds), max(ds)
+    return {"circle": [round(cx, 3), round(cy, 3), round((r_in + r_out) / 2, 3)],
+            "width": round(r_out - r_in, 3), "color": run[0]["color"]}
+
+
+def _quads_touch(a, b, eps):
+    shared = 0
+    for pa in a:
+        if any(abs(pa[0] - pb[0]) < eps and abs(pa[1] - pb[1]) < eps for pb in b):
+            shared += 1
+    return shared >= 2
+
+
+def _split_ring_runs(quads, eps):
+    """Break a same-colour quad run into per-torus segments by edge
+    adjacency (ring_strip's quads share a radial edge with the next; a new
+    ring_strip call starts a disconnected segment)."""
+    segs = [[quads[0]]]
+    for q in quads[1:]:
+        if _quads_touch(segs[-1][-1]["points"], q["points"], eps):
+            segs[-1].append(q)
+        else:
+            segs.append([q])
+    return segs
+
+
+def collapse_strokeless(parts):
+    span = max((abs(p["points"][0][0]) for p in parts if "points" in p and p["points"]),
+               default=1.0) or 1.0
+    slack = span * 0.06 + 0.01
+    out, i, n = [], 0, len(parts)
+    while i < n:
+        p = parts[i]
+        q = parts[i + 1] if i + 1 < n else None
+        # (a) outline polygon behind a fill polygon: same vertex count, the
+        #     first strictly encloses the second, different colour.
+        if (q and "points" in p and "points" in q
+                and len(p["points"]) == len(q["points"]) >= 3
+                and p.get("color") != q.get("color")
+                and _covers(p["points"], q["points"], slack)):
+            m = dict(q); m["outline"] = p["color"]; out.append(m); i += 2; continue
+        # (b) outline circle behind a fill circle.
+        if (q and "circle" in p and "circle" in q and "width" not in p and "width" not in q
+                and abs(p["circle"][0] - q["circle"][0]) < slack
+                and abs(p["circle"][1] - q["circle"][1]) < slack
+                and p["circle"][2] > q["circle"][2]
+                and p.get("color") != q.get("color")):
+            m = dict(q); m["outline"] = p["color"]; out.append(m); i += 2; continue
+        # (c) a run of >=8 same-colour quads: split into per-torus segments
+        #     by edge adjacency, fold each real torus into one ring circle,
+        #     keep the rest as-is (e.g. a row of window squares).
+        if "points" in p and len(p["points"]) == 4:
+            j = i
+            while (j < n and "points" in parts[j] and len(parts[j]["points"]) == 4
+                   and parts[j].get("color") == p.get("color")):
+                j += 1
+            if j - i >= 8:
+                for seg in _split_ring_runs(parts[i:j], slack):
+                    if len(seg) >= 8:
+                        out.append(_ring_from_run(seg))
+                    else:
+                        out.extend(seg)
+                i = j
+                continue
+        out.append(p); i += 1
+    return out
+
+
+if "nocollapse" not in sys.argv:
+    parts[:] = collapse_strokeless(parts)
+
+
 def hex_rgb(s):
     """'#rrggbb' / '#rgb' -> [r, g, b]; passes a list through."""
     if isinstance(s, (list, tuple)):
@@ -301,7 +401,7 @@ if MODE in ("hull", "nohull"):
             parts.insert(0, parts.pop(best_i))
     elif best_i is not None:
         parts.pop(best_i)
-    if hull_part.get("outline"):
+    if hull_part.get("outline") and hull_part["outline"] != "none":
         out["outline_color"] = hex_rgb(hull_part["outline"])
     print(json.dumps(out, indent=None))
     print(f"\n// {MODE} {len(hull)}hullpts + {len(parts)} parts"

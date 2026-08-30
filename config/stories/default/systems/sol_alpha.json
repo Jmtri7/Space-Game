@@ -235,7 +235,7 @@
             "role": "ship_salesman",
             "outfit": "vherathi_factor",
             "greeting": "Looking for a ship? Concord hulls, a couple of Federation issues - take your pick.",
-            "shop": {"type": "ships", "stock": ["shuttle", "patrol", "freighter", "vherathi_skiff", "vherathi_courier", "vherathi_thornwing", "vherathi_tender", "vherathi_reliquary", "vherathi_ark"]}
+            "shop": {"type": "ships", "stock": ["vherathi_skiff", "vherathi_courier", "vherathi_thornwing", "vherathi_tender", "vherathi_reliquary", "vherathi_ark"]}
           },
           {
             "name": "Reeve Katic",
