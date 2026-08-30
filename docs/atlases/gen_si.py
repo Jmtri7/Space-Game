@@ -238,19 +238,19 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if blade:                                    # grown guard-blade down one arm
         P.append(opoly([(38, 56), (46, 56), (49, 138), (45, 158), (40, 150)], blade, d=1.0))
 
-    # torso - an hourglass: wide chest, a gradual pinch to the cinched waist,
-    # then a gradual flare back to a hip almost as wide as the chest, so the
-    # waist reads even when a loose outfit covers it. Many points on the
-    # cinch so it curves rather than kinks.
+    # torso - one smooth hourglass outline from the hip, through the cinched
+    # waist, up to a rounded shoulder with no armpit notch, then a short flat
+    # neck across the top. _side is the left silhouette (dx from centre, y);
+    # the right is its mirror, so the curve is symmetric by construction.
     _grp("body"); _gate(None)
-    # left silhouette, hip -> chest (dx from centre, y); mirrored for the right
-    _cinch = [(-hw, hip_y), (-hw, hip_y - 5), (-(hw - 1), waist_y + 27),
-              (-(waist_hw + 4), waist_y + 15), (-(waist_hw + 1), waist_y + 5),
-              (-waist_hw, waist_y), (-(waist_hw + 3), waist_y - 8),
-              (-(hw - 4), waist_y - 18), (-19, 92), (-21, 84)]
-    torso = ([(70 + dx, y) for dx, y in _cinch]
-             + [(52, 72), (58, 64), (66, 61), (74, 61), (82, 64), (88, 72)]
-             + [(70 - dx, y) for dx, y in reversed(_cinch)])
+    _side = [(-hw, hip_y), (-hw, hip_y - 6),
+             (-(hw - 1), waist_y + 25), (-(waist_hw + 5), waist_y + 13),
+             (-(waist_hw + 1), waist_y + 4), (-waist_hw, waist_y),
+             (-(waist_hw + 4), waist_y - 11), (-(hw - 3), waist_y - 23),
+             (-20.5, 90), (-21, 82), (-20, 73), (-16.5, 66),
+             (-11, 62), (-6, 60.5)]
+    torso = ([(70 + dx, y) for dx, y in _side]
+             + [(70 - dx, y) for dx, y in reversed(_side)])
     P.append(opoly(torso, suit, d=1.5))
 
     # arms - short (~leg length); shoulder pads (later) cover the tops
@@ -410,20 +410,18 @@ CONTACT = {
 }
 
 def gen_special_1(vb, aria):
+    """The current shared body: legged, walk-cycle arms, a cinched waist
+    with the belt/hip line at it. (Was a current-vs-proposed comparison
+    against the old foot-oval body; that shipped, so just the one figure now.)"""
     x0, y0, vw, vh = (float(v) for v in vb.split())
     bg = poly([(x0, y0), (x0 + vw, y0), (x0 + vw, y0 + vh), (x0, y0 + vh)], GRID)
-    cur = "".join(figure_parts(suit=SKIN, boot=SKINL, legged=False, arms=False, no_helmet=True))
-    prop = "".join(figure_parts(suit=SKIN, boot=SKINL, legged=True, arms=True, no_helmet=True, hipline=True))
-    g1 = f'<g transform="translate(10,18) scale(0.8)">{cur}</g>'
-    g2 = f'<g transform="translate(138,10) scale(0.8)">{prop}</g>'
-    div = bar(130, 20, 130, 184, 1, "#2b2b38")
-    hd = dashed_bar(180, 133, 208, 133, 0.9, "#8fb9c8", dash=2.4, gap=2.2)
-    t = ('<text x="66" y="30" fill="#6d6a7e" font-family="IBM Plex Mono, monospace" font-size="8" '
-         'letter-spacing="1.5" text-anchor="middle">CURRENT</text>'
-         '<text x="194" y="30" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="8" '
-         'letter-spacing="1.5" text-anchor="middle">PROPOSED</text>'
-         '<text x="230" y="132" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="6.5">hip line</text>')
-    return f'<svg viewBox="{vb}" role="img" aria-label="{aria}">{bg}{div}{g1}{g2}{hd}{t}</svg>'
+    fig = "".join(figure_parts(suit=SKIN, boot=SKINL, no_helmet=True, hipline=True))
+    g = f'<g transform="translate(50,4) scale(0.92)">{fig}</g>'
+    t = ('<text x="120" y="20" fill="#6d6a7e" font-family="IBM Plex Mono, monospace" font-size="8" '
+         'letter-spacing="1.5" text-anchor="middle">SHARED BODY</text>'
+         '<text x="182" y="120" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="6.5">waist line</text>')
+    hd = dashed_bar(150, 121, 176, 121, 0.9, "#8fb9c8", dash=2.4, gap=2.2)
+    return f'<svg viewBox="{vb}" role="img" aria-label="{aria}">{bg}{g}{hd}{t}</svg>'
 
 def gen_special_3(vb, aria):
     return figure_svg(vb, aria, wrap="translate(50,0)",
