@@ -270,8 +270,8 @@
     }
   },
   "celestial_bodies": [
-    {"name": "Marker One", "x": 0.55, "y": 0.52, "size": 12, "color": [150, 160, 175], "body_type": "rocky"},
-    {"name": "Halbegg", "x": 0.06, "y": 0.9, "size": 24, "color": [220, 230, 245], "body_type": "ice"},
+    {"name": "Marker Buoy 1", "x": 0.55, "y": 0.52, "size": 12, "color": [150, 160, 175], "body_type": "rocky"},
+    {"name": "SF-9c", "x": 0.06, "y": 0.9, "size": 24, "color": [220, 230, 245], "body_type": "ice"},
     {"name": "Wardwatch", "x": 0.94, "y": 0.1, "size": 48, "color": [200, 205, 220], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 195, 210]}
   ],
   "ai_ships": [

@@ -26,16 +26,7 @@ only appears under a section if it currently has items there.
 
 - [ ] No mission-complete message when leaving the mission area — a mission that
       completes on leaving/returning surfaces no confirmation toast.
-- [ ] Tutorial first stage doesn't complete until the player walks — it should
-      complete on its intended trigger, not require movement.
 - [ ] Petra Voss should be positioned at the loan office desk.
-- [ ] Petty Officer Lund gets stuck — pathing wedges on geometry and the NPC
-      stops moving.
-
-## Ships & Customization
-
-- [ ] Gap: what happens when you buy a second ship? (multiple owned ships behavior
-      is undefined — see the feature item under Ships & Customization.)
 
 ## Economy & Trading
 
@@ -46,17 +37,12 @@ only appears under a section if it currently has items there.
 ## Stations, Interiors & World Building
 
 - [ ] Characters added to a story don't show up in old saves.
-- [ ] Decorations and buildings placed in the middle of "streets".
-- [ ] Overlapping decorations and buildings.
-- [ ] Decorations need more spacing between them.
 - [ ] The concierge desk should sit right in front of the player on entry.
 
 ## Graphics & Rendering
 
 - [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
       player's own model instead of a distinct sprite.
-- [ ] Building collision footprint extends too far below the building graphic.
-- [ ] Hitboxes on some decorations are way off from the graphic.
 - [ ] Pipe fence needs an outline.
 - [ ] Faint shimmer of the world when panning (running left/right in an
       interior, flying in space): the camera scrolls a non-integer number of
@@ -95,7 +81,6 @@ only appears under a section if it currently has items there.
 - [ ] Tutorial for jumping to another system (see also: jumping to system center
       needs work, under Bugs → Navigation & Flight).
 - [ ] Relationships.
-- [ ] Cultural languages and names (per-culture naming schemes / language flavor).
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
       story.
@@ -120,7 +105,9 @@ only appears under a section if it currently has items there.
 ## Ships & Customization
 
 - [ ] Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
-      ship" feel more personal, especially once multiple owned ships exist.
+      ship" feel more personal. (Owning multiple ships and switching between
+      them at the ship salesman's "Your Ships" tab now works — story `1.12.0`;
+      per-ship stored outfit loadouts are still a gap, see SAVE_SYSTEM.md.)
 - [ ] Make all outfits usable (not just cosmetic/inert).
 - [ ] Outfitter should explain how to install outfits and what each outfit does.
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).

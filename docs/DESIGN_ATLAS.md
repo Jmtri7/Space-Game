@@ -18,6 +18,14 @@ is the how: how to make one, how to keep it honest, and which ones exist.
 | **Resin & Rivets** | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
 | **Standard Issue** | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
+Both atlases carry a **Naming** section per culture (01·N / 02·N / 05·N),
+sourced from each culture's `naming` field in `cultures.json` and applied to
+the default story's three systems as of story `1.13.0` (Aurelith / Vaelune
+Ring / Ossira for the Vherathi; Kadmor Reach / Kadmor Yard / Skragg for the
+Drossholt; Procyon Gate kept, minor body names catalogued for the Federation).
+Internal `system_id` file names (`sol_alpha.json` etc.) are unchanged for save
+compatibility.
+
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
   shipped** as of story `1.10.0` — both station interiors and both moon cities are

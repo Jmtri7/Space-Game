@@ -1,6 +1,6 @@
 {
   "elena_voss": {
-    "name": "Elena Voss",
+    "name": "Elae Vossae",
     "faction": "Frontier Traders Guild",
     "role": "freighter_pilot",
     "personality": "Blunt and unhurried — cares more about the manifest than the view.",
@@ -8,7 +8,7 @@
       "root": "start",
       "nodes": {
         "start": {
-          "text": "Freighter One here. Hope you're not looking to relieve me of my cargo.",
+          "text": "Tidebearer here. Hope you're not looking to relieve me of my cargo.",
           "options": [
             {"label": "Just saying hello.", "next": "hello"},
             {"label": "Ask about her cargo.", "next": "cargo"},
@@ -105,7 +105,7 @@
     "personality": "Gruff and territorial, treats every claim boundary like it's already been shot at once."
   },
   "juno_vale": {
-    "name": "Juno Vale",
+    "name": "Junae Valis",
     "faction": "The Vherathi Concord",
     "role": "explorer",
     "personality": "Never stays anywhere long, already thinking about whatever's over the next horizon."

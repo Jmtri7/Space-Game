@@ -1,13 +1,13 @@
 {
-  "name": "Kepler's Reach",
-  "description": "A remote outpost system on the edge of known space",
+  "name": "Kadmor Reach",
+  "description": "A Drossholt Company survey claim on the edge of charted space - a plate-welded yard-station and a settlement grid on the moon.",
   "star_map_position": {"x": 400, "y": -250},
   "station_asset": "station_delta",
   "moon_asset": "moon_rust",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
-    "name": "Kepler",
+    "name": "Kadmor",
     "size": 80,
     "color": [255, 180, 120]
   },
@@ -26,10 +26,10 @@
   "station": {
     "x": 0.75,
     "y": 0.25,
-    "name": "Delta Outpost",
+    "name": "Kadmor Yard",
     "interiors": {
       "default": {
-        "label": "Delta Outpost",
+        "label": "Kadmor Yard",
         "culture": "drossholt",
         "portals": [
           {"x": 90, "y": 530, "connected_locations": [], "return_to_ship": true}
@@ -91,7 +91,7 @@
             "dialogue_options": ["Nothing", "Leave"]
           },
           {
-            "name": "Sergeant Dane",
+            "name": "Watch-Chief Dane",
             "x": 560,
             "y": 240,
             "role": "security",
@@ -100,7 +100,7 @@
             "dialogue_options": ["Understood", "Leave"]
           },
           {
-            "name": "Medtech Sella",
+            "name": "Patcher Sella",
             "x": 950,
             "y": 600,
             "role": "medic",
@@ -124,10 +124,10 @@
   "moon": {
     "x": 0.2,
     "y": 0.7,
-    "name": "Rust Moon",
+    "name": "Skragg",
     "interiors": {
       "city": {
-        "label": "Rust Moon Settlement",
+        "label": "Skragg Yard-town",
         "description": "A cluster of bolted-together Drossholt cargo bunkers and a watch tower",
         "culture": "drossholt",
         "background_color": [140, 70, 50],
@@ -250,7 +250,7 @@
         ]
       },
       "wilderness": {
-        "label": "Rust Moon Wilderness",
+        "label": "Skragg Flats",
         "description": "Cratered, rust-red terrain",
         "background_color": [140, 70, 50],
         "entrance": {"x": 200, "y": 200},
@@ -267,12 +267,12 @@
   },
   "celestial_bodies": [
     {"name": "Cinderpoint", "x": 0.54, "y": 0.53, "size": 12, "color": [170, 80, 60], "body_type": "rocky"},
-    {"name": "Wraithmoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
+    {"name": "Greymoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
     {"name": "Bulwark", "x": 0.05, "y": 0.1, "size": 50, "color": [210, 170, 130], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 170, 140]}
   ],
   "ai_ships": [
     {
-      "name": "Trader One",
+      "name": "Ledger Run",
       "x": 0.65,
       "y": 0.6,
       "ship_type": "drossholt_freighter",
@@ -280,7 +280,7 @@
       "route": ["station", "moon"]
     },
     {
-      "name": "Patrol One",
+      "name": "Claim-Watch",
       "x": 0.5,
       "y": 0.4,
       "ship_type": "drossholt_patrol",
