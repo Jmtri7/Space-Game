@@ -330,10 +330,12 @@ def collapse_strokeless(parts):
     while i < n:
         p = parts[i]
         q = parts[i + 1] if i + 1 < n else None
-        # (a) outline polygon behind a fill polygon: same vertex count, the
-        #     first strictly encloses the second, different colour.
+        # (a) outline polygon behind a fill polygon: the first strictly
+        #     encloses the second, different colour. The outline copy may have
+        #     a few *more* vertices than the fill (a sharp corner bevels to
+        #     two points in offset_poly), so allow >=, not ==.
         if (q and "points" in p and "points" in q
-                and len(p["points"]) == len(q["points"]) >= 3
+                and len(p["points"]) >= len(q["points"]) >= 3
                 and p.get("color") != q.get("color")
                 and _covers(p["points"], q["points"], slack)):
             m = dict(q); m["outline"] = p["color"]; out.append(m); i += 2; continue

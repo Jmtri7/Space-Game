@@ -4,41 +4,55 @@ import pygame
 from game.utils import to_screen, get_scale
 
 
-def expand_polygon(pts, d):
-    """Screen-space mitre offset: every edge pushed out by a constant d
+def expand_polygon(pts, d, miter_limit=2.0):
+    """Screen-space outward offset: every edge pushed out by a constant d
     pixels, so the outline is the same thickness on every side (a tall thin
     shape doesn't get a top-heavy border). Same technique the design atlases
     use - an outline is a larger copy of the shape drawn behind it, never a
     stroke - so the in-game silhouettes match the plates primitive-for-
-    primitive (polygons + circles, no strokes)."""
+    primitive (polygons + circles, no strokes).
+
+    Corners are mitred; a corner too sharp to mitre within `miter_limit`*d is
+    bevelled (a point per edge) instead. Without that, a pointed shape - a
+    blade tip, a thruster nozzle, a tapered wedge - grows a long spike out
+    its point (and on a rotating hull the spike sweeps around with it). The
+    offset direction is taken from the polygon's signed area, not a
+    distance-to-centroid guess on one vertex, so it never depends on how the
+    shape happens to be rotated on screen."""
     n = len(pts)
     if n < 3:
         return pts
-    cx = sum(p[0] for p in pts) / n
-    cy = sum(p[1] for p in pts) / n
+    area2 = sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1]
+               for i in range(n))
+    sgn = 1.0 if area2 > 0 else -1.0
+
+    def edge_normal(p, q):
+        ux, uy = q[0] - p[0], q[1] - p[1]
+        L = math.hypot(ux, uy)
+        if L < 1e-9:
+            return None
+        return (sgn * uy / L, -sgn * ux / L)
 
     out = []
     for i in range(n):
-        ax, ay = pts[i - 1]
-        bx, by = pts[i]
-        ex, ey = pts[(i + 1) % n]
-        u1x, u1y = bx - ax, by - ay
-        u2x, u2y = ex - bx, ey - by
-        l1 = math.hypot(u1x, u1y) or 1.0
-        l2 = math.hypot(u2x, u2y) or 1.0
-        n1x, n1y = -u1y / l1, u1x / l1
-        mx, my = n1x + (-u2y / l2), n1y + (u2x / l2)
-        ml = math.hypot(mx, my) or 1.0
-        mx, my = mx / ml, my / ml
-        cosv = mx * n1x + my * n1y
-        if abs(cosv) < 0.32:
-            cosv = 0.32 if cosv >= 0 else -0.32
-        out.append((bx + mx * d / cosv, by + my * d / cosv))
-    # the mitre direction ignores winding; flip (reflect through each vertex)
-    # if the result came out smaller instead of larger
-    if (math.hypot(out[0][0] - cx, out[0][1] - cy)
-            < math.hypot(pts[0][0] - cx, pts[0][1] - cy)):
-        out = [(2 * p[0] - o[0], 2 * p[1] - o[1]) for p, o in zip(pts, out)]
+        a, b, c = pts[i - 1], pts[i], pts[(i + 1) % n]
+        n1 = edge_normal(a, b)
+        n2 = edge_normal(b, c)
+        if n1 is None and n2 is None:
+            out.append(b)
+            continue
+        if n1 is None or n2 is None:
+            nn = n1 or n2
+            out.append((b[0] + nn[0] * d, b[1] + nn[1] * d))
+            continue
+        mx, my = n1[0] + n2[0], n1[1] + n2[1]
+        ml = math.hypot(mx, my)
+        cosv = (mx / ml) * n1[0] + (my / ml) * n1[1] if ml > 1e-9 else 0.0
+        if cosv < 1.0 / miter_limit:                 # too sharp (or reflex): bevel
+            out.append((b[0] + n1[0] * d, b[1] + n1[1] * d))
+            out.append((b[0] + n2[0] * d, b[1] + n2[1] * d))
+        else:
+            out.append((b[0] + mx / ml * d / cosv, b[1] + my / ml * d / cosv))
     return out
 
 

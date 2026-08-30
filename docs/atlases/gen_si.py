@@ -92,27 +92,42 @@ def _u(v):
     L = math.hypot(v[0], v[1]) or 1.0
     return (v[0] / L, v[1] / L)
 
-def offset_poly(pts, d):
+def offset_poly(pts, d, miter_limit=2.0):
+    """Outward offset by a constant d on every edge. Corners mitre; a corner
+    too sharp to mitre within miter_limit*d bevels (a point per edge) instead,
+    so a pointed shape (blade, nozzle, wedge) gets a clean cap, not a spike.
+    Direction comes from the signed area, so it's winding-agnostic. Must stay
+    in lockstep with game/world/world_object.py:expand_polygon."""
     n = len(pts)
-    cx = sum(p[0] for p in pts) / n
-    cy = sum(p[1] for p in pts) / n
+    if n < 3:
+        return pts
+    area2 = sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1]
+               for i in range(n))
+    sgn = 1.0 if area2 > 0 else -1.0
 
-    def build(dd):
-        r = []
-        for i in range(n):
-            p0, p1, p2 = pts[(i - 1) % n], pts[i], pts[(i + 1) % n]
-            e1 = _u((p1[0] - p0[0], p1[1] - p0[1]))
-            e2 = _u((p2[0] - p1[0], p2[1] - p1[1]))
-            n1 = (-e1[1], e1[0]); n2 = (-e2[1], e2[0])
-            m = _u((n1[0] + n2[0], n1[1] + n2[1]))
-            cosv = max(0.32, m[0] * n1[0] + m[1] * n1[1])
-            r.append((p1[0] + m[0] * dd / cosv, p1[1] + m[1] * dd / cosv))
-        return r
+    def norm(p, q):
+        ux, uy = q[0] - p[0], q[1] - p[1]
+        L = math.hypot(ux, uy)
+        return None if L < 1e-9 else (sgn * uy / L, -sgn * ux / L)
 
-    a = build(d)
-    grew = (sum(math.hypot(x - cx, y - cy) for x, y in a)
-            >= sum(math.hypot(x - cx, y - cy) for x, y in pts))
-    return a if grew else build(-d)
+    out = []
+    for i in range(n):
+        a, b, c = pts[(i - 1) % n], pts[i], pts[(i + 1) % n]
+        n1, n2 = norm(a, b), norm(b, c)
+        if n1 is None and n2 is None:
+            out.append(b); continue
+        if n1 is None or n2 is None:
+            k = n1 or n2
+            out.append((b[0] + k[0] * d, b[1] + k[1] * d)); continue
+        mx, my = n1[0] + n2[0], n1[1] + n2[1]
+        ml = math.hypot(mx, my)
+        cosv = (mx / ml) * n1[0] + (my / ml) * n1[1] if ml > 1e-9 else 0.0
+        if cosv < 1.0 / miter_limit:
+            out.append((b[0] + n1[0] * d, b[1] + n1[1] * d))
+            out.append((b[0] + n2[0] * d, b[1] + n2[1] * d))
+        else:
+            out.append((b[0] + mx / ml * d / cosv, b[1] + my / ml * d / cosv))
+    return out
 
 def opoly(pts, fill, d=1.3, ol=OUT, cls=None):
     return poly(offset_poly(pts, d), ol) + poly(pts, fill, cls=cls)
