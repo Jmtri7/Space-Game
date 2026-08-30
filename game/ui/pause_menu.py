@@ -12,15 +12,16 @@ QUIT_ACCENT = (230, 160, 150)
 
 
 class PauseMenu(MenuBase):
-    """Resume / Save Game / Load Game / Quit to Menu, as buttons. `handle_input`
-    returns the clicked button's action string (`"resume"` / `"save"` /
-    `"load"` / `"quit"`) or `None`."""
+    """Resume / Save Game / Load Game / Settings / Quit to Menu, as buttons.
+    `handle_input` returns the clicked button's action string (`"resume"` /
+    `"save"` / `"load"` / `"settings"` / `"quit"`) or `None`."""
 
     def __init__(self):
         self._buttons = [
             ("resume", "Resume", RESUME_ACCENT),
             ("save", "Save Game", NEUTRAL_ACCENT),
             ("load", "Load Game", NEUTRAL_ACCENT),
+            ("settings", "Settings", NEUTRAL_ACCENT),
             ("quit", "Quit to Menu", QUIT_ACCENT),
         ]
         self.button_index = 0
@@ -30,7 +31,7 @@ class PauseMenu(MenuBase):
         return [(bid, label, accent, False) for bid, label, accent in self._buttons]
 
     def panel_rect(self, scale):
-        return modal_panel_rect(scale, 0.24, 0.6, 0.56)
+        return modal_panel_rect(scale, 0.22, 0.6, 0.66)
 
     def button_bar_rects(self, scale):
         panel = self.panel_rect(scale)

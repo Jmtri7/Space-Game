@@ -5098,5 +5098,35 @@ class TestVideoResolution(unittest.TestCase):
             self.assertEqual(m.load_resolution(), m.default_resolution())
 
 
+class TestSettingsMenu(unittest.TestCase):
+    """main.py's Settings menu: the Video tab's rows and the supersample-AA
+    toggle label tracking constants.SUPERSAMPLE_AA."""
+
+    def setUp(self):
+        import game.constants as constants
+        self._prev_aa = constants.SUPERSAMPLE_AA
+        self.addCleanup(setattr, constants, "SUPERSAMPLE_AA", self._prev_aa)
+
+    def test_video_tab_has_aa_toggle_first_then_aspect_and_resolutions(self):
+        import main
+        menu = main.settings_menu("16:9")
+        self.assertEqual(menu.tabs, ("Video", main.SETTINGS_TABS))
+        values = [v for v, _l, _d in menu.rows]
+        self.assertEqual(values[0], "aa_toggle")
+        self.assertIn("aspect", values)
+
+    def test_aa_toggle_label_follows_the_flag(self):
+        import main
+        import game.constants as constants
+
+        constants.SUPERSAMPLE_AA = False
+        off = main.settings_menu("16:9").rows[0][1]
+        constants.SUPERSAMPLE_AA = True
+        on = main.settings_menu("16:9").rows[0][1]
+        self.assertIn("Off", off)
+        self.assertNotIn("Off", on)
+        self.assertIn("x2", on.lower())
+
+
 if __name__ == "__main__":
     unittest.main()

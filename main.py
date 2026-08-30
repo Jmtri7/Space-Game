@@ -148,7 +148,7 @@ def open_window(size, measure_vsync=True):
     `VIDEORESIZE` handling at all. `SCALED`'s catch - the window can't be
     dragged below the logical size, and a second `set_mode()` on a live SCALED
     renderer fails - is why `size` is one of a few fixed `VIDEO_RESOLUTIONS`
-    chosen in the main-menu Video Settings (and applied via a full display
+    chosen in Settings -> Video (and applied via a full display
     re-init, see `apply_resolution`), rather than something that tracks the
     window. Falls back to a plain resizable window (clock.tick paces, a pan
     may tear) if SCALED won't initialise.
@@ -171,11 +171,34 @@ def open_window(size, measure_vsync=True):
     return surface
 
 
+# Supersample-AA offscreen buffer (Settings -> Video). When
+# constants.SUPERSAMPLE_AA is on, PHASE 3 renders the whole frame here at 2x
+# the logical resolution and smoothscales it down onto `screen`. Lazily
+# (re)allocated to match the current logical size and dropped whenever the
+# resolution changes. See docs/BACKLOG.md for the lighter gfxdraw alternative.
+_hires_surface = None
+
+
+def _hires_target(size):
+    global _hires_surface
+    if _hires_surface is None or _hires_surface.get_size() != tuple(size):
+        _hires_surface = pygame.Surface(size).convert()
+    return _hires_surface
+
+
+def _invalidate_hires_surface():
+    global _hires_surface
+    _hires_surface = None
+
+
 def apply_resolution(size):
-    """Switch the SCALED logical resolution (from the Video Settings menu) and
+    """Switch the SCALED logical resolution (from the Settings menu) and
     persist it. A live SCALED renderer can't be re-`set_mode()`'d, so the
-    whole display is torn down and re-initialised - safe because this is only
-    reachable from the main menu, where nothing holds a Surface reference."""
+    whole display is torn down and re-initialised. Safe even though Settings
+    is now reachable mid-game from the pause menu: no screen or world object
+    holds a persistent Surface (every draw() builds its scratch surfaces
+    fresh each frame), and the one long-lived buffer, `_hires_surface`, is
+    dropped here."""
     global screen, logical_resolution
     pygame.display.quit()
     pygame.display.init()
@@ -183,12 +206,14 @@ def apply_resolution(size):
     screen = open_window(size, measure_vsync=False)
     set_screen_size(*size)
     logical_resolution = tuple(size)
+    _invalidate_hires_surface()
     settings = load_settings()
     settings["resolution"] = list(size)
     save_settings(settings)
 
 
 logical_resolution = load_resolution()
+constants.SUPERSAMPLE_AA = bool(load_settings().get("supersample_aa", False))
 screen = open_window(logical_resolution)
 set_screen_size(*logical_resolution)
 screen.fill((0, 0, 0))
@@ -399,40 +424,55 @@ def step_world(current_screen, game_screen, station_interior, moon_interior):
 
 
 def main_menu():
-    """The main menu (NEW / LOAD / VIDEO SETTINGS / QUIT) - rebuilt whenever the
+    """The main menu (NEW / LOAD / SETTINGS / QUIT) - rebuilt whenever the
     game returns to it so the LOAD row reflects the current save situation."""
     return BackdropMenu("GALAXY RISE", [
         ("new", "NEW", None),
         ("load", "LOAD", None),
-        ("video", "VIDEO SETTINGS", None),
+        ("settings", "SETTINGS", None),
         ("quit", "QUIT", None),
     ])
 
 
-def video_settings_menu(aspect):
-    """Main-menu Video Settings for aspect group `aspect`: a top row that
-    opens the aspect picker, then the fixed SCALED logical resolutions in that
-    group (see open_window) - the active one marked "Current resolution", the
-    native one "Native resolution". A resolution click applies it immediately
-    (apply_resolution); Back returns to the main menu. Mouse-only."""
-    aspect_desc = None if aspect == NATIVE_ASPECT else f"Your display is {NATIVE_ASPECT}"
-    rows = [("aspect", f"Aspect ratio  ·  {aspect}", aspect_desc)]
-    for w, h in resolutions_for_aspect(aspect):
-        if (w, h) == logical_resolution:
-            marker = "Current resolution"
-        elif (w, h) == NATIVE_RESOLUTION:
-            marker = "Native resolution"
-        else:
-            marker = None
-        rows.append((f"{w}x{h}", f"{w} × {h}", marker))
-    return BackdropMenu("VIDEO SETTINGS", rows, allow_cancel=True)
+# Tabs shown by the Settings menu, in order. "Video" is the only one for now;
+# add a label here and a matching branch in settings_menu() to grow it.
+SETTINGS_TABS = ["Video"]
+
+
+def settings_menu(aspect, tab="Video"):
+    """The Settings menu (main menu -> SETTINGS, or the pause menu). A tab
+    strip over the active tab's rows, then **Back**. Mouse-only.
+
+    **Video** tab: an **Anti-aliasing** toggle (Off / Supersampling x2 - see
+    constants.SUPERSAMPLE_AA and main()'s PHASE 3 render path), a row that
+    opens the aspect-ratio picker, then the fixed SCALED logical resolutions
+    in `aspect` (see open_window) - the active one marked "Current
+    resolution", the native one "Native resolution". A resolution click
+    applies it immediately (apply_resolution)."""
+    rows = []
+    if tab == "Video":
+        aa = "Supersampling x2" if constants.SUPERSAMPLE_AA else "Off"
+        rows.append(("aa_toggle", f"Anti-aliasing  ·  {aa}",
+                     "Renders at 2x then downscales for smoother edges - costs GPU "
+                     "time each frame, so it's off by default."))
+        aspect_desc = None if aspect == NATIVE_ASPECT else f"Your display is {NATIVE_ASPECT}"
+        rows.append(("aspect", f"Aspect ratio  ·  {aspect}", aspect_desc))
+        for w, h in resolutions_for_aspect(aspect):
+            if (w, h) == logical_resolution:
+                marker = "Current resolution"
+            elif (w, h) == NATIVE_RESOLUTION:
+                marker = "Native resolution"
+            else:
+                marker = None
+            rows.append((f"{w}x{h}", f"{w} × {h}", marker))
+    return BackdropMenu("SETTINGS", rows, allow_cancel=True, tabs=(tab, SETTINGS_TABS))
 
 
 def video_aspect_menu(selected):
-    """The aspect-ratio picker reached from Video Settings. One row per
+    """The aspect-ratio picker reached from Settings -> Video. One row per
     available_aspects() entry - the one in use marked "Selected", the
     monitor's own marked "Native" when it isn't the selected one. Picking one
-    (or Back) returns to Video Settings with its resolution list refiltered."""
+    (or Back) returns to Settings with its resolution list refiltered."""
     rows = []
     for label in available_aspects():
         if label == selected:
@@ -477,7 +517,8 @@ def main():
         load_return_screen = None  # "pause" when the Load menu was opened from the pause menu (ESC/load returns there), else None -> main menu
         star_map = None
         video_menu = None
-        video_aspect = None  # aspect group being browsed in Video Settings
+        video_aspect = None  # aspect group being browsed in Settings -> Video
+        settings_return_screen = None  # "pause" if Settings was opened from the pause menu, else -> main menu
         current_screen = "menu"
         previous_screen = None
         running = True
@@ -522,7 +563,7 @@ def main():
             # The window is freely resizable, but the SCALED logical surface is
             # fixed (see open_window): SDL scales it to the window and remaps
             # mouse coords, so VIDEORESIZE needs no handling. The logical size
-            # only changes via the Video Settings menu (apply_resolution).
+            # only changes via Settings -> Video (apply_resolution).
             for event in events:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
@@ -550,33 +591,46 @@ def main():
                 elif selection == "load":
                     load_menu = SaveBrowser("load")
                     current_screen = "load"
-                elif selection == "video":
+                elif selection == "settings":
                     video_aspect = aspect_label(logical_resolution)
-                    video_menu = video_settings_menu(video_aspect)
-                    current_screen = "video_settings"
+                    video_menu = settings_menu(video_aspect)
+                    settings_return_screen = None
+                    current_screen = "settings"
 
-            elif current_screen == "video_settings":
+            elif current_screen == "settings":
                 choice = video_menu.handle_input(events)
                 if choice == "cancel":
-                    current_screen = "menu"
-                    menu = main_menu()
+                    if settings_return_screen == "pause":
+                        current_screen = "pause"
+                    else:
+                        current_screen = "menu"
+                        menu = main_menu()
+                elif choice and choice.startswith("tab:"):
+                    pass  # "Video" is the only tab today - selecting it is a no-op
+                elif choice == "aa_toggle":
+                    constants.SUPERSAMPLE_AA = not constants.SUPERSAMPLE_AA
+                    _settings = load_settings()
+                    _settings["supersample_aa"] = constants.SUPERSAMPLE_AA
+                    save_settings(_settings)
+                    _invalidate_hires_surface()
+                    video_menu = settings_menu(video_aspect)  # refresh the toggle label
                 elif choice == "aspect":
                     video_menu = video_aspect_menu(video_aspect)
-                    current_screen = "video_aspect"
+                    current_screen = "settings_aspect"
                 elif choice:
                     w, h = (int(n) for n in choice.split("x"))
                     if (w, h) != logical_resolution:
                         apply_resolution((w, h))  # ~150ms display re-init; menu-only
                     video_aspect = aspect_label(logical_resolution)
-                    video_menu = video_settings_menu(video_aspect)  # refresh markers
+                    video_menu = settings_menu(video_aspect)  # refresh markers
 
-            elif current_screen == "video_aspect":
+            elif current_screen == "settings_aspect":
                 choice = video_menu.handle_input(events)
                 if choice:
                     if choice != "cancel":
                         video_aspect = choice
-                    video_menu = video_settings_menu(video_aspect)
-                    current_screen = "video_settings"
+                    video_menu = settings_menu(video_aspect)
+                    current_screen = "settings"
 
             elif current_screen == "story_select":
                 story = story_selector.handle_input(events)
@@ -946,6 +1000,11 @@ def main():
                         load_menu = SaveBrowser("load")
                         load_return_screen = "pause"
                         current_screen = "load"
+                    elif action == "settings":
+                        video_aspect = aspect_label(logical_resolution)
+                        video_menu = settings_menu(video_aspect)
+                        settings_return_screen = "pause"
+                        current_screen = "settings"
                     elif action == "quit":
                         current_screen = "menu"
                         menu = main_menu()
@@ -987,28 +1046,45 @@ def main():
             # PHASE 3 - render (once per iteration)
             # Draws whatever current_screen now is. Modal screens redraw
             # the frozen world/interior they sit over, then their overlay.
+            #
+            # Supersample AA (Settings -> Video): when on, the frame is drawn
+            # to a 2x-logical offscreen surface (`dst`) with the reported
+            # screen size temporarily doubled - everything is resolution
+            # independent (utils.to_screen / get_ui_scale derive from the
+            # screen size), so this just renders bigger - then smoothscaled
+            # back down onto `screen`. Input handling (PHASE 1) always runs at
+            # the logical size, so hit-testing is unaffected. Off -> `dst` is
+            # `screen` and the wrapper is a no-op.
             # ========================================================
+            _ss_aa = constants.SUPERSAMPLE_AA
+            if _ss_aa:
+                _lw, _lh = screen.get_size()
+                dst = _hires_target((_lw * 2, _lh * 2))
+                set_screen_size(_lw * 2, _lh * 2)
+            else:
+                dst = screen
+
             if current_screen == "menu":
-                menu.draw(screen)
+                menu.draw(dst)
             elif current_screen == "story_select":
-                story_selector.draw(screen)
+                story_selector.draw(dst)
             elif current_screen == "pilot_name":
-                pilot_name_dialog.draw(screen)
+                pilot_name_dialog.draw(dst)
             elif current_screen == "load":
-                load_menu.draw(screen)
+                load_menu.draw(dst)
                 if delete_confirm_dialog:
-                    delete_confirm_dialog.draw(screen)
-            elif current_screen in ("video_settings", "video_aspect"):
-                video_menu.draw(screen)
+                    delete_confirm_dialog.draw(dst)
+            elif current_screen in ("settings", "settings_aspect"):
+                video_menu.draw(dst)
             elif current_screen == "game":
-                game_screen.draw(screen)
+                game_screen.draw(dst)
             elif current_screen == "star_map":
-                star_map.draw(screen)
+                star_map.draw(dst)
             elif current_screen == "station":
                 if station_interior:
-                    station_interior.draw(screen)
+                    station_interior.draw(dst)
             elif current_screen == "select_location":
-                location_selector.draw(screen)
+                location_selector.draw(dst)
             elif current_screen == "exit_menu":
                 # The exit ChoiceDialog only paints a centered panel, not a
                 # full-screen fill, so the interior being left must be
@@ -1016,35 +1092,35 @@ def main():
                 # frame's interior (e.g. the spaceport, NPCs and all) shows
                 # through, looking like an NPC in two rooms at once.
                 if exit_menu_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw(dst, draw_hud=False)
                 elif exit_menu_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                exit_menu.draw(screen)
+                    moon_interior.draw(dst, draw_hud=False)
+                exit_menu.draw(dst)
             elif current_screen == "possessions":
                 if possessions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw(dst, draw_hud=False)
                 elif possessions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw(dst, draw_hud=False)
                 elif possessions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                possessions_menu.draw(screen)
+                    moon_interior.draw(dst, draw_hud=False)
+                possessions_menu.draw(dst)
             elif current_screen == "missions":
                 if missions_return_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw(dst, draw_hud=False)
                 elif missions_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw(dst, draw_hud=False)
                 elif missions_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                mission_log.draw(screen)
+                    moon_interior.draw(dst, draw_hud=False)
+                mission_log.draw(dst)
             elif current_screen == "shop":
                 if shop_return_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
+                    station_interior.draw(dst, draw_hud=False)
                 elif shop_return_screen == "moon" and moon_interior:
-                    moon_interior.draw(screen, draw_hud=False)
-                shop_menu.draw(screen)
+                    moon_interior.draw(dst, draw_hud=False)
+                shop_menu.draw(dst)
             elif current_screen == "moon":
                 if moon_interior:
-                    moon_interior.draw(screen)
+                    moon_interior.draw(dst)
             elif current_screen == "pause":
                 pause_menu.update()  # render-side banner animation, not simulation
                 # draw_hud=False since PauseMenu.draw() immediately fills
@@ -1052,16 +1128,21 @@ def main():
                 # camera-follow/animation state current, not for the HUD
                 # to actually be seen.
                 if previous_screen == "game" and game_screen:
-                    game_screen.draw(screen, draw_hud=False)
+                    game_screen.draw(dst, draw_hud=False)
                 elif previous_screen == "station" and station_interior:
-                    station_interior.draw(screen, draw_hud=False)
-                pause_menu.draw(screen)
+                    station_interior.draw(dst, draw_hud=False)
+                pause_menu.draw(dst)
                 if delete_confirm_dialog:
-                    delete_confirm_dialog.draw(screen)
+                    delete_confirm_dialog.draw(dst)
                 elif overwrite_confirm_dialog:
-                    overwrite_confirm_dialog.draw(screen)
+                    overwrite_confirm_dialog.draw(dst)
                 elif save_dialog:
-                    save_dialog.draw(screen)
+                    save_dialog.draw(dst)
+
+            if _ss_aa:
+                with perf_metrics.metrics.span("render.supersample"):
+                    pygame.transform.smoothscale(dst, screen.get_size(), screen)
+                set_screen_size(*screen.get_size())
 
             # DEBUG-only perf panel, drawn over whatever screen is active.
             perf_metrics.draw_overlay(screen)

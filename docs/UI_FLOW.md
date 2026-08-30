@@ -48,7 +48,7 @@ are unchanged.
                   │                                                │
         ┌─────────▼────────────────────────────────────────────────▼──┐
         │                          PAUSE MENU                          │
-        │              Resume / Save / Load / Quit                     │
+        │          Resume / Save / Load / Settings / Quit              │
         └───┬───────────────────────────┬───────────────────────┬────┘
             │                           │                       │
     ┌──────────────┐          ┌────────────────────┐   ┌──────────────────┐
@@ -73,33 +73,49 @@ connected location (→ that location's own `LocationScreen`, staying in
 ## Screen Descriptions
 
 ### Main Menu (`BackdropMenu`)
-**States:** Showing NEW, LOAD, VIDEO SETTINGS, QUIT
+**States:** Showing NEW, LOAD, SETTINGS, QUIT
 - `main.py`'s `main_menu()` builds the rows; recreated each time the game
   returns to the menu
 
 **Transitions:**
 - NEW → Story Selector
 - LOAD → `SaveBrowser("load")`
-- VIDEO SETTINGS → Video Settings (`"video_settings"` state; its own
-  Aspect Ratio sub-picker is `"video_aspect"`)
+- SETTINGS → Settings (`"settings"` state; its Aspect Ratio sub-picker is
+  `"settings_aspect"`)
 - QUIT → Exit application
 
-### Video Settings (`BackdropMenu`, `allow_cancel=True`)
-**Shows:** a top **Aspect ratio · <label>** row, then the fixed SCALED logical
-resolutions in that aspect group (`main.resolutions_for_aspect()` — the
-`constants.VIDEO_RESOLUTIONS` in that group that fit the desktop, plus the
-native resolution when it belongs there, sorted small→large), the active one
-marked "Current resolution" and the native one "Native resolution", then
-**Back**. Built by `video_settings_menu(aspect)`; the browsed `aspect` (a
-`main()` local) defaults to `aspect_label(logical_resolution)` and is rebuilt
-after each pick so the markers follow. The first-run / fallback default
-resolution is the native one. Reachable only from the main menu.
+### Settings (`BackdropMenu`, `allow_cancel=True`, `tabs=(...)`)
+**Reachable from:** the main menu **and** the in-game pause menu (`Settings`
+button). A `main()` local, `settings_return_screen`, records `"pause"` vs. the
+main menu so **Back** returns to the right place. Built by
+`settings_menu(aspect, tab)`; `main.SETTINGS_TABS` is the tab list (just
+`["Video"]` today — a tab click returns `"tab:<label>"` and rebuilds the menu).
+
+**Shows (Video tab):**
+- **Anti-aliasing · Off / Supersampling x2** (`"aa_toggle"`) — toggles
+  `constants.SUPERSAMPLE_AA`, persists it to `settings.json`
+  (`supersample_aa`), and drops the offscreen buffer
+  (`main._invalidate_hires_surface()`). When on, PHASE 3 renders the whole
+  frame to a 2×-logical surface and `smoothscale`s it down onto `screen` (see
+  "Frame timing" below); off by default.
+- **Aspect ratio · <label>** row.
+- the fixed SCALED logical resolutions in that aspect group
+  (`main.resolutions_for_aspect()` — the `constants.VIDEO_RESOLUTIONS` in that
+  group that fit the desktop, plus the native resolution when it belongs
+  there, sorted small→large), the active one marked "Current resolution" and
+  the native one "Native resolution".
+- then **Back**.
+
+The browsed `aspect` (a `main()` local) defaults to
+`aspect_label(logical_resolution)` and is rebuilt after each pick so the
+markers follow. The first-run / fallback default resolution is the native one.
 
 **Transitions:**
-- Aspect ratio row → **Aspect Ratio** picker (`"video_aspect"` state)
+- Anti-aliasing row → toggles in place, stays on this screen
+- Aspect ratio row → **Aspect Ratio** picker (`"settings_aspect"` state)
 - a resolution → `main.apply_resolution()` re-inits the display at that
   SCALED logical size and writes it to `settings.json`; stays on this screen
-- Back → Main Menu
+- Back → Main Menu, or the Pause Menu when opened from there
 
 ### Aspect Ratio (`BackdropMenu`, `allow_cancel=True`)
 **Shows:** `main.available_aspects()` — the aspect labels (from `main.ASPECTS`,
@@ -108,7 +124,7 @@ The one in use is marked "Selected", the monitor's own "Native" when it isn't
 the selected one. Built by `video_aspect_menu(selected)`.
 
 **Transitions:**
-- an aspect / Back → back to **Video Settings**, resolution list refiltered
+- an aspect / Back → back to **Settings**, resolution list refiltered
   to the chosen (or unchanged, on Back) aspect. Nothing is applied until a
   resolution is picked.
 
@@ -334,8 +350,8 @@ equip/unequip directly · ESC: close (or cancel an open picker first)
 - ESC → back to whichever screen opened it (`shop_return_screen` in `main.py`)
 
 ### PauseMenu (`MenuBase`)
-**Shows:** A column of buttons - Resume / Save Game / Load Game / Quit to
-Menu - plus an optional "Saved!" banner.
+**Shows:** A column of buttons - Resume / Save Game / Load Game / Settings /
+Quit to Menu - plus an optional "Saved!" banner.
 
 **Inputs:** UP/DOWN or W/S: move between buttons · RETURN or click: press · ESC: resume (quick exit)
 
@@ -343,6 +359,7 @@ Menu - plus an optional "Saved!" banner.
 - Resume → back to whichever screen was active (`previous_screen`)
 - Save Game → `SaveBrowser("save")`
 - Load Game → `SaveBrowser("load")` (with `load_return_screen = "pause"`, so cancelling it returns here instead of the Main Menu; a successful load replaces the running game and goes to `"game"`/`"station"`/`"moon"`)
+- Settings → **Settings** (`"settings"` state, `settings_return_screen = "pause"`, so **Back** returns here)
 - Quit to Menu → Main Menu
 
 ### Save Menu (`SaveBrowser`, `mode="save"`)
@@ -484,13 +501,21 @@ This separation makes it easy to test input handlers independently.
    step returns it, `main()` applies the landing and stops draining.
 3. **Render** — one `if current_screen == …` that draws the current screen
    (modal screens redraw the frozen backdrop with `draw_hud=False`, then
-   their overlay), then `pygame.display.flip()`.
+   their overlay), then `pygame.display.flip()`. When
+   `constants.SUPERSAMPLE_AA` is on (Settings → Video), the whole `if` block
+   draws to a 2×-logical offscreen surface (`main._hires_target()`) with the
+   reported screen size temporarily doubled — everything is
+   resolution-independent, so it just renders bigger — then
+   `pygame.transform.smoothscale()` shrinks it onto `screen` (timed as the
+   `render.supersample` span). Off by default; ~4× fill + a downscale per
+   frame, which is why it's opt-in. Input (phase 1) always runs at the
+   logical size, so hit-testing is unaffected.
 
 The window is opened by `main.open_window()` with `pygame.RESIZABLE |
 pygame.SCALED` and `vsync=1`. `SCALED` backs the window with a GPU renderer —
 the only way SDL2 vsyncs a non-OpenGL window on many drivers — and makes the
 **logical surface a fixed size** (one of `constants.VIDEO_RESOLUTIONS`, chosen
-in the main-menu Video Settings, default = the native desktop resolution,
+in Settings → Video, default = the native desktop resolution,
 remembered in `settings.json`). SDL scales that surface to whatever
 size the user drags the window to and remaps mouse coords, so `VIDEORESIZE`
 needs **no handling at all** — the loop ignores it. `SCALED`'s two catches —

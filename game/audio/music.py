@@ -272,8 +272,10 @@ INGAME_TRACK = {
     "peak": 0.5,            # sits well under the SFX and gameplay
 }
 
-MENU_SCENES = {"menu", "story_select", "pilot_name", "load",
-               "video_settings", "video_aspect"}
+# The Settings menu ("settings" / "settings_aspect") is deliberately absent:
+# it opens from both the main menu and the in-game pause menu, so set_scene()
+# leaves whichever track is playing alone rather than forcing "menu".
+MENU_SCENES = {"menu", "story_select", "pilot_name", "load"}
 
 
 class MusicPlayer:
@@ -321,6 +323,8 @@ class MusicPlayer:
         """Map a `main.py` screen name to a track and switch if it changed."""
         if not self.enabled:
             return
+        if screen_name in ("settings", "settings_aspect"):
+            return  # keep whatever's playing - Settings opens from menu and pause
         track = "menu" if screen_name in MENU_SCENES else "ingame"
         if track != self._current:
             self._current = track

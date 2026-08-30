@@ -197,6 +197,15 @@ only appears under a section if it currently has items there.
 
 ## Graphics & Visual Polish
 
+- [ ] Anti-aliasing via `pygame.gfxdraw` as a second AA option in Settings →
+      Video, alongside the existing supersample toggle (`constants.SUPERSAMPLE_AA`
+      / the 2×-then-smoothscale path in `main.py`'s PHASE 3). Supersampling is
+      universal but costs ~4× fill + a downscale every frame; `gfxdraw`
+      (`aacircle` / `aapolygon` / `aaellipse`, plus filled shape + `aa` outline)
+      is far cheaper but has to be applied per-primitive at each draw site. Would
+      likely be a per-shape helper (draw filled + aa outline) that ship/outfit/
+      building/decoration rendering opts into. Make the Settings toggle a
+      3-way choice (Off / gfxdraw / Supersample ×2) once it exists.
 - [ ] Better jumping animation.
 - [ ] Better jump graphics.
 - [ ] More texture for interior grounds and ships.

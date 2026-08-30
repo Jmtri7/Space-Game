@@ -50,7 +50,7 @@ SCREEN_WIDTH = info.current_w - 50  # Account for taskbar (~40px) and window tit
 SCREEN_HEIGHT = info.current_h - 100
 FPS = 60
 
-# Resolution candidates for the main-menu Video Settings. The chosen one is
+# Resolution candidates for Settings -> Video. The chosen one is
 # the fixed SCALED logical surface (main.open_window): the game renders at it
 # and SDL scales that to the actual window, so it also sets the smallest the
 # window can be dragged. The menu groups these by aspect ratio - the player
@@ -101,6 +101,14 @@ RED = (255, 60, 60)
 
 # Debug mode
 DEBUG_MODE = False  # Press ` (backtick) to toggle
+
+# Supersample anti-aliasing (Settings -> Video). When True, main.py's PHASE 3
+# renders the whole frame to a 2x-logical offscreen surface and smoothscales
+# it down onto the SCALED logical surface - universal edge antialiasing at
+# ~4x fill + a downscale per frame. Opt-in, off by default; loaded from
+# settings.json at startup and toggled in the Settings menu. See
+# docs/BACKLOG.md for the lighter-weight gfxdraw alternative.
+SUPERSAMPLE_AA = False
 
 # UI constants
 FONT_SIZE = 20

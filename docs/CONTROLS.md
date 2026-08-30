@@ -374,17 +374,26 @@ velocity, rotation, cargo all update at once).
 Each row is a button (with its story blurb under it). The Story Selector adds
 a **Back** button that returns to the Main Menu. Click a row to pick it.
 
-### Video Settings (Main Menu → VIDEO SETTINGS)
-The top row, **Aspect ratio · <label>**, opens an aspect-ratio picker
-(16:9, 16:10, 21:9, 4:3, …); it starts on your monitor's own ratio, and the
-others are marked so you can tell which is "Native". Below it are the screen
-resolutions in the chosen aspect that fit your desktop, plus your native
-resolution — the one in use marked "Current resolution". Click a resolution
-to switch: the display re-initialises in place (~150 ms) and the choice is
-remembered in `settings.json`. Picking a non-native aspect just letterboxes
-the view. The game window is always freely resizable by dragging its edges;
-this only sets the render resolution (and the smallest the window can go).
-**Back** returns to the Main Menu.
+### Settings (Main Menu → SETTINGS, or Pause Menu → Settings)
+A tabbed menu. The tab strip currently has one tab, **Video**; **Back**
+returns to wherever Settings was opened from (the Main Menu, or the Pause
+Menu during a game).
+
+**Video tab:**
+- **Anti-aliasing · Off / Supersampling ×2** — click to toggle. Supersampling
+  renders the whole frame at 2× the resolution and downscales it for smoother
+  edges; it costs GPU time every frame, so it's off by default. Remembered in
+  `settings.json`.
+- **Aspect ratio · <label>** opens an aspect-ratio picker (16:9, 16:10, 21:9,
+  4:3, …); it starts on your monitor's own ratio, and the others are marked so
+  you can tell which is "Native".
+- Below that are the screen resolutions in the chosen aspect that fit your
+  desktop, plus your native resolution — the one in use marked "Current
+  resolution". Click a resolution to switch: the display re-initialises in
+  place (~150 ms) and the choice is remembered in `settings.json`. Picking a
+  non-native aspect just letterboxes the view. The game window is always
+  freely resizable by dragging its edges; this only sets the render resolution
+  (and the smallest the window can go).
 
 ### Save / Load Menus
 | Control | Action |
@@ -403,10 +412,12 @@ field is pre-filled with `<pilot> - <timestamp>` (so **Save** works with no
 typing); the first keystroke clears it so you can type your own.
 
 ### Pause Menu
-A column of buttons - **Resume** / **Save Game** / **Load Game** / **Quit to
-Menu**. Click one. **Load Game** opens the same `SaveBrowser`; its **Cancel**
-returns to the pause menu, and loading replaces the running game. (ESC opens
-the pause menu from gameplay, but does not close it - use **Resume**.)
+A column of buttons - **Resume** / **Save Game** / **Load Game** /
+**Settings** / **Quit to Menu**. Click one. **Load Game** opens the same
+`SaveBrowser`; its **Cancel** returns to the pause menu, and loading replaces
+the running game. **Settings** opens the same tabbed Settings menu as the main
+menu; its **Back** returns to the pause menu. (ESC opens the pause menu from
+gameplay, but does not close it - use **Resume**.)
 
 ### Exit Menu (interior, when the entrance leads to more than one place)
 | Control | Action |
