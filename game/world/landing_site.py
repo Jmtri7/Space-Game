@@ -1,6 +1,7 @@
 """Landing sites the player can dock at (space stations and moons)."""
 import math
 import pygame
+import game.aa_draw as aa
 import game.constants as constants
 from game.constants import GREEN
 from game.utils import get_scale, to_screen, load_json
@@ -176,15 +177,15 @@ class LandingSite(WorldObject):
             for lx, ly in self.windows:
                 wx = self.x + (lx * cos_a - ly * sin_a)
                 wy = self.y + (lx * sin_a + ly * cos_a)
-                pygame.draw.circle(surface, self.window_color, to_screen(wx, wy), radius)
-        pygame.draw.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
+                aa.circle(surface, self.window_color, to_screen(wx, wy), radius)
+        aa.circle(surface, self.core_color, to_screen(self.x, self.y), max(1, int(round(self.size * 0.25 * scale))))
 
     def _draw_moon(self, surface, scale):
         """Draw a celestial moon with craters."""
-        pygame.draw.circle(surface, self.color, to_screen(self.x, self.y), max(1, int(round(self.size * scale))))
+        aa.circle(surface, self.color, to_screen(self.x, self.y), max(1, int(round(self.size * scale))))
         # Draw craters
         for crater in self.craters:
             crater_x = self.x + crater.get("x", 0)
             crater_y = self.y + crater.get("y", 0)
             crater_radius = crater.get("radius", 4)
-            pygame.draw.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))
+            aa.circle(surface, self.crater_color, to_screen(crater_x, crater_y), max(1, int(crater_radius * scale)))

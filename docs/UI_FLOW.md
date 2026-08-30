@@ -92,12 +92,16 @@ main menu so **Back** returns to the right place. Built by
 `["Video"]` today — a tab click returns `"tab:<label>"` and rebuilds the menu).
 
 **Shows (Video tab):**
-- **Anti-aliasing · Off / Supersampling x2** (`"aa_toggle"`) — toggles
-  `constants.SUPERSAMPLE_AA`, persists it to `settings.json`
-  (`supersample_aa`), and drops the offscreen buffer
-  (`main._invalidate_hires_surface()`). When on, PHASE 3 renders the whole
-  frame to a 2×-logical surface and `smoothscale`s it down onto `screen` (see
-  "Frame timing" below); off by default.
+- **Anti-aliasing · Off / gfxdraw / Supersampling x2** (`"aa_cycle"`) — cycles
+  `constants.AA_MODE` through `constants.AA_MODES`, persists it to
+  `settings.json` (`aa_mode`), and drops the offscreen buffer
+  (`main._invalidate_hires_surface()`). `"gfxdraw"` is per-primitive AA in
+  `game/aa_draw.py` (world/asset draw sites route their fills through
+  `aa.polygon`/`aa.circle`, which lay a `pygame.gfxdraw` `aa*` outline over the
+  shape); `"supersample"` makes PHASE 3 render the whole frame to a 2×-logical
+  surface and `smoothscale` it down onto `screen` (see "Frame timing" below).
+  Off by default. Old `supersample_aa: true` settings.json files are read as
+  `"supersample"` once.
 - **Aspect ratio · <label>** row.
 - the fixed SCALED logical resolutions in that aspect group
   (`main.resolutions_for_aspect()` — the `constants.VIDEO_RESOLUTIONS` in that
@@ -111,7 +115,7 @@ The browsed `aspect` (a `main()` local) defaults to
 markers follow. The first-run / fallback default resolution is the native one.
 
 **Transitions:**
-- Anti-aliasing row → toggles in place, stays on this screen
+- Anti-aliasing row → cycles the mode in place, stays on this screen
 - Aspect ratio row → **Aspect Ratio** picker (`"settings_aspect"` state)
 - a resolution → `main.apply_resolution()` re-inits the display at that
   SCALED logical size and writes it to `settings.json`; stays on this screen
@@ -502,14 +506,16 @@ This separation makes it easy to test input handlers independently.
 3. **Render** — one `if current_screen == …` that draws the current screen
    (modal screens redraw the frozen backdrop with `draw_hud=False`, then
    their overlay), then `pygame.display.flip()`. When
-   `constants.SUPERSAMPLE_AA` is on (Settings → Video), the whole `if` block
-   draws to a 2×-logical offscreen surface (`main._hires_target()`) with the
-   reported screen size temporarily doubled — everything is
+   `constants.AA_MODE == "supersample"` (Settings → Video), the whole `if`
+   block draws to a 2×-logical offscreen surface (`main._hires_target()`) with
+   the reported screen size temporarily doubled — everything is
    resolution-independent, so it just renders bigger — then
    `pygame.transform.smoothscale()` shrinks it onto `screen` (timed as the
    `render.supersample` span). Off by default; ~4× fill + a downscale per
    frame, which is why it's opt-in. Input (phase 1) always runs at the
-   logical size, so hit-testing is unaffected.
+   logical size, so hit-testing is unaffected. The `"gfxdraw"` AA mode is
+   unrelated to this block — it's per-primitive in `game/aa_draw.py` at the
+   world/asset draw sites.
 
 The window is opened by `main.open_window()` with `pygame.RESIZABLE |
 pygame.SCALED` and `vsync=1`. `SCALED` backs the window with a GPU renderer —

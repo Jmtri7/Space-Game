@@ -102,13 +102,22 @@ RED = (255, 60, 60)
 # Debug mode
 DEBUG_MODE = False  # Press ` (backtick) to toggle
 
-# Supersample anti-aliasing (Settings -> Video). When True, main.py's PHASE 3
-# renders the whole frame to a 2x-logical offscreen surface and smoothscales
-# it down onto the SCALED logical surface - universal edge antialiasing at
-# ~4x fill + a downscale per frame. Opt-in, off by default; loaded from
-# settings.json at startup and toggled in the Settings menu. See
-# docs/BACKLOG.md for the lighter-weight gfxdraw alternative.
-SUPERSAMPLE_AA = False
+# Anti-aliasing mode (Settings -> Video). One of AA_MODES:
+#   "off"         - straight pygame.draw, hard edges
+#   "gfxdraw"     - per-primitive AA via game/aa_draw.py: a gfxdraw filled
+#                   shape plus a matching aa outline at each world draw site
+#                   (ships, stations, buildings, people, ...). Cheap - no
+#                   offscreen buffer - but only reaches the call sites routed
+#                   through aa_draw, and UI/HUD stay aliased.
+#   "supersample" - main.py's PHASE 3 renders the whole frame to a 2x-logical
+#                   offscreen surface and smoothscales it down. Universal
+#                   (everything, UI included) but ~4x fill + a downscale per
+#                   frame.
+# Loaded from settings.json ("aa_mode") at startup, cycled in the Settings
+# menu. Off by default.
+AA_MODE = "off"
+AA_MODES = ("off", "gfxdraw", "supersample")
+AA_MODE_LABELS = {"off": "Off", "gfxdraw": "gfxdraw", "supersample": "Supersampling x2"}
 
 # UI constants
 FONT_SIZE = 20

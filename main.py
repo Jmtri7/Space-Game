@@ -172,10 +172,11 @@ def open_window(size, measure_vsync=True):
 
 
 # Supersample-AA offscreen buffer (Settings -> Video). When
-# constants.SUPERSAMPLE_AA is on, PHASE 3 renders the whole frame here at 2x
-# the logical resolution and smoothscales it down onto `screen`. Lazily
+# constants.AA_MODE == "supersample", PHASE 3 renders the whole frame here at
+# 2x the logical resolution and smoothscales it down onto `screen`. Lazily
 # (re)allocated to match the current logical size and dropped whenever the
-# resolution changes. See docs/BACKLOG.md for the lighter gfxdraw alternative.
+# resolution changes. The "gfxdraw" AA mode needs no buffer - it's
+# per-primitive in game/aa_draw.py.
 _hires_surface = None
 
 
@@ -213,7 +214,11 @@ def apply_resolution(size):
 
 
 logical_resolution = load_resolution()
-constants.SUPERSAMPLE_AA = bool(load_settings().get("supersample_aa", False))
+_saved_settings = load_settings()
+if _saved_settings.get("aa_mode") in constants.AA_MODES:
+    constants.AA_MODE = _saved_settings["aa_mode"]
+elif _saved_settings.get("supersample_aa"):        # pre-"aa_mode" settings.json
+    constants.AA_MODE = "supersample"
 screen = open_window(logical_resolution)
 set_screen_size(*logical_resolution)
 screen.fill((0, 0, 0))
@@ -443,18 +448,21 @@ def settings_menu(aspect, tab="Video"):
     """The Settings menu (main menu -> SETTINGS, or the pause menu). A tab
     strip over the active tab's rows, then **Back**. Mouse-only.
 
-    **Video** tab: an **Anti-aliasing** toggle (Off / Supersampling x2 - see
-    constants.SUPERSAMPLE_AA and main()'s PHASE 3 render path), a row that
-    opens the aspect-ratio picker, then the fixed SCALED logical resolutions
-    in `aspect` (see open_window) - the active one marked "Current
-    resolution", the native one "Native resolution". A resolution click
-    applies it immediately (apply_resolution)."""
+    **Video** tab: an **Anti-aliasing** row that cycles constants.AA_MODE
+    (Off / gfxdraw / Supersampling x2 - see game/aa_draw.py and main()'s
+    PHASE 3 render path), a row that opens the aspect-ratio picker, then the
+    fixed SCALED logical resolutions in `aspect` (see open_window) - the
+    active one marked "Current resolution", the native one "Native
+    resolution". A resolution click applies it immediately
+    (apply_resolution)."""
     rows = []
     if tab == "Video":
-        aa = "Supersampling x2" if constants.SUPERSAMPLE_AA else "Off"
-        rows.append(("aa_toggle", f"Anti-aliasing  ·  {aa}",
-                     "Renders at 2x then downscales for smoother edges - costs GPU "
-                     "time each frame, so it's off by default."))
+        aa = constants.AA_MODE_LABELS.get(constants.AA_MODE, "Off")
+        rows.append(("aa_cycle", f"Anti-aliasing  ·  {aa}",
+                     "Click to cycle. gfxdraw smooths ship / station / building / "
+                     "figure edges cheaply. Supersampling x2 renders the whole "
+                     "frame at 2x and downscales - smoother everywhere (UI too) "
+                     "but costs GPU time each frame."))
         aspect_desc = None if aspect == NATIVE_ASPECT else f"Your display is {NATIVE_ASPECT}"
         rows.append(("aspect", f"Aspect ratio  ·  {aspect}", aspect_desc))
         for w, h in resolutions_for_aspect(aspect):
@@ -607,13 +615,15 @@ def main():
                         menu = main_menu()
                 elif choice and choice.startswith("tab:"):
                     pass  # "Video" is the only tab today - selecting it is a no-op
-                elif choice == "aa_toggle":
-                    constants.SUPERSAMPLE_AA = not constants.SUPERSAMPLE_AA
+                elif choice == "aa_cycle":
+                    _i = constants.AA_MODES.index(constants.AA_MODE) if constants.AA_MODE in constants.AA_MODES else 0
+                    constants.AA_MODE = constants.AA_MODES[(_i + 1) % len(constants.AA_MODES)]
                     _settings = load_settings()
-                    _settings["supersample_aa"] = constants.SUPERSAMPLE_AA
+                    _settings["aa_mode"] = constants.AA_MODE
+                    _settings.pop("supersample_aa", None)  # superseded by aa_mode
                     save_settings(_settings)
                     _invalidate_hires_surface()
-                    video_menu = settings_menu(video_aspect)  # refresh the toggle label
+                    video_menu = settings_menu(video_aspect)  # refresh the AA label
                 elif choice == "aspect":
                     video_menu = video_aspect_menu(video_aspect)
                     current_screen = "settings_aspect"
@@ -1047,16 +1057,17 @@ def main():
             # Draws whatever current_screen now is. Modal screens redraw
             # the frozen world/interior they sit over, then their overlay.
             #
-            # Supersample AA (Settings -> Video): when on, the frame is drawn
+            # AA_MODE == "supersample" (Settings -> Video): the frame is drawn
             # to a 2x-logical offscreen surface (`dst`) with the reported
             # screen size temporarily doubled - everything is resolution
             # independent (utils.to_screen / get_ui_scale derive from the
             # screen size), so this just renders bigger - then smoothscaled
             # back down onto `screen`. Input handling (PHASE 1) always runs at
-            # the logical size, so hit-testing is unaffected. Off -> `dst` is
-            # `screen` and the wrapper is a no-op.
+            # the logical size, so hit-testing is unaffected. Other modes ->
+            # `dst` is `screen` and the wrapper is a no-op ("gfxdraw" mode does
+            # its AA per-primitive in game/aa_draw.py; "off" does nothing).
             # ========================================================
-            _ss_aa = constants.SUPERSAMPLE_AA
+            _ss_aa = constants.AA_MODE == "supersample"
             if _ss_aa:
                 _lw, _lh = screen.get_size()
                 dst = _hires_target((_lw * 2, _lh * 2))

@@ -1,5 +1,6 @@
 """A planet, ice ball, or gas giant drifting in a system - never a landing site."""
 import pygame
+import game.aa_draw as aa
 from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
 
@@ -38,7 +39,7 @@ class CelestialBody(WorldObject):
             # a fully opaque planet.
             self._draw_ring_half(surface, ring_rect, ring_width, top_half=True)
 
-        pygame.draw.circle(surface, self.color, center, radius)
+        aa.circle(surface, self.color, center, radius)
 
         if self.has_ring:
             self._draw_ring_half(surface, ring_rect, ring_width, top_half=False)

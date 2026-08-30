@@ -1,6 +1,6 @@
 """Base class for NPCs and other characters in the game."""
-import pygame
 import math
+import game.aa_draw as aa
 from game.utils import to_screen, get_scale
 from game.world.possessions import Possessions
 from game.world import person_figure as fig
@@ -185,11 +185,11 @@ class Person:
                 pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
                        for gx, gy in p["points"]]
                 if len(pts) >= 3:
-                    pygame.draw.polygon(surface, col, pts)
+                    aa.polygon(surface, col, pts)
             else:
                 cx, cy, r = p["circle"]
                 wx, wy = self._place(cx, cy + dy, grp, stance, arm)
-                pygame.draw.circle(surface, col, to_screen(wx, wy), max(1, int(r * scale)))
+                aa.circle(surface, col, to_screen(wx, wy), max(1, int(r * scale)))
 
     def draw(self, surface):
         scale = get_scale()

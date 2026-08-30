@@ -380,10 +380,12 @@ returns to wherever Settings was opened from (the Main Menu, or the Pause
 Menu during a game).
 
 **Video tab:**
-- **Anti-aliasing · Off / Supersampling ×2** — click to toggle. Supersampling
-  renders the whole frame at 2× the resolution and downscales it for smoother
-  edges; it costs GPU time every frame, so it's off by default. Remembered in
-  `settings.json`.
+- **Anti-aliasing · Off / gfxdraw / Supersampling ×2** — click to cycle.
+  *gfxdraw* smooths the edges of world shapes (ships, stations, buildings,
+  people, asteroids) cheaply, per-shape; the UI stays hard-edged. *Supersampling
+  ×2* renders the whole frame at 2× and downscales it — smoother everywhere,
+  UI included, but it costs GPU time every frame. Off by default; remembered in
+  `settings.json` (`aa_mode`).
 - **Aspect ratio · <label>** opens an aspect-ratio picker (16:9, 16:10, 21:9,
   4:3, …); it starts on your monitor's own ratio, and the others are marked so
   you can tell which is "Native".

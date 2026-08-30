@@ -683,6 +683,65 @@ usually called Y-sorting).
 
 ---
 
+## Pattern: Drop-In Draw Wrapper (mode-dispatched primitives)
+
+**Problem:** A rendering option (anti-aliasing, a debug tint, a colour-blind
+remap) needs to change *how* shapes are drawn at dozens of scattered call
+sites. Threading a flag through every `draw()` signature, or branching on it
+at each site, spreads the same `if` everywhere and makes the "off" path pay
+for a feature nobody enabled.
+
+**Solution:** A tiny module whose functions mirror the `pygame.draw`
+primitives you actually use (`polygon(surface, color, points, width=0)`,
+`circle(...)`) one-for-one — same argument order, same defaults — so adopting
+it at a call site is a pure rename (`pygame.draw.polygon` → `aa.polygon`). The
+mode check lives *once*, inside the wrapper; when the feature is off the
+wrapper is a straight pass-through to `pygame.draw`. Always end with a
+`pygame.draw` fallback so a call site can adopt the wrapper unconditionally
+even for inputs the fancy path can't handle.
+
+**Implementation** (`game/aa_draw.py`, dispatched on `constants.AA_MODE`):
+```python
+def polygon(surface, color, points, width=0):
+    if _gfx_active() and len(points) >= 3:
+        ipts = [(round(x), round(y)) for x, y in points]
+        if _fits(...):                       # gfxdraw's int16 range
+            try:
+                col = _color(color)
+                if width:
+                    pygame.draw.polygon(surface, color, points, width)
+                else:
+                    pygame.gfxdraw.filled_polygon(surface, ipts, col)
+                pygame.gfxdraw.aapolygon(surface, ipts, col)   # the smoothed edge
+                return
+            except _GFX_ERRORS:
+                pass
+    pygame.draw.polygon(surface, color, points, width)          # fallback / "off"
+```
+Call sites just swap the primitive: `world_object.draw_parts`,
+`Ship._draw_windows`, `LandingSite._draw_station`, `Person._emit`,
+`LocationScreen`'s building/decoration drawers, … Only the world/asset layer
+opts in; menus and the HUD keep calling `pygame.draw` directly, so the mode
+scopes itself without a single conditional at those sites.
+
+**Why this works:**
+- The "off" cost is one attribute compare per primitive — no measurable
+  regression, so the wrapper can be adopted broadly without a perf argument.
+- New modes (a third AA method, a debug outline) are added in one file; no
+  call site changes.
+- The unconditional fallback means "route this site through the wrapper" is
+  never a risk decision — worst case it draws exactly as before.
+
+**Watch out for:** keep the wrapper's signature a strict superset of the
+primitive it replaces (so the rename is mechanical), and capture any
+exception classes you catch (`pygame.error`) at import so a mocked-out
+`pygame` in tests can't turn the `except` tuple into a `TypeError`.
+
+**Use case:** Any cross-cutting change to low-level drawing that would
+otherwise be a flag threaded through the whole render tree.
+
+---
+
 ## Pattern: Walkability-Oracle Navigation
 
 **Problem:** AI needs to walk a body from A to B across an area whose shape is

@@ -1,6 +1,7 @@
 """Configurable location for station, moon city, and moon wilderness."""
 import pygame
 import math
+import game.aa_draw as aa
 import game.constants as constants
 from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, set_camera_zoom, set_camera_zoom_limits, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
@@ -844,7 +845,7 @@ class LocationScreen(ScreenBase):
                 if len(screen_pts) >= 2:
                     pygame.draw.lines(surface, deco["color"], deco["shape"] != "line", screen_pts, max(1, int((deco["width"] or 1) * scale)))
             elif len(screen_pts) >= 3:
-                pygame.draw.polygon(surface, deco["color"], screen_pts)
+                aa.polygon(surface, deco["color"], screen_pts)
 
     def _build_culture_decorations(self, culture):
         """Expand this culture's optional "interior_decoration" generator
@@ -1142,14 +1143,14 @@ class LocationScreen(ScreenBase):
             radius = building_type.get("radius", 50)
             cx, cy = to_screen(anchor_x, anchor_y)
             r = max(1, int(radius * scale))
-            pygame.draw.circle(surface, metal_color, (cx, cy), r)
-            pygame.draw.circle(surface, outline_color, (cx, cy), r, outline_w)
+            aa.circle(surface, metal_color, (cx, cy), r)
+            aa.circle(surface, outline_color, (cx, cy), r, outline_w)
         elif shape == "polygon":
             local_points = building_type.get("local_points", [])
             screen_points = [to_screen(anchor_x + lx, anchor_y + ly) for lx, ly in local_points]
             if len(screen_points) >= 3:
-                pygame.draw.polygon(surface, metal_color, screen_points)
-                pygame.draw.polygon(surface, outline_color, screen_points, outline_w)
+                aa.polygon(surface, metal_color, screen_points)
+                aa.polygon(surface, outline_color, screen_points, outline_w)
         else:  # rect
             width = building_type.get("width", 100)
             height = building_type.get("height", 100)
@@ -1169,7 +1170,7 @@ class LocationScreen(ScreenBase):
         for wx, wy in ([] if parts else building_type.get("windows", [])):
             px, py = to_screen(anchor_x + wx, anchor_y + wy)
             if window_shape == "circle":
-                pygame.draw.circle(surface, glass_color, (px, py), half)
+                aa.circle(surface, glass_color, (px, py), half)
             else:
                 pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
 
@@ -1254,7 +1255,7 @@ class LocationScreen(ScreenBase):
 
             def draw_circle(surface):
                 cx, cy = to_screen(x, y)
-                pygame.draw.circle(surface, color, (cx, cy), max(1, int(r * scale)))
+                aa.circle(surface, color, (cx, cy), max(1, int(r * scale)))
             return draw_circle
 
         if struct_type == "polygon":
@@ -1262,7 +1263,7 @@ class LocationScreen(ScreenBase):
 
             def draw_polygon(surface):
                 screen_points = [to_screen(px, py) for px, py in points]
-                pygame.draw.polygon(surface, color, screen_points)
+                aa.polygon(surface, color, screen_points)
             return draw_polygon
 
         return lambda surface: None

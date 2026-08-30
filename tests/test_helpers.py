@@ -486,9 +486,11 @@ class TestPersonOutfitRendering(unittest.TestCase):
 
     def test_visor_replaces_the_eyes(self):
         def circle_count(outfit):
-            with patch("game.world.person.pygame") as mock_pygame:
+            # Person.draw() emits its shapes through game.aa_draw (aa.polygon /
+            # aa.circle), which dispatch on constants.AA_MODE.
+            with patch("game.world.person.aa") as mock_aa:
                 Person(0, 0, outfit=outfit).draw(MagicMock())
-                return mock_pygame.draw.polygon.call_count, mock_pygame.draw.circle.call_count
+                return mock_aa.polygon.call_count, mock_aa.circle.call_count
         polys_visor, circles_visor = circle_count({"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]})
         _, circles_plain = circle_count({"suit_color": [10, 10, 10]})
         self.assertGreater(polys_visor, 0)
@@ -1171,12 +1173,13 @@ class TestStationWindowsAndCulture(unittest.TestCase):
         self.assertEqual(tuple(g["core_color"]), (255, 200, 80))   # drossholt glass_color
 
     def test_a_windowed_station_with_no_parts_draws_one_light_per_window_plus_core(self):
-        with patch("game.world.landing_site.pygame") as mock_pygame:
+        # Station shapes go through game.aa_draw (aa.circle / aa.polygon).
+        with patch("game.world.landing_site.aa") as mock_aa:
             g = {"rotation_speed": 0.5, "size": 30,
                  "local_points": [[-10, -10], [10, -10], [10, 10], [-10, 10]],
                  "windows": [[0, -5], [0, 5], [5, 0]]}
             LandingSite(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
-            self.assertEqual(mock_pygame.draw.circle.call_count, len(g["windows"]) + 1)
+            self.assertEqual(mock_aa.circle.call_count, len(g["windows"]) + 1)
 
     def test_a_parts_station_skips_the_flat_hull_window_dots_and_core(self):
         """A "parts" silhouette from the atlas is the whole drawn station - it
@@ -1185,17 +1188,20 @@ class TestStationWindowsAndCulture(unittest.TestCase):
         local_points polygon, scatter window circles, or stamp the plain core
         beacon on top (each just shows the old shape bleeding past the new
         one). Everything is delegated to draw_parts."""
-        with patch("game.world.landing_site.pygame") as mock_pygame:
+        with patch("game.world.landing_site.aa") as mock_aa, \
+             patch("game.world.landing_site.pygame") as mock_pygame:
             g = utils.get_graphics_asset("default", "space_stations", "station_alpha")
             self.assertTrue(g.get("parts"))
             LandingSite(0, 0, graphics=g)._draw_station(MagicMock(), 1.0)
+            mock_aa.polygon.assert_not_called()
+            mock_aa.circle.assert_not_called()
             mock_pygame.draw.polygon.assert_not_called()
             mock_pygame.draw.circle.assert_not_called()
 
     def test_a_station_with_no_windows_draws_only_the_core(self):
-        with patch("game.world.landing_site.pygame") as mock_pygame:
+        with patch("game.world.landing_site.aa") as mock_aa:
             LandingSite(0, 0, graphics={"rotation_speed": 0.5, "size": 30})._draw_station(MagicMock(), 1.0)
-            self.assertEqual(mock_pygame.draw.circle.call_count, 1)
+            self.assertEqual(mock_aa.circle.call_count, 1)
 
 
 class TestPossessions(unittest.TestCase):
@@ -5099,33 +5105,114 @@ class TestVideoResolution(unittest.TestCase):
 
 
 class TestSettingsMenu(unittest.TestCase):
-    """main.py's Settings menu: the Video tab's rows and the supersample-AA
-    toggle label tracking constants.SUPERSAMPLE_AA."""
+    """main.py's Settings menu: the Video tab's rows and the anti-aliasing
+    row label tracking constants.AA_MODE."""
 
     def setUp(self):
         import game.constants as constants
-        self._prev_aa = constants.SUPERSAMPLE_AA
-        self.addCleanup(setattr, constants, "SUPERSAMPLE_AA", self._prev_aa)
+        self._prev_aa = constants.AA_MODE
+        self.addCleanup(setattr, constants, "AA_MODE", self._prev_aa)
 
-    def test_video_tab_has_aa_toggle_first_then_aspect_and_resolutions(self):
+    def test_video_tab_has_aa_row_first_then_aspect_and_resolutions(self):
         import main
         menu = main.settings_menu("16:9")
         self.assertEqual(menu.tabs, ("Video", main.SETTINGS_TABS))
         values = [v for v, _l, _d in menu.rows]
-        self.assertEqual(values[0], "aa_toggle")
+        self.assertEqual(values[0], "aa_cycle")
         self.assertIn("aspect", values)
 
-    def test_aa_toggle_label_follows_the_flag(self):
+    def test_aa_row_label_follows_the_mode(self):
         import main
         import game.constants as constants
 
-        constants.SUPERSAMPLE_AA = False
+        constants.AA_MODE = "off"
         off = main.settings_menu("16:9").rows[0][1]
-        constants.SUPERSAMPLE_AA = True
-        on = main.settings_menu("16:9").rows[0][1]
+        constants.AA_MODE = "gfxdraw"
+        gfx = main.settings_menu("16:9").rows[0][1]
+        constants.AA_MODE = "supersample"
+        ss = main.settings_menu("16:9").rows[0][1]
         self.assertIn("Off", off)
-        self.assertNotIn("Off", on)
-        self.assertIn("x2", on.lower())
+        self.assertIn("gfxdraw", gfx)
+        self.assertIn("x2", ss.lower())
+
+    def test_every_aa_mode_has_a_label(self):
+        import game.constants as constants
+        for mode in constants.AA_MODES:
+            self.assertIn(mode, constants.AA_MODE_LABELS)
+
+
+class TestAADraw(unittest.TestCase):
+    """game/aa_draw.py: mode dispatch and the pygame.draw fallback. pygame is
+    mocked here, so this checks which primitives get called, not pixels."""
+
+    TRI = [(0, 0), (10, 0), (5, 10)]
+
+    def setUp(self):
+        import game.constants as constants
+        self._prev = constants.AA_MODE
+        self.addCleanup(setattr, constants, "AA_MODE", self._prev)
+
+    def test_off_mode_uses_plain_pygame_draw(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "off"
+        with patch("game.aa_draw.pygame") as mp:
+            aa.polygon(MagicMock(), (1, 2, 3), self.TRI)
+            aa.circle(MagicMock(), (1, 2, 3), (5, 5), 4)
+            mp.draw.polygon.assert_called_once()
+            mp.draw.circle.assert_called_once()
+            mp.gfxdraw.filled_polygon.assert_not_called()
+            mp.gfxdraw.aacircle.assert_not_called()
+
+    def test_supersample_mode_also_uses_plain_pygame_draw(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "supersample"
+        with patch("game.aa_draw.pygame") as mp:
+            aa.polygon(MagicMock(), (1, 2, 3), self.TRI)
+            mp.draw.polygon.assert_called_once()
+            mp.gfxdraw.aapolygon.assert_not_called()
+
+    def test_gfxdraw_mode_fills_and_outlines_via_gfxdraw(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "gfxdraw"
+        with patch("game.aa_draw.pygame") as mp:
+            aa.polygon(MagicMock(), (1, 2, 3), self.TRI)
+            mp.gfxdraw.filled_polygon.assert_called_once()
+            mp.gfxdraw.aapolygon.assert_called_once()
+            mp.draw.polygon.assert_not_called()
+            aa.circle(MagicMock(), (1, 2, 3), (5, 5), 4)
+            mp.gfxdraw.filled_circle.assert_called_once()
+            mp.gfxdraw.aacircle.assert_called_once()
+
+    def test_gfxdraw_stroke_keeps_pygame_for_the_stroke(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "gfxdraw"
+        with patch("game.aa_draw.pygame") as mp:
+            aa.polygon(MagicMock(), (1, 2, 3), self.TRI, width=2)
+            mp.draw.polygon.assert_called_once()       # the stroke itself
+            mp.gfxdraw.aapolygon.assert_called_once()  # smoothed on top
+            mp.gfxdraw.filled_polygon.assert_not_called()
+
+    def test_gfxdraw_falls_back_when_coords_out_of_range(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "gfxdraw"
+        with patch("game.aa_draw.pygame") as mp:
+            aa.polygon(MagicMock(), (1, 2, 3), [(0, 0), (99999, 0), (0, 99999)])
+            mp.draw.polygon.assert_called_once()
+            mp.gfxdraw.filled_polygon.assert_not_called()
+
+    def test_gfxdraw_falls_back_on_gfxdraw_error(self):
+        import game.aa_draw as aa
+        import game.constants as constants
+        constants.AA_MODE = "gfxdraw"
+        with patch("game.aa_draw.pygame") as mp:
+            mp.gfxdraw.filled_circle.side_effect = ValueError("bad")
+            aa.circle(MagicMock(), (1, 2, 3), (5, 5), 4)
+            mp.draw.circle.assert_called_once()
 
 
 if __name__ == "__main__":

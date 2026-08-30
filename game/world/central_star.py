@@ -1,5 +1,5 @@
 """Static central star rendered in the space view."""
-import pygame
+import game.aa_draw as aa
 from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
 
@@ -24,5 +24,5 @@ class CentralStar(WorldObject):
         radius = max(1, int(round(self.size * scale)))
 
         glow_color = tuple(int(c * 0.5) for c in self.color)
-        pygame.draw.circle(surface, glow_color, center, int(radius * 1.4))
-        pygame.draw.circle(surface, self.color, center, radius)
+        aa.circle(surface, glow_color, center, int(radius * 1.4))
+        aa.circle(surface, self.color, center, radius)

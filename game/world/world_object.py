@@ -1,6 +1,7 @@
 """Base class for positioned, drawable objects in the game world."""
 import math
 import pygame
+import game.aa_draw as aa
 from game.utils import to_screen, get_scale
 
 
@@ -70,18 +71,18 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color):
                 band = max(1.0, ring_w * unit * scale)
                 segs = max(14, min(44, int(radius / 2.2)))
                 for quad in _ring_quads(center, radius, band, segs):
-                    pygame.draw.polygon(surface, color, quad)
+                    aa.polygon(surface, color, quad)
             else:
-                pygame.draw.circle(surface, color, center, radius)
+                aa.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
             half = max(0.6, part.get("width", 2) * unit * scale / 2)
             for a, b in zip(pts, pts[1:]):
-                pygame.draw.polygon(surface, color, thick_seg(a, b, half))
+                aa.polygon(surface, color, thick_seg(a, b, half))
         else:
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
-                pygame.draw.polygon(surface, color, pts)
+                aa.polygon(surface, color, pts)
 
 
 def _resolve_part_color(spec, metal_color, glass_color):
@@ -153,9 +154,9 @@ class WorldObject:
                 rotated_x = ox * cos_a - oy * sin_a
                 rotated_y = ox * sin_a + oy * cos_a
                 outline_points.append(to_screen(self.x + rotated_x, self.y + rotated_y))
-            pygame.draw.polygon(surface, outline_color, outline_points)
+            aa.polygon(surface, outline_color, outline_points)
 
-        pygame.draw.polygon(surface, color, points)
+        aa.polygon(surface, color, points)
         return points
 
     def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color):

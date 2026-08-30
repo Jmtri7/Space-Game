@@ -1,6 +1,6 @@
 """Base ship class with physics and rendering. Autopilot is a separate component."""
-import pygame
 import math
+import game.aa_draw as aa
 from game.constants import DARK_GRAY, YELLOW
 from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
@@ -180,7 +180,7 @@ class Ship(WorldObject):
             lx, ly = wx * ship_size, wy * ship_size
             world_x = self.x + (lx * cos_a - ly * sin_a)
             world_y = self.y + (lx * sin_a + ly * cos_a)
-            pygame.draw.circle(surface, window_color, to_screen(world_x, world_y), radius)
+            aa.circle(surface, window_color, to_screen(world_x, world_y), radius)
 
     def _draw_thrusters(self, surface, ship_size):
         """Draw a triangular flame, pointed backward, at each thruster mount point.
@@ -225,7 +225,7 @@ class Ship(WorldObject):
             base_left = to_screen(mount_x + right_x_dir * half_width, mount_y + right_y_dir * half_width)
             base_right = to_screen(mount_x - right_x_dir * half_width, mount_y - right_y_dir * half_width)
 
-            pygame.draw.polygon(surface, thrust_color, [to_screen(tip_x, tip_y), base_left, base_right])
+            aa.polygon(surface, thrust_color, [to_screen(tip_x, tip_y), base_left, base_right])
 
     def _get_shape_points(self, size, shape):
         """Get local points for ship shape.

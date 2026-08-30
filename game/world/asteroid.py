@@ -1,7 +1,7 @@
 """Small drifting asteroid with constant velocity; round or jagged-polygon shape."""
 import math
 import random
-import pygame
+import game.aa_draw as aa
 from game.constants import GRAY
 from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
@@ -57,4 +57,4 @@ class Asteroid(WorldObject):
 
         scale = get_scale()
         radius = max(1, int(round(self.size * scale)))
-        pygame.draw.circle(surface, self.color, to_screen(self.x, self.y), radius)
+        aa.circle(surface, self.color, to_screen(self.x, self.y), radius)
