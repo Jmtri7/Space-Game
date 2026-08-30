@@ -25,7 +25,9 @@ sys.path.insert(0, str(HERE))
 import gen_si
 
 S = 0.19
-GROUND = 201.0            # figure-y the boots stand on -> Person self.y
+HIP_Y = gen_si.FIG_HIP_Y          # legs join the torso here (figure-y)
+ANKLE_Y = gen_si.FIG_FOOT_Y       # ankle line
+GROUND = ANKLE_Y + 10.0           # figure-y the boots stand on -> Person self.y
 
 def g(x, y):
     return round((x - 70.0) * S, 3), round((y - GROUND) * S, 3)
@@ -92,12 +94,12 @@ for k, kw in SPECS.items():
     ACC[k] = [p for p in variant if ident(p) not in bare_ne_k]
 
 # animation pivots + limb spans, Person game units, feet at (0, 0)
-PIVOTS = {"leg_l": list(g(63.5, 150)), "leg_r": list(g(76.5, 150)),
-          "arm_l": list(g(46, 76)), "arm_r": list(g(94, 76))}
-LEG_HIP_Y, _   = g(0, 150)[1], None
-LEG_ANKLE_Y    = g(0, 190)[1]
-ARM_SHOULDER_Y = g(0, 76)[1]
-ARM_WRIST_Y    = g(0, 121)[1]
+PIVOTS = {"leg_l": list(g(63.5, HIP_Y)), "leg_r": list(g(76.5, HIP_Y)),
+          "arm_l": list(g(47, 68)), "arm_r": list(g(93, 68))}
+LEG_HIP_Y, _   = g(0, HIP_Y)[1], None
+LEG_ANKLE_Y    = g(0, ANKLE_Y)[1]
+ARM_SHOULDER_Y = g(0, 68)[1]
+ARM_WRIST_Y    = g(0, 120)[1]
 
 def d(v):
     return json.dumps(v, separators=(",", ":"))
@@ -110,7 +112,7 @@ def block(name, parts):
     return "\n".join(lines)
 
 groups = ["S = %s" % S,
-          "LEG_HIP_Y = %s" % g(0, 150)[1],
+          "LEG_HIP_Y = %s" % LEG_HIP_Y,
           "LEG_ANKLE_Y = %s" % LEG_ANKLE_Y,
           "ARM_SHOULDER_Y = %s" % ARM_SHOULDER_Y,
           "ARM_WRIST_Y = %s" % ARM_WRIST_Y,

@@ -189,6 +189,12 @@ def arcband(x0, x1, ytop, sag, w, fill, samp=12):
     return poly(top + bot[::-1], fill)
 
 # ---------------------------------------------------------------- the figure
+# Body proportion anchors (figure-space y). build_person_figure.py imports
+# these so the walk-cycle pivots track any change here.
+FIG_HIP_Y = 146      # where the legs join the torso (non-coat)
+FIG_FOOT_Y = 194     # ankle line; boots sit ~3 below, ground ~10 below
+
+
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                  hat=None, cap=None, no_helmet=False, legged=True, arms=True, coat=False,
                  torso_long=False, backpack=None, spikes=None, spikes_side="both",
@@ -201,21 +207,21 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     leg = leg or boot
     sleeve = sleeve or suit
     P = []
-    hip_y = 156 if (torso_long or coat) else 150
+    hip_y = (FIG_HIP_Y + 6) if (torso_long or coat) else FIG_HIP_Y
     hw = 21 if (torso_long or coat) else 19        # hip half-width - nearly the chest's (21),
                                                    # so the torso reads as an hourglass; legs hang inside it
     # A cinched waist about halfway up the standing figure (well above the hip
     # line). Every belt, sash end and hip pouch anchors here (waist_y), not at
     # the hip; the torso pinches to waist_hw and flares back out to the hip
     # below - so a loose coat still drapes from a real waist.
-    waist_y = 111
+    waist_y = 108
     waist_hw = hw - 7         # a gentle pinch between chest and hip
     belt_y = waist_y - 4
-    foot_y = 190 if legged else 166
+    foot_y = FIG_FOOT_Y if legged else 166
 
     _grp("body"); _gate(None)
 
-    P.append(poly(ngon(70, 197 if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
+    P.append(poly(ngon(70, (foot_y + 3) if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
 
     # back pieces
     if backpack:
@@ -243,21 +249,30 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # neck across the top. _side is the left silhouette (dx from centre, y);
     # the right is its mirror, so the curve is symmetric by construction.
     _grp("body"); _gate(None)
-    _side = [(-hw, hip_y), (-hw, hip_y - 6),
-             (-(hw - 1), waist_y + 25), (-(waist_hw + 5), waist_y + 13),
-             (-(waist_hw + 1), waist_y + 4), (-waist_hw, waist_y),
-             (-(waist_hw + 4), waist_y - 11), (-(hw - 3), waist_y - 23),
-             (-20.5, 90), (-21, 82), (-20, 73), (-16.5, 66),
-             (-11, 62), (-6, 60.5)]
+    # left silhouette, hip (bottom) -> neck (top). The upper torso is a broad
+    # near-vertical column (shoulder to just above the waist), tapering only
+    # gently; the real narrowing is the waist cinch; then a gentle flare back
+    # to the hip. dx from centre eases monotonically each way - no bulge under
+    # the arm, no kink. Mirrored for the right.
+    _side = [(-hw, hip_y), (-hw, hip_y - 5),
+             (-(hw - 1), (hip_y + waist_y) / 2),
+             (-(waist_hw + 4), waist_y + 10), (-(waist_hw + 1), waist_y + 3),
+             (-waist_hw, waist_y), (-(waist_hw + 2), waist_y - 9),
+             (-(waist_hw + 5), waist_y - 18), (-(hw - 1), 82),
+             (-hw, 72), (-hw, 66), (-(hw - 4), 62), (-9, 59), (-4.5, 57)]
     torso = ([(70 + dx, y) for dx, y in _side]
              + [(70 - dx, y) for dx, y in reversed(_side)])
     P.append(opoly(torso, suit, d=1.5))
 
-    # arms - short (~leg length); shoulder pads (later) cover the tops
+    # arms - a rounded shoulder cap that tucks against the torso side (no
+    # armpit gap) then a straight shaft to the wrist. Drawn over the torso;
+    # shoulder pads (later) cover the very top. ab is the wrist line.
     if arms:
-        at, ab = 76, 118
-        _grp("arm_l"); P.append(opoly([(42, at), (50, at - 2), (50, ab), (43, ab + 2)], sleeve, d=1.3))
-        _grp("arm_r"); P.append(opoly([(90, at - 2), (98, at), (97, ab + 2), (90, ab)], sleeve, d=1.3))
+        ab = 120
+        _grp("arm_l"); P.append(opoly([(41, 84), (43, 72), (49, 66), (54, 71),
+                                       (52, ab), (43, ab + 1)], sleeve, d=1.3))
+        _grp("arm_r"); P.append(opoly([(99, 84), (97, 72), (91, 66), (86, 71),
+                                       (88, ab), (97, ab + 1)], sleeve, d=1.3))
         _grp("hand_l"); P.append(ocirc(46, ab + 3, 3.1, SKINF, d=1.1))
         _grp("hand_r"); P.append(ocirc(94, ab + 3, 3.1, SKINF, d=1.1))
 
