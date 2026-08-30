@@ -208,7 +208,7 @@ class LocationScreen(ScreenBase):
     # role label is anchored to - clears the head/helmet drawn by Person.draw().
     LABEL_HEIGHT_ABOVE = 42
 
-    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, location_labels=None):
+    def __init__(self, config_file=None, config_data=None, world_width=1600, world_height=1600, pilot_name="", story="default", player_possessions=None, on_ship_purchased=None, on_ship_switched=None, location_labels=None):
         self.story = story  # which story's config/building_types.json etc. to resolve against
         # {interior_key: display label} for every sibling interior at the
         # same landing site (see SpaceScreen.get_interior_screen) - used only to
@@ -277,6 +277,10 @@ class LocationScreen(ScreenBase):
         # (see get_interior_screen callable injection on AIShip for the
         # same one-directional-dependency idiom).
         self.on_ship_purchased = on_ship_purchased
+        # Same one-directional hook as on_ship_purchased, for the ship
+        # salesman's "Your Ships" tab switching which owned hull is flown
+        # (see switch_ship).
+        self.on_ship_switched = on_ship_switched
         # Which key in the landing site's interiors dict this is (e.g.
         # "dormitory", "default") - set by SpaceScreen.get_interior_screen;
         # None when constructed standalone (e.g. in tests).
@@ -646,6 +650,20 @@ class LocationScreen(ScreenBase):
         self.player.possessions.flags[f"bought_ship:{ship_type_id}"] = True
         if self.on_ship_purchased:
             self.on_ship_purchased(ship_type_id)
+
+    def switch_ship(self, index):
+        """Make owned_ships[index] the active hull (see
+        Possessions.set_active_ship) - driven by ShipBrowserMenu's "Your
+        Ships" tab. Uninstalls outfits for the same reason buy_ship() does
+        (installed_outfits tracks "whichever ship is flown", not a hull),
+        then lets SpaceScreen reconfigure and re-dock the real ship."""
+        possessions = self.player.possessions
+        if not 0 <= index < len(possessions.owned_ships) or index == possessions.active_ship_index:
+            return
+        possessions.uninstall_all_outfits()
+        possessions.set_active_ship(index)
+        if self.on_ship_switched:
+            self.on_ship_switched(possessions.active_ship())
 
     def _first_selectable_option(self, options):
         """Index of the first option _option_blocked_reason doesn't block -

@@ -443,9 +443,9 @@ class SpaceScreen(ScreenBase):
             location_labels[sibling_key] = (sibling_config or {}).get("label", sibling_key)
 
         if isinstance(interior_config, str):
-            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
+            screen = LocationScreen(config_file=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, on_ship_switched=self._on_ship_switched, location_labels=location_labels)
         else:
-            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, location_labels=location_labels)
+            screen = LocationScreen(config_data=interior_config, world_width=world_width, world_height=world_height, pilot_name=self.pilot_name, story=self.story, player_possessions=self.player.person.possessions, on_ship_purchased=self._on_ship_purchased, on_ship_switched=self._on_ship_switched, location_labels=location_labels)
         # Which interiors key this is (e.g. "default" for a station,
         # "city"/"wilderness" for a moon) - recorded into a save as
         # station_location / moon_location (see main.py's
@@ -480,9 +480,9 @@ class SpaceScreen(ScreenBase):
         immediately instead of only on the next save/load. Just re-runs
         _apply_ship_type on whatever ship is currently flown, since that
         already re-reads installed_outfits every time (see there)."""
-        owned_ships = self.player.person.possessions.owned_ships
-        if owned_ships:
-            self._apply_ship_type(owned_ships[-1])
+        active = self.player.person.possessions.active_ship()
+        if active:
+            self._apply_ship_type(active)
 
     def _apply_start_config(self):
         """Seed the player's Possessions from story.json's "start" block -
@@ -566,6 +566,15 @@ class SpaceScreen(ScreenBase):
                 and self.starting_mission not in possessions.missions
                 and self.starting_mission not in possessions.completed_missions):
             possessions.flags["starting_mission_armed"] = True
+
+    def _on_ship_switched(self, ship_type_id):
+        """Re-configure and re-park the player's real ship after the ship
+        salesman's "Your Ships" tab makes a different owned hull active
+        (see LocationScreen.switch_ship / Possessions.set_active_ship) -
+        the same reconfigure + dock-outside step a purchase does, minus the
+        credit spend and tutorial arming."""
+        self._apply_ship_type(ship_type_id)
+        self.park_at(self.station)
 
     def board_ship(self):
         """The player has launched from a docked interior back into space
@@ -1793,13 +1802,13 @@ class SpaceScreen(ScreenBase):
         self.player.person.possessions.restore_from(state["possessions"])
         # __init__ always starts the player's Ship from story.json's
         # default type, regardless of what was actually bought before
-        # saving - re-equip whichever ship they most recently bought
-        # (last entry in owned_ships), or the ship visibly reverts to
+        # saving - re-equip whichever ship was active (see
+        # Possessions.active_ship()), or the ship visibly reverts to
         # that default (e.g. showing a Patrol when a Shuttle was
-        # actually purchased) even though possessions itself is correct.
-        owned_ships = self.player.person.possessions.owned_ships
-        if owned_ships:
-            self._apply_ship_type(owned_ships[-1])
+        # actually being flown) even though possessions itself is correct.
+        active = self.player.person.possessions.active_ship()
+        if active:
+            self._apply_ship_type(active)
 
     def restore_state(self, state):
         """Full restore for a "space" save - ship position/velocity,

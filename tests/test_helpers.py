@@ -2133,7 +2133,7 @@ class TestShipBrowserMenu(unittest.TestCase):
         bought = []
         possessions = Possessions(credits=1200)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())  # what the Buy button / double-click does
+        menu._activate(menu.grid.selected)  # what the Buy button / double-click does
         self.assertIsNotNone(menu.confirm)
         self.assertEqual(bought, [])  # not yet - still waiting on confirmation
         self.assertEqual(possessions.credits, 1200)
@@ -2141,7 +2141,7 @@ class TestShipBrowserMenu(unittest.TestCase):
     def test_confirming_calls_on_buy_with_the_selected_ship_type(self):
         bought = []
         menu = ShipBrowserMenu(Possessions(credits=1200), "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())
+        menu._activate(menu.grid.selected)
         self.assertEqual(menu.confirm.context_data, "shuttle")
         # the confirm dialog resolves "Yes"
         menu.confirm = SimpleNamespace(handle_input=lambda evs: ("confirm", "shuttle"))
@@ -2153,9 +2153,25 @@ class TestShipBrowserMenu(unittest.TestCase):
         bought = []
         possessions = Possessions(credits=0)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())
+        menu._activate(menu.grid.selected)
         self.assertIsNone(menu.confirm)
         self.assertEqual(bought, [])
+
+    def test_your_ships_tab_switches_the_active_hull(self):
+        switched = []
+        possessions = Possessions(owned_ships=["shuttle", "freighter"])  # active = index 1
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle", "freighter"]},
+                               on_buy=lambda x: None, on_switch=switched.append)
+        menu._set_mode("owned")
+        self.assertEqual([b[0] for b in menu.buttons()], ["close", "action", "toggle"])
+        menu.grid.selected = 0  # the shuttle
+        menu._activate(0)
+        self.assertEqual(switched, [0])
+
+    def test_your_ships_tab_hidden_without_an_on_switch_callback(self):
+        menu = ShipBrowserMenu(Possessions(owned_ships=["shuttle"]), "default",
+                               {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        self.assertNotIn("toggle", [b[0] for b in menu.buttons()])
 
     def test_keyboard_does_nothing(self):
         import pygame as mocked_pygame
@@ -2176,9 +2192,9 @@ class TestShipBrowserMenu(unittest.TestCase):
 
     def test_panel_exposes_a_buy_button_gated_on_affordability(self):
         rich = ShipBrowserMenu(Possessions(credits=5000), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
-        self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("buy"), False)
+        self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("action"), False)
         broke = ShipBrowserMenu(Possessions(credits=0), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
-        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["buy"])
+        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["action"])
 
 
 class TestApproximateSizeLabel(unittest.TestCase):

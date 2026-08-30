@@ -39,11 +39,18 @@ class ShipBrowserMenu(MenuBase):
     LocationScreen owns the actual purchase mutation rather than this
     menu)."""
 
-    def __init__(self, possessions, story, shop_config, on_buy):
+    def __init__(self, possessions, story, shop_config, on_buy, on_switch=None):
         self.possessions = possessions
         self.story = story
         self.stock = list(shop_config.get("stock", []))
         self.on_buy = on_buy
+        # Switch which owned hull is flown (see LocationScreen.switch_ship).
+        # None -> the "Your Ships" tab is hidden (e.g. a test builds the
+        # menu without it).
+        self.on_switch = on_switch
+        # "buy" = the shop's stock; "owned" = the player's own hulls, with a
+        # "Fly this" button instead of "Buy".
+        self.mode = "buy"
         self.grid = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
         self.confirm = None  # ConfirmDialog while a purchase is pending confirmation
         # Transient "Bought 1 X" confirmation (see draw_purchase_message) -
@@ -52,8 +59,43 @@ class ShipBrowserMenu(MenuBase):
         self.message = None
         self.message_timer = 0
 
-    def _disabled_reason(self, ship_type_id):
-        cost = get_ship_type(self.story, ship_type_id).get("cost", 0)
+    def _owned_mode(self):
+        return self.mode == "owned"
+
+    def _current_list(self):
+        """Grid items: stock ship-type ids in "buy" mode; owned-ship *slot
+        indices* in "owned" mode (so two of the same hull are still two
+        distinct, individually-selectable cells)."""
+        if self._owned_mode():
+            return list(range(len(self.possessions.owned_ships)))
+        return self.stock
+
+    def _id_of(self, item):
+        """ship_type_id for a grid item (an id already, or an owned-ships index)."""
+        if isinstance(item, int):
+            return self.possessions.owned_ships[item]
+        return item
+
+    def _active_index(self):
+        """Which owned-ships slot is being flown - the stored index, or the
+        last ship when it's unset (matches Possessions.active_ship())."""
+        i = self.possessions.active_ship_index
+        n = len(self.possessions.owned_ships)
+        return i if (i is not None and 0 <= i < n) else (n - 1 if n else -1)
+
+    def _set_mode(self, mode):
+        if mode == self.mode:
+            return
+        self.mode = mode
+        self.grid = IconGrid(self._current_list(), columns=GRID_COLUMNS, max_rows=GRID_ROWS)
+        if self._owned_mode() and self._active_index() >= 0:
+            self.grid.selected = self._active_index()
+        self.confirm = None
+
+    def _disabled_reason(self, item):
+        if self._owned_mode():
+            return None
+        cost = get_ship_type(self.story, item).get("cost", 0)
         if not self.possessions.can_afford(cost):
             return "not enough credits"
         return None
@@ -75,32 +117,47 @@ class ShipBrowserMenu(MenuBase):
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                self._open_confirm(self.grid.current())  # Enter = the selected ship
+                self._activate(self.grid.selected)  # Enter = the selected ship
                 continue
             pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
             if pressed == "close":
                 return "close"
-            if pressed == "buy":
-                self._open_confirm(self.grid.current())
+            if pressed == "toggle":
+                self._set_mode("buy" if self._owned_mode() else "owned")
+                continue
+            if pressed == "action":
+                self._activate(self.grid.selected)
                 continue
             if event.type == pygame.MOUSEWHEEL:
                 self.grid.scroll(-event.y)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # A single click only selects (and updates the live
-                # preview); a double-click opens the buy confirmation, the
-                # same as the Buy button - so a stray click can't start a
-                # purchase.
+                # preview); a double-click acts on it (buy / fly), the
+                # same as the action button - so a stray click can't
+                # buy a ship or swap the one you're flying.
                 double = self._is_double_click(event.pos)
                 index = self.grid.index_at(event.pos)
                 if index is not None:
                     self.grid.selected = index
                     if double:
-                        self._open_confirm(self.grid.current())
+                        self._activate(index)
         return None
 
-    def _open_confirm(self, ship_type_id):
-        """Open the Yes/No purchase confirmation for ship_type_id - shared
-        by the Buy button and a double-click on the grid."""
+    def _activate(self, index):
+        """The action button / Enter / double-click: in "buy" mode open the
+        purchase confirmation for the selected stock ship; in "owned" mode
+        switch to flying the selected owned hull."""
+        items = self._current_list()
+        if not 0 <= index < len(items):
+            return
+        if self._owned_mode():
+            if self.on_switch and index != self._active_index():
+                name = get_ship_type(self.story, self._id_of(items[index])).get("name", "ship")
+                self.on_switch(index)
+                self.message = f"Now flying your {name}"
+                self.message_timer = PURCHASE_MESSAGE_FRAMES
+            return
+        ship_type_id = items[index]
         if ship_type_id and not self._disabled_reason(ship_type_id):
             ship_type = get_ship_type(self.story, ship_type_id)
             self.confirm = ConfirmDialog(
@@ -110,10 +167,19 @@ class ShipBrowserMenu(MenuBase):
             )
 
     def buttons(self):
-        ship_id = self.grid.current()
-        disabled = not ship_id or bool(self._disabled_reason(ship_id))
-        return [("close", "Close", (235, 235, 240), False),
-                ("buy", "Buy", (150, 220, 160), disabled)]
+        items = self._current_list()
+        if self._owned_mode():
+            disabled = not items or self.grid.selected == self._active_index()
+            action = ("action", "Fly this", (150, 220, 160), disabled)
+        else:
+            ship_id = self.grid.current()
+            disabled = not ship_id or bool(self._disabled_reason(ship_id))
+            action = ("action", "Buy", (150, 220, 160), disabled)
+        rows = [("close", "Close", (235, 235, 240), False), action]
+        if self.on_switch:
+            label = "Shop" if self._owned_mode() else "Your Ships"
+            rows.append(("toggle", label, (200, 210, 235), not self.possessions.owned_ships))
+        return rows
 
     def panel_rect(self, scale):
         return modal_panel_rect(scale, 0.1, 0.8, 0.8)
@@ -123,8 +189,12 @@ class ShipBrowserMenu(MenuBase):
         w, h, m = int(120 * scale), int(38 * scale), int(16 * scale)
         close_rect = pygame.Rect(panel.x + m, panel.y + m, w, h)
         aw = int(150 * scale)
-        buy_rect = pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale))
-        return [close_rect, buy_rect]
+        action_rect = pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale))
+        rects = [close_rect, action_rect]
+        if self.on_switch:
+            tw = int(150 * scale)
+            rects.append(pygame.Rect(panel.right - m - tw, panel.y + m, tw, h))
+        return rects
 
     def active_popup(self):
         return self.confirm
@@ -140,10 +210,15 @@ class ShipBrowserMenu(MenuBase):
         font_info = get_font(int(20 * scale))
 
         y = panel_rect.y + int(20 * scale)
-        y += draw_glow_title(surface, "Shipyard", font_title, panel_rect.centerx, y)
+        y += draw_glow_title(surface, "Your Ships" if self._owned_mode() else "Shipyard",
+                             font_title, panel_rect.centerx, y)
         y += int(10 * scale)
 
-        credits_text = font_info.render(f"Credits: {self.possessions.credits}", True, (255, 220, 100))
+        if self._owned_mode():
+            sub = "Pick a hull and press Fly this to switch to it."
+        else:
+            sub = f"Credits: {self.possessions.credits}"
+        credits_text = font_info.render(sub, True, (255, 220, 100))
         surface.blit(credits_text, (panel_rect.centerx - credits_text.get_width() // 2, y))
         grid_top = y + int(40 * scale)
 
@@ -159,8 +234,9 @@ class ShipBrowserMenu(MenuBase):
 
         preview_x = panel_rect.x + panel_rect.width * 3 // 4
 
-        selected_id = self.grid.current()
-        if selected_id:
+        selected_item = self.grid.current()
+        if selected_item is not None:
+            selected_id = self._id_of(selected_item)
             ship_type = get_ship_type(self.story, selected_id)
             graphics = get_graphics_asset(self.story, "ships", selected_id)
             preview_center_y = panel_rect.y + int(140 * scale)
@@ -178,9 +254,13 @@ class ShipBrowserMenu(MenuBase):
             draw_ship_glyph(surface, preview_x, preview_center_y, int(45 * scale), graphics,
                              angle=preview_angle, thrust=preview_thrust)
 
+            if self._owned_mode():
+                head = "CURRENTLY FLYING" if self.grid.selected == self._active_index() else "Owned hull"
+            else:
+                head = f"Owned: {self._owned_count(selected_id)}"
             stats = [
                 ship_type.get("description", ""),
-                f"Owned: {self._owned_count(selected_id)}",
+                head,
                 f"Approximate Size: {_approximate_size_label(graphics)}",
                 f"Thrust: {ship_type.get('max_thrust', 0)}",
                 f"Max Velocity: {ship_type.get('max_velocity', 0)}",
@@ -200,13 +280,17 @@ class ShipBrowserMenu(MenuBase):
             self.message_timer -= 1
             draw_purchase_message(surface, self.message, self.message_timer, panel_rect.centerx, panel_rect.bottom - int(100 * scale), scale)
 
-    def _draw_cell(self, surface, rect, ship_type_id, is_selected, reason, scale):
+    def _draw_cell(self, surface, rect, item, is_selected, reason, scale):
         """cell_draw_fn for the ship IconGrid - a static silhouette (no
         rotation/thrust, unlike the animated preview on the right), the
-        ship's name, and its cost."""
+        ship's name, and its cost (buy mode) or fly/owned status (owned mode)."""
+        ship_type_id = self._id_of(item)
         ship_type = get_ship_type(self.story, ship_type_id)
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
         icon_fn = functools.partial(draw_ship_glyph, graphics=graphics)
-        owned = self._owned_count(ship_type_id)
-        detail = f"{ship_type.get('cost', 0)}cr" + (f"  (own {owned})" if owned else "")
+        if self._owned_mode():
+            detail = "flying" if item == self._active_index() else "owned"
+        else:
+            owned = self._owned_count(ship_type_id)
+            detail = f"{ship_type.get('cost', 0)}cr" + (f"  (own {owned})" if owned else "")
         draw_shop_cell(surface, rect, is_selected, reason, icon_fn, ship_type.get("name", ship_type_id), detail, scale)
