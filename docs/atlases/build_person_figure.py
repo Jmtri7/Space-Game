@@ -30,28 +30,15 @@ GROUND = 201.0            # figure-y the boots stand on -> Person self.y
 def g(x, y):
     return round((x - 70.0) * S, 3), round((y - GROUND) * S, 3)
 
-# Keep the arms exactly where the atlas figure puts them (a small gap to the
-# torso, splaying out below) - an earlier inward nudge pulled them under the
-# torso so they read as "drawn on top of the body" instead of spaced out.
-ARM_INSET = 0.0   # game units, toward centre
-
-def _inset(gx, gy, group):
-    if group in ("arm_l", "hand_l"):
-        gx += ARM_INSET
-    elif group in ("arm_r", "hand_r"):
-        gx -= ARM_INSET
-    return round(gx, 3), round(gy, 3)
-
 def to_parts(shapes, keep_group=True):
     out = []
     for sh in shapes:
         grp = sh["group"]
         if "points" in sh:
-            geom = {"points": [list(_inset(*g(x, y), grp)) for x, y in sh["points"]]}
+            geom = {"points": [list(g(x, y)) for x, y in sh["points"]]}
         else:
             cx, cy, r = sh["circle"]
-            gx, gy = _inset(*g(cx, cy), grp)
-            geom = {"circle": [gx, gy, round(r * S, 3)]}
+            geom = {"circle": [*g(cx, cy), round(r * S, 3)]}
         p = {**geom, "color": sh["color"]}
         if keep_group:
             p["group"] = grp
@@ -105,10 +92,8 @@ for k, kw in SPECS.items():
     ACC[k] = [p for p in variant if ident(p) not in bare_ne_k]
 
 # animation pivots + limb spans, Person game units, feet at (0, 0)
-_arm_l_piv = list(_inset(*g(46, 76), "arm_l"))
-_arm_r_piv = list(_inset(*g(94, 76), "arm_r"))
 PIVOTS = {"leg_l": list(g(63.5, 150)), "leg_r": list(g(76.5, 150)),
-          "arm_l": _arm_l_piv, "arm_r": _arm_r_piv}
+          "arm_l": list(g(46, 76)), "arm_r": list(g(94, 76))}
 LEG_HIP_Y, _   = g(0, 150)[1], None
 LEG_ANKLE_Y    = g(0, 190)[1]
 ARM_SHOULDER_Y = g(0, 76)[1]

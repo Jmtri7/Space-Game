@@ -7,7 +7,7 @@ from game.constants import YELLOW, WHITE, GRAY
 from game.utils import get_font, _wrap_text, get_ui_scale
 import game.utils as utils
 from game.world.ship import Ship
-from game.world.world_object import _resolve_part_color, expand_polygon, _ring_quads
+from game.world.world_object import _resolve_part_color, _ring_quads
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
@@ -531,8 +531,7 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, 
     parts = graphics.get("parts")
     if parts:
         _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts,
-                          _rotate, color, tuple(graphics.get("window_color", (200, 230, 255))),
-                          outline_color)
+                          _rotate, color, tuple(graphics.get("window_color", (200, 230, 255))))
     else:
         margin = 2
         outline_points = []
@@ -550,32 +549,18 @@ def draw_ship_glyph(surface, center_x, center_y, pixel_size, graphics, angle=0, 
 
 
 def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
-                      metal_color, glass_color, outline_color):
+                      metal_color, glass_color):
     """Screen-pixel twin of WorldObject.draw_parts for draw_ship_glyph: each
     part's coords are fractions of the ship's "size" (pixel_size stands in
     for size here), rotated by the same `rotate` closure the base polygon
-    uses. Colours resolve exactly as in-world (_resolve_part_color)."""
-    base_outline_w = max(1, round(pixel_size / 22))
-
+    uses. Colours resolve exactly as in-world (_resolve_part_color). No
+    synthesised outline - the plate's own offset polygons/circles carry it."""
     def project(x, y):
         rx, ry = rotate(x * pixel_size, y * pixel_size)
         return (center_x + rx, center_y + ry)
 
-    def outline_for(scr_pts):
-        xs = [p[0] for p in scr_pts]
-        ys = [p[1] for p in scr_pts]
-        diag = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
-        return max(1.0, min(base_outline_w, 0.02 * diag))
-
     for part in parts:
         color = _resolve_part_color(part.get("color"), metal_color, glass_color)
-        ol_spec = part.get("outline")
-        if ol_spec == "none":
-            ol = None
-        elif ol_spec is not None:
-            ol = _resolve_part_color(ol_spec, metal_color, glass_color)
-        else:
-            ol = outline_color
         if "circle" in part:
             cx, cy, r = part["circle"]
             center = project(cx, cy)
@@ -586,8 +571,6 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
                 for quad in _ring_quads(center, radius, band, max(14, min(44, radius // 2))):
                     pygame.draw.polygon(surface, color, quad)
             else:
-                if ol:
-                    pygame.draw.circle(surface, ol, center, radius + max(1, int(min(base_outline_w, 0.04 * radius))))
                 pygame.draw.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
@@ -602,8 +585,6 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
         else:
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
-                if ol:
-                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_for(pts)))
                 pygame.draw.polygon(surface, color, pts)
 
 

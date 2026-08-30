@@ -4,58 +4,6 @@ import pygame
 from game.utils import to_screen, get_scale
 
 
-def expand_polygon(pts, d, miter_limit=2.0):
-    """Screen-space outward offset: every edge pushed out by a constant d
-    pixels, so the outline is the same thickness on every side (a tall thin
-    shape doesn't get a top-heavy border). Same technique the design atlases
-    use - an outline is a larger copy of the shape drawn behind it, never a
-    stroke - so the in-game silhouettes match the plates primitive-for-
-    primitive (polygons + circles, no strokes).
-
-    Corners are mitred; a corner too sharp to mitre within `miter_limit`*d is
-    bevelled (a point per edge) instead. Without that, a pointed shape - a
-    blade tip, a thruster nozzle, a tapered wedge - grows a long spike out
-    its point (and on a rotating hull the spike sweeps around with it). The
-    offset direction is taken from the polygon's signed area, not a
-    distance-to-centroid guess on one vertex, so it never depends on how the
-    shape happens to be rotated on screen."""
-    n = len(pts)
-    if n < 3:
-        return pts
-    area2 = sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1]
-               for i in range(n))
-    sgn = 1.0 if area2 > 0 else -1.0
-
-    def edge_normal(p, q):
-        ux, uy = q[0] - p[0], q[1] - p[1]
-        L = math.hypot(ux, uy)
-        if L < 1e-9:
-            return None
-        return (sgn * uy / L, -sgn * ux / L)
-
-    out = []
-    for i in range(n):
-        a, b, c = pts[i - 1], pts[i], pts[(i + 1) % n]
-        n1 = edge_normal(a, b)
-        n2 = edge_normal(b, c)
-        if n1 is None and n2 is None:
-            out.append(b)
-            continue
-        if n1 is None or n2 is None:
-            nn = n1 or n2
-            out.append((b[0] + nn[0] * d, b[1] + nn[1] * d))
-            continue
-        mx, my = n1[0] + n2[0], n1[1] + n2[1]
-        ml = math.hypot(mx, my)
-        cosv = (mx / ml) * n1[0] + (my / ml) * n1[1] if ml > 1e-9 else 0.0
-        if cosv < 1.0 / miter_limit:                 # too sharp (or reflex): bevel
-            out.append((b[0] + n1[0] * d, b[1] + n1[1] * d))
-            out.append((b[0] + n2[0] * d, b[1] + n2[1] * d))
-        else:
-            out.append((b[0] + mx / ml * d / cosv, b[1] + my / ml * d / cosv))
-    return out
-
-
 def _ring_quads(center, r, band, segs):
     """A torus as `segs` radial quads - hole stays genuinely transparent
     (nothing is painted in the centre), matching the plates' ring_strip."""
@@ -71,8 +19,7 @@ def _ring_quads(center, r, band, segs):
     return out
 
 
-def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
-               outline_color=(12, 10, 16)):
+def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color):
     """Draw a composite-shape "parts" list about world point (ox, oy). Each
     part is one of:
       {"points": [[x, y], ...], "color": <c>}   filled polygon
@@ -85,15 +32,16 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
     building's absolute local units, `size` for a ship/station whose base
     points are fractions of size - then rotated `angle` degrees. Lets one
     config entry carry the multi-polygon designs a single base shape can't
-    (see the design atlases). Colours (`color`, and an optional per-part
-    `outline` - `"none"` to omit it, else defaults to `outline_color`)
-    resolve via _resolve_part_color: an [r,g,b], "#rrggbb", "metal",
-    "glass", or "shade:<n>".
+    (see the design atlases). Colours resolve via _resolve_part_color: an
+    [r,g,b], "#rrggbb", "metal", "glass", or "shade:<n>".
 
-    Drawn strokelessly - only filled polygons and circles, no pygame stroke
-    calls - so it renders by the same rules as the design atlases: an
-    outline is a larger copy of the shape behind it, a ring is a quad strip,
-    a line is a thin quad."""
+    The list is drawn back-to-front with **no synthesised outline of any
+    kind** - it's exactly the polygons and circles the atlas plate draws, and
+    an outline there is already its own slightly-larger polygon/circle part
+    sitting behind the fill (see docs/atlases/extract_atlas.py). So the
+    in-game silhouette matches the plate primitive-for-primitive, and the
+    outline scales with the shape instead of being a fixed-pixel border that
+    swallows a small ship's nose."""
     if not parts:
         return
     rad = math.radians(angle)
@@ -104,19 +52,6 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
         x, y = x * unit, y * unit
         return to_screen(ox + (x * cos_a - y * sin_a), oy + (x * sin_a + y * cos_a))
 
-    # Outline thickness: normally a fixed screen amount, but capped at ~2% of
-    # a shape's *own* on-screen diagonal. Without the cap a small ship
-    # (vherathi_skiff, size 10) or a small sub-part (a nozzle) gets an outline
-    # as fat as a size-48 hull - it swallows the shape's point and reads like
-    # a heavy stroke instead of the thin offset the atlases use.
-    base_outline_w = max(1.0, 1.6 * scale)
-
-    def outline_for(scr_pts):
-        xs = [p[0] for p in scr_pts]
-        ys = [p[1] for p in scr_pts]
-        diag = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
-        return max(1.0, min(base_outline_w, 0.02 * diag))
-
     def thick_seg(p, q, half):
         dx, dy = q[0] - p[0], q[1] - p[1]
         L = math.hypot(dx, dy) or 1.0
@@ -126,13 +61,6 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
 
     for part in parts:
         color = _resolve_part_color(part.get("color"), metal_color, glass_color)
-        ol_spec = part.get("outline")
-        if ol_spec == "none":
-            ol = None
-        elif ol_spec is not None:
-            ol = _resolve_part_color(ol_spec, metal_color, glass_color)
-        else:
-            ol = outline_color
         if "circle" in part:
             cx, cy, r = part["circle"]
             center = project(cx, cy)
@@ -144,9 +72,6 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
                 for quad in _ring_quads(center, radius, band, segs):
                     pygame.draw.polygon(surface, color, quad)
             else:
-                if ol:
-                    ow = max(1.0, min(base_outline_w, 0.04 * radius))
-                    pygame.draw.circle(surface, ol, center, radius + max(1, int(round(ow))))
                 pygame.draw.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
@@ -156,8 +81,6 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
         else:
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
-                if ol:
-                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_for(pts)))
                 pygame.draw.polygon(surface, color, pts)
 
 
@@ -235,9 +158,8 @@ class WorldObject:
         pygame.draw.polygon(surface, color, points)
         return points
 
-    def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color,
-                    outline_color=(12, 10, 16)):
+    def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color):
         """Composite "parts" detail about this object's own (x, y) - see the
         module-level draw_parts()."""
         draw_parts(surface, parts, self.x, self.y, angle, unit, metal_color,
-                   glass_color, outline_color)
+                   glass_color)

@@ -166,7 +166,7 @@ class LandingSite(WorldObject):
         stays authoritative for collision/size math, just not for drawing."""
         if self.parts:
             self._draw_parts(surface, self.parts, self.rotation, 1, self.color,
-                             self.window_color, self.outline_color)
+                             self.window_color)
             return
         self._draw_rotated_polygon(surface, self.local_points, self.rotation, self.color, outline_color=self.outline_color)
         if self.windows:

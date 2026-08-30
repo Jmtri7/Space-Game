@@ -226,8 +226,9 @@ def emit(tag, el, style):
         return float(v) if v is not None else default
 
     def poly(pts):
-        d = {"points": pts, "color": col, "outline": outline or "none"}
-        parts.append(d)
+        # No "outline" key: the strokeless plates carry an outline as its own
+        # offset polygon, and the engine draws the parts list verbatim.
+        parts.append({"points": pts, "color": col})
 
     if tag == "polygon":
         p = nums(el.get("points", ""))
@@ -246,8 +247,6 @@ def emit(tag, el, style):
             # stroke-only circle -> a ring: carry the band width, no fill,
             # so draw_parts leaves the hole transparent
             d["width"] = round(float(swv) * SCALE, 3)
-        else:
-            d["outline"] = outline or "none"
         parts.append(d)
     elif tag == "line":
         pts = tf([(g(el, "x1"), g(el, "y1")), (g(el, "x2"), g(el, "y2"))])
@@ -268,27 +267,12 @@ def emit(tag, el, style):
 walk(root, {})
 
 
-# ---- collapse the strokeless-atlas idioms back to compact parts --------
+# ---- fold the one wasteful strokeless idiom back to a compact part -----
 # standard-issue.html / resin-and-rivets.html are drawn with only <polygon>
-# and <circle>, no stroke: an outline is an even offset copy of the shape
-# drawn behind it, and a ring/torus is a run of radial quad segments. Left
-# as-is that's ~2x polygons per shape and hundreds of tiny quads per ring.
-# Fold each idiom back into one part with a real `outline` / a ring circle
-# so the in-game `parts` list stays as small as the old stroked atlas.
-def _bbox(pts):
-    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
-    return min(xs), min(ys), max(xs), max(ys)
-
-
-def _covers(outer, inner, slack):
-    ox0, oy0, ox1, oy1 = _bbox(outer)
-    ix0, iy0, ix1, iy1 = _bbox(inner)
-    return (ox0 <= ix0 + slack and oy0 <= iy0 + slack
-            and ox1 >= ix1 - slack and oy1 >= iy1 - slack
-            and (ox1 - ox0) - (ix1 - ix0) < 0.7 * max(ix1 - ix0, 1e-6)
-            and (oy1 - oy0) - (iy1 - iy0) < 0.7 * max(iy1 - iy0, 1e-6))
-
-
+# and <circle>, no stroke. The outline idiom (an evenly-offset copy of a shape
+# behind it) is kept as-is - two parts per outlined shape, drawn verbatim. Only
+# a ring/torus, which is hundreds of tiny radial quads, is folded: each torus
+# collapses to one {"circle", "width"} the engine re-expands to the same quads.
 def _ring_from_run(run):
     """run: polygon parts (4-pt quads), same colour, forming ONE torus ->
     a {"circle", "width"} ring part (transparent hole)."""
@@ -323,32 +307,22 @@ def _split_ring_runs(quads, eps):
 
 
 def collapse_strokeless(parts):
+    """Fold the one strokeless idiom that's genuinely wasteful - a torus built
+    from dozens of tiny radial quads - back into a compact {"circle","width"}
+    ring (the engine re-expands it to the same quads). The *outline* idiom (an
+    evenly-offset copy of a shape drawn behind it) is deliberately NOT folded:
+    the engine draws the parts list verbatim with no synthesised outline, so
+    the offset polygon/circle stays a real part and the outline scales with
+    the shape exactly as the plate drew it."""
     span = max((abs(p["points"][0][0]) for p in parts if "points" in p and p["points"]),
                default=1.0) or 1.0
     slack = span * 0.06 + 0.01
     out, i, n = [], 0, len(parts)
     while i < n:
         p = parts[i]
-        q = parts[i + 1] if i + 1 < n else None
-        # (a) outline polygon behind a fill polygon: the first strictly
-        #     encloses the second, different colour. The outline copy may have
-        #     a few *more* vertices than the fill (a sharp corner bevels to
-        #     two points in offset_poly), so allow >=, not ==.
-        if (q and "points" in p and "points" in q
-                and len(p["points"]) >= len(q["points"]) >= 3
-                and p.get("color") != q.get("color")
-                and _covers(p["points"], q["points"], slack)):
-            m = dict(q); m["outline"] = p["color"]; out.append(m); i += 2; continue
-        # (b) outline circle behind a fill circle.
-        if (q and "circle" in p and "circle" in q and "width" not in p and "width" not in q
-                and abs(p["circle"][0] - q["circle"][0]) < slack
-                and abs(p["circle"][1] - q["circle"][1]) < slack
-                and p["circle"][2] > q["circle"][2]
-                and p.get("color") != q.get("color")):
-            m = dict(q); m["outline"] = p["color"]; out.append(m); i += 2; continue
-        # (c) a run of >=8 same-colour quads: split into per-torus segments
-        #     by edge adjacency, fold each real torus into one ring circle,
-        #     keep the rest as-is (e.g. a row of window squares).
+        # a run of >=8 same-colour quads: split into per-torus segments by
+        # edge adjacency, fold each real torus into one ring circle, keep the
+        # rest as-is (e.g. a row of window squares).
         if "points" in p and len(p["points"]) == 4:
             j = i
             while (j < n and "points" in parts[j] and len(parts[j]["points"]) == 4

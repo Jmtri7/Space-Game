@@ -155,7 +155,7 @@ class Ship(WorldObject):
         if parts:
             glass_color = tuple(self.graphics.get("window_color", (200, 230, 255)))
             self._draw_parts(surface, parts, self.angle, ship_size, color,
-                             glass_color, outline_color)
+                             glass_color)
         else:
             self._draw_rotated_polygon(surface, local_points, self.angle, color, outline_color=outline_color)
             self._draw_windows(surface, ship_size)

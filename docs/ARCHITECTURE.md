@@ -601,9 +601,11 @@ and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
 to `building_footprints`, which `can_move_to` (and therefore `plan_path`'s nav
 grid) rejects. A `building_type` (and a ship/station in `graphics.json`) may
 also carry an optional **`parts`** list — filled polygons / circles /
-polylines (each with its own `color` and optional `outline`) drawn by
-`WorldObject.draw_parts()` for multi-shape detail the single base silhouette
-can't express (extracted from the design-atlas SVGs; see
+polylines (each with a `color`) drawn back-to-front by
+`WorldObject.draw_parts()` with **no synthesised outline** (an outline is
+already its own slightly-larger polygon/circle part), for multi-shape detail
+the single base silhouette can't express (extracted from the design-atlas
+SVGs; see
 [DESIGN_ATLAS.md](DESIGN_ATLAS.md)). When `parts` is present it is the
 *whole* drawn silhouette — `Ship.draw` / `LandingSite._draw_station` skip the
 flat base polygon and the `windows` dots entirely — but `shape` / dims /

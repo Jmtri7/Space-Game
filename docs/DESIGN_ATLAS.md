@@ -69,11 +69,11 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   `person.py` (a `sleeve_color` sleeve quad per shoulder, counter-swinging on
   the walk cycle) along with the culture-neutral kit becoming the Sol
   Federation look in each system.
-  `apply_parts.py` runs off these plates: `extract_atlas.py`'s
-  `collapse_strokeless` folds an offset-outline pair back into one part with a
-  real `outline`, and a run of `ring_strip` quads back into a
-  `{"circle", "width"}` ring — so the in-game part counts stay ~as small as the
-  old stroked atlas (station rings extract as transparent-hole ring parts).
+  `apply_parts.py` runs off these plates: `extract_atlas.py` keeps every
+  polygon/circle (an offset-outline shape stays its own part, drawn behind its
+  fill), and `collapse_strokeless` folds only a `ring_strip` quad run back into
+  a `{"circle", "width"}` ring (station rings extract as transparent-hole ring
+  parts). The engine draws the list verbatim, no synthesised outline.
 
 ### Updating a published atlas
 
@@ -193,11 +193,12 @@ copy the shape, push every vertex away from the centroid by `d`, draw that
 behind in the outline colour — gives a **top-heavy outline** on any shape
 that isn't roughly circular: a tall thin rectangle's end vertices move mostly
 vertically, so the outline is thick on the ends and thin on the sides. What
-works is a **constant-perpendicular offset** (`offset_poly` in `gen_si.py`,
-mirrored exactly by `expand_polygon` in the engine — keep the two in
-lockstep): push each *edge* out along its own outward normal by `d`, then
-close the gap this opens at each corner. The corner treatment is the same
-choice SVG makes with `stroke-linejoin` + `stroke-miterlimit`:
+works is a **constant-perpendicular offset** (`offset_poly` in `gen_si.py`):
+push each *edge* out along its own outward normal by `d`, then close the gap
+this opens at each corner. The engine has no equivalent step — it draws
+`offset_poly`'s output as a plain part, so the plate and the game agree by
+construction. The corner treatment is the same choice SVG makes with
+`stroke-linejoin` + `stroke-miterlimit`:
 
 - **Mitre** (default): extend both offset edges until they intersect — one
   sharp point that keeps the corner's original shape. Vertex moves out along
@@ -211,15 +212,15 @@ choice SVG makes with `stroke-linejoin` + `stroke-miterlimit`:
   nozzle, a tapered wedge caps cleanly rather than shooting a long spike.
 
 Offset direction comes from the polygon's **signed area** (winding), not a
-"did it grow? then flip" guess on one vertex — so it's stable no matter how
-the shape is rotated (an earlier one-vertex check let a rotating hull's
-thruster-port outline flip and "spin"). One extra `<polygon>` behind the
+"did it grow? then flip" guess on one vertex. One extra `<polygon>` behind the
 shape, uniform width on every edge; a bevelled corner just adds a vertex.
 Circles are the easy case: a bigger circle behind is already uniform.
 
 *Authoring implication:* a sharp point in a plate is fine — it caps, it
-doesn't spike, and the engine does the identical thing, so the plate predicts
-the game. (Before the miter limit, a pointy specimen spiked in both.)
+doesn't spike. And because the engine draws exactly these polygons (it never
+re-derives an outline), the plate predicts the game 1:1 — including the
+outline's thickness, which scales with the shape rather than being a
+fixed-pixel border.
 
 **Transparent ring holes — build the torus from radial strips.** A single
 "keyhole" annulus polygon (outer loop → bridge → reversed inner loop, one
@@ -241,25 +242,26 @@ line = a long thin polygon (a run of short ones for dashes); a dotted circle
 = a ring of small `<circle>` dots; `<text>` is allowed for annotation only
 (corner tags, `SF-###` registrations, floor-plan room labels).
 
-**Extraction folds both idioms back.** `extract_atlas.py`'s
-`collapse_strokeless` (run automatically; pass `nocollapse` to skip) turns an
-offset-outline polygon + fill polygon back into one part with a real
-`"outline"` colour, and a run of ≥8 same-colour quads back into one
-`{"circle", "width"}` ring per torus (split by edge-adjacency, so a row of
-window squares is left alone). Result: `apply_parts.py` off the strokeless
-atlas gives part counts within ±1 of the old stroked extraction, with the
-station rings as transparent-hole ring parts. The `#888` fallback in
-`gen_rr.py` was removed — a `url(#grid)` fill must pass through, or a second
-run of the (non-idempotent) converter paints the background solid grey.
+**Extraction keeps the outline as a real part.** `extract_atlas.py` emits the
+offset-outline polygon/circle and the fill it sits behind as **two separate
+parts**, exactly as the plate draws them — it does **not** fold them into an
+`"outline"` colour key. `collapse_strokeless` folds only the one genuinely
+wasteful idiom: a torus of dozens of tiny radial quads → one
+`{"circle", "width"}` ring (the engine re-expands it to the same quads). The
+`#888` fallback in `gen_rr.py` was removed — a `url(#grid)` fill must pass
+through, or a second run of the (non-idempotent) converter paints the
+background solid grey.
 
-**The engine renders these parts by the same rules** — `WorldObject.draw_parts`
-(and its UI twin `ui_theme._draw_glyph_parts`, and `Person.draw`) use *only*
-filled polygons and circles, no `pygame` stroke: an outline is
-`world_object.expand_polygon` (a mitre-offset copy) drawn behind the fill, a
-ring is `_ring_quads` (a strip), a line is a thin quad, and a boot is a
-12-gon. So the in-game silhouettes match the plates primitive-for-primitive,
-and sharp corners can't poke through the outline the way a `polygon(…, width)`
-stroke let them. Costs ~+1 ms on a 15-NPC interior — within budget.
+**The engine draws the parts list verbatim** — `WorldObject.draw_parts` (and
+its UI twin `ui_theme._draw_glyph_parts`, and `Person.draw` off
+`person_figure.py`) render each polygon/circle filled, back to front, with
+**no synthesised outline of any kind** — no `pygame` stroke, no runtime
+offset. The outline is already its own slightly-larger polygon/circle part in
+the list, so it scales with the shape exactly as the plate drew it, instead
+of a fixed-pixel border that (on a small ship like `vherathi_skiff`, size 10)
+grew fat enough to swallow the nose. Rings render as `_ring_quads` (a strip),
+lines as a thin quad. The in-game silhouette matches the plate
+primitive-for-primitive.
 
 ## Turning a plate into config
 
