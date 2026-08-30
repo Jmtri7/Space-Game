@@ -305,8 +305,14 @@ the currently defined cultures (e.g. the Vherathi Concord).
 **Base Class: `Person`**
 - Stores position, appearance, an `outfit`, and a `Possessions`
 - Implements `draw(surface)` — a face-on foot-to-head stack (two boots, two
-  legs, a tapering torso, a head), with the outfit's colors and accessory
-  pieces drawn over the shared body shape (see below)
+  legs, a tapering torso with an arm per shoulder, a head), with the outfit's
+  colors and accessory pieces drawn over the shared body shape (see below).
+  The silhouette + every accessory piece is **data**, extracted from the
+  Standard Issue atlas figure into `game/world/person_figure.py` by
+  `docs/atlases/build_person_figure.py` (same "atlas is the source of truth"
+  pipeline as ship/building `parts`); `draw()` resolves colour tokens per
+  outfit, applies the walk transform per animation group, and blits — it has
+  no body geometry of its own. See [DESIGN_ATLAS.md](DESIGN_ATLAS.md).
 - Provides `get_distance(x, y)` for interaction checks
 - Owns the shared **walk cycle**: `step_toward()` → `_advance_walk()` advances
   `walk_phase` by the distance walked and ramps `walk_intensity`; `draw()`
@@ -326,17 +332,16 @@ decorated variants (`marshal`, `vherathi_honor_guard`, `merchant_prince`,
 …).
 
 Every outfit key is just a color. `helmet_color` / `suit_color` /
-`boot_color` / `leg_color` recolor the base body (helmet optional;
-`leg_color` defaults to a darker shade of the suit). Optional accessory
-keys each add one layered piece, drawn by `Person._draw_back_accessories`
-(behind the body: `backpack_color`, `spike_color` shoulder spikes,
-`antenna_color`) and `_draw_front_accessories` (over the torso:
-`shoulder_color` pauldrons, `chest_plate_color`, `sash_color` diagonal
-band, `belt_color` + shaded buckle, `collar_color`, `badge_color` chest
-diamond); `visor_color` is a face band that replaces the eyes. An absent
-key just skips that piece, so a bare `Person` shows plain body colors and
-**a new decorated outfit is still only a `graphics.json` entry — no
-drawing-code changes.**
+`boot_color` / `leg_color` / `sleeve_color` recolor the base body (helmet
+optional; `leg_color` defaults to a darker shade of the suit, `sleeve_color`
+to the suit). Optional accessory keys each switch on one layered figure
+piece (`fig.ACC[key]`): behind the body — `backpack_color`, `spike_color`
+shoulder spikes, `antenna_color`; over the torso — `chest_plate_color`,
+`sash_color` diagonal band, `collar_color`, `belt_color` + shaded buckle,
+`shoulder_color` pauldrons, `badge_color` chest diamond; `visor_color` is a
+face band that replaces the eyes. An absent key just skips that piece, so a
+bare `Person` shows plain body colors and **a new decorated outfit is still
+only a `graphics.json` entry — no drawing-code changes.**
 
 `Person` itself has no behavior/role concept - that lives on `Character`
 (see below), which owns a `Person` rather than subclassing it. Local NPCs

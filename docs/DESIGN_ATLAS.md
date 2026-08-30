@@ -281,6 +281,24 @@ Tooling lives beside the atlas HTML: [`docs/atlases/extract_atlas.py`](atlases/e
 (the asset→plate table + targeted JSON injection; run from repo root, it's
 idempotent). Add a row to `apply_parts.py`'s `T` table for a new asset.
 
+**The Person body is extracted too, from `gen_si.figure_parts`.**
+`figure_parts()` (in [`docs/atlases/gen_si.py`](atlases/gen_si.py)) is the
+single generator for every Standard Issue crew/contact specimen; it carries
+`_grp()` / `_gate()` markers that tag each shape with an animation group
+(`body` / `arm_l` / `arm_r` / `hand_l` / `hand_r` / `leg_l` / `leg_r` /
+`boot_l` / `boot_r`) and, for accessory pieces, the outfit colour-key that
+gates them. `figure_shapes(**tokens)` re-runs it with a recorder on, and
+[`docs/atlases/build_person_figure.py`](atlases/build_person_figure.py) diffs
+a few token combinations (helmet vs bare head, each accessory on/off) into
+`game/world/person_figure.py` — `BASE` / `BARE_HEAD` / `HELMET_RING` /
+`HELMET_FACE` / `EYES_*` / `ACC[key]`, all in Person game units (centre-line
+at x, feet at y, y negative going up), plus the walk pivots. `Person.draw()`
+resolves the colour tokens per outfit, applies the walk-cycle transform per
+group, and blits — no body drawing code of its own. Re-run the builder from
+the repo root after editing the atlas figure; don't hand-edit
+`person_figure.py`. Colours flow the other way too: the `--skin` / `--body-out`
+CSS vars in the atlas quote `Person.SKIN_COLOR` / `Person.OUTLINE_COLOR`.
+
 **The thruster flame is not extracted.** Any specimen shape (or `<g>`) tagged
 `class="flame"` is dropped by `extract_atlas.py` — only the drawn **port**
 polygon lands in `parts`; the exhaust stays procedural in

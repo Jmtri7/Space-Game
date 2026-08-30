@@ -3,7 +3,7 @@ import pygame
 import math
 from game.utils import to_screen, get_scale
 from game.world.possessions import Possessions
-from game.world.world_object import expand_polygon
+from game.world import person_figure as fig
 
 
 class Person:
@@ -21,15 +21,17 @@ class Person:
         # A resolved graphics.json "outfits" asset (see get_graphics_asset),
         # drawn over the shared body below - helmet_color/suit_color/
         # boot_color/leg_color/sleeve_color, any of which may be absent.
-        # None/{} means
-        # bare body, no outfit. The body shape itself stays shared across
-        # everyone for now; an outfit recolors it, adds a helmet, and can
-        # bolt on optional accessory pieces - each just another color key
-        # (shoulder_color, spike_color, collar_color, chest_plate_color,
-        # sash_color, belt_color, badge_color, backpack_color,
-        # antenna_color, visor_color; see draw() and _draw_*_accessories).
-        # So a new decorated outfit is still just a new graphics.json
-        # entry, no drawing code needed.
+        # None/{} means bare body, no outfit. The body silhouette itself is
+        # shared across everyone: it's extracted from the Standard Issue
+        # atlas figure into game/world/person_figure.py (see
+        # docs/atlases/build_person_figure.py), the same "atlas is the source
+        # of truth" pipeline ships and buildings use. An outfit recolours
+        # that figure and switches on optional accessory pieces - each just
+        # another colour key (helmet_color, shoulder_color, spike_color,
+        # collar_color, chest_plate_color, sash_color, belt_color,
+        # badge_color, backpack_color, antenna_color, visor_color; see
+        # fig.ACC and draw()). So a new decorated outfit is still just a new
+        # graphics.json entry, no drawing code needed.
         self.outfit = outfit or {}
 
         # Walk-cycle state (see WALK_* constants and _advance_walk). Every
@@ -39,47 +41,24 @@ class Person:
         self.walk_intensity = 0.0
         self._walked_this_frame = False
 
-    # Body proportions, all measured up from the feet (self.x/self.y is the
-    # ground position a character is standing at, not their head or
-    # shoulders - matches where collision/arrival distance checks treat
-    # them as being). The bare body is a face-on foot-to-head stack - two
-    # boots, two tapering legs rising to a hip line, a tapering rounded-
-    # shoulder torso polygon with an arm hanging from each shoulder, and a
-    # head circle - shaded from one skin tone as if lit from above (head
-    # lightest, boots darkest). An outfit (see self.outfit) recolors the
-    # shapes and adds a thick helmet ring around the head, but never
-    # changes this shape - see draw(). The legs and arms carry the walk
-    # cycle (WALK_* below, driven by step_toward): the arms counter-swing.
-    BOOT_RADIUS_X = 2.6      # boot oval - wider than tall, like the old foot
-    BOOT_RADIUS_Y = 1.9
-    LEG_HEIGHT = 11        # hip line down to the ankle (boot centre) at rest
-    LEG_HALF_WIDTH = 1.7
-    LEG_SEPARATION = 2.8   # each leg's centre, out from the body centreline
-    HIP_OVERLAP = 1.5       # how far the leg tops tuck up under the torso base
-    BODY_HEIGHT = 11         # torso height, shoulders to hip line
-    SHOULDER_HALF_WIDTH = 7  # torso half-width at the (rounded) shoulders
-    BASE_HALF_WIDTH = 4.5    # torso half-width at the base - covers the leg tops
-    SHOULDER_RADIUS = 3.5    # rounding radius of each shoulder corner
-    SHOULDER_SEGMENTS = 4    # polygon segments approximating each shoulder's curve
-    # Arms: a tapered sleeve quad from each shoulder down to a small hand
-    # circle, ~the length of a leg. They swing fore/aft opposite the legs
-    # while walking (see _arm_swing / WALK_ARM_DEG); at rest they hang
-    # straight. sleeve_color defaults to suit_color; hands are head-toned.
-    ARM_LENGTH = 9.0          # shoulder joint down to the wrist, at rest
-    ARM_HALF_WIDTH = 1.55
-    ARM_SEPARATION = 6.4     # each arm's shoulder joint, out from the centreline
-    ARM_SHOULDER_DROP = 1.6  # shoulder joint below the torso top
-    HAND_RADIUS = 1.4
-    HEAD_RADIUS = 5.5        # slightly large, so it overlaps the shoulders below
-    HEAD_OVERLAP = 0.1       # how far the head sinks between the shoulders
-    HELMET_THICKNESS = 2.4   # ring width of a helmet outside the face, when outfitted
-    HELMET_FACE_COVER = 1.3  # how far a helmet's inner rim also creeps in over the face
-    EYE_RADIUS = 0.8
-    EYE_OFFSET_X = 2.2       # each eye's distance from center
-    EYE_OFFSET_Y = 0.5       # slightly below head center
+    # self.x/self.y is the ground position a character stands at (matches
+    # where collision / arrival-distance checks treat them as being), not
+    # their head. The body silhouette + every accessory piece live in
+    # person_figure.py in these same units - centre-line at x, feet at y, y
+    # negative going up - split into animation `group`s (body / arm_l /
+    # arm_r / hand_l / hand_r / leg_l / leg_r / boot_l / boot_r). The legs
+    # and arms carry the walk cycle; the arms swing together, counter to the
+    # stride (see _leg_stance / _arm_swing and _place).
+    LEG_HEIGHT = 11         # walk-cycle knob: notional hip-to-ankle length
+    HIP_OVERLAP = 1.5       # (paired with LEG_HEIGHT for the stride amplitude)
+    ARM_LENGTH = 9.0        # walk-cycle knob: notional shoulder-to-wrist length
 
-    SKIN_COLOR = (225, 180, 145)  # torso tone; head/legs/boots are shaded from this
+    SKIN_COLOR = (225, 180, 145)   # figure "skin" token; head/hands are shaded from this
     EYE_COLOR = (40, 30, 30)
+    # Near-black silhouette tone, baked into the figure's own outline shapes
+    # (each shape ships with a slightly larger copy behind it - strokeless,
+    # the same rule the atlases use); matches ships' default outline_color.
+    OUTLINE_COLOR = (20, 18, 25)
 
     # Walk cycle. walk_phase advances with the distance actually walked
     # (step_toward -> _advance_walk); walk_intensity ramps in on movement
@@ -91,58 +70,21 @@ class Person:
                               # (player / dock pilot at ~2.0 u/frame) would
                               # otherwise blur; a stroller (WanderRoutine at
                               # 0.5 u/frame) stays below the cap unchanged
-    WALK_LIFT = 2.6           # peak rise of the swinging leg's boot
+    WALK_LIFT = 1.7          # peak rise of the swinging leg's boot
     WALK_STRIDE_DEG = 6       # peak fore/aft swing of each leg about the hip
-    WALK_ARM_DEG = 9         # peak fore/aft arm swing about the shoulder,
-                            # opposite the same-side leg (natural counter-swing)
-    WALK_BOB = 0.8           # body rise as a foot passes under
+    WALK_ARM_DEG = 9         # peak fore/aft arm swing about the shoulder
+    WALK_BOB = 0.6           # body rise as a foot passes under
     WALK_INTENSITY_GAIN = 0.34  # per moving frame, up to 1.0
     WALK_INTENSITY_DECAY = 0.82  # per idle frame, back toward 0
 
-    # Same technique as WorldObject._draw_rotated_polygon uses for ships: a
-    # dark silhouette drawn slightly larger, underneath each shape, so the
-    # body reads as distinct from similarly-toned ground/terrain instead of
-    # blending into it (see docs/BACKLOG.md's helmet-vs-ground item). Same
-    # near-black tone as ships' default outline_color for visual consistency.
-    OUTLINE_COLOR = (20, 18, 25)
-    OUTLINE_WIDTH = 2  # screen pixels
+    # How far a helmeted face sits below a bare one - the visor is extracted
+    # at the bare-head position, so it's nudged down onto a helmeted face.
+    _HELM_FACE_DY = round(fig.HELMET_FACE[0]["circle"][1] - fig.BARE_HEAD[0]["circle"][1], 3)
 
     @staticmethod
     def _shade(color, amount):
         """Nudge a color's channels by amount (+lighter/-darker), clamped."""
         return tuple(max(0, min(255, c + amount)) for c in color)
-
-    def _shoulder_arc(self, cx, cy, start_deg, end_deg, radius):
-        """Points tracing one rounded shoulder corner, center (cx, cy),
-        sweeping from start_deg to end_deg (0=right, 90=down, 180=left,
-        270=up - screen convention, y grows downward)."""
-        points = []
-        for i in range(self.SHOULDER_SEGMENTS + 1):
-            t = start_deg + (end_deg - start_deg) * i / self.SHOULDER_SEGMENTS
-            rad = math.radians(t)
-            points.append((cx + radius * math.cos(rad), cy + radius * math.sin(rad)))
-        return points
-
-    def _torso_points(self, body_top_y, body_bottom_y, margin=0):
-        """The symmetric, round-shouldered, tapering torso polygon: left
-        shoulder arc, right shoulder arc, then straight down to the (base,
-        narrower) bottom corners - which sit hidden behind the leg tops, so
-        they don't need rounding too.
-
-        margin (game-space units) grows every dimension outward, for tracing
-        an outline silhouette rather than the torso itself - see OUTLINE_COLOR."""
-        shoulder_half_width = self.SHOULDER_HALF_WIDTH + margin
-        base_half_width = self.BASE_HALF_WIDTH + margin
-        shoulder_radius = self.SHOULDER_RADIUS + margin
-        top_y = body_top_y - margin
-        bottom_y = body_bottom_y + margin
-        left_center = (self.x - shoulder_half_width + shoulder_radius, top_y + shoulder_radius)
-        right_center = (self.x + shoulder_half_width - shoulder_radius, top_y + shoulder_radius)
-        points = self._shoulder_arc(*left_center, 180, 270, shoulder_radius)
-        points += self._shoulder_arc(*right_center, 270, 360, shoulder_radius)
-        points.append((self.x + base_half_width, bottom_y))
-        points.append((self.x - base_half_width, bottom_y))
-        return points
 
     def _leg_stance(self):
         """Per-frame walk-cycle offsets: (hip_dy, ((ankle_dx, ankle_dy) for
@@ -161,16 +103,6 @@ class Person:
         hip_dy = -abs(swing) * self.WALK_BOB * amt
         return hip_dy, ((dx_l, -lift_l), (-dx_l, -lift_r))
 
-    def _leg_quad(self, center_x, hip_y, ankle_x, ankle_y, half_width):
-        """Four points of one leg: a slightly tapered quad from the hip
-        (tucked up under the torso base) down to the ankle."""
-        return [
-            (center_x - half_width, hip_y - self.HIP_OVERLAP),
-            (center_x + half_width, hip_y - self.HIP_OVERLAP),
-            (ankle_x + half_width * 0.82, ankle_y),
-            (ankle_x - half_width * 0.82, ankle_y),
-        ]
-
     def _arm_swing(self):
         """Per-frame fore/aft wrist offset (dx) for the left arm then the
         right. Both arms swing *together* (same direction), counter to the
@@ -182,24 +114,6 @@ class Person:
         swing = math.sin(self.walk_phase)
         dx = -math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
         return dx, dx
-
-    def _arm_quad(self, shoulder_x, shoulder_y, wrist_x, wrist_y, half_width):
-        """Four points of one arm: a lightly tapered sleeve from the
-        shoulder joint down to the wrist."""
-        return [
-            (shoulder_x - half_width, shoulder_y),
-            (shoulder_x + half_width, shoulder_y),
-            (wrist_x + half_width * 0.8, wrist_y),
-            (wrist_x - half_width * 0.8, wrist_y),
-        ]
-
-    @staticmethod
-    def _ngon(cx, cy, rx, ry, n=12):
-        """An oval as an n-sided polygon (game-space units) - the body is
-        drawn strokelessly with polygons + circles only, like the atlases,
-        so an ellipse (boot) becomes a many-sided polygon."""
-        return [(cx + rx * math.cos(2 * math.pi * i / n),
-                 cy + ry * math.sin(2 * math.pi * i / n)) for i in range(n)]
 
     def _advance_walk(self, distance):
         """Advance the walk cycle by the distance just walked and ramp the
@@ -213,13 +127,76 @@ class Person:
         self.walk_intensity = min(1.0, self.walk_intensity + self.WALK_INTENSITY_GAIN)
         self._walked_this_frame = True
 
+    # ---- Body rendering ------------------------------------------------
+    _MID_LEG_Y = (fig.LEG_HIP_Y + fig.LEG_ANKLE_Y) * 0.5
+    _ARM_SPAN_Y = fig.ARM_WRIST_Y - fig.ARM_SHOULDER_Y
+
+    def _fig_color(self, tok):
+        """Resolve a figure colour token against this Person's outfit."""
+        o = self.outfit
+        if tok == "outline":
+            return self.OUTLINE_COLOR
+        if tok == "suit":
+            return o.get("suit_color", self.SKIN_COLOR)
+        if tok == "sleeve":
+            return o.get("sleeve_color", o.get("suit_color", self.SKIN_COLOR))
+        if tok == "leg":
+            return o.get("leg_color", self._shade(o.get("suit_color", self.SKIN_COLOR), -22))
+        if tok == "boot":
+            return o.get("boot_color", self._shade(self.SKIN_COLOR, -35))
+        if tok == "skin_hi":
+            return self._shade(self.SKIN_COLOR, 30)
+        if tok == "skin":
+            return self.SKIN_COLOR
+        if tok == "skin_lo":
+            return self._shade(self.SKIN_COLOR, -35)
+        if tok == "eye":
+            return self.EYE_COLOR
+        if tok == "buckle":
+            belt = o.get("belt_color")
+            return self._shade(belt, 45) if belt else (122, 122, 132)
+        return o.get(tok, (150, 150, 150))   # accessory colour keys (gated in draw)
+
+    def _place(self, gx, gy, group, stance, arm):
+        """Figure-space point (game units, feet at origin) -> world point,
+        with the walk-cycle transform for its animation group applied."""
+        hip_dy, ((adx_l, ady_l), (adx_r, ady_r)) = stance
+        if group == "body":
+            return self.x + gx, self.y + gy + hip_dy
+        if group in ("leg_l", "leg_r"):
+            adx, ady = (adx_l, ady_l) if group == "leg_l" else (adx_r, ady_r)
+            if gy <= self._MID_LEG_Y:            # hip end - rides the body
+                return self.x + gx, self.y + gy + hip_dy
+            return self.x + gx + adx, self.y + gy + ady    # ankle end - swings
+        if group in ("boot_l", "boot_r"):
+            adx, ady = (adx_l, ady_l) if group == "boot_l" else (adx_r, ady_r)
+            return self.x + gx + adx, self.y + gy + ady
+        if group in ("arm_l", "hand_l", "arm_r", "hand_r"):
+            adx = arm[0] if group.endswith("_l") else arm[1]
+            t = min(1.0, max(0.0, (gy - fig.ARM_SHOULDER_Y) / self._ARM_SPAN_Y))
+            return self.x + gx + adx * t, self.y + gy + hip_dy
+        return self.x + gx, self.y + gy
+
+    def _emit(self, surface, parts, stance, arm, scale, dy=0.0):
+        for p in parts:
+            col = self._fig_color(p["color"])
+            grp = p["group"]
+            if "points" in p:
+                pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
+                       for gx, gy in p["points"]]
+                if len(pts) >= 3:
+                    pygame.draw.polygon(surface, col, pts)
+            else:
+                cx, cy, r = p["circle"]
+                wx, wy = self._place(cx, cy + dy, grp, stance, arm)
+                pygame.draw.circle(surface, col, to_screen(wx, wy), max(1, int(r * scale)))
+
     def draw(self, surface):
         scale = get_scale()
 
         # Walk cycle: _advance_walk ramps walk_intensity in while moving;
         # ease it back out on any frame we didn't move. draw() is the one
-        # per-frame hook every Person (player and NPC) shares, and the cost
-        # is a single multiply for a purely cosmetic settle.
+        # per-frame hook every Person (player and NPC) shares.
         if self._walked_this_frame:
             self._walked_this_frame = False
         elif self.walk_intensity:
@@ -227,227 +204,44 @@ class Person:
             if self.walk_intensity < 0.01:
                 self.walk_intensity = 0.0
 
-        hip_dy, ankle_offsets = self._leg_stance()
+        stance = self._leg_stance()
+        arm = self._arm_swing()
+        o = self.outfit
+        helmeted = "helmet_color" in o
 
-        ground_y = self.y
-        body_bottom_y = ground_y - self.LEG_HEIGHT + hip_dy   # the hip line
-        body_top_y = body_bottom_y - self.BODY_HEIGHT
-        head_center_y = body_top_y - self.HEAD_RADIUS + self.HEAD_OVERLAP
+        def emit(parts, dy=0.0):
+            self._emit(surface, parts, stance, arm, scale, dy)
 
-        # An outfit recolors the shapes exactly as-is (no shape change) and
-        # adds a helmet ring; bare (self.outfit == {}) falls back to shaded
-        # skin tones. leg_color defaults to a darker shade of the suit.
-        boot_color = self.outfit.get("boot_color", self._shade(self.SKIN_COLOR, -35))
-        torso_color = self.outfit.get("suit_color", self.SKIN_COLOR)
-        leg_color = self.outfit.get("leg_color", self._shade(torso_color, -22))
-        helmet_color = self.outfit.get("helmet_color")
-        head_color = self._shade(self.SKIN_COLOR, 30)
-        # A helmet's inner rim overlaps the face a little, so the exposed
-        # head reads smaller than a bare one (see HELMET_FACE_COVER).
-        face_radius = self.HEAD_RADIUS - (self.HELMET_FACE_COVER if helmet_color else 0)
+        # Behind the body: backpack, shoulder spikes, helmet antenna.
+        for key in ("backpack_color", "spike_color", "antenna_color"):
+            if key in o:
+                emit(fig.ACC[key])
 
-        margin = self.OUTLINE_WIDTH / scale
+        # Torso, arms, hands, legs, boots.
+        emit(fig.BASE)
 
-        # Accessories that sit *behind* the body (backpack, shoulder
-        # spikes, helmet antenna) - drawn first so the body overlaps them.
-        self._draw_back_accessories(surface, body_top_y, body_bottom_y, head_center_y, scale)
+        # Helmet ring sits behind the front torso pieces; the face it frames
+        # is drawn later, over them.
+        if helmeted:
+            emit(fig.HELMET_RING)
 
-        # Legs + boots, drawn before the torso so its base covers the leg
-        # tops. Each leg swings about the hip; the boot rides its ankle.
-        for center_x, (ankle_dx, ankle_dy) in zip(
-            (self.x - self.LEG_SEPARATION, self.x + self.LEG_SEPARATION), ankle_offsets
-        ):
-            ankle_x = center_x + ankle_dx
-            ankle_y = ground_y + ankle_dy
-            self._fill_poly(surface, self._leg_quad(center_x, body_bottom_y, ankle_x, ankle_y, self.LEG_HALF_WIDTH + margin), self.OUTLINE_COLOR, border_px=0)
-            self._fill_poly(surface, self._leg_quad(center_x, body_bottom_y, ankle_x, ankle_y, self.LEG_HALF_WIDTH), leg_color, border_px=0)
-            boot_cy = ankle_y - self.BOOT_RADIUS_Y
-            self._fill_poly(surface, self._ngon(ankle_x, boot_cy, self.BOOT_RADIUS_X + margin, self.BOOT_RADIUS_Y + margin), self.OUTLINE_COLOR, border_px=0)
-            self._fill_poly(surface, self._ngon(ankle_x, boot_cy, self.BOOT_RADIUS_X, self.BOOT_RADIUS_Y), boot_color, border_px=0)
+        # Layered over the torso: chest plate -> sash -> collar -> belt, then
+        # the pauldrons over the arm tops.
+        for key in ("chest_plate_color", "sash_color", "collar_color", "belt_color"):
+            if key in o:
+                emit(fig.ACC[key])
+        if "shoulder_color" in o:
+            emit(fig.ACC["shoulder_color"])
 
-        outline_torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y, margin=margin)]
-        pygame.draw.polygon(surface, self.OUTLINE_COLOR, outline_torso_points)
-        torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y)]
-        pygame.draw.polygon(surface, torso_color, torso_points)
-
-        # Arms: hang from the shoulders and swing opposite the legs. Drawn
-        # over the torso so the fore/aft swing stays visible; the front
-        # accessories (pauldrons especially) then cover the shoulder joint.
-        sleeve_color = self.outfit.get("sleeve_color", torso_color)
-        arm_dx_l, arm_dx_r = self._arm_swing()
-        shoulder_y = body_top_y + self.ARM_SHOULDER_DROP
-        wrist_y = shoulder_y + self.ARM_LENGTH
-        for shoulder_x, wrist_dx in (
-            (self.x - self.ARM_SEPARATION, arm_dx_l),
-            (self.x + self.ARM_SEPARATION, arm_dx_r),
-        ):
-            wrist_x = shoulder_x + wrist_dx
-            self._fill_poly(surface, self._arm_quad(shoulder_x, shoulder_y, wrist_x, wrist_y, self.ARM_HALF_WIDTH + margin), self.OUTLINE_COLOR, border_px=0)
-            self._fill_poly(surface, self._arm_quad(shoulder_x, shoulder_y, wrist_x, wrist_y, self.ARM_HALF_WIDTH), sleeve_color, border_px=0)
-            self._fill_circle(surface, wrist_x, wrist_y, self.HAND_RADIUS + margin, self.OUTLINE_COLOR, scale, border_px=0)
-            self._fill_circle(surface, wrist_x, wrist_y, self.HAND_RADIUS, head_color, scale, border_px=0)
-
-        if helmet_color:
-            pygame.draw.circle(surface, self.OUTLINE_COLOR, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS + margin) * scale)))
-            pygame.draw.circle(surface, helmet_color, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + self.HELMET_THICKNESS) * scale)))
+        # The face, then the visor (over the eyes) or the eyes.
+        emit(fig.HELMET_FACE if helmeted else fig.BARE_HEAD)
+        if "visor_color" in o:
+            emit(fig.ACC["visor_color"], dy=self._HELM_FACE_DY if helmeted else 0.0)
         else:
-            pygame.draw.circle(surface, self.OUTLINE_COLOR, to_screen(self.x, head_center_y), max(1, int((self.HEAD_RADIUS + margin) * scale)))
+            emit(fig.EYES_HELM if helmeted else fig.EYES_BARE)
 
-        # Accessories layered *over* the torso (pauldrons, chest plate,
-        # sash, belt, collar, badge), under the head drawn next.
-        self._draw_front_accessories(surface, body_top_y, body_bottom_y, scale)
-
-        pygame.draw.circle(surface, head_color, to_screen(self.x, head_center_y), max(1, int(face_radius * scale)))
-        if self.outfit.get("visor_color"):
-            self._draw_visor(surface, head_center_y)
-        else:
-            eye_y = head_center_y + self.EYE_OFFSET_Y
-            eye_radius_px = max(1, int(self.EYE_RADIUS * scale))
-            pygame.draw.circle(surface, self.EYE_COLOR, to_screen(self.x - self.EYE_OFFSET_X, eye_y), eye_radius_px)
-            pygame.draw.circle(surface, self.EYE_COLOR, to_screen(self.x + self.EYE_OFFSET_X, eye_y), eye_radius_px)
-
-    # ---- Outfit accessory pieces ---------------------------------------
-    # Each piece is one optional color key on self.outfit (see __init__);
-    # an absent key just skips that piece, so a decorated outfit stays a
-    # pure graphics.json entry. Shapes are traced in the same game-space
-    # units as the body constants and get a thin OUTLINE_COLOR border (the
-    # body itself uses an oversized dark silhouette instead, but a stroke
-    # reads fine at accessory scale).
-    _ACCESSORY_BORDER = 2  # screen px
-
-    def _fill_poly(self, surface, points, color, border_px=_ACCESSORY_BORDER):
-        screen_points = [to_screen(px, py) for px, py in points]
-        # Strokeless, like the atlases / the body: the outline is a larger
-        # copy of the shape drawn *behind* the fill, never an edge stroke.
-        if border_px and len(screen_points) >= 3:
-            pygame.draw.polygon(surface, self.OUTLINE_COLOR,
-                                expand_polygon(screen_points, border_px))
-        pygame.draw.polygon(surface, color, screen_points)
-
-    def _fill_circle(self, surface, cx, cy, radius, color, scale, border_px=_ACCESSORY_BORDER):
-        center = to_screen(cx, cy)
-        radius_px = max(1, int(radius * scale))
-        if border_px:
-            pygame.draw.circle(surface, self.OUTLINE_COLOR, center, radius_px + border_px)
-        pygame.draw.circle(surface, color, center, radius_px)
-
-    def _draw_back_accessories(self, surface, body_top_y, body_bottom_y, head_center_y, scale):
-        outfit = self.outfit
-        sw = self.SHOULDER_HALF_WIDTH
-
-        backpack_color = outfit.get("backpack_color")
-        if backpack_color:
-            w = sw * 1.05
-            self._fill_poly(surface, [
-                (self.x - w, body_top_y - 1.5), (self.x + w, body_top_y - 1.5),
-                (self.x + w, body_bottom_y + 1.0), (self.x - w, body_bottom_y + 1.0),
-            ], backpack_color)
-
-        spike_color = outfit.get("spike_color")
-        if spike_color:
-            for side in (-1, 1):
-                base_x = self.x + side * (sw - 1)
-                self._fill_poly(surface, [
-                    (base_x - 1.7, body_top_y + 1.5), (base_x + 1.7, body_top_y + 1.5),
-                    (base_x + side * 4.5, body_top_y - 6.0),
-                ], spike_color)
-
-        antenna_color = outfit.get("antenna_color")
-        if antenna_color and outfit.get("helmet_color"):
-            r = self.HEAD_RADIUS + self.HELMET_THICKNESS
-            base = (self.x + r * 0.55, head_center_y - r * 0.55)
-            tip = (self.x + r * 0.95, head_center_y - r * 2.0)
-            self._draw_thick_line(surface, base, tip, 0.6, antenna_color)
-            self._fill_circle(surface, tip[0], tip[1], 1.3, antenna_color, scale)
-
-    def _draw_thick_line(self, surface, a, b, half_width, color):
-        """A thin line as a filled quad (+ dark quad behind) - no stroke."""
-        ax, ay = a
-        bx, by = b
-        dx, dy = bx - ax, by - ay
-        L = math.hypot(dx, dy) or 1.0
-        nx, ny = -dy / L * half_width, dx / L * half_width
-        def quad(w):
-            ox, oy = nx * w / half_width, ny * w / half_width
-            return [(ax + ox, ay + oy), (bx + ox, by + oy),
-                    (bx - ox, by - oy), (ax - ox, ay - oy)]
-        self._fill_poly(surface, quad(half_width + 0.5), self.OUTLINE_COLOR, border_px=0)
-        self._fill_poly(surface, quad(half_width), color, border_px=0)
-
-    def _draw_front_accessories(self, surface, body_top_y, body_bottom_y, scale):
-        outfit = self.outfit
-        x = self.x
-        sw = self.SHOULDER_HALF_WIDTH
-        bw = self.BASE_HALF_WIDTH
-        torso_h = body_bottom_y - body_top_y
-
-        chest_color = outfit.get("chest_plate_color")
-        if chest_color:
-            top = body_top_y + 1.5
-            bot = body_top_y + torso_h * 0.62
-            self._fill_poly(surface, [
-                (x - sw * 0.72, top), (x + sw * 0.72, top),
-                (x + bw * 1.05, bot), (x - bw * 1.05, bot),
-            ], chest_color)
-
-        sash_color = outfit.get("sash_color")
-        if sash_color:
-            ax, ay = x - sw, body_top_y + 0.5
-            bx, by = x + bw, body_bottom_y - 0.5
-            dx, dy = bx - ax, by - ay
-            length = math.hypot(dx, dy) or 1
-            nx, ny = -dy / length * 1.7, dx / length * 1.7
-            self._fill_poly(surface, [
-                (ax + nx, ay + ny), (ax - nx, ay - ny),
-                (bx - nx, by - ny), (bx + nx, by + ny),
-            ], sash_color)
-
-        belt_color = outfit.get("belt_color")
-        if belt_color:
-            top = body_bottom_y - 3.0
-            bot = body_bottom_y - 0.5
-            self._fill_poly(surface, [
-                (x - bw - 0.8, top), (x + bw + 0.8, top),
-                (x + bw + 0.8, bot), (x - bw - 0.8, bot),
-            ], belt_color)
-            buckle = self._shade(belt_color, 45)
-            mid = (top + bot) / 2
-            self._fill_poly(surface, [
-                (x - 1.1, mid - 1.1), (x + 1.1, mid - 1.1),
-                (x + 1.1, mid + 1.1), (x - 1.1, mid + 1.1),
-            ], buckle, border_px=1)
-
-        collar_color = outfit.get("collar_color")
-        if collar_color:
-            top = body_top_y - 0.6
-            bot = body_top_y + 2.4
-            self._fill_poly(surface, [
-                (x - sw * 0.62, top), (x + sw * 0.62, top),
-                (x + sw * 0.70, bot), (x - sw * 0.70, bot),
-            ], collar_color)
-
-        shoulder_color = outfit.get("shoulder_color")
-        if shoulder_color:
-            for sx in (x - sw - 1.2, x + sw + 1.2):
-                self._fill_circle(surface, sx, body_top_y + 1.8, 2.9, shoulder_color, scale)
-
-        badge_color = outfit.get("badge_color")
-        if badge_color:
-            bx, by = x + 2.4, body_top_y + torso_h * 0.32
-            s = 1.8
-            self._fill_poly(surface, [
-                (bx, by - s), (bx + s, by), (bx, by + s), (bx - s, by),
-            ], badge_color, border_px=1)
-
-    def _draw_visor(self, surface, head_center_y):
-        x = self.x
-        w = self.HEAD_RADIUS * 1.5
-        top = head_center_y - 1.7
-        bot = head_center_y + 1.9
-        self._fill_poly(surface, [
-            (x - w, top), (x + w, top),
-            (x + w * 0.88, bot), (x - w * 0.88, bot),
-        ], self.outfit["visor_color"])
+        if "badge_color" in o:
+            emit(fig.ACC["badge_color"])
 
     def get_distance(self, px, py):
         return math.sqrt((self.x - px) ** 2 + (self.y - py) ** 2)
