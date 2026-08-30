@@ -264,9 +264,24 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
              + [(70 - dx, y) for dx, y in reversed(_side)])
     P.append(opoly(torso, suit, d=1.5))
 
+    # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
+    # the belt line. Drawn BEFORE the arms so the arm hangs over it and only
+    # its inner edge / lower end shows past the hand (it never sits in front
+    # of the arm); the belt, drawn later, laps its top strap.
+    _grp("body")
+    if pod:
+        P.append(opoly([(80, waist_y - 6), (86, waist_y - 6), (85, waist_y), (81, waist_y)], pod))  # hanger strap
+        P.append(opoly(rrect(78, waist_y - 2, 12, 16, 2), pod, d=1.0))
+        P.append(bar(80, waist_y + 4, 88, waist_y + 4, 0.8, "#2a2a30"))                             # flap seam
+    if torch:                                     # a stowed cutter - canister + nozzle, not lit
+        P.append(opoly(rrect(79, waist_y - 1, 9, 15, 1), torch, d=1.0))
+        P.append(poly([(83, waist_y - 1), (88, waist_y - 7), (91, waist_y - 4),
+                       (86, waist_y + 1)], "#5a5560"))          # nozzle head
+        P.append(circ(90, waist_y - 5, 1.2, "#8a8590"))         # tip
+
     # arms - a rounded shoulder cap that tucks against the torso side (no
-    # armpit gap) then a straight shaft to the wrist. Drawn over the torso;
-    # shoulder pads (later) cover the very top. ab is the wrist line.
+    # armpit gap) then a straight shaft to the wrist. Drawn over the torso and
+    # the hip kit; shoulder pads (later) cover the very top. ab is the wrist line.
     if arms:
         ab = 120
         _grp("arm_l"); P.append(opoly([(41, 84), (43, 72), (49, 66), (54, 71),
@@ -320,16 +335,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _gate("collar_color")
         P.append(opoly([(55, 62), (85, 62), (81, 74), (59, 74)], collar, d=1.1))
         _gate(None)
-    if belt:
+    if belt:                                       # over the top of the hip kit's strap
         _gate("belt_color")
         P.append(opoly(rrect(70 - waist_hw - 4, belt_y, 2 * (waist_hw + 4), 9, 2), belt, d=1.1))
         P.append(poly(rrect(66, belt_y + 2, 8, 5, 1), buckle or "#7a7a84"))
         _gate(None)
-    if pod:                                        # one pouch, hung off the waist
-        P.append(opoly(rrect(84, waist_y - 2, 10, 16, 2), pod, d=1.0))
-    if torch:                                      # hip torch + little flame, off the waist
-        P.append(opoly(rrect(88, waist_y + 2, 8, 14, 1), torch, d=1.0))
-        P.append(poly([(90, waist_y + 2), (92, waist_y - 8), (94, waist_y + 2)], "#ff8c3c"))
 
     if shoulders:                                # sit outboard + high, over the arm tops
         _gate("shoulder_color")
