@@ -155,9 +155,13 @@ class IndoorPathfinder:
 
     @staticmethod
     def _segment_walkable(a, b, walkable_fn, cell):
-        """Whether every sample along a-b (spaced ~cell/2) is walkable."""
+        """Whether every sample along a-b (spaced ~cell/3) is walkable. The
+        spacing is deliberately finer than the grid: a diagonal leg can
+        graze the corner of a footprint or wall between two coarser samples,
+        and the string-pull that calls this would then hand a walker a
+        waypoint it can't actually reach in a straight line."""
         dist = math.hypot(b[0] - a[0], b[1] - a[1])
-        steps = max(1, int(dist / (cell / 2)))
+        steps = max(1, int(dist / (cell / 3)))
         for i in range(steps + 1):
             t = i / steps
             if not walkable_fn(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t):

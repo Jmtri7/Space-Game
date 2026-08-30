@@ -119,6 +119,41 @@ def _polygon_bounds(poly):
     return min(xs), min(ys), max(xs), max(ys)
 
 
+def _silhouette_local_bounds(building_type):
+    """(min_x, min_y, max_x, max_y) of a building_type's drawn silhouette in
+    its own local space (anchor at 0,0; +y downward, so max_y is the base
+    the object sits on). Reads the real geometry that gets drawn - the
+    `parts` list first (see WorldObject.draw_parts), then `local_points`,
+    then `width`/`height` (rect) or `radius` (circle) - because a stale
+    `height` on a `parts`-authored building can overstate the drawn extent
+    by tens of units, and the collision footprint is anchored to this
+    (see _building_footprint)."""
+    parts = building_type.get("parts")
+    xs, ys = [], []
+    if parts:
+        for part in parts:
+            if "circle" in part:
+                cx, cy, r = part["circle"]
+                xs += [cx - r, cx + r]
+                ys += [cy - r, cy + r]
+            else:
+                for px, py in part.get("points") or part.get("line") or []:
+                    xs.append(px)
+                    ys.append(py)
+    if not xs:
+        pts = building_type.get("local_points")
+        if pts:
+            xs = [p[0] for p in pts]
+            ys = [p[1] for p in pts]
+    if not xs:
+        if building_type.get("shape") == "circle":
+            r = building_type.get("radius", 50)
+            return (-r, -r, r, r)
+        w, h = building_type.get("width", 100), building_type.get("height", 100)
+        return (0.0, 0.0, float(w), float(h))
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
 def _polygon_centroid(poly):
     return (sum(p[0] for p in poly) / len(poly), sum(p[1] for p in poly) / len(poly))
 
@@ -1173,6 +1208,12 @@ class LocationScreen(ScreenBase):
             else:
                 pygame.draw.rect(surface, glass_color, (px - half, py - half, half * 2, half * 2))
 
+    # World units the collision box is allowed to poke past the drawn base
+    # of a building/furniture piece on the near (camera) side - a small lip
+    # so a person can't walk their feet visually into the object's front
+    # face, without the box floating in open floor below the graphic.
+    FOOTPRINT_FRONT_LIP = 8
+
     def _building_footprint(self, structure):
         """World-space collision box (fx, fy, fw, fh) for one structure, or
         None if it isn't a building (decorative circle/rect/polygon terrain,
@@ -1185,16 +1226,21 @@ class LocationScreen(ScreenBase):
         _draw_culture_building), so making the whole visual height solid
         would block a player from ever standing near the far side even
         though the painter's-algorithm sort in draw() already draws them
-        behind it correctly. Sized and anchored from building_type's own
-        "footprint" (roughly square/city-block, not a sliver spanning the
-        building's full height) rather than derived from width/height,
-        since e.g. drossholt_tower is only 80 wide but 220 tall - a footprint
-        that thin would make its base nearly impossible to walk around.
+        behind it correctly. Sized from building_type's own "footprint"
+        (roughly square/city-block, not a sliver spanning the building's
+        full height) rather than derived from width/height, since e.g.
+        drossholt_tower is only 80 wide but 220 tall - a footprint that thin
+        would make its base nearly impossible to walk around.
 
-        Anchor point matches _structure_depth's/_draw_culture_building's own
-        per-shape convention: "rect" is authored top-left, so ground level is
-        its bottom edge (anchor + height); "circle"/"polygon" are authored
-        with ground level at the anchor itself.
+        The box is anchored so its **back edge** sits `depth` behind the
+        drawn silhouette's own bottom edge and its front edge sits at that
+        bottom edge (plus FOOTPRINT_FRONT_LIP) - not centred on the anchor
+        point, which for several `parts`/`local_points` furniture pieces
+        (the resin bench, lounge pod, concierge desk) is well above where
+        the art actually meets the floor, leaving a slab of collision
+        hanging in the open floor in front of the object. The silhouette's
+        bottom/centre come from `local_points` (polygon), `width`/`height`
+        (rect, authored top-left) or `radius` (circle, authored centred).
         """
         building_type_id = structure.get("building_type")
         if not building_type_id:
@@ -1204,12 +1250,11 @@ class LocationScreen(ScreenBase):
         if not footprint:
             return None
         fw, fd = footprint.get("width", 100), footprint.get("depth", 100)
-        if building_type.get("shape", "rect") == "rect":
-            ground_x = structure["x"] + building_type.get("width", 100) / 2
-            ground_y = structure["y"] + building_type.get("height", 100)
-        else:  # circle: center is ground level; polygon: authored at ground level
-            ground_x, ground_y = structure["x"], structure["y"]
-        return (ground_x - fw / 2, ground_y - fd / 2, fw, fd)
+        sx, sy = structure["x"], structure["y"]
+        min_x, _, max_x, max_y = _silhouette_local_bounds(building_type)
+        base_cx = sx + (min_x + max_x) / 2
+        base_y = sy + max_y
+        return (base_cx - fw / 2, base_y - fd, fw, fd + self.FOOTPRINT_FRONT_LIP)
 
     def _structure_depth(self, structure):
         """Y-sort key for a structure: the ground-level depth a walking

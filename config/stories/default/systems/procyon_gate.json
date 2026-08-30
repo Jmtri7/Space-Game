@@ -224,8 +224,8 @@
           },
           {
             "name": "Corporal Vane",
-            "x": 1200,
-            "y": 620,
+            "x": 1220,
+            "y": 730,
             "role": "resident",
             "outfit": "station_official",
             "greeting": "Off shift. Barracks are that block - not that you asked.",

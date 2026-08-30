@@ -12,7 +12,11 @@
       {
         "text": "Walk around the concourse - WASD or the arrow keys.",
         "complete_flag": "walked_interior",
-        "reset_on_activation": true
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Sela Cordova",
+          "text": "You're on the tour - it's tracking in your Mission Log (N). Let's start with your feet: walk a lap of the concourse on WASD or the arrow keys."
+        }
       },
       {
         "text": "Target one of the people here - press [ or ] to cycle, or click them.",

@@ -915,10 +915,10 @@ class TestBuildingFootprintCollision(unittest.TestCase):
     bug: player/NPCs used to be able to walk straight through a building's
     drawn silhouette, since can_move_to() only ever checked room walls or
     the open-world bounds. Uses a real building_type from the default
-    story's building_types.json (drossholt_bunker: 140x90, anchored
-    top-left, so its footprint - see LocationScreen._building_footprint -
-    sits at world x:500-640, y:545-635) rather than a synthetic one, so
-    this breaks if that config's shape/footprint fields are renamed."""
+    story's building_types.json (drossholt_bunker), so this breaks if that
+    config's shape/footprint fields are renamed. The footprint (see
+    LocationScreen._building_footprint) is anchored so its front edge sits
+    at the drawn silhouette's own base, not centred on the anchor point."""
 
     def _make_screen_with_bunker(self):
         config = {
@@ -927,18 +927,29 @@ class TestBuildingFootprintCollision(unittest.TestCase):
         }
         return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
 
-    def test_footprint_is_computed_from_the_building_type(self):
-        location = self._make_screen_with_bunker()
-        self.assertEqual(location.building_footprints, [(500.0, 545.0, 140, 90)])
+    def _bunker_fp(self):
+        return self._make_screen_with_bunker().building_footprints[0]
+
+    def test_footprint_front_edge_sits_at_the_drawn_base(self):
+        from game.screens.location_screen import _silhouette_local_bounds
+        from game.utils import get_building_type
+        _, _, _, base = _silhouette_local_bounds(get_building_type("default", "drossholt_bunker"))
+        fx, fy, fw, fh = self._bunker_fp()
+        # box back edge = base - depth; front edge = base + the small lip
+        self.assertAlmostEqual(fy, 500 + base - 90)
+        self.assertAlmostEqual(fy + fh, 500 + base + LocationScreen.FOOTPRINT_FRONT_LIP)
+        self.assertEqual(fw, 140)
 
     def test_cannot_walk_into_the_footprint(self):
         location = self._make_screen_with_bunker()
-        self.assertFalse(location.can_move_to(570, 590))  # dead center of the bunker
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertFalse(location.can_move_to(fx + fw / 2, fy + fh / 2))  # dead center
 
     def test_can_walk_around_the_sides(self):
         location = self._make_screen_with_bunker()
-        self.assertTrue(location.can_move_to(480, 590))  # just left of the footprint
-        self.assertTrue(location.can_move_to(660, 590))  # just right of the footprint
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertTrue(location.can_move_to(fx - 20, fy + fh / 2))   # just left
+        self.assertTrue(location.can_move_to(fx + fw + 20, fy + fh / 2))  # just right
 
     def test_can_walk_behind_it(self):
         """North of the building (smaller y) is open ground once past the
@@ -946,7 +957,8 @@ class TestBuildingFootprintCollision(unittest.TestCase):
         the building and be drawn behind it (see draw()'s y-sort), instead
         of the whole tall silhouette being solid all the way through."""
         location = self._make_screen_with_bunker()
-        self.assertTrue(location.can_move_to(570, 400))
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertTrue(location.can_move_to(fx + fw / 2, fy - 40))
 
     def test_decorative_structures_with_no_building_type_have_no_footprint(self):
         config = {
@@ -980,9 +992,9 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
         return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
 
     def test_pilot_routes_around_the_building_instead_of_getting_stuck(self):
-        # Bunker footprint is x:500-640, y:545-635 (see
-        # TestBuildingFootprintCollision) - start directly north of it,
-        # target directly south, so dx is 0 for the entire direct line.
+        # Start directly north of the bunker, target directly south, so dx
+        # is 0 for the entire direct line and the wall-slide fallback's
+        # axis-only candidates never move the pilot on their own.
         target_x, target_y = 570, 700
         location = self._make_screen_with_bunker(target_x, target_y)
         person = Person(570, 400)
@@ -1041,9 +1053,10 @@ class TestWanderRoutineRespectsWalls(unittest.TestCase):
             "structures": [{"x": 500, "y": 500, "building_type": "drossholt_bunker"}],
         }
         location = LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
-        # Right against the bunker's near (north) edge, well within
-        # WANDER_RADIUS of stepping into it.
-        person = Person(570, 540)
+        # Just north of the bunker's footprint, well within WANDER_RADIUS
+        # of stepping into it.
+        fx, fy, fw, fh = location.building_footprints[0]
+        person = Person(fx + fw / 2, fy - 15)
         character = Character(person, role="resident", can_move_to=location.can_move_to)
 
         for _ in range(2000):
@@ -4011,6 +4024,7 @@ class TestStationTour(unittest.TestCase):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         concourse = game_screen.get_interior_screen(game_screen.station, "default")
         sela = next(c for c in concourse.npcs if c.person.name == "Sela Cordova")
+        self._game_screen = game_screen  # for tests that need the docked mission tick
         return concourse, sela
 
     def _accept_tour(self, concourse, sela):
@@ -4101,6 +4115,28 @@ class TestStationTour(unittest.TestCase):
         self.assertIn("station_tour", possessions.completed_missions)
         self.assertTrue(possessions.flags.get("station_tour_done"))
         self.assertFalse(possessions.flags.get("station_guide_escorting"))
+
+    def test_accepting_the_tour_advances_stage_zero_and_prompts_without_movement(self):
+        """Regression: after accepting Sela's offer, stage 0 ("accept the
+        offer") completes on the very next docked simulation tick - the
+        same `game_screen.update_physics()` main.py runs every frame while
+        docked, which is where check_mission_progress lives - with zero
+        player movement. That tick also delivers stage 1's one_way_message,
+        so the player gets an immediate in-interior prompt instead of the
+        tour appearing to do nothing until they happen to walk."""
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        possessions = concourse.player.possessions
+        self.assertEqual(possessions.missions["station_tour"], 0)
+
+        before = len(possessions.message_log)
+        self._game_screen.update_physics()  # one docked frame, no movement
+
+        self.assertEqual(possessions.missions["station_tour"], 1,
+                         "stage 0 must complete from the docked mission tick alone")
+        walk_prompts = [m for m in possessions.message_log[:len(possessions.message_log) - before]
+                        if m["sender"] == "Sela Cordova" and "walk" in m["text"].lower()]
+        self.assertTrue(walk_prompts, "stage 1's walk prompt should land immediately on accept")
 
     def test_message_log_banner_and_alert_fire_when_the_shared_log_grows(self):
         concourse, _ = self._concourse()

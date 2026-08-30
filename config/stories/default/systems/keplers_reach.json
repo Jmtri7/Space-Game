@@ -197,8 +197,8 @@
           },
           {
             "name": "Sela Drummond",
-            "x": 1150,
-            "y": 450,
+            "x": 1160,
+            "y": 350,
             "behavior": "wander",
             "outfit": "drossholt_tallyman",
             "greeting": "Prices are fair. Mostly.",
