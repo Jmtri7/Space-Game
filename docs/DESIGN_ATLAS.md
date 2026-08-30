@@ -11,25 +11,29 @@ Each atlas's HTML **source is committed** under [`docs/atlases/`](atlases/); the
 published Claude Artifact is a *render* of that file, at a stable URL. This doc
 is the how: how to make one, how to keep it honest, and which ones exist.
 
-## Planned restructure (not done yet)
+## Restructure in progress
 
 The three-atlas split (Resin & Rivets = 2 cultures, Standard Issue = body +
 Federation) is being pulled apart into **one atlas per subject**, each with
 full coverage (outfits · ships · stations · decorations · city & station
-layouts):
+layouts). Shared page shell lives in
+[`docs/atlases/atlas_shell.py`](atlases/atlas_shell.py) (`css()` + `DEFS`),
+per-atlas accent colour.
 
-| planned atlas | from | holds |
-|---|---|---|
-| **Common Kit** | Standard Issue ch. 01–04 | the shared `Person` body + walk cycle + the culture-neutral / civilian outfits (space suit, flight suit, mechanic, dockworker, medic, …) |
-| **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: ships, station, buildings, interior, Federation-specific crew/command outfits, Procyon Gate layouts |
-| **Vherathi Concord** | Resin & Rivets, Vherathi half | grown resin hulls, stations, outfits, buildings, decorations, station + moon-city layouts |
-| **Drossholt Company** | Resin & Rivets, Drossholt half | bolted-salvage hulls, stations, outfits, buildings, decorations, layouts |
-| **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only |
+| atlas | from | holds | state |
+|---|---|---|---|
+| **Common Kit** | Standard Issue ch. 01–04 | shared `Person` body (cinched-waist anatomy + accessory slot map) + the culture-neutral civilian / service outfits, each with a role detail | **built** — `gen_common.py` + `common_kit.py` |
+| **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: ships, station, buildings, interior, Federation crew/command outfits, Procyon Gate layouts | planned |
+| **Vherathi Concord** | Resin & Rivets, Vherathi half | grown resin hulls, stations, outfits, buildings, decorations, station + moon-city layouts | planned |
+| **Drossholt Company** | Resin & Rivets, Drossholt half | bolted-salvage hulls, stations, outfits, buildings, decorations, layouts | planned |
+| **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only | done |
 
-Until that lands, `standard-issue.html` and `resin-and-rivets.html` are the
-record but their **figure specimens are behind `gen_si.figure_parts`** (which
-carries the cinched-waist body below) — re-running `gen_si.py` / `gen_rr.py`
-will redraw them, and the prose gets rewritten as each culture is split out.
+Once **Sol Federation** exists, `standard-issue.html` retires (its content is
+split between Common Kit and Sol Federation). Likewise `resin-and-rivets.html`
+retires once both **Vherathi Concord** and **Drossholt Company** exist. Until
+then those two are still the record, but their **figure specimens are behind
+`gen_si.figure_parts`** (the cinched-waist body below) — re-running
+`gen_si.py` / `gen_rr.py` redraws them.
 
 **Body: the cinched waist.** `figure_parts` now pinches the torso to a waist
 about halfway up the standing figure and flares back to a hip nearly as wide
@@ -43,10 +47,24 @@ has it; `past-the-reach.html` shows it; `standard-issue.html` /
 
 | Atlas | Source | Published URL |
 |---|---|---|
-| **Resin & Rivets** | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| **Standard Issue** | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Common Kit** | [`docs/atlases/common-kit.html`](atlases/common-kit.html) | https://claude.ai/code/artifact/801028b3-1b57-4883-b19a-ce6bdac213dc |
+| **Resin & Rivets** *(retires after the Vherathi/Drossholt split)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
+| **Standard Issue** *(retires after Sol Federation exists)* | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 | **Past the Reach** | [`docs/atlases/past-the-reach.html`](atlases/past-the-reach.html) | https://claude.ai/code/artifact/d822ff88-5b66-4203-8b3c-e9c7459052fb |
 
+- **Common Kit** — the shared `Person` body and the culture-neutral outfits,
+  split out of Standard Issue. **Body chapter:** a labelled cinched-waist
+  anatomy plate + the accessory slot map (both **shipped** — `person_figure.py`
+  carries the waist / rounded shoulders / belts-at-waist). **Outfit chapters:**
+  ~15 `graphics.json` civilian / service outfits (space suit, flight suit,
+  mechanic, dockworker, miner, security, station command, marshal, medic,
+  surgeon, researcher, civilian, smuggler, ranger, bounty hunter) redrawn on
+  the new body, each with a **role-distinguishing detail** — a mechanic's tool
+  belt + lamp, a dockworker's hi-vis tabard, a smuggler's hood, a surgeon's
+  mask. The recoloured base is buildable now; the role details are new geometry
+  (mockup) and would land via a `figure_signature` table keyed by outfit id.
+  Built by [`gen_common.py`](atlases/gen_common.py) +
+  [`common_kit.py`](atlases/common_kit.py). Accent: steel-cyan `#8fb9c8`.
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
   shipped** as of story `1.10.0` — both station interiors and both moon cities are
