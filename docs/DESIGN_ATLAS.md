@@ -11,6 +11,34 @@ Each atlas's HTML **source is committed** under [`docs/atlases/`](atlases/); the
 published Claude Artifact is a *render* of that file, at a stable URL. This doc
 is the how: how to make one, how to keep it honest, and which ones exist.
 
+## Planned restructure (not done yet)
+
+The three-atlas split (Resin & Rivets = 2 cultures, Standard Issue = body +
+Federation) is being pulled apart into **one atlas per subject**, each with
+full coverage (outfits · ships · stations · decorations · city & station
+layouts):
+
+| planned atlas | from | holds |
+|---|---|---|
+| **Common Kit** | Standard Issue ch. 01–04 | the shared `Person` body + walk cycle + the culture-neutral / civilian outfits (space suit, flight suit, mechanic, dockworker, medic, …) |
+| **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: ships, station, buildings, interior, Federation-specific crew/command outfits, Procyon Gate layouts |
+| **Vherathi Concord** | Resin & Rivets, Vherathi half | grown resin hulls, stations, outfits, buildings, decorations, station + moon-city layouts |
+| **Drossholt Company** | Resin & Rivets, Drossholt half | bolted-salvage hulls, stations, outfits, buildings, decorations, layouts |
+| **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only |
+
+Until that lands, `standard-issue.html` and `resin-and-rivets.html` are the
+record but their **figure specimens are behind `gen_si.figure_parts`** (which
+carries the cinched-waist body below) — re-running `gen_si.py` / `gen_rr.py`
+will redraw them, and the prose gets rewritten as each culture is split out.
+
+**Body: the cinched waist.** `figure_parts` now pinches the torso to a waist
+about halfway up the standing figure and flares back to a hip nearly as wide
+as the chest — an hourglass whether or not an outfit covers it. **Every belt,
+sash end, hip pouch and torch anchors at the waist**, not the hip line. Baked
+into `game/world/person_figure.py` via `build_person_figure.py`, so the game
+has it; `past-the-reach.html` shows it; `standard-issue.html` /
+`resin-and-rivets.html` pick it up on their next regenerate.
+
 ## Current atlases
 
 | Atlas | Source | Published URL |

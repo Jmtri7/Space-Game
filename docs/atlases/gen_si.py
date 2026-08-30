@@ -202,7 +202,15 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     sleeve = sleeve or suit
     P = []
     hip_y = 156 if (torso_long or coat) else 150
-    hw = 16 if (torso_long or coat) else 14        # bottom half-width - fits inside the belt
+    hw = 21 if (torso_long or coat) else 19        # hip half-width - nearly the chest's (21),
+                                                   # so the torso reads as an hourglass; legs hang inside it
+    # A cinched waist about halfway up the standing figure (well above the hip
+    # line). Every belt, sash end and hip pouch anchors here (waist_y), not at
+    # the hip; the torso pinches to waist_hw and flares back out to the hip
+    # below - so a loose coat still drapes from a real waist.
+    waist_y = 111
+    waist_hw = hw - 7         # a gentle pinch between chest and hip
+    belt_y = waist_y - 4
     foot_y = 190 if legged else 166
 
     _grp("body"); _gate(None)
@@ -230,11 +238,19 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if blade:                                    # grown guard-blade down one arm
         P.append(opoly([(38, 56), (46, 56), (49, 138), (45, 158), (40, 150)], blade, d=1.0))
 
-    # torso - tapers in quickly below the chest so the belt wraps its top
+    # torso - an hourglass: wide chest, a gradual pinch to the cinched waist,
+    # then a gradual flare back to a hip almost as wide as the chest, so the
+    # waist reads even when a loose outfit covers it. Many points on the
+    # cinch so it curves rather than kinks.
     _grp("body"); _gate(None)
-    torso = [(70 - hw, hip_y), (52, hip_y - 22), (49, 86), (52, 72), (58, 64),
-             (66, 61), (74, 61), (82, 64), (88, 72), (91, 86),
-             (88, hip_y - 22), (70 + hw, hip_y)]
+    # left silhouette, hip -> chest (dx from centre, y); mirrored for the right
+    _cinch = [(-hw, hip_y), (-hw, hip_y - 5), (-(hw - 1), waist_y + 27),
+              (-(waist_hw + 4), waist_y + 15), (-(waist_hw + 1), waist_y + 5),
+              (-waist_hw, waist_y), (-(waist_hw + 3), waist_y - 8),
+              (-(hw - 4), waist_y - 18), (-19, 92), (-21, 84)]
+    torso = ([(70 + dx, y) for dx, y in _cinch]
+             + [(52, 72), (58, 64), (66, 61), (74, 61), (82, 64), (88, 72)]
+             + [(70 - dx, y) for dx, y in reversed(_cinch)])
     P.append(opoly(torso, suit, d=1.5))
 
     # arms - short (~leg length); shoulder pads (later) cover the tops
@@ -247,9 +263,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
 
     _grp("body")
     if hipline:
-        P.append(dashed_bar(53, hip_y, 87, hip_y, 1.1, accent))
-    if band:
-        P.append(opoly([(50, 103), (90, 103), (89, 117), (51, 117)], band, d=1.0))
+        P.append(dashed_bar(70 - waist_hw - 2, waist_y, 70 + waist_hw + 2, waist_y, 1.1, accent))
+    if band:                                      # chest band, above the belt
+        P.append(opoly([(50, 92), (90, 92), (89, 105), (51, 105)], band, d=1.0))
 
     # legs + boots (or the old foot oval)
     if legged:
@@ -281,9 +297,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                 for ry in (84, 100):
                     P.append(circ(rx, ry, 1.4, rivets))
         _gate(None)
-    if sash:                                      # ends at the belt line, never past the hem
+    if sash:                                      # ends at the cinched waist, tucked under the belt
         _gate("sash_color")
-        P.append(opoly([(50, 70), (61, 70), (76, hip_y - 4), (65, hip_y - 4)], sash, d=1.1))
+        P.append(opoly([(50, 70), (61, 70), (74, waist_y - 2), (63, waist_y - 2)], sash, d=1.1))
         _gate(None)
     if collar:
         _gate("collar_color")
@@ -291,14 +307,14 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _gate(None)
     if belt:
         _gate("belt_color")
-        P.append(opoly(rrect(54, 142, 32, 9, 2), belt, d=1.1))
-        P.append(poly(rrect(66, 144, 8, 5, 1), buckle or "#7a7a84"))
+        P.append(opoly(rrect(70 - waist_hw - 4, belt_y, 2 * (waist_hw + 4), 9, 2), belt, d=1.1))
+        P.append(poly(rrect(66, belt_y + 2, 8, 5, 1), buckle or "#7a7a84"))
         _gate(None)
-    if pod:                                        # one hip pod / pouch
-        P.append(opoly(rrect(88, 116, 10, 16, 2), pod, d=1.0))
-    if torch:                                      # Cutterman's hip torch + little flame
-        P.append(opoly(rrect(92, 122, 8, 14, 1), torch, d=1.0))
-        P.append(poly([(94, 122), (96, 112), (98, 122)], "#ff8c3c"))
+    if pod:                                        # one pouch, hung off the waist
+        P.append(opoly(rrect(84, waist_y - 2, 10, 16, 2), pod, d=1.0))
+    if torch:                                      # hip torch + little flame, off the waist
+        P.append(opoly(rrect(88, waist_y + 2, 8, 14, 1), torch, d=1.0))
+        P.append(poly([(90, waist_y + 2), (92, waist_y - 8), (94, waist_y + 2)], "#ff8c3c"))
 
     if shoulders:                                # sit outboard + high, over the arm tops
         _gate("shoulder_color")

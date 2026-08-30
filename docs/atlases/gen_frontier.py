@@ -438,6 +438,10 @@ footer{{border-top:1px solid var(--line);padding:26px 0 60px;font-family:"IBM Pl
       wait on a parts-style figure renderer, the same as the Standard Issue outfit
       chapters. Three of these cultures are brand new (Kaethar, Vetl, Salt Crows);
       the other four refine the earlier frontier sketches with far more detail.
+      The shared body here carries the <b>cinched waist</b> now in
+      <code class="f">gen_si.figure_parts</code> / <code class="f">person_figure.py</code>
+      &mdash; belts sit at the waist, roughly halfway up, and every torso is an
+      hourglass whether or not an outfit covers it.
     </div>
     <dl class="legend" id="read">
       <div><dt>Left &mdash; specimen</dt><dd>Ship top-down (<code class="f">240&times;200</code>) or figure front-view (<code class="f">140&times;210</code>) on void-black, so silhouettes and palettes compare directly.</dd></div>

@@ -223,8 +223,8 @@ def federation():
 def kaethar():
     base = dict(coat=True, torso_long=True, suit="#2b3040", boot="#171b26",
                 leg="#20242f", sleeve="#2b3040", belt="#12151d")
-    # straight-edged greatcoat skirt below the belt (sharp rectangular corners)
-    pre = opoly_s([(50, 150), (90, 150), (94, 186), (46, 186)], "#242938")
+    # straight-edged greatcoat skirt, hanging from the cinched waist (sharp corners)
+    pre = opoly_s([(52, 112), (88, 112), (95, 178), (45, 178)], "#242938")
     p = []
     # angular full helm: horizontal red sensor bar + peaked crest
     p.append(opoly_s([(55, 56), (56, 40), (70, 32), (84, 40), (85, 56),
@@ -312,10 +312,10 @@ def salt_crows():
         tx = 56 + (88 - 56) * t
         ty = 66 + (128 - 66) * t
         p.append(opoly_s(rrect(tx - 2, ty - 4, 4, 8, 1), "#b8b0a0"))
-    # trophy trinkets at the belt
-    for x in (60, 66, 80):
-        p.append(bar(x, 150, x, 156, 0.7, "#c98a3c"))
-        p.append(circ(x, 158, 1.6, "#e8e2d4"))
+    # trophy trinkets hung off the waist belt
+    for x in (58, 64, 82):
+        p.append(bar(x, 112, x, 120, 0.7, "#c98a3c"))
+        p.append(circ(x, 122, 1.6, "#e8e2d4"))
     # the salt-crow bird mark stencilled on the chest
     p.append(poly([(66, 116), (74, 113), (80, 118), (75, 119), (78, 125),
                    (72, 120), (67, 125), (69, 118), (63, 118)], "#e8e2d4"))
