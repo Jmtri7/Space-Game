@@ -49,6 +49,19 @@ class NavGrid:
             [walkable_fn(*self.cell_center(c, r)) for c in range(self.cols)]
             for r in range(self.rows)
         ]
+        # A walkable cell touching a wall/footprint on any of its 8 sides -
+        # A* pays a small surcharge to cross one (see _astar), so a route
+        # runs down the middle of a corridor and only hugs a wall where
+        # there's genuinely no room not to. Without this the grid path
+        # traces the exact wall line and a walker wall-sliding along it
+        # gets pinned in the corner where two rooms meet.
+        self.near_wall = [
+            [self.walkable[r][c] and any(
+                not (0 <= c + dc < self.cols and 0 <= r + dr < self.rows and self.walkable[r + dr][c + dc])
+                for dc in (-1, 0, 1) for dr in (-1, 0, 1) if dc or dr)
+             for c in range(self.cols)]
+            for r in range(self.rows)
+        ]
 
     def cell_center(self, c, r):
         return (self.min_x + (c + 0.5) * self.cell, self.min_y + (r + 0.5) * self.cell)
@@ -80,28 +93,49 @@ class IndoorPathfinder:
 
     @classmethod
     def find_path(cls, grid, start, goal):
-        """Waypoints (world-space, ending at `goal`) from `start` to `goal`
-        across `grid`. Returns `[goal]` unchanged when the goal isn't in the
-        walkable area at all, when either endpoint has no reachable walkable
-        cell, or when A* finds no path between them - the caller wall-slides
-        that direct leg as its safety net."""
-        if not grid.walkable_fn(*goal):
-            return [goal]
+        """Waypoints (world-space) from `start` toward `goal` across `grid`.
+
+        When `goal` itself isn't walkable (an NPC standing on a building
+        footprint, a hair outside a room) the path routes to the nearest
+        walkable cell to it and *ends there* - so a DockRoutine walker
+        arrives right next to its target and stops, instead of the old
+        behaviour of returning `[goal]` unchanged and wall-sliding against
+        the obstacle forever. Returns `[goal]` only when neither endpoint
+        has any reachable walkable cell or A* finds no route - the caller
+        wall-slides that direct leg as its last-ditch safety net."""
+        goal_walkable = grid.walkable_fn(*goal)
         start_cell = grid._snap(*grid._to_cell(start))
         goal_cell = grid._snap(*grid._to_cell(goal))
         if start_cell is None or goal_cell is None:
             return [goal]
 
+        # An unwalkable goal that's still *near* the walkable area (an NPC on
+        # a footprint, just outside a room) routes to the nearest walkable
+        # point and ends there, so a walker arrives beside it and stops. A
+        # goal nowhere near the walkable area falls back to the bare goal
+        # for the caller to wall-slide.
+        end = goal
+        if not goal_walkable:
+            snapped = grid.cell_center(*goal_cell)
+            if math.hypot(snapped[0] - goal[0], snapped[1] - goal[1]) > grid.cell * 3:
+                return [goal]
+            end = snapped
+
         cell_path = cls._astar(grid, start_cell, goal_cell)
         if cell_path is None:
             return [goal]
 
-        points = [start] + [grid.cell_center(c, r) for c, r in cell_path[1:-1]] + [goal]
+        points = [start] + [grid.cell_center(c, r) for c, r in cell_path[1:-1]] + [end]
         return cls._string_pull(points, grid.walkable_fn, grid.cell)
+
+    # Extra step cost for stepping onto a cell that touches a wall - keeps
+    # A* off the exact wall line without ever forbidding a tight passage
+    # (see NavGrid.near_wall).
+    WALL_HUG_PENALTY = 1.5
 
     @staticmethod
     def _astar(grid, start, goal):
-        walkable, cols, rows = grid.walkable, grid.cols, grid.rows
+        walkable, near_wall, cols, rows = grid.walkable, grid.near_wall, grid.cols, grid.rows
 
         def neighbors(c, r):
             for dc, dr in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
@@ -110,7 +144,10 @@ class IndoorPathfinder:
                     continue
                 if dc and dr and not (walkable[r][nc] and walkable[nr][c]):
                     continue  # don't cut a diagonal through a wall corner
-                yield (nc, nr), (DIAG_COST if dc and dr else 1.0)
+                cost = DIAG_COST if dc and dr else 1.0
+                if near_wall[nr][nc]:
+                    cost += IndoorPathfinder.WALL_HUG_PENALTY
+                yield (nc, nr), cost
 
         def h(node):
             return math.hypot(node[0] - goal[0], node[1] - goal[1])

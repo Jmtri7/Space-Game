@@ -1017,6 +1017,35 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
         # that far from the exact target, not pixel-perfect on it.
         self.assertLessEqual(math.hypot(person.x - target_x, person.y - target_y), 10)
 
+    def test_step_toward_gives_up_a_leg_it_cannot_finish_instead_of_hanging(self):
+        """Backlog "Petty Officer Lund gets stuck": a walk leg aimed at a
+        spot the walker genuinely can't reach (target boxed in by the
+        bunker footprint against a wall) used to spin _step_toward forever,
+        freezing the pilot mid-route. It must now abandon the leg after
+        STUCK_GIVEUP_FRAMES so the phase machine keeps moving."""
+        from game.world.dock_routine import STUCK_GIVEUP_FRAMES
+        config = {
+            "label": "Boxed In",
+            "rooms": [{"rect": [0, 0, 800, 800]}],
+            # bunker hard against the west wall; target pinned in the
+            # sliver between its footprint and the wall.
+            "structures": [{"x": -40, "y": 400, "building_type": "drossholt_bunker"}],
+        }
+        location = LocationScreen(config_data=config, world_width=800, world_height=800, story="default")
+        location.rooms = [normalize_room(r) for r in config["rooms"]]
+        fx, fy, fw, fh = location.building_footprints[0]
+        person = Person(400, 400)
+        routine = DockRoutine(route=[])
+        routine._location = location
+        routine._set_waypoints(person, (max(0, fx) - 5, fy + fh / 2))  # unreachable pocket
+
+        for frame in range(STUCK_GIVEUP_FRAMES + 400):
+            if routine._step_toward(person):
+                break
+        else:
+            self.fail("_step_toward never gave up - the pilot would hang forever")
+        self.assertTrue(location.can_move_to(person.x, person.y))
+
 
 class TestWanderRoutineRespectsWalls(unittest.TestCase):
     """WanderRoutine used to move a wandering NPC (resident/roommate/
