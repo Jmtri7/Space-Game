@@ -1,0 +1,355 @@
+<meta charset="utf-8">
+<title>Past the Reach</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+:root{
+  --void:#0a0a0e;--panel:#131319;--ink:#ece9f4;--ink-2:#a5a2b6;--ink-3:#6d6a7e;
+  --line:#292935;--line-2:#35333f;--accent:#d9a441;
+  --skin:#e1b491;--skin-hi:#f4d0ab;--skin-lo:#bd8f6a;--body-out:#141219;
+  --maxw:1120px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);
+  font-family:"Archivo","Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.65;
+  background-image:radial-gradient(1000px 560px at 84% -10%,rgba(217,164,65,.12),transparent 60%),
+    radial-gradient(880px 520px at 6% 106%,rgba(127,232,232,.08),transparent 62%);
+  background-repeat:no-repeat;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+::selection{background:rgba(217,164,65,.28);color:#fff}
+.topbar{position:sticky;top:0;z-index:40;background:#0c0c11;border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:20px;height:56px}
+.mark{font-family:"Instrument Serif",Georgia,serif;font-size:1.28rem}
+.mark em{font-style:italic;color:var(--ink-2)}
+.navlinks{display:flex;gap:18px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.navlinks a{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.16em;color:var(--ink-3);text-decoration:none;padding:4px 0;border-bottom:1px solid transparent}
+.navlinks a:hover{color:var(--ink);border-color:var(--line-2)}
+@media (max-width:720px){.navlinks{display:none}}
+.tag-wip{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);border:1px solid rgba(217,164,65,.35);border-radius:2px;padding:3px 7px;white-space:nowrap}
+.hero{padding:76px 0 40px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;text-transform:uppercase;letter-spacing:.22em;
+  color:var(--ink-3);margin:0 0 20px}
+.hero h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(2.9rem,8vw,5.2rem);
+  line-height:1;margin:0 0 18px;letter-spacing:-.005em}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.dek{font-size:1.14rem;color:var(--ink-2);max-width:64ch;margin:0 0 26px}
+.status{border:1px solid var(--line);border-left:2px solid var(--accent);background:var(--panel);
+  border-radius:3px;padding:14px 18px;max-width:68ch;font-size:.92rem;color:var(--ink-2)}
+.status b{color:var(--ink);font-weight:600}
+code.f{font-family:"IBM Plex Mono",monospace;font-size:.84em;color:var(--accent)}
+.legend{margin:44px 0 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.legend div{background:var(--panel);padding:16px 18px}
+.legend dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:6px}
+.legend dd{margin:0;font-size:.92rem;color:var(--ink-2)}
+.chapter{padding:92px 0 8px;scroll-margin-top:72px}
+.chapter-kicker{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 10px}
+.chapter h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(2.1rem,5vw,3.4rem);
+  line-height:1.02;margin:0 0 20px}
+.chapter h2 em{color:var(--accent);font-style:italic}
+.lead{max-width:66ch;color:var(--ink-2);margin:0 0 12px}
+.lead b{color:var(--ink);font-weight:600}
+.identity{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:34px;margin:8px 0 20px;align-items:start}
+@media (max-width:820px){.identity{grid-template-columns:1fr;gap:24px}}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:104px}
+.sw i{display:block;height:50px;border-radius:3px;border:1px solid rgba(255,255,255,.09)}
+.sw span{display:block;margin-top:6px;font-family:"IBM Plex Mono",monospace;font-size:.58rem;color:var(--ink-3)}
+.sw span b{display:block;color:var(--ink-2);letter-spacing:.1em;text-transform:uppercase;font-size:.56rem;font-weight:500}
+.directives{margin:0;padding:0;list-style:none;counter-reset:d}
+.directives li{position:relative;padding:10px 0 10px 42px;border-top:1px solid var(--line);font-size:.92rem;color:var(--ink-2)}
+.directives li:last-child{border-bottom:1px solid var(--line)}
+.directives li::before{counter-increment:d;content:counter(d);position:absolute;left:0;top:9px;
+  font-family:"IBM Plex Mono",monospace;font-size:.7rem;width:26px;height:22px;display:grid;place-items:center;
+  border:1px solid rgba(217,164,65,.3);border-radius:2px;color:var(--accent)}
+.directives li b{color:var(--ink);font-weight:600}
+.plate{display:grid;grid-template-columns:300px minmax(0,1fr);gap:34px;padding:30px 0;border-top:1px solid var(--line)}
+@media (max-width:760px){.plate{grid-template-columns:1fr;gap:20px}}
+.viewport{position:relative;border:1px solid var(--line);border-radius:3px;
+  background:radial-gradient(circle at 50% 40%,#16161f 0%,#0c0c11 72%,#090a0d 100%);overflow:hidden}
+.viewport.diagram{aspect-ratio:6/5}
+.viewport svg{position:absolute;inset:0;width:100%;height:100%}
+.viewport .vlabel{position:absolute;left:10px;bottom:8px;font-family:"IBM Plex Mono",monospace;font-size:.58rem;
+  letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+.isnew{position:absolute;right:0;top:0;font-family:"IBM Plex Mono",monospace;font-size:.56rem;letter-spacing:.14em;
+  text-transform:uppercase;padding:4px 8px;background:var(--accent);color:#1c1305;font-weight:600;border-bottom-left-radius:3px}
+.plate-body h3{font-family:"Archivo",sans-serif;font-weight:600;font-size:1.32rem;margin:2px 0 3px}
+.role{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  color:#c99a4f;margin:0 0 14px}
+.plate-body p{margin:0 0 14px;font-size:.96rem;color:var(--ink-2);max-width:60ch}
+.plate-body p b{color:var(--ink);font-weight:600}
+.spec{margin:16px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+  display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-family:"IBM Plex Mono",monospace;font-size:.74rem}
+.spec dt{color:var(--ink-3)}
+.spec dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.spec .full{grid-column:1/-1;color:var(--ink-2);padding-top:8px;margin-top:4px;border-top:1px solid var(--line)}
+.keys{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.keys span{font-family:"IBM Plex Mono",monospace;font-size:.63rem;padding:3px 7px;border:1px solid var(--line-2);
+  border-radius:2px;color:var(--ink-2)}
+.keys span b{color:var(--ink);font-weight:500}
+.wiring{padding:90px 0 40px}
+.wiring h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(1.9rem,4.4vw,2.9rem);margin:0 0 22px}
+.wiring-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.wiring-grid section{background:var(--panel);padding:20px}
+.wiring-grid h4{margin:0 0 8px;font-size:.95rem;font-weight:600}
+.wiring-grid p{margin:0;font-size:.9rem;color:var(--ink-2)}
+.risk{margin:26px 0 0;border:1px solid rgba(217,164,65,.35);border-left:2px solid var(--accent);background:var(--panel);
+  border-radius:3px;padding:16px 18px;max-width:72ch;font-size:.94rem;color:var(--ink-2)}
+.risk b{color:var(--ink);font-weight:600}
+footer{border-top:1px solid var(--line);padding:26px 0 60px;font-family:"IBM Plex Mono",monospace;font-size:.66rem;
+  letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
+</style>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1" fill="#ffffff" fill-opacity="0.05"/></pattern></defs></svg>
+<header class="topbar"><div class="wrap">
+  <span class="mark">Past the <em>Reach</em></span>
+  <nav class="navlinks">
+    <a href="#read">How to read</a>
+    <a href="#deeprock">Deeprock</a>
+    <a href="#kessari">Kessari</a>
+    <a href="#meridian">Meridian</a>
+    <a href="#theln">Theln</a>
+    <a href="#wiring">Wiring in</a>
+  </nav>
+  <span class="tag-wip">Proposal &middot; nothing in config</span>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="eyebrow">Four proposed cultures beyond the default three</p>
+    <h1>Past the <em>Reach</em></h1>
+    <p class="dek">
+      The default story has three cultures: the Vherathi <b>grow</b> their hulls,
+      the Drossholt <b>bolt</b> theirs, the Sol Federation <b>issues</b> its own to
+      spec. This atlas sketches four more for the edge of the map &mdash; one ship
+      and one outfit each &mdash; so the silhouettes can be compared before any of
+      it is built.
+    </p>
+    <div class="status">
+      <b>None of this is in the game.</b> Every plate is a <span style="color:var(--accent)">MOCKUP</span>.
+      The four <code class="f">cultures.json</code> entries, the ships, and the
+      outfits are proposals; the ship silhouettes could be extracted into
+      <code class="f">parts</code> the same way Resin &amp; Rivets was, but the
+      outfit redraws would wait on a parts-style figure renderer (same as the
+      Standard Issue outfit chapters). Palettes here are the ones proposed for
+      each <code class="f">cultures.json</code> entry.
+    </div>
+    <dl class="legend" id="read">
+      <div><dt>Left &mdash; specimen</dt><dd>Ship top-down (<code class="f">240&times;200</code>) or figure front-view (<code class="f">160&times;200</code>) on void-black, so silhouettes and palettes compare directly.</dd></div>
+      <div><dt>Shapes only</dt><dd>Every specimen is <code class="f">&lt;polygon&gt;</code> + <code class="f">&lt;circle&gt;</code>, no stroke &mdash; outline is a larger offset shape behind, curves are many-sided polygons, the exhaust jet is a <code class="f">class="flame"</code> shape that stays procedural in-engine.</dd></div>
+      <div><dt>Identity spread</dt><dd>Each chapter opens with the proposed palette as named hex swatches keyed to <code class="f">cultures.json</code> fields, and a numbered rubric of silhouette directives pulled from that culture's <code class="f">theme</code> string.</dd></div>
+      <div><dt>MOCKUP</dt><dd>Nothing here is wired in. Spec blocks name real fields but are suggestions, never patches.</dd></div>
+    </dl>
+  </section>
+
+  <section class="chapter" id="deeprock">
+    <p class="chapter-kicker">Chapter 01 &mdash; Deeprock Mining Consortium</p>
+    <h2>Built around the job</h2>
+    <p class="lead">Already a faction in <code class="f">pilots.json</code> (Oskar Lindqvist, <code class="f">mining_foreman</code>) with no look yet. The outfit that chews ore out of the belts: hardware built around the job it does, painted only where a warning is needed.</p>
+
+    <div class="identity">
+      <div><div class="swatches"><div class="sw"><i style="background:#5c524a"></i><span><b>hull / wall</b>#5C524A</span></div><div class="sw"><i style="background:#413a34"></i><span><b>hull shadow</b>#413A34</span></div><div class="sw"><i style="background:#ffe078"></i><span><b>glass / lights</b>#FFE078</span></div><div class="sw"><i style="background:#ff9646"></i><span><b>thrust</b>#FF9646</span></div><div class="sw"><i style="background:#d6b03c"></i><span><b>trim</b>#D6B03C</span></div></div>
+        <p style="margin:14px 0 0;font-size:.82rem;color:var(--ink-3);font-family:'IBM Plex Mono',monospace">
+        cultures.json &rarr; <code class="f">deeprock</code> &mdash; proposed, not in config</p></div>
+      <ol class="directives"><li><b>Built around the job.</b> One dominant forward volume - an intake maw or ore scoop - a fat tank body behind it, and small ancillary boxes (cabin, mast) clamped on wherever they cleared the load. Front-heavy and asymmetric, not tidy.</li><li><b>Almost no windows.</b> Light is a few harsh floodlights clustered at the working end, drawn from <code class="f">glass_color</code>. The crew works by them, not by a view.</li><li><b>Hazard, not livery.</b> Trim-yellow striping (<code class="f">wall_trim_color</code>) edges every intake, hatch and thruster. It's a warning, not a paint job - everything else stays bare <code class="f">metal_color</code>.</li><li><b>Heavy industrial plant.</b> Blunt rectangular housings, visible rivets, mirrored thruster pairs at the back. It reads as machinery that happens to fly.</li></ol>
+    </div>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">01&middot;A &mdash; Ship</p>
+    <article class="plate">
+      <div class="viewport diagram"><svg viewBox="0 0 240 200" role="img" aria-label="Top-down Deeprock ore-hauler: a wide flat intake maw at the nose, a fat cylindrical tank body, an offset cabin box, two mirrored riveted thruster housings, floodlights clustered at the working end, hazard striping."><polygon points="0.0,0.0 240.0,0.0 240.0,200.0 0.0,200.0" fill="url(#grid)"/><polygon class="flame" points="97.0,176.0 100.0,196.0 103.0,176.0" fill="#ff9646"/><polygon class="flame" points="137.0,176.0 140.0,196.0 143.0,176.0" fill="#ff9646"/><polygon points="120.0,70.4 133.5,72.8 145.7,79.9 155.3,90.9 161.5,104.7 163.6,120.0 161.5,135.3 155.3,149.1 145.7,160.1 133.5,167.2 120.0,169.6 106.5,167.2 94.3,160.1 84.7,149.1 78.5,135.3 76.4,120.0 78.5,104.7 84.7,90.9 94.3,79.9 106.5,72.8" fill="#141219"/><polygon points="120.0,72.0 133.0,74.3 144.7,81.2 154.0,91.8 159.9,105.2 162.0,120.0 159.9,134.8 154.0,148.2 144.7,158.8 133.0,165.7 120.0,168.0 107.0,165.7 95.3,158.8 86.0,148.2 80.1,134.8 78.0,120.0 80.1,105.2 86.0,91.8 95.3,81.2 107.0,74.3" fill="#5c524a"/><polygon points="71.8,42.4 172.3,42.4 157.1,83.6 84.8,83.6" fill="#141219"/><polygon points="74.0,44.0 170.0,44.0 156.0,82.0 86.0,82.0" fill="#5c524a"/><polygon points="90.0,48.0 152.0,48.0 142.0,72.0 100.0,72.0" fill="#332f2b"/><polygon points="58.6,67.8 59.3,65.3 61.3,63.3 63.8,62.6 82.2,62.6 84.7,63.3 86.7,65.3 87.4,67.8 87.4,90.2 86.7,92.7 84.7,94.7 82.2,95.4 63.8,95.4 61.3,94.7 59.3,92.7 58.6,90.2" fill="#141219"/><polygon points="60.0,68.0 60.5,66.0 62.0,64.5 64.0,64.0 82.0,64.0 84.0,64.5 85.5,66.0 86.0,68.0 86.0,90.0 85.5,92.0 84.0,93.5 82.0,94.0 64.0,94.0 62.0,93.5 60.5,92.0 60.0,90.0" fill="#413a34"/><polygon points="87.6,152.8 88.1,150.8 89.8,149.1 91.8,148.6 108.2,148.6 110.2,149.1 111.9,150.8 112.4,152.8 112.4,175.2 111.9,177.2 110.2,178.9 108.2,179.4 91.8,179.4 89.8,178.9 88.1,177.2 87.6,175.2" fill="#141219"/><polygon points="89.0,153.0 89.4,151.5 90.5,150.4 92.0,150.0 108.0,150.0 109.5,150.4 110.6,151.5 111.0,153.0 111.0,175.0 110.6,176.5 109.5,177.6 108.0,178.0 92.0,178.0 90.5,177.6 89.4,176.5 89.0,175.0" fill="#413a34"/><circle cx="94.0" cy="156.0" r="1.3" fill="#332f2b"/><circle cx="94.0" cy="166.0" r="1.3" fill="#332f2b"/><circle cx="94.0" cy="174.0" r="1.3" fill="#332f2b"/><circle cx="106.0" cy="156.0" r="1.3" fill="#332f2b"/><circle cx="106.0" cy="166.0" r="1.3" fill="#332f2b"/><circle cx="106.0" cy="174.0" r="1.3" fill="#332f2b"/><polygon points="127.6,152.8 128.1,150.8 129.8,149.1 131.8,148.6 148.2,148.6 150.2,149.1 151.9,150.8 152.4,152.8 152.4,175.2 151.9,177.2 150.2,178.9 148.2,179.4 131.8,179.4 129.8,178.9 128.1,177.2 127.6,175.2" fill="#141219"/><polygon points="129.0,153.0 129.4,151.5 130.5,150.4 132.0,150.0 148.0,150.0 149.5,150.4 150.6,151.5 151.0,153.0 151.0,175.0 150.6,176.5 149.5,177.6 148.0,178.0 132.0,178.0 130.5,177.6 129.4,176.5 129.0,175.0" fill="#413a34"/><circle cx="134.0" cy="156.0" r="1.3" fill="#332f2b"/><circle cx="134.0" cy="166.0" r="1.3" fill="#332f2b"/><circle cx="134.0" cy="174.0" r="1.3" fill="#332f2b"/><circle cx="146.0" cy="156.0" r="1.3" fill="#332f2b"/><circle cx="146.0" cy="166.0" r="1.3" fill="#332f2b"/><circle cx="146.0" cy="174.0" r="1.3" fill="#332f2b"/><circle cx="92.0" cy="50.0" r="3.2" fill="#ffe078"/><circle cx="120.0" cy="46.0" r="3.2" fill="#ffe078"/><circle cx="148.0" cy="50.0" r="3.2" fill="#ffe078"/><circle cx="120.0" cy="66.0" r="3.2" fill="#ffe078"/><polygon points="74.0,46.6 170.0,46.6 170.0,43.4 74.0,43.4" fill="#d6b03c"/><polygon points="89.0,152.4 111.0,152.4 111.0,149.6 89.0,149.6" fill="#d6b03c"/><polygon points="129.0,152.4 151.0,152.4 151.0,149.6 129.0,149.6" fill="#d6b03c"/></svg><span class="vlabel">deeprock · ship · top</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Deeprock Gnaw <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">ship_types.json &middot; graphics.json &rarr; ship type</p>
+        <p>A wide flat intake maw at the nose, a fat cylindrical tank body, an offset cabin box, two mirrored riveted thruster housings, floodlights clustered at the working end, hazard striping.</p>
+        <dl class="spec">
+          <dt>size</dt><dd>44</dd>
+          <dt>silhouette</dt><dd>front-heavy asymmetric maw + tank</dd>
+          <dt>thrusters</dt><dd>thrusters mirrored riveted housings, aft</dd>
+          <dd class="full">graphics.json space? no - ship_types.json + graphics.json entry. New. Colours: hull <code class="f">metal_color</code>, lights <code class="f">glass_color</code>, exhaust <code class="f">thrust_color</code>. The <code class="f">class="flame"</code> jet stays procedural (<code class="f">Ship._draw_thrusters</code>).</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> &middot; <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">01&middot;B &mdash; Outfit</p>
+    <article class="plate">
+      <div class="viewport diagram" style="aspect-ratio:4/5"><svg viewBox="0 0 160 200" role="img" aria-label="Front view of the Pit Foreman rig on the shared body."><polygon points="0.0,0.0 160.0,0.0 160.0,200.0 0.0,200.0" fill="url(#grid)"/><g transform="translate(15.6,11.4) scale(0.92)"><polygon points="70.0,190.0 83.0,190.7 93.5,192.6 99.2,195.4 99.2,198.6 93.5,201.4 83.0,203.3 70.0,204.0 57.0,203.3 46.5,201.4 40.8,198.6 40.8,195.4 46.5,192.6 57.0,190.7" fill="#ffffff" opacity="0.05"/><polygon points="46.7,65.8 47.6,62.3 50.3,59.6 53.8,58.7 86.2,58.7 89.7,59.6 92.4,62.3 93.3,65.8 93.3,140.2 92.4,143.7 89.7,146.4 86.2,147.3 53.8,147.3 50.3,146.4 47.6,143.7 46.7,140.2" fill="#141219"/><polygon points="48.0,66.0 48.8,63.0 51.0,60.8 54.0,60.0 86.0,60.0 89.0,60.8 91.2,63.0 92.0,66.0 92.0,140.0 91.2,143.0 89.0,145.2 86.0,146.0 54.0,146.0 51.0,145.2 48.8,143.0 48.0,140.0" fill="#5c524a"/><polygon points="54.7,151.5 50.5,128.2 47.5,85.9 50.6,71.4 57.1,62.7 65.7,59.5 74.3,59.5 82.9,62.7 89.4,71.4 92.5,85.9 89.5,128.2 85.3,151.5" fill="#141219"/><polygon points="56.0,150.0 52.0,128.0 49.0,86.0 52.0,72.0 58.0,64.0 66.0,61.0 74.0,61.0 82.0,64.0 88.0,72.0 91.0,86.0 88.0,128.0 84.0,150.0" fill="#8a7a68"/><polygon points="40.7,75.0 51.3,72.3 51.3,119.0 41.7,121.7" fill="#141219"/><polygon points="42.0,76.0 50.0,74.0 50.0,118.0 43.0,120.0" fill="#7a6a58"/><polygon points="88.7,72.3 99.3,75.0 98.3,121.7 88.7,119.0" fill="#141219"/><polygon points="90.0,74.0 98.0,76.0 97.0,120.0 90.0,118.0" fill="#7a6a58"/><circle cx="46.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="46.0" cy="121.0" r="3.1" fill="#f4d0ab"/><circle cx="94.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="94.0" cy="121.0" r="3.1" fill="#f4d0ab"/><polygon points="48.9,102.0 91.1,102.0 89.9,118.0 50.1,118.0" fill="#141219"/><polygon points="50.0,103.0 90.0,103.0 89.0,117.0 51.0,117.0" fill="#d6b03c"/><polygon points="56.7,146.7 70.3,146.7 69.3,191.3 57.7,191.3" fill="#141219"/><polygon points="58.0,148.0 69.0,148.0 68.0,190.0 59.0,190.0" fill="#3a342e"/><polygon points="69.7,146.7 83.3,146.7 82.3,191.3 70.7,191.3" fill="#141219"/><polygon points="71.0,148.0 82.0,148.0 81.0,190.0 72.0,190.0" fill="#3a342e"/><polygon points="63.5,184.7 69.0,185.7 73.2,188.7 74.9,193.0 73.2,197.3 69.0,200.3 63.5,201.3 58.0,200.3 53.8,197.3 52.1,193.0 53.8,188.7 58.0,185.7" fill="#141219"/><polygon points="63.5,186.0 68.5,186.9 72.2,189.5 73.5,193.0 72.2,196.5 68.5,199.1 63.5,200.0 58.5,199.1 54.8,196.5 53.5,193.0 54.8,189.5 58.5,186.9" fill="#3a342e"/><polygon points="76.5,184.7 82.0,185.7 86.2,188.7 87.9,193.0 86.2,197.3 82.0,200.3 76.5,201.3 71.0,200.3 66.8,197.3 65.1,193.0 66.8,188.7 71.0,185.7" fill="#141219"/><polygon points="76.5,186.0 81.5,186.9 85.2,189.5 86.5,193.0 85.2,196.5 81.5,199.1 76.5,200.0 71.5,199.1 67.8,196.5 66.5,193.0 67.8,189.5 71.5,186.9" fill="#3a342e"/><circle cx="70.0" cy="50.0" r="19.8" fill="#141219"/><circle cx="70.0" cy="50.0" r="18.0" fill="#c9b083"/><polygon points="54.7,73.8 85.3,73.8 82.1,111.2 57.9,111.2" fill="#141219"/><polygon points="56.0,75.0 84.0,75.0 81.0,110.0 59.0,110.0" fill="#5c524a"/><circle cx="62.0" cy="84.0" r="1.4" fill="#3a342e"/><circle cx="62.0" cy="100.0" r="1.4" fill="#3a342e"/><circle cx="78.0" cy="84.0" r="1.4" fill="#3a342e"/><circle cx="78.0" cy="100.0" r="1.4" fill="#3a342e"/><polygon points="52.9,143.9 53.3,142.4 54.4,141.3 55.9,140.9 84.1,140.9 85.6,141.3 86.7,142.4 87.1,143.9 87.1,149.1 86.7,150.6 85.6,151.7 84.1,152.1 55.9,152.1 54.4,151.7 53.3,150.6 52.9,149.1" fill="#141219"/><polygon points="54.0,144.0 54.3,143.0 55.0,142.3 56.0,142.0 84.0,142.0 85.0,142.3 85.7,143.0 86.0,144.0 86.0,149.0 85.7,150.0 85.0,150.7 84.0,151.0 56.0,151.0 55.0,150.7 54.3,150.0 54.0,149.0" fill="#3a342e"/><polygon points="66.0,145.0 66.1,144.5 66.5,144.1 67.0,144.0 73.0,144.0 73.5,144.1 73.9,144.5 74.0,145.0 74.0,148.0 73.9,148.5 73.5,148.9 73.0,149.0 67.0,149.0 66.5,148.9 66.1,148.5 66.0,148.0" fill="#d6b03c"/><polygon points="91.0,122.9 91.2,122.0 92.0,121.2 92.9,121.0 99.1,121.0 100.0,121.2 100.8,122.0 101.0,122.9 101.0,135.1 100.8,136.0 100.0,136.8 99.1,137.0 92.9,137.0 92.0,136.8 91.2,136.0 91.0,135.1" fill="#141219"/><polygon points="92.0,123.0 92.1,122.5 92.5,122.1 93.0,122.0 99.0,122.0 99.5,122.1 99.9,122.5 100.0,123.0 100.0,135.0 99.9,135.5 99.5,135.9 99.0,136.0 93.0,136.0 92.5,135.9 92.1,135.5 92.0,135.0" fill="#5c524a"/><polygon points="94.0,122.0 96.0,112.0 98.0,122.0" fill="#ff8c3c"/><circle cx="70.0" cy="52.0" r="13.4" fill="#141219"/><circle cx="70.0" cy="52.0" r="12.0" fill="#f4d0ab"/><circle cx="64.5" cy="53.0" r="1.7" fill="#281e1e"/><circle cx="75.5" cy="53.0" r="1.7" fill="#281e1e"/></g></svg><span class="vlabel">deeprock · outfit · front</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Pit Foreman rig <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">mining_foreman · belt crews</p>
+        <p>A hard hat, a hi-vis band across a scuffed work suit, a bolted chest plate, an air-and-tool pack, a hip lamp. Everything that matters is painted trim-yellow; nothing else is painted at all.</p>
+        <dl class="spec">
+          <dt>on</dt><dd>the shared <code class="f">Person</code> body</dd>
+          <dt>keys</dt><dd>hat, suit, boot, sleeve, chest, rivets, backpack, torch, belt, band</dd>
+          <dd class="full">A <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry: each key is one more colour, no draw code &mdash; but the redraw here is a mockup, like the Standard Issue / R&amp;R outfit plates: <code class="f">Person.draw</code> is colour-key driven, so a genuinely new <em>silhouette</em> waits on a parts-style figure renderer.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+  </section>
+  <section class="chapter" id="kessari">
+    <p class="chapter-kicker">Chapter 02 &mdash; The Ashfall Rite</p>
+    <h2>The ember in the stone</h2>
+    <p class="lead">A close order that keeps to the burnt worlds. Where the Vherathi grow their hulls and the Drossholt bolt theirs, the Kessari <b>fire</b> theirs - single dark slabs of basalt-ceramic, no ornament, lit only by the seam where the stone is still cooling.</p>
+
+    <div class="identity">
+      <div><div class="swatches"><div class="sw"><i style="background:#22201e"></i><span><b>hull / wall</b>#22201E</span></div><div class="sw"><i style="background:#17161a"></i><span><b>hull shadow</b>#17161A</span></div><div class="sw"><i style="background:#ff823c"></i><span><b>glass / lights</b>#FF823C</span></div><div class="sw"><i style="background:#dc4628"></i><span><b>thrust</b>#DC4628</span></div><div class="sw"><i style="background:#c8602c"></i><span><b>trim</b>#C8602C</span></div></div>
+        <p style="margin:14px 0 0;font-size:.82rem;color:var(--ink-3);font-family:'IBM Plex Mono',monospace">
+        cultures.json &rarr; <code class="f">kessari</code> &mdash; proposed, not in config</p></div>
+      <ol class="directives"><li><b>One solid mass.</b> A tall blunt slab, wider and heavier toward the base like a standing stone. Roughly bilaterally symmetric but never mechanically precise - one edge is always slightly hand-irregular.</li><li><b>The ember seam.</b> The single defining feature: a thin bright line of <code class="f">glass_color</code> tracing the hull's central spine end to end, plus a matching glow at each thruster. Everything else is near-black <code class="f">metal_color</code>.</li><li><b>Almost sealed.</b> No panel lines, no patch plates, no rows of windows - at most one or two tiny apertures near the top.</li><li><b>Cell, not cabin.</b> Interiors are narrow, dim, high-contrast: black floor and walls, one bright line of light down the centre of every room, rooms kept small and rectangular.</li></ol>
+    </div>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">02&middot;A &mdash; Ship</p>
+    <article class="plate">
+      <div class="viewport diagram"><svg viewBox="0 0 240 200" role="img" aria-label="Top-down Kessari ship: a single dark blunt slab, heavier toward the base, one edge left irregular, a bright ember seam running the length of the spine, two tiny apertures near the nose, one thruster at the base."><polygon points="0.0,0.0 240.0,0.0 240.0,200.0 0.0,200.0" fill="url(#grid)"/><polygon class="flame" points="114.0,168.0 126.0,168.0 124.0,182.0 116.0,182.0" fill="#dc4628"/><polygon points="102.6,32.3 138.5,32.3 146.7,95.8 151.7,149.9 151.7,167.7 88.3,167.7 88.3,150.0 91.3,95.8" fill="#141216"/><polygon points="104.0,34.0 137.0,34.0 145.0,96.0 150.0,150.0 150.0,166.0 90.0,166.0 90.0,150.0 93.0,96.0" fill="#22201e"/><polygon points="117.6,38.0 117.6,162.0 122.4,162.0 122.4,38.0" fill="#ff823c"/><polygon points="119.1,38.0 119.1,162.0 120.9,162.0 120.9,38.0" fill="#ffd9a0"/><circle cx="111.0" cy="52.0" r="2.4" fill="#ff823c"/><circle cx="129.0" cy="52.0" r="2.4" fill="#ff823c"/><polygon points="108.5,156.7 131.5,156.7 128.1,177.3 111.9,177.3" fill="#141216"/><polygon points="110.0,158.0 130.0,158.0 127.0,176.0 113.0,176.0" fill="#17161a"/><circle cx="120.0" cy="164.0" r="3.0" fill="#dc4628"/></svg><span class="vlabel">kessari · ship · top</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Kessari Cairn <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">ship_types.json &middot; graphics.json &rarr; ship type</p>
+        <p>A single dark blunt slab, heavier toward the base, one edge left irregular, a bright ember seam running the length of the spine, two tiny apertures near the nose, one thruster at the base.</p>
+        <dl class="spec">
+          <dt>size</dt><dd>34</dd>
+          <dt>silhouette</dt><dd>single tall slab, base-heavy, one irregular edge</dd>
+          <dt>thrusters</dt><dd>thrusters one, base centre; spine seam = glass_color</dd>
+          <dd class="full">ship_types.json + graphics.json entry. New. Colours: hull <code class="f">metal_color</code>, lights <code class="f">glass_color</code>, exhaust <code class="f">thrust_color</code>. The <code class="f">class="flame"</code> jet stays procedural (<code class="f">Ship._draw_thrusters</code>).</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> &middot; <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">02&middot;B &mdash; Outfit</p>
+    <article class="plate">
+      <div class="viewport diagram" style="aspect-ratio:4/5"><svg viewBox="0 0 160 200" role="img" aria-label="Front view of the Ashfall Adept habit on the shared body."><polygon points="0.0,0.0 160.0,0.0 160.0,200.0 0.0,200.0" fill="url(#grid)"/><g transform="translate(15.6,11.4) scale(0.92)"><polygon points="70.0,190.0 83.0,190.7 93.5,192.6 99.2,195.4 99.2,198.6 93.5,201.4 83.0,203.3 70.0,204.0 57.0,203.3 46.5,201.4 40.8,198.6 40.8,195.4 46.5,192.6 57.0,190.7" fill="#ffffff" opacity="0.05"/><polygon points="52.6,157.5 50.5,134.1 47.5,85.9 50.6,71.4 57.1,62.7 65.7,59.5 74.3,59.5 82.9,62.7 89.4,71.4 92.5,85.9 89.5,134.1 87.4,157.5" fill="#141219"/><polygon points="54.0,156.0 52.0,134.0 49.0,86.0 52.0,72.0 58.0,64.0 66.0,61.0 74.0,61.0 82.0,64.0 88.0,72.0 91.0,86.0 88.0,134.0 86.0,156.0" fill="#2a2730"/><polygon points="40.7,75.0 51.3,72.3 51.3,119.0 41.7,121.7" fill="#141219"/><polygon points="42.0,76.0 50.0,74.0 50.0,118.0 43.0,120.0" fill="#2a2730"/><polygon points="88.7,72.3 99.3,75.0 98.3,121.7 88.7,119.0" fill="#141219"/><polygon points="90.0,74.0 98.0,76.0 97.0,120.0 90.0,118.0" fill="#2a2730"/><circle cx="46.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="46.0" cy="121.0" r="3.1" fill="#f4d0ab"/><circle cx="94.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="94.0" cy="121.0" r="3.1" fill="#f4d0ab"/><polygon points="56.7,152.7 70.3,152.7 69.3,191.3 57.7,191.3" fill="#141219"/><polygon points="58.0,154.0 69.0,154.0 68.0,190.0 59.0,190.0" fill="#242229"/><polygon points="69.7,152.7 83.3,152.7 82.3,191.3 70.7,191.3" fill="#141219"/><polygon points="71.0,154.0 82.0,154.0 81.0,190.0 72.0,190.0" fill="#242229"/><polygon points="63.5,184.7 69.0,185.7 73.2,188.7 74.9,193.0 73.2,197.3 69.0,200.3 63.5,201.3 58.0,200.3 53.8,197.3 52.1,193.0 53.8,188.7 58.0,185.7" fill="#141219"/><polygon points="63.5,186.0 68.5,186.9 72.2,189.5 73.5,193.0 72.2,196.5 68.5,199.1 63.5,200.0 58.5,199.1 54.8,196.5 53.5,193.0 54.8,189.5 58.5,186.9" fill="#1e1c22"/><polygon points="76.5,184.7 82.0,185.7 86.2,188.7 87.9,193.0 86.2,197.3 82.0,200.3 76.5,201.3 71.0,200.3 66.8,197.3 65.1,193.0 66.8,188.7 71.0,185.7" fill="#141219"/><polygon points="76.5,186.0 81.5,186.9 85.2,189.5 86.5,193.0 85.2,196.5 81.5,199.1 76.5,200.0 71.5,199.1 67.8,196.5 66.5,193.0 67.8,189.5 71.5,186.9" fill="#1e1c22"/><polygon points="52.1,49.2 87.9,49.2 82.9,39.2 74.3,33.8 65.7,33.8 57.1,39.2" fill="#141219"/><polygon points="54.0,48.0 86.0,48.0 82.0,40.0 74.0,35.0 66.0,35.0 58.0,40.0" fill="#1e1c22"/><polygon points="48.7,68.9 61.9,68.9 77.3,153.1 64.1,153.1" fill="#141219"/><polygon points="50.0,70.0 61.0,70.0 76.0,152.0 65.0,152.0" fill="#ff823c"/><polygon points="53.5,60.9 86.5,60.9 81.8,75.1 58.2,75.1" fill="#141219"/><polygon points="55.0,62.0 85.0,62.0 81.0,74.0 59.0,74.0" fill="#3a3540"/><circle cx="70.0" cy="48.0" r="16.8" fill="#141219"/><circle cx="70.0" cy="48.0" r="15.0" fill="#f4d0ab"/><circle cx="64.5" cy="49.0" r="1.7" fill="#281e1e"/><circle cx="75.5" cy="49.0" r="1.7" fill="#281e1e"/></g></svg><span class="vlabel">kessari · outfit · front</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Ashfall Adept habit <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">kessari crew · pilgrims</p>
+        <p>A long dark hooded habit, near-black, ascetic. One ember sash is the only colour on the whole figure - the same seam the ships carry, worn.</p>
+        <dl class="spec">
+          <dt>on</dt><dd>the shared <code class="f">Person</code> body</dd>
+          <dt>keys</dt><dd>cap, coat, torso_long, suit, leg, boot, sleeve, collar, sash</dd>
+          <dd class="full">A <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry: each key is one more colour, no draw code &mdash; but the redraw here is a mockup, like the Standard Issue / R&amp;R outfit plates: <code class="f">Person.draw</code> is colour-key driven, so a genuinely new <em>silhouette</em> waits on a parts-style figure renderer.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+  </section>
+  <section class="chapter" id="meridian">
+    <p class="chapter-kicker">Chapter 03 &mdash; The Meridian Free Ports</p>
+    <h2>Seen arriving</h2>
+    <p class="lead">A loose confederation of independent trading ports, rich and fond of showing it. Stacked rounded tiers in brass and cream, arched windows because a Meridian captain wants to be seen arriving.</p>
+
+    <div class="identity">
+      <div><div class="swatches"><div class="sw"><i style="background:#96744a"></i><span><b>hull / wall</b>#96744A</span></div><div class="sw"><i style="background:#6a5030"></i><span><b>hull shadow</b>#6A5030</span></div><div class="sw"><i style="background:#ffeec8"></i><span><b>glass / lights</b>#FFEEC8</span></div><div class="sw"><i style="background:#ffd282"></i><span><b>thrust</b>#FFD282</span></div><div class="sw"><i style="background:#e8ce96"></i><span><b>trim</b>#E8CE96</span></div></div>
+        <p style="margin:14px 0 0;font-size:.82rem;color:var(--ink-3);font-family:'IBM Plex Mono',monospace">
+        cultures.json &rarr; <code class="f">meridian</code> &mdash; proposed, not in config</p></div>
+      <ol class="directives"><li><b>Stacked tiers.</b> Two or three rounded volumes of decreasing size, each with a scalloped or fluted rim, symmetric and centred - not the Vherathi organic asymmetry.</li><li><b>Ornament is the point.</b> Repeated edge detailing, brass trim (<code class="f">wall_trim_color</code>) framing every opening, a lantern finial at the nose.</li><li><b>Windows on show.</b> Plentiful, in even arched rows along each tier - a Meridian captain wants to be seen arriving.</li><li><b>Warm and bright inside.</b> Wide oval or many-sided rooms joined by broad archways, gold trim on every edge - the opposite of a Kessari cell.</li></ol>
+    </div>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">03&middot;A &mdash; Ship</p>
+    <article class="plate">
+      <div class="viewport diagram"><svg viewBox="0 0 240 200" role="img" aria-label="Top-down Meridian trader: three stacked rounded tiers decreasing toward the nose, each with a scalloped brass rim and an arched row of warm windows, a lantern finial, two mirrored fluted thrusters aft."><polygon points="0.0,0.0 240.0,0.0 240.0,200.0 0.0,200.0" fill="url(#grid)"/><polygon class="flame" points="101.0,168.0 104.0,192.0 107.0,168.0" fill="#ffd282"/><polygon class="flame" points="133.0,168.0 136.0,192.0 139.0,168.0" fill="#ffd282"/><polygon points="92.7,152.8 93.2,150.8 94.8,149.2 96.8,148.7 111.2,148.7 113.2,149.2 114.8,150.8 115.3,152.8 115.3,169.2 114.8,171.2 113.2,172.8 111.2,173.3 96.8,173.3 94.8,172.8 93.2,171.2 92.7,169.2" fill="#141219"/><polygon points="94.0,153.0 94.4,151.5 95.5,150.4 97.0,150.0 111.0,150.0 112.5,150.4 113.6,151.5 114.0,153.0 114.0,169.0 113.6,170.5 112.5,171.6 111.0,172.0 97.0,172.0 95.5,171.6 94.4,170.5 94.0,169.0" fill="#6a5030"/><polygon points="98.1,152.0 98.1,170.0 99.9,170.0 99.9,152.0" fill="#3a2c1c"/><polygon points="103.1,152.0 103.1,170.0 104.9,170.0 104.9,152.0" fill="#3a2c1c"/><polygon points="108.1,152.0 108.1,170.0 109.9,170.0 109.9,152.0" fill="#3a2c1c"/><polygon points="124.7,152.8 125.2,150.8 126.8,149.2 128.8,148.7 143.2,148.7 145.2,149.2 146.8,150.8 147.3,152.8 147.3,169.2 146.8,171.2 145.2,172.8 143.2,173.3 128.8,173.3 126.8,172.8 125.2,171.2 124.7,169.2" fill="#141219"/><polygon points="126.0,153.0 126.4,151.5 127.5,150.4 129.0,150.0 143.0,150.0 144.5,150.4 145.6,151.5 146.0,153.0 146.0,169.0 145.6,170.5 144.5,171.6 143.0,172.0 129.0,172.0 127.5,171.6 126.4,170.5 126.0,169.0" fill="#6a5030"/><polygon points="130.1,152.0 130.1,170.0 131.9,170.0 131.9,152.0" fill="#3a2c1c"/><polygon points="135.1,152.0 135.1,170.0 136.9,170.0 136.9,152.0" fill="#3a2c1c"/><polygon points="140.1,152.0 140.1,170.0 141.9,170.0 141.9,152.0" fill="#3a2c1c"/><polygon points="120.0,108.5 132.2,109.5 143.5,112.6 153.4,117.5 161.0,124.0 165.8,131.7 167.5,140.0 165.8,148.3 161.0,156.0 153.4,162.5 143.5,167.4 132.2,170.5 120.0,171.5 107.8,170.5 96.5,167.4 86.6,162.5 79.0,156.0 74.2,148.3 72.5,140.0 74.2,131.7 79.0,124.0 86.6,117.5 96.5,112.6 107.8,109.5" fill="#141219"/><polygon points="120.0,110.0 131.9,111.0 143.0,114.0 152.5,118.8 159.8,125.0 164.4,132.2 166.0,140.0 164.4,147.8 159.8,155.0 152.5,161.2 143.0,166.0 131.9,169.0 120.0,170.0 108.1,169.0 97.0,166.0 87.5,161.2 80.2,155.0 75.6,147.8 74.0,140.0 75.6,132.2 80.2,125.0 87.5,118.8 97.0,114.0 108.1,111.0" fill="#96744a"/><polygon points="120.0,82.5 129.8,83.3 139.0,85.8 147.0,89.8 153.2,95.0 157.2,101.2 158.5,108.0 157.2,114.8 153.2,121.0 147.0,126.2 139.0,130.2 129.8,132.7 120.0,133.5 110.2,132.7 101.0,130.2 93.0,126.2 86.8,121.0 82.8,114.8 81.5,108.0 82.8,101.2 86.8,95.0 93.0,89.8 101.0,85.8 110.2,83.3" fill="#141219"/><polygon points="120.0,84.0 129.6,84.8 138.5,87.2 146.2,91.0 152.0,96.0 155.7,101.8 157.0,108.0 155.7,114.2 152.0,120.0 146.2,125.0 138.5,128.8 129.6,131.2 120.0,132.0 110.4,131.2 101.5,128.8 93.8,125.0 88.0,120.0 84.3,114.2 83.0,108.0 84.3,101.8 88.0,96.0 93.8,91.0 101.5,87.2 110.4,84.8" fill="#96744a"/><polygon points="120.0,57.5 127.3,58.2 134.1,60.1 140.0,63.3 144.6,67.5 147.5,72.5 148.5,78.0 147.5,83.5 144.6,88.5 140.0,92.7 134.1,95.9 127.3,97.8 120.0,98.5 112.7,97.8 105.9,95.9 100.0,92.7 95.4,88.5 92.5,83.5 91.5,78.0 92.5,72.5 95.4,67.5 100.0,63.3 105.9,60.1 112.7,58.2" fill="#141219"/><polygon points="120.0,59.0 127.0,59.6 133.5,61.5 139.1,64.6 143.4,68.5 146.1,73.1 147.0,78.0 146.1,82.9 143.4,87.5 139.1,91.4 133.5,94.5 127.0,96.4 120.0,97.0 113.0,96.4 106.5,94.5 100.9,91.4 96.6,87.5 93.9,82.9 93.0,78.0 93.9,73.1 96.6,68.5 100.9,64.6 106.5,61.5 113.0,59.6" fill="#96744a"/><circle cx="166.0" cy="140.0" r="1.3" fill="#e8ce96"/><circle cx="164.6" cy="147.5" r="1.3" fill="#e8ce96"/><circle cx="160.3" cy="154.5" r="1.3" fill="#e8ce96"/><circle cx="153.5" cy="160.5" r="1.3" fill="#e8ce96"/><circle cx="144.6" cy="165.3" r="1.3" fill="#e8ce96"/><circle cx="134.2" cy="168.5" r="1.3" fill="#e8ce96"/><circle cx="122.9" cy="169.9" r="1.3" fill="#e8ce96"/><circle cx="111.4" cy="169.5" r="1.3" fill="#e8ce96"/><circle cx="100.4" cy="167.1" r="1.3" fill="#e8ce96"/><circle cx="90.7" cy="163.1" r="1.3" fill="#e8ce96"/><circle cx="82.8" cy="157.6" r="1.3" fill="#e8ce96"/><circle cx="77.2" cy="151.0" r="1.3" fill="#e8ce96"/><circle cx="74.4" cy="143.8" r="1.3" fill="#e8ce96"/><circle cx="74.4" cy="136.2" r="1.3" fill="#e8ce96"/><circle cx="77.2" cy="129.0" r="1.3" fill="#e8ce96"/><circle cx="82.8" cy="122.4" r="1.3" fill="#e8ce96"/><circle cx="90.7" cy="116.9" r="1.3" fill="#e8ce96"/><circle cx="100.4" cy="112.9" r="1.3" fill="#e8ce96"/><circle cx="111.4" cy="110.5" r="1.3" fill="#e8ce96"/><circle cx="122.9" cy="110.1" r="1.3" fill="#e8ce96"/><circle cx="134.2" cy="111.5" r="1.3" fill="#e8ce96"/><circle cx="144.6" cy="114.7" r="1.3" fill="#e8ce96"/><circle cx="153.5" cy="119.5" r="1.3" fill="#e8ce96"/><circle cx="160.3" cy="125.5" r="1.3" fill="#e8ce96"/><circle cx="164.6" cy="132.5" r="1.3" fill="#e8ce96"/><circle cx="92.1" cy="130.2" r="1.9" fill="#ffeec8"/><circle cx="100.8" cy="122.9" r="1.9" fill="#ffeec8"/><circle cx="113.2" cy="118.9" r="1.9" fill="#ffeec8"/><circle cx="126.8" cy="118.9" r="1.9" fill="#ffeec8"/><circle cx="139.2" cy="122.9" r="1.9" fill="#ffeec8"/><circle cx="147.9" cy="130.2" r="1.9" fill="#ffeec8"/><circle cx="157.0" cy="108.0" r="1.3" fill="#e8ce96"/><circle cx="155.2" cy="115.4" r="1.3" fill="#e8ce96"/><circle cx="149.9" cy="122.1" r="1.3" fill="#e8ce96"/><circle cx="141.7" cy="127.4" r="1.3" fill="#e8ce96"/><circle cx="131.4" cy="130.8" r="1.3" fill="#e8ce96"/><circle cx="120.0" cy="132.0" r="1.3" fill="#e8ce96"/><circle cx="108.6" cy="130.8" r="1.3" fill="#e8ce96"/><circle cx="98.3" cy="127.4" r="1.3" fill="#e8ce96"/><circle cx="90.1" cy="122.1" r="1.3" fill="#e8ce96"/><circle cx="84.8" cy="115.4" r="1.3" fill="#e8ce96"/><circle cx="83.0" cy="108.0" r="1.3" fill="#e8ce96"/><circle cx="84.8" cy="100.6" r="1.3" fill="#e8ce96"/><circle cx="90.1" cy="93.9" r="1.3" fill="#e8ce96"/><circle cx="98.3" cy="88.6" r="1.3" fill="#e8ce96"/><circle cx="108.6" cy="85.2" r="1.3" fill="#e8ce96"/><circle cx="120.0" cy="84.0" r="1.3" fill="#e8ce96"/><circle cx="131.4" cy="85.2" r="1.3" fill="#e8ce96"/><circle cx="141.7" cy="88.6" r="1.3" fill="#e8ce96"/><circle cx="149.9" cy="93.9" r="1.3" fill="#e8ce96"/><circle cx="155.2" cy="100.6" r="1.3" fill="#e8ce96"/><circle cx="97.6" cy="100.2" r="1.9" fill="#ffeec8"/><circle cx="104.6" cy="94.3" r="1.9" fill="#ffeec8"/><circle cx="114.5" cy="91.1" r="1.9" fill="#ffeec8"/><circle cx="125.5" cy="91.1" r="1.9" fill="#ffeec8"/><circle cx="135.4" cy="94.3" r="1.9" fill="#ffeec8"/><circle cx="142.4" cy="100.2" r="1.9" fill="#ffeec8"/><circle cx="147.0" cy="78.0" r="1.3" fill="#e8ce96"/><circle cx="144.7" cy="85.7" r="1.3" fill="#e8ce96"/><circle cx="138.1" cy="92.1" r="1.3" fill="#e8ce96"/><circle cx="128.3" cy="96.1" r="1.3" fill="#e8ce96"/><circle cx="117.2" cy="96.9" r="1.3" fill="#e8ce96"/><circle cx="106.5" cy="94.5" r="1.3" fill="#e8ce96"/><circle cx="98.2" cy="89.2" r="1.3" fill="#e8ce96"/><circle cx="93.6" cy="82.0" r="1.3" fill="#e8ce96"/><circle cx="93.6" cy="74.0" r="1.3" fill="#e8ce96"/><circle cx="98.2" cy="66.8" r="1.3" fill="#e8ce96"/><circle cx="106.5" cy="61.5" r="1.3" fill="#e8ce96"/><circle cx="117.2" cy="59.1" r="1.3" fill="#e8ce96"/><circle cx="128.3" cy="59.9" r="1.3" fill="#e8ce96"/><circle cx="138.1" cy="63.9" r="1.3" fill="#e8ce96"/><circle cx="144.7" cy="70.3" r="1.3" fill="#e8ce96"/><circle cx="103.6" cy="71.8" r="1.9" fill="#ffeec8"/><circle cx="108.7" cy="67.2" r="1.9" fill="#ffeec8"/><circle cx="116.0" cy="64.6" r="1.9" fill="#ffeec8"/><circle cx="124.0" cy="64.6" r="1.9" fill="#ffeec8"/><circle cx="131.3" cy="67.2" r="1.9" fill="#ffeec8"/><circle cx="136.4" cy="71.8" r="1.9" fill="#ffeec8"/><polygon points="112.4,61.3 127.6,61.3 124.2,45.6 121.2,39.4 118.8,39.4 115.8,45.6" fill="#141219"/><polygon points="114.0,60.0 126.0,60.0 123.0,46.0 120.0,40.0 117.0,46.0" fill="#96744a"/><circle cx="120.0" cy="50.0" r="5.3" fill="#141219"/><circle cx="120.0" cy="50.0" r="4.0" fill="#ffeec8"/></svg><span class="vlabel">meridian · ship · top</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Meridian Argosy <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">ship_types.json &middot; graphics.json &rarr; ship type</p>
+        <p>Three stacked rounded tiers decreasing toward the nose, each with a scalloped brass rim and an arched row of warm windows, a lantern finial, two mirrored fluted thrusters aft.</p>
+        <dl class="spec">
+          <dt>size</dt><dd>40</dd>
+          <dt>silhouette</dt><dd>three centred rounded tiers, scalloped rims</dd>
+          <dt>thrusters</dt><dd>thrusters mirrored fluted pair, aft</dd>
+          <dd class="full">ship_types.json + graphics.json entry. New. Colours: hull <code class="f">metal_color</code>, lights <code class="f">glass_color</code>, exhaust <code class="f">thrust_color</code>. The <code class="f">class="flame"</code> jet stays procedural (<code class="f">Ship._draw_thrusters</code>).</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> &middot; <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">03&middot;B &mdash; Outfit</p>
+    <article class="plate">
+      <div class="viewport diagram" style="aspect-ratio:4/5"><svg viewBox="0 0 160 200" role="img" aria-label="Front view of the Free-Port Factor coat on the shared body."><polygon points="0.0,0.0 160.0,0.0 160.0,200.0 0.0,200.0" fill="url(#grid)"/><g transform="translate(15.6,11.4) scale(0.92)"><polygon points="70.0,190.0 83.0,190.7 93.5,192.6 99.2,195.4 99.2,198.6 93.5,201.4 83.0,203.3 70.0,204.0 57.0,203.3 46.5,201.4 40.8,198.6 40.8,195.4 46.5,192.6 57.0,190.7" fill="#ffffff" opacity="0.05"/><polygon points="52.6,157.5 50.5,134.1 47.5,85.9 50.6,71.4 57.1,62.7 65.7,59.5 74.3,59.5 82.9,62.7 89.4,71.4 92.5,85.9 89.5,134.1 87.4,157.5" fill="#141219"/><polygon points="54.0,156.0 52.0,134.0 49.0,86.0 52.0,72.0 58.0,64.0 66.0,61.0 74.0,61.0 82.0,64.0 88.0,72.0 91.0,86.0 88.0,134.0 86.0,156.0" fill="#96744a"/><polygon points="40.7,75.0 51.3,72.3 51.3,119.0 41.7,121.7" fill="#141219"/><polygon points="42.0,76.0 50.0,74.0 50.0,118.0 43.0,120.0" fill="#8a6a44"/><polygon points="88.7,72.3 99.3,75.0 98.3,121.7 88.7,119.0" fill="#141219"/><polygon points="90.0,74.0 98.0,76.0 97.0,120.0 90.0,118.0" fill="#8a6a44"/><circle cx="46.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="46.0" cy="121.0" r="3.1" fill="#f4d0ab"/><circle cx="94.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="94.0" cy="121.0" r="3.1" fill="#f4d0ab"/><polygon points="56.7,152.7 70.3,152.7 69.3,191.3 57.7,191.3" fill="#141219"/><polygon points="58.0,154.0 69.0,154.0 68.0,190.0 59.0,190.0" fill="#4a3826"/><polygon points="69.7,152.7 83.3,152.7 82.3,191.3 70.7,191.3" fill="#141219"/><polygon points="71.0,154.0 82.0,154.0 81.0,190.0 72.0,190.0" fill="#4a3826"/><polygon points="63.5,184.7 69.0,185.7 73.2,188.7 74.9,193.0 73.2,197.3 69.0,200.3 63.5,201.3 58.0,200.3 53.8,197.3 52.1,193.0 53.8,188.7 58.0,185.7" fill="#141219"/><polygon points="63.5,186.0 68.5,186.9 72.2,189.5 73.5,193.0 72.2,196.5 68.5,199.1 63.5,200.0 58.5,199.1 54.8,196.5 53.5,193.0 54.8,189.5 58.5,186.9" fill="#4a3826"/><polygon points="76.5,184.7 82.0,185.7 86.2,188.7 87.9,193.0 86.2,197.3 82.0,200.3 76.5,201.3 71.0,200.3 66.8,197.3 65.1,193.0 66.8,188.7 71.0,185.7" fill="#141219"/><polygon points="76.5,186.0 81.5,186.9 85.2,189.5 86.5,193.0 85.2,196.5 81.5,199.1 76.5,200.0 71.5,199.1 67.8,196.5 66.5,193.0 67.8,189.5 71.5,186.9" fill="#4a3826"/><polygon points="52.1,49.2 87.9,49.2 82.9,39.2 74.3,33.8 65.7,33.8 57.1,39.2" fill="#141219"/><polygon points="54.0,48.0 86.0,48.0 82.0,40.0 74.0,35.0 66.0,35.0 58.0,40.0" fill="#4a3826"/><polygon points="48.7,68.9 61.9,68.9 77.3,153.1 64.1,153.1" fill="#141219"/><polygon points="50.0,70.0 61.0,70.0 76.0,152.0 65.0,152.0" fill="#e8ce96"/><polygon points="53.5,60.9 86.5,60.9 81.8,75.1 58.2,75.1" fill="#141219"/><polygon points="55.0,62.0 85.0,62.0 81.0,74.0 59.0,74.0" fill="#e8ce96"/><polygon points="52.9,143.9 53.3,142.4 54.4,141.3 55.9,140.9 84.1,140.9 85.6,141.3 86.7,142.4 87.1,143.9 87.1,149.1 86.7,150.6 85.6,151.7 84.1,152.1 55.9,152.1 54.4,151.7 53.3,150.6 52.9,149.1" fill="#141219"/><polygon points="54.0,144.0 54.3,143.0 55.0,142.3 56.0,142.0 84.0,142.0 85.0,142.3 85.7,143.0 86.0,144.0 86.0,149.0 85.7,150.0 85.0,150.7 84.0,151.0 56.0,151.0 55.0,150.7 54.3,150.0 54.0,149.0" fill="#4a3826"/><polygon points="66.0,145.0 66.1,144.5 66.5,144.1 67.0,144.0 73.0,144.0 73.5,144.1 73.9,144.5 74.0,145.0 74.0,148.0 73.9,148.5 73.5,148.9 73.0,149.0 67.0,149.0 66.5,148.9 66.1,148.5 66.0,148.0" fill="#e8ce96"/><circle cx="46.0" cy="77.0" r="8.2" fill="#141219"/><circle cx="46.0" cy="77.0" r="7.0" fill="#7a5c38"/><circle cx="94.0" cy="77.0" r="8.2" fill="#141219"/><circle cx="94.0" cy="77.0" r="7.0" fill="#7a5c38"/><circle cx="70.0" cy="48.0" r="16.8" fill="#141219"/><circle cx="70.0" cy="48.0" r="15.0" fill="#f4d0ab"/><circle cx="64.5" cy="49.0" r="1.7" fill="#281e1e"/><circle cx="75.5" cy="49.0" r="1.7" fill="#281e1e"/><polygon points="70.0,90.6 76.2,98.0 70.0,105.4 63.8,98.0" fill="#141219"/><polygon points="70.0,92.0 75.0,98.0 70.0,104.0 65.0,98.0" fill="#ffeec8"/></g></svg><span class="vlabel">meridian · outfit · front</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Free-Port Factor coat <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">meridian captains · factors</p>
+        <p>A brass merchant's coat with a gold collar and sash, epaulettes, a badge of office, a buckled belt, a folded cap. A Meridian captain dresses to be seen stepping off the ramp.</p>
+        <dl class="spec">
+          <dt>on</dt><dd>the shared <code class="f">Person</code> body</dd>
+          <dt>keys</dt><dd>cap, coat, suit, boot, sleeve, collar, sash, shoulders, badge, belt, buckle</dd>
+          <dd class="full">A <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry: each key is one more colour, no draw code &mdash; but the redraw here is a mockup, like the Standard Issue / R&amp;R outfit plates: <code class="f">Person.draw</code> is colour-key driven, so a genuinely new <em>silhouette</em> waits on a parts-style figure renderer.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+  </section>
+  <section class="chapter" id="theln">
+    <p class="chapter-kicker">Chapter 04 &mdash; The Theln Drift</p>
+    <h2>Never makes port</h2>
+    <p class="lead">Nomads who never make port for long. Ships are tensioned membrane over a light exoskeleton - translucent, kite-like, asymmetric - with running lights strung along the rigging.</p>
+
+    <div class="identity">
+      <div><div class="swatches"><div class="sw"><i style="background:#c8c0b0"></i><span><b>hull / wall</b>#C8C0B0</span></div><div class="sw"><i style="background:#9a9384"></i><span><b>hull shadow</b>#9A9384</span></div><div class="sw"><i style="background:#7fe8e8"></i><span><b>glass / lights</b>#7FE8E8</span></div><div class="sw"><i style="background:#6fd0d0"></i><span><b>thrust</b>#6FD0D0</span></div><div class="sw"><i style="background:#bfe6df"></i><span><b>trim</b>#BFE6DF</span></div></div>
+        <p style="margin:14px 0 0;font-size:.82rem;color:var(--ink-3);font-family:'IBM Plex Mono',monospace">
+        cultures.json &rarr; <code class="f">theln</code> &mdash; proposed, not in config</p></div>
+      <ol class="directives"><li><b>Membrane on frame.</b> Tensioned translucent sail (low-opacity <code class="f">wall_trim_color</code>) over a light exoskeleton of thin <code class="f">metal_color</code> struts. Kite-like, never a solid hull.</li><li><b>Asymmetric spars.</b> Booms and struts of uneven length - one side always reaches further than the other.</li><li><b>Lights on cables.</b> Running lights (<code class="f">glass_color</code>) strung in lines along the boom edges, like fairy lights on rigging.</li><li><b>Tent, not room.</b> Interiors are soft and low-walled, hanging lights, fabric dividers - a camp that packs down, not a built space.</li></ol>
+    </div>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">04&middot;A &mdash; Ship</p>
+    <article class="plate">
+      <div class="viewport diagram"><svg viewBox="0 0 240 200" role="img" aria-label="Top-down Theln skiff: a thin central spine with translucent teal membrane sails spread asymmetrically over a light bone frame, running lights strung along the booms, a cockpit blister at the nose."><polygon points="0.0,0.0 240.0,0.0 240.0,200.0 0.0,200.0" fill="url(#grid)"/><polygon class="flame" points="118.0,158.0 120.0,178.0 122.0,158.0" fill="#6fd0d0"/><polygon points="120.0,58.0 52.0,108.0 120.0,150.0" fill="#bfe6df" opacity="0.3"/><polygon points="120.0,58.0 186.0,92.0 120.0,150.0" fill="#bfe6df" opacity="0.2"/><polygon points="120.0,150.0 74.0,176.0 120.0,130.0" fill="#bfe6df" opacity="0.24"/><polygon points="117.4,42.0 117.4,160.0 122.6,160.0 122.6,42.0" fill="#c8c0b0"/><polygon points="119.2,56.9 51.2,106.9 52.8,109.1 120.8,59.1" fill="#c8c0b0"/><polygon points="119.4,59.2 185.4,93.2 186.6,90.8 120.6,56.8" fill="#c8c0b0"/><polygon points="119.3,148.8 73.3,174.8 74.7,177.2 120.7,151.2" fill="#c8c0b0"/><polygon points="119.6,151.3 167.6,167.3 168.4,164.7 120.4,148.7" fill="#c8c0b0"/><circle cx="120.0" cy="58.0" r="1.3" fill="#7fe8e8"/><circle cx="106.4" cy="68.0" r="1.3" fill="#7fe8e8"/><circle cx="92.8" cy="78.0" r="1.3" fill="#7fe8e8"/><circle cx="79.2" cy="88.0" r="1.3" fill="#7fe8e8"/><circle cx="65.6" cy="98.0" r="1.3" fill="#7fe8e8"/><circle cx="52.0" cy="108.0" r="1.3" fill="#7fe8e8"/><circle cx="120.0" cy="58.0" r="1.3" fill="#7fe8e8"/><circle cx="136.5" cy="66.5" r="1.3" fill="#7fe8e8"/><circle cx="153.0" cy="75.0" r="1.3" fill="#7fe8e8"/><circle cx="169.5" cy="83.5" r="1.3" fill="#7fe8e8"/><circle cx="186.0" cy="92.0" r="1.3" fill="#7fe8e8"/><circle cx="120.0" cy="150.0" r="1.3" fill="#7fe8e8"/><circle cx="108.5" cy="156.5" r="1.3" fill="#7fe8e8"/><circle cx="97.0" cy="163.0" r="1.3" fill="#7fe8e8"/><circle cx="85.5" cy="169.5" r="1.3" fill="#7fe8e8"/><circle cx="74.0" cy="176.0" r="1.3" fill="#7fe8e8"/><circle cx="120.0" cy="52.0" r="6.2" fill="#141219"/><circle cx="120.0" cy="52.0" r="5.0" fill="#9a9384"/><circle cx="120.0" cy="52.0" r="2.6" fill="#7fe8e8"/></svg><span class="vlabel">theln · ship · top</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Theln Kite <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">ship_types.json &middot; graphics.json &rarr; ship type</p>
+        <p>A thin central spine with translucent teal membrane sails spread asymmetrically over a light bone frame, running lights strung along the booms, a cockpit blister at the nose.</p>
+        <dl class="spec">
+          <dt>size</dt><dd>32</dd>
+          <dt>silhouette</dt><dd>thin spine + asymmetric membrane sails on a strut frame</dd>
+          <dt>thrusters</dt><dd>thrusters one, base; sails = wall_trim_color at low opacity</dd>
+          <dd class="full">ship_types.json + graphics.json entry. Membrane opacity is new - Ship.draw has no alpha layer yet. Colours: hull <code class="f">metal_color</code>, lights <code class="f">glass_color</code>, exhaust <code class="f">thrust_color</code>. The <code class="f">class="flame"</code> jet stays procedural (<code class="f">Ship._draw_thrusters</code>).</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>1</b> &middot; <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+
+    <p class="subhead" style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:44px 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line)">04&middot;B &mdash; Outfit</p>
+    <article class="plate">
+      <div class="viewport diagram" style="aspect-ratio:4/5"><svg viewBox="0 0 160 200" role="img" aria-label="Front view of the Drift Rigger kit on the shared body."><polygon points="0.0,0.0 160.0,0.0 160.0,200.0 0.0,200.0" fill="url(#grid)"/><g transform="translate(15.6,11.4) scale(0.92)"><polygon points="70.0,190.0 83.0,190.7 93.5,192.6 99.2,195.4 99.2,198.6 93.5,201.4 83.0,203.3 70.0,204.0 57.0,203.3 46.5,201.4 40.8,198.6 40.8,195.4 46.5,192.6 57.0,190.7" fill="#ffffff" opacity="0.05"/><polygon points="54.7,151.5 50.5,128.2 47.5,85.9 50.6,71.4 57.1,62.7 65.7,59.5 74.3,59.5 82.9,62.7 89.4,71.4 92.5,85.9 89.5,128.2 85.3,151.5" fill="#141219"/><polygon points="56.0,150.0 52.0,128.0 49.0,86.0 52.0,72.0 58.0,64.0 66.0,61.0 74.0,61.0 82.0,64.0 88.0,72.0 91.0,86.0 88.0,128.0 84.0,150.0" fill="#c8c0b0"/><polygon points="40.7,75.0 51.3,72.3 51.3,119.0 41.7,121.7" fill="#141219"/><polygon points="42.0,76.0 50.0,74.0 50.0,118.0 43.0,120.0" fill="#bfb8a8"/><polygon points="88.7,72.3 99.3,75.0 98.3,121.7 88.7,119.0" fill="#141219"/><polygon points="90.0,74.0 98.0,76.0 97.0,120.0 90.0,118.0" fill="#bfb8a8"/><circle cx="46.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="46.0" cy="121.0" r="3.1" fill="#f4d0ab"/><circle cx="94.0" cy="121.0" r="4.2" fill="#141219"/><circle cx="94.0" cy="121.0" r="3.1" fill="#f4d0ab"/><polygon points="48.9,102.0 91.1,102.0 89.9,118.0 50.1,118.0" fill="#141219"/><polygon points="50.0,103.0 90.0,103.0 89.0,117.0 51.0,117.0" fill="#7fe8e8"/><polygon points="56.7,146.7 70.3,146.7 69.3,191.3 57.7,191.3" fill="#141219"/><polygon points="58.0,148.0 69.0,148.0 68.0,190.0 59.0,190.0" fill="#8a857a"/><polygon points="69.7,146.7 83.3,146.7 82.3,191.3 70.7,191.3" fill="#141219"/><polygon points="71.0,148.0 82.0,148.0 81.0,190.0 72.0,190.0" fill="#8a857a"/><polygon points="63.5,184.7 69.0,185.7 73.2,188.7 74.9,193.0 73.2,197.3 69.0,200.3 63.5,201.3 58.0,200.3 53.8,197.3 52.1,193.0 53.8,188.7 58.0,185.7" fill="#141219"/><polygon points="63.5,186.0 68.5,186.9 72.2,189.5 73.5,193.0 72.2,196.5 68.5,199.1 63.5,200.0 58.5,199.1 54.8,196.5 53.5,193.0 54.8,189.5 58.5,186.9" fill="#8a857a"/><polygon points="76.5,184.7 82.0,185.7 86.2,188.7 87.9,193.0 86.2,197.3 82.0,200.3 76.5,201.3 71.0,200.3 66.8,197.3 65.1,193.0 66.8,188.7 71.0,185.7" fill="#141219"/><polygon points="76.5,186.0 81.5,186.9 85.2,189.5 86.5,193.0 85.2,196.5 81.5,199.1 76.5,200.0 71.5,199.1 67.8,196.5 66.5,193.0 67.8,189.5 71.5,186.9" fill="#8a857a"/><circle cx="70.0" cy="50.0" r="19.8" fill="#141219"/><circle cx="70.0" cy="50.0" r="18.0" fill="#d8d2c4"/><polygon points="87.0,117.9 87.4,116.5 88.5,115.4 89.9,115.0 96.1,115.0 97.5,115.4 98.6,116.5 99.0,117.9 99.0,130.1 98.6,131.5 97.5,132.6 96.1,133.0 89.9,133.0 88.5,132.6 87.4,131.5 87.0,130.1" fill="#141219"/><polygon points="88.0,118.0 88.3,117.0 89.0,116.3 90.0,116.0 96.0,116.0 97.0,116.3 97.7,117.0 98.0,118.0 98.0,130.0 97.7,131.0 97.0,131.7 96.0,132.0 90.0,132.0 89.0,131.7 88.3,131.0 88.0,130.0" fill="#a8a294"/><polygon points="54.5,91.4 82.5,121.4 85.5,118.6 57.5,88.6" fill="#9a9384"/><circle cx="70.0" cy="52.0" r="13.4" fill="#141219"/><circle cx="70.0" cy="52.0" r="12.0" fill="#f4d0ab"/><polygon points="53.5,48.3 86.5,48.3 83.9,58.7 56.1,58.7" fill="#141219"/><polygon points="55.0,49.5 85.0,49.5 83.0,57.5 57.0,57.5" fill="#7fe8e8"/><circle cx="70.0" cy="200.0" r="2.6" fill="#7fe8e8"/></g></svg><span class="vlabel">theln · outfit · front</span><span class="isnew">New</span></div>
+      <div class="plate-body">
+        <h3>Drift Rigger kit <span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.6em;letter-spacing:.12em">MOCKUP</span></h3>
+        <p class="role">theln crew · riggers</p>
+        <p>Light layered bone-cloth over a half-harness worn on one side only, a teal running-light band, a visor, a single hip pod. Built to move around a membrane hull, not to impress anyone.</p>
+        <dl class="spec">
+          <dt>on</dt><dd>the shared <code class="f">Person</code> body</dd>
+          <dt>keys</dt><dd>helmet, visor, suit, boot, sleeve, harness, harness_side, pod, band, accent_dot</dd>
+          <dd class="full">A <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry: each key is one more colour, no draw code &mdash; but the redraw here is a mockup, like the Standard Issue / R&amp;R outfit plates: <code class="f">Person.draw</code> is colour-key driven, so a genuinely new <em>silhouette</em> waits on a parts-style figure renderer.</dd>
+        </dl>
+        <div class="keys"><span>Rubric: <b>2</b> &middot; <b>3</b></span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="wiring" id="wiring">
+    <h2>Wiring in</h2>
+    <div class="wiring-grid">
+      <section><h4>cultures.json</h4><p>Four new entries (<code class="f">deeprock</code>, <code class="f">kessari</code>, <code class="f">meridian</code>, <code class="f">theln</code>) &mdash; <code class="f">name</code>, <code class="f">description</code>, the colour keys shown, an <code class="f">interior_decoration</code> generator, and a <code class="f">theme</code> string. Self-contained; assets reference them by key.</p></section>
+      <section><h4>ship_types.json + graphics.json</h4><p>One ship type + graphics entry per culture. A ship silhouette can be <b>extracted</b> from its plate into <code class="f">parts</code> via <code class="f">extract_atlas.py</code> / <code class="f">apply_parts.py</code> &mdash; add a row to the <code class="f">T</code> table. Theln's low-opacity membrane has no engine support yet (<code class="f">Ship.draw</code> draws flat opaque polygons) &mdash; it would ship as solid tinted panels until a translucency layer exists.</p></section>
+      <section><h4>graphics.json &rarr; outfits</h4><p>One outfit entry per culture, each just a set of <code class="f">*_color</code> keys on the shared body. The <em>redraws</em> here are mockups &mdash; <code class="f">Person.draw</code> is colour-key driven, so a new outfit that only recolours + toggles existing accessory pieces is buildable now; a new silhouette is not.</p></section>
+      <section><h4>routines &amp; pilots</h4><p>Deeprock and Theln want behaviours that don't exist yet (a mining loop, a drift). See the proposed <code class="f">MiningRoutine</code> / <code class="f">PicketRoutine</code> etc. &mdash; a culture is only half a faction without a routine and a pilot roster.</p></section>
+    </div>
+    <div class="risk">
+      <b>Adding cultures is additive, but adding ship types and outfits is not free.</b>
+      A new ship type shows up in every shipyard list and a new outfit in every
+      outfitter &mdash; an old save loading into a shop sees the new stock. That's
+      a story-version bump (see <code class="f">SAVE_SYSTEM.md</code>), not a
+      breakage: NPCs and outfits are rebuilt from story config on load, never
+      stored.
+    </div>
+    <p class="lead" style="margin-top:30px">
+      Companion atlases: <b>Resin &amp; Rivets</b> (Vherathi + Drossholt) and
+      <b>Standard Issue</b> (the shared body + Sol Federation). Same visual
+      system, same strokeless rule, same <code class="f">figure_parts</code> body.
+    </p>
+  </section>
+</main>
+<footer><div class="wrap">Past the Reach &middot; four proposed cultures &middot; mockup, nothing in config &middot; default story</div></footer>

@@ -17,6 +17,7 @@ is the how: how to make one, how to keep it honest, and which ones exist.
 |---|---|---|
 | **Resin & Rivets** | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
 | **Standard Issue** | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| **Past the Reach** | [`docs/atlases/past-the-reach.html`](atlases/past-the-reach.html) | https://claude.ai/code/artifact/d822ff88-5b66-4203-8b3c-e9c7459052fb |
 
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
@@ -74,6 +75,22 @@ is the how: how to make one, how to keep it honest, and which ones exist.
   fill), and `collapse_strokeless` folds only a `ring_strip` quad run back into
   a `{"circle", "width"}` ring (station rings extract as transparent-hole ring
   parts). The engine draws the list verbatim, no synthesised outline.
+- **Past the Reach** — a **mockup-only** sketch of four *proposed* cultures for
+  the edge of the map (Deeprock Mining Consortium, the Ashfall Rite / Kessari,
+  the Meridian Free Ports, the Theln Drift). **Nothing here is in `config/`** —
+  no `cultures.json` entries, no ship types, no outfits. One chapter per
+  culture: an identity spread (proposed palette swatches + a numbered rubric
+  from the proposed `theme` string) and two plates — a top-down **ship** and a
+  front-view **outfit** on the shared `figure_parts` body. Generated from
+  scratch by [`docs/atlases/gen_frontier.py`](atlases/gen_frontier.py) (imports
+  the strokeless primitives + `figure_parts` from `gen_si`), so it obeys the
+  same "only `<polygon>` + `<circle>`" rule and the ship silhouettes could be
+  extracted into `parts` the same way the other two atlases were. The outfit
+  redraws stay mockups (colour-key `Person` renderer, same caveat as Standard
+  Issue's outfit chapters). Accent is amber (`#d9a441`) rather than SI's
+  steel-cyan. If any of these four cultures gets built, split it out — a
+  shipped culture belongs in its own atlas (or Resin & Rivets' successor), not
+  in a proposals file.
 
 ### Updating a published atlas
 
