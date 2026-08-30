@@ -3594,9 +3594,9 @@ class TestStoryTuningConfig(unittest.TestCase):
 
     def test_space_and_interior_camera_zoom_ranges_from_story(self):
         s = SpaceScreen(pilot_name="T", story="default")
-        self.assertEqual((s.camera_zoom_min, s.camera_zoom, s.camera_zoom_max), (1.75, 3.0, 5.0))
+        self.assertEqual((s.camera_zoom_min, s.camera_zoom, s.camera_zoom_max), (1.75, 3.0, 9.0))
         loc = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
-        self.assertEqual((loc.camera_zoom_min, loc.camera_zoom, loc.camera_zoom_max), (2.25, 3.0, 4.5))
+        self.assertEqual((loc.camera_zoom_min, loc.camera_zoom, loc.camera_zoom_max), (2.25, 3.0, 8.0))
 
 
 class TestCameraZoomControl(unittest.TestCase):
@@ -3608,10 +3608,10 @@ class TestCameraZoomControl(unittest.TestCase):
 
     def test_space_wheel_zoom_clamps_to_story_range(self):
         s = SpaceScreen(pilot_name="T", story="default")
-        for _ in range(20):
+        for _ in range(40):
             s.handle_input([self._wheel(1)])   # zoom in, wheel up
         self.assertEqual(s.camera_zoom, s.camera_zoom_max)
-        for _ in range(40):
+        for _ in range(60):
             s.handle_input([self._wheel(-1)])  # zoom out
         self.assertEqual(s.camera_zoom, s.camera_zoom_min)
 
@@ -3628,7 +3628,7 @@ class TestCameraZoomControl(unittest.TestCase):
                              world_width=800, world_height=600, story="default")
         for _ in range(20):
             loc.handle_input([self._wheel(1)])
-        self.assertEqual(loc.camera_zoom, loc.camera_zoom_max)  # 4.5, not the Space View's 5.0
+        self.assertEqual(loc.camera_zoom, loc.camera_zoom_max)  # 8.0, not the Space View's 9.0
 
     def test_zoom_survives_save_round_trip_and_reclamps(self):
         s = SpaceScreen(pilot_name="T", story="default")

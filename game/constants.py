@@ -17,10 +17,10 @@ CAMERA_ZOOM = 3.0  # Zoom to keep objects at same visual scale despite larger wo
 # and "interior_camera_zoom"/"interior_camera_zoom_min"/"..._max"). The live
 # level is remembered per context for the session and captured in the save.
 CAMERA_ZOOM_MIN = 2.0
-CAMERA_ZOOM_MAX = 5.0
+CAMERA_ZOOM_MAX = 9.0
 INTERIOR_CAMERA_ZOOM = 3.0
 INTERIOR_CAMERA_ZOOM_MIN = 2.0
-INTERIOR_CAMERA_ZOOM_MAX = 5.0
+INTERIOR_CAMERA_ZOOM_MAX = 9.0
 CAMERA_ZOOM_STEP = 0.25  # zoom change per mouse-wheel notch
 SAVE_DIR = "saves"
 # Where MusicPlayer caches its procedurally-rendered tracks so they only

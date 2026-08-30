@@ -11,12 +11,28 @@ only appears under a section if it currently has items there.
 
 # Bugs
 
+## Controls & UI
+
+- [ ] Say "messages", not "comms", everywhere in the UI.
+- [ ] Button overlapping in the shipyard menu.
+- [ ] Shipyard ship-description text runs off the edge of the menu panel.
+
+## Navigation & Flight
+
+- [ ] Jumping to system center — the mechanic and its tutorial both need work.
+- [ ] Jump-target label wraps excessively.
+
 ## Missions, Dialogue & NPCs
 
 - [ ] Target isn't officially cleared when an NPC exits the interior, so a new
       target isn't chosen when walking close again.
 - [ ] No mission-complete message when leaving the mission area — a mission that
       completes on leaving/returning surfaces no confirmation toast.
+- [ ] Tutorial first stage doesn't complete until the player walks — it should
+      complete on its intended trigger, not require movement.
+- [ ] Petra Voss should be positioned at the (concierge) desk.
+- [ ] Petty Officer Lund gets stuck — pathing wedges on geometry and the NPC
+      stops moving.
 
 ## Ships & Customization
 
@@ -32,12 +48,18 @@ only appears under a section if it currently has items there.
 ## Stations, Interiors & World Building
 
 - [ ] Characters added to a story don't show up in old saves.
+- [ ] Decorations and buildings placed in the middle of "streets".
+- [ ] Overlapping decorations and buildings.
+- [ ] Decorations need more spacing between them.
+- [ ] The concierge desk should sit right in front of the player on entry.
 
 ## Graphics & Rendering
 
 - [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
       player's own model instead of a distinct sprite.
 - [ ] Building collision footprint extends too far below the building graphic.
+- [ ] Hitboxes on some decorations are way off from the graphic.
+- [ ] Pipe fence needs an outline.
 - [ ] Faint shimmer of the world when panning (running left/right in an
       interior, flying in space): the camera scrolls a non-integer number of
       screen pixels per frame and `to_screen`'s pixel rounding renders it as
@@ -64,11 +86,16 @@ only appears under a section if it currently has items there.
 - [ ] Show the active mission on the in-world HUD.
 - [ ] Controls should be usable without moving the hand off WASD / arrow keys —
       avoid bindings that force the player to reposition their hand.
+- [ ] Arrow indicators in menus (visible scroll/selection arrows).
+- [ ] `ESC` should close the NPC conversation box and the shop menus (deliberate
+      change to the mouse-only-modal / no-ESC-to-close rule in CLAUDE.md).
 
 ## Navigation & Flight
 
 - [ ] Indicate when reaching the edge of the star map.
 - [ ] Star map zoom.
+- [ ] "Fly to it yourself" autopilot tutorial — teach manual approach as an
+      alternative to engaging autopilot.
 - [ ] System minimap (local-system view during flight, distinct from the interstellar
       star map).
 
@@ -83,9 +110,12 @@ only appears under a section if it currently has items there.
 - [ ] Tutorial mission for taking out a loan and buying a ship. (Engine
       support done: `took_loan` / `bought_ship` / `bought_ship:<type>`
       gameplay-event flags - just needs the missions.json stages written.)
-- [ ] Tutorial for turning the camera.
-- [ ] Tutorial for jumping to another system.
+- [ ] Tutorial for turning the camera — phrasing like "Hold S until your ship
+      stops turning".
+- [ ] Tutorial for jumping to another system (see also: jumping to system center
+      needs work, under Bugs → Navigation & Flight).
 - [ ] Relationships.
+- [ ] Cultural languages and names (per-culture naming schemes / language flavor).
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
       story.
@@ -113,6 +143,7 @@ only appears under a section if it currently has items there.
 - [ ] Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
       ship" feel more personal, especially once multiple owned ships exist.
 - [ ] Make all outfits usable (not just cosmetic/inert).
+- [ ] Outfitter should explain how to install outfits and what each outfit does.
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
 - [ ] Graphic for ship thrusters so they're visible when turned off.
 
@@ -149,6 +180,9 @@ only appears under a section if it currently has items there.
 - [ ] Cultural and role-based clothing for people (space_suit is the only outfit so
       far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.
+- [ ] Add more systems (more of them overall, beyond the unique-concepts item).
+- [ ] Black backgrounds on all stations? — evaluate a consistent black backdrop
+      for station interiors.
 
 ## Exploration & World Content
 
@@ -177,5 +211,7 @@ only appears under a section if it currently has items there.
 
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame
       already handles that.
+- [ ] Verify the graphics extractor actually writes extracted graphics into the
+      config JSON.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
       user who wants help creating one.
