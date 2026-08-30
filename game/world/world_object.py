@@ -99,11 +99,23 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
     rad = math.radians(angle)
     cos_a, sin_a = math.cos(rad), math.sin(rad)
     scale = get_scale()
-    outline_w = max(1.0, 1.6 * scale)
 
     def project(x, y):
         x, y = x * unit, y * unit
         return to_screen(ox + (x * cos_a - y * sin_a), oy + (x * sin_a + y * cos_a))
+
+    # Outline thickness: normally a fixed screen amount, but capped at ~2% of
+    # a shape's *own* on-screen diagonal. Without the cap a small ship
+    # (vherathi_skiff, size 10) or a small sub-part (a nozzle) gets an outline
+    # as fat as a size-48 hull - it swallows the shape's point and reads like
+    # a heavy stroke instead of the thin offset the atlases use.
+    base_outline_w = max(1.0, 1.6 * scale)
+
+    def outline_for(scr_pts):
+        xs = [p[0] for p in scr_pts]
+        ys = [p[1] for p in scr_pts]
+        diag = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
+        return max(1.0, min(base_outline_w, 0.02 * diag))
 
     def thick_seg(p, q, half):
         dx, dy = q[0] - p[0], q[1] - p[1]
@@ -133,7 +145,8 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
                     pygame.draw.polygon(surface, color, quad)
             else:
                 if ol:
-                    pygame.draw.circle(surface, ol, center, radius + max(1, int(round(outline_w))))
+                    ow = max(1.0, min(base_outline_w, 0.04 * radius))
+                    pygame.draw.circle(surface, ol, center, radius + max(1, int(round(ow))))
                 pygame.draw.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
@@ -144,7 +157,7 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color,
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
                 if ol:
-                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_w))
+                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_for(pts)))
                 pygame.draw.polygon(surface, color, pts)
 
 

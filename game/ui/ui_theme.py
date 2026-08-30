@@ -555,11 +555,17 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
     part's coords are fractions of the ship's "size" (pixel_size stands in
     for size here), rotated by the same `rotate` closure the base polygon
     uses. Colours resolve exactly as in-world (_resolve_part_color)."""
-    outline_w = max(1, round(pixel_size / 22))
+    base_outline_w = max(1, round(pixel_size / 22))
 
     def project(x, y):
         rx, ry = rotate(x * pixel_size, y * pixel_size)
         return (center_x + rx, center_y + ry)
+
+    def outline_for(scr_pts):
+        xs = [p[0] for p in scr_pts]
+        ys = [p[1] for p in scr_pts]
+        diag = math.hypot(max(xs) - min(xs), max(ys) - min(ys))
+        return max(1.0, min(base_outline_w, 0.02 * diag))
 
     for part in parts:
         color = _resolve_part_color(part.get("color"), metal_color, glass_color)
@@ -581,7 +587,7 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
                     pygame.draw.polygon(surface, color, quad)
             else:
                 if ol:
-                    pygame.draw.circle(surface, ol, center, radius + outline_w)
+                    pygame.draw.circle(surface, ol, center, radius + max(1, int(min(base_outline_w, 0.04 * radius))))
                 pygame.draw.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
@@ -597,7 +603,7 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
                 if ol:
-                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_w))
+                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_for(pts)))
                 pygame.draw.polygon(surface, color, pts)
 
 

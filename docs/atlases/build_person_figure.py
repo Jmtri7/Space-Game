@@ -30,10 +30,10 @@ GROUND = 201.0            # figure-y the boots stand on -> Person self.y
 def g(x, y):
     return round((x - 70.0) * S, 3), round((y - GROUND) * S, 3)
 
-# The atlas arm hangs a hair outboard of the narrow torso; at in-game zoom
-# that reads as a detached rectangle, so pull the arm/hand groups toward the
-# centre-line until their inner edge clearly overlaps the torso.
-ARM_INSET = 1.3   # game units, toward centre
+# Keep the arms exactly where the atlas figure puts them (a small gap to the
+# torso, splaying out below) - an earlier inward nudge pulled them under the
+# torso so they read as "drawn on top of the body" instead of spaced out.
+ARM_INSET = 0.0   # game units, toward centre
 
 def _inset(gx, gy, group):
     if group in ("arm_l", "hand_l"):
