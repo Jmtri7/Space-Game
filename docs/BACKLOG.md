@@ -24,20 +24,9 @@ only appears under a section if it currently has items there.
 
 ## Missions, Dialogue & NPCs
 
-- [ ] Target isn't officially cleared when an NPC exits the interior, so a new
-      target isn't chosen when walking close again.
 - [ ] No mission-complete message when leaving the mission area — a mission that
       completes on leaving/returning surfaces no confirmation toast.
-- [ ] Tutorial first stage doesn't complete until the player walks — it should
-      complete on its intended trigger, not require movement.
-- [ ] Petra Voss should be positioned at the (concierge) desk.
-- [ ] Petty Officer Lund gets stuck — pathing wedges on geometry and the NPC
-      stops moving.
-
-## Ships & Customization
-
-- [ ] Gap: what happens when you buy a second ship? (multiple owned ships behavior
-      is undefined — see the feature item under Ships & Customization.)
+- [ ] Petra Voss should be positioned at the loan office desk.
 
 ## Economy & Trading
 
@@ -48,17 +37,12 @@ only appears under a section if it currently has items there.
 ## Stations, Interiors & World Building
 
 - [ ] Characters added to a story don't show up in old saves.
-- [ ] Decorations and buildings placed in the middle of "streets".
-- [ ] Overlapping decorations and buildings.
-- [ ] Decorations need more spacing between them.
 - [ ] The concierge desk should sit right in front of the player on entry.
 
 ## Graphics & Rendering
 
 - [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
       player's own model instead of a distinct sprite.
-- [ ] Building collision footprint extends too far below the building graphic.
-- [ ] Hitboxes on some decorations are way off from the graphic.
 - [ ] Pipe fence needs an outline.
 - [ ] Faint shimmer of the world when panning (running left/right in an
       interior, flying in space): the camera scrolls a non-integer number of
@@ -73,49 +57,30 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Quick save.
-- [x] Minimap: click a target to select it. (`SpaceScreen._select_target` /
-      the minimap branch in `handle_input` - a click on a blip targets it,
-      inferring the target mode.)
 - [ ] Make the player icon on the minimap more obvious than the others.
-- [x] Hover text on the minimap when the mouse is over a point, showing what it
-      is. (`_draw_minimap_tooltip` / `_minimap_blip_at` / `_minimap_label`.)
-- [ ] Make credits amount display consistent with other UI texts.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
 - [ ] Show the active mission on the in-world HUD.
 - [ ] Controls should be usable without moving the hand off WASD / arrow keys —
       avoid bindings that force the player to reposition their hand.
-- [ ] Arrow indicators in menus (visible scroll/selection arrows).
+- [ ] Allow arrow keys to change meny selections.
 - [ ] `ESC` should close the NPC conversation box and the shop menus (deliberate
       change to the mouse-only-modal / no-ESC-to-close rule in CLAUDE.md).
 
 ## Navigation & Flight
 
-- [ ] Indicate when reaching the edge of the star map.
+- [ ] Add a border to the edge of the star map where no systems can be.
 - [ ] Star map zoom.
-- [ ] "Fly to it yourself" autopilot tutorial — teach manual approach as an
-      alternative to engaging autopilot.
-- [ ] System minimap (local-system view during flight, distinct from the interstellar
-      star map).
+- [ ] Correct Kade Marshes grammar about "Fly it to yourself".
 
 ## Missions, Dialogue & NPCs
 
-- [ ] NPCs in interior locations (station interiors, etc.) should be able to display
-      messages on screen too, not just NPCs hailing from space.
-- [ ] Mission Log: split into two tabs, Active and Completed, so finished
-      missions have their own place instead of being mixed into the same list
-      as in-progress ones (`report_menu.mission_report()` already gets both from
-      `mission_status_lines()`).
-- [ ] Tutorial mission for taking out a loan and buying a ship. (Engine
-      support done: `took_loan` / `bought_ship` / `bought_ship:<type>`
-      gameplay-event flags - just needs the missions.json stages written.)
 - [ ] Tutorial for turning the camera — phrasing like "Hold S until your ship
       stops turning".
 - [ ] Tutorial for jumping to another system (see also: jumping to system center
       needs work, under Bugs → Navigation & Flight).
 - [ ] Relationships.
-- [ ] Cultural languages and names (per-culture naming schemes / language flavor).
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
       story.
@@ -139,9 +104,10 @@ only appears under a section if it currently has items there.
 
 ## Ships & Customization
 
-- [ ] Multiple owned ships.
 - [ ] Ship customization (paint/decals/name) — cosmetic, cheap, but makes "your
-      ship" feel more personal, especially once multiple owned ships exist.
+      ship" feel more personal. (Owning multiple ships and switching between
+      them at the ship salesman's "Your Ships" tab now works — story `1.12.0`;
+      per-ship stored outfit loadouts are still a gap, see SAVE_SYSTEM.md.)
 - [ ] Make all outfits usable (not just cosmetic/inert).
 - [ ] Outfitter should explain how to install outfits and what each outfit does.
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
@@ -165,20 +131,10 @@ only appears under a section if it currently has items there.
 
 ## Stations, Interiors & World Building
 
-- [x] Cultural station interiors; round rooms. (Interiors are polygon `rooms` -
-      `{"shape":"circle"}` N-gons, concave polygons, `{"rect"}` - unioned into
-      one walkable area; each `culture` drives wall/floor/trim colour plus an
-      `interior_decoration` generator. See `normalize_room` in
-      `location_screen.py`.)
-- [x] Better station interior designs. Each default-story station is now one
-      connected area (dormitory/corridor/concourse/spaceport/loan_office
-      collapsed to a single interior with one ship portal).
 - [ ] Enterable buildings in cities.
 - [~] More interior decorations, like roads. (Decoration system done -
       per-interior `decorations` floor/wall decals + per-culture packs; moon
       cities have road decals. Room for more content.)
-- [ ] Cultural and role-based clothing for people (space_suit is the only outfit so
-      far - see graphics.json's "outfits" section and Person.outfit).
 - [ ] More systems with unique concepts.
 - [ ] Add more systems (more of them overall, beyond the unique-concepts item).
 - [ ] Black backgrounds on all stations? — evaluate a consistent black backdrop
@@ -186,7 +142,6 @@ only appears under a section if it currently has items there.
 
 ## Exploration & World Content
 
-- [ ] Options for star/asteroid seeds.
 - [ ] Animals.
 - [ ] Hunting.
 - [ ] Procedurally generated outdoor areas, with a way to find the exit — biggest

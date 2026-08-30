@@ -49,9 +49,15 @@ class Possessions:
     entries so a long playthrough doesn't grow this without bound."""
     def __init__(self, credits=0, owned_ships=None, loans=None,
                  owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None,
-                 missions=None, completed_missions=None, message_log=None):
+                 missions=None, completed_missions=None, message_log=None, active_ship_index=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
+        # Which entry of owned_ships is the hull the player currently flies
+        # (see active_ship()). Buying a ship makes it active; the ship
+        # salesman's "Your Ships" tab switches it. None here means "the last
+        # one" - matches the pre-multi-ship behaviour and how an old save
+        # (no stored index) restores.
+        self.active_ship_index = active_ship_index
         self.loans = loans or []  # list of {"lender": str, "principal": int}
         self.owned_outfits = owned_outfits or []  # list of outfit_id strings, uninstalled
         self.installed_outfits = installed_outfits or {}  # {slot_id: outfit_id}
@@ -80,6 +86,24 @@ class Possessions:
 
     def add_ship(self, ship_type_id):
         self.owned_ships.append(ship_type_id)
+        self.active_ship_index = len(self.owned_ships) - 1
+
+    def active_ship(self):
+        """The ship_type_id of the hull the player currently flies, or None
+        if they own nothing. Falls back to the last owned ship when
+        active_ship_index is unset (old save) or out of range."""
+        if not self.owned_ships:
+            return None
+        i = self.active_ship_index
+        if i is None or not 0 <= i < len(self.owned_ships):
+            return self.owned_ships[-1]
+        return self.owned_ships[i]
+
+    def set_active_ship(self, index):
+        """Point active_ship() at owned_ships[index]. Ignores an out-of-range
+        index rather than raising."""
+        if 0 <= index < len(self.owned_ships):
+            self.active_ship_index = index
 
     def take_loan(self, lender, amount):
         self.loans.append({"lender": lender, "principal": amount})
@@ -151,6 +175,7 @@ class Possessions:
             return
         self.credits = state.get("credits", self.credits)
         self.owned_ships = list(state.get("owned_ships", self.owned_ships))
+        self.active_ship_index = state.get("active_ship_index", self.active_ship_index)
         self.loans = [dict(loan) for loan in state.get("loans", self.loans)]
         self.owned_outfits = list(state.get("owned_outfits", self.owned_outfits))
         self.installed_outfits = dict(state.get("installed_outfits", self.installed_outfits))
@@ -165,6 +190,7 @@ class Possessions:
         return {
             "credits": self.credits,
             "owned_ships": list(self.owned_ships),
+            "active_ship_index": self.active_ship_index,
             "loans": [dict(loan) for loan in self.loans],
             "owned_outfits": list(self.owned_outfits),
             "installed_outfits": dict(self.installed_outfits),
@@ -183,6 +209,7 @@ class Possessions:
         return cls(
             credits=state.get("credits", 0),
             owned_ships=list(state.get("owned_ships", [])),
+            active_ship_index=state.get("active_ship_index"),
             loans=[dict(loan) for loan in state.get("loans", [])],
             owned_outfits=list(state.get("owned_outfits", [])),
             installed_outfits=dict(state.get("installed_outfits", {})),

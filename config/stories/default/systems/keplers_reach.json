@@ -1,13 +1,13 @@
 {
-  "name": "Kepler's Reach",
-  "description": "A remote outpost system on the edge of known space",
+  "name": "Kadmor Reach",
+  "description": "A Drossholt Company survey claim on the edge of charted space - a plate-welded yard-station and a settlement grid on the moon.",
   "star_map_position": {"x": 400, "y": -250},
   "station_asset": "station_delta",
   "moon_asset": "moon_rust",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
-    "name": "Kepler",
+    "name": "Kadmor",
     "size": 80,
     "color": [255, 180, 120]
   },
@@ -26,10 +26,10 @@
   "station": {
     "x": 0.75,
     "y": 0.25,
-    "name": "Delta Outpost",
+    "name": "Kadmor Yard",
     "interiors": {
       "default": {
-        "label": "Delta Outpost",
+        "label": "Kadmor Yard",
         "culture": "drossholt",
         "portals": [
           {"x": 90, "y": 530, "connected_locations": [], "return_to_ship": true}
@@ -46,21 +46,20 @@
           {"layer": "floor", "shape": "line", "points": [[300, 445], [300, 615]], "color": [225, 195, 150], "width": 2}
         ],
         "structures": [
-          {"x": 640, "y": 280, "building_type": "drossholt_desk"},
-          {"x": 530, "y": 240, "building_type": "drossholt_bench"},
-          {"x": 900, "y": 700, "building_type": "drossholt_bench"},
-          {"x": 985, "y": 320, "building_type": "drossholt_crate"},
-          {"x": 1050, "y": 378, "building_type": "drossholt_crate"},
-          {"x": 570, "y": 690, "building_type": "drossholt_barrel"},
-          {"x": 606, "y": 712, "building_type": "drossholt_barrel"},
-          {"x": 690, "y": 710, "building_type": "drossholt_planter"},
-          {"x": 800, "y": 600, "building_type": "drossholt_pipe_rail"},
-          {"x": 540, "y": 210, "building_type": "drossholt_lamp"},
-          {"x": 1050, "y": 210, "building_type": "drossholt_lamp"},
-          {"x": 560, "y": 690, "building_type": "drossholt_lamp"},
-          {"x": 1050, "y": 690, "building_type": "drossholt_lamp"},
+          {"x": 640, "y": 260, "building_type": "drossholt_desk"},
+          {"x": 620, "y": 430, "building_type": "drossholt_bench"},
+          {"x": 900, "y": 720, "building_type": "drossholt_bench"},
+          {"x": 970, "y": 300, "building_type": "drossholt_crate"},
+          {"x": 1050, "y": 380, "building_type": "drossholt_crate"},
+          {"x": 560, "y": 690, "building_type": "drossholt_barrel"},
+          {"x": 596, "y": 712, "building_type": "drossholt_barrel"},
+          {"x": 700, "y": 700, "building_type": "drossholt_planter"},
+          {"x": 800, "y": 590, "building_type": "drossholt_pipe_rail"},
+          {"x": 1075, "y": 250, "building_type": "drossholt_lamp"},
+          {"x": 660, "y": 690, "building_type": "drossholt_lamp"},
+          {"x": 1040, "y": 700, "building_type": "drossholt_lamp"},
           {"x": 180, "y": 460, "building_type": "drossholt_lamp"},
-          {"x": 400, "y": 460, "building_type": "drossholt_lamp"}
+          {"x": 410, "y": 450, "building_type": "drossholt_lamp"}
         ],
         "npcs": [
           {
@@ -92,7 +91,7 @@
             "dialogue_options": ["Nothing", "Leave"]
           },
           {
-            "name": "Sergeant Dane",
+            "name": "Watch-Chief Dane",
             "x": 560,
             "y": 240,
             "role": "security",
@@ -101,7 +100,7 @@
             "dialogue_options": ["Understood", "Leave"]
           },
           {
-            "name": "Medtech Sella",
+            "name": "Patcher Sella",
             "x": 950,
             "y": 600,
             "role": "medic",
@@ -125,10 +124,10 @@
   "moon": {
     "x": 0.2,
     "y": 0.7,
-    "name": "Rust Moon",
+    "name": "Skragg",
     "interiors": {
       "city": {
-        "label": "Rust Moon Settlement",
+        "label": "Skragg Yard-town",
         "description": "A cluster of bolted-together Drossholt cargo bunkers and a watch tower",
         "culture": "drossholt",
         "background_color": [140, 70, 50],
@@ -149,32 +148,31 @@
           {"layer": "floor", "shape": "line", "points": [[480, 200], [480, 1400]], "color": [225, 195, 150], "width": 3}
         ],
         "structures": [
-          {"x": 220, "y": 660, "building_type": "drossholt_warehouse"},
-          {"x": 1060, "y": 940, "building_type": "drossholt_warehouse"},
-          {"x": 560, "y": 440, "building_type": "drossholt_bunker"},
-          {"x": 1080, "y": 440, "building_type": "drossholt_bunker"},
-          {"x": 800, "y": 320, "building_type": "drossholt_tower"},
+          {"x": 180, "y": 760, "building_type": "drossholt_warehouse"},
+          {"x": 1110, "y": 740, "building_type": "drossholt_warehouse"},
+          {"x": 260, "y": 320, "building_type": "drossholt_bunker"},
+          {"x": 1120, "y": 320, "building_type": "drossholt_bunker"},
+          {"x": 720, "y": 260, "building_type": "drossholt_tower"},
           {"x": 780, "y": 700, "building_type": "drossholt_gantry_rig"},
-          {"x": 315, "y": 600, "building_type": "drossholt_crate"},
-          {"x": 1180, "y": 845, "building_type": "drossholt_crate"},
-          {"x": 640, "y": 900, "building_type": "drossholt_barrel"},
-          {"x": 678, "y": 922, "building_type": "drossholt_barrel"},
-          {"x": 880, "y": 900, "building_type": "drossholt_barrel"},
-          {"x": 700, "y": 620, "building_type": "drossholt_planter"},
-          {"x": 760, "y": 948, "building_type": "drossholt_pipe_rail"},
-          {"x": 560, "y": 980, "building_type": "drossholt_bench"},
-          {"x": 940, "y": 980, "building_type": "drossholt_bench"},
-          {"x": 520, "y": 640, "building_type": "drossholt_bench"},
+          {"x": 600, "y": 680, "building_type": "drossholt_crate"},
+          {"x": 900, "y": 690, "building_type": "drossholt_crate"},
+          {"x": 620, "y": 860, "building_type": "drossholt_barrel"},
+          {"x": 660, "y": 884, "building_type": "drossholt_barrel"},
+          {"x": 880, "y": 870, "building_type": "drossholt_barrel"},
+          {"x": 620, "y": 1200, "building_type": "drossholt_planter"},
+          {"x": 300, "y": 1120, "building_type": "drossholt_bench"},
+          {"x": 1200, "y": 1120, "building_type": "drossholt_bench"},
+          {"x": 280, "y": 460, "building_type": "drossholt_bench"},
           {"x": 480, "y": 560, "building_type": "drossholt_lamp"},
           {"x": 1040, "y": 560, "building_type": "drossholt_lamp"},
           {"x": 480, "y": 1000, "building_type": "drossholt_lamp"},
           {"x": 1040, "y": 1000, "building_type": "drossholt_lamp"},
           {"x": 800, "y": 560, "building_type": "drossholt_lamp"},
           {"x": 800, "y": 1000, "building_type": "drossholt_lamp"},
-          {"x": 380, "y": 300, "building_type": "drossholt_planter"},
-          {"x": 1220, "y": 300, "building_type": "drossholt_planter"},
-          {"x": 380, "y": 1260, "building_type": "drossholt_planter"},
-          {"x": 1220, "y": 1260, "building_type": "drossholt_planter"}
+          {"x": 470, "y": 550, "building_type": "drossholt_planter"},
+          {"x": 1260, "y": 640, "building_type": "drossholt_planter"},
+          {"x": 400, "y": 1300, "building_type": "drossholt_planter"},
+          {"x": 1000, "y": 1250, "building_type": "drossholt_planter"}
         ],
         "npcs": [
           {
@@ -197,8 +195,8 @@
           },
           {
             "name": "Sela Drummond",
-            "x": 1150,
-            "y": 450,
+            "x": 1280,
+            "y": 340,
             "behavior": "wander",
             "outfit": "drossholt_tallyman",
             "greeting": "Prices are fair. Mostly.",
@@ -252,7 +250,7 @@
         ]
       },
       "wilderness": {
-        "label": "Rust Moon Wilderness",
+        "label": "Skragg Flats",
         "description": "Cratered, rust-red terrain",
         "background_color": [140, 70, 50],
         "entrance": {"x": 200, "y": 200},
@@ -269,12 +267,12 @@
   },
   "celestial_bodies": [
     {"name": "Cinderpoint", "x": 0.54, "y": 0.53, "size": 12, "color": [170, 80, 60], "body_type": "rocky"},
-    {"name": "Wraithmoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
+    {"name": "Greymoor", "x": 0.95, "y": 0.95, "size": 20, "color": [200, 215, 230], "body_type": "ice"},
     {"name": "Bulwark", "x": 0.05, "y": 0.1, "size": 50, "color": [210, 170, 130], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 170, 140]}
   ],
   "ai_ships": [
     {
-      "name": "Trader One",
+      "name": "Ledger Run",
       "x": 0.65,
       "y": 0.6,
       "ship_type": "drossholt_freighter",
@@ -282,7 +280,7 @@
       "route": ["station", "moon"]
     },
     {
-      "name": "Patrol One",
+      "name": "Claim-Watch",
       "x": 0.5,
       "y": 0.4,
       "ship_type": "drossholt_patrol",

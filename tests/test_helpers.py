@@ -760,7 +760,7 @@ class TestFreighterPilotDoesNotDetourIntoEmptyWilderness(unittest.TestCase):
 
     def test_elena_voss_visits_only_city_then_reboards(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        elena_ship = next(s for s in game_screen.ai_ships if s.person.name == "Elena Voss")
+        elena_ship = next(s for s in game_screen.ai_ships if s.person.name == "Elae Vossae")
         routine = elena_ship.routine
         routine.route = [game_screen.moon]
         routine._route_index = 0
@@ -926,10 +926,10 @@ class TestBuildingFootprintCollision(unittest.TestCase):
     bug: player/NPCs used to be able to walk straight through a building's
     drawn silhouette, since can_move_to() only ever checked room walls or
     the open-world bounds. Uses a real building_type from the default
-    story's building_types.json (drossholt_bunker: 140x90, anchored
-    top-left, so its footprint - see LocationScreen._building_footprint -
-    sits at world x:500-640, y:545-635) rather than a synthetic one, so
-    this breaks if that config's shape/footprint fields are renamed."""
+    story's building_types.json (drossholt_bunker), so this breaks if that
+    config's shape/footprint fields are renamed. The footprint (see
+    LocationScreen._building_footprint) is anchored so its front edge sits
+    at the drawn silhouette's own base, not centred on the anchor point."""
 
     def _make_screen_with_bunker(self):
         config = {
@@ -938,18 +938,29 @@ class TestBuildingFootprintCollision(unittest.TestCase):
         }
         return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
 
-    def test_footprint_is_computed_from_the_building_type(self):
-        location = self._make_screen_with_bunker()
-        self.assertEqual(location.building_footprints, [(500.0, 545.0, 140, 90)])
+    def _bunker_fp(self):
+        return self._make_screen_with_bunker().building_footprints[0]
+
+    def test_footprint_front_edge_sits_at_the_drawn_base(self):
+        from game.screens.location_screen import _silhouette_local_bounds
+        from game.utils import get_building_type
+        _, _, _, base = _silhouette_local_bounds(get_building_type("default", "drossholt_bunker"))
+        fx, fy, fw, fh = self._bunker_fp()
+        # box back edge = base - depth; front edge = base + the small lip
+        self.assertAlmostEqual(fy, 500 + base - 90)
+        self.assertAlmostEqual(fy + fh, 500 + base + LocationScreen.FOOTPRINT_FRONT_LIP)
+        self.assertEqual(fw, 140)
 
     def test_cannot_walk_into_the_footprint(self):
         location = self._make_screen_with_bunker()
-        self.assertFalse(location.can_move_to(570, 590))  # dead center of the bunker
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertFalse(location.can_move_to(fx + fw / 2, fy + fh / 2))  # dead center
 
     def test_can_walk_around_the_sides(self):
         location = self._make_screen_with_bunker()
-        self.assertTrue(location.can_move_to(480, 590))  # just left of the footprint
-        self.assertTrue(location.can_move_to(660, 590))  # just right of the footprint
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertTrue(location.can_move_to(fx - 20, fy + fh / 2))   # just left
+        self.assertTrue(location.can_move_to(fx + fw + 20, fy + fh / 2))  # just right
 
     def test_can_walk_behind_it(self):
         """North of the building (smaller y) is open ground once past the
@@ -957,7 +968,8 @@ class TestBuildingFootprintCollision(unittest.TestCase):
         the building and be drawn behind it (see draw()'s y-sort), instead
         of the whole tall silhouette being solid all the way through."""
         location = self._make_screen_with_bunker()
-        self.assertTrue(location.can_move_to(570, 400))
+        fx, fy, fw, fh = self._bunker_fp()
+        self.assertTrue(location.can_move_to(fx + fw / 2, fy - 40))
 
     def test_decorative_structures_with_no_building_type_have_no_footprint(self):
         config = {
@@ -991,9 +1003,9 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
         return LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
 
     def test_pilot_routes_around_the_building_instead_of_getting_stuck(self):
-        # Bunker footprint is x:500-640, y:545-635 (see
-        # TestBuildingFootprintCollision) - start directly north of it,
-        # target directly south, so dx is 0 for the entire direct line.
+        # Start directly north of the bunker, target directly south, so dx
+        # is 0 for the entire direct line and the wall-slide fallback's
+        # axis-only candidates never move the pilot on their own.
         target_x, target_y = 570, 700
         location = self._make_screen_with_bunker(target_x, target_y)
         person = Person(570, 400)
@@ -1015,6 +1027,35 @@ class TestDockRoutineRespectsBuildings(unittest.TestCase):
         # _step_toward's ARRIVAL_DISTANCE (10) means arrival can land up to
         # that far from the exact target, not pixel-perfect on it.
         self.assertLessEqual(math.hypot(person.x - target_x, person.y - target_y), 10)
+
+    def test_step_toward_gives_up_a_leg_it_cannot_finish_instead_of_hanging(self):
+        """Backlog "Petty Officer Lund gets stuck": a walk leg aimed at a
+        spot the walker genuinely can't reach (target boxed in by the
+        bunker footprint against a wall) used to spin _step_toward forever,
+        freezing the pilot mid-route. It must now abandon the leg after
+        STUCK_GIVEUP_FRAMES so the phase machine keeps moving."""
+        from game.world.dock_routine import STUCK_GIVEUP_FRAMES
+        config = {
+            "label": "Boxed In",
+            "rooms": [{"rect": [0, 0, 800, 800]}],
+            # bunker hard against the west wall; target pinned in the
+            # sliver between its footprint and the wall.
+            "structures": [{"x": -40, "y": 400, "building_type": "drossholt_bunker"}],
+        }
+        location = LocationScreen(config_data=config, world_width=800, world_height=800, story="default")
+        location.rooms = [normalize_room(r) for r in config["rooms"]]
+        fx, fy, fw, fh = location.building_footprints[0]
+        person = Person(400, 400)
+        routine = DockRoutine(route=[])
+        routine._location = location
+        routine._set_waypoints(person, (max(0, fx) - 5, fy + fh / 2))  # unreachable pocket
+
+        for frame in range(STUCK_GIVEUP_FRAMES + 400):
+            if routine._step_toward(person):
+                break
+        else:
+            self.fail("_step_toward never gave up - the pilot would hang forever")
+        self.assertTrue(location.can_move_to(person.x, person.y))
 
 
 class TestWanderRoutineRespectsWalls(unittest.TestCase):
@@ -1052,9 +1093,10 @@ class TestWanderRoutineRespectsWalls(unittest.TestCase):
             "structures": [{"x": 500, "y": 500, "building_type": "drossholt_bunker"}],
         }
         location = LocationScreen(config_data=config, world_width=1600, world_height=1600, story="default")
-        # Right against the bunker's near (north) edge, well within
-        # WANDER_RADIUS of stepping into it.
-        person = Person(570, 540)
+        # Just north of the bunker's footprint, well within WANDER_RADIUS
+        # of stepping into it.
+        fx, fy, fw, fh = location.building_footprints[0]
+        person = Person(fx + fw / 2, fy - 15)
         character = Character(person, role="resident", can_move_to=location.can_move_to)
 
         for _ in range(2000):
@@ -2106,7 +2148,7 @@ class TestShipBrowserMenu(unittest.TestCase):
         bought = []
         possessions = Possessions(credits=1200)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())  # what the Buy button / double-click does
+        menu._activate(menu.grid.selected)  # what the Buy button / double-click does
         self.assertIsNotNone(menu.confirm)
         self.assertEqual(bought, [])  # not yet - still waiting on confirmation
         self.assertEqual(possessions.credits, 1200)
@@ -2114,7 +2156,7 @@ class TestShipBrowserMenu(unittest.TestCase):
     def test_confirming_calls_on_buy_with_the_selected_ship_type(self):
         bought = []
         menu = ShipBrowserMenu(Possessions(credits=1200), "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())
+        menu._activate(menu.grid.selected)
         self.assertEqual(menu.confirm.context_data, "shuttle")
         # the confirm dialog resolves "Yes"
         menu.confirm = SimpleNamespace(handle_input=lambda evs: ("confirm", "shuttle"))
@@ -2126,9 +2168,25 @@ class TestShipBrowserMenu(unittest.TestCase):
         bought = []
         possessions = Possessions(credits=0)
         menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle"]}, on_buy=bought.append)
-        menu._open_confirm(menu.grid.current())
+        menu._activate(menu.grid.selected)
         self.assertIsNone(menu.confirm)
         self.assertEqual(bought, [])
+
+    def test_your_ships_tab_switches_the_active_hull(self):
+        switched = []
+        possessions = Possessions(owned_ships=["shuttle", "freighter"])  # active = index 1
+        menu = ShipBrowserMenu(possessions, "default", {"stock": ["shuttle", "freighter"]},
+                               on_buy=lambda x: None, on_switch=switched.append)
+        menu._set_mode("owned")
+        self.assertEqual([b[0] for b in menu.buttons()], ["close", "action", "toggle"])
+        menu.grid.selected = 0  # the shuttle
+        menu._activate(0)
+        self.assertEqual(switched, [0])
+
+    def test_your_ships_tab_hidden_without_an_on_switch_callback(self):
+        menu = ShipBrowserMenu(Possessions(owned_ships=["shuttle"]), "default",
+                               {"stock": ["shuttle"]}, on_buy=lambda x: None)
+        self.assertNotIn("toggle", [b[0] for b in menu.buttons()])
 
     def test_keyboard_does_nothing(self):
         import pygame as mocked_pygame
@@ -2149,9 +2207,9 @@ class TestShipBrowserMenu(unittest.TestCase):
 
     def test_panel_exposes_a_buy_button_gated_on_affordability(self):
         rich = ShipBrowserMenu(Possessions(credits=5000), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
-        self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("buy"), False)
+        self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("action"), False)
         broke = ShipBrowserMenu(Possessions(credits=0), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
-        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["buy"])
+        self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["action"])
 
 
 class TestApproximateSizeLabel(unittest.TestCase):
@@ -2901,7 +2959,7 @@ class TestMultiSystemSimulation(unittest.TestCase):
         ExplorerRoutine-driven pilot's system can round-trip through a save
         - a plain per-system list index can't survive it moving lists."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
-        explorer = next(s for s in game_screen.systems["sol_alpha"].ai_ships if s.person.name == "Juno Vale")
+        explorer = next(s for s in game_screen.systems["sol_alpha"].ai_ships if s.person.name == "Junae Valis")
         # Simulate it having wandered off to the other system already.
         game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
         game_screen.systems["keplers_reach"].ai_ships.append(explorer)
@@ -2909,13 +2967,13 @@ class TestMultiSystemSimulation(unittest.TestCase):
         explorer.x, explorer.y = 4242, 1337
 
         state = game_screen.get_state()
-        self.assertEqual(state["ai_ships"]["Juno Vale"]["system_id"], "keplers_reach")
+        self.assertEqual(state["ai_ships"]["Junae Valis"]["system_id"], "keplers_reach")
 
         fresh = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
         fresh.restore_state(state)
 
         self.assertNotIn(explorer.person.name, [s.person.name for s in fresh.systems["sol_alpha"].ai_ships])
-        restored = next(s for s in fresh.systems["keplers_reach"].ai_ships if s.person.name == "Juno Vale")
+        restored = next(s for s in fresh.systems["keplers_reach"].ai_ships if s.person.name == "Junae Valis")
         self.assertEqual((restored.x, restored.y), (4242, 1337))
         self.assertEqual(restored.system_id, "keplers_reach")
 
@@ -2930,7 +2988,7 @@ class TestMultiSystemSimulation(unittest.TestCase):
         unrelated part of the same game-space coordinates. Losing the
         ship should clear the target instead of following it there."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
-        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Junae Valis")
 
         game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
         filtered = game_screen._filtered_targets()
@@ -2954,7 +3012,7 @@ class TestMultiSystemSimulation(unittest.TestCase):
         (see test above) left the player's autopilot still committed to
         chasing that Character's position in whatever system it jumped to."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
-        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Junae Valis")
 
         game_screen.player.engage_seek(explorer)
         self.assertTrue(game_screen.player.autopilot_active)
@@ -2979,7 +3037,7 @@ class TestMultiSystemSimulation(unittest.TestCase):
         landing on Kade Marsh in between. "]" happened to reach Kade on the
         step before the ghost, which is why only "[" looked broken."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
-        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Junae Valis")
 
         game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
         game_screen.systems["keplers_reach"].ai_ships.append(explorer)
@@ -2989,8 +3047,8 @@ class TestMultiSystemSimulation(unittest.TestCase):
         game_screen.update_physics()  # prunes the departed ship (see _validate_target)
 
         names = [obj.person.name for _, obj in game_screen._filtered_targets()]
-        self.assertNotIn("Juno Vale", names, "Departed ship should drop out of the target list")
-        self.assertEqual(set(names), {"Elena Voss", "Kade Marsh"})
+        self.assertNotIn("Junae Valis", names, "Departed ship should drop out of the target list")
+        self.assertEqual(set(names), {"Elae Vossae", "Kade Marsh"})
 
         for direction in (-1, 1):  # "[" and "]"
             seen = set()
@@ -3004,27 +3062,27 @@ class TestMultiSystemSimulation(unittest.TestCase):
                     still_targeted,
                     f"Cycling with direction {direction} landed on a ship that immediately got cleared")
                 seen.add(still_targeted.person.name)
-            self.assertEqual(seen, {"Elena Voss", "Kade Marsh"})
+            self.assertEqual(seen, {"Elae Vossae", "Kade Marsh"})
 
     def test_a_ship_that_jumps_back_becomes_targetable_again(self):
         """_validate_target re-adds an AI ship that's returned to this
         system (ExplorerRoutine can jump back to where it started) so it
         doesn't stay untargetable until the next _activate_system."""
         game_screen = SpaceScreen(pilot_name="Test", story="default", system_id="sol_alpha")
-        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Juno Vale")
+        explorer = next(s for s in game_screen.ai_ships if s.person.name == "Junae Valis")
         game_screen.target_mode_index = TARGET_MODES.index("SHIPS")
 
         game_screen.systems["sol_alpha"].ai_ships.remove(explorer)
         game_screen.systems["keplers_reach"].ai_ships.append(explorer)
         explorer.system_id = "keplers_reach"
         game_screen.update_physics()
-        self.assertNotIn("Juno Vale", [o.person.name for _, o in game_screen._filtered_targets()])
+        self.assertNotIn("Junae Valis", [o.person.name for _, o in game_screen._filtered_targets()])
 
         game_screen.systems["keplers_reach"].ai_ships.remove(explorer)
         game_screen.systems["sol_alpha"].ai_ships.append(explorer)
         explorer.system_id = "sol_alpha"
         game_screen.update_physics()
-        self.assertIn("Juno Vale", [o.person.name for _, o in game_screen._filtered_targets()])
+        self.assertIn("Junae Valis", [o.person.name for _, o in game_screen._filtered_targets()])
 
 
 class TestJumpDrive(unittest.TestCase):
@@ -3436,7 +3494,7 @@ class TestSpaceScreenHailing(unittest.TestCase):
 
     def test_hailing_an_ashore_pilot_shows_a_busy_banner_instead(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        elena = self._target_ship(game_screen, "Elena Voss")
+        elena = self._target_ship(game_screen, "Elae Vossae")
         elena.ashore = True
         game_screen._start_hail()
         self.assertIsNone(game_screen.active_dialogue)
@@ -3964,7 +4022,7 @@ class TestBartenderConsequenceDialogue(unittest.TestCase):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_screen.player.person.possessions.credits = credits
         concourse = game_screen.get_interior_screen(game_screen.station, "default")
-        bartender = next(c.person for c in concourse.npcs if c.person.name == "Bram Solise")
+        bartender = next(c.person for c in concourse.npcs if c.person.name == "Brahn Ossilis")
         return concourse, bartender
 
     def test_buying_a_round_spends_credits_grants_item_and_sets_flag(self):
@@ -4025,7 +4083,8 @@ class TestStationTour(unittest.TestCase):
     def _concourse(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         concourse = game_screen.get_interior_screen(game_screen.station, "default")
-        sela = next(c for c in concourse.npcs if c.person.name == "Sela Cordova")
+        sela = next(c for c in concourse.npcs if c.person.name == "Selu Vaeren")
+        self._game_screen = game_screen  # for tests that need the docked mission tick
         return concourse, sela
 
     def _accept_tour(self, concourse, sela):
@@ -4117,9 +4176,31 @@ class TestStationTour(unittest.TestCase):
         self.assertTrue(possessions.flags.get("station_tour_done"))
         self.assertFalse(possessions.flags.get("station_guide_escorting"))
 
+    def test_accepting_the_tour_advances_stage_zero_and_prompts_without_movement(self):
+        """Regression: after accepting Sela's offer, stage 0 ("accept the
+        offer") completes on the very next docked simulation tick - the
+        same `game_screen.update_physics()` main.py runs every frame while
+        docked, which is where check_mission_progress lives - with zero
+        player movement. That tick also delivers stage 1's one_way_message,
+        so the player gets an immediate in-interior prompt instead of the
+        tour appearing to do nothing until they happen to walk."""
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        possessions = concourse.player.possessions
+        self.assertEqual(possessions.missions["station_tour"], 0)
+
+        before = len(possessions.message_log)
+        self._game_screen.update_physics()  # one docked frame, no movement
+
+        self.assertEqual(possessions.missions["station_tour"], 1,
+                         "stage 0 must complete from the docked mission tick alone")
+        walk_prompts = [m for m in possessions.message_log[:len(possessions.message_log) - before]
+                        if m["sender"] == "Selu Vaeren" and "walk" in m["text"].lower()]
+        self.assertTrue(walk_prompts, "stage 1's walk prompt should land immediately on accept")
+
     def test_message_log_banner_and_alert_fire_when_the_shared_log_grows(self):
         concourse, _ = self._concourse()
-        concourse.player.possessions.add_message("Sela Cordova", "Follow me.")
+        concourse.player.possessions.add_message("Selu Vaeren", "Follow me.")
         concourse._refresh_messages()
         self.assertGreater(concourse.message_alert_timer, 0)
         self.assertIsNotNone(concourse.message_banner)
@@ -4132,7 +4213,7 @@ class TestStationTour(unittest.TestCase):
         concourse._check_npc_ambient()
         concourse._check_npc_ambient()
         self.assertEqual(len(concourse.player.possessions.message_log), before + 1)
-        self.assertEqual(concourse.player.possessions.message_log[0]["sender"], "Sela Cordova")
+        self.assertEqual(concourse.player.possessions.message_log[0]["sender"], "Selu Vaeren")
 
     def test_walking_sets_the_walked_interior_flag(self):
         concourse, _ = self._concourse()
@@ -4252,13 +4333,13 @@ class TestLocationScreenEconomy(unittest.TestCase):
 
     def test_take_loan_uses_story_json_lender_and_amount(self):
         """Lender name + amount come from story.json's "loan" block (the
-        default story: Station Credit Union / 100,000cr), not a hardcoded
+        default story: Concord Lending / 100,000cr), not a hardcoded
         literal - see LocationScreen._loan_terms."""
         screen = self._make_screen()
         screen._apply_dialogue_action("take_loan")
         self.assertEqual(screen.player.possessions.credits, 100_000)
         self.assertEqual(screen.player.possessions.loans,
-                         [{"lender": "Station Credit Union", "principal": 100_000}])
+                         [{"lender": "Concord Lending", "principal": 100_000}])
 
     def test_take_loan_with_explicit_amount_overrides_the_default(self):
         """"take_loan:<amount>" grants exactly that many credits, keeping
@@ -4267,7 +4348,7 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen._apply_dialogue_action("take_loan:2500")
         self.assertEqual(screen.player.possessions.credits, 2500)
         self.assertEqual(screen.player.possessions.loans,
-                         [{"lender": "Station Credit Union", "principal": 2500}])
+                         [{"lender": "Concord Lending", "principal": 2500}])
 
     def test_take_loan_sets_the_took_loan_gameplay_flag(self):
         screen = self._make_screen()
@@ -4700,7 +4781,7 @@ class TestStationInteriorLayout(unittest.TestCase):
     def test_a_pilot_can_path_from_the_ship_portal_across_alpha_station(self):
         interior = self._interior("sol_alpha", "station")
         start = (interior.portals[0]["x"], interior.portals[0]["y"])
-        bram = next(c.person for c in interior.npcs if c.person.name == "Bram Solise")
+        bram = next(c.person for c in interior.npcs if c.person.name == "Brahn Ossilis")
         goal = (bram.x, bram.y)
         path = interior.plan_path(start, goal)
         self.assertEqual(path[-1], goal)

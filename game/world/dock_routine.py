@@ -13,6 +13,17 @@ WALK_SPEED = WALKING_SPEED  # fallback pace; _advance_walk() prefers the interio
 ARRIVAL_DISTANCE = 10    # how close counts as "reached" a walking destination
 TALK_FRAMES = 180        # ~3 seconds at 60fps
 
+# Stuck-recovery for a walk leg (see _step_toward). A visiting pilot that
+# stops making progress - wedged in a concave corner, or aimed at a goal
+# the pathfinder couldn't route to at all - used to freeze in place
+# forever (backlog: "Petty Officer Lund gets stuck"). If the body barely
+# moves for STUCK_REPLAN_FRAMES we re-plan the route once; if it's still
+# stuck STUCK_GIVEUP_FRAMES later we treat the leg as finished so the phase
+# machine moves on (into the visit, or reboards) instead of hanging.
+STUCK_STEP_EPSILON = 0.4
+STUCK_REPLAN_FRAMES = 45
+STUCK_GIVEUP_FRAMES = 150
+
 # Sentinel usable inside a ROLE_EXIT_PREFERENCE list: resolves at each
 # stop to the next hop along the shortest path (see _next_hop_toward_ship,
 # which searches LandingSite.interior_adjacency) toward whichever interior
@@ -80,6 +91,8 @@ class DockRoutine:
         self._talk_timer = 0
         self._pending_exit = None   # "ship" or a connected_locations key - chosen in "talking", acted on once "walking_out" arrives
         self._visited_this_stop = set()  # connected_locations keys already entered at this stop - keeps _choose_exit from ping-ponging forever between two locations that each prefer the other
+        self._stuck_frames = 0      # consecutive near-zero-movement _step_toward calls (see STUCK_* constants)
+        self._replanned_while_stuck = False
 
     def start(self, character):
         if self.route:
@@ -236,7 +249,10 @@ class DockRoutine:
         line that might not be walkable at all - what stops a pilot (e.g.
         Elena Voss) from getting permanently stuck against a wall or
         building partway there."""
+        self._goal = goal
         self._waypoints = self._location.plan_path((person.x, person.y), goal)
+        self._stuck_frames = 0
+        self._replanned_while_stuck = False
 
     def _step_toward(self, person):
         """Move person one step toward the next waypoint in self._waypoints
@@ -244,15 +260,28 @@ class DockRoutine:
         (Person.step_toward), which wall-slides against self._location's
         walls using the same LocationScreen.can_move_to the player's own
         movement uses. Advances through waypoints already reached without
-        waiting a frame; returns True once the final waypoint (the real
-        destination) is reached."""
+        waiting a frame; returns True once the final waypoint is reached -
+        or once the body has been stuck long enough that the leg is
+        abandoned (see the STUCK_* constants), so the phase machine keeps
+        moving instead of the pilot freezing on the floor."""
         while self._waypoints:
             target_x, target_y = self._waypoints[0]
             if math.hypot(target_x - person.x, target_y - person.y) <= ARRIVAL_DISTANCE:
                 self._waypoints.pop(0)
                 continue
             speed = getattr(self._location, "speed", WALK_SPEED)
+            x0, y0 = person.x, person.y
             person.step_toward(target_x, target_y, speed, self._location.can_move_to)
+            if math.hypot(person.x - x0, person.y - y0) >= STUCK_STEP_EPSILON:
+                self._stuck_frames = 0
+                return False
+            self._stuck_frames += 1
+            if self._stuck_frames == STUCK_REPLAN_FRAMES and not self._replanned_while_stuck:
+                self._replanned_while_stuck = True
+                self._waypoints = self._location.plan_path((person.x, person.y), getattr(self, "_goal", (target_x, target_y)))
+            elif self._stuck_frames >= STUCK_GIVEUP_FRAMES:
+                self._waypoints = []
+                return True
             return False
         return True
 

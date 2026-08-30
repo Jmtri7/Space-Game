@@ -200,26 +200,26 @@
           {"layer": "floor", "shape": "circle", "center": [800, 800], "radius": 80, "color": [78, 92, 112]}
         ],
         "structures": [
-          {"x": 260, "y": 470, "building_type": "issue_block"},
-          {"x": 760, "y": 470, "building_type": "issue_block"},
-          {"x": 1180, "y": 470, "building_type": "issue_block"},
-          {"x": 220, "y": 980, "building_type": "issue_shed"},
-          {"x": 1000, "y": 980, "building_type": "issue_shed"},
-          {"x": 640, "y": 900, "building_type": "issue_bench"},
-          {"x": 900, "y": 900, "building_type": "issue_bench"},
-          {"x": 720, "y": 1040, "building_type": "issue_bench"},
-          {"x": 479, "y": 559, "building_type": "issue_bollard"},
-          {"x": 1039, "y": 559, "building_type": "issue_bollard"},
-          {"x": 479, "y": 999, "building_type": "issue_bollard"},
-          {"x": 1039, "y": 999, "building_type": "issue_bollard"},
-          {"x": 800, "y": 559, "building_type": "issue_bollard"},
-          {"x": 800, "y": 999, "building_type": "issue_bollard"},
-          {"x": 300, "y": 720, "building_type": "issue_bench"},
-          {"x": 1180, "y": 760, "building_type": "issue_bench"},
-          {"x": 320, "y": 300, "building_type": "issue_bollard"},
-          {"x": 1220, "y": 300, "building_type": "issue_bollard"},
-          {"x": 320, "y": 1280, "building_type": "issue_bollard"},
-          {"x": 1220, "y": 1280, "building_type": "issue_bollard"}
+          {"x": 250, "y": 250, "building_type": "issue_block"},
+          {"x": 760, "y": 250, "building_type": "issue_block"},
+          {"x": 1180, "y": 250, "building_type": "issue_block"},
+          {"x": 200, "y": 760, "building_type": "issue_shed"},
+          {"x": 1120, "y": 760, "building_type": "issue_shed"},
+          {"x": 640, "y": 720, "building_type": "issue_bench"},
+          {"x": 900, "y": 720, "building_type": "issue_bench"},
+          {"x": 720, "y": 880, "building_type": "issue_bench"},
+          {"x": 300, "y": 1200, "building_type": "issue_bench"},
+          {"x": 1180, "y": 1200, "building_type": "issue_bench"},
+          {"x": 420, "y": 500, "building_type": "issue_bollard"},
+          {"x": 1080, "y": 500, "building_type": "issue_bollard"},
+          {"x": 420, "y": 940, "building_type": "issue_bollard"},
+          {"x": 1080, "y": 940, "building_type": "issue_bollard"},
+          {"x": 760, "y": 500, "building_type": "issue_bollard"},
+          {"x": 760, "y": 940, "building_type": "issue_bollard"},
+          {"x": 380, "y": 380, "building_type": "issue_bollard"},
+          {"x": 1130, "y": 380, "building_type": "issue_bollard"},
+          {"x": 320, "y": 1300, "building_type": "issue_bollard"},
+          {"x": 1220, "y": 1300, "building_type": "issue_bollard"}
         ],
         "npcs": [
           {
@@ -251,8 +251,8 @@
           },
           {
             "name": "Corporal Vane",
-            "x": 1200,
-            "y": 620,
+            "x": 1220,
+            "y": 730,
             "role": "resident",
             "outfit": "federation_rating",
             "greeting": "Off shift. Barracks are that block - not that you asked.",
@@ -287,8 +287,8 @@
           },
           {
             "name": "Supply Sgt. Pell",
-            "x": 340,
-            "y": 880,
+            "x": 250,
+            "y": 950,
             "role": "quartermaster",
             "outfit": "deck_chief",
             "greeting": "Everything in that shed is on a manifest. If it's not on the manifest, it's not in the shed.",
@@ -315,8 +315,8 @@
     }
   },
   "celestial_bodies": [
-    {"name": "Marker One", "x": 0.55, "y": 0.52, "size": 12, "color": [150, 160, 175], "body_type": "rocky"},
-    {"name": "Halbegg", "x": 0.06, "y": 0.9, "size": 24, "color": [220, 230, 245], "body_type": "ice"},
+    {"name": "Marker Buoy 1", "x": 0.55, "y": 0.52, "size": 12, "color": [150, 160, 175], "body_type": "rocky"},
+    {"name": "SF-9c", "x": 0.06, "y": 0.9, "size": 24, "color": [220, 230, 245], "body_type": "ice"},
     {"name": "Wardwatch", "x": 0.94, "y": 0.1, "size": 48, "color": [200, 205, 220], "body_type": "gas_giant", "has_ring": true, "ring_color": [190, 195, 210]}
   ],
   "ai_ships": [

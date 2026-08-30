@@ -25,7 +25,7 @@
   },
   "engraved_flask": {
     "name": "Engraved Flask",
-    "description": "A keepsake flask from Bram's bar - engraved 'to a good customer'",
+    "description": "A keepsake flask from Brahn's bar - engraved 'to a good customer'",
     "base_price": 0,
     "category": "keepsake",
     "icon_shape": "vial",

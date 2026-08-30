@@ -1,13 +1,13 @@
 {
-  "name": "Sol Alpha System",
-  "description": "A vast star system with multiple stations and automated traffic",
+  "name": "Aurelith",
+  "description": "The Vherathi Concord's founding light - a grown ring-station and a lattice-city on the moon, all coral-shaped from living resin.",
   "star_map_position": {"x": 0, "y": 0},
   "station_asset": "station_alpha",
   "moon_asset": "moon_silver",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
-    "name": "Sol Alpha",
+    "name": "Aurelith",
     "size": 100,
     "color": [255, 255, 100]
   },
@@ -26,21 +26,21 @@
   "station": {
     "x": 0.15,
     "y": 0.2,
-    "name": "Alpha Station",
+    "name": "Vaelune Ring",
     "interiors": {
       "default": {
-        "label": "Alpha Station",
+        "label": "Vaelune Ring",
         "culture": "vherathi",
         "portals": [
           {"x": 1340, "y": 680, "connected_locations": [], "return_to_ship": true}
         ],
         "rooms": [
-          {"label": "Concourse", "shape": "circle", "center": [810, 610], "radius": 285, "sides": 40},
+          {"label": "The Confluence", "shape": "circle", "center": [810, 610], "radius": 285, "sides": 40},
           {"label": "The Long Vein", "shape": "circle", "center": [810, 270], "radius": 195, "sides": 32},
-          {"label": "Credit Union", "shape": "circle", "center": [250, 610], "radius": 240, "sides": 32},
-          {"label": "West Gallery", "polygon": [[430, 545], [590, 545], [590, 675], [430, 675]]},
-          {"label": "Ship Dock", "shape": "circle", "center": [1360, 610], "radius": 250, "sides": 32},
-          {"label": "East Gallery", "polygon": [[1045, 545], [1165, 545], [1165, 675], [1045, 675]]},
+          {"label": "The Lender's Vault", "shape": "circle", "center": [250, 610], "radius": 240, "sides": 32},
+          {"label": "West Vein", "polygon": [[430, 545], [590, 545], [590, 675], [430, 675]]},
+          {"label": "The Berth", "shape": "circle", "center": [1360, 610], "radius": 250, "sides": 32},
+          {"label": "East Vein", "polygon": [[1045, 545], [1165, 545], [1165, 675], [1045, 675]]},
           {"label": "Resin Quarter", "polygon": [[670, 840], [960, 840], [925, 1140], [700, 1140]]}
         ],
         "decorations": [
@@ -55,44 +55,41 @@
         ],
         "structures": [
           {"x": 850, "y": 740, "building_type": "vherathi_concierge_desk"},
-          {"x": 770, "y": 762, "building_type": "vherathi_lamp"},
-          {"x": 930, "y": 762, "building_type": "vherathi_lamp"},
           {"x": 810, "y": 442, "building_type": "vherathi_vein_arch"},
           {"x": 810, "y": 360, "building_type": "vherathi_lamp"},
           {"x": 560, "y": 500, "building_type": "vherathi_lamp"},
-          {"x": 1055, "y": 500, "building_type": "vherathi_lamp"},
-          {"x": 580, "y": 800, "building_type": "vherathi_lamp"},
-          {"x": 1030, "y": 800, "building_type": "vherathi_lamp"},
+          {"x": 1060, "y": 500, "building_type": "vherathi_lamp"},
+          {"x": 560, "y": 810, "building_type": "vherathi_lamp"},
+          {"x": 1060, "y": 810, "building_type": "vherathi_lamp"},
           {"x": 640, "y": 410, "building_type": "vherathi_bench"},
           {"x": 980, "y": 410, "building_type": "vherathi_bench"},
-          {"x": 560, "y": 700, "building_type": "vherathi_bench"},
-          {"x": 700, "y": 620, "building_type": "vherathi_planter"},
-          {"x": 960, "y": 650, "building_type": "vherathi_planter"},
-          {"x": 1010, "y": 720, "building_type": "vherathi_seat_pod"},
-          {"x": 1075, "y": 675, "building_type": "vherathi_seat_pod"},
+          {"x": 560, "y": 690, "building_type": "vherathi_bench"},
+          {"x": 700, "y": 610, "building_type": "vherathi_planter"},
+          {"x": 950, "y": 640, "building_type": "vherathi_planter"},
+          {"x": 1030, "y": 700, "building_type": "vherathi_seat_pod"},
           {"x": 1360, "y": 490, "building_type": "vherathi_dock_antler"},
-          {"x": 1440, "y": 540, "building_type": "vherathi_lamp"},
-          {"x": 1440, "y": 690, "building_type": "vherathi_lamp"},
-          {"x": 1490, "y": 615, "building_type": "vherathi_bench"},
-          {"x": 1280, "y": 730, "building_type": "vherathi_planter"},
-          {"x": 250, "y": 480, "building_type": "vherathi_lamp"},
-          {"x": 250, "y": 740, "building_type": "vherathi_bench"},
-          {"x": 120, "y": 610, "building_type": "vherathi_planter"},
+          {"x": 1445, "y": 540, "building_type": "vherathi_lamp"},
+          {"x": 1445, "y": 700, "building_type": "vherathi_lamp"},
+          {"x": 1500, "y": 615, "building_type": "vherathi_bench"},
+          {"x": 1270, "y": 740, "building_type": "vherathi_planter"},
+          {"x": 250, "y": 470, "building_type": "vherathi_lamp"},
+          {"x": 250, "y": 745, "building_type": "vherathi_bench"},
+          {"x": 130, "y": 610, "building_type": "vherathi_planter"},
           {"x": 400, "y": 610, "building_type": "vherathi_lamp"},
           {"x": 710, "y": 250, "building_type": "vherathi_bench"},
           {"x": 910, "y": 250, "building_type": "vherathi_bench"},
           {"x": 810, "y": 150, "building_type": "vherathi_planter"},
           {"x": 730, "y": 340, "building_type": "vherathi_lamp"},
           {"x": 890, "y": 340, "building_type": "vherathi_lamp"},
-          {"x": 725, "y": 970, "building_type": "vherathi_planter"},
-          {"x": 900, "y": 970, "building_type": "vherathi_planter"},
-          {"x": 812, "y": 1050, "building_type": "vherathi_seat_pod"},
-          {"x": 735, "y": 900, "building_type": "vherathi_lamp"},
-          {"x": 890, "y": 900, "building_type": "vherathi_lamp"}
+          {"x": 720, "y": 985, "building_type": "vherathi_planter"},
+          {"x": 905, "y": 985, "building_type": "vherathi_planter"},
+          {"x": 812, "y": 1060, "building_type": "vherathi_seat_pod"},
+          {"x": 735, "y": 890, "building_type": "vherathi_lamp"},
+          {"x": 890, "y": 890, "building_type": "vherathi_lamp"}
         ],
         "npcs": [
           {
-            "name": "Sela Cordova",
+            "name": "Selu Vaeren",
             "x": 850,
             "y": 700,
             "role": "concierge",
@@ -110,7 +107,7 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Welcome to Alpha Station - you've found the concierge desk. First time out here, I'd guess. Want the quick tour? I'll walk you through the controls, help you line up a loan, and get you into a ship of your own.",
+                  "text": "Welcome to Vaelune Ring - you've found the concierge desk. First time out here, I'd guess. Want the quick tour? I'll walk you through the controls, help you line up a loan, and get you into a ship of your own.",
                   "options": [
                     {"label": "Yes, show me around.", "next": "accepted", "actions": ["set_flag:station_tour_accepted", "start_mission:station_tour"]},
                     {"label": "Maybe later.", "next": null}
@@ -130,7 +127,7 @@
                   ]
                 },
                 "declined": {
-                  "text": "Fair enough. The pods are all off the concourse - Credit Union west, Ship Dock east. Good luck out there.",
+                  "text": "Fair enough. The pods are all off the concourse - the Lender's Vault west, the Berth east. Good luck out there.",
                   "options": [
                     {"label": "Thanks.", "next": null}
                   ]
@@ -145,7 +142,7 @@
             }
           },
           {
-            "name": "Bram Solise",
+            "name": "Brahn Ossilis",
             "x": 800,
             "y": 200,
             "role": "bartender",
@@ -187,7 +184,7 @@
                   ]
                 },
                 "about_station": {
-                  "text": "One big ring, all of it off this concourse. Credit union's the west pod, ship dock's the east one - go see Petra if you're short, then Dax about a hull.",
+                  "text": "One grown ring, all of it off this concourse. The Lender's Vault is the west pod, the Berth's the east one - go see Petira if you're short, then Daxen about a hull.",
                   "options": [
                     {"label": "Ask about the quiet cargo runs", "next": "smuggler_tip", "requires_flag": "bought_bartender_round"},
                     {"label": "Good to know", "next": "start"},
@@ -195,7 +192,7 @@
                   ]
                 },
                 "smuggler_tip": {
-                  "text": "Word is Priya doesn't ask too many questions if the crate isn't labeled. Didn't hear that from me.",
+                  "text": "Word is Silas doesn't ask too many questions if the crate isn't labeled. Didn't hear that from me.",
                   "options": [
                     {"label": "Noted", "next": null}
                   ]
@@ -204,7 +201,7 @@
             }
           },
           {
-            "name": "Petra Voss",
+            "name": "Petira Valune",
             "x": 280,
             "y": 600,
             "role": "loan_officer",
@@ -229,7 +226,7 @@
             }
           },
           {
-            "name": "Dax Renner",
+            "name": "Daxen Reeve",
             "x": 1290,
             "y": 556,
             "role": "ship_salesman",
@@ -238,7 +235,7 @@
             "shop": {"type": "ships", "stock": ["vherathi_skiff", "vherathi_courier", "vherathi_thornwing", "vherathi_tender", "vherathi_reliquary", "vherathi_ark"]}
           },
           {
-            "name": "Reeve Katic",
+            "name": "Riven Kataris",
             "x": 1376,
             "y": 660,
             "role": "outfitter",
@@ -247,7 +244,7 @@
             "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
           },
           {
-            "name": "Ilsa Farrow",
+            "name": "Ilsae Farrune",
             "x": 660,
             "y": 600,
             "role": "quartermaster",
@@ -257,7 +254,7 @@
             "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.2}
           },
           {
-            "name": "Talen Brix",
+            "name": "Talen Bracis",
             "x": 1120,
             "y": 600,
             "role": "guard",
@@ -266,7 +263,7 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Wren Castellan",
+            "name": "Wrenna Castis",
             "x": 904,
             "y": 700,
             "role": "traveler",
@@ -275,7 +272,7 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Mira Osei",
+            "name": "Mirae Oseth",
             "x": 800,
             "y": 1000,
             "role": "roommate",
@@ -284,7 +281,7 @@
             "dialogue_options": ["Sorry", "Leave"]
           },
           {
-            "name": "Renna Kade",
+            "name": "Renna Kadis",
             "x": 700,
             "y": 744,
             "role": "resident",
@@ -293,25 +290,25 @@
             "dialogue_options": ["Morning", "Leave"]
           },
           {
-            "name": "Toma Idrisi",
+            "name": "Toma Idras",
             "x": 884,
             "y": 448,
             "role": "resident",
             "outfit": "vherathi_softsuit",
-            "greeting": "Concourse bar's right there if you're looking for Bram.",
+            "greeting": "The bar's right there off the concourse if you're looking for Brahn.",
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Adjutant Ondra",
+            "name": "Ondra Sethvane",
             "x": 300,
             "y": 560,
             "role": "clerk",
             "outfit": "vherathi_steward",
-            "greeting": "Docking fees are settled at the credit union, not here. I only handle the paperwork.",
+            "greeting": "Docking fees are settled at the Lender's Vault, not here. I only handle the paperwork.",
             "dialogue_options": ["Understood", "Leave"]
           },
           {
-            "name": "Stationmaster Corell",
+            "name": "Warden Corelis",
             "x": 1320,
             "y": 536,
             "role": "stationmaster",
@@ -320,7 +317,7 @@
             "dialogue_options": ["Noted", "Leave"]
           },
           {
-            "name": "Jax Miren",
+            "name": "Jaxel Miren",
             "x": 1190,
             "y": 600,
             "role": "dockworker",
@@ -335,7 +332,7 @@
   "moon": {
     "x": 0.85,
     "y": 0.8,
-    "name": "Luna Prime",
+    "name": "Ossira",
     "size": 30,
     "color": [200, 200, 200],
     "crater_color": [150, 150, 150],
@@ -346,8 +343,8 @@
     ],
     "interiors": {
       "city": {
-        "label": "Moon City",
-        "description": "Lunar metropolitan settlement",
+        "label": "Ossira Lattice",
+        "description": "The Concord's grown lattice-city",
         "culture": "vherathi",
         "background_color": [150, 150, 150],
         "connected_locations": ["wilderness"],
@@ -370,51 +367,50 @@
         ],
         "structures": [
           {"x": 800, "y": 706, "building_type": "vherathi_vein_arch"},
-          {"x": 420, "y": 440, "building_type": "vherathi_spire"},
-          {"x": 1180, "y": 520, "building_type": "vherathi_spire"},
-          {"x": 1300, "y": 980, "building_type": "vherathi_spire"},
-          {"x": 480, "y": 1120, "building_type": "vherathi_bloompod"},
-          {"x": 1080, "y": 1080, "building_type": "vherathi_bloompod"},
-          {"x": 400, "y": 980, "building_type": "vherathi_hall"},
-          {"x": 720, "y": 700, "building_type": "vherathi_bench"},
-          {"x": 960, "y": 720, "building_type": "vherathi_bench"},
-          {"x": 800, "y": 970, "building_type": "vherathi_bench"},
-          {"x": 620, "y": 860, "building_type": "vherathi_bench"},
-          {"x": 1080, "y": 860, "building_type": "vherathi_bench"},
-          {"x": 680, "y": 650, "building_type": "vherathi_lamp"},
-          {"x": 1060, "y": 600, "building_type": "vherathi_lamp"},
-          {"x": 780, "y": 1060, "building_type": "vherathi_lamp"},
-          {"x": 1180, "y": 870, "building_type": "vherathi_lamp"},
-          {"x": 470, "y": 890, "building_type": "vherathi_lamp"},
-          {"x": 500, "y": 520, "building_type": "vherathi_lamp"},
-          {"x": 900, "y": 900, "building_type": "vherathi_planter"},
-          {"x": 700, "y": 900, "building_type": "vherathi_planter"},
-          {"x": 1000, "y": 760, "building_type": "vherathi_planter"},
-          {"x": 340, "y": 700, "building_type": "vherathi_planter"},
-          {"x": 860, "y": 860, "building_type": "vherathi_seat_pod"},
-          {"x": 740, "y": 760, "building_type": "vherathi_seat_pod"}
+          {"x": 800, "y": 440, "building_type": "vherathi_spire"},
+          {"x": 1250, "y": 560, "building_type": "vherathi_spire"},
+          {"x": 1200, "y": 1180, "building_type": "vherathi_spire"},
+          {"x": 650, "y": 370, "building_type": "vherathi_bloompod"},
+          {"x": 520, "y": 1170, "building_type": "vherathi_bloompod"},
+          {"x": 360, "y": 720, "building_type": "vherathi_hall"},
+          {"x": 700, "y": 660, "building_type": "vherathi_bench"},
+          {"x": 910, "y": 670, "building_type": "vherathi_bench"},
+          {"x": 660, "y": 950, "building_type": "vherathi_bench"},
+          {"x": 940, "y": 950, "building_type": "vherathi_bench"},
+          {"x": 800, "y": 600, "building_type": "vherathi_planter"},
+          {"x": 620, "y": 800, "building_type": "vherathi_planter"},
+          {"x": 980, "y": 800, "building_type": "vherathi_planter"},
+          {"x": 800, "y": 980, "building_type": "vherathi_planter"},
+          {"x": 560, "y": 560, "building_type": "vherathi_lamp"},
+          {"x": 1050, "y": 560, "building_type": "vherathi_lamp"},
+          {"x": 560, "y": 1010, "building_type": "vherathi_lamp"},
+          {"x": 1050, "y": 1000, "building_type": "vherathi_lamp"},
+          {"x": 360, "y": 920, "building_type": "vherathi_lamp"},
+          {"x": 1170, "y": 860, "building_type": "vherathi_lamp"},
+          {"x": 1000, "y": 300, "building_type": "vherathi_seat_pod"},
+          {"x": 380, "y": 1120, "building_type": "vherathi_seat_pod"}
         ],
         "npcs": [
           {
-            "name": "Nadia Okafor",
+            "name": "Nadae Okavis",
             "x": 300,
             "y": 200,
             "outfit": "vherathi_envoy"
           },
           {
-            "name": "Ezra Kondo",
+            "name": "Ezren Kondae",
             "x": 700,
             "y": 150,
             "outfit": "vherathi_softsuit"
           },
           {
-            "name": "Livia Marchetti",
+            "name": "Livae Marchis",
             "x": 1250,
             "y": 250,
             "outfit": "vherathi_honor_guard"
           },
           {
-            "name": "Ovie Sann",
+            "name": "Ovis Sannen",
             "x": 550,
             "y": 300,
             "role": "surface_tech",
@@ -423,7 +419,7 @@
             "dialogue_options": ["Interesting", "Leave"]
           },
           {
-            "name": "Councilor Orvin",
+            "name": "Magistrate Orvis",
             "x": 1000,
             "y": 350,
             "role": "magistrate",
@@ -432,7 +428,7 @@
             "dialogue_options": ["Of course", "Leave"]
           },
           {
-            "name": "Captain Bell",
+            "name": "Tide-pilot Bellae",
             "x": 300,
             "y": 450,
             "role": "pilot",
@@ -441,7 +437,7 @@
             "dialogue_options": ["Safe flights", "Leave"]
           },
           {
-            "name": "Dr. Sesh",
+            "name": "Healer Sesh",
             "x": 650,
             "y": 1150,
             "role": "medic",
@@ -450,7 +446,7 @@
             "dialogue_options": ["Noted", "Leave"]
           },
           {
-            "name": "Tarn Escobar",
+            "name": "Tarn Escavis",
             "x": 400,
             "y": 1250,
             "role": "ranger",
@@ -459,7 +455,7 @@
             "dialogue_options": ["Thanks", "Leave"]
           },
           {
-            "name": "Silas Vantauk",
+            "name": "Silas Vantune",
             "x": 1150,
             "y": 950,
             "role": "merchant",
@@ -479,8 +475,8 @@
         ]
       },
       "wilderness": {
-        "label": "Moon Wilderness",
-        "description": "Natural lunar terrain",
+        "label": "Ossira Reef",
+        "description": "Bare grown reef beyond the dome",
         "background_color": [150, 150, 150],
         "connected_locations": ["city"],
         "entrance": {
@@ -508,13 +504,13 @@
     }
   },
   "celestial_bodies": [
-    {"name": "Emberrock", "x": 0.56, "y": 0.53, "size": 14, "color": [180, 90, 60], "body_type": "rocky"},
-    {"name": "Frostvane", "x": 0.05, "y": 0.95, "size": 22, "color": [210, 225, 255], "body_type": "ice"},
-    {"name": "Kolossus", "x": 0.95, "y": 0.08, "size": 55, "color": [230, 180, 120], "body_type": "gas_giant", "has_ring": true, "ring_color": [200, 190, 150]}
+    {"name": "Caldis", "x": 0.56, "y": 0.53, "size": 14, "color": [180, 90, 60], "body_type": "rocky"},
+    {"name": "Vereth", "x": 0.05, "y": 0.95, "size": 22, "color": [210, 225, 255], "body_type": "ice"},
+    {"name": "Illuma", "x": 0.95, "y": 0.08, "size": 55, "color": [230, 180, 120], "body_type": "gas_giant", "has_ring": true, "ring_color": [200, 190, 150]}
   ],
   "ai_ships": [
     {
-      "name": "Freighter One",
+      "name": "Tidebearer",
       "x": 0.65,
       "y": 0.6,
       "ship_type": "vherathi_reliquary",
@@ -522,7 +518,7 @@
       "route": ["station", "moon"]
     },
     {
-      "name": "Patrol One",
+      "name": "Vein-Warden",
       "x": 0.5,
       "y": 0.1,
       "ship_type": "vherathi_thornwing",
@@ -530,7 +526,7 @@
       "route": ["station", "moon"]
     },
     {
-      "name": "Explorer One",
+      "name": "Farwander",
       "x": 0.5,
       "y": 0.5,
       "ship_type": "vherathi_courier",

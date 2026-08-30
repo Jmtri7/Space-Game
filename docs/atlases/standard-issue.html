@@ -107,6 +107,15 @@
   }
   .status b{color:var(--ink);font-weight:600}
   code.f{font-family:"IBM Plex Mono",monospace;font-size:.84em;color:var(--issue)}
+  .source-quote{
+    border-left:2px solid var(--line);padding:2px 0 2px 18px;margin:0 0 22px;
+    max-width:66ch;color:var(--ink-2);font-size:1rem;
+  }
+  .source-quote cite{
+    display:block;margin-top:8px;font-style:normal;
+    font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
 
   .legend{
     margin:44px 0 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
@@ -857,6 +866,34 @@
         <li><b>Clean symmetry.</b> Mirrored and evenly spaced like Drossholt, but flush — no visible patch plates, no mismatched shades, windows in a regular grid.</li>
         <li><b>Interiors: spine and bays.</b> A straight central concourse with identical rooms budding off both sides at regular intervals; every doorway marked with a painted safety line and hazard chevrons.</li>
       </ol>
+    </div>
+
+    <!-- ---- naming ---- -->
+    <p class="subhead">05·N — Naming</p>
+    <blockquote class="source-quote">
+      Sol Federation names are issued, stencilled, and catalogued — the same
+      instinct as the <code class="f">SF-###</code> registration on every hull. A
+      system keeps its old astronomical name plus its Federation function
+      ("Procyon Gate" — the gate on the Procyon lane); the star keeps the plain
+      name. A station is "&lt;system&gt; Ring" or "&lt;system&gt; Station"; a settlement
+      is a function plus "Row", "Post" or "Line". Rooms are their function,
+      nothing more (Concourse, Dock, Administration, Customs, Med Bay, Stores,
+      Operations, Comms). Minor bodies are catalogue entries — "Marker Buoy 1",
+      "SF-9c" — while a named installation-world keeps its name. People are
+      "&lt;rank&gt; &lt;surname&gt;" with real Federation ranks (Administrator, Marshal,
+      Officer, Corporal, Petty Officer, Flight Officer, Signals Tech, Medtech);
+      a civilian job stands in for the rank. Ships are a duty plus "Patrol" or
+      "Run".
+      <cite>— cultures.json · "standard_issue" · naming</cite>
+    </blockquote>
+    <div class="status" style="margin:0 0 26px">
+      <b>The reference — already on-scheme.</b> <b>Procyon Gate</b>
+      (<code class="f">procyon_gate</code>): star <b>Procyon</b>, station
+      <b>Procyon Ring</b>, moon <b>Gate Moon</b> / settlement <b>Garrison Row</b>,
+      rank-titled residents (Administrator Kwe, Marshal Otile, Corporal Vane,
+      Signals Tech Oro, Petty Officer Lund…), traffic <b>Gate Patrol · Supply
+      Run</b>. Only the two ad-hoc body names were catalogued: <b>Marker Buoy
+      1</b> and <b>SF-9c</b> (Wardwatch, a named watch-body, kept).
     </div>
 
     <!-- ---- ships ---- -->

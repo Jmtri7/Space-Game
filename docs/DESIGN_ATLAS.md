@@ -67,10 +67,20 @@ has it; `past-the-reach.html` shows it; `standard-issue.html` /
   surgeon, researcher, civilian, smuggler, ranger, bounty hunter) redrawn on
   the new body, each with a **role-distinguishing detail** — a mechanic's tool
   belt + lamp, a dockworker's hi-vis tabard, a smuggler's hood, a surgeon's
-  mask. The recoloured base is buildable now; the role details are new geometry
-  (mockup) and would land via a `figure_signature` table keyed by outfit id.
+  mask. **Shipped** — the role details are now baked as
+  `game/world/figure_signatures.py` (via `build_figure_signatures.py`) and
+  `Person.draw()` renders them from each outfit's `"signature"` key.
   Built by [`gen_common.py`](atlases/gen_common.py) +
   [`common_kit.py`](atlases/common_kit.py). Accent: steel-cyan `#8fb9c8`.
+
+Both atlases carry a **Naming** section per culture (01·N / 02·N / 05·N),
+sourced from each culture's `naming` field in `cultures.json` and applied to
+the default story's three systems as of story `1.13.0` (Aurelith / Vaelune
+Ring / Ossira for the Vherathi; Kadmor Reach / Kadmor Yard / Skragg for the
+Drossholt; Procyon Gate kept, minor body names catalogued for the Federation).
+Internal `system_id` file names (`sol_alpha.json` etc.) are unchanged for save
+compatibility.
+
 - **Resin & Rivets** — the two default-story cultures (Vherathi Concord, Drossholt
   Company): ships, stations, outfits, buildings, decorations, interiors. **Fully
   shipped** as of story `1.10.0` — both station interiors and both moon cities are

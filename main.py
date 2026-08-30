@@ -272,18 +272,18 @@ def _pressed_any(events, *keys):
     return any(e.type == pygame.KEYDOWN and e.key in keys for e in events)
 
 
-def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed):
+def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed, switch_ship_fn=None):
     """Which menu class a "shop" config opens - ShipBrowserMenu for ships
-    (needs a live preview and a purchase callback, not a flat price list),
-    OutfittingMenu for ship outfits (needs the current ship's slots and a
-    stats-refresh callback), ShopMenu for everything else (commodities/
-    items). Centralized here since both the station and moon branches in
-    main()'s state machine need the same dispatch."""
+    (needs a live preview, a purchase callback, and a switch-active-hull
+    callback), OutfittingMenu for ship outfits (needs the current ship's
+    slots and a stats-refresh callback), ShopMenu for everything else
+    (commodities/items). Centralized here since both the station and moon
+    branches in main()'s state machine need the same dispatch."""
     shop_type = shop_config.get("type")
     if shop_type == "ships":
-        return ShipBrowserMenu(possessions, story, shop_config, on_buy=buy_ship_fn)
+        return ShipBrowserMenu(possessions, story, shop_config, on_buy=buy_ship_fn, on_switch=switch_ship_fn)
     if shop_type == "outfits":
-        ship_type_id = possessions.owned_ships[-1] if possessions.owned_ships else None
+        ship_type_id = possessions.active_ship()
         return OutfittingMenu(possessions, story, shop_config, ship_type_id, on_outfits_changed=on_outfits_changed)
     return ShopMenu(possessions, story, shop_config, cargo_capacity=cargo_capacity)
 
@@ -827,7 +827,7 @@ def main():
                     missions_return_screen = "station"
                     current_screen = "missions"
                 elif action == "shop":
-                    shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits)
+                    shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits, station_interior.switch_ship)
                     shop_return_screen = "station"
                     current_screen = "shop"
                 # Space physics stays running while docked, and the
@@ -916,7 +916,7 @@ def main():
                     missions_return_screen = "moon"
                     current_screen = "missions"
                 elif action == "shop":
-                    shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits)
+                    shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits, moon_interior.switch_ship)
                     shop_return_screen = "moon"
                     current_screen = "shop"
                 # Space physics stays running while on the moon, and the

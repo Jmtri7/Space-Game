@@ -58,7 +58,8 @@ name is kept, the timestamp lives inside it.
     },
     "possessions": {
       "credits": 0,
-      "owned_ships": ["shuttle"],
+      "owned_ships": ["shuttle", "freighter"],
+      "active_ship_index": 1,
       "loans": [{"lender": "Station Credit Union", "principal": 1200}],
       "owned_outfits": ["afterburner"],
       "installed_outfits": {"weapon_1": "laser_cannon"},
@@ -153,18 +154,27 @@ ARCHITECTURE.md).
 (`{slot_id: outfit_id}`) are a separate concept from `cargo`/`items` and from
 `Person.outfit` (the unrelated cosmetic space-suit asset in `graphics.json`) -
 see `game/world/possessions.py`. **`installed_outfits` describes whichever
-ship is currently flown, not a specific owned ship instance** - like
-`owned_ships`, there's no per-ship identity in this data model yet (buying a
-new ship just makes it the active one, per `SpaceScreen.restore_possessions()`
-re-equipping `owned_ships[-1]`). Because of that, `LocationScreen.buy_ship()`
-calls `Possessions.uninstall_all_outfits()` before adding the new ship -
-otherwise slot ids like `"utility_1"` being reused across ship types would
-let a new ship silently inherit whatever was mounted on the old one for
-free. The new ship starts bare; the old outfits land back in `owned_outfits`
-to reinstall by hand. If "own multiple ships and switch between them" is
-ever built, `installed_outfits` will need to move from a flat map on
-`Possessions` to something keyed per owned ship - this is a known, deliberate
-gap, not an oversight. `SpaceScreen._apply_ship_type()` re-applies
+ship is currently flown, not a specific owned ship instance** - there's no
+per-ship *loadout* identity in this data model yet.
+
+`active_ship_index` picks which entry of `owned_ships` is that flown hull
+(`Possessions.active_ship()`). Buying a ship sets it to the new one; the
+ship salesman's **"Your Ships"** tab (`ShipBrowserMenu` → `LocationScreen.
+switch_ship()` → `SpaceScreen._on_ship_switched()`) points it at any owned
+hull and re-docks the real ship. A save with no `active_ship_index`
+(pre-`1.12.0`, or any save with a single ship) falls back to the **last**
+`owned_ships` entry, exactly matching the old `owned_ships[-1]` behaviour -
+so an old single-ship save loads identically. An old save that somehow held
+two-plus ships (buying a second was undefined before) now flies its last
+one instead of an arbitrary pick.
+
+Both `LocationScreen.buy_ship()` and `switch_ship()` call
+`Possessions.uninstall_all_outfits()` first - otherwise slot ids like
+`"utility_1"` being reused across ship types would let the ship you switch
+to silently inherit whatever was mounted on the last one for free. The
+switched-to ship starts bare; the old outfits land back in `owned_outfits`
+to reinstall by hand. Giving each owned ship its *own* stored loadout is
+still a known, deliberate gap. `SpaceScreen._apply_ship_type()` re-applies
 `installed_outfits`' stat modifiers (via `Ship.apply_outfits()`) every time it
 runs, so a loaded save's outfitted ship keeps its bonuses instead of reverting
 to the bare ship type's base stats. `apply_outfits()` also clamps the
