@@ -7,7 +7,7 @@ from game.constants import YELLOW, WHITE, GRAY
 from game.utils import get_font, _wrap_text, get_ui_scale
 import game.utils as utils
 from game.world.ship import Ship
-from game.world.world_object import _resolve_part_color
+from game.world.world_object import _resolve_part_color, expand_polygon, _ring_quads
 
 PANEL_COLOR = (8, 10, 20, 235)
 PANEL_BORDER = (120, 120, 145)
@@ -575,24 +575,30 @@ def _draw_glyph_parts(surface, center_x, center_y, pixel_size, parts, rotate,
             center = project(cx, cy)
             radius = max(1, round(r * pixel_size))
             ring_w = part.get("width")
-            if ring_w:
-                pygame.draw.circle(surface, color, center, radius,
-                                   max(1, round(ring_w * pixel_size)))
+            if ring_w:                       # ring: quad strip, transparent hole
+                band = max(1, round(ring_w * pixel_size))
+                for quad in _ring_quads(center, radius, band, max(14, min(44, radius // 2))):
+                    pygame.draw.polygon(surface, color, quad)
             else:
-                pygame.draw.circle(surface, color, center, radius)
                 if ol:
-                    pygame.draw.circle(surface, ol, center, radius, outline_w)
+                    pygame.draw.circle(surface, ol, center, radius + outline_w)
+                pygame.draw.circle(surface, color, center, radius)
         elif "line" in part:
             pts = [project(px, py) for px, py in part["line"]]
-            if len(pts) >= 2:
-                pygame.draw.lines(surface, color, False, pts,
-                                  max(1, round(part.get("width", 2) * pixel_size)))
+            half = max(0.6, round(part.get("width", 2) * pixel_size) / 2)
+            for a, b in zip(pts, pts[1:]):
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                L = math.hypot(dx, dy) or 1.0
+                nx, ny = -dy / L * half, dx / L * half
+                pygame.draw.polygon(surface, color, [
+                    (a[0] + nx, a[1] + ny), (b[0] + nx, b[1] + ny),
+                    (b[0] - nx, b[1] - ny), (a[0] - nx, a[1] - ny)])
         else:
             pts = [project(px, py) for px, py in part.get("points", [])]
             if len(pts) >= 3:
-                pygame.draw.polygon(surface, color, pts)
                 if ol:
-                    pygame.draw.polygon(surface, ol, pts, outline_w)
+                    pygame.draw.polygon(surface, ol, expand_polygon(pts, outline_w))
+                pygame.draw.polygon(surface, color, pts)
 
 
 def _draw_glyph_windows(surface, center_x, center_y, pixel_size, graphics, cos_a, sin_a):

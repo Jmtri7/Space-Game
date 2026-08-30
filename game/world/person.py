@@ -1,8 +1,9 @@
 """Base class for NPCs and other characters in the game."""
 import pygame
 import math
-from game.utils import to_screen, to_screen_x, to_screen_y, get_scale
+from game.utils import to_screen, get_scale
 from game.world.possessions import Possessions
+from game.world.world_object import expand_polygon
 
 
 class Person:
@@ -192,6 +193,14 @@ class Person:
             (wrist_x - half_width * 0.8, wrist_y),
         ]
 
+    @staticmethod
+    def _ngon(cx, cy, rx, ry, n=12):
+        """An oval as an n-sided polygon (game-space units) - the body is
+        drawn strokelessly with polygons + circles only, like the atlases,
+        so an ellipse (boot) becomes a many-sided polygon."""
+        return [(cx + rx * math.cos(2 * math.pi * i / n),
+                 cy + ry * math.sin(2 * math.pi * i / n)) for i in range(n)]
+
     def _advance_walk(self, distance):
         """Advance the walk cycle by the distance just walked and ramp the
         animation in; draw() eases it back out once movement stops. Lives on
@@ -252,9 +261,9 @@ class Person:
             ankle_y = ground_y + ankle_dy
             self._fill_poly(surface, self._leg_quad(center_x, body_bottom_y, ankle_x, ankle_y, self.LEG_HALF_WIDTH + margin), self.OUTLINE_COLOR, border_px=0)
             self._fill_poly(surface, self._leg_quad(center_x, body_bottom_y, ankle_x, ankle_y, self.LEG_HALF_WIDTH), leg_color, border_px=0)
-            boot_top_y = ankle_y - 2 * self.BOOT_RADIUS_Y
-            pygame.draw.ellipse(surface, self.OUTLINE_COLOR, (*to_screen(ankle_x - self.BOOT_RADIUS_X - margin, boot_top_y - margin), to_screen_x((self.BOOT_RADIUS_X + margin) * 2), to_screen_y((self.BOOT_RADIUS_Y + margin) * 2)))
-            pygame.draw.ellipse(surface, boot_color, (*to_screen(ankle_x - self.BOOT_RADIUS_X, boot_top_y), to_screen_x(self.BOOT_RADIUS_X * 2), to_screen_y(self.BOOT_RADIUS_Y * 2)))
+            boot_cy = ankle_y - self.BOOT_RADIUS_Y
+            self._fill_poly(surface, self._ngon(ankle_x, boot_cy, self.BOOT_RADIUS_X + margin, self.BOOT_RADIUS_Y + margin), self.OUTLINE_COLOR, border_px=0)
+            self._fill_poly(surface, self._ngon(ankle_x, boot_cy, self.BOOT_RADIUS_X, self.BOOT_RADIUS_Y), boot_color, border_px=0)
 
         outline_torso_points = [to_screen(px, py) for px, py in self._torso_points(body_top_y, body_bottom_y, margin=margin)]
         pygame.draw.polygon(surface, self.OUTLINE_COLOR, outline_torso_points)
@@ -308,16 +317,19 @@ class Person:
 
     def _fill_poly(self, surface, points, color, border_px=_ACCESSORY_BORDER):
         screen_points = [to_screen(px, py) for px, py in points]
+        # Strokeless, like the atlases / the body: the outline is a larger
+        # copy of the shape drawn *behind* the fill, never an edge stroke.
+        if border_px and len(screen_points) >= 3:
+            pygame.draw.polygon(surface, self.OUTLINE_COLOR,
+                                expand_polygon(screen_points, border_px))
         pygame.draw.polygon(surface, color, screen_points)
-        if border_px:
-            pygame.draw.polygon(surface, self.OUTLINE_COLOR, screen_points, border_px)
 
     def _fill_circle(self, surface, cx, cy, radius, color, scale, border_px=_ACCESSORY_BORDER):
         center = to_screen(cx, cy)
         radius_px = max(1, int(radius * scale))
-        pygame.draw.circle(surface, color, center, radius_px)
         if border_px:
-            pygame.draw.circle(surface, self.OUTLINE_COLOR, center, radius_px, border_px)
+            pygame.draw.circle(surface, self.OUTLINE_COLOR, center, radius_px + border_px)
+        pygame.draw.circle(surface, color, center, radius_px)
 
     def _draw_back_accessories(self, surface, body_top_y, body_bottom_y, head_center_y, scale):
         outfit = self.outfit
@@ -345,9 +357,22 @@ class Person:
             r = self.HEAD_RADIUS + self.HELMET_THICKNESS
             base = (self.x + r * 0.55, head_center_y - r * 0.55)
             tip = (self.x + r * 0.95, head_center_y - r * 2.0)
-            pygame.draw.line(surface, self.OUTLINE_COLOR, to_screen(*base), to_screen(*tip), self._ACCESSORY_BORDER + 2)
-            pygame.draw.line(surface, antenna_color, to_screen(*base), to_screen(*tip), self._ACCESSORY_BORDER)
+            self._draw_thick_line(surface, base, tip, 0.6, antenna_color)
             self._fill_circle(surface, tip[0], tip[1], 1.3, antenna_color, scale)
+
+    def _draw_thick_line(self, surface, a, b, half_width, color):
+        """A thin line as a filled quad (+ dark quad behind) - no stroke."""
+        ax, ay = a
+        bx, by = b
+        dx, dy = bx - ax, by - ay
+        L = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / L * half_width, dx / L * half_width
+        def quad(w):
+            ox, oy = nx * w / half_width, ny * w / half_width
+            return [(ax + ox, ay + oy), (bx + ox, by + oy),
+                    (bx - ox, by - oy), (ax - ox, ay - oy)]
+        self._fill_poly(surface, quad(half_width + 0.5), self.OUTLINE_COLOR, border_px=0)
+        self._fill_poly(surface, quad(half_width), color, border_px=0)
 
     def _draw_front_accessories(self, surface, body_top_y, body_bottom_y, scale):
         outfit = self.outfit

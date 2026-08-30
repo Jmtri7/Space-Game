@@ -234,6 +234,15 @@ station rings as transparent-hole ring parts. The `#888` fallback in
 `gen_rr.py` was removed — a `url(#grid)` fill must pass through, or a second
 run of the (non-idempotent) converter paints the background solid grey.
 
+**The engine renders these parts by the same rules** — `WorldObject.draw_parts`
+(and its UI twin `ui_theme._draw_glyph_parts`, and `Person.draw`) use *only*
+filled polygons and circles, no `pygame` stroke: an outline is
+`world_object.expand_polygon` (a mitre-offset copy) drawn behind the fill, a
+ring is `_ring_quads` (a strip), a line is a thin quad, and a boot is a
+12-gon. So the in-game silhouettes match the plates primitive-for-primitive,
+and sharp corners can't poke through the outline the way a `polygon(…, width)`
+stroke let them. Costs ~+1 ms on a 15-NPC interior — within budget.
+
 ## Turning a plate into config
 
 A specimen SVG is mostly polygons/paths/circles, and the engine can consume
