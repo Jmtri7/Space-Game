@@ -186,15 +186,21 @@ class A:
 
 
 def walk(el, inh):
-    """inh: dict of inherited fill/stroke/stroke-width."""
+    """inh: dict of inherited fill/stroke/stroke-width/opacity."""
     if "flame" in (el.get("class") or "").split():
         return  # exhaust flame: stays procedural, never extracted
     style = dict(inh)
-    for k in ("fill", "stroke", "stroke-width"):
+    for k in ("fill", "stroke", "stroke-width", "opacity"):
         if el.get(k) is not None:
             style[k] = el.get(k)
     tag = el.tag.split("}")[-1]
-    if tag in ("polygon", "rect", "circle", "line", "path"):
+    # A near-transparent shape is atmosphere (the faint white floor-glow
+    # under every specimen), not silhouette - never a part.
+    try:
+        faint = float(style.get("opacity", 1)) < 0.2
+    except (TypeError, ValueError):
+        faint = False
+    if tag in ("polygon", "rect", "circle", "line", "path") and not faint:
         emit(tag, el, style)
     for child in el:
         walk(child, style)
