@@ -231,6 +231,9 @@ class SpaceScreen(ScreenBase):
         self.hail_banner_timer = 0
         # Projectiles (laser shots) currently in flight
         self.projectiles = []
+        # Laser fire rate limiting (frames between shots when holding X)
+        self.weapon_fire_cooldown = 0
+        self.weapon_fire_rate = 6  # frames between shots (10 shots/second at 60fps)
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -619,6 +622,9 @@ class SpaceScreen(ScreenBase):
         # reason LocationScreen pauses movement for its own active_dialogue.
         if not self.jump_state and not self.active_dialogue:
             self.player.handle_input(keys)
+            # Fire laser continuously while X is held
+            if keys[pygame.K_x]:
+                self._update_weapon_fire()
 
         # Rotate the view (Q/E) - held, like ship turning. Allowed even
         # mid-jump (it's only the camera), blocked only while a hail has
@@ -755,8 +761,6 @@ class SpaceScreen(ScreenBase):
                 return "missions"
             elif event.key == pygame.K_c:
                 self._toggle_controls()
-            elif event.key == pygame.K_x:
-                self._fire_weapon()
         return None
 
     def _mark_landed(self):
@@ -1417,6 +1421,9 @@ class SpaceScreen(ScreenBase):
             self.asteroid_field.update()
         with perf.span("sim.projectiles"):
             self._update_projectiles()
+        # Update weapon fire cooldown
+        if self.weapon_fire_cooldown > 0:
+            self.weapon_fire_cooldown -= 1
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
         if self.hail_banner_timer > 0:
@@ -1878,8 +1885,10 @@ class SpaceScreen(ScreenBase):
                 self.systems[dest_sid].ai_ships.append(ai_ship)
                 ai_ship.system_id = dest_sid
 
-    def _fire_weapon(self):
-        """Fire a laser projectile from the player's ship."""
+    def _update_weapon_fire(self):
+        """Fire laser if cooldown allows."""
+        if self.weapon_fire_cooldown > 0:
+            return
         if not self.player.ship:
             return
         rad = math.radians(self.player.angle)
@@ -1889,6 +1898,7 @@ class SpaceScreen(ScreenBase):
         projectile_vel_y = self.player.velocity_y - math.cos(rad) * PROJECTILE_SPEED
         projectile = Projectile(projectile_x, projectile_y, projectile_vel_x, projectile_vel_y)
         self.projectiles.append(projectile)
+        self.weapon_fire_cooldown = self.weapon_fire_rate
         sound_board.play("ping")
 
     def _update_projectiles(self):

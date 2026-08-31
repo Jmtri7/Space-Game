@@ -103,6 +103,23 @@ class ShipBrowserMenu(MenuBase):
     def _owned_count(self, ship_type_id):
         return self.possessions.owned_ships.count(ship_type_id)
 
+    def _format_slots(self, slots):
+        """Format slot list as a readable summary like 'W1 E1 U2'."""
+        if not slots:
+            return "None"
+        counts = {}
+        for slot in slots:
+            slot_type = slot.get("type", "utility")
+            counts[slot_type] = counts.get(slot_type, 0) + 1
+        # Order: weapon, engine, utility
+        order = ["weapon", "engine", "utility"]
+        parts = []
+        for slot_type in order:
+            if slot_type in counts:
+                abbrev = slot_type[0].upper()
+                parts.append(f"{abbrev}{counts[slot_type]}")
+        return " ".join(parts) if parts else "None"
+
     def handle_input(self, events):
         if self.confirm:
             action, ship_type_id = self.confirm.handle_input(events)
@@ -258,6 +275,8 @@ class ShipBrowserMenu(MenuBase):
                 head = "CURRENTLY FLYING" if self.grid.selected == self._active_index() else "Owned hull"
             else:
                 head = f"Owned: {self._owned_count(selected_id)}"
+            slots = ship_type.get("slots", [])
+            slot_summary = self._format_slots(slots)
             stats = [
                 ship_type.get("description", ""),
                 head,
@@ -266,6 +285,7 @@ class ShipBrowserMenu(MenuBase):
                 f"Max Velocity: {ship_type.get('max_velocity', 0)}",
                 f"Rotation: {ship_type.get('rotation_speed', 0)}",
                 f"Cargo Capacity: {ship_type.get('cargo_capacity', 0)}",
+                f"Slots: {slot_summary}",
                 f"Cost: {ship_type.get('cost', 0)}cr",
             ]
             stat_y = preview_center_y + int(62 * scale)

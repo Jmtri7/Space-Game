@@ -34,7 +34,7 @@ action to a modal (add a button, not a key).
 | **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
 | **L** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
-| **X** | Fire laser cannon at asteroids for mining |
+| **X** | Fire laser cannon (hold to fire continuously) |
 | **M** | Open the star map |
 | **J** | Jump to the selected star system (see Star Map below) |
 | **P** | Open the Possessions menu (credits, owned ships, loans) |

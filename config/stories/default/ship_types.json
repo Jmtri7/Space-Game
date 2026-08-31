@@ -11,6 +11,7 @@
     "cost": 1200,
     "cargo_capacity": 10,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
     ]
   },
@@ -26,6 +27,7 @@
     "cost": 4500,
     "cargo_capacity": 80,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -36,7 +38,7 @@
     "description": "Light security vessel",
     "max_thrust": 0.35,
     "max_velocity": 5.0,
-    "rotation_speed": 7,
+    "rotation_speed": 6.5,
     "size": 13,
     "color": [150, 100, 200],
     "cost": 3500,
@@ -58,6 +60,7 @@
     "cost": 4500,
     "cargo_capacity": 80,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -68,7 +71,7 @@
     "description": "Riveted-plate security cutter watching Drossholt claims",
     "max_thrust": 0.35,
     "max_velocity": 5.0,
-    "rotation_speed": 7,
+    "rotation_speed": 6.5,
     "size": 13,
     "color": [200, 150, 100],
     "shape": "rectangle",
@@ -84,13 +87,14 @@
     "description": "A grown needle - all spine and one outrigger fin. Fastest turn in the system, negligible hold.",
     "max_thrust": 0.4,
     "max_velocity": 5.5,
-    "rotation_speed": 9,
+    "rotation_speed": 6.5,
     "size": 8,
     "color": [74, 48, 96],
     "shape": "rectangle",
     "cost": 2200,
     "cargo_capacity": 4,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55}
     ]
@@ -107,6 +111,7 @@
     "cost": 5200,
     "cargo_capacity": 40,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5},
@@ -125,6 +130,7 @@
     "cost": 18000,
     "cargo_capacity": 60,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.35, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.65, "y": 0.5}
@@ -142,6 +148,7 @@
     "cost": 1800,
     "cargo_capacity": 6,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55}
     ]
@@ -158,6 +165,7 @@
     "cost": 4800,
     "cargo_capacity": 80,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -168,7 +176,7 @@
     "description": "The patrol hull swept into a single thorn - one long starboard wing to a point, the port side clipped to a stub, a grown weapon nub at the bow.",
     "max_thrust": 0.35,
     "max_velocity": 5.0,
-    "rotation_speed": 7,
+    "rotation_speed": 6.5,
     "size": 13,
     "color": [74, 48, 96],
     "shape": "rectangle",
@@ -191,6 +199,7 @@
     "cost": 6000,
     "cargo_capacity": 30,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -208,6 +217,7 @@
     "cost": 8000,
     "cargo_capacity": 70,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -243,6 +253,7 @@
     "cost": 1400,
     "cargo_capacity": 10,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.8}
     ]
   },
@@ -258,6 +269,7 @@
     "cost": 4800,
     "cargo_capacity": 80,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
@@ -268,7 +280,7 @@
     "description": "The Federation customs / port-authority cutter - painted to be seen, with a light bar and a bow mount.",
     "max_thrust": 0.35,
     "max_velocity": 5.0,
-    "rotation_speed": 7,
+    "rotation_speed": 6.5,
     "size": 13,
     "color": [65, 80, 106],
     "shape": "rectangle",
@@ -291,6 +303,7 @@
     "cost": 5000,
     "cargo_capacity": 25,
     "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
       {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85},
       {"id": "utility_1", "type": "utility", "x": 0.3, "y": 0.5},
       {"id": "utility_2", "type": "utility", "x": 0.7, "y": 0.5}
