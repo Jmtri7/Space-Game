@@ -334,11 +334,11 @@ def vetl(P):
     for k in range(7):
         sy = 68 + k * 12
         o.append(poly([(117, sy), (123, sy), (120, sy - 6)], B))
-    # ritual glow constellation on the back
+    # ritual glow constellation on the back - beads only (a connecting line
+    # reads as a teal scribble at sprite scale)
     for gx, gy in ((110, 78), (128, 90), (118, 106), (132, 118), (104, 112), (124, 74)):
         o.append(circ(gx, gy, 1.8, G))
-    o.append(ribbon([(110, 78), (124, 74)], 0.6, G))
-    o.append(ribbon([(128, 90), (118, 106), (132, 118)], 0.6, G))
+    o.append(circ(118, 106, 4.6, G, op=0.2))
     # big eye-spots near the nose
     for sx in (1, -1):
         o.append(ocirc(120 + sx * 14, 78, 5, L, d=1.3))
