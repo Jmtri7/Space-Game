@@ -66,6 +66,13 @@ has it; `past-the-reach.html` shows it; `standard-issue.html` /
 | **Vherathi Concord** | [`docs/atlases/vherathi-concord.html`](atlases/vherathi-concord.html) | https://claude.ai/code/artifact/d352d82f-d0f3-4165-94c6-32e14415de1f |
 | **Drossholt Company** | [`docs/atlases/drossholt-company.html`](atlases/drossholt-company.html) | https://claude.ai/code/artifact/5124a8b1-4c9e-4c3c-b341-9c778e9d13d7 |
 | **Past the Reach** | [`docs/atlases/past-the-reach.html`](atlases/past-the-reach.html) | https://claude.ai/code/artifact/d822ff88-5b66-4203-8b3c-e9c7459052fb |
+| **Kaethar Directorate** | [`docs/atlases/kaethar-directorate.html`](atlases/kaethar-directorate.html) | https://claude.ai/code/artifact/87a840a9-b921-482c-b14a-351dd1353469 |
+| **The Vetl** | [`docs/atlases/the-vetl.html`](atlases/the-vetl.html) | https://claude.ai/code/artifact/c046ebc1-2d81-4160-b956-0cc4e4312fc6 |
+| **The Salt Crows** | [`docs/atlases/salt-crows.html`](atlases/salt-crows.html) | https://claude.ai/code/artifact/bca33565-f999-45cf-b8b2-55eeff986310 |
+| **Deeprock Mining Consortium** | [`docs/atlases/deeprock-consortium.html`](atlases/deeprock-consortium.html) | https://claude.ai/code/artifact/d24ab6df-142b-4012-9b41-0f12b0720937 |
+| **The Ashfall Rite** | [`docs/atlases/ashfall-rite.html`](atlases/ashfall-rite.html) | https://claude.ai/code/artifact/b123b6e5-653d-42f9-b9c5-adc146af735d |
+| **The Meridian Free Ports** | [`docs/atlases/meridian-free-ports.html`](atlases/meridian-free-ports.html) | https://claude.ai/code/artifact/150329e8-d18e-40f8-93ee-092f060f33fc |
+| **The Theln Drift** | [`docs/atlases/theln-drift.html`](atlases/theln-drift.html) | https://claude.ai/code/artifact/13308051-79e6-4c1c-a61c-820ea9b5f962 |
 | ~~Resin & Rivets~~ *(superseded by Vherathi Concord + Drossholt Company)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
 | ~~Standard Issue~~ *(superseded by Common Kit + Sol Federation)* | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
 
