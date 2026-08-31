@@ -2352,9 +2352,23 @@ class TestOutfittingMenu(unittest.TestCase):
 
     def test_icon_for_defaults_to_slot_type_when_outfit_has_no_icon_shape(self):
         menu = OutfittingMenu(Possessions(), "default", {"stock": []}, None)
-        icon_shape, icon_color = menu._icon_for("laser_cannon")  # weapon slot, no icon_shape in config
+        # afterburner (engine slot) carries no icon_shape/icon_color of its
+        # own in ship_outfits.json, so this exercises the SLOT_ICON_SHAPES/
+        # SLOT_COLORS fallback - see test_icon_for_uses_the_outfits_own_
+        # config_when_set below for the explicit-config path (laser_cannon).
+        icon_shape, icon_color = menu._icon_for("afterburner")
+        self.assertEqual(icon_shape, "flame")
+        self.assertEqual(icon_color, SLOT_COLORS["engine"])
+
+    def test_icon_for_uses_the_outfits_own_config_when_set(self):
+        # laser_cannon sets an explicit icon_shape/icon_color in
+        # ship_outfits.json (so a fired projectile's glyph - see
+        # game/world/projectile.py - visibly matches its Outfitter icon)
+        # rather than falling back to the generic per-slot-type default.
+        menu = OutfittingMenu(Possessions(), "default", {"stock": []}, None)
+        icon_shape, icon_color = menu._icon_for("laser_cannon")
         self.assertEqual(icon_shape, "blade")
-        self.assertEqual(icon_color, SLOT_COLORS["weapon"])
+        self.assertEqual(icon_color, [100, 200, 255])
 
     def test_clicking_the_owned_grid_moves_focus_there(self):
         menu = OutfittingMenu(Possessions(owned_outfits=["laser_cannon"]), "default", {"stock": []}, "patrol")

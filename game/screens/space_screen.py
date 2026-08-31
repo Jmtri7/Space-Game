@@ -233,7 +233,7 @@ class SpaceScreen(ScreenBase):
         self.projectiles = []
         # Laser fire rate limiting (frames between shots when holding X)
         self.weapon_fire_cooldown = 0
-        self.weapon_fire_rate = 6  # frames between shots (10 shots/second at 60fps)
+        self.weapon_fire_rate = 18  # frames between shots (~3.3 shots/second at 60fps)
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -1885,6 +1885,30 @@ class SpaceScreen(ScreenBase):
                 self.systems[dest_sid].ai_ships.append(ai_ship)
                 ai_ship.system_id = dest_sid
 
+    def _equipped_weapon_icon(self):
+        """(icon_shape, icon_color) for whatever's installed in the flown
+        ship's first weapon slot, falling back to the laser cannon's own
+        config (in case nothing's actually installed - a new pilot's
+        placeholder ship has no outfits yet, but should still fire
+        something that looks like a laser) - so a fired projectile always
+        matches its outfit's own Outfitter-menu icon rather than a fixed
+        look. See ui_theme.draw_item_icon / ship_outfits.json."""
+        possessions = self.player.person.possessions
+        ship_type_id = possessions.active_ship()
+        weapon_outfit_id = None
+        if ship_type_id:
+            ship_type = get_ship_type(self.story, ship_type_id)
+            for slot in ship_type.get("slots", []):
+                if slot.get("type") == "weapon":
+                    installed = possessions.installed_outfits.get(slot["id"])
+                    if installed:
+                        weapon_outfit_id = installed
+                        break
+        outfit = get_ship_outfit(self.story, weapon_outfit_id or "laser_cannon")
+        icon_shape = outfit.get("icon_shape", "blade")
+        icon_color = tuple(outfit.get("icon_color", (100, 200, 255)))
+        return icon_shape, icon_color
+
     def _update_weapon_fire(self):
         """Fire laser if cooldown allows."""
         if self.weapon_fire_cooldown > 0:
@@ -1896,10 +1920,12 @@ class SpaceScreen(ScreenBase):
         projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
         projectile_vel_x = self.player.velocity_x + math.sin(rad) * PROJECTILE_SPEED
         projectile_vel_y = self.player.velocity_y - math.cos(rad) * PROJECTILE_SPEED
-        projectile = Projectile(projectile_x, projectile_y, projectile_vel_x, projectile_vel_y)
+        icon_shape, icon_color = self._equipped_weapon_icon()
+        projectile = Projectile(projectile_x, projectile_y, projectile_vel_x, projectile_vel_y,
+                                 angle=self.player.angle, icon_shape=icon_shape, icon_color=icon_color)
         self.projectiles.append(projectile)
         self.weapon_fire_cooldown = self.weapon_fire_rate
-        sound_board.play("ping")
+        sound_board.play("laser")
 
     def _update_projectiles(self):
         """Update all projectiles; handle collisions with asteroids."""

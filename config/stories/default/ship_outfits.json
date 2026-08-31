@@ -4,7 +4,9 @@
     "description": "Standard-issue forward-mounted laser weapon",
     "slot_type": "weapon",
     "cost": 800,
-    "stat_modifiers": {}
+    "stat_modifiers": {},
+    "icon_shape": "blade",
+    "icon_color": [100, 200, 255]
   },
   "afterburner": {
     "name": "Afterburner",

@@ -388,8 +388,12 @@ and prefer composing one onto a `Character`/`PlayerController`-style wrapper
 |---|---|---|---|
 | `max_thrust` (acceleration/frame) | 0.08 – 0.15 | 0.15 – 0.35 | 0.35 – 0.5 |
 | `max_velocity` (units/frame) | 1.5 – 3 | 3 – 5 | 5 – 6.5 |
-| `rotation_speed` (degrees/frame) | 1 – 3 | 3 – 7 | 7 – 10 |
+| `rotation_speed` (degrees/frame) | 1 – 3 | 3 – 6 | 6 |
 | `size` (world units) | 8 – 14 | 14 – 24 | 24 – 35 |
+
+**`rotation_speed` has a hard ceiling of 6 degrees/frame across the whole roster** - past that,
+aiming (especially with the laser cannon, see below) stops feeling controllable. Don't add a
+ship type above it.
 
 A rule of thumb from the existing roster: big/slow cargo ships (`freighter`) pair low thrust +
 low velocity + low rotation + high size; small/agile ships (`patrol`) pair medium-high thrust +

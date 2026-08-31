@@ -5,7 +5,7 @@ into this instead."""
 import functools
 import pygame
 from game.constants import YELLOW, GRAY
-from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset
+from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset, _wrap_text
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
@@ -104,21 +104,20 @@ class ShipBrowserMenu(MenuBase):
         return self.possessions.owned_ships.count(ship_type_id)
 
     def _format_slots(self, slots):
-        """Format slot list as a readable summary like 'W1 E1 U2'."""
+        """Format slot list as a readable summary like 'Weapon x1, Engine x1, Utility x2'."""
         if not slots:
             return "None"
         counts = {}
         for slot in slots:
             slot_type = slot.get("type", "utility")
             counts[slot_type] = counts.get(slot_type, 0) + 1
-        # Order: weapon, engine, utility
-        order = ["weapon", "engine", "utility"]
+        # Order: weapon, engine, shield, utility - matches OutfittingMenu's SLOT_COLORS order
+        order = ["weapon", "engine", "shield", "utility"]
         parts = []
         for slot_type in order:
             if slot_type in counts:
-                abbrev = slot_type[0].upper()
-                parts.append(f"{abbrev}{counts[slot_type]}")
-        return " ".join(parts) if parts else "None"
+                parts.append(f"{slot_type.capitalize()} x{counts[slot_type]}")
+        return ", ".join(parts) if parts else "None"
 
     def handle_input(self, events):
         if self.confirm:
@@ -288,11 +287,18 @@ class ShipBrowserMenu(MenuBase):
                 f"Slots: {slot_summary}",
                 f"Cost: {ship_type.get('cost', 0)}cr",
             ]
+            # Word-wrap every stat line (the description and the slot
+            # summary are both free-form/variable-length and would
+            # otherwise run past the panel's right edge - see _wrap_text)
+            # to a width that stays inside the preview column.
+            stats_max_width = int(panel_rect.width * 0.44)
             stat_y = preview_center_y + int(62 * scale)
             for line in stats:
-                text = font_info.render(line, True, GRAY if line != stats[-1] else YELLOW)
-                surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
-                stat_y += int(23 * scale)
+                color = GRAY if line != stats[-1] else YELLOW
+                for wrapped_line in _wrap_text(font_info, line, stats_max_width) or [""]:
+                    text = font_info.render(wrapped_line, True, color)
+                    surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
+                    stat_y += int(23 * scale)
 
         # The Close/Buy buttons, and deferring to the purchase ConfirmDialog
         # while it's up, are handled by MenuBase.draw via buttons()/active_popup().

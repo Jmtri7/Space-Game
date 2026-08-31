@@ -33,7 +33,9 @@ sound_board.define("chime", [
 ])
 ```
 
-Per-layer keys: `freq` (Hz), `dur` (s), `wave`
+Per-layer keys: `freq` (Hz), `freq_end` (Hz, optional - the layer glides
+linearly from `freq` to `freq_end` over its `dur`; omit for a constant tone -
+this is what gives `laser` its descending "pew"), `dur` (s), `wave`
 (`sine`/`square`/`saw`/`triangle`/`noise`), `amp`, `attack` (linear fade-in s),
 `decay` (exponential decay time-constant s), `sustain` (0..1 decay floor),
 `delay` (s before the layer starts). Each rendered sound is peak-normalized and
@@ -54,6 +56,7 @@ this to sit well below the rest).
 | `confirm` | rising perfect-fifth chime | **engaging autopilot** (Space, space view) |
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
 | `alert` | two high triangle beeps | (available; unused by default) |
+| `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** — holding **X** in the space view, see `SpaceScreen._update_weapon_fire` |
 
 ## Wiring
 
@@ -73,6 +76,9 @@ this to sit well below the rest).
   [`game/screens/space_screen.py`](../game/screens/space_screen.py);
   `_cycle_npc_target` / `_select_person_target_at` in
   [`game/screens/location_screen.py`](../game/screens/location_screen.py).
+- **Weapon fire:** `SpaceScreen._update_weapon_fire()` - called every frame
+  **X** is held (rate-limited by `weapon_fire_cooldown`/`weapon_fire_rate`,
+  not once per keypress, so holding the key fires repeatedly rather than once).
 
 `master_volume` (default `0.55`) on the `SoundBoard` scales everything.
 `sound_board.muted` (toggled by **Ctrl+M**, see below) silences it.

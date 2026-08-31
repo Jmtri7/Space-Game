@@ -17,7 +17,8 @@ audio device, `SDL_AUDIODRIVER` unset on a headless box), so callers never
 have to guard the call.
 
 The board currently defines: `ping` (message received / menu button pressed),
-`blip`, `confirm`, `deny`, and `alert`. Add more with `define()`.
+`blip`, `confirm`, `deny`, `alert`, and `laser` (the laser cannon, see
+SpaceScreen._update_weapon_fire). Add more with `define()`.
 """
 import math
 import os
@@ -64,7 +65,11 @@ def render_waveform(layers, sample_rate=SAMPLE_RATE, channels=2):
     """Mix `layers` into an `array('h')` of interleaved signed-16-bit PCM.
 
     Each layer is a dict:
-      freq    - tone frequency in Hz (required)
+      freq     - tone frequency in Hz (required)
+      freq_end - if set, freq glides linearly to this by the end of the
+                 layer's dur (default: freq, i.e. no sweep) - the classic
+                 sci-fi laser "pew" is a fast downward sweep, e.g.
+                 freq=1800/freq_end=300
       dur     - layer length in seconds (required)
       wave    - "sine" (default) | "square" | "saw" | "triangle" | "noise"
       amp     - pre-normalization weight for this layer (default 1.0)
@@ -81,7 +86,8 @@ def render_waveform(layers, sample_rate=SAMPLE_RATE, channels=2):
     buf = [0.0] * n
 
     for layer in layers:
-        freq = float(layer["freq"])
+        freq_start = float(layer["freq"])
+        freq_end = float(layer.get("freq_end", freq_start))
         wave = layer.get("wave", "sine")
         amp = float(layer.get("amp", 1.0))
         attack = max(float(layer.get("attack", 0.004)), 1e-5)
@@ -89,14 +95,22 @@ def render_waveform(layers, sample_rate=SAMPLE_RATE, channels=2):
         sustain = max(0.0, min(1.0, float(layer.get("sustain", 0.0))))
         start = int(sample_rate * float(layer.get("delay", 0.0)))
         length = max(1, int(sample_rate * float(layer["dur"])))
-        step = 2.0 * math.pi * freq / sample_rate
+        # Phase is accumulated sample-by-sample (rather than a single
+        # step * i formula) so freq can glide linearly from freq_start to
+        # freq_end over the layer - a constant freq (freq_end == freq_start,
+        # the common case) accumulates the same constant step every sample,
+        # so this is equivalent to the old formula whenever there's no sweep.
+        phase = 0.0
 
         for i in range(length):
             idx = start + i
             if idx >= n:
                 break
+            frac = i / length
+            instantaneous_freq = freq_start + (freq_end - freq_start) * frac
+            phase += 2.0 * math.pi * instantaneous_freq / sample_rate
             env = _layer_envelope(i / sample_rate, attack, decay, sustain)
-            buf[idx] += amp * env * _wave_sample(wave, step * i)
+            buf[idx] += amp * env * _wave_sample(wave, phase)
 
     peak = max((abs(v) for v in buf), default=0.0)
     norm = (NORMALIZE_PEAK / peak) if peak > 1e-9 else 0.0
@@ -231,6 +245,17 @@ class SoundBoard:
             {"freq": 1568.0, "dur": 0.09, "wave": "triangle", "decay": 0.07, "amp": 0.7},
             {"freq": 1568.0, "dur": 0.09, "wave": "triangle", "decay": 0.07, "amp": 0.7, "delay": 0.13},
         ])
+        # "laser" - the classic sci-fi "pew": a fast downward frequency
+        # sweep (freq -> freq_end, see render_waveform) on a square wave for
+        # bite, layered with a quieter saw an octave down for body. Short
+        # (0.09s) and quiet by default (volume=0.5) since SpaceScreen fires
+        # it on a cooldown while X is held (see weapon_fire_rate) - it needs
+        # to read as a rapid-fire cannon, not one sound per shot fighting
+        # the last one's tail.
+        self.define("laser", [
+            {"freq": 1800.0, "freq_end": 300.0, "dur": 0.09, "wave": "square", "attack": 0.002, "decay": 0.05, "amp": 0.6},
+            {"freq": 900.0, "freq_end": 150.0, "dur": 0.09, "wave": "saw", "attack": 0.002, "decay": 0.05, "amp": 0.3},
+        ], volume=0.5)
 
 
 # Shared instance - see module docstring.

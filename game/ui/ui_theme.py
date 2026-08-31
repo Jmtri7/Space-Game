@@ -639,12 +639,33 @@ def _draw_glyph_thrusters(surface, center_x, center_y, pixel_size, graphics, cos
 ICON_DEFAULT_COLOR = (140, 140, 150)
 
 
-def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
+def _rotate_points(points, center_x, center_y, angle):
+    """Rotate a list of (x, y) points by `angle` radians about (center_x,
+    center_y) - used by draw_item_icon's polygon-based glyphs when a caller
+    passes a non-zero `angle` (e.g. a laser projectile orienting its outfit
+    icon to its direction of travel)."""
+    cos_a, sin_a = math.cos(angle), math.sin(angle)
+    rotated = []
+    for px, py in points:
+        lx, ly = px - center_x, py - center_y
+        rx = lx * cos_a - ly * sin_a
+        ry = lx * sin_a + ly * cos_a
+        rotated.append((center_x + rx, center_y + ry))
+    return rotated
+
+
+def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color, angle=0.0):
     """Draw a small procedural icon for a shop item/commodity, centered on
     (center_x, center_y) with pixel `size` roughly its radius. `icon_shape`
     selects a built-in glyph; None or any value not recognized here falls
     back to a plain crate glyph, so an item/commodity with no "icon_shape"
-    configured still gets a sane default instead of nothing."""
+    configured still gets a sane default instead of nothing.
+
+    `angle` (radians, default 0 = glyph's normal upright orientation) rotates
+    the polygon-based glyphs (gem/star/blade/flame/shield) about the icon's
+    own center - e.g. a fired projectile orienting its outfit's icon to its
+    direction of travel (see game/world/projectile.py). The circle/rect-based
+    glyphs (vial/gear/crate) ignore it; those read the same at any angle."""
     color = tuple(icon_color) if icon_color else ICON_DEFAULT_COLOR
     outline = tuple(max(0, c - 70) for c in color)
 
@@ -661,10 +682,14 @@ def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
             (center_x, center_y - size), (center_x + size * 0.85, center_y - size * 0.15),
             (center_x, center_y + size), (center_x - size * 0.85, center_y - size * 0.15),
         ]
+        if angle:
+            points = _rotate_points(points, center_x, center_y, angle)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
     elif icon_shape == "star":
         points = _star_points(center_x, center_y, size, size * 0.45, 5)
+        if angle:
+            points = _rotate_points(points, center_x, center_y, angle)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
     elif icon_shape == "blade":  # weapon outfits
@@ -672,6 +697,8 @@ def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
             (center_x, center_y - size * 1.1), (center_x + size * 0.25, center_y + size * 0.3),
             (center_x, center_y + size), (center_x - size * 0.25, center_y + size * 0.3),
         ]
+        if angle:
+            points = _rotate_points(points, center_x, center_y, angle)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
     elif icon_shape == "flame":  # engine outfits
@@ -680,6 +707,8 @@ def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
             (center_x + size * 0.3, center_y + size), (center_x, center_y + size * 0.6),
             (center_x - size * 0.3, center_y + size), (center_x - size * 0.6, center_y + size * 0.2),
         ]
+        if angle:
+            points = _rotate_points(points, center_x, center_y, angle)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
     elif icon_shape == "shield":  # shield outfits
@@ -688,6 +717,8 @@ def draw_item_icon(surface, center_x, center_y, size, icon_shape, icon_color):
             (center_x + size * 0.8, center_y + size * 0.1), (center_x, center_y + size),
             (center_x - size * 0.8, center_y + size * 0.1),
         ]
+        if angle:
+            points = _rotate_points(points, center_x, center_y, angle)
         pygame.draw.polygon(surface, color, points)
         pygame.draw.polygon(surface, outline, points, width=1)
     elif icon_shape == "gear":  # utility outfits
