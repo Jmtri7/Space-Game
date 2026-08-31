@@ -19,9 +19,81 @@ in the story's config and is read fresh at load time - never duplicate it into a
 Anything that *does* change during play (position, credits, owned ships, loans, which
 interior, AI ship state, ...) is mutable state and **must** be captured/restored (see
 "Extending State Persistence" below) - and whenever a change makes something new
-mutable, the save format has to grow to capture it in the same change. See
-[CLAUDE.md](../CLAUDE.md)'s "Save Compatibility & Story Versioning" section for the
-full discipline, including when a change needs to warn the user before it's made.
+mutable, the save format has to grow to capture it in the same change. The full
+discipline — including when a change must warn the user before it's made — is the
+next section.
+
+## Save Compatibility Discipline ⚠️
+
+**Read this before changing anything a save file depends on.** The story/save
+split below has already caused several real bugs in single sessions purely from
+getting this discipline wrong (system not restored on load, moon location
+misdetected, ship scattered to the wrong space coordinates).
+
+### The story/save split
+
+A save references a story (and system) by ID (`game_state["story"]`,
+`game_state["system_id"]`). Anything that **doesn't** change during play (room
+layouts, ship stats, dialogue trees, prices, NPC rosters) is read fresh from
+that story's config at load time, never duplicated into the save. Anything that
+**does** change during play (player position, credits, owned ships, loans,
+which interior, AI ship state, …) is **mutable state** and must be captured by
+`get_state()` / restored by `restore_state()` (or the narrower
+`restore_possessions()` — see "Restoring State" below) and documented in the
+save-format description above.
+
+### Whenever a change makes something mutable that wasn't before
+
+(a new kind of possession, a new interior graph, a new field that can now vary)
+— update `get_state()` / `restore_state()` in the **same change**, and update
+this doc's documented format alongside it. Don't let a save silently stop
+capturing something the player can now actually change.
+
+### When adding a new persistent/named entity
+
+(a new AI ship pilot, a new character with saveable state, anything else
+`get_state()` / `restore_state()` matches by name or ID) — check what happens
+when an *old* save (made before that entity existed) loads it. Don't assume
+"new content" is automatically safe because it's additive.
+
+- **Station/moon NPCs are the easy case:** pure story config, rebuilt fresh
+  from `npcs` every time a location loads, never referenced by a save. A new
+  one just appears regardless of which save is loaded.
+- **AI ship pilots are the case that needs checking:** `SpaceScreen.get_state()`'s
+  `ai_ships` dict is keyed by pilot name, and `restore_state()` uses that name
+  to reposition an existing ship. A new pilot with no matching save entry
+  starts fresh from its config position (fine). But **renaming** an existing
+  pilot silently orphans its old save entry instead of erroring — the ship
+  quietly resets to its config default instead of restoring where the player
+  left it. Load (or construct, in a test) an old-shaped save state after this
+  kind of change and confirm the actual outcome.
+
+### Warn the user, explicitly and up front
+
+whenever a change could change what an *existing* save file means once reloaded
+— not "I added a new field" (that's normal, `.get(key, default)` handles it),
+but anything that changes how an *already-stored* value gets interpreted:
+
+- renaming / repurposing a save key
+- changing a default fallback
+- changing which class or coordinate-space a stored value feeds into
+- changing detection logic that a save's stored value depends on
+
+Say so *before* you make the change, the same way you'd flag any other
+user-facing behavior change — don't discover it after the fact.
+
+### Story versioning
+
+`story.json` has a `"version"` field (semver-ish, e.g. `"1.0.0"`), recorded
+into every save as `game_state["story_version"]` (`SpaceScreen.story_version`,
+set by `build_save_game_state()` in `main.py`). Loading warns (via `main.py`'s
+`warn_if_story_version_mismatch()`, **non-blocking** — it never refuses to
+load) whenever a save's recorded version doesn't match the story's current one,
+or predates versioning entirely (no `story_version` key).
+
+**Bump a story's version whenever you make a change that fits the "warn the
+user" criteria above** — that's what gives the warning teeth instead of it
+staying accurate by accident.
 
 ## File Format
 
@@ -136,7 +208,8 @@ for the "system not restored" bug).
 version and prints a warning (never blocks loading) if they differ, or if the
 save predates versioning entirely (no `story_version` key). Bump a story's
 `"version"` whenever a change would make an existing save's stored values mean
-something different once reloaded - see CLAUDE.md for the full criteria.
+something different once reloaded - see "Save Compatibility Discipline" above for
+the full criteria.
 
 `game_state["possessions"]` (credits, owned ship type IDs, loans) is written by
 *both* `SpaceScreen.get_state()` and `LocationScreen.get_state()` - whichever one
@@ -475,8 +548,8 @@ When adding a new saveable entity:
    if you're also changing a *default*, *renaming/repurposing* an existing key,
    changing *which coordinate space or class* a stored value feeds into, or changing
    *detection logic* a stored value depends on (all real bugs this project has
-   actually shipped - see CLAUDE.md), warn the user about it up front and bump the
-   relevant story's `"version"` in its `story.json`.
+   actually shipped - see "Save Compatibility Discipline" above), warn the user about
+   it up front and bump the relevant story's `"version"` in its `story.json`.
 
 ## Directory Structure
 

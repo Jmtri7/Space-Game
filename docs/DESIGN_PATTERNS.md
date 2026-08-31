@@ -2,6 +2,37 @@
 
 Proven patterns and architectural solutions discovered during development.
 
+## Working Principles
+
+### Cross-Cutting Concerns: Handle at the Source
+
+When a behavior needs to apply everywhere (window close, event filtering,
+startup logic), handle it **once** in the main loop or a base class, not
+repeated in every subclass.
+
+- **Benefit:** new screens inherit correct behavior by default; nobody has to
+  remember to add it.
+- **Example:** `pygame.QUIT` is handled in the main event loop, so any new
+  screen works without modification.
+- **Anti-pattern:** duplicated QUIT checks in ten different screen classes.
+
+### Generalization Strategy
+
+When you notice the same pattern appearing in multiple places:
+
+1. **Extract to a helper function** if it's utility code
+   (`_handle_scrolling_input()`).
+2. **Move to a base class** if it's core to the entity type (`get_state()` on
+   `ScreenBase`).
+3. **Handle centrally** if it's a cross-cutting concern (QUIT in the main loop).
+4. **Document here** if it's a reusable principle other parts of the game
+   should follow — see "Contributing Patterns" at the bottom.
+
+When implementing a feature or fix, watch for a clever solution other code
+could reuse, or repeated logic that wants extracting, and raise it.
+
+---
+
 ## Pattern: Coordinate Conversion
 
 **Problem:** Graphics deform on window resize, objects render at wrong positions.
@@ -1050,5 +1081,3 @@ When fixing a bug or implementing a feature, if you notice:
 - A design decision that took thought and worked well
 
 ...document it as a pattern so future code can reuse the solution.
-
-See [README.md](README.md#for-agents-pattern-recognition--contribution) for the contribution workflow.

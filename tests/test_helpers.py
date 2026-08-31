@@ -2029,7 +2029,7 @@ class TestShopMenu(unittest.TestCase):
     same convention as other config-dependent tests that pin to real story
     data rather than reimplementing get_commodity()/get_item() with a fake.
     Only the transaction/navigation logic is tested here, not draw() - see
-    CLAUDE.md's "don't test UI rendering" and the fact that no other full
+    docs/WORKFLOW.md's "don't test UI rendering" and the fact that no other full
     menu class (ReportMenu, ConfirmDialog, ChoiceDialog) has a draw() test
     either."""
 
@@ -2274,7 +2274,7 @@ class TestOutfittingMenu(unittest.TestCase):
     filtering against the real "default" story's patrol ship type (slots:
     weapon_1/weapon, utility_1/utility) and ship_outfits.json (laser_cannon/
     weapon, afterburner/engine, cargo_expansion/utility). Mouse drag-and-
-    drop itself isn't tested here - see CLAUDE.md's "don't test UI
+    drop itself isn't tested here - see docs/WORKFLOW.md's "don't test UI
     rendering" and the plan's note that the underlying Possessions.
     install_outfit/uninstall_outfit swap logic is already covered by
     TestPossessionsInventory; this class only covers the menu's own
@@ -3321,13 +3321,13 @@ class TestBuildSaveGameState(unittest.TestCase):
 
 class TestStoryVersioning(unittest.TestCase):
     """Test story_version round-tripping through a save and the load-time
-    mismatch warning (see CLAUDE.md's "Save Compatibility & Story
-    Versioning" section) - never blocks loading, just surfaces the risk
+    mismatch warning (see docs/SAVE_SYSTEM.md's "Save Compatibility
+    Discipline") - never blocks loading, just surfaces the risk
     that a save's story config or this game's state-handling code has
     changed since the save was made."""
 
     # Read the live version from story.json rather than pinning a literal, so
-    # a routine version bump (see CLAUDE.md's story-versioning rules) doesn't
+    # a routine version bump (see docs/SAVE_SYSTEM.md's story-versioning rules) doesn't
     # need a test edit - these assert the plumbing, not the number.
     CURRENT_VERSION = utils.get_story("default")["version"]
 

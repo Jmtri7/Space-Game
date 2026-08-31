@@ -1581,7 +1581,7 @@ class LocationScreen(ScreenBase):
             self.player.y = player_state.get("y", self.player.y)
             # A saved position can land outside this interior's walkable
             # area if the floor plan was rescaled/reshaped since the save
-            # was made (see CLAUDE.md's save-compat notes) - snap to the
+            # was made (see docs/SAVE_SYSTEM.md's save-compat notes) - snap to the
             # primary portal rather than leaving the player wedged in a
             # wall with no way to move.
             if not self.can_move_to(self.player.x, self.player.y):

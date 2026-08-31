@@ -579,11 +579,29 @@ bottom-left overlay that `perf_metrics.draw_overlay(screen)` paints is gated on
 `constants.DEBUG_MODE`. Everything shown is a rolling average + peak over the
 last `WINDOW` frames (~2 s).
 
-**Agents:** when a change touches the main loop, a `draw()`/`update()` path, or
-adds per-frame work (a new drawable, an AI routine, a scan over all entities),
-toggle debug (`` ` ``) and watch the panel before and after — keep `frame` well
-under the 16.67 ms budget and don't let a `sim.*` / `render.*` span balloon.
-Wrap a genuinely new expensive section in its own `metrics.span(...)` so the
-regression is visible next time.
+**Agents — the frame budget.** The game holds 60 FPS by doing all of a frame's
+work (input + simulation + render + present) in **under 16.67 ms**. Monitor the
+panel whenever your change adds per-frame work: a new drawable, an AI/physics
+routine, a per-frame scan over all entities/systems/interiors, a new
+`update()` / `draw()` path, or anything in `main.py`'s loop.
+
+1. Toggle debug (`` ` ``), note the `frame` average and the relevant
+   `sim.*` / `render.*` span.
+2. Make the change.
+3. Compare. A change that pushes `frame` toward the budget or balloons a span
+   is a regression even if it "looks fine" — the same failure mode
+   [AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md) describes.
+
+**Instrument genuinely new expensive sections** by wrapping them at the call
+site:
+```python
+from game.perf_metrics import metrics as perf
+with perf.span("sim.<name>"):   # or "render.<name>"
+    ...
+```
+so the cost shows in the panel and the next agent sees any regression. Keep
+spans sharing a prefix **non-overlapping** (a phase's spans should sum to
+something meaningful). Recording is cheap and always on; only the overlay is
+gated on `constants.DEBUG_MODE`.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md#state-machine-screen-flow) for class hierarchy.

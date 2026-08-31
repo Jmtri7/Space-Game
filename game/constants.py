@@ -81,8 +81,8 @@ VIDEO_RESOLUTIONS = [
 # FPS. It only diverges when a machine can't keep up, and then it runs 2-3 sim
 # steps per render (sim stays correct, rendering gets choppy) instead of one
 # slow step (sim goes wrong). Changing SIM_STEP - or moving to units/second -
-# would change what an existing save's stored velocities mean; see CLAUDE.md's
-# "Save Compatibility & Story Versioning" section before doing that.
+# would change what an existing save's stored velocities mean; see
+# docs/SAVE_SYSTEM.md's "Save Compatibility Discipline" before doing that.
 SIM_STEP = 1.0 / 60.0
 MAX_STEPS_PER_FRAME = 5   # spiral-of-death clamp: give up catching up past this
 MAX_FRAME_TIME = 0.25     # clamp real elapsed before it feeds the accumulator,

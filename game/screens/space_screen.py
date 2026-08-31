@@ -93,8 +93,8 @@ class SpaceScreen(ScreenBase):
         # a save always knows which version of the story it was made
         # against - bump story.json's "version" whenever a change to that
         # story's config or this game's state-handling code would make an
-        # existing save behave differently once reloaded (see CLAUDE.md's
-        # "Save Compatibility & Story Versioning" section).
+        # existing save behave differently once reloaded (see
+        # docs/SAVE_SYSTEM.md's "Save Compatibility Discipline").
         self.story_version = story_meta.get("version", "0.0.0")
         # Static mission definitions for this story (title + ordered stages -
         # see game/world/mission.py); which mission(s) a player actually has

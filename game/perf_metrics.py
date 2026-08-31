@@ -5,9 +5,9 @@ One shared instance (`metrics`, created at the bottom of this file) is fed
 by `main.py`'s loop once per iteration and read by the DEBUG overlay
 (`draw_overlay()`). This mirrors the shared-instance pattern `game/utils.py`
 uses for `Camera` - a single module-level object reachable through helpers -
-which is why this module holds a class *and* module-level functions (see
-CLAUDE.md's One Class Per File rule; `ui_theme.py` is an exception for the
-same reason).
+which is why this module holds a class *and* module-level functions (an
+intentional One Class Per File exception, see docs/ARCHITECTURE.md's "Project
+Layout & File Conventions"; `ui_theme.py` is an exception for the same reason).
 
 **Cost:** `record()` is a handful of float subtractions and deque appends,
 and each `span()` is two `perf_counter()` calls - cheap enough to run

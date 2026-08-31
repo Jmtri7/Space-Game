@@ -328,8 +328,8 @@ def warn_if_story_version_mismatch(story, saved_version):
     """Print a warning if a save's story_version doesn't match the current
     story.json's version - the story's config or this game's state-
     handling code may have changed since the save was made, in a way that
-    changes what the saved state means (see CLAUDE.md's "Save Compatibility
-    & Story Versioning" section). Never blocks loading - just surfaces the
+    changes what the saved state means (see docs/SAVE_SYSTEM.md's "Save
+    Compatibility Discipline"). Never blocks loading - just surfaces the
     risk so a stale save behaving oddly isn't a total mystery."""
     current_version = get_story(story).get("version", "0.0.0")
     if saved_version is None:

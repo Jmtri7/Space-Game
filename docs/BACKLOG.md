@@ -66,7 +66,8 @@ only appears under a section if it currently has items there.
       avoid bindings that force the player to reposition their hand.
 - [ ] Allow arrow keys to change meny selections.
 - [ ] `ESC` should close the NPC conversation box and the shop menus (deliberate
-      change to the mouse-only-modal / no-ESC-to-close rule in CLAUDE.md).
+      change to the mouse-only-modal / no-ESC-to-close rule — see
+      DESIGN_PATTERNS.md's "Menu vs. Dialog" and CONTROLS.md's "Menus").
 
 ## Navigation & Flight
 

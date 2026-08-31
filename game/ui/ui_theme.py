@@ -1,6 +1,7 @@
 """Shared visual helpers for menu-style screens: glass panels, glow titles,
-and pulsing selection highlights. Utility functions, not a class - see
-CLAUDE.md's One Class Per File rule for why this file is an exception."""
+and pulsing selection highlights. Utility functions, not a class - an
+intentional One Class Per File exception, see docs/ARCHITECTURE.md's "Project
+Layout & File Conventions"."""
 import math
 import pygame
 from game.constants import YELLOW, WHITE, GRAY

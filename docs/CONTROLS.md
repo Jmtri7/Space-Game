@@ -1,6 +1,20 @@
 # Space Game Controls
 
-All interactive controls and their bindings. **Update this document when adding or changing any control**.
+All interactive controls and their bindings.
+
+## Documentation trail — when you add or change ANY keyboard binding
+
+1. **Check this document first** for existing bindings, to avoid conflicts and
+   to keep controls discoverable and consistent.
+2. **Add / update** the control here, with an action description.
+3. **Add / update** the help text in the menu or screen that shows the control
+   to players (the in-world Controls pane, a menu's button labels, etc.).
+4. **Commit** with `controls:` in the message so future agents know controls
+   changed.
+
+Menus and dialogs are mouse-only — see "Menus" below and
+[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s "Menu vs. Dialog" before adding an
+action to a modal (add a button, not a key).
 
 ## Space View (Default)
 

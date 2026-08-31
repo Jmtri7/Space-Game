@@ -1,6 +1,111 @@
 # Architecture & Class Design
 
 Class hierarchy, entity patterns, and extensibility points for the space game.
+**Source of truth for project structure and file conventions** — the sections
+below, not any snapshot in `CLAUDE.md`.
+
+## Project Layout & File Conventions
+
+A pygame space-exploration game: procedurally generated star fields, AI ships,
+station/moon interiors with NPCs, physics-based flight, full save/load.
+
+```
+space-game/
+├── main.py                  # Game loop, screen state machine, pygame init
+├── run_tests.py             # Test runner (discovers tests/test_*.py)
+├── game/
+│   ├── constants.py          # Colors, dimensions, UI config (shared)
+│   ├── utils.py              # Coord conversion, render helpers, file I/O, camera (shared)
+│   ├── world/               # Physics / entities
+│   │   ├── world_object.py   # WorldObject base — Ship and LandingSite extend it
+│   │   ├── ship.py, ai_ship.py, player_controller.py, autopilot.py
+│   │   ├── character.py, person.py, possessions.py, dialogue.py, mission.py
+│   │   ├── *_routine.py      # One Routine class per file (dock/orbit/wander/…)
+│   │   └── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landing_site.py
+│   ├── screens/             # ScreenBase and the two concrete screens
+│   │   └── screen_base.py, space_screen.py, location_screen.py
+│   ├── ui/                  # Menus/dialogs (not ScreenBase) + shared UI styling
+│   │   └── menu_base.py, dialog_base.py, ui_theme.py, save_browser.py, …
+│   └── audio/
+│       └── sound_board.py, music.py
+├── config/
+│   └── stories/{story}/     # All config is per-story — nothing shared between stories
+│       ├── story.json, ship_types.json, graphics.json, cultures.json,
+│       │   building_types.json, pilots.json, commodities.json, items.json, missions.json
+│       └── systems/{system_id}.json   # Station/moon placement, AI ship roster
+├── saves/                   # Player save files (runtime-generated)
+├── tests/                   # test_*.py, discovered by run_tests.py
+└── docs/                    # This documentation tree — see docs/README.md
+```
+
+**One Class Per File.** Each Python file contains exactly one class. Filename is
+`snake_case.py` matching the class: `MyClass` → `my_class.py`. Exceptions are
+utility/constant modules (`utils.py`, `constants.py`) and deliberately
+function-only modules (`game/world/mission.py`) — a module-level docstring notes
+when a file is an intentional exception (e.g. `ui_theme.py`, `perf_metrics.py`).
+If a class extends another, both imports go at the top of the child file.
+
+**Imports are absolute, rooted at the package** — `from game.world.ship import
+Ship`, `import game.utils as utils`. Never relative imports.
+
+**Entry points** (`main.py`, `run_tests.py`) stay at the repo root.
+
+## Shared Helpers (`game/utils.py`, `game/constants.py`)
+
+`utils.py` — used across all modules:
+
+- `to_screen(x, y)`, `to_screen_x(x)`, `to_screen_y(y)` — world → screen coords
+- `get_scale()`, `get_offset()` — render scale and letterbox centering
+- `get_ui_scale()`, `get_ui_offset()` — UI scaling, independent of world zoom
+- `set_camera_offset(x, y)`, `set_screen_size(w, h)` — camera / viewport
+- `advance_accumulator(acc, dt)` — fixed-timestep step arithmetic (pure; see
+  [UI_FLOW.md](UI_FLOW.md#main-loop-fixed-timestep-three-phases))
+- `load_json()`, `save_json()` — file I/O with error handling
+- `get_save_files()`, `create_save_file()`, `load_save_file()`,
+  `delete_save_file()` — save-file management
+- `_list_files_by_pattern()`, `_handle_scrolling_input()`, `_center_text_x()` —
+  shared list/menu helpers (see [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md))
+- `draw_debug_marker()`, `draw_target_brackets()` — debug visualization
+
+`constants.py` — `GAME_WIDTH`/`GAME_HEIGHT` (2400×1800), `CAMERA_ZOOM`,
+`SCREEN_WIDTH`/`SCREEN_HEIGHT`, `FPS` (60), `SAVE_DIR`, `WALKING_SPEED`,
+`DEBUG_MODE`, `AA_MODE`, color constants.
+
+## Configuration Files
+
+Everything under `config/stories/{story}/` — nothing is shared between stories,
+so two stories can define the same key with different values. Configs are never
+modified by play. See [SAVE_SYSTEM.md](SAVE_SYSTEM.md#directory-structure) for
+the full tree and the story/save split.
+
+**`systems/{system_id}.json`** — one star system's layout:
+```json
+{
+  "station": {"x": 0.75, "y": 0.3},
+  "ai_ships": [{"x": 0.75, "y": 0.1, "ship_type": "freighter"}]
+}
+```
+Station/AI positions are fractions of `GAME_WIDTH`/`GAME_HEIGHT`.
+
+**Interior layout** (per key in a landing site's `interiors`): a `culture`, one
+or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
+"circle", "center": […], "radius": r}` — walkable area is their union),
+`portals` (`{"x", "y", "return_to_ship": true}` for a ship dock), optional
+`decorations` (cosmetic decals) and `structures` (solid, if they carry a
+`footprint`), and `npcs`. A default-story station is one such interior. See
+"Interior geometry" below and `game/screens/location_screen.py`.
+```json
+{
+  "label": "Alpha Station", "culture": "vherathi",
+  "portals": [{"x": 660, "y": 345, "return_to_ship": true}],
+  "rooms": [{"label": "Concourse", "shape": "circle", "center": [400, 300], "radius": 150}],
+  "npcs": [{"name": "…", "x": 400, "y": 100, "role": "bartender", "dialogue_options": [...]}]
+}
+```
+
+For `story.json`'s own fields, see the "`story.json` fields" table further down.
+For `ship_types.json` / `graphics.json` and adding a ship type, see "Adding or
+Updating a Ship Type".
 
 ## Class Hierarchy
 
@@ -87,8 +192,9 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   top-right targeting/info pane, `draw_info_panel()` /
   `SpaceScreen.info_panel_scroll`),
   composed onto every `Person`
-- `game/world/mission.py` (functions, not a class - see CLAUDE.md's One
-  Class Per File exception for utility modules) — mission/stage tracking:
+- `game/world/mission.py` (functions, not a class - an intentional One Class
+  Per File exception, see "Project Layout & File Conventions" above) —
+  mission/stage tracking:
   `start_mission()` begins a mission (config from `missions.json`, via
   `get_missions()`) at its first stage on `Possessions.missions`;
   `check_mission_progress()` (called every frame from
