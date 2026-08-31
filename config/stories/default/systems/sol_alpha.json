@@ -19,8 +19,8 @@
   "asteroid_field": {
     "per_chunk_range": [1, 3],
     "types": [
-      {"type": "gray_rock", "weight": 3, "size_range": [3, 7], "speed_range": [0.05, 0.3]},
-      {"type": "brown_rock", "weight": 1, "size_range": [5, 10], "speed_range": [0.05, 0.25]}
+      {"type": "gray_rock", "weight": 3, "size_range": [4, 18], "speed_range": [0.05, 0.3], "mine_yield": 10},
+      {"type": "brown_rock", "weight": 1, "size_range": [6, 25], "speed_range": [0.05, 0.25], "mine_yield": 15}
     ]
   },
   "station": {

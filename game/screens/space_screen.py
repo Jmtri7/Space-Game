@@ -1,6 +1,7 @@
 """Main space exploration screen with ships and landing."""
 import pygame
 import math
+import random
 import game.constants as constants
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, CAMERA_ZOOM, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, CAMERA_ZOOM_STEP,
@@ -20,6 +21,8 @@ from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
+from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE
+from game.world.asteroid import Asteroid
 from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
@@ -226,6 +229,8 @@ class SpaceScreen(ScreenBase):
         self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_h)
         self.hail_banner = None  # (text, color) for a transient hail-related message (see below)
         self.hail_banner_timer = 0
+        # Projectiles (laser shots) currently in flight
+        self.projectiles = []
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -750,6 +755,8 @@ class SpaceScreen(ScreenBase):
                 return "missions"
             elif event.key == pygame.K_c:
                 self._toggle_controls()
+            elif event.key == pygame.K_x:
+                self._fire_weapon()
         return None
 
     def _mark_landed(self):
@@ -1408,6 +1415,8 @@ class SpaceScreen(ScreenBase):
             for state in self.systems.values():
                 state.update_physics()
             self.asteroid_field.update()
+        with perf.span("sim.projectiles"):
+            self._update_projectiles()
         if self.jump_message_timer > 0:
             self.jump_message_timer -= 1
         if self.hail_banner_timer > 0:
@@ -1539,6 +1548,8 @@ class SpaceScreen(ScreenBase):
             self.station.draw(surface)
             self.moon.draw(surface)
             self.asteroid_field.draw(surface)
+            for projectile in self.projectiles:
+                projectile.draw(surface)
             for ai_ship in self.ai_ships:
                 ai_ship.draw(surface)
             self.player.draw(surface)
@@ -1866,3 +1877,111 @@ class SpaceScreen(ScreenBase):
                 origin_state.ai_ships.remove(ai_ship)
                 self.systems[dest_sid].ai_ships.append(ai_ship)
                 ai_ship.system_id = dest_sid
+
+    def _fire_weapon(self):
+        """Fire a laser projectile from the player's ship."""
+        if not self.player.ship:
+            return
+        rad = math.radians(self.player.angle)
+        projectile_x = self.player.x + math.sin(rad) * self.player.ship.size
+        projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
+        projectile_vel_x = self.player.velocity_x + math.sin(rad) * PROJECTILE_SPEED
+        projectile_vel_y = self.player.velocity_y - math.cos(rad) * PROJECTILE_SPEED
+        projectile = Projectile(projectile_x, projectile_y, projectile_vel_x, projectile_vel_y)
+        self.projectiles.append(projectile)
+        sound_board.play("ping")
+
+    def _update_projectiles(self):
+        """Update all projectiles; handle collisions with asteroids."""
+        alive_projectiles = []
+        for projectile in self.projectiles:
+            if not projectile.update():
+                continue  # Projectile expired
+
+            # Check for collision with asteroids
+            if self._check_projectile_asteroid_collision(projectile):
+                continue  # Projectile destroyed on impact
+
+            alive_projectiles.append(projectile)
+
+        self.projectiles = alive_projectiles
+
+    def _check_projectile_asteroid_collision(self, projectile):
+        """Check if projectile hits an asteroid; damage it and handle breakup/mining."""
+        hit_distance = PROJECTILE_SIZE + 5
+        hit_asteroid = None
+        min_dist = hit_distance
+
+        # Check all asteroids in the active field
+        for asteroid in self.asteroid_field.asteroids:
+            dist = math.sqrt((projectile.x - asteroid.x) ** 2 + (projectile.y - asteroid.y) ** 2)
+            if dist < min_dist:
+                hit_asteroid = asteroid
+                min_dist = dist
+
+        if hit_asteroid is None:
+            return False
+
+        # Damage the asteroid
+        if hit_asteroid.take_damage(projectile.damage):
+            # Asteroid destroyed
+            self._destroy_asteroid(hit_asteroid)
+        else:
+            # Visual feedback: asteroid flashes or sparks (kept simple for now)
+            pass
+
+        return True
+
+    def _destroy_asteroid(self, asteroid):
+        """Handle asteroid destruction: add ore to cargo or spawn fragments."""
+        possessions = self.player.person.possessions
+
+        # Large asteroids break into smaller fragments
+        if asteroid.size > 12:
+            self._spawn_asteroid_fragments(asteroid)
+        else:
+            # Small asteroids give ore to player
+            if asteroid.asteroid_type:
+                ore_amount = asteroid.asteroid_type.get("mine_yield", 10)
+                possessions.add_cargo("ore", ore_amount)
+                self._show_toast(f"Mined {ore_amount} ore", CYAN)
+
+        # Remove from field - this is tricky since it's managed by AsteroidField
+        # We need to find and remove it from the appropriate chunk
+        for chunk_asteroids in self.asteroid_field.chunk_asteroids.values():
+            if asteroid in chunk_asteroids:
+                chunk_asteroids.remove(asteroid)
+                break
+
+    def _spawn_asteroid_fragments(self, asteroid):
+        """Break a large asteroid into smaller fragments flying apart."""
+        fragment_count = random.randint(2, 4)
+        fragment_size_min = asteroid.size * 0.4
+        fragment_size_max = asteroid.size * 0.65
+
+        for _ in range(fragment_count):
+            frag_size = random.uniform(fragment_size_min, fragment_size_max)
+            # Fragment velocity: add random outward velocity to base asteroid velocity
+            angle_offset = random.uniform(0, 2 * math.pi)
+            outward_speed = random.uniform(0.5, 2.0)
+            frag_vel_x = asteroid.velocity_x + math.cos(angle_offset) * outward_speed
+            frag_vel_y = asteroid.velocity_y + math.sin(angle_offset) * outward_speed
+
+            fragment = Asteroid(
+                asteroid.x, asteroid.y,
+                velocity_x=frag_vel_x, velocity_y=frag_vel_y,
+                size=frag_size, graphics=asteroid.graphics,
+                asteroid_type=asteroid.asteroid_type
+            )
+            # Add fragment to an appropriate chunk
+            cx = int(asteroid.x // 1200)  # CHUNK_SIZE from asteroid_field
+            cy = int(asteroid.y // 1200)
+            if (cx, cy) not in self.asteroid_field.chunk_asteroids:
+                self.asteroid_field.chunk_asteroids[(cx, cy)] = []
+            self.asteroid_field.chunk_asteroids[(cx, cy)].append(fragment)
+
+        # Remove the original asteroid
+        for chunk_asteroids in self.asteroid_field.chunk_asteroids.values():
+            if asteroid in chunk_asteroids:
+                chunk_asteroids.remove(asteroid)
+                break

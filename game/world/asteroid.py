@@ -17,8 +17,9 @@ class Asteroid(WorldObject):
     ones get an irregular polygon silhouette, generated once from `rng` at
     construction (regenerating it every frame would make them visibly writhe
     instead of looking like a solid rock), that spins in place at a fixed
-    per-instance rate."""
-    def __init__(self, x, y, velocity_x=0, velocity_y=0, size=4, graphics=None, rng=None):
+    per-instance rate. Asteroids can be damaged by projectiles; when health
+    is depleted, small asteroids are destroyed, large ones break into fragments."""
+    def __init__(self, x, y, velocity_x=0, velocity_y=0, size=4, graphics=None, rng=None, asteroid_type=None):
         super().__init__(x, y, graphics=graphics)
         self.velocity_x = velocity_x
         self.velocity_y = velocity_y
@@ -28,9 +29,13 @@ class Asteroid(WorldObject):
         self.angle = 0
         self.spin_speed = 0
         self.local_points = None  # (x, y) fractions of size, unrotated - jagged only
+        self.asteroid_type = asteroid_type
+        self.health = max(5, size * 2)  # Health scales with size
+        self.max_health = self.health
+        self.rng = rng or random.Random()
 
         if self.shape == "jagged":
-            rng = rng or random.Random()
+            rng = self.rng
             vertex_min, vertex_max = self.graphics.get("vertex_count_range", DEFAULT_VERTEX_COUNT_RANGE)
             vertex_count = rng.randint(vertex_min, vertex_max)
             jaggedness = self.graphics.get("jaggedness", DEFAULT_JAGGEDNESS)
@@ -41,6 +46,11 @@ class Asteroid(WorldObject):
                 theta = (2 * math.pi * i) / vertex_count
                 radius_fraction = 1 + rng.uniform(-jaggedness, jaggedness)
                 self.local_points.append((radius_fraction * math.cos(theta), radius_fraction * math.sin(theta)))
+
+    def take_damage(self, amount):
+        """Reduce health; returns True if destroyed."""
+        self.health -= amount
+        return self.health <= 0
 
     def update(self):
         """Drift at constant velocity; jagged asteroids also spin in place."""

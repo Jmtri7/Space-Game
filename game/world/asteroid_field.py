@@ -62,7 +62,8 @@ class AsteroidField:
             velocity_y = speed * math.sin(heading)
             asteroids.append(Asteroid(
                 x, y, velocity_x=velocity_x, velocity_y=velocity_y, size=size,
-                graphics=type_cfg.get("graphics"), rng=rng
+                graphics=type_cfg.get("graphics"), rng=rng,
+                asteroid_type={"id": type_cfg.get("type"), "mine_yield": type_cfg.get("mine_yield", 10)}
             ))
         return asteroids
 
