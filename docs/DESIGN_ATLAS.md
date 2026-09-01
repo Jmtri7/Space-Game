@@ -89,15 +89,6 @@ new lines: waist `y103`, belt `y99`, hands `(57/83, 133)`, arm shaft `x50-60` /
 Concord / Drossholt Company atlases all render it (re-run `gen_common.py` +
 `gen_split.py` + `build_person_figure.py` + `build_figure_signatures.py`).
 
-**Resting arm splay.** Each arm hangs out from the body at `gen_si.ARM_REST_DEG`
-(42°, from vertical, about the shoulder joint) so the default pose reads open
-rather than pinned to the sides; the walk-cycle sway composes on top.
-`gen_si._arm_rot(s, x, y)` maps a point on the notional straight-down arm to its
-splayed position — `figure_parts` uses it for the arm shaft + hand, and every
-`*_outfits.py` signature file imports it to re-anchor arm-mounted detail (cuffs,
-gauntlets, gloves, the Federation chevron flash). Change the one constant to
-widen/narrow the splay; re-run the four generators.
-
 **Signature-accessory pass (with the Grounded body).** Moving the arms/hands in
 meant re-anchoring the signature layers in `common_kit.py` / `federation_outfits.py`
 / `vherathi_outfits.py` / `drossholt_outfits.py`. The rules that came out of it:

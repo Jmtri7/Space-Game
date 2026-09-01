@@ -8,19 +8,17 @@ composed by gen_common.py as:  grid + pre + figure_parts(**base) + post
 
 Figure anchors after the full Grounded proportion remap (~6.1-head figure):
 chest y72-106 (x57-83), waist y103 (x57-83), belt y95-108, hip y139, legs
-y139-194, bare head (70,46) r14 with the mouth line at y54, helmeted face
-(70,48) r11.5. The arms are splayed out from the body by `gen_si.ARM_REST_DEG`
-about the shoulder joint, so anything drawn on an arm (a cuff, a glove, an
-armband) is authored at its straight-down position and wrapped in
-`_arm_rot(s, x, y)` (s = -1 left / +1 right). Anything on the hip/thigh that the
-arm should cover goes in `pre` (drawn behind the body), not `post`.
+y139-194, arms x50-60 / x80-90 y66-132, hands (57/83, 133), bare head (70,46)
+r14 with the mouth line at y54, helmeted face (70,48) r11.5. Anything on the
+hip/thigh that the arm should cover goes in `pre` (drawn behind the body), not
+`post`.
 """
 import math
 import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import poly, circ, ngon, rrect, opoly, ocirc, bar, offset_poly, _u, _arm_rot
+from gen_si import poly, circ, ngon, rrect, opoly, ocirc, bar, offset_poly, _u
 
 OUT = "#141219"
 WAIST = 103
@@ -104,7 +102,7 @@ def mechanic():
     base = dict(helmet="#f0aa37", suit="#524e48", boot="#2e2a26")
     post = (hardhat("#f0aa37", lamp="#fff2c0")
             + toolbelt("#3a352f")
-            + op_s([_arm_rot(-1, x, y) for x, y in [(51, 95), (60, 95), (60, 124), (51, 124)]], "#3a352f")   # rolled sleeve cuff L (over the arm)
+            + op_s([(51, 95), (60, 95), (60, 124), (51, 124)], "#3a352f")   # rolled sleeve cuff L (over the arm)
             + op_s(rrect(53, 150, 13, 9, 2), "#3a352f") + op_s(rrect(71, 150, 13, 9, 2), "#3a352f"))  # knee pads
     return base, "", post
 
@@ -118,7 +116,7 @@ def dockworker():
             + op_s([(57, 64), (64, 64), (62, 84), (55, 84)], "#f2962a")     # strap L
             + op_s([(76, 64), (83, 64), (85, 84), (78, 84)], "#f2962a")     # strap R
             + hardhat("#f2962a")
-            + ocirc(*_arm_rot(-1, 57, 133), 4.0, "#2a303a", d=1.0) + ocirc(*_arm_rot(1, 83, 133), 4.0, "#2a303a", d=1.0))  # heavy gloves
+            + ocirc(57, 133, 4.0, "#2a303a", d=1.0) + ocirc(83, 133, 4.0, "#2a303a", d=1.0))  # heavy gloves
     return base, pre, post
 
 
@@ -170,9 +168,9 @@ def medic():
     base = dict(helmet="#d2ece6", suit="#e6eaea", boot="#b0bcbc", coat=True,
                 badge="#e15a5a", badge_cross=True)
     pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 158), (48, 158)], "#eef2f2")   # coat skirt
-    post = (op_s([_arm_rot(-1, x, y) for x, y in [(50, 74), (59, 74), (59, 90), (50, 90)]], "#e15a5a")   # arm band, left upper arm
-            + poly([_arm_rot(-1, x, y) for x, y in [(52, 83), (57, 83), (57, 79), (52, 79)]], "#eef2f2")  # white cross on it
-            + poly([_arm_rot(-1, x, y) for x, y in [(53, 85), (56, 85), (56, 77), (53, 77)]], "#eef2f2")
+    post = (op_s([(50, 74), (59, 74), (59, 90), (50, 90)], "#e15a5a")                 # arm band, left upper arm
+            + poly([(52, 83), (57, 83), (57, 79), (52, 79)], "#eef2f2")               # white cross on it
+            + poly([(53, 85), (56, 85), (56, 77), (53, 77)], "#eef2f2")
             + op_s(rrect(83, 100, 14, 16, 2), "#eef2f2")                              # med satchel
             + poly([(87, 104), (93, 104), (93, 108), (90, 108), (90, 112), (88, 112),
                     (88, 108), (85, 108)], "#e15a5a"))                                # cross on the flap
@@ -186,7 +184,7 @@ def surgeon():
     post = (op_s([(58, 47), (82, 47), (80, 60), (60, 60)], "#dfeae6")                 # mask over nose + mouth
             + bar(60, 50, 53, 45, 0.9, "#dfeae6") + bar(80, 50, 87, 45, 0.9, "#dfeae6")  # ear ties
             + op_s([(56, 40), (84, 40), (81, 30), (70, 26), (59, 30)], "#dfeae6")      # scrub cap over the crown
-            + ocirc(*_arm_rot(-1, 57, 133), 3.6, "#eef2f2", d=1.0) + ocirc(*_arm_rot(1, 83, 133), 3.6, "#eef2f2", d=1.0)  # gloves
+            + ocirc(57, 133, 3.6, "#eef2f2", d=1.0) + ocirc(83, 133, 3.6, "#eef2f2", d=1.0)  # gloves
             + circ(70, 95, 2.0, "#e15a5a"))
     return base, pre, post
 

@@ -95,7 +95,7 @@ for k, kw in SPECS.items():
 
 # animation pivots + limb spans, Person game units, feet at (0, 0)
 _ARM_SH_Y = gen_si._gy(25.5)     # arm-swing pivot (Grounded study shoulder line)
-_ARM_WR_Y = gen_si._arm_rot(1, gen_si._gx(2.5), gen_si._gy(13.6))[1]  # wrist, after the resting splay
+_ARM_WR_Y = gen_si._gy(13.6)     # wrist line
 PIVOTS = {"leg_l": list(g(gen_si._gx(-1.7), HIP_Y)), "leg_r": list(g(gen_si._gx(1.7), HIP_Y)),
           "arm_l": list(g(gen_si._gx(-3.05), _ARM_SH_Y)), "arm_r": list(g(gen_si._gx(3.05), _ARM_SH_Y))}
 LEG_HIP_Y, _   = g(0, HIP_Y)[1], None
