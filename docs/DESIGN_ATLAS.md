@@ -413,6 +413,17 @@ grew fat enough to swallow the nose. Rings render as `_ring_quads` (a strip),
 lines as a thin quad. The in-game silhouette matches the plate
 primitive-for-primitive.
 
+**The atlas figure is front-view; the in-game figure is side-on.** The
+`figure_parts` plate (and every `*_outfits.py` card) is a flat front elevation —
+best for reading an outfit. `Person.draw` takes the same part list and turns it
+to a walking side view: `self.facing` (±1, from the last horizontal step)
+mirrors every figure-space x; the left-side animation groups draw *behind* the
+torso a shade darker (the far arm + far leg), the right-side groups draw in
+*front* (the near arm + leg); and `_arm_swing` swings the arms opposite each
+other, counter to the stride, settling to a small splay at rest. So an outfit
+still only needs its front-view geometry — the side-on read is all in
+`person.py`.
+
 ## Turning a plate into config
 
 A specimen SVG is mostly polygons/paths/circles, and the engine can consume
