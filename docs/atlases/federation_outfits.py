@@ -40,13 +40,14 @@ def op_s(pts, fill, d=1.1, ol=OUT):
     return poly(offset_poly(pts, d), ol) + poly(pts, fill)
 
 
-def chevron_flash(x=86, side=1):
-    """Amber hazard chevrons on one shoulder."""
+def chevron_flash(x=85, side=1):
+    """Amber hazard chevrons sitting on the (right) upper arm - x..x+8 stays
+    inside the arm shaft (x85-95), so the flash tracks the arm, not the air."""
     o = []
     for k in range(3):
-        y = 70 + k * 5
-        o.append(poly([(x, y), (x + side * 7, y + 4), (x + side * 14, y),
-                       (x + side * 12, y), (x + side * 7, y + 2.5), (x + side * 2, y)], HAZ))
+        y = 73 + k * 4
+        o.append(poly([(x, y), (x + side * 4, y + 3), (x + side * 8, y),
+                       (x + side * 7, y), (x + side * 4, y + 1.5), (x + side * 1, y)], HAZ))
     return "".join(o)
 
 
@@ -64,8 +65,9 @@ def SIG_HELM():
 
 def SIG_LIVERY(num="000", stripe_to=WAIST):
     """White centreline stripe + amber chevron flash + SF-### stencil - on
-    everyone, helmet or cap."""
-    return (poly([(68, 60), (72, 60), (72, stripe_to), (68, stripe_to)], STRIPE)
+    everyone, helmet or cap. The stripe starts at the collar (y67), clear of
+    the chin and mouth."""
+    return (poly([(68, 67), (72, 67), (72, stripe_to), (68, stripe_to)], STRIPE)
             + chevron_flash()
             + sf_stencil(num))
 
@@ -91,14 +93,14 @@ def pilot():
 def officer():
     base = dict(hat="#2e384a", helmet_r=17, suit="#2e384a", boot="#20262f",
                 collar=STRIPE, shoulders="#28303e", coat=True)
-    pre = op_s([(48, WAIST), (92, WAIST), (95, 172), (45, 172)], "#28303e")      # frock coat skirt
+    pre = (op_s([(48, WAIST), (92, WAIST), (95, 172), (45, 172)], "#28303e")     # frock coat skirt
+           + op_s(rrect(86, BELT + 4, 7, 13, 1), DARK))                          # sidearm on the hip (behind arm)
     post = (SIG_LIVERY("O-2", stripe_to=WAIST)
             + poly([(52, 46), (88, 46), (82, 38), (74, 33), (66, 33), (58, 38)], "#2e384a")  # peaked cap
             + poly([(52, 46), (68, 46), (64, 42), (56, 42)], DARK)              # brim
-            + "".join(bar(48, 96 + k * 4, 56, 96 + k * 4, 1.4, HAZ) for k in range(3))  # cuff braid
-            + op_s(rrect(46, 68, 16, 6, 1), HAZ) + op_s(rrect(78, 68, 16, 6, 1), HAZ)   # shoulder boards
-            + poly([(68, 96), (74, 102), (68, 108), (62, 102)], HAZ)            # command badge
-            + op_s(rrect(82, BELT + 4, 7, 12, 1), DARK))                        # sidearm
+            + "".join(bar(47, 96 + k * 4, 54, 96 + k * 4, 1.4, HAZ) for k in range(3))  # cuff braid, left forearm
+            + op_s(rrect(45, 68, 16, 6, 1), HAZ) + op_s(rrect(79, 68, 16, 6, 1), HAZ)   # shoulder boards
+            + poly([(63, 84), (67, 89), (63, 94), (59, 89)], HAZ))              # command badge, left breast
     return base, pre, post
 
 
@@ -109,9 +111,7 @@ def marine():
             + op_s([(56, 78), (84, 78), (82, 94), (58, 94)], "#48525f")
             + op_s([(58, 98), (82, 98), (80, 112), (60, 112)], "#48525f")
             + "".join(circ(x, 68, 1.2, DARK) for x in (60, 70, 80))
-            + chevron_flash(88, 1)
-            + rib([(46, 60), (58, 68), (86, 116), (78, 120)], 2.0, "#20242c")   # sling
-            + op_s(rrect(40, 92, 6, 40, 1), "#20242c")                          # carbine at the side
+            + chevron_flash(85, 1)
             + op_s(rrect(56, 156, 14, 10, 2), "#48525f") + op_s(rrect(70, 156, 14, 10, 2), "#48525f")  # shin guards
             + sf_stencil("M-07", y=100))
     return base, "", post
@@ -138,11 +138,12 @@ def fleet_command():
     post = (SIG_LIVERY("FLAG", stripe_to=WAIST)
             + "".join(circ(x, y, 1.6, HAZ) for x in (62, 78) for y in (70, 80, 90, 100))  # double-breasted buttons
             + op_s(rrect(44, 66, 18, 7, 1), HAZ) + op_s(rrect(78, 66, 18, 7, 1), HAZ)   # heavy boards
-            + "".join(bar(46, 68 + k, 60, 68 + k, 0.9, "#252d3c") for k in (0, 2, 4))
+            + "".join(bar(46, 68 + k, 58, 68 + k, 0.9, "#252d3c") for k in (0, 2, 4))   # board rank lines, L
+            + "".join(bar(82, 68 + k, 94, 68 + k, 0.9, "#252d3c") for k in (0, 2, 4))   #                   R (mirrored)
             + poly([(50, 40), (90, 40), (94, 34), (84, 26), (56, 26), (46, 34)], "#252d3c")  # scrambled-egg cap
             + poly([(50, 40), (72, 40), (68, 36), (54, 36)], DARK)
             + "".join(poly([(52 + i * 3, 37), (55 + i * 3, 34), (58 + i * 3, 37)], HAZ) for i in range(4))  # cap braid
-            + poly([(68, 92), (75, 100), (68, 108), (61, 100)], HAZ))          # flag badge
+            + poly([(63, 84), (68, 90), (63, 96), (58, 90)], HAZ))              # flag badge, left breast
     return base, pre, post
 
 

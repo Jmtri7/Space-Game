@@ -28,15 +28,22 @@ per-atlas accent colour.
 | **Drossholt Company** | Resin & Rivets, Drossholt half | 5 bolted hulls, welded station, 4 buildings, 7 furniture/deco, 2 layouts + outfits with riveted patch-plates + box respirator | **built** — `gen_split.py` + `drossholt_outfits.py` |
 | **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only | done |
 
-**All four splits are built.** `gen_split.py` pulls the ship / station /
-building / furniture / layout SVGs **verbatim** from `standard-issue.html` /
-`resin-and-rivets.html` via `atlas_plates.grab` (they're already
-detailed and extracted-to-`parts` — no reason to redraw), and adds the new
-signature outfits. **`standard-issue.html` and `resin-and-rivets.html` are now
-superseded** — keep them until their generators (`gen_rr.py`, and the
-non-`figure_parts` half of `gen_si.py`) are pruned, but the four new atlases
-are the record. `gen_si.figure_parts` / `FIG_*` / `figure_shapes` stay — they
-feed `build_person_figure.py`.
+**All four splits are built.** `gen_split.py` builds the Vherathi / Drossholt
+ship / station / building / furniture / layout plates by pulling them
+**verbatim** from `resin-and-rivets.html` via `atlas_plates.grab`; the Federation
+"issue" hardware is generated straight from `gen_si.issue_plate` (its plate
+generators `gen29`–`gen40` live in `gen_si.py`). Then it adds the signature
+outfits.
+
+**`standard-issue.html` is removed** — superseded by Common Kit + Sol Federation.
+`gen_si.py` was pruned to just the shared drawing kit + `figure_parts` +
+`figure_shapes` + the issue-hardware generators (the "rewrite standard-issue.html
+in place" pass and the `CREW`/`CONTACT` crew tables are gone). `apply_parts.py`'s
+`SI` rows now read `sol-federation.html` (which carries the same grabbed plates).
+**`resin-and-rivets.html` is still superseded but still live** — it's the plate
+source for Vherathi / Drossholt hardware and for `apply_parts.py`'s `RR` rows;
+removing it would mean moving `gen_rr.py`'s hardware generators into `gen_si.py`
+the same way, a follow-up.
 
 **Outfit signatures ship in-game.** Each `*_outfits.py` signature function's
 pre/post SVG is baked by
@@ -49,18 +56,50 @@ default story's system NPC rosters carry the `"signature"` keys and Federation
 crew entries. `tests/test_helpers.py` asserts every referenced signature is
 baked.
 
-**Body: the cinched waist.** `figure_parts` now pinches the torso to a waist
+**Body: the cinched waist.** `figure_parts` pinches the torso to a waist
 about halfway up the standing figure and flares back to a hip nearly as wide
 as the chest — an hourglass whether or not an outfit covers it. **Every belt,
 sash end, hip pouch and torch anchors at the waist**, not the hip line. Baked
 into `game/world/person_figure.py` via `build_person_figure.py`, so the game
-has it; `past-the-reach.html` shows it; `standard-issue.html` /
-`resin-and-rivets.html` pick it up on their next regenerate.
+has it; `past-the-reach.html` shows it; `resin-and-rivets.html` picks it up on
+its next regenerate.
+
+**Body: the Grounded pass.** On top of the cinched waist, `figure_parts` carries
+the "Grounded" face + shoulder pass worked out in the person-redesign artifact:
+**narrow rounded shoulders** — the torso curves out to a modest shoulder point
+and the upper arm gets a **domed top** that tucks under it (no block sticking
+out) — and a **face kit** that always shows on a bare or hatted head (hidden by
+a helmet or a visor): **oval eyes** with a full-height pupil, a short **straight
+brow** over each, a tan **under-nose shadow** (`SKINL`), a soft **mouth** line in
+the same tone, and shallow **D-ears** tucked under the face circle. Every feature
+scales with the face radius (`fr` = 15 bare, 12 helmeted). Baked into
+`person_figure.py` — the D-ears lead `BARE_HEAD`, so `Person._HELM_FACE_DY` now
+picks the face circle out of the list rather than assuming index 0; the eyes are
+`ngon` polygons, so `tests/test_helpers.py::test_visor_replaces_the_eyes` counts
+the polygon delta (8) instead of circles. The Common Kit / Sol Federation /
+Vherathi Concord / Drossholt Company atlases all render it (re-run
+`gen_common.py` + `gen_split.py`).
+
+**Signature-accessory pass (with the Grounded body).** Moving the arms/hands in
+meant re-anchoring the signature layers in `common_kit.py` / `federation_outfits.py`
+/ `vherathi_outfits.py` / `drossholt_outfits.py`. The rules that came out of it:
+anything on the **hip / thigh that the arm should cover** (holster, sidearm,
+clipboard, canteen, respirator canister) goes in **`pre`**, not `post`; **gloves**
+sit at the hand anchors `(49, 91)`; a **badge** is a small diamond on the **left
+breast** (`figure_parts` moved it off-centre — `(61, 88)`); the Federation
+**centreline stripe** starts at the collar `y67` (clear of the chin/mouth) and the
+**chevron flash** sits *on* the right upper arm (`x85–93`); the Vherathi **helmet
+dome** is a rounded arc that hugs the head and covers the ears, and a **sash** is
+a baldric over the left shoulder to the opposite hip (`figure_parts` `sash` +
+each culture's own). **Held weapons were removed for now** (mechanic's wrench,
+ranger's rifle, marine's carbine, bounty-hunter's shoulder weapon) — they come
+back with the weapons system.
 
 ## Current atlases
 
 | Atlas | Source | Published URL |
 |---|---|---|
+| **Grounded Person Model** *(hand-authored, interactive)* | [`docs/atlases/grounded-person.html`](atlases/grounded-person.html) | https://claude.ai/code/artifact/f1dbba15-75d6-40c7-9d46-45f5e7c9c276 |
 | **Common Kit** | [`docs/atlases/common-kit.html`](atlases/common-kit.html) | https://claude.ai/code/artifact/801028b3-1b57-4883-b19a-ce6bdac213dc |
 | **Sol Federation** | [`docs/atlases/sol-federation.html`](atlases/sol-federation.html) | https://claude.ai/code/artifact/fedf43de-02d7-4251-8c64-6263442678eb |
 | **Vherathi Concord** | [`docs/atlases/vherathi-concord.html`](atlases/vherathi-concord.html) | https://claude.ai/code/artifact/d352d82f-d0f3-4165-94c6-32e14415de1f |
@@ -73,8 +112,19 @@ has it; `past-the-reach.html` shows it; `standard-issue.html` /
 | **The Ashfall Rite** | [`docs/atlases/ashfall-rite.html`](atlases/ashfall-rite.html) | https://claude.ai/code/artifact/b123b6e5-653d-42f9-b9c5-adc146af735d |
 | **The Meridian Free Ports** | [`docs/atlases/meridian-free-ports.html`](atlases/meridian-free-ports.html) | https://claude.ai/code/artifact/150329e8-d18e-40f8-93ee-092f060f33fc |
 | **The Theln Drift** | [`docs/atlases/theln-drift.html`](atlases/theln-drift.html) | https://claude.ai/code/artifact/13308051-79e6-4c1c-a61c-820ea9b5f962 |
-| ~~Resin & Rivets~~ *(superseded by Vherathi Concord + Drossholt Company)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| ~~Standard Issue~~ *(superseded by Common Kit + Sol Federation)* | [`docs/atlases/standard-issue.html`](atlases/standard-issue.html) | https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce |
+| ~~Resin & Rivets~~ *(superseded by Vherathi Concord + Drossholt Company; still the plate source for their hardware)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
+| ~~Standard Issue~~ *(removed — Common Kit + Sol Federation; the issue-hardware generators moved into `gen_si.py`)* | — | ~~https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce~~ |
+
+- **Grounded Person Model** — the design study that worked out the "Grounded"
+  body + face pass now in `figure_parts`. **Hand-authored, not generated by a
+  `gen_*.py`** — a standalone interactive page (JS builds the figures from a
+  proportion spec; a `requestAnimationFrame` walk cycle you can pause / scrub).
+  Sections: the reproportioned body with head-count ticks; the live walk cycle
+  (arms opposite each other, counter to the stride); the hair / skin options
+  on the head; the body in a few `graphics.json` outfits; and the figure at
+  on-screen distances. It's a record of a **shipped** decision, kept because
+  the interactive walk and the proportion rationale don't live anywhere else.
+  Update it by editing the HTML directly, then re-publish to its URL.
 
 - **Common Kit** — the shared `Person` body and the culture-neutral outfits,
   split out of Standard Issue. **Body chapter:** a labelled cinched-waist
@@ -128,33 +178,17 @@ compatibility.
   atlases (`extract_atlas.py` now folds the strokeless idioms back to compact
   parts — see "Strokeless specimens"), so the in-game `parts` are current with
   these plates again.
-- **Standard Issue** — the shared `Person` body (legged redesign + walk cycle,
-  **shipped**), the culture-neutral kit, and the Sol Federation "Standard Issue"
-  look. The `standard_issue` culture, its ships/station, the **Procyon Gate**
-  system, and all of its **buildings + furniture** (issue_block, issue_shed,
-  issue_bollard, issue_bench, issue_desk — the last one a fresh plate) shipped
-  into `parts` too. The culture-neutral **outfit redraws** (Chapters 02–04) stay
-  mockups — the `Person` renderer is colour-key driven, so they need a parts-style
-  figure renderer first. So does the 05·D **hazard-chevron floor decal**: the
-  `decorations` system has no `parts`, so it's still authored as plain
-  hazard-colour floor rects in the system JSON, not literal chevrons.
-  The 05·A ship plates carry explicit thruster ports + `class="flame"` exhausts
-  too, extracted the same way; the Standard Ring's ring modules and the Issue
-  Tender's docking collar extract as transparent-hole ring parts.
-  **Every specimen in `standard-issue.html` is drawn with only `<polygon>` and
-  `<circle>`, no stroke** (outline = an evenly-offset copy of the shape behind
-  it; ovals/curves = many-sided polygons; straight + dashed lines = long thin
-  polygons; a ring/torus = radial quad segments so the centre is never covered
-  and the hole is genuinely transparent; `<text>` kept only for
-  labels/registrations). The figures carry **arms + hands** — shipped into
-  `person.py` (a `sleeve_color` sleeve quad per shoulder, counter-swinging on
-  the walk cycle) along with the culture-neutral kit becoming the Sol
-  Federation look in each system.
-  `apply_parts.py` runs off these plates: `extract_atlas.py` keeps every
-  polygon/circle (an offset-outline shape stays its own part, drawn behind its
-  fill), and `collapse_strokeless` folds only a `ring_strip` quad run back into
-  a `{"circle", "width"}` ring (station rings extract as transparent-hole ring
-  parts). The engine draws the list verbatim, no synthesised outline.
+- **Standard Issue** *(removed)* — was the shared `Person` body + culture-neutral
+  kit + the Sol Federation look, all now split into **Common Kit** + **Sol
+  Federation**. Its `standard_issue` culture, ships/station, **Procyon Gate**
+  system and buildings/furniture (issue_block / issue_shed / issue_bollard /
+  issue_bench / issue_desk) shipped into `parts` and stay in `config/`. The
+  issue-hardware plate generators (`gen29`–`gen40`) moved into `gen_si.py`
+  (`gen_si.issue_plate`, `ISSUE_PLATES`), so Sol Federation still renders them and
+  `apply_parts.py`'s `SI` rows still extract them (now from `sol-federation.html`).
+  The strokeless-only rule it established (only `<polygon>` + `<circle>`, no
+  stroke; offset-shape outlines; many-sided polygons for curves; `ring_strip`
+  tori) carries on across every current atlas — see "Strokeless specimens".
 - **Past the Reach** — a **mockup-only** proposal: **seven** *proposed* cultures
   for the edge of the map — Deeprock Mining Consortium, the Ashfall Rite
   (Kessari), the Meridian Free Ports, the Theln Drift, and three brand-new ones:
@@ -282,8 +316,9 @@ unrenderable page during the first build:
 
 ## Strokeless specimens: outlines and holes
 
-**Both atlases** (`standard-issue.html` and `resin-and-rivets.html`) are drawn
-with **only `<polygon>` and `<circle>`, no `stroke` anywhere** — it maps 1:1 to
+**Every atlas** is drawn with **only `<polygon>` and `<circle>`, no `stroke`
+anywhere** (the rule started with `standard-issue.html` /
+`resin-and-rivets.html`) — it maps 1:1 to
 what `extract_atlas.py` reads, so plates extract with no black-ring
 special-casing. `scratchpad/gen_si.py` bakes Standard Issue from scratch;
 `scratchpad/gen_rr.py` imports its primitives + `figure_parts` and (a) rebuilds

@@ -60,17 +60,21 @@ def patch_plates(spec=None):
     return "".join(o)
 
 
-def box_respirator(hose_to=(96, 96)):
-    o = [op_s(rrect(62, 48, 16, 10, 1), "#5a4130")]
+def box_respirator():
+    """A bolted box over the mouth; a short hose runs down the RIGHT side of the
+    jaw and shoulder to a canister clipped at the right hip - never across the
+    chest. The canister sits inside the arm line so the arm laps its outer edge."""
+    o = [op_s(rrect(62, 54, 16, 10, 1), "#5a4130")]        # box over nose + mouth
     for gx in (65, 69, 73):
-        o.append(bar(gx, 50, gx, 56, 0.9, "#2c2018"))
-    o.append(rib_line([(78, 54), (88, 58), hose_to], 1.4, "#5a4130"))
-    o.append(op_s(rrect(hose_to[0] - 6, hose_to[1] - 12, 12, 22, 2), "#6a4f39"))  # hip canister
+        o.append(bar(gx, 56, gx, 62, 0.9, "#2c2018"))      # grille slats
+    o.append(rib_line([(79, 58), (84, 68), (84, 96), (82, 112)], 1.6, "#5a4130"))  # hose down the right side
+    o.append(op_s(rrect(76, 112, 12, 20, 2), "#6a4f39"))   # hip canister (x76-88, inside the arm)
     return "".join(o)
 
 
 def mismatched_shoulders(big="#5a4130", accent="#8a6845"):
-    return op_s([(41, 62), (56, 60), (57, 76), (44, 80)], big) + circ(48, 70, 3, accent)
+    # one big pauldron over the left shoulder/upper-arm (arm shaft x45-55)
+    return op_s([(43, 62), (55, 60), (56, 76), (45, 80)], big) + circ(49, 70, 3, accent)
 
 
 # ---------------------------------------------------------------- outfits
@@ -83,17 +87,16 @@ def coveralls():
     base = dict(no_helmet=True, suit="#dab488", boot="#5a4130", sleeve="#c89664", belt="#5a4130")
     post = (patch_plates([([(52, 72), (74, 70), (76, 98), (54, 100)], "#8a6845"),
                           ([(56, 102), (80, 106), (78, WAIST + 6), (54, WAIST + 2)], "#7a5c3f")])
-            + op_s(rrect(60, 46, 20, 8, 1), "#5a4130")                          # dust scarf over the mouth
-            + rib_line([(70, 62), (70, 100)], 0.9, "#5a4130"))
+            + op_s([(58, 54), (82, 54), (80, 65), (60, 65)], "#5a4130"))        # dust scarf over nose + mouth
     return base, "", post
 
 
 def cutterman():
     base = dict(helmet="#ffc850", suit="#c89664", boot="#5a4130", sleeve="#c89664",
                 shoulders="#5a4130", torch="#8a6845", belt="#5a4130", backpack="#7a5c3f")
-    post = (patch_plates() + box_respirator(hose_to=(44, 96))
-            + op_s([(37, 92), (49, 92), (47, WAIST + 4), (35, WAIST - 4)], "#6a4f39")  # heavy cutting gauntlet
-            + rib_line([(43, 96), (43, WAIST)], 0.8, "#3a2c1e"))
+    post = (patch_plates() + box_respirator()
+            + op_s([(43, 92), (54, 92), (53, WAIST + 6), (44, WAIST + 6)], "#6a4f39")  # heavy cutting gauntlet on the left forearm
+            + "".join(circ(48, 98 + k * 5, 1.0, "#3a2c1e") for k in range(3)))          # gauntlet rivets
     return base, "", post
 
 
@@ -103,7 +106,7 @@ def tallyman():
     post = (patch_plates([([(52, 70), (72, 68), (73, 88), (53, 90)], "#8a6845")])
             + op_s(rrect(56, 74, 28, 22, 2), "#6a4f39")                         # chest ledger board
             + "".join(bar(59, 80 + k * 4, 81, 80 + k * 4, 0.9, "#3a2c1e") for k in range(3))
-            + rib_line([(84, 82), (92, 84)], 1.2, "#3a2c1e") + circ(92, 84, 1.4, "#8a6845"))  # stylus on a cord
+            + rib_line([(70, 96), (76, 100), (80, 96)], 1.0, "#3a2c1e") + circ(80, 96, 1.4, "#8a6845"))  # stylus on a short cord
     return base, "", post
 
 
@@ -114,26 +117,26 @@ def gun_bosun():
             + poly([(50, 60), (58, 66), (86, 116), (78, 120)], "#3a2c1e")       # ammo bandolier
             + "".join(op_s(rrect(t[0] - 2, t[1] - 3, 5, 8, 1), "#8a8f66")
                       for t in ((56, 74), (63, 88), (70, 102), (77, 116)))
-            + box_respirator(hose_to=(40, 100)))
+            + box_respirator())
     return base, "", post
 
 
 def foreman():
     base = dict(helmet="#ffc850", suit="#96703c", boot="#5a4130", sleeve="#8a6845",
                 shoulders="#78583a", belt="#5a4130", badge="#ffc850")
+    pre = op_s(rrect(74, 110, 13, 17, 2), "#5a4130")                            # clipboard on the hip (behind the arm)
     post = (patch_plates()
             + op_s([(50, 66), (74, 64), (76, 78), (52, 80)], "#ffc850")         # hi-vis foreman panel
-            + op_s(rrect(80, 108, 14, 18, 2), "#5a4130")                        # clipboard on the hip
             + mismatched_shoulders())
-    return base, "", post
+    return base, pre, post
 
 
 def hauler():
     base = dict(no_helmet=True, suit="#bea073", boot="#5a4130", sleeve="#a97f52",
                 backpack="#967452", belt="#5a4130")
     post = (patch_plates([([(52, 72), (74, 70), (76, 100), (54, 102)], "#8a6845")])
-            + op_s([(44, 60), (58, 66), (56, 110), (42, 104)], "#5a4130")       # a load strap over one shoulder
-            + op_s([(82, 66), (96, 60), (98, 104), (84, 110)], "#5a4130"))
+            + op_s([(45, 60), (56, 64), (55, 108), (45, 104)], "#5a4130")        # load strap over the left shoulder
+            + op_s([(84, 64), (95, 60), (95, 104), (85, 108)], "#5a4130"))       # and the right
     return base, "", post
 
 

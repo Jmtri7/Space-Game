@@ -3,6 +3,7 @@ signature: a grown helmet dome carrying ASYMMETRIC CLUSTERS of circular
 eye-bubbles (never one visor), a branching resin-vein glow tracing up the
 torso and one arm, and one-sided grown fittings. Strokeless.
 """
+import math
 import pathlib
 import sys
 
@@ -18,10 +19,24 @@ def op_s(pts, fill, d=1.1, ol=OUT):
     return poly(offset_poly(pts, d), ol) + poly(pts, fill)
 
 
+def _dome_pts():
+    """A rounded grown helmet dome that hugs the head (circle r15 at 70,48) and
+    comes down past the ear line - bigger radius on the left (the grown side)."""
+    cx, cy = 70, 47
+    pts = []
+    for a in range(200, 341, 14):          # crown arc, left temple -> right temple
+        r = 19.5 if a < 270 else 17.8      # left side grown a touch fuller
+        pts.append((cx + r * math.cos(math.radians(a)),
+                    cy + r * math.sin(math.radians(a))))
+    # down each side past the ears, then a soft jaw line under the chin bulge
+    pts += [(88, 58), (82, 61), (70, 60), (58, 61), (52, 58)]
+    return pts
+
+
 def eye_bubbles(dome=METAL, left=((60, 44, 3.4), (58, 52, 2.6), (64, 50, 2.2), (61, 38, 2.4)),
                 right=((80, 42, 3.0), (82, 50, 2.0))):
-    """The signature - an asymmetric grown dome + clustered circular bubbles."""
-    o = [op_s([(53, 55), (57, 33), (76, 28), (89, 37), (87, 57)], dome)]
+    """The signature - a rounded grown dome (covers the ears) + clustered bubbles."""
+    o = [op_s(_dome_pts(), dome)]
     for bx, by, br in left + right:
         o.append(circ(bx, by, br + 1.0, OUT))
         o.append(circ(bx, by, br, GLASS))
@@ -62,8 +77,9 @@ def reefwright():
     base = dict(suit="#7d628c", boot="#4a3060", sleeve="#6a5080",
                 shoulders="#4a3060", shoulders_side="left")
     post = (eye_bubbles("#7a5c96")
-            + op_s([(50, 62), (60, 62), (74, WAIST - 4), (64, WAIST - 4)], GLASS)  # asymmetric tool sash
-            + "".join(circ(56 + i * 3, 78 + i * 8, 1.6, DARK) for i in range(4))    # tool clips on it
+            + op_s([(45, 63), (53, 60), (60, 78), (69, 94), (82, WAIST + 2),
+                    (75, WAIST + 9), (61, 92), (52, 76), (41, 66)], GLASS)         # tool baldric, shoulder to opposite hip
+            + "".join(circ(52 + i * 6, 74 + i * 10, 1.6, DARK) for i in range(4))  # tool clips down it
             + veins())
     return base, "", post
 
@@ -74,7 +90,7 @@ def vault_warden():
                 chest="#3a264e", belt="#2f1e3c")
     post = (eye_bubbles("#7a5c96", left=((59, 42, 3.6), (57, 51, 2.8), (63, 49, 2.2),
                                          (60, 34, 2.6), (65, 40, 1.8)), right=((81, 44, 2.4),))
-            + op_s([(37, 54), (44, 52), (47, 96), (43, 110), (38, 98)], "#8fffcf")  # grown guard-blade, one arm
+            + op_s([(44, 66), (49, 64), (52, 100), (49, 118), (45, 106), (43, 88)], "#8fffcf")  # grown guard-blade down the left forearm
             + veins())
     return base, "", post
 

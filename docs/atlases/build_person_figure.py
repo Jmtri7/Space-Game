@@ -95,7 +95,7 @@ for k, kw in SPECS.items():
 
 # animation pivots + limb spans, Person game units, feet at (0, 0)
 PIVOTS = {"leg_l": list(g(63.5, HIP_Y)), "leg_r": list(g(76.5, HIP_Y)),
-          "arm_l": list(g(47, 68)), "arm_r": list(g(93, 68))}
+          "arm_l": list(g(50, 68)), "arm_r": list(g(90, 68))}
 LEG_HIP_Y, _   = g(0, HIP_Y)[1], None
 LEG_ANKLE_Y    = g(0, ANKLE_Y)[1]
 ARM_SHOULDER_Y = g(0, 68)[1]

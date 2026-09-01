@@ -72,18 +72,21 @@ def anatomy_svg():
     fig = "".join(figure_parts(suit="#565660", boot="#3f3f48", no_helmet=True, hipline=True))
     g = f'<g transform="translate(66,6) scale(1.0)">{fig}</g>'
     lab = ('<g fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7">'
-           '<text x="6" y="52">head — unchanged</text>'
-           '<text x="6" y="90">rounded shoulder,</text><text x="6" y="99">arm connects flush</text>'
-           '<text x="6" y="132">cinched waist —</text><text x="6" y="141">belts anchor here</text>'
+           '<text x="6" y="46">oval eyes, straight brow,</text>'
+           '<text x="6" y="55">under-nose shadow, D-ears</text>'
+           '<text x="6" y="96">narrow rounded shoulder,</text><text x="6" y="105">domed arm top</text>'
+           '<text x="6" y="140">cinched waist —</text><text x="6" y="149">belts anchor here</text>'
            '<text x="196" y="150" text-anchor="end">hip flares back to</text>'
            '<text x="196" y="159" text-anchor="end">near the chest width</text>'
            '<text x="196" y="196" text-anchor="end">longer legs, two boots</text></g>')
-    lines = (dashed_bar(58, 128, 118, 128, 0.8, ACCENT, dash=2.4, gap=2.2)
-             + dashed_bar(126, 86, 150, 86, 0.8, ACCENT, dash=2.4, gap=2.2)
+    lines = (dashed_bar(58, 136, 118, 136, 0.8, ACCENT, dash=2.4, gap=2.2)
+             + dashed_bar(118, 100, 150, 100, 0.8, ACCENT, dash=2.4, gap=2.2)
+             + dashed_bar(122, 52, 150, 52, 0.8, ACCENT, dash=2.4, gap=2.2)
              + dashed_bar(126, 152, 150, 152, 0.8, ACCENT, dash=2.4, gap=2.2))
     return (f'<svg viewBox="0 0 240 210" role="img" aria-label="Labelled anatomy of the shared Person body: '
-            f'head, rounded shoulders with the arm connecting flush, a cinched waist where belts sit, a hip that '
-            f'flares back to near the chest width, and longer legs on two boots.">{GRIDDEF}'
+            f'a head with oval eyes, a short straight brow, a tan under-nose shadow and shallow D-ears; '
+            f'narrow rounded shoulders with a domed arm top connecting flush; a cinched waist where belts sit; '
+            f'a hip that flares back to near the chest width; and longer legs on two boots.">{GRIDDEF}'
             f'<polygon points="0,0 240,0 240,210 0,210" fill="url(#grid)"/>{lines}{g}{lab}</svg>')
 
 
@@ -163,8 +166,11 @@ def build():
       The shared <code class="f">Person</code> now stands on two legs, walks
       (<code class="f">person.py</code>'s <code class="f">_leg_stance</code> /
       <code class="f">_arm_swing</code>), has a <b>cinched waist</b> with the
-      belts moved up to it, and rounded shoulders the arm connects to
-      &mdash; all baked from <code class="f">gen_si.figure_parts</code> into
+      belts moved up to it, <b>narrow rounded shoulders</b> with a domed arm
+      top, and the Grounded <b>face kit</b> &mdash; oval eyes with a full-height
+      pupil, a short straight brow, a tan under-nose shadow, a soft mouth line
+      and shallow D-ears &mdash; all baked from
+      <code class="f">gen_si.figure_parts</code> into
       <code class="f">person_figure.py</code>. The <em>role-detail</em> pieces
       below (tool belt, tabard, hood, mask) are baked by
       <code class="f">build_figure_signatures.py</code> into
@@ -187,7 +193,10 @@ def build():
       Three shapes shaded from one skin tone, plus legs, plus a set of optional
       accessory pieces an outfit switches on by naming a colour. It stands on two
       boots and walks with them; it has a <b>cinched waist</b> about halfway up
-      where every belt sits, and a hip that flares back to near the chest width.
+      where every belt sits, a hip that flares back to near the chest width, and
+      <b>narrow rounded shoulders</b> the domed arm top connects flush to. The
+      face carries the Grounded kit: oval eyes, a straight brow, an under-nose
+      shadow and shallow D-ears &mdash; hidden under a helmet or a visor.
     </p>
 
     <article class="plate">
@@ -198,13 +207,14 @@ def build():
         <h3>Anatomy <span class="mk">SHIPPED</span></h3>
         <p class="role">person.py &middot; person_figure.py</p>
         <p>
-          The cinched waist and rounded shoulders are in
+          The cinched waist, narrow rounded shoulders and the Grounded face kit
+          (oval eyes, straight brow, under-nose shadow, D-ears) are in
           <code class="f">gen_si.figure_parts</code> and baked to
           <code class="f">person_figure.py</code> by
           <code class="f">build_person_figure.py</code>. <b>Belts, sashes, hip
           pouches and torches moved up to the waist</b>; the arm is drawn with a
-          rounded cap that tucks against the torso side (no armpit gap); a hip
-          pouch draws <em>behind</em> the arm.
+          domed cap that tucks under the torso's shoulder point (no armpit gap,
+          nothing sticking out); a hip pouch draws <em>behind</em> the arm.
         </p>
         <dl class="spec">
           <dt>FIG_HIP_Y</dt><dd>146 &nbsp; (legs join here)</dd>
@@ -244,7 +254,7 @@ def build():
   <section class="wiring" id="wiring">
     <h2>Wiring in</h2>
     <div class="wiring-grid">
-      <section><h4>The body &mdash; shipped</h4><p><code class="f">person.py</code> / <code class="f">person_figure.py</code>: legs, boots, walk cycle, and now the cinched waist + rounded shoulders + belts-at-the-waist, all baked from <code class="f">gen_si.figure_parts</code>. Re-run <code class="f">build_person_figure.py</code> after editing the atlas figure; don't hand-edit <code class="f">person_figure.py</code>.</p></section>
+      <section><h4>The body &mdash; shipped</h4><p><code class="f">person.py</code> / <code class="f">person_figure.py</code>: legs, boots, walk cycle, the cinched waist + belts-at-the-waist, and now the <b>Grounded pass</b> &mdash; narrow rounded shoulders with a domed arm top, oval eyes, a straight brow, an under-nose shadow and D-ears &mdash; all baked from <code class="f">gen_si.figure_parts</code>. Re-run <code class="f">build_person_figure.py</code> after editing the atlas figure; don't hand-edit <code class="f">person_figure.py</code>.</p></section>
       <section><h4>Recolour-only outfits</h4><p>Any outfit that only sets <code class="f">*_color</code> keys is a one-line <code class="f">graphics.json</code> entry. The existing <code class="f">space_suit</code> / <code class="f">flight_suit</code> / <code class="f">mechanic</code> / … already are.</p></section>
       <section><h4>Role detail &mdash; shipped</h4><p>The tool belt, tabard, hood, mask, star, bandolier are baked geometry. <code class="f">build_figure_signatures.py</code> turns each signature function into a part list in <code class="f">game/world/figure_signatures.py</code>; <code class="f">Person.draw</code> emits it behind / over the body when the outfit carries a <code class="f">"signature"</code> key. Same path for the culture atlases' signature pieces.</p></section>
       <section><h4>The other atlases</h4><p><b>Sol Federation</b> (the <code class="f">standard_issue</code> hardware &mdash; ships, station, buildings, interior, Federation crew), <b>Vherathi Concord</b> and <b>Drossholt Company</b> (Resin &amp; Rivets, split in two). All four reference this body.</p></section>

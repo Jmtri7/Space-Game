@@ -175,7 +175,7 @@ SHIPPED = {
    "(not a bubble), a white contrast centreline stripe, an amber hazard-chevron "
    "shoulder flash, and a stencilled <code class=\"f\">SF-###</code> registration "
    "on the chest.",
-   "standard-issue.html"),
+   "sol-federation.html"),
 }
 
 SWATCH_LABELS = [("hull / wall", "hull"), ("hull shadow", "hull_lo"),

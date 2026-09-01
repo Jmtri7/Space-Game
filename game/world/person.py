@@ -80,7 +80,10 @@ class Person:
 
     # How far a helmeted face sits below a bare one - the visor is extracted
     # at the bare-head position, so it's nudged down onto a helmeted face.
-    _HELM_FACE_DY = round(fig.HELMET_FACE[0]["circle"][1] - fig.BARE_HEAD[0]["circle"][1], 3)
+    # Both lists lead with the D-ear polygons now, so pick out the face circle.
+    _HELM_FACE_DY = round(
+        next(p for p in fig.HELMET_FACE if "circle" in p)["circle"][1]
+        - next(p for p in fig.BARE_HEAD if "circle" in p)["circle"][1], 3)
 
     @staticmethod
     def _shade(color, amount):

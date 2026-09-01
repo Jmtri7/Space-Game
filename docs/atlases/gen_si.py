@@ -1,6 +1,11 @@
-"""Rewrite every specimen SVG in standard-issue.html using ONLY <polygon> and
-<circle>, no strokes.
+"""The shared strokeless drawing kit + the single `Person` figure generator.
 
+`figure_parts()` is the one source for the `Person` silhouette: every culture
+atlas (`gen_common.py`, `gen_split.py`, the frontier / culture kits) imports it
+and the primitives below, and `build_person_figure.py` / `build_figure_signatures.py`
+bake its output into `game/world/person_figure.py` and `figure_signatures.py`.
+
+Strokeless drawing idioms used throughout:
   - outline  : an evenly-offset copy of the shape (offset_poly) drawn behind it,
                constant perpendicular width on every edge.
   - ovals    : many-sided polygons (ngon).
@@ -8,20 +13,28 @@
                (dashed_bar); a dotted circle = a ring of dots (dots_ring).
   - ring hole: a torus built from radial quad segments (ring_strip) - nothing
                covers the centre, so the hole is genuinely transparent.
-  <text> is kept for labels / ship registrations / room names only.
-"""
-import math, re, pathlib
 
-SRC = pathlib.Path("docs/atlases/standard-issue.html")
-s = SRC.read_text(encoding="utf-8")
+(Was also the "rewrite standard-issue.html in place" pass; that atlas was
+superseded by Common Kit + Sol Federation and removed, so only the shared
+figure half remains here.)
+"""
+import math
 
 OUT   = "#141219"
 SKIN  = "#e1b491"
 SKINF = "#f4d0ab"
 SKINL = "#bd8f6a"
 EYE   = "#281e1e"
+EYEW  = "#f4efe7"     # eye white
+BROW  = "#3d2e24"     # eyebrow
 SHAD  = "#2a3444"
 GRID  = "url(#grid)"
+
+# shallow "D" ear as (dx, dy) from the face centre in head-radii: flat side
+# just outside the thick face outline (~1.12 r), a gentle bulge out past it,
+# ~0.5 r tall. Mirrored on both sides. dy is SVG-down (positive = lower).
+EAR_D = [(1.02, -0.30), (1.02, 0.26), (1.18, 0.20),
+         (1.30, 0.02), (1.30, -0.12), (1.18, -0.26)]
 
 # ---------------------------------------------------------------- primitives
 def fmt(pts): return " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
@@ -279,17 +292,19 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                        (86, waist_y + 1)], "#5a5560"))          # nozzle head
         P.append(circ(90, waist_y - 5, 1.2, "#8a8590"))         # tip
 
-    # arms - a rounded shoulder cap that tucks against the torso side (no
-    # armpit gap) then a straight shaft to the wrist. Drawn over the torso and
-    # the hip kit; shoulder pads (later) cover the very top. ab is the wrist line.
+    # arms - narrow rounded shoulders: a domed cap over the top of the upper
+    # arm that tucks under the torso's shoulder point (no armpit gap, no block
+    # sticking out), then a straight shaft to the wrist. Drawn over the torso
+    # and the hip kit; shoulder pads (later) cover the very top. ab is the wrist
+    # line. The Grounded study settled on this shoulder.
     if arms:
         ab = 120
-        _grp("arm_l"); P.append(opoly([(41, 84), (43, 72), (49, 66), (54, 71),
-                                       (52, ab), (43, ab + 1)], sleeve, d=1.3))
-        _grp("arm_r"); P.append(opoly([(99, 84), (97, 72), (91, 66), (86, 71),
-                                       (88, ab), (97, ab + 1)], sleeve, d=1.3))
-        _grp("hand_l"); P.append(ocirc(46, ab + 3, 3.1, SKINF, d=1.1))
-        _grp("hand_r"); P.append(ocirc(94, ab + 3, 3.1, SKINF, d=1.1))
+        _grp("arm_l"); P.append(opoly([(45, 85), (46, 74), (49, 67), (53, 69),
+                                       (55, 74), (53, ab), (45, ab + 1)], sleeve, d=1.3))
+        _grp("arm_r"); P.append(opoly([(95, 85), (94, 74), (91, 67), (87, 69),
+                                       (85, 74), (87, ab), (95, ab + 1)], sleeve, d=1.3))
+        _grp("hand_l"); P.append(ocirc(49, ab + 3, 3.1, SKINF, d=1.1))
+        _grp("hand_r"); P.append(ocirc(91, ab + 3, 3.1, SKINF, d=1.1))
 
     _grp("body")
     if hipline:
@@ -327,9 +342,15 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                 for ry in (84, 100):
                     P.append(circ(rx, ry, 1.4, rivets))
         _gate(None)
-    if sash:                                      # ends at the cinched waist, tucked under the belt
+    if sash:      # a baldric: over the left shoulder, across the chest, tucked
+                  # under the belt at the opposite (right) hip
         _gate("sash_color")
-        P.append(opoly([(50, 70), (61, 70), (74, waist_y - 2), (63, waist_y - 2)], sash, d=1.1))
+        P.append(opoly([(45, 63), (53, 60),                 # over the top of the left shoulder
+                        (60, 78), (69, 94),                  # diagonally across the chest
+                        (82, waist_y + 2),                   # down to the right waist
+                        (75, waist_y + 9),                   # band width at the waist end
+                        (61, 92), (52, 76), (41, 66)],       # back up the underside
+                       sash, d=1.1))
         _gate(None)
     if collar:
         _gate("collar_color")
@@ -354,12 +375,21 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         if harness_side in ("both", "right"):
             P.append(bar(84, 90, 56, 120, 2, harness))
 
-    # face - always ringed, so it has an edge wherever it clears the helmet
+    # face - always ringed, so it has an edge wherever it clears the helmet.
+    # The Grounded face kit: shallow D-ears (bare head only, tucked under the
+    # face), oval eyes with a full-height pupil, a short straight brow over each,
+    # a tan sideways-oval under-nose shadow, and a soft mouth line in the same
+    # tone. fr is the face radius so every feature scales with helmet vs bare.
     _grp("body"); _gate(None)
     if helmet or hat:
-        P.append(ocirc(70, 52, 12, SKINF, d=1.4)); face_cy = 53
+        fr, face_cx, face_cy = 12.0, 70.0, 53.0
+        P.append(ocirc(face_cx, 52, fr, SKINF, d=1.4))
     else:
-        P.append(ocirc(70, 48, 15, SKINF, d=1.8)); face_cy = 49
+        fr, face_cx, face_cy = 15.0, 70.0, 49.0
+        for sgn in (-1, 1):
+            P.append(opoly([(face_cx + sgn * fr * dx, 48 + fr * dy)
+                            for dx, dy in EAR_D], SKINF, d=1.0))
+        P.append(ocirc(face_cx, 48, fr, SKINF, d=1.8))
 
     if visor:
         _gate("visor_color")
@@ -367,8 +397,18 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                         (83, face_cy + 4.5), (57, face_cy + 4.5)], visor, d=1.2))
         _gate(None)
     elif eyes:
-        P.append(circ(64.5, face_cy, 1.7, EYE))
-        P.append(circ(75.5, face_cy, 1.7, EYE))
+        eye_cy = face_cy - fr * 0.06
+        brow_y = face_cy - fr * 0.48
+        for sgn in (-1, 1):
+            exc = face_cx + sgn * fr * 0.42
+            P.append(opoly(ngon(exc, eye_cy, fr * 0.20, fr * 0.14, 14), EYEW, d=0.7))
+            P.append(poly(ngon(exc, eye_cy, fr * 0.12, fr * 0.14, 12), EYE))
+            bw, bh = fr * 0.19, fr * 0.07
+            P.append(poly([(exc - bw, brow_y), (exc + bw, brow_y),
+                           (exc + bw, brow_y + bh), (exc - bw, brow_y + bh)], BROW))
+        P.append(poly(ngon(face_cx, face_cy + fr * 0.30, fr * 0.22, fr * 0.09, 12), SKINL))
+        P.append(bar(face_cx - fr * 0.22, face_cy + fr * 0.60,
+                     face_cx + fr * 0.22, face_cy + fr * 0.60, 0.9, SKINL))
 
     if badge_cross:
         _gate("badge_color")
@@ -377,9 +417,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                         (cx+3,cy+3),(cx+3,cy+6),(cx-3,cy+6),(cx-3,cy+3),(cx-6,cy+3),
                         (cx-6,cy-3),(cx-3,cy-3)], badge, d=0.9))
         _gate(None)
-    elif badge:
+    elif badge:                                   # a small diamond, worn on the left breast
         _gate("badge_color")
-        P.append(opoly([(70,92),(75,98),(70,104),(65,98)], badge, d=0.9))
+        P.append(opoly([(61,84),(65,89),(61,94),(57,89)], badge, d=0.9))
         _gate(None)
 
     if helmet_ring:
@@ -388,74 +428,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(circ(70, 200, 2.6, accent))
     return P
 
-def figure_svg(vb, aria, *, wrap=None, extra="", **opts):
-    x0, y0, vw, vh = (float(v) for v in vb.split())
-    bg = poly([(x0, y0), (x0 + vw, y0), (x0 + vw, y0 + vh), (x0, y0 + vh)], GRID)
-    body = "".join(figure_parts(**opts))
-    if wrap:
-        body = f'<g transform="{wrap}">{body}</g>'
-    return f'<svg viewBox="{vb}" role="img" aria-label="{aria}">{bg}{body}{extra}</svg>'
 
-# ---------------------------------------------------------------- specimen tables
-CREW = {
- 4:  dict(helmet="#96969b", suit="#5a5a60", boot="#46464a"),
- 5:  dict(helmet="#ced2dc", suit="#3a4658", boot="#282e38", harness="#2b3542"),
- 6:  dict(hat="#f0aa37", suit="#524e48", boot="#2e2a26", belt="#3a352f", buckle="#6a563c"),
- 7:  dict(helmet="#f2962a", suit="#464e5a", boot="#282c34", band="#f2962a"),
- 8:  dict(helmet="#d2ece6", suit="#e0e4e4", boot="#b0bcbc", coat=True, badge="#e15a5a", badge_cross=True),
- 9:  dict(helmet="#606874", suit="#3a3f48", boot="#24272e", collar="#2f333a"),
- 10: dict(helmet="#ced2dc", suit="#2e384a", boot="#222832", collar="#dce1eb",
-         shoulders="#28303e", chest="#465266", badge="#ebcd5f"),
- 11: dict(helmet="#606874", suit="#32363e", boot="#1e2128", visor="#eb785a",
-         spikes="#96a0af", chest="#424854", belt="#1e2128", buckle="#4a4f58", badge="#ebcd5f"),
- 12: dict(hat="#ebcd5f", suit="#7a6648", boot="#483828", backpack="#62523a",
-         shoulders="#62523a", belt="#483828", buckle="#6a563c"),
- 13: dict(no_helmet=True, suit="#6e3442", boot="#281c20", torso_long=True, sash="#d6aa5a",
-         collar="#d6aa5a", belt="#281c20", buckle="#4a3238", badge="#ffe196"),
- 14: dict(no_helmet=True, suit="#282242", boot="#1a162e", torso_long=True, collar="#96ffd7",
-         spikes="#96ffd7", sash="#7878ff", badge="#ffffff"),
- 15: dict(helmet="#3c4046", suit="#2c2e34", boot="#1c1e22", visor="#eb785a",
-         backpack="#282a30", chest="#3a3c44", shoulders="#34363e", belt="#1c1e22", buckle="#44464e"),
-}
-CONTACT = {
- 16: dict(suit="#404852", boot="#282624"),
- 17: dict(suit="#2a2e44", boot="#1a1a22"),
- 18: dict(suit="#7a3a4a", boot="#2c1e22"),
- 19: dict(suit="#6c603e", boot="#463826", belt="#463826", buckle="#6a563c"),
- 20: dict(hat="#ebcd5f", helmet_r=17, suit="#7a6648", boot="#483828"),
- 21: dict(suit="#606e78", boot="#3c4248"),
- 22: dict(suit="#808c98", boot="#5c626c", coat=True),
- 23: dict(suit="#2e3431", boot="#1e211f"),
- 24: dict(suit="#363c4e", boot="#222630"),
- 25: dict(hat="#f2962a", helmet_r=17, suit="#404854", boot="#262a32", shoulders="#f2962a"),
- 26: dict(helmet="#d2ece6", helmet_r=17, suit="#e6eaea", boot="#b0bcbc", coat=True,
-         collar="#8cc8be", badge="#e15a5a", badge_cross=True),
- 27: dict(suit="#6c603e", boot="#463826", sash="#b4965a"),
- 28: dict(helmet="#ced2dc", helmet_r=17, suit="#3a4a46", boot="#283230", backpack="#303e3a"),
-}
-
-def gen_special_1(vb, aria):
-    """The current shared body: legged, walk-cycle arms, a cinched waist
-    with the belt/hip line at it. (Was a current-vs-proposed comparison
-    against the old foot-oval body; that shipped, so just the one figure now.)"""
-    x0, y0, vw, vh = (float(v) for v in vb.split())
-    bg = poly([(x0, y0), (x0 + vw, y0), (x0 + vw, y0 + vh), (x0, y0 + vh)], GRID)
-    fig = "".join(figure_parts(suit=SKIN, boot=SKINL, no_helmet=True, hipline=True))
-    g = f'<g transform="translate(50,4) scale(0.92)">{fig}</g>'
-    t = ('<text x="120" y="20" fill="#6d6a7e" font-family="IBM Plex Mono, monospace" font-size="8" '
-         'letter-spacing="1.5" text-anchor="middle">SHARED BODY</text>'
-         '<text x="182" y="120" fill="#8fb9c8" font-family="IBM Plex Mono, monospace" font-size="6.5">waist line</text>')
-    hd = dashed_bar(150, 121, 176, 121, 0.9, "#8fb9c8", dash=2.4, gap=2.2)
-    return f'<svg viewBox="{vb}" role="img" aria-label="{aria}">{bg}{g}{hd}{t}</svg>'
-
-def gen_special_3(vb, aria):
-    return figure_svg(vb, aria, wrap="translate(50,0)",
-        helmet="#3a3a44", suit="#55555f", leg="#3f3f48", boot="#333333",
-        backpack="#3a3a44", spikes="#4a4a55", antenna="#4a4a55", collar="#6a6a75",
-        shoulders="#6a6a75", chest="#63636e", sash="#75757f", badge="#8a8a94",
-        belt="#4a4a54", buckle="#7a7a84", visor="#5a5a64")
-
-# ---------------------------------------------------------------- hardware
+# ---------------------------------------------------------------- issue hardware
+# The Sol Federation "issue" ships / station / buildings / decal / interior plan.
+# Authored here; gen_split.py renders them straight into sol-federation.html
+# (they used to be baked into the removed standard-issue.html and grabbed).
 def _flame(pts): return poly(pts, "#8cb9ff", cls="flame")
 
 def gen29(vb, aria):  # issue shuttle
@@ -633,52 +610,25 @@ def gen40(vb, aria):  # interior plan
            '<text x="160" y="104" text-anchor="middle">CONCOURSE</text></g>')
     return f'<svg viewBox="{vb}" role="img" aria-label="{aria}">{"".join(P)}{lab}</svg>'
 
-HARDWARE = {29:gen29,30:gen30,31:gen31,32:gen32,33:gen33,34:gen34,
-            35:gen35,36:gen36,37:gen37,38:gen38,39:gen39,40:gen40}
 
-# ---------------------------------------------------------------- rewrite pass
-def _main():
-    svgs = list(re.finditer(r'<svg[\s\S]*?</svg>', s))
-    assert len(svgs) == 41, len(svgs)
+# label substring (as gen_split lists them) -> (generator, viewBox)
+ISSUE_PLATES = {
+    "issue shuttle":       (gen29, "0 0 200 200"),
+    "issue lighter":       (gen30, "0 0 200 200"),
+    "issue cutter":        (gen31, "0 0 200 200"),
+    "issue tender":        (gen32, "0 0 200 200"),
+    "standard ring":       (gen33, "0 0 240 200"),
+    "issue block":         (gen34, "0 0 200 210"),
+    "issue shed":          (gen35, "0 0 200 210"),
+    "issue bollard":       (gen36, "0 0 200 210"),
+    "issue bench":         (gen37, "0 0 200 210"),
+    "issue service counter": (gen38, "0 0 200 210"),
+    "hazard chevron":      (gen39, "0 0 200 160"),
+    "station interior":    (gen40, "0 0 320 200"),
+}
 
-    def aria_of(b):
-        m = re.search(r'aria-label="([^"]*)"', b)
-        return m.group(1) if m else ""
-    def vb_of(b):
-        return re.search(r'viewBox="([^"]*)"', b).group(1)
-
-    out, last = [], 0
-    for i, m in enumerate(svgs):
-        out.append(s[last:m.start()])
-        block = m.group(0)
-        if i == 0:
-            new = ('<svg width="0" height="0" aria-hidden="true" style="position:absolute">'
-                   '<defs><pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">'
-                   '<circle cx="1.5" cy="1.5" r="1" fill="#ffffff" fill-opacity="0.05"/>'
-                   '</pattern></defs></svg>')
-        elif i == 1:
-            new = gen_special_1(vb_of(block), aria_of(block))
-        elif i == 3:
-            new = gen_special_3(vb_of(block), aria_of(block))
-        elif i == 2:
-            new = figure_svg(vb_of(block), aria_of(block), suit=SKIN, boot=SKINL,
-                             no_helmet=True, hipline=True, helmet_ring=True, accent_dot=True)
-        elif i in CREW:
-            new = figure_svg(vb_of(block), aria_of(block), **CREW[i])
-        elif i in CONTACT:
-            new = figure_svg(vb_of(block), aria_of(block),
-                             wrap="translate(1,4) scale(0.62)", **CONTACT[i])
-        elif i in HARDWARE:
-            new = HARDWARE[i](vb_of(block), aria_of(block))
-        else:
-            new = block
-        out.append(new)
-        last = m.end()
-    out.append(s[last:])
-    res = "".join(out)
-    assert "url(#floorglow)" not in res
-    SRC.write_text(res, encoding="utf-8")
-    print("rewrote", SRC, len(res), "bytes")
-
-if __name__ == "__main__":
-    _main()
+def issue_plate(label):
+    """The <svg> for a Federation hardware plate, matched by label substring."""
+    key = next(k for k in ISSUE_PLATES if k in label.lower())
+    fn, vb = ISSUE_PLATES[key]
+    return fn(vb, label)

@@ -494,18 +494,22 @@ class TestPersonOutfitRendering(unittest.TestCase):
                 self.assertIn(sig, SIGNATURE, f"{outfit_id} references unbaked signature {sig!r}")
 
     def test_visor_replaces_the_eyes(self):
-        def circle_count(outfit):
+        def counts(outfit):
             # Person.draw() emits its shapes through game.aa_draw (aa.polygon /
             # aa.circle), which dispatch on constants.AA_MODE.
             with patch("game.world.person.aa") as mock_aa:
                 Person(0, 0, outfit=outfit).draw(MagicMock())
                 return mock_aa.polygon.call_count, mock_aa.circle.call_count
-        polys_visor, circles_visor = circle_count({"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]})
-        _, circles_plain = circle_count({"suit_color": [10, 10, 10]})
+        polys_visor, circles_visor = counts({"suit_color": [10, 10, 10], "visor_color": [200, 120, 90]})
+        polys_plain, circles_plain = counts({"suit_color": [10, 10, 10]})
         self.assertGreater(polys_visor, 0)
-        # The only circle difference between the two is the pair of eyes the
-        # visor covers - everything else (head, hands, ...) is unchanged.
-        self.assertEqual(circles_plain - circles_visor, 2)
+        # A plain face draws the whole Grounded face kit - oval eyes (white +
+        # pupil), a brow over each, an under-nose shadow and a mouth line, all
+        # polygons now (EYES_BARE, 10 parts). The visored face draws the visor
+        # plate (2 polys) over that area instead, so it emits 8 fewer polygons;
+        # circles (head, ears-as-polys aside, hands) are unchanged.
+        self.assertEqual(polys_plain - polys_visor, 8)
+        self.assertEqual(circles_plain, circles_visor)
 
 
 class TestLocationExitOptions(unittest.TestCase):

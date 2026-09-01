@@ -2,11 +2,13 @@
 Drossholt Company.
 
 Ships / station / buildings / furniture / decorations / layouts are pulled
-verbatim from the current shipped atlases (standard-issue.html /
-resin-and-rivets.html) via atlas_plates.grab - they're already detailed and
-extracted-to-parts, no reason to redraw them. The OUTFITS are new: redrawn on
-the cinched-waist body with each culture's signature (federation_outfits /
-vherathi_outfits / drossholt_outfits).
+verbatim via atlas_plates.grab - they're already detailed and extracted-to-parts,
+no reason to redraw them. The Vherathi / Drossholt plates come from
+resin-and-rivets.html; the Federation "issue" plates come from this atlas's own
+last output (they were authored in gen_si's now-removed hardware generators and
+baked into the now-removed standard-issue.html, then grabbed here). The OUTFITS
+are new: redrawn on the current body with each culture's signature
+(federation_outfits / vherathi_outfits / drossholt_outfits).
 
     python docs/atlases/gen_split.py            # all three
     python docs/atlases/gen_split.py vherathi   # just one
@@ -17,7 +19,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import figure_parts, poly, GRID
+from gen_si import figure_parts, poly, GRID, issue_plate
 from atlas_shell import css, DEFS, GRIDDEF
 from atlas_plates import grab
 
@@ -30,7 +32,10 @@ CULTURES = {
  "federation": dict(
    file="sol-federation.html", title="Sol Federation", mark="Sol <em>Federation</em>",
    accent="#8fb9c8", accent_rgb="143,185,200",
-   src="standard-issue.html", outfits="federation_outfits",
+   # the issue ship / station / building plates are generated straight from
+   # gen_si.issue_plate (src=None) - they used to be baked into the removed
+   # standard-issue.html and grabbed from there.
+   src=None, outfits="federation_outfits",
    pal=dict(hull="#41506a", hull_lo="#2a3444", glass="#cfe0f0", thrust="#8cb9ff",
             trim="#f2b23a", shadow="#1c2430"),
    tagline="Not grown, not scavenged &mdash; <em>issued</em>",
@@ -156,7 +161,9 @@ def strip_svg(svg):
 
 
 def card_from_plate(src, label):
-    svg = grab(src, label)
+    # src is None for the Federation - its hardware plates are generated straight
+    # from gen_si.issue_plate rather than grabbed from an atlas HTML.
+    svg = issue_plate(label) if src is None else grab(src, label)
     vb, inner = strip_svg(svg)
     return (f'<figure class="card"><svg viewBox="{vb}" role="img" aria-label="{label}">'
             f'{inner}</svg><figcaption><b>{label}</b></figcaption></figure>')
@@ -244,8 +251,8 @@ def build(key):
     <div class="wiring-grid">
       <section><h4>Hardware &mdash; shipped</h4><p>Ships (<code class="f">graphics.json</code>), station (<code class="f">graphics.json</code> &rarr; <code class="f">space_stations</code>), buildings (<code class="f">building_types.json</code>), furniture, decorations and both layouts are in <code class="f">config/stories/default</code>, silhouettes extracted from these plates into <code class="f">parts</code> by <code class="f">apply_parts.py</code>.</p></section>
       <section><h4>Outfits &mdash; the redraw</h4><p>Each outfit's recoloured base is a <code class="f">graphics.json</code> &rarr; <code class="f">outfits</code> entry with a <code class="f">"signature"</code> key. <code class="f">build_figure_signatures.py</code> bakes each signature function's geometry into <code class="f">game/world/figure_signatures.py</code>, and <code class="f">Person.draw()</code> emits it behind / over the body. Shipped for all three cultures + Common Kit.</p></section>
-      <section><h4>The body</h4><p>The cinched waist / rounded shoulders / belts-at-the-waist are shipped in <code class="f">person_figure.py</code>. See the <b>Common Kit</b> atlas.</p></section>
-      <section><h4>Retires</h4><p>This atlas + <b>Common Kit</b> (+ the other culture atlases) replace <code class="f">{src}</code> once all are built. Same visual system, same strokeless rule, same body.</p></section>
+      <section><h4>The body</h4><p>The cinched waist, narrow rounded shoulders, domed arm tops and the Grounded face kit (oval eyes, straight brow, under-nose shadow, D-ears) are shipped in <code class="f">person_figure.py</code>. See the <b>Common Kit</b> atlas.</p></section>
+      <section><h4>Retires</h4><p>This atlas + <b>Common Kit</b> (+ the other culture atlases) replaced the old combined atlases. Same visual system, same strokeless rule, same body.</p></section>
     </div>
   </section>
 </main>

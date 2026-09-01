@@ -1,0 +1,821 @@
+<title>Grounded Person Model</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #eef0ee; --paper: #f9faf8; --plate: #ffffff;
+    --ink: #1a2733; --text: #2b3a45; --muted: #64757f; --line: #d3dad9;
+    --accent: #c8781f; --accent-soft: #e7d3bb; --pick: #2f7d6b; --fig-stroke: #16212b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1319; --paper: #10161c; --plate: #161d25;
+      --ink: #e8eef0; --text: #c3ced3; --muted: #7d8f98; --line: #263139;
+      --accent: #e0932f; --accent-soft: #3a3020; --pick: #4bbfa5; --fig-stroke: #05090c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0e1319; --paper: #10161c; --plate: #161d25;
+    --ink: #e8eef0; --text: #c3ced3; --muted: #7d8f98; --line: #263139;
+    --accent: #e0932f; --accent-soft: #3a3020; --pick: #4bbfa5; --fig-stroke: #05090c;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif; line-height: 1.6;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 28px 80px; }
+
+  header { max-width: 660px; margin-bottom: 20px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Archivo", sans-serif; font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px); line-height: 1.12;
+    color: var(--ink); margin: 0 0 16px; text-wrap: balance;
+  }
+  header p { margin: 0; font-size: 15.5px; }
+  header p + p { margin-top: 12px; color: var(--muted); font-size: 14px; }
+
+  section { margin-top: 52px; }
+  .sec-head { max-width: 660px; margin-bottom: 26px; }
+  h2.sec {
+    font-family: "Archivo", sans-serif; font-weight: 700; font-size: 22px;
+    color: var(--ink); margin: 0 0 8px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent); display: inline-block;
+  }
+  .sec-head p { margin: 10px 0 0; font-size: 14.5px; }
+
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 940px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .lead { display: grid; gap: 22px; grid-template-columns: 200px 1fr; align-items: start; }
+  @media (max-width: 620px) { .lead { grid-template-columns: 1fr; } }
+
+  .plate {
+    background: var(--plate); border: 1px solid var(--line); border-radius: 4px;
+    padding: 18px 18px 20px; display: flex; flex-direction: column;
+  }
+  .plate.is-pick { border-color: var(--pick); box-shadow: inset 0 2px 0 var(--pick); }
+
+  .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px;
+  }
+  .plate h3 {
+    font-family: "Archivo", sans-serif; font-weight: 600; font-size: 16px;
+    color: var(--ink); margin: 0 0 12px;
+  }
+  .plate.mini h3 { font-size: 14px; margin-bottom: 6px; }
+  .stage { width: 170px; max-width: 100%; height: 276px; display: block; margin: 0 auto 12px; }
+  .stage-head { width: 150px; max-width: 100%; height: 140px; display: block; margin: 2px auto 10px; }
+
+  .spec {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--muted); margin: 0; line-height: 1.7;
+  }
+  .spec b { color: var(--ink); font-weight: 500; }
+
+  dl {
+    margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px;
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+  }
+  dt { color: var(--muted); }
+  dd { margin: 0; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+  .lead .body-note { margin: 16px 0 0; font-size: 14px; color: var(--text); }
+
+  .cap { font-size: 12.5px; color: var(--muted); margin: 0; }
+  .cap b { color: var(--text); font-weight: 500; }
+
+  .walk-wrap {
+    display: flex; gap: 28px; align-items: center; flex-wrap: wrap;
+    background: var(--plate); border: 1px solid var(--line);
+    border-radius: 4px; padding: 20px 22px;
+  }
+  .walk-wrap .stage { flex: 0 0 auto; }
+  .walk-wrap .side { flex: 1 1 240px; min-width: 220px; }
+  .walk-controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .walk-controls button {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    background: var(--ground); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 3px;
+    padding: 5px 14px; cursor: pointer; letter-spacing: 0.04em;
+  }
+  .walk-controls button:hover { border-color: var(--accent); }
+  .walk-controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .walk-controls label {
+    display: flex; align-items: center; gap: 8px;
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted);
+  }
+  .walk-controls input[type="range"] { accent-color: var(--accent); width: 120px; }
+  .walk-wrap .side p { margin: 0; font-size: 13.5px; }
+  .walk-wrap .side p + p { margin-top: 10px; color: var(--muted); font-size: 12.5px; }
+
+  .distrow {
+    display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+    padding: 20px; border: 1px solid var(--line); border-radius: 4px;
+    background: var(--plate); margin-bottom: 16px;
+  }
+  .distrow .rl {
+    flex: 0 0 130px; font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--ink); align-self: center;
+  }
+  .distrow .cell { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .distrow .cell span {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--muted);
+  }
+
+  footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line);
+    font-size: 13.5px; color: var(--muted); max-width: 700px;
+  }
+  footer code, .mono {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+  }
+  footer code {
+    background: var(--accent-soft); color: var(--ink); padding: 1px 5px; border-radius: 3px;
+  }
+  footer strong { color: var(--text); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">space-game · character model</p>
+    <h1>The Grounded Person model</h1>
+    <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; head down ~15%, a short neck, longer torso, legs lifted to the true half-body line, narrow rounded shoulders &mdash; then the face kit worked out on it: the oval eyes, one short straight brow, the oval-shadow nose, hair and skin tones, and how each holds up as the figure shrinks on screen.</p>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2 class="sec">1 &nbsp;The body</h2>
+      <p>Head-count ticks up the left &mdash; a little over six. Narrow rounded shoulders: the torso curves out to a modest shoulder point and the top of each arm is domed, so the two meet in one smooth line.</p>
+    </div>
+    <div class="lead">
+      <div class="plate is-pick" style="align-items:center">
+        <p class="tag">Grounded</p>
+        <svg class="stage" id="lead-fig" width="170" height="276" viewBox="0 0 132 214"></svg>
+      </div>
+      <div>
+        <dl id="lead-stats"></dl>
+        <p class="body-note">Keeps the chunky, sprite-legible silhouette &mdash; nothing downstream (walk cycle, outfit colour keys, accessory slots) needs to move, only <span class="mono">LEG_HEIGHT</span> / <span class="mono">ARM_LENGTH</span> to match the new limb lengths. The walk cycle keeps its shape too &mdash; arms swinging opposite each other, counter to the stride.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2 class="sec">2 &nbsp;Walk cycle</h2>
+      <p>The settled gait, live. <span class="mono">swing = sin(walk_phase)</span> drives the legs (±16&deg; about the hip, forward foot lifting); the arms swing <b>opposite each other</b> and <b>counter to the stride</b> &mdash; the natural human walk &mdash; with a small body dip at the extremes.</p>
+    </div>
+    <div class="walk-wrap">
+      <svg class="stage" id="walk-fig" width="170" height="276" viewBox="0 0 132 214"></svg>
+      <div class="side">
+        <div class="walk-controls">
+          <button id="walk-toggle" type="button">Pause</button>
+          <label>Speed <input id="walk-speed" type="range" min="0.35" max="2" step="0.05" value="1"></label>
+        </div>
+        <p>This changes the current in-game <span class="mono">_arm_swing</span>, which sways both arms the same way. Everything else in <span class="mono">Person._leg_stance</span> / <span class="mono">_arm_swing</span> stays &mdash; same phase variable, same amplitudes, same body bob.</p>
+        <p>Reduced-motion: the animation starts paused.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2 class="sec">3 &nbsp;Hair &amp; skin</h2>
+      <p>Hairstyles on the Grounded head, each with a different skin token. The hairline sits high enough to show the brow and a band of forehead.</p>
+    </div>
+    <div class="grid" id="grid-hair"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2 class="sec">4 &nbsp;In outfits</h2>
+      <p>The Grounded body in existing <span class="mono">graphics.json</span> outfits. Accessory pieces are approximate stand-ins for the baked <span class="mono">figure_signatures</span> geometry.</p>
+    </div>
+    <div class="grid" id="grid-outfit"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2 class="sec">5 &nbsp;At distance</h2>
+      <p>The body, then the face detail, at the sizes they actually draw on screen. Vector here, so this shows silhouette and feature read, not pixel snapping.</p>
+    </div>
+    <div id="dist-body" class="distrow"></div>
+    <div id="dist-heads"></div>
+  </section>
+
+  <footer>
+    <p><strong>To apply:</strong> move the proportion stops in <code>gen_si.figure_parts()</code> &mdash; new head/neck sizes, longer legs, and the narrow-rounded-shoulder torso with a domed arm top &mdash; then re-run <code>build_person_figure.py</code>. <strong>Face kit</strong> &mdash; the oval eyes, straight brow, oval-shadow nose and D-ears become part of the base head; one new optional key set (<code>hair</code> enum + <code>hair_color</code>) resolved in <code>Person._fig_color</code> / <code>draw</code>, with a <code>fig.HAIR</code> table baked the same way as <code>ACC</code>; defaults reproduce the current look, and NPC rosters / <code>graphics.json</code> opt in per character. (This page draws every outline as a thin <code>stroke</code> for simplicity &mdash; the mechanic's helmet ring included, now that it's a plain circle like the rest. In <code>person_figure.py</code> the outline is its own slightly-larger shape behind each part, per the atlas pipeline; the helmet ring would follow that same rule at a matching width.)</p>
+  </footer>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const COL = { suit:"#6f7c8b", legs:"#4b5560", boot:"#38424d", skin:"#d9ac86" };
+const STROKE = "var(--fig-stroke)";
+
+/* front-hair silhouettes, normalised to head radius 1 (centre 0, crown at +y).
+   Tops are sampled along an arc a little outside the skull so the hair
+   conforms to the head instead of sitting flat. */
+const HAIR_SHAPE = {
+  buzz: [[-0.97,0.06],[-0.92,0.48],[-0.77,0.78],[-0.50,0.97],[-0.26,1.08],[0,1.11],
+         [0.26,1.08],[0.50,0.97],[0.77,0.78],[0.92,0.48],[0.97,0.06],
+         [0.82,0.44],[0.44,0.72],[0,0.82],[-0.44,0.72],[-0.82,0.44]],
+  cap:  [[-1.01,-0.04],[-0.96,0.44],[-0.82,0.78],[-0.56,1.02],[-0.29,1.16],[0,1.21],
+         [0.29,1.16],[0.56,1.02],[0.82,0.78],[0.96,0.44],[1.01,-0.04],
+         [0.74,0.44],[0.30,0.70],[-0.30,0.70],[-0.74,0.44]],
+  sidepart: [[-1.03,-0.02],[-0.97,0.46],[-0.80,0.82],[-0.50,1.06],[-0.16,1.18],[0.22,1.12],
+             [0.62,0.94],[0.95,0.58],[1.03,0.16],
+             [0.58,0.50],[-0.02,0.74],[-0.70,0.44]],
+  receding: [[-0.93,0.22],[-0.87,0.52],[-0.73,0.78],[-0.49,0.96],[-0.25,1.05],[0,1.08],
+             [0.25,1.05],[0.49,0.96],[0.73,0.78],[0.87,0.52],[0.93,0.22],
+             [0.58,0.64],[0.33,0.84],[0,0.90],[-0.33,0.84],[-0.58,0.64]],
+  long: [[-1.04,0.02],[-0.97,0.48],[-0.80,0.84],[-0.48,1.08],[-0.14,1.20],[0.30,1.14],
+         [0.72,0.92],[1.02,0.52],[1.05,0.12],
+         [0.62,0.48],[-0.12,0.72],[-0.70,0.44]],
+};
+function hairKey(s){
+  return s === "buzz" ? "buzz"
+       : s === "sidepart" ? "sidepart"
+       : s === "receding" ? "receding"
+       : s === "long" ? "long" : "cap";
+}
+
+/* ---------- colour helpers ---------- */
+function toRGB(col){
+  if (Array.isArray(col)) return col.slice(0,3);
+  if (typeof col === "string" && col[0] === "#"){
+    const n = parseInt(col.slice(1), 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  }
+  const m = String(col).match(/(\d+)\D+(\d+)\D+(\d+)/);
+  return m ? [+m[1], +m[2], +m[3]] : [150,150,150];
+}
+function shade(col, amt){
+  return "rgb(" + toRGB(col).map(c => Math.max(0, Math.min(255, c+amt))).join(",") + ")";
+}
+function rgb(a){ return "rgb(" + a.join(",") + ")"; }
+
+/* ==================================================================
+   SHARED FEATURE DRAWERS  (mx/my map local unit offsets -> px; s scales feature size)
+   ================================================================== */
+/* coords are in FACE-RADIUS units from face centre; mx/my map them to px; k = px per face-radius */
+function drawEyes(g, cx, cy, ex, style, mx, my, k){
+  const mk = (tag, at) => { const e = document.createElementNS(NS, tag);
+    for (const [a,v] of Object.entries(at)) e.setAttribute(a, v); g.appendChild(e); return e; };
+  for (const sgn of [-1, 1]){
+    const x = cx + sgn*ex;
+    // outer size ~ matches the oval nose (rx 0.22); pupil spans the full height
+    mk("ellipse", { cx: mx(x), cy: my(cy), rx: 0.22*k, ry: 0.155*k,
+      fill: "#f4efe7", stroke: STROKE, "stroke-width": Math.max(0.5, 0.05*k) });
+    mk("ellipse", { cx: mx(x), cy: my(cy), rx: 0.135*k, ry: 0.155*k, fill: STROKE });
+  }
+}
+function drawBrows(g, cx, cy, ex, style, col, mx, my, k){
+  // settled: one brow — a short straight bar centred over each eye (or none)
+  if (style === "none") return;
+  const th = 0.08;
+  for (const sgn of [-1,1]){
+    const x = cx + sgn*ex, hw = 0.20;
+    const e = document.createElementNS(NS,"polygon");
+    e.setAttribute("points", [[x-hw,cy],[x+hw,cy],[x+hw,cy+th],[x-hw,cy+th]]
+      .map(q => mx(q[0]).toFixed(1)+","+my(q[1]).toFixed(1)).join(" "));
+    e.setAttribute("fill", col); e.setAttribute("stroke", STROKE);
+    e.setAttribute("stroke-width", Math.max(0.4, 0.05*k)); e.setAttribute("stroke-linejoin","round");
+    g.appendChild(e);
+  }
+}
+const NOSE_SHADE = -42;
+function drawNose(g, style, skin, mx, my, k){
+  // settled: the nose is always a tan sideways oval (under-nose shadow)
+  const e = document.createElementNS(NS,"ellipse");
+  e.setAttribute("cx", mx(0.0)); e.setAttribute("cy", my(-0.28));
+  e.setAttribute("rx", 0.22*k); e.setAttribute("ry", 0.09*k);
+  e.setAttribute("fill", shade(skin, NOSE_SHADE));
+  g.appendChild(e);
+}
+// shallow "D" ear, flat side to the head, mirrored on both sides
+const EAR_D = [[0.88,0.26],[0.88,-0.24],[0.99,-0.20],[1.06,-0.04],[1.06,0.12],[0.99,0.22]];
+function drawEars(g, skin, mx, my, k){
+  for (const s of [-1,1]){
+    const e = document.createElementNS(NS,"polygon");
+    e.setAttribute("points", EAR_D.map(([x,y]) => `${mx(s*x).toFixed(1)},${my(y).toFixed(1)}`).join(" "));
+    e.setAttribute("fill", skin); e.setAttribute("stroke", STROKE);
+    e.setAttribute("stroke-width", Math.max(0.4, 0.05*k));
+    e.setAttribute("stroke-linejoin","round"); e.setAttribute("paint-order","stroke");
+    g.appendChild(e);
+  }
+}
+function drawMouth(g, skin, mx, my, k){
+  const e = document.createElementNS(NS,"line");
+  e.setAttribute("x1", mx(-0.22)); e.setAttribute("x2", mx(0.22));
+  e.setAttribute("y1", my(-0.58)); e.setAttribute("y2", my(-0.58));
+  e.setAttribute("stroke", shade(skin, NOSE_SHADE));   // same tone as the nose shadow
+  e.setAttribute("stroke-width", Math.max(0.7, 0.11*k));
+  e.setAttribute("stroke-linecap","round"); g.appendChild(e);
+}
+
+/* ==================================================================
+   FULL FIGURE   (game units: feet at origin, y negative up)
+   ================================================================== */
+const K = 5.6, ORIGIN = 66, GROUND = 200, VB_W = 132, VB_H = 214;
+const fx = u => ORIGIN + u * K;
+const fy = u => GROUND - u * K;
+
+function fpoly(p, pts, fill, sw){
+  const el = document.createElementNS(NS, "polygon");
+  el.setAttribute("points", pts.map(q => fx(q[0]).toFixed(1)+","+fy(q[1]).toFixed(1)).join(" "));
+  el.setAttribute("fill", fill); el.setAttribute("stroke", STROKE);
+  el.setAttribute("stroke-width", sw ?? 1.1);
+  el.setAttribute("stroke-linejoin", "round"); el.setAttribute("paint-order", "stroke");
+  p.appendChild(el); return el;
+}
+function fell(p, cx, cy, rx, ry, fill){
+  const el = document.createElementNS(NS, "ellipse");
+  el.setAttribute("cx", fx(cx)); el.setAttribute("cy", fy(cy));
+  el.setAttribute("rx", rx*K); el.setAttribute("ry", ry*K);
+  el.setAttribute("fill", fill); el.setAttribute("stroke", STROKE);
+  el.setAttribute("stroke-width", 1.1); el.setAttribute("paint-order", "stroke");
+  p.appendChild(el); return el;
+}
+function fdot(p, cx, cy, r, fill, stroked){
+  const el = document.createElementNS(NS, "circle");
+  el.setAttribute("cx", fx(cx)); el.setAttribute("cy", fy(cy)); el.setAttribute("r", r*K);
+  el.setAttribute("fill", fill);
+  if (stroked){ el.setAttribute("stroke", STROKE); el.setAttribute("stroke-width", 1.1); el.setAttribute("paint-order","stroke"); }
+  p.appendChild(el); return el;
+}
+function fline(p, x1, y1, x2, y2, col, w){
+  const el = document.createElementNS(NS, "line");
+  el.setAttribute("x1", fx(x1)); el.setAttribute("y1", fy(y1));
+  el.setAttribute("x2", fx(x2)); el.setAttribute("y2", fy(y2));
+  el.setAttribute("stroke", col); el.setAttribute("stroke-width", w);
+  p.appendChild(el); return el;
+}
+
+function legPts(sign, c){
+  const cx = sign * c.hipHalf * 0.5, w = c.ankleW, mids = c.legMids || [];
+  const pts = [[sign * c.hipHalf, c.hipY]];
+  mids.forEach(m => pts.push([cx + sign * m.w, m.y]));
+  pts.push([cx + sign * w, c.ankleY]);
+  pts.push([cx - sign * w, c.ankleY]);
+  mids.slice().reverse().forEach(m => pts.push([cx - sign * m.w, m.y]));
+  pts.push([sign * 0.15, c.hipY]);
+  return { pts, cx, w };
+}
+function bootPts(cx, w, c){
+  const a = c.ankleY;
+  return [[cx - w*0.85, a],[cx + w*0.95, a],[cx + w*1.12, 0.55],
+          [cx + w*0.95, 0],[cx - w*0.75, 0],[cx - w*0.8, 0.62]];
+}
+function armPts(sign, c){
+  const sx = sign * c.attachHalf, sy = c.armShoulderY;
+  const wx = sign * (c.attachHalf - 0.55), wy = c.armWristY;
+  const tt = c.armTop*0.5, tb = c.armBot*0.5;
+  // domed top on the upper arm so it rounds into the shoulder
+  return { pts:[
+    [sx-tt, sy],
+    [sx-tt*0.6, sy + tt*0.62],
+    [sx,        sy + tt*0.82],
+    [sx+tt*0.6, sy + tt*0.62],
+    [sx+tt, sy],
+    [wx+tb, wy],
+    [wx-tb, wy],
+  ], wx, wy };
+}
+function torsoPts(c){
+  const s = c.torso;
+  return s.map(([h,y]) => [-h,y]).concat(s.map(([h,y]) => [h,y]).reverse());
+}
+function waistPt(c){ return c.torso.reduce((a,b) => b[0] < a[0] ? b : a); }
+function waistHalf(c){ return waistPt(c)[0]; }
+
+function figFace(g, c, hd, dy){
+  dy = dy || 0;
+  const r = c.head.r, cx = c.head.cx, helm = hd.helmet, hcy = c.head.cy + dy;
+  let faceCy = hcy, faceR = r;
+  if (helm){
+    // helmet dome — a plain stroked circle, same 1.1px outline as every other part
+    fdot(g, cx, hcy, r*1.2, hd.helmet, true);
+    faceR = r*0.82; faceCy = hcy - r*0.16;
+  } else {
+    hairBehindFig(g, cx, hcy, r, hd);
+  }
+  // face-radius-unit mappers: (0,0) at face centre, +y up
+  const efx = u => fx(cx + u*faceR), efy = u => fy(faceCy + u*faceR);
+  const kf = faceR * K;
+  if (!helm) drawEars(g, hd.skin || COL.skin, efx, efy, kf);
+  fell(g, cx, faceCy, faceR*0.92, faceR, hd.skin || COL.skin);
+  if (hd.visor && helm){
+    fpoly(g, [[cx-faceR*0.98, faceCy+faceR*0.44],[cx+faceR*0.98, faceCy+faceR*0.44],
+              [cx+faceR*0.92, faceCy-faceR*0.32],[cx-faceR*0.92, faceCy-faceR*0.32]], hd.visor, 1.1);
+  } else {
+    drawEyes(g, 0, 0.08, 0.42, "oval", efx, efy, kf);
+    drawBrows(g, 0, 0.34, 0.42, "straight", hd.browCol || "#2b2320", efx, efy, kf);
+    drawNose(g, "oval", hd.skin || COL.skin, efx, efy, kf);
+    drawMouth(g, hd.skin || COL.skin, efx, efy, kf);
+  }
+  if (!helm) hairFrontFig(g, cx, hcy, r, hd);
+}
+
+function hairBehindFig(g, cx, cy, r, hd){
+  const s = hd.hair, col = hd.hairCol || "#241c1a";
+  if (!s || s === "none") return;
+  if (s === "afro") fdot(g, cx, cy + r*0.15, r*1.62, col, true);
+  else if (s === "long"){
+    fpoly(g, [[cx-r*1.05,cy+r*0.4],[cx-r*1.15,cy-r*3.4],[cx-r*0.2,cy-r*3.6],[cx-r*0.15,cy-r*0.2]], col, 1.1);
+    fpoly(g, [[cx+r*1.05,cy+r*0.4],[cx+r*1.15,cy-r*3.4],[cx+r*0.2,cy-r*3.6],[cx+r*0.15,cy-r*0.2]], col, 1.1);
+  } else if (s === "ponytail"){
+    fpoly(g, [[cx+r*0.7,cy+r*0.7],[cx+r*1.7,cy+r*0.1],[cx+r*1.5,cy-r*2.2],[cx+r*0.5,cy-r*1.6]], col, 1.1);
+  } else if (s === "bun"){
+    fdot(g, cx, cy + r*1.15, r*0.62, col, true);
+  }
+}
+function hairFrontFig(g, cx, cy, r, hd){
+  const s = hd.hair, col = hd.hairCol || "#241c1a";
+  if (!s || s === "none") return;
+  fpoly(g, HAIR_SHAPE[hairKey(s)].map(([x,y]) => [cx + r*x, cy + r*y]), col, 1.0);
+  if (s === "curls")
+    for (const a of [-0.75,-0.35,0.1,0.55,0.9])
+      fdot(g, cx + a*r, cy + r*(0.62 + 0.28*Math.cos(a*2)), r*0.32, col, true);
+}
+
+function figAcc(g, c, o, phase){
+  const wp = waistPt(c), wy = wp[1], wh = wp[0];
+  if (phase === "back" && o.backpack_color)
+    fpoly(g, [[-3.9,c.torso[0][1]-0.4],[3.9,c.torso[0][1]-0.4],[3.9,wy-1.0],[-3.9,wy-1.0]], o.backpack_color, 1.1);
+  if (phase === "front"){
+    if (o.chest_plate_color)
+      fpoly(g, [[-2.7,c.torso[1][1]+0.1],[2.7,c.torso[1][1]+0.1],[2.15,wy+0.6],[-2.15,wy+0.6]], o.chest_plate_color, 1.1);
+    if (o.collar_color)
+      fpoly(g, [[-3.2,c.torso[0][1]],[3.2,c.torso[0][1]],[2.3,c.torso[0][1]-2.1],[-2.3,c.torso[0][1]-2.1]], o.collar_color, 1.1);
+    if (o.shoulder_color){
+      fdot(g, -c.attachHalf-0.1, c.armShoulderY-0.3, 1.3, o.shoulder_color, true);
+      fdot(g,  c.attachHalf+0.1, c.armShoulderY-0.3, 1.3, o.shoulder_color, true);
+    }
+    if (o.belt_color){
+      fpoly(g, [[-wh-0.2,wy+0.7],[wh+0.2,wy+0.7],[wh+0.2,wy-0.7],[-wh-0.2,wy-0.7]], o.belt_color, 1.1);
+      fpoly(g, [[-0.6,wy+0.45],[0.6,wy+0.45],[0.6,wy-0.45],[-0.6,wy-0.45]], "#c8c8d0", 1.0);
+    }
+    if (o.badge_color){
+      const by = wy - 2.4;
+      fpoly(g, [[0,by+0.95],[0.95,by],[0,by-0.95],[-0.95,by]], o.badge_color, 1.0);
+    }
+  }
+}
+
+function buildFigure(svg, c, opts){
+  opts = opts || {};
+  const hd = opts.head || { hair:"none", skin:COL.skin };
+  const o = opts.outfit || {};
+  while (svg.firstChild) svg.removeChild(svg.firstChild);   // redraw-safe (animation)
+  const g = document.createElementNS(NS, "g");
+  svg.appendChild(g);
+
+  if (opts.ticks){
+    const headTop = c.head.cy + c.head.r, headH = c.head.r*2, axX = -10.4;
+    fpoly(g, [[axX-0.05,0],[axX+0.05,0],[axX+0.05,headTop],[axX-0.05,headTop]], "var(--accent)", 0);
+    for (let i=1;i<=Math.floor(headTop/headH+0.01);i++){
+      fline(g, axX-0.55, i*headH, axX+0.55, i*headH, "var(--accent)", 1.4);
+      const t = document.createElementNS(NS,"text");
+      t.setAttribute("x", fx(axX-1.4)); t.setAttribute("y", fy(i*headH)+3.5);
+      t.setAttribute("text-anchor","end"); t.setAttribute("fill","var(--muted)");
+      t.setAttribute("font-family","IBM Plex Mono, monospace"); t.setAttribute("font-size","9");
+      t.textContent = i; g.appendChild(t);
+    }
+  }
+  fline(g, -9, 0, 9, 0, "var(--line)", 1.4);
+
+  figAcc(g, c, o, "back");
+
+  const suit = o.suit_color || COL.suit;
+  const legc = o.leg_color || (o.suit_color ? shade(o.suit_color,-20) : COL.legs);
+  const bootc = o.boot_color || COL.boot;
+  const skin = hd.skin || COL.skin;
+
+  // ---- walk-cycle transform (matches Person._leg_stance / _arm_swing) ----
+  // swing = sin(walk_phase); drives the legs. arms: amplitude aAmp, either
+  // both together or L/R opposite, and either in phase (+1) or counter (−1) to
+  // the stride.
+  const sw = opts.phase !== undefined ? Math.sin(opts.phase) : (opts.swing || 0);
+  const aAmp = 15;
+  // natural gait: arms swing opposite each other, counter to the stride
+  const aTogether = opts.armTogether === true;
+  const aPhase = opts.armPhase === undefined ? -1 : opts.armPhase;
+  const swArm = aPhase * sw;
+  const armDegL = swArm * aAmp;
+  const armDegR = (aTogether ? swArm : -swArm) * aAmp;
+  const armDegFor = s => (s === -1 ? armDegL : armDegR);
+
+  const bob = -Math.abs(sw) * 0.5;                 // body dips a little at the stride extremes
+  const rotP = (p, piv, deg) => {
+    if (!deg) return p;
+    const a = deg*Math.PI/180, cs = Math.cos(a), sn = Math.sin(a);
+    const dx = p[0]-piv[0], dy = p[1]-piv[1];
+    return [piv[0] + dx*cs - dy*sn, piv[1] + dx*sn + dy*cs];
+  };
+  const up = p => [p[0], p[1] + bob];
+  const legDeg = s => (s === -1 ? sw : -sw) * 16;  // left leg (s=-1) leads while swing > 0
+  const footLift = s => Math.max(0, (s === -1 ? sw : -sw)) * 1.3;   // forward foot clears the ground
+  const hipPiv = s => [s * c.hipHalf * 0.5, c.hipY];
+  const legXf  = (s, pts) => pts.map(p => {
+    const r = rotP(p, hipPiv(s), legDeg(s));
+    return p[1] < c.hipY - 3 ? [r[0], r[1] + footLift(s)] : r;
+  });
+  const armXf  = (s, pts) => pts.map(p => up(rotP(p, [s*c.attachHalf, c.armShoulderY], armDegFor(s))));
+
+  const ab = armPts(-1, c);
+  fpoly(g, armXf(-1, ab.pts), o.sleeve_color || suit);
+  { const w = up(rotP([ab.wx, ab.wy], [-c.attachHalf, c.armShoulderY], armDegL));
+    fdot(g, w[0], w[1], c.hand, skin, true); }
+
+  for (const s of [-1,1]){
+    const L = legPts(s, c);
+    fpoly(g, legXf(s, bootPts(L.cx, L.w, c)), bootc);
+    fpoly(g, legXf(s, L.pts), legc);
+  }
+
+  fpoly(g, torsoPts(c).map(up), suit);
+
+  if (c.neck){
+    const nh = c.neck.half, y1 = c.head.cy - c.head.r*0.7;
+    fpoly(g, [[-nh,c.neck.y0+bob],[-nh,y1+bob],[nh,y1+bob],[nh,c.neck.y0+bob]], skin);
+  }
+
+  figAcc(g, c, o, "front");
+
+  const af = armPts(1, c);
+  fpoly(g, armXf(1, af.pts), o.sleeve_color || suit);
+  { const w = up(rotP([af.wx, af.wy], [c.attachHalf, c.armShoulderY], armDegR));
+    fdot(g, w[0], w[1], c.hand, skin, true); }
+
+  const hd2 = Object.assign({}, hd, { helmet: o.helmet_color || hd.helmet, visor: o.visor_color || hd.visor });
+  figFace(g, c, hd2, bob);
+}
+
+/* ==================================================================
+   HEAD CARD   (local units, head radius = 1, y up)
+   ================================================================== */
+const HB_W = 120, HB_H = 112, HCX = 60, HCY = 58, HK = 13;
+const hx = d => HCX + d * HK;
+const hy = d => HCY - d * HK;
+
+function hpoly(p, pts, fill, sw){
+  const el = document.createElementNS(NS,"polygon");
+  el.setAttribute("points", pts.map(q => hx(q[0]).toFixed(1)+","+hy(q[1]).toFixed(1)).join(" "));
+  el.setAttribute("fill", fill); el.setAttribute("stroke", STROKE);
+  el.setAttribute("stroke-width", sw ?? 1.2); el.setAttribute("stroke-linejoin","round");
+  el.setAttribute("paint-order","stroke"); p.appendChild(el); return el;
+}
+function hdot(p, cx, cy, r, fill, stroked){
+  const el = document.createElementNS(NS,"circle");
+  el.setAttribute("cx", hx(cx)); el.setAttribute("cy", hy(cy)); el.setAttribute("r", r*HK);
+  el.setAttribute("fill", fill);
+  if (stroked){ el.setAttribute("stroke", STROKE); el.setAttribute("stroke-width",1.2); el.setAttribute("paint-order","stroke"); }
+  p.appendChild(el); return el;
+}
+
+function drawHeadCard(svg, hd, sizeK){
+  const k = sizeK || HK;
+  const lx = d => (svg._cx ?? HCX) + d * k;
+  const ly = d => (svg._cy ?? HCY) - d * k;
+  const g = document.createElementNS(NS,"g");
+  svg.appendChild(g);
+  const P = (pts, fill, sw) => { const el = document.createElementNS(NS,"polygon");
+    el.setAttribute("points", pts.map(q => lx(q[0]).toFixed(1)+","+ly(q[1]).toFixed(1)).join(" "));
+    el.setAttribute("fill", fill); el.setAttribute("stroke", STROKE);
+    el.setAttribute("stroke-width", sw ?? 1.2); el.setAttribute("stroke-linejoin","round");
+    el.setAttribute("paint-order","stroke"); g.appendChild(el); };
+  const D = (cx, cy, r, fill, stroked) => { const el = document.createElementNS(NS,"circle");
+    el.setAttribute("cx", lx(cx)); el.setAttribute("cy", ly(cy)); el.setAttribute("r", r*k);
+    el.setAttribute("fill", fill);
+    if (stroked){ el.setAttribute("stroke", STROKE); el.setAttribute("stroke-width",1.2); el.setAttribute("paint-order","stroke"); }
+    g.appendChild(el); };
+
+  // neck + shoulder hint
+  P([[-0.42,-0.92],[-0.42,-2.1],[0.42,-2.1],[0.42,-0.92]], hd.skin);
+  P([[-2.4,-2.0],[2.4,-2.0],[2.4,-3.0],[-2.4,-3.0]], hd.suitHint || "#6f7c8b");
+
+  if (!hd.helmet) hairBehindHeadLocal(P, D, hd);
+
+  if (hd.helmet) D(0, 0, 1.2, hd.helmet, true);   // thin outline, matches the rest
+  const faceR = hd.helmet ? 0.82 : 1.0;
+  const faceCy = hd.helmet ? -0.16 : 0;
+  const efx = u => lx(u*faceR), efy = u => ly(faceCy + u*faceR);
+  const kf = faceR * k;
+  if (!hd.helmet) drawEars(g, hd.skin, efx, efy, kf);
+  // face with slight jaw taper
+  P([[-0.92*faceR, faceCy+0.5],[-0.86*faceR, faceCy-0.35],[-0.5*faceR, faceCy-0.92],[0, faceCy-1.04],
+     [0.5*faceR, faceCy-0.92],[0.86*faceR, faceCy-0.35],[0.92*faceR, faceCy+0.5],
+     [0.66*faceR, faceCy+0.9],[0, faceCy+1.02],[-0.66*faceR, faceCy+0.9]], hd.skin);
+  if (hd.visor && hd.helmet){
+    P([[-0.98*faceR, faceCy+0.44*faceR],[0.98*faceR, faceCy+0.44*faceR],
+       [0.9*faceR, faceCy-0.34*faceR],[-0.9*faceR, faceCy-0.34*faceR]], hd.visor, 1.1);
+  } else {
+    drawEyes(g, 0, 0.08, 0.42, "oval", efx, efy, kf);
+    drawBrows(g, 0, 0.34, 0.42, "straight", hd.browCol || "#2b2320", efx, efy, kf);
+    drawNose(g, "oval", hd.skin, efx, efy, kf);
+    drawMouth(g, hd.skin, efx, efy, kf);
+  }
+  if (!hd.helmet) hairFrontHeadLocal(P, D, hd);
+}
+
+function hairBehindHeadLocal(P, D, hd){
+  const s = hd.hair, col = hd.hairCol || "#241c1a";
+  if (!s || s === "none") return;
+  if (s === "afro") D(0, 0.18, 1.62, col, true);
+  else if (s === "long"){
+    P([[-1.05,0.5],[-1.2,-2.9],[-0.15,-3.05],[-0.1,-0.1]], col);
+    P([[1.05,0.5],[1.2,-2.9],[0.15,-3.05],[0.1,-0.1]], col);
+  } else if (s === "ponytail"){
+    P([[0.7,0.75],[1.75,0.2],[1.55,-1.9],[0.5,-1.4]], col);
+  } else if (s === "bun"){
+    D(0, 1.28, 0.6, col, true);
+  }
+}
+function hairFrontHeadLocal(P, D, hd){
+  const col = hd.hairCol || "#241c1a";
+  const s = hd.hair;
+  if (!s || s === "none") return;
+  P(HAIR_SHAPE[hairKey(s)], col, 1.0);
+  if (s === "curls")
+    for (const a of [-0.8,-0.4,0,0.4,0.8,-0.6,0.6]) D(a, 0.66 + 0.26*Math.cos(a*3), 0.30, col, true);
+}
+
+function shadeHex(hex, amt){ return shade(hex, amt); }
+
+/* ================= DATA ================= */
+const GROUNDED = {
+  head:{cx:0, cy:30.4, r:2.72}, neck:{half:1.15, y0:26.4},
+  // narrow rounded shoulders: the torso top curves from the neck out to a
+  // modest shoulder point (y 26.5, same height as before) and rounds down into
+  // the arm, whose top is domed (see armPts)
+  torso:[[2.6,26.5],[3.2,25.9],[3.55,24.7],[3.5,23.1],[3.3,21.2],[2.5,19.2],[3.4,12.3]],
+  hipY:12.3, ankleY:1.6, hipHalf:3.4, ankleW:0.95, legMids:[{w:1.15,y:6.8}],
+  armShoulderY:25.5, armWristY:13.6, armTop:1.5, armBot:1.2, attachHalf:3.05, hand:0.62,
+};
+const LEAD_STATS = {
+  "head : height":"1 : 6.1", "head Ø":"5.4 u", "neck":"added, 2.3 u",
+  "shoulder":"6.1 u", "torso":"14.1 u", "leg of body":"41%", "hand Ø":"1.2 u",
+};
+
+const S_UMBER="#4a3423", S_BROWN="#6e4a31", S_TAN="#c08a58",
+      S_OLIVE="#9c7c50", S_LIGHT="#dcae88", S_PALE="#e7ccb5", S_ROSE="#e0b59a";
+const H_BLACK="#1b191d", H_DARKBROWN="#33241b", H_AUBURN="#6a3320",
+      H_BROWN="#4c3323", H_BLONDE="#c39a5b", H_GREY="#82828a";
+
+const HAIR = [
+  { name:"Rell",  skin:S_UMBER, hair:"buzz",     hairCol:H_BLACK,     desc:"buzz" },
+  { name:"Oda",   skin:S_BROWN, hair:"crop",     hairCol:H_DARKBROWN, desc:"crop" },
+  { name:"Ives",  skin:S_TAN,   hair:"sidepart", hairCol:H_AUBURN,    desc:"side part" },
+  { name:"Bku",   skin:S_BROWN, hair:"curls",    hairCol:H_BLACK,     desc:"curls" },
+  { name:"Sano",  skin:S_OLIVE, hair:"bun",      hairCol:H_BLACK,     desc:"topknot" },
+  { name:"Marn",  skin:S_LIGHT, hair:"long",     hairCol:H_BLONDE,    desc:"long" },
+  { name:"Voss",  skin:S_PALE,  hair:"receding", hairCol:H_GREY,      desc:"receding / thin, grey" },
+  { name:"Talia", skin:S_ROSE,  hair:"ponytail", hairCol:H_BROWN,     desc:"ponytail" },
+];
+
+const OUTFITS = [
+  { name:"Civilian", src:"civilian",
+    o:{ suit_color:[96,110,120], boot_color:[60,66,72] }, face:HAIR[1],
+    cap:"Bare-head service look &mdash; nothing covers the face." },
+  { name:"Drossholt Tallyman", src:"drossholt_tallyman",
+    o:{ suit_color:[218,180,131], boot_color:[90,65,45], chest_plate_color:[138,104,69], belt_color:[90,65,45], badge_color:[255,224,150] },
+    face:HAIR[2], cap:"Chest plate + belt + badge over a bare head." },
+  { name:"Smuggler", src:"smuggler",
+    o:{ suit_color:[46,52,49], boot_color:[30,33,31], collar_color:[38,42,40] },
+    face:HAIR[3], cap:"Dark coat, raised collar; face still reads." },
+  { name:"Mechanic", src:"mechanic",
+    o:{ helmet_color:[240,170,55], suit_color:[82,78,72], boot_color:[46,42,38], belt_color:[58,54,48] },
+    face:HAIR[0], cap:"Helmet on &mdash; hair and brow hidden, only the visor gap shows." },
+];
+
+const DIST_HEADS = [
+  { label:"deep skin",  skin:S_UMBER },
+  { label:"mid skin",   skin:S_TAN },
+  { label:"light skin", skin:S_LIGHT },
+];
+const HEAD_PX = [116, 78, 52, 36, 24];
+const BODY_PX = [{l:"docked",px:150},{l:"on deck",px:96},{l:"across the bay",px:60},{l:"far walker",px:38},{l:"HUD blip",px:22}];
+
+/* ================= RENDER ================= */
+function mkSvg(cls, vbw, vbh){
+  const s = document.createElementNS(NS,"svg");
+  s.setAttribute("viewBox", `0 0 ${vbw} ${vbh}`);
+  if (cls) s.setAttribute("class", cls);
+  // explicit intrinsic px so renderers that ignore `height:auto` on
+  // attribute-less inline SVG still size these correctly (CSS overrides)
+  const dim = cls === "stage" ? [170,276] : cls === "stage-head" ? [150,140] : [vbw,vbh];
+  s.setAttribute("width", dim[0]); s.setAttribute("height", dim[1]);
+  return s;
+}
+function browColFor(hairCol){
+  return hairCol === H_GREY ? "#7d6f63" : shade(hairCol, -8);
+}
+
+/* 1 — body */
+buildFigure(document.getElementById("lead-fig"), GROUNDED, { ticks:true });
+const ls = document.getElementById("lead-stats");
+for (const [k,v] of Object.entries(LEAD_STATS)) ls.insertAdjacentHTML("beforeend", `<dt>${k}</dt><dd>${v}</dd>`);
+
+/* 2 — walk cycle (live, the settled gait: arms opposite each other, counter to stride) */
+const walkFig = document.getElementById("walk-fig");
+const walkToggle = document.getElementById("walk-toggle");
+const walkSpeedInput = document.getElementById("walk-speed");
+const walkReduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let walkPlaying = !walkReduce;
+let walkSpeed = 1, walkPhase = 0.9, walkLast = null;
+
+function drawWalk(){
+  buildFigure(walkFig, GROUNDED, {
+    phase: walkPhase,
+    outfit: { suit_color: rgb([111, 124, 139]), boot_color: rgb([56, 66, 77]) },
+    head: { skin: S_TAN, hair: "crop", hairCol: H_DARKBROWN, browCol: browColFor(H_DARKBROWN) },
+  });
+}
+function walkFrame(t){
+  if (walkLast === null) walkLast = t;
+  const dt = Math.min(80, t - walkLast); walkLast = t;
+  walkPhase = (walkPhase + dt * 0.0042 * walkSpeed) % (Math.PI * 2);
+  drawWalk();
+  if (walkPlaying) requestAnimationFrame(walkFrame);
+}
+walkToggle.textContent = walkPlaying ? "Pause" : "Play";
+walkToggle.addEventListener("click", () => {
+  walkPlaying = !walkPlaying;
+  walkToggle.textContent = walkPlaying ? "Pause" : "Play";
+  if (walkPlaying){ walkLast = null; requestAnimationFrame(walkFrame); }
+});
+walkSpeedInput.addEventListener("input", e => { walkSpeed = +e.target.value; });
+drawWalk();
+if (walkPlaying) requestAnimationFrame(walkFrame);
+
+/* 3 — hair & skin */
+const gh = document.getElementById("grid-hair");
+HAIR.forEach(f => {
+  const el = document.createElement("div");
+  el.className = "plate mini"; el.style.alignItems = "center";
+  el.innerHTML = `<p class="tag">${f.name}</p>`;
+  const svg = mkSvg("stage-head", HB_W, HB_H); svg._cx = HCX; svg._cy = HCY;
+  el.appendChild(svg);
+  drawHeadCard(svg, { skin:f.skin, hair:f.hair, hairCol:f.hairCol, browCol:browColFor(f.hairCol) });
+  el.insertAdjacentHTML("beforeend", `<p class="spec">${f.desc}</p>`);
+  gh.appendChild(el);
+});
+
+/* 4 — outfits */
+const go = document.getElementById("grid-outfit");
+OUTFITS.forEach(ot => {
+  const el = document.createElement("div");
+  el.className = "plate";
+  el.innerHTML = `<p class="tag mono">${ot.src}</p><h3>${ot.name}</h3>`;
+  const svg = mkSvg("stage", VB_W, VB_H); el.appendChild(svg);
+  const o = {};
+  for (const [k,v] of Object.entries(ot.o)) o[k] = Array.isArray(v) ? rgb(v) : v;
+  buildFigure(svg, GROUNDED, {
+    outfit:o,
+    head:{ skin:ot.face.skin, hair:ot.face.hair, hairCol:ot.face.hairCol,
+           browCol:browColFor(ot.face.hairCol) },
+  });
+  el.insertAdjacentHTML("beforeend", `<p class="cap"><b>${ot.face.name}</b> &mdash; ${ot.cap}</p>`);
+  go.appendChild(el);
+});
+
+/* 5a — body at distance (section 5) */
+const db = document.getElementById("dist-body");
+db.insertAdjacentHTML("beforeend", `<div class="rl">Grounded body<br><span style="color:var(--muted)">civilian · Marn</span></div>`);
+BODY_PX.forEach(d => {
+  const cell = document.createElement("div"); cell.className = "cell";
+  const svg = mkSvg("", VB_W, VB_H);
+  svg.style.width = d.px + "px"; svg.style.height = (d.px * VB_H / VB_W) + "px"; svg.style.display = "block";
+  cell.appendChild(svg);
+  buildFigure(svg, GROUNDED, {
+    outfit:{ suit_color:rgb([96,110,120]), boot_color:rgb([60,66,72]) },
+    head:{ skin:S_LIGHT, hair:"long", hairCol:H_BLONDE, browCol:browColFor(H_BLONDE) },
+  });
+  cell.insertAdjacentHTML("beforeend", `<span>${d.l} · ${d.px}px</span>`);
+  db.appendChild(cell);
+});
+
+/* 5b — face detail at distance */
+const dh = document.getElementById("dist-heads");
+DIST_HEADS.forEach(combo => {
+  const row = document.createElement("div"); row.className = "distrow";
+  row.insertAdjacentHTML("beforeend", `<div class="rl">${combo.label}</div>`);
+  HEAD_PX.forEach(pxw => {
+    const cell = document.createElement("div"); cell.className = "cell";
+    const svg = mkSvg("", HB_W, HB_H);
+    svg.style.width = pxw + "px"; svg.style.height = (pxw * HB_H / HB_W) + "px"; svg.style.display = "block";
+    svg._cx = HCX; svg._cy = HCY + 6;
+    cell.appendChild(svg);
+    drawHeadCard(svg, { skin:combo.skin, hair:"none", browCol:"#3a2a20" });
+    cell.insertAdjacentHTML("beforeend", `<span>${pxw}px</span>`);
+    row.appendChild(cell);
+  });
+  dh.appendChild(row);
+});
+</script>

@@ -10,7 +10,9 @@ import subprocess, sys, os, json, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.getcwd()
 RR = os.path.join(HERE, "resin-and-rivets.html")
-SI = os.path.join(HERE, "standard-issue.html")
+# the issue ship / station / building plates moved to sol-federation.html when
+# standard-issue.html was removed; sol-federation grabbed them verbatim.
+SI = os.path.join(HERE, "sol-federation.html")
 EX = os.path.join(HERE, "extract_atlas.py")
 
 B = "config/stories/default/building_types.json"
@@ -70,7 +72,7 @@ T = [
     ("drossholt_tug",    RR, "sledge-tug", 120, 100, 0.0125, 0, "hull", G),
     ("drossholt_miner",  RR, "ratchet-prospector", 120, 100, 0.0115, 0, "hull", G),
     ("drossholt_gunship", RR, "bulwark-gunship", 120, 102, 0.0125, 0, "hull", G),
-    ("issue_shuttle", SI, "issue shuttle · top", 100, 100, 0.0130, 0, "hull", G),
+    ("issue_shuttle", SI, "issue shuttle", 100, 100, 0.0130, 0, "hull", G),
     ("issue_lighter", SI, "issue lighter", 100, 100, 0.0115, 0, "hull", G),
     ("issue_cutter",  SI, "issue cutter", 100, 100, 0.0130, 0, "hull", G),
     ("issue_tender",  SI, "issue tender", 100, 108, 0.0130, 0, "hull", G),
