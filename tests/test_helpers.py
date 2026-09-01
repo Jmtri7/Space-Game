@@ -1197,20 +1197,33 @@ class TestPersonWalkCycle(unittest.TestCase):
         self.assertEqual(hip_dy, 0.0)
         self.assertEqual(ankles, ((0.0, 0.0), (0.0, 0.0)))
 
-    def test_a_still_persons_arms_hang_straight(self):
-        self.assertEqual(Person(0.0, 0.0)._arm_swing(), (0.0, 0.0))
+    def test_a_still_persons_arms_settle_to_a_small_splay(self):
+        # near (right) arm a touch forward, far (left) arm a touch back
+        far, near = Person(0.0, 0.0)._arm_swing()
+        self.assertAlmostEqual(far, -Person.ARM_REST_SPLAY, places=6)
+        self.assertAlmostEqual(near, Person.ARM_REST_SPLAY, places=6)
 
-    def test_both_arms_swing_together_and_counter_to_the_stride(self):
+    def test_the_arms_swing_opposite_each_other_and_counter_to_the_stride(self):
         p = Person(0.0, 0.0)
         p.step_toward(100.0, 0.0, 4.0, lambda x, y: True)
         p.walk_phase = math.pi / 2  # sin = 1 -> left leg fully forward
         p.walk_intensity = 1.0
         _, ((leg_dx_l, _), _) = p._leg_stance()
         arm_dx_l, arm_dx_r = p._arm_swing()
-        self.assertGreater(leg_dx_l, 0.0)             # left leg forward
-        self.assertAlmostEqual(arm_dx_l, arm_dx_r, places=6)   # arms move together
-        self.assertLess(arm_dx_l, 0.0)               # ...counter to the leading leg
-        self.assertNotEqual(arm_dx_l, 0.0)
+        self.assertGreater(leg_dx_l, 0.0)                     # left leg forward
+        self.assertLess(arm_dx_l, 0.0)                        # left arm back (counter)
+        self.assertGreater(arm_dx_r, 0.0)                     # right arm forward
+        self.assertAlmostEqual(arm_dx_l, -arm_dx_r, places=6) # ...opposite each other
+
+    def test_a_person_faces_the_way_it_last_walked(self):
+        p = Person(0.0, 0.0)
+        self.assertEqual(p.facing, 1)
+        p.step_toward(-50.0, 0.0, 4.0, lambda x, y: True)
+        self.assertEqual(p.facing, -1)
+        p.step_toward(0.0, 99.0, 4.0, lambda x, y: True)      # straight up
+        self.assertEqual(p.facing, -1)                        # unchanged
+        p.step_toward(50.0, 0.0, 4.0, lambda x, y: True)
+        self.assertEqual(p.facing, 1)
 
 
 class TestStationWindowsAndCulture(unittest.TestCase):

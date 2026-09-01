@@ -41,6 +41,11 @@ class Person:
         self.walk_phase = 0.0
         self.walk_intensity = 0.0
         self._walked_this_frame = False
+        # Which way the body faces: +1 = right (screen +x), -1 = left. Set from
+        # the last horizontal step in step_toward and kept when standing still,
+        # so the figure is always drawn facing the way it last walked. draw()
+        # mirrors every figure-space x about self.x when this is -1.
+        self.facing = 1
 
     # self.x/self.y is the ground position a character stands at (matches
     # where collision / arrival-distance checks treat them as being), not
@@ -48,11 +53,21 @@ class Person:
     # person_figure.py in these same units - centre-line at x, feet at y, y
     # negative going up - split into animation `group`s (body / arm_l /
     # arm_r / hand_l / hand_r / leg_l / leg_r / boot_l / boot_r). The legs
-    # and arms carry the walk cycle; the arms swing together, counter to the
-    # stride (see _leg_stance / _arm_swing and _place).
+    # and arms carry the walk cycle; the arms swing opposite each other,
+    # counter to the stride (see _leg_stance / _arm_swing and _place).
+    #
+    # For the side-on read, the left-side groups are drawn as the FAR limbs
+    # (behind the torso, a shade darker) and the right-side groups as the NEAR
+    # limbs (in front). Combined with self.facing that gives a figure that
+    # struts left or right rather than facing the camera.
     LEG_HEIGHT = 10.5       # walk-cycle knob: notional hip-to-ankle length
     HIP_OVERLAP = 1.5       # (paired with LEG_HEIGHT for the stride amplitude)
     ARM_LENGTH = 11.0       # walk-cycle knob: notional shoulder-to-wrist length
+    ARM_REST_SPLAY = 3.0    # near arm forward / far arm back a touch at a standstill
+
+    _BACK_GROUPS = frozenset(("arm_l", "hand_l", "leg_l", "boot_l"))
+    _FRONT_GROUPS = frozenset(("arm_r", "hand_r", "leg_r", "boot_r"))
+    _BACK_TINT = -48        # the far arm + far leg draw this much darker
 
     SKIN_COLOR = (225, 180, 145)   # figure "skin" token; head/hands are shaded from this
     EYE_COLOR = (40, 30, 30)
@@ -108,16 +123,20 @@ class Person:
         return hip_dy, ((dx_l, -lift_l), (-dx_l, -lift_r))
 
     def _arm_swing(self):
-        """Per-frame fore/aft wrist offset (dx) for the left arm then the
-        right. Both arms swing *together* (same direction), counter to the
-        stride - a relaxed side-to-side sway rather than a march. Returns
-        (0.0, 0.0) at rest so a still Person's arms hang straight."""
+        """Per-frame fore/aft wrist offset (dx) for the left (far) arm then the
+        right (near) arm. The two swing *opposite* each other and counter to
+        the stride - the natural human gait - about the shoulder (the offset
+        ramps in from 0 at the shoulder to full at the wrist, see _place). At a
+        standstill they settle to a small ARM_REST_SPLAY (near arm a touch
+        forward, far arm a touch back) rather than hanging dead straight."""
         amt = self.walk_intensity
-        if not amt:
-            return 0.0, 0.0
-        swing = math.sin(self.walk_phase)
-        dx = -math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
-        return dx, dx
+        rest = self.ARM_REST_SPLAY * (1.0 - amt)
+        sw = 0.0
+        if amt:
+            swing = math.sin(self.walk_phase)
+            sw = math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
+        # left/far arm trails the leading (left) leg; right/near arm leads
+        return -sw - rest, sw + rest
 
     def _advance_walk(self, distance):
         """Advance the walk cycle by the distance just walked and ramp the
@@ -167,9 +186,17 @@ class Person:
             return self._shade(belt, 45) if belt else (122, 122, 132)
         return o.get(tok, (150, 150, 150))   # accessory colour keys (gated in draw)
 
+    @staticmethod
+    def _groups(parts, groups):
+        """The subset of a part list whose animation group is in `groups`."""
+        return [p for p in parts if p.get("group", "body") in groups]
+
     def _place(self, gx, gy, group, stance, arm):
         """Figure-space point (game units, feet at origin) -> world point,
-        with the walk-cycle transform for its animation group applied."""
+        with the walk-cycle transform for its animation group applied and the
+        whole figure mirrored about self.x when it faces left."""
+        f = self.facing
+        gx *= f
         hip_dy, ((adx_l, ady_l), (adx_r, ady_r)) = stance
         if group == "body":
             return self.x + gx, self.y + gy + hip_dy
@@ -177,19 +204,21 @@ class Person:
             adx, ady = (adx_l, ady_l) if group == "leg_l" else (adx_r, ady_r)
             if gy <= self._MID_LEG_Y:            # hip end - rides the body
                 return self.x + gx, self.y + gy + hip_dy
-            return self.x + gx + adx, self.y + gy + ady    # ankle end - swings
+            return self.x + gx + adx * f, self.y + gy + ady   # ankle end - swings
         if group in ("boot_l", "boot_r"):
             adx, ady = (adx_l, ady_l) if group == "boot_l" else (adx_r, ady_r)
-            return self.x + gx + adx, self.y + gy + ady
+            return self.x + gx + adx * f, self.y + gy + ady
         if group in ("arm_l", "hand_l", "arm_r", "hand_r"):
             adx = arm[0] if group.endswith("_l") else arm[1]
             t = min(1.0, max(0.0, (gy - fig.ARM_SHOULDER_Y) / self._ARM_SPAN_Y))
-            return self.x + gx + adx * t, self.y + gy + hip_dy
+            return self.x + gx + adx * f * t, self.y + gy + hip_dy
         return self.x + gx, self.y + gy
 
-    def _emit(self, surface, parts, stance, arm, scale, dy=0.0):
+    def _emit(self, surface, parts, stance, arm, scale, dy=0.0, tint=0):
         for p in parts:
             col = self._fig_color(p["color"])
+            if tint:
+                col = self._shade(col, tint)
             grp = p.get("group", "body")     # signature parts ride the torso
             if "points" in p:
                 pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
@@ -219,8 +248,8 @@ class Person:
         o = self.outfit
         helmeted = "helmet_color" in o
 
-        def emit(parts, dy=0.0):
-            self._emit(surface, parts, stance, arm, scale, dy)
+        def emit(parts, dy=0.0, tint=0):
+            self._emit(surface, parts, stance, arm, scale, dy, tint)
 
         # Culture / role signature (eye-bubble helm, patch-plates, tool belt,
         # ...): "pre" behind the body, "post" over it. Opted in by the outfit's
@@ -234,19 +263,25 @@ class Person:
         if sig and sig["pre"]:
             emit(sig["pre"])
 
-        # Torso, arms, hands, legs, boots.
-        emit(fig.BASE)
+        # Far arm + far leg first, behind the torso and a shade darker.
+        emit(self._groups(fig.BASE, self._BACK_GROUPS), tint=self._BACK_TINT)
+
+        # Torso (+ neck).
+        emit(self._groups(fig.BASE, ("body",)))
 
         # Helmet ring sits behind the front torso pieces; the face it frames
         # is drawn later, over them.
         if helmeted:
             emit(fig.HELMET_RING)
 
-        # Layered over the torso: chest plate -> sash -> collar -> belt, then
-        # the pauldrons over the arm tops.
+        # Layered over the torso: chest plate -> sash -> collar -> belt.
         for key in ("chest_plate_color", "sash_color", "collar_color", "belt_color"):
             if key in o:
                 emit(fig.ACC[key])
+
+        # Near arm + near leg, in front of the torso, then the pauldrons over
+        # the (near) arm top.
+        emit(self._groups(fig.BASE, self._FRONT_GROUPS))
         if "shoulder_color" in o:
             emit(fig.ACC["shoulder_color"])
 
@@ -292,6 +327,9 @@ class Person:
         ):
             if (cand_x, cand_y) != (self.x, self.y) and can_move_to(cand_x, cand_y):
                 moved = math.hypot(cand_x - self.x, cand_y - self.y)
+                mvx, mvy = cand_x - self.x, cand_y - self.y
+                if abs(mvx) > abs(mvy):         # face the way we're walking when
+                    self.facing = 1 if mvx > 0 else -1   # it's mostly sideways; keep it when we stop
                 self.x, self.y = cand_x, cand_y
                 self._advance_walk(moved)
                 return True
