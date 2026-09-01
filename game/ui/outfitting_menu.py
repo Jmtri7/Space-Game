@@ -5,8 +5,8 @@ build_shop_menu), the same way ShopMenu/ShipBrowserMenu are."""
 import functools
 import math
 import pygame
-from game.constants import YELLOW, GRAY, GREEN, WHITE
-from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset
+from game.constants import YELLOW, GRAY, GREEN, WHITE, CYAN
+from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset, _wrap_text
 from game.ui.ui_theme import (
     draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
     draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
@@ -31,8 +31,11 @@ SLOT_ICON_SHAPES = {
     "utility": "gear",
 }
 SLOT_RADIUS = 14
-GRID_COLUMNS = 3
-GRID_ROWS = 2
+# Buy tab grid: 2 columns (was 3) x 3 rows (was 2) - narrower to leave room
+# for the stats preview panel (see _draw_stat_panel) beside it, same total
+# 6-per-page count as before.
+GRID_COLUMNS = 2
+GRID_ROWS = 3
 
 
 class OutfittingMenu(MenuBase):
@@ -140,6 +143,135 @@ class OutfittingMenu(MenuBase):
     def _owned_label(self, outfit_id):
         outfit = self._resolve(outfit_id)
         return f"{outfit.get('name', outfit_id)} ({outfit.get('slot_type', '?')})"
+
+    def _selected_outfit_id(self):
+        """Whichever outfit the stats preview (see _draw_stat_panel) should
+        currently show: the Buy grid's highlighted cell on the Buy tab; on
+        the Install tab, whatever's installed in the focused slot (None for
+        an empty one) if slots have focus, else the highlighted spare in
+        the owned list. Live/highlight-driven (updates as the arrow keys or
+        mouse move the selection), not a separate click-to-open action -
+        matching how ShipBrowserMenu's own preview already works."""
+        if self.tab == "buy":
+            return self.buy_grid.current()
+        if self.focus_column == "owned":
+            return self.owned_grid.current()
+        if self.slots:
+            slot = self.slots[self.slot_focus]
+            return self.possessions.installed_outfits.get(slot["id"])
+        return None
+
+    def _stat_lines_for(self, outfit_id):
+        """The full stat readout for the preview panel (see
+        _draw_stat_panel): description first (wrapped as a paragraph, tagged
+        "desc" so the drawer knows to treat it differently from a label/value
+        row), then cost/slot, then either every weapon-specific field (for a
+        "weapon" slot_type - damage/fire rate/projectile speed & size &
+        lifetime/inaccuracy/pellet count & spread, see ship_outfits.json and
+        SpaceScreen._equipped_weapon_stats, which reads the exact same
+        fields) or the outfit's stat_modifiers (for anything else - engine/
+        utility outfits only ever affect the ship through these). A weapon
+        with no stat_modifiers of its own (the normal case - its effect is
+        entirely in the weapon fields, not stat_modifiers) skips that
+        section rather than printing an empty "Effect: None"."""
+        outfit = self._resolve(outfit_id)
+        lines = []
+        description = outfit.get("description")
+        if description:
+            lines.append(("desc", description))
+        lines.append(("Cost", f"{outfit.get('cost', 0)}cr"))
+        slot_type = outfit.get("slot_type", "?")
+        lines.append(("Slot", slot_type.capitalize()))
+
+        if slot_type == "weapon":
+            lines.append(("Damage", str(outfit.get("damage", 0))))
+            fire_rate = outfit.get("fire_rate", 0)
+            rate_per_sec = 60.0 / fire_rate if fire_rate else 0.0
+            lines.append(("Fire Rate", f"{rate_per_sec:.1f}/s"))
+            lines.append(("Projectile Speed", str(outfit.get("projectile_speed", 0))))
+            lines.append(("Projectile Size", str(outfit.get("projectile_size", 0))))
+            lifetime = outfit.get("projectile_lifetime", 0)
+            lines.append(("Projectile Range", f"{lifetime / 60.0:.1f}s"))
+            inaccuracy = outfit.get("inaccuracy", 0)
+            lines.append(("Inaccuracy", f"±{inaccuracy / 2:.1f}°" if inaccuracy else "None (precise)"))
+            count = outfit.get("projectile_count", 1)
+            lines.append(("Projectiles/Shot", str(count)))
+            if count > 1:
+                lines.append(("Pellet Spread", f"{outfit.get('pellet_spread', 0)}°"))
+        else:
+            modifiers = outfit.get("stat_modifiers", {})
+            for stat_name, value in modifiers.items():
+                sign = "+" if value >= 0 else ""
+                lines.append((stat_name.replace("_", " ").title(), f"{sign}{value}"))
+
+        return lines
+
+    def _draw_stat_panel(self, surface, rect, outfit_id, scale, extra_lines=None, show_description=True):
+        """Draw outfit_id's name/icon plus its full stat readout
+        (_stat_lines_for) inside rect - the shared preview shown on
+        selection in both the Buy tab (see _draw_buy_tab, a tall narrow
+        rect) and the Install tab (see _draw_install_tab, a short wide
+        one - which also passes show_description=False, since the Install
+        tab's tighter vertical budget favors the stats themselves over
+        repeating text already shown while shopping). `extra_lines`
+        (label, value) pairs are inserted right after Cost/Slot - used by
+        the Buy tab to show Owned/Fit-status context that only makes sense
+        while shopping.
+
+        The description (when shown) is one paragraph at full rect width.
+        Every label/value stat row after it goes into 1 column normally, or
+        2 side-by-side columns if rect is wide enough *and* a single column
+        wouldn't fit rect's height - so the same call adapts to either a
+        tall-narrow or a short-wide rect without the caller having to know
+        which layout it'll need (see the two very different callers above)."""
+        outfit = self._resolve(outfit_id)
+        font_name = get_font(int(20 * scale))
+        font_label = get_font(int(14 * scale))
+
+        icon_shape, icon_color = self._icon_for(outfit_id)
+        icon_size = int(18 * scale)
+        icon_cx = rect.x + icon_size
+        icon_cy = rect.y + icon_size
+        draw_item_icon(surface, icon_cx, icon_cy, icon_size, icon_shape, icon_color)
+
+        name_text = font_name.render(outfit.get("name", outfit_id), True, WHITE)
+        surface.blit(name_text, (rect.x + icon_size * 2 + int(8 * scale), rect.y + icon_size - name_text.get_height() // 2))
+        y = rect.y + icon_size * 2 + int(10 * scale)
+
+        lines = self._stat_lines_for(outfit_id)
+        # Splice extra_lines in right after "Slot" (index 2: desc, Cost, Slot)
+        insert_at = min(3, len(lines))
+        if extra_lines:
+            lines = lines[:insert_at] + list(extra_lines) + lines[insert_at:]
+
+        description = next((text for tag, text in lines if tag == "desc"), None) if show_description else None
+        stat_rows = [(label, value) for label, value in lines if label != "desc"]
+
+        if description:
+            for wrapped_line in _wrap_text(font_label, description, rect.width - int(8 * scale)):
+                desc_text = font_label.render(wrapped_line, True, GRAY)
+                surface.blit(desc_text, (rect.x, y))
+                y += desc_text.get_height() + int(2 * scale)
+            y += int(6 * scale)
+
+        row_height = font_label.get_height() + int(3 * scale)
+        stats_top = y
+        available_height = max(row_height, rect.bottom - stats_top)
+        min_two_col_width = int(340 * scale)
+        columns = 2 if (rect.width >= min_two_col_width
+                         and row_height * len(stat_rows) > available_height) else 1
+        rows_per_col = math.ceil(len(stat_rows) / columns)
+        col_width = rect.width // columns
+
+        for i, (label, value) in enumerate(stat_rows):
+            col, row = divmod(i, rows_per_col)
+            col_x = rect.x + col * col_width
+            value_x = col_x + int(col_width * 0.55)
+            row_y = stats_top + row * row_height
+            label_text = font_label.render(f"{label}:", True, GRAY)
+            value_text = font_label.render(str(value), True, WHITE)
+            surface.blit(label_text, (col_x, row_y))
+            surface.blit(value_text, (value_x, row_y))
 
     def _draw_owned_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
         """cell_draw_fn for owned_grid (see IconGrid.draw) - an icon plus
@@ -388,20 +520,36 @@ class OutfittingMenu(MenuBase):
         rects = [pygame.Rect(panel.x + m, panel.y + m, w, h)]
         if len(self.buttons()) > 1:
             aw = int(150 * scale)
-            rects.append(pygame.Rect(panel.centerx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale)))
+            # Centered under the stock grid specifically (see
+            # _draw_buy_tab's own grid_area_width), not the whole panel -
+            # the panel's other half is the stats preview, and a
+            # panel-centered button would sit over the grid's right column.
+            grid_area_width = int(panel.width * 0.52)
+            action_cx = panel.x + grid_area_width // 2
+            rects.append(pygame.Rect(action_cx - aw // 2, panel.bottom - int(58 * scale), aw, int(42 * scale)))
         return rects
 
     def _draw_buy_tab(self, surface, panel_rect, y, scale, font_info):
+        # Left: the stock grid. Right: a live stats preview (see
+        # _draw_stat_panel) of whatever's currently highlighted - updates
+        # with the selection, same live-preview idiom ShipBrowserMenu uses.
+        grid_area_width = int(panel_rect.width * 0.52)
+
         grid = self.buy_grid
         if grid.has_more_above:
             up_indicator = font_info.render("^ more", True, GRAY)
-            surface.blit(up_indicator, (panel_rect.centerx - up_indicator.get_width() // 2, y))
+            surface.blit(up_indicator, (panel_rect.x + grid_area_width // 2 - up_indicator.get_width() // 2, y))
         y += int(18 * scale)
 
         gap = int(14 * scale)
-        cell_width = (panel_rect.width - int(60 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
-        cell_height = int(148 * scale)
-        grid_left = panel_rect.centerx - (cell_width * GRID_COLUMNS + gap * (GRID_COLUMNS - 1)) // 2
+        cell_width = (grid_area_width - int(40 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
+        # 3 rows in the space 2 used to occupy (see GRID_COLUMNS/GRID_ROWS
+        # comment) - shorter per cell (helped by _draw_buy_cell's now-
+        # lighter icon/name/cost layout) so the grid's total height still
+        # clears the fixed-position button bar at the panel's bottom, with
+        # room left over for the "v more" scroll indicator below it.
+        cell_height = int(84 * scale)
+        grid_left = panel_rect.x + int(30 * scale)
 
         draw_cell = functools.partial(self._draw_buy_cell, scale=scale)
         grid.draw(surface, (grid_left, y), cell_width, cell_height, gap, draw_cell, disabled_fn=self._buy_disabled_reason)
@@ -409,13 +557,28 @@ class OutfittingMenu(MenuBase):
         grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
         if grid.has_more_below:
             down_indicator = font_info.render("v more", True, GRAY)
-            surface.blit(down_indicator, (panel_rect.centerx - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
+            surface.blit(down_indicator, (panel_rect.x + grid_area_width // 2 - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
+
+        selected_id = self.buy_grid.current()
+        if selected_id:
+            preview_rect = pygame.Rect(
+                panel_rect.x + grid_area_width + int(20 * scale), y,
+                panel_rect.width - grid_area_width - int(50 * scale), grid_bottom - y,
+            )
+            extra_lines = [
+                ("Owned", str(self._owned_count(selected_id))),
+                ("Fit", self._fit_status(selected_id, self._resolve(selected_id).get("slot_type"))[0]),
+            ]
+            self._draw_stat_panel(surface, preview_rect, selected_id, scale, extra_lines=extra_lines)
 
     def _draw_buy_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
-        """Bespoke cell layout (not the shared ui_theme.draw_shop_cell) -
-        outfits need more info per cell than a plain price: how many you
-        already own (spares + installed), which slot type they use, and
-        whether your current ship can actually fit one."""
+        """Bespoke cell layout (not the shared ui_theme.draw_shop_cell) - just
+        icon/name/cost/(disabled reason). Owned count, slot type, fit status,
+        and every weapon/modifier stat now live in the stats preview panel
+        (_draw_stat_panel, shown for whichever cell is selected) instead of
+        being crammed into each cell, which is what let the grid go to 3
+        rows x 2 columns (see GRID_COLUMNS/GRID_ROWS) without the cells
+        themselves getting illegibly cramped."""
         outfit = self._resolve(outfit_id)
         icon_shape, icon_color = self._icon_for(outfit_id)
 
@@ -423,32 +586,21 @@ class OutfittingMenu(MenuBase):
             pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
             draw_selection_highlight(surface, rect, scale, pulse)
 
-        icon_cy = rect.y + int(rect.height * 0.15)
-        icon_size = int(rect.height * 0.12)
+        icon_cy = rect.y + int(rect.height * 0.25)
+        icon_size = int(rect.height * 0.18)
         draw_item_icon(surface, rect.centerx, icon_cy, icon_size, icon_shape, icon_color)
 
-        font_name = get_font(int(18 * scale))
-        font_detail = get_font(int(14 * scale))
+        font_name = get_font(int(17 * scale))
+        font_detail = get_font(int(13 * scale))
         name_color = DISABLED_TEXT_COLOR if reason else (WHITE if is_selected else GRAY)
         cost_color = DISABLED_TEXT_COLOR if reason else YELLOW
 
         name_text = font_name.render(outfit.get("name", outfit_id), True, name_color)
-        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.28)))
+        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.5)))
 
-        cost_text = font_detail.render(f"{outfit.get('cost', 0)}cr", True, cost_color)
-        surface.blit(cost_text, (rect.centerx - cost_text.get_width() // 2, rect.y + int(rect.height * 0.44)))
-
-        slot_type = outfit.get("slot_type", "?")
-        own_text = font_detail.render(f"Own: {self._owned_count(outfit_id)}   Slot: {slot_type}", True, GRAY)
-        surface.blit(own_text, (rect.centerx - own_text.get_width() // 2, rect.y + int(rect.height * 0.58)))
-
-        fit_text, fit_color = self._fit_status(outfit_id, slot_type)
-        fit_rendered = font_detail.render(fit_text, True, DISABLED_TEXT_COLOR if reason else fit_color)
-        surface.blit(fit_rendered, (rect.centerx - fit_rendered.get_width() // 2, rect.y + int(rect.height * 0.72)))
-
-        if reason:
-            reason_text = font_detail.render(f"({reason})", True, DISABLED_TEXT_COLOR)
-            surface.blit(reason_text, (rect.centerx - reason_text.get_width() // 2, rect.y + int(rect.height * 0.87)))
+        cost_or_reason = f"({reason})" if reason else f"{outfit.get('cost', 0)}cr"
+        cost_text = font_detail.render(cost_or_reason, True, DISABLED_TEXT_COLOR if reason else cost_color)
+        surface.blit(cost_text, (rect.centerx - cost_text.get_width() // 2, rect.y + int(rect.height * 0.74)))
 
     def _draw_install_tab(self, surface, panel_rect, y, scale, font_text, font_info):
         if not self.ship_type_id:
@@ -507,6 +659,31 @@ class OutfittingMenu(MenuBase):
         if self.owned_grid.has_more_below:
             down_indicator = font_info.render("v more", True, GRAY)
             surface.blit(down_indicator, (owned_x - down_indicator.get_width() // 2, owned_grid_bottom + int(4 * scale)))
+
+        # Stats preview (see _draw_stat_panel) for whichever outfit is
+        # currently focused - the slot column's installed outfit, or the
+        # owned column's highlighted spare (see _selected_outfit_id) -
+        # full panel width, below both the slot diagram and the owned
+        # list (whichever ends lower), since neither column alone is wide
+        # enough for a readable stat readout at this panel size. No
+        # description here (show_description=False) - it's already shown
+        # while shopping on the Buy tab, and the vertical budget here is
+        # tighter without it, description omitted, 2-column stats fit.
+        diagram_bottom = diagram_cy + int(70 * scale) + int(SLOT_RADIUS * scale) + font_info.get_height() + int(6 * scale)
+        preview_top = max(diagram_bottom, owned_grid_bottom + int(16 * scale))
+        preview_rect = pygame.Rect(
+            panel_rect.x + int(30 * scale), preview_top,
+            panel_rect.width - int(60 * scale),
+            panel_rect.bottom - preview_top - int(30 * scale),
+        )
+        preview_selected_id = self._selected_outfit_id()
+        if preview_selected_id:
+            self._draw_stat_panel(surface, preview_rect, preview_selected_id, scale, show_description=False)
+        elif self.focus_column == "slots" and self.slots:
+            # Focused slot is empty - say so rather than showing nothing,
+            # so the panel isn't just blank with no explanation.
+            empty_text = font_info.render("(empty slot)", True, GRAY)
+            surface.blit(empty_text, (preview_rect.x, preview_rect.y))
 
         if self.picker is not None:
             picker_rect = pygame.Rect(panel_rect.centerx - int(150 * scale), panel_rect.centery - int(110 * scale), int(300 * scale), int(230 * scale))

@@ -3825,7 +3825,9 @@ class TestSpaceScreenMissionIntegration(unittest.TestCase):
         target = game_screen._get_target_object()
         self.assertIsInstance(target, Character)
 
-        game_screen.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE)])
+        # F engages autopilot (SPACE fires the equipped weapon instead - see
+        # SpaceScreen.handle_input's K_f branch).
+        game_screen.handle_input([SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_f)])
         self.assertTrue(game_screen.player.person.possessions.flags.get("used_autopilot_on_ship"))
 
     def test_landing_sets_the_flag(self):
@@ -4919,7 +4921,7 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         game_screen.target_mode_index = TARGET_MODES.index("LANDING SITES")
         game_screen.current_target = 0
-        ev = SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_SPACE, mod=0)
+        ev = SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_f, mod=0)
         with patch("game.screens.space_screen.sound_board") as mock_board:
             game_screen.handle_input([ev])
             mock_board.play.assert_any_call("confirm")

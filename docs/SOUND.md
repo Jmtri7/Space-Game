@@ -53,10 +53,10 @@ this to sit well below the rest).
 |------|-----------|--------------|
 | `ping` | bright two-note blip | **every menu/dialog button press**, and **one-way messages** — three times per message, once per blink of the Message Log's unread light (see `ui_theme.message_alert_state`) |
 | `blip` | single square-wave tick (mixed quiet, `volume=0.4`) | **cycling or clicking a target** — `[` / `]` / `T` in the space view, `[` / `]` / click in an interior |
-| `confirm` | rising perfect-fifth chime | **engaging autopilot** (Space, space view) |
+| `confirm` | rising perfect-fifth chime | **engaging autopilot** (**F**, space view) |
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
 | `alert` | two high triangle beeps | (available; unused by default) |
-| `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** (`ship_outfits.json`'s default weapon) — holding **X** in the space view, see `SpaceScreen._update_weapon_fire` |
+| `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** (`ship_outfits.json`'s default weapon) — holding **SPACE** in the space view, see `SpaceScreen._update_weapon_fire` |
 | `blaster` | thinner, higher, shorter version of `laser` (mixed quiet, `volume=0.4`) | **firing the pulse blaster** — matches its much faster `fire_rate` |
 | `cannon` | deep triangle thud sweep plus a short noise crack | **firing the heavy cannon** — matches its slow `fire_rate` and heavy single hit |
 | `scatter` | three overlapping quick noise cracks plus a low thud | **firing the scatter gun** — echoes its multi-pellet spread |
@@ -82,7 +82,7 @@ this to sit well below the rest).
   `_cycle_npc_target` / `_select_person_target_at` in
   [`game/screens/location_screen.py`](../game/screens/location_screen.py).
 - **Weapon fire:** `SpaceScreen._update_weapon_fire()` - called every frame
-  **X** is held (rate-limited by `weapon_fire_cooldown`/the equipped
+  **SPACE** is held (rate-limited by `weapon_fire_cooldown`/the equipped
   weapon's own `fire_rate`, not once per keypress, so holding the key fires
   repeatedly rather than once). Which sound plays (`laser`/`blaster`/
   `cannon`/`scatter`) is per-weapon config (`ship_outfits.json`'s

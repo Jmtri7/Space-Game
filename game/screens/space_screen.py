@@ -21,7 +21,7 @@ from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
-from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE, PROJECTILE_DAMAGE
+from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE, PROJECTILE_DAMAGE, PROJECTILE_LIFETIME
 from game.world.asteroid import Asteroid
 from game.world.explosion import Explosion
 from game.world.ore_pickup import OrePickup, PICKUP_RANGE
@@ -634,8 +634,14 @@ class SpaceScreen(ScreenBase):
         # reason LocationScreen pauses movement for its own active_dialogue.
         if not self.jump_state and not self.active_dialogue:
             self.player.handle_input(keys)
-            # Fire laser continuously while X is held
-            if keys[pygame.K_x]:
+            # Fire the equipped weapon continuously while SPACE is held -
+            # polled every frame (not a KEYDOWN branch below) so holding it
+            # fires repeatedly at the weapon's own fire_rate, rather than
+            # once per physical press. Autopilot now lives on F (see K_f
+            # below) - SPACE used to do both (a tap engaged autopilot,
+            # which is why so many docstrings elsewhere still say
+            # "K_SPACE" when they mean "the autopilot-engage key").
+            if keys[pygame.K_SPACE]:
                 self._update_weapon_fire()
 
         # Rotate the view (Q/E) - held, like ship turning. Allowed even
@@ -704,8 +710,11 @@ class SpaceScreen(ScreenBase):
                 continue
 
             # Cancel autopilot on any key press (except ESC which handles
-            # pause, and Q/E which only rotate the view - not a flight input)
-            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_q, pygame.K_e):
+            # pause, Q/E which only rotate the view - not a flight input -
+            # and SPACE, which fires the equipped weapon rather than
+            # steering, so shooting at an asteroid doesn't abort a run to
+            # the station)
+            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_q, pygame.K_e, pygame.K_SPACE):
                 self.player.autopilot_active = False
                 self.player.autopilot_target = None
                 return None
@@ -721,7 +730,7 @@ class SpaceScreen(ScreenBase):
             elif event.key == pygame.K_h:
                 self._start_hail()
             elif event.key == pygame.K_l:
-                # Land only - never engages autopilot (see K_SPACE below
+                # Land only - never engages autopilot (see K_f below
                 # for that). If a landing site is targeted and already in
                 # range, land on it directly; otherwise fall back to a
                 # pure proximity check, which also covers an AI ship
@@ -744,10 +753,13 @@ class SpaceScreen(ScreenBase):
                     self.landing_target = landing_target
                     self._mark_landed()
                     return "land"
-            elif event.key == pygame.K_SPACE:
+            elif event.key == pygame.K_f:
                 # Engage autopilot toward the current target - follows an
                 # AI ship, or approaches a landing site from any range (L
-                # only lands once you're already close).
+                # only lands once you're already close). SPACE now fires
+                # the equipped weapon (polled continuously above, not a
+                # KEYDOWN branch) - autopilot moved here so the two don't
+                # collide on one key.
                 target_obj = self._get_target_object()
                 if target_obj and self.current_target is not None:
                     self.player.engage_seek(target_obj)
@@ -766,7 +778,7 @@ class SpaceScreen(ScreenBase):
             elif event.key == pygame.K_p:
                 return "possessions"
             elif event.key == pygame.K_n:
-                # Generic gameplay-event flag (see K_SPACE's comment) - a
+                # Generic gameplay-event flag (see K_f's comment) - a
                 # mission stage can use "viewed_mission_log" as its
                 # complete_flag (see missions.json's first_flight).
                 self.player.person.possessions.flags["viewed_mission_log"] = True
@@ -778,7 +790,7 @@ class SpaceScreen(ScreenBase):
     def _mark_landed(self):
         """Set the generic "landed_on_landing_site" gameplay-event flag -
         called from every path that actually lands the ship (manual L,
-        and update()'s auto-land-on-autopilot-arrival). See K_SPACE's own
+        and update()'s auto-land-on-autopilot-arrival). See K_f's own
         comment above for why this lives on Possessions.flags rather than
         a SpaceScreen-only field."""
         self.player.person.possessions.flags["landed_on_landing_site"] = True
@@ -877,7 +889,7 @@ class SpaceScreen(ScreenBase):
         self.current_target = 0 if self._filtered_targets() else None
         sound_board.play("blip")
         if TARGET_MODES[self.target_mode_index] == "SHIPS":
-            # Generic gameplay-event flag - see K_SPACE's own comment on
+            # Generic gameplay-event flag - see K_f's own comment on
             # why these live on Possessions.flags instead of a
             # SpaceScreen-only field.
             self.player.person.possessions.flags["used_ships_target_mode"] = True
@@ -1120,7 +1132,7 @@ class SpaceScreen(ScreenBase):
         dialogue = target_obj.person.hail_dialogue
         possessions = self.player.person.possessions
         flags = possessions.flags
-        # Generic gameplay-event flag (see K_SPACE's own comment) - any
+        # Generic gameplay-event flag (see K_f's own comment) - any
         # story's missions.json can use "hailed_pilot:<name>" as a stage's
         # complete_flag without this class hardcoding which pilot.
         flags[f"hailed_pilot:{pilot_name}"] = True
@@ -1391,7 +1403,7 @@ class SpaceScreen(ScreenBase):
         self.selected_system_id = self.system_id
         arrival_name = get_star_systems(self.story).get(self.system_id, {}).get("name", self.system_id)
         self._show_toast(f"Jump complete - arrived at {arrival_name}", CYAN)
-        # Generic gameplay-event flag - see K_SPACE's comment above on why
+        # Generic gameplay-event flag - see K_f's comment above on why
         # these live on Possessions.flags instead of a SpaceScreen-only
         # field. Set for any completed jump, not just a self-jump back to
         # this same system - both demonstrate the mechanic equally well.
@@ -1416,7 +1428,7 @@ class SpaceScreen(ScreenBase):
                 self.player.update()
         flags = self.player.person.possessions.flags
         if self.player.thrust > 0:
-            # Generic gameplay-event flag - see K_SPACE's comment above on
+            # Generic gameplay-event flag - see K_f's comment above on
             # why these live on Possessions.flags instead of a
             # SpaceScreen-only field.
             flags["used_thrust"] = True
@@ -1908,13 +1920,20 @@ class SpaceScreen(ScreenBase):
         weapon slot, falling back to the laser cannon's own config (in case
         nothing's actually installed - a new pilot's placeholder ship has no
         outfits yet, but should still fire something) - so every field a
-        fired shot needs (damage/fire_rate/speed/size/spread/count/icon/
-        sound) always resolves to a real weapon's config, never a partial
-        or missing one. `.get(key, laser_cannon's value)` per-field (not a
-        whole-dict fallback) so a weapon outfit that only overrides some
-        fields still inherits sane defaults for the rest. See
-        ship_outfits.json's laser_cannon/pulse_blaster/heavy_cannon/
-        scatter_gun for the range this spans."""
+        fired shot needs always resolves to a real weapon's config, never a
+        partial or missing one. `.get(key, laser_cannon's value)` per-field
+        (not a whole-dict fallback) so a weapon outfit that only overrides
+        some fields still inherits sane defaults for the rest.
+
+        `inaccuracy` (degrees) is per-shot random aim wobble, applied to
+        every pellet a weapon fires (a precise weapon sets it to 0);
+        `pellet_spread` (degrees) is the fixed fan arc `projectile_count`
+        pellets are evenly distributed across, independent of inaccuracy -
+        the two are separate stats so a weapon can be single-shot-but-
+        imprecise (pulse_blaster), multi-pellet-in-a-fan (scatter_gun), or
+        (in principle) both at once. See ship_outfits.json's
+        laser_cannon/pulse_blaster/heavy_cannon/scatter_gun for the range
+        this spans."""
         possessions = self.player.person.possessions
         ship_type_id = possessions.active_ship()
         weapon_outfit_id = None
@@ -1935,35 +1954,40 @@ class SpaceScreen(ScreenBase):
             "fire_rate": outfit.get("fire_rate", baseline.get("fire_rate", 18)),
             "projectile_speed": outfit.get("projectile_speed", baseline.get("projectile_speed", PROJECTILE_SPEED)),
             "projectile_size": outfit.get("projectile_size", baseline.get("projectile_size", PROJECTILE_SIZE)),
-            "spread": outfit.get("spread", baseline.get("spread", 0)),
+            "projectile_lifetime": outfit.get("projectile_lifetime", baseline.get("projectile_lifetime", PROJECTILE_LIFETIME)),
+            "inaccuracy": outfit.get("inaccuracy", baseline.get("inaccuracy", 0)),
+            "pellet_spread": outfit.get("pellet_spread", baseline.get("pellet_spread", 0)),
             "projectile_count": max(1, outfit.get("projectile_count", baseline.get("projectile_count", 1))),
             "fire_sound": outfit.get("fire_sound", baseline.get("fire_sound", "laser")),
         }
 
     def _update_weapon_fire(self):
-        """Fire the equipped weapon if its cooldown allows - one shot for a
-        precise weapon, a fan of `projectile_count` pellets across `spread`
-        degrees for a shotgun-style one (see ship_outfits.json's
-        scatter_gun). A single-pellet weapon with spread>0 (pulse_blaster)
-        instead gets one shot at a random angle within that spread, for a
-        rapid-fire weapon that's fast but not perfectly accurate."""
+        """Fire the equipped weapon if its cooldown allows - one shot
+        (randomly offset within `inaccuracy` degrees, if any) for a
+        single-pellet weapon, or `projectile_count` pellets fanned evenly
+        across `pellet_spread` degrees - each also independently offset by
+        `inaccuracy` - for a shotgun-style one (see ship_outfits.json's
+        scatter_gun)."""
         if self.weapon_fire_cooldown > 0:
             return
         if not self.player.ship:
             return
         stats = self._equipped_weapon_stats()
         count = stats["projectile_count"]
-        spread = stats["spread"]
+        inaccuracy = stats["inaccuracy"]
+        pellet_spread = stats["pellet_spread"]
+
+        def wobble():
+            return random.uniform(-inaccuracy / 2, inaccuracy / 2) if inaccuracy else 0
 
         if count == 1:
-            fire_angles = [self.player.angle + (random.uniform(-spread / 2, spread / 2) if spread else 0)]
+            fire_angles = [self.player.angle + wobble()]
         else:
-            # Evenly fan the pellets across the arc, each with a little of
-            # its own jitter so a multi-pellet shot doesn't look like a
-            # perfectly rigid comb.
-            jitter = spread / (count * 4) if spread else 0
+            # Evenly fan the pellets across the arc, then apply the
+            # weapon's own aim wobble to each pellet independently, so a
+            # multi-pellet shot doesn't look like a perfectly rigid comb.
             fire_angles = [
-                self.player.angle - spread / 2 + spread * i / (count - 1) + random.uniform(-jitter, jitter)
+                self.player.angle - pellet_spread / 2 + pellet_spread * i / (count - 1) + wobble()
                 for i in range(count)
             ]
 
@@ -1973,10 +1997,17 @@ class SpaceScreen(ScreenBase):
             projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
             projectile_vel_x = self.player.velocity_x + math.sin(rad) * stats["projectile_speed"]
             projectile_vel_y = self.player.velocity_y - math.cos(rad) * stats["projectile_speed"]
+            # Orient the drawn icon to the shot's actual resultant travel
+            # direction (velocity vector), not the raw aim angle - the two
+            # can differ once the ship's own velocity is added in (e.g.
+            # strafing sideways while firing forward skews the real path),
+            # and the icon should visibly point where the shot is actually
+            # going, not just where it started aimed.
+            travel_angle = math.degrees(math.atan2(projectile_vel_x, -projectile_vel_y))
             projectile = Projectile(
                 projectile_x, projectile_y, projectile_vel_x, projectile_vel_y,
-                angle=fire_angle, icon_shape=stats["icon_shape"], icon_color=stats["icon_color"],
-                size=stats["projectile_size"], damage=stats["damage"],
+                angle=travel_angle, icon_shape=stats["icon_shape"], icon_color=stats["icon_color"],
+                size=stats["projectile_size"], damage=stats["damage"], lifetime=stats["projectile_lifetime"],
             )
             self.projectiles.append(projectile)
 

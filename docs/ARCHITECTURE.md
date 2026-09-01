@@ -558,31 +558,52 @@ its `ship_types.json` `slots` list (see "`ship_types.json`" fields and the
 Outfitting section below). A weapon outfit (`ship_outfits.json`, `slot_type:
 "weapon"`) is a full stat bundle, not just cosmetic: `damage`, `fire_rate`
 (cooldown frames between shots), `projectile_speed`, `projectile_size`,
-`spread` (degrees), `projectile_count`, plus its own `icon_shape`/
-`icon_color` and `fire_sound`. The story ships four - `laser_cannon`
-(balanced baseline), `pulse_blaster` (fast/weak/slightly inaccurate),
-`heavy_cannon` (slow single heavy slug), `scatter_gun` (multi-pellet fan) -
-but adding a fifth is pure config, no code.
+`projectile_lifetime` (frames before a shot despawns - its effective range),
+`inaccuracy` (degrees of random per-shot aim wobble), `pellet_spread`
+(degrees - the fixed fan arc `projectile_count` pellets spread across, a
+*separate* stat from `inaccuracy`), `projectile_count`, plus its own
+`icon_shape`/`icon_color` and `fire_sound`. The story ships four -
+`laser_cannon` (balanced baseline), `pulse_blaster` (fast/weak/imprecise -
+`inaccuracy` but no `pellet_spread`), `heavy_cannon` (slow single heavy
+slug, longest `projectile_lifetime`), `scatter_gun` (`pellet_spread` fan of
+5, each pellet also carrying a little `inaccuracy`) - but adding a fifth is
+pure config, no code. The Outfitter menu's stats preview
+(`OutfittingMenu._draw_stat_panel`, shown live for whichever outfit is
+selected/focused in both its Buy and Install tabs) reads every one of these
+fields directly, so a new weapon's full readout - Fire Rate converted to
+shots/sec, Projectile Range converted to seconds, Inaccuracy as "±n.n°" or
+"None (precise)", Pellet Spread only shown when `projectile_count > 1` -
+appears with no UI changes needed either.
 
-**Firing:** holding **X** in the Space View
+**Firing:** holding **SPACE** in the Space View
 (`SpaceScreen._update_weapon_fire`, rate-limited by
 `weapon_fire_cooldown`/the equipped weapon's own `fire_rate` so holding the
-key fires repeatedly rather than once) resolves the flown ship's actual
-loadout via `SpaceScreen._equipped_weapon_stats` - the outfit installed in
-its first weapon slot, each field falling back individually to
-`laser_cannon`'s value so a partial config still works, and falling back to
-`laser_cannon` entirely if the slot is empty (a new pilot's placeholder ship
-has no outfits yet, but should still fire *something*). `projectile_count
-== 1` fires one shot, randomly offset within `spread` degrees if the weapon
-has any (`pulse_blaster`); `projectile_count > 1` fans that many pellets
-evenly across the `spread` arc with a little jitter each, rather than a
-rigid comb (`scatter_gun`). Each shot spawns a `Projectile`
+key fires repeatedly rather than once - and deliberately excluded from the
+"any keypress cancels autopilot" rule below, so firing doesn't abort a run
+to the station) resolves the flown ship's actual loadout via
+`SpaceScreen._equipped_weapon_stats` - the outfit installed in its first
+weapon slot, each field falling back individually to `laser_cannon`'s value
+so a partial config still works, and falling back to `laser_cannon` entirely
+if the slot is empty (a new pilot's placeholder ship has no outfits yet, but
+should still fire *something*). `projectile_count == 1` fires one shot,
+randomly offset within `inaccuracy` degrees if the weapon has any
+(`pulse_blaster`); `projectile_count > 1` fans that many pellets evenly
+across the `pellet_spread` arc, each pellet *also* independently offset by
+`inaccuracy` (`scatter_gun` sets both - a wide fan of individually-imprecise
+pellets), rather than a rigid comb. Each shot spawns a `Projectile`
 (`game/world/projectile.py`) from the ship's nose, inheriting the ship's own
-velocity, sized/coloured/shaped after the firing weapon's own
-`projectile_size`/`icon_shape`/`icon_color` and rotated to face its travel
-direction (a rotation-capable `angle` param on `ui_theme.draw_item_icon`) -
-so a fired shot always visibly matches its Outfitter-menu icon, and carries
-that weapon's own `damage`.
+velocity, sized/coloured/shaped/lifetimed after the firing weapon's own
+`projectile_size`/`icon_shape`/`icon_color`/`projectile_lifetime` and
+carries that weapon's own `damage`. The drawn icon is rotated to the shot's
+*actual resultant travel direction* - `atan2` of its final velocity vector
+(ship velocity + firing velocity combined), not the raw aim angle (a
+rotation-capable `angle` param on `ui_theme.draw_item_icon`) - so a shot
+fired while the ship is drifting sideways visibly points where it's really
+going, not just where it was aimed, and always matches its weapon's own
+Outfitter-menu icon.
+
+**F engages autopilot** (moved off SPACE so the two controls don't
+collide - see `handle_input`'s `K_f` branch and docs/CONTROLS.md).
 
 **Asteroid damage:** `Asteroid` (`game/world/asteroid.py`) carries a
 `health` pool (`max(5, size * 2)`) and `take_damage()`.
