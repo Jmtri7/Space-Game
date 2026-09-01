@@ -8,7 +8,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import poly, circ, rrect, offset_poly, bar, _u
+from gen_si import poly, circ, rrect, offset_poly, bar, _u, _arm_rot
 
 OUT = "#141219"
 WAIST, BELT = 103, 99
@@ -41,13 +41,14 @@ def op_s(pts, fill, d=1.1, ol=OUT):
 
 
 def chevron_flash(x=81, side=1):
-    """Amber hazard chevrons sitting on the (right) upper arm - x..x+8 stays
-    inside the arm shaft (x80-90), so the flash tracks the arm, not the air."""
+    """Amber hazard chevrons sitting on the (right) upper arm - authored at the
+    straight-arm position, then rotated onto the splayed arm via _arm_rot."""
     o = []
     for k in range(3):
         y = 69 + k * 4
-        o.append(poly([(x, y), (x + side * 4, y + 3), (x + side * 8, y),
-                       (x + side * 7, y), (x + side * 4, y + 1.5), (x + side * 1, y)], HAZ))
+        o.append(poly([_arm_rot(1, px, py) for px, py in
+                       [(x, y), (x + side * 4, y + 3), (x + side * 8, y),
+                        (x + side * 7, y), (x + side * 4, y + 1.5), (x + side * 1, y)]], HAZ))
     return "".join(o)
 
 
@@ -98,7 +99,7 @@ def officer():
     post = (SIG_LIVERY("O-2", stripe_to=WAIST)
             + poly([(53, 41), (87, 41), (81, 33), (74, 28), (66, 28), (59, 33)], "#2e384a")  # peaked cap
             + poly([(53, 41), (68, 41), (64, 37), (56, 37)], DARK)              # brim
-            + "".join(bar(51, 110 + k * 5, 59, 110 + k * 5, 1.4, HAZ) for k in range(3))  # cuff braid, left forearm
+            + "".join(bar(*_arm_rot(-1, 51, 110 + k * 5), *_arm_rot(-1, 59, 110 + k * 5), 1.4, HAZ) for k in range(3))  # cuff braid, left forearm
             + op_s(rrect(49, 65, 15, 6, 1), HAZ) + op_s(rrect(76, 65, 15, 6, 1), HAZ)   # shoulder boards
             + poly([(62, 80), (66, 85), (62, 90), (58, 85)], HAZ))              # command badge, left breast
     return base, pre, post

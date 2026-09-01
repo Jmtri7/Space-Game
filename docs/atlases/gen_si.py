@@ -224,6 +224,27 @@ def _gy(u):
 FIG_HIP_Y = round(_gy(12.3))         # 139 - where the legs join the torso
 FIG_FOOT_Y = round(_gy(1.6))         # 194 - ankle line; boots ~3 below, ground ~10
 
+# Resting arm splay: each arm hangs out from the body at this angle (from
+# vertical, about the shoulder joint), so the default pose reads as relaxed
+# and open rather than pinned to the sides. The walk-cycle swing composes on
+# top. _arm_rot maps any atlas-space point on the notional straight-down arm
+# to where it lands after the splay - figure_parts uses it for the arm shaft
+# and hand, and the *_outfits.py signature files import it to re-anchor
+# arm-mounted detail (cuffs, gauntlets, gloves).
+ARM_REST_DEG = 42
+_ARM_PIVOT = (3.05, 25.9)             # shoulder joint, study coords (|x|, y)
+
+
+def _arm_rot(s, ax, ay):
+    """Atlas point on the straight arm -> atlas point after the resting splay.
+    s = -1 for the left arm, +1 for the right."""
+    ux, uy = (ax - 70.0) / _G_SCALE, (_G_GROUND - ay) / _G_SCALE
+    px, py = s * _ARM_PIVOT[0], _ARM_PIVOT[1]
+    ang = math.radians(s * ARM_REST_DEG)
+    ca, sa = math.cos(ang), math.sin(ang)
+    dx, dy = ux - px, uy - py
+    return _gx(px + dx * ca - dy * sa), _gy(py + dx * sa + dy * ca)
+
 
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                  hat=None, cap=None, no_helmet=False, legged=True, arms=True, coat=False,
@@ -306,19 +327,20 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(circ(92, waist_y - 5, 1.2, "#8a8590"))         # tip
 
     # arms - narrow rounded shoulders: a domed cap over the top of the upper
-    # arm that tucks under the torso's shoulder point (no armpit gap, no block
-    # sticking out), then a straight shaft to the wrist. Drawn over the torso
-    # and the hip kit; shoulder pads (later) cover the very top. The Grounded
-    # study settled on this shoulder.
+    # arm that tucks under the torso's shoulder point, then a straight shaft to
+    # the wrist, the whole arm splayed out from the body by ARM_REST_DEG about
+    # the shoulder joint (_arm_rot). Drawn over the torso and the hip kit;
+    # shoulder pads (later) cover the very top.
     if arms:
         for s, grp in ((-1, "arm_l"), (1, "arm_r")):
             _grp(grp)
-            P.append(opoly([(_gx(s * 2.3), _gy(25.5)), (_gx(s * 2.6), _gy(25.97)),
-                            (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
-                            (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
-                            (_gx(s * 1.9), _gy(13.6))], sleeve, d=1.3))
-        _grp("hand_l"); P.append(ocirc(_gx(-2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
-        _grp("hand_r"); P.append(ocirc(_gx(2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
+            shaft = [(_gx(s * 2.1), _gy(26.6)), (_gx(s * 2.6), _gy(25.97)),
+                     (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
+                     (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
+                     (_gx(s * 1.9), _gy(13.6))]
+            P.append(opoly([_arm_rot(s, x, y) for x, y in shaft], sleeve, d=1.3))
+        _grp("hand_l"); P.append(ocirc(*_arm_rot(-1, _gx(-2.5), _gy(12.7)), 3.2, SKINF, d=1.1))
+        _grp("hand_r"); P.append(ocirc(*_arm_rot(1, _gx(2.5), _gy(12.7)), 3.2, SKINF, d=1.1))
 
     _grp("body")
     if hipline:
@@ -332,11 +354,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         for s, grp in ((-1, "leg_l"), (1, "leg_r")):
             _grp(grp)
             cx = s * 1.7
+            # a clean trapezoid hip -> ankle (no mid vertex, so the walk-cycle
+            # shear from _place doesn't kink it at the calf)
             P.append(opoly([(_gx(s * 3.4), _gy(12.3)),
-                            (_gx(cx + s * 1.15), _gy(6.8)),
                             (_gx(cx + s * 0.95), _gy(1.6)),
                             (_gx(cx - s * 0.95), _gy(1.6)),
-                            (_gx(cx - s * 1.15), _gy(6.8)),
                             (_gx(s * 0.15), _gy(12.3))], leg, d=1.3))
         if knee:
             _grp("leg_l"); P.append(opoly([(_gx(-2.3), _gy(8.6)), (_gx(-0.3), _gy(8.6)),

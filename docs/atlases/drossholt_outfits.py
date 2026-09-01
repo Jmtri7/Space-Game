@@ -8,7 +8,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import poly, circ, offset_poly, bar, rrect, _u
+from gen_si import poly, circ, offset_poly, bar, rrect, _u, _arm_rot
 
 OUT = "#141219"
 WAIST, BELT = 103, 99
@@ -73,8 +73,9 @@ def box_respirator():
 
 
 def mismatched_shoulders(big="#5a4130", accent="#8a6845"):
-    # one big pauldron over the left shoulder/upper-arm (arm shaft x50-60)
-    return op_s([(49, 62), (60, 60), (61, 76), (50, 80)], big) + circ(55, 70, 3, accent)
+    # one big pauldron capping the left shoulder / upper arm
+    return (op_s([_arm_rot(-1, x, y) for x, y in [(49, 62), (60, 60), (61, 76), (50, 80)]], big)
+            + circ(*_arm_rot(-1, 55, 70), 3, accent))
 
 
 # ---------------------------------------------------------------- outfits
@@ -95,8 +96,9 @@ def cutterman():
     base = dict(helmet="#ffc850", suit="#c89664", boot="#5a4130", sleeve="#c89664",
                 shoulders="#5a4130", torch="#8a6845", belt="#5a4130", backpack="#7a5c3f")
     post = (patch_plates() + box_respirator()
-            + op_s([(49, 96), (60, 96), (59, WAIST + 4), (50, WAIST + 4)], "#6a4f39")  # heavy cutting gauntlet on the left forearm
-            + "".join(circ(55, 100 + k * 5, 1.0, "#3a2c1e") for k in range(3)))          # gauntlet rivets
+            + op_s([_arm_rot(-1, x, y) for x, y in
+                    [(49, 96), (60, 96), (59, WAIST + 4), (50, WAIST + 4)]], "#6a4f39")  # heavy cutting gauntlet on the left forearm
+            + "".join(circ(*_arm_rot(-1, 55, 100 + k * 5), 1.0, "#3a2c1e") for k in range(3)))  # gauntlet rivets
     return base, "", post
 
 
