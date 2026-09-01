@@ -118,9 +118,11 @@ only appears under a section if it currently has items there.
 
 - [ ] Sell all button.
 - [ ] Picking up and dropping items.
-- [ ] Asteroid mining — pairs naturally with the existing asteroid fields and
-      "different asteroid types" idea; gives the economy a real gameplay loop instead
-      of just trading.
+- [x] Asteroid mining. (Done - laser cannon damages asteroids on a health
+      pool sized off `size`; a large one breaks into smaller fragments, a
+      small one yields ore on destruction, type-dependent via
+      asteroid_types.json's mine_yield - sold at a quartermaster like any
+      other commodity. See ARCHITECTURE.md's "Weapons & Asteroid Mining".)
 - [ ] More ways to make money.
 - [ ] Ilsa Farrow should sell things — give her a shop/merchant role.
 - [ ] Make some commodities usable for various purposes (not just tradeable).

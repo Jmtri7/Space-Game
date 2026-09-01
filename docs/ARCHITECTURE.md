@@ -286,7 +286,9 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   and `config/stories/default/missions.json`'s `"first_flight"` for a
   worked example.
 - `Autopilot` — flight computer owned by a `Ship` (see Ship Class section below)
-- `CentralStar`, `Asteroid` — ambient `WorldObject`s (non-interactive, can't be landed on)
+- `CentralStar` — ambient `WorldObject` (non-interactive, can't be landed on)
+- `Asteroid` — ambient `WorldObject`, but not purely decorative: it can be
+  shot and mined (see "Weapons & Asteroid Mining" below)
 - `game/perf_metrics.py` — `PerfMetrics` + a shared `metrics` instance and
   `draw_overlay()` (module-level, same shared-instance rationale as
   `utils.Camera`). `main.py`'s loop calls `metrics.record()` once per frame
@@ -388,10 +390,10 @@ and prefer composing one onto a `Character`/`PlayerController`-style wrapper
 |---|---|---|---|
 | `max_thrust` (acceleration/frame) | 0.08 – 0.15 | 0.15 – 0.35 | 0.35 – 0.5 |
 | `max_velocity` (units/frame) | 1.5 – 3 | 3 – 5 | 5 – 6.5 |
-| `rotation_speed` (degrees/frame) | 1 – 3 | 3 – 6 | 6 |
+| `rotation_speed` (degrees/frame) | 1 – 3 | 3 – 5 | 5 |
 | `size` (world units) | 8 – 14 | 14 – 24 | 24 – 35 |
 
-**`rotation_speed` has a hard ceiling of 6 degrees/frame across the whole roster** - past that,
+**`rotation_speed` has a hard ceiling of 5 degrees/frame across the whole roster** - past that,
 aiming (especially with the laser cannon, see below) stops feeling controllable. Don't add a
 ship type above it.
 
@@ -548,6 +550,59 @@ active one is ever drawn/given a camera).
 - `landing_distance` — how close the player must get (and how slow) to land
 - `interiors` — dict of location keys → interior config (file path or inline dict),
   consumed by `LocationScreen` when the player lands
+
+## Weapons & Asteroid Mining
+
+**Firing:** every ship type carries at least one `"weapon"` slot in its
+`ship_types.json` `slots` list (see "`ship_types.json`" fields and the
+Outfitting section below); holding **X** in the Space View
+(`SpaceScreen._update_weapon_fire`, rate-limited by `weapon_fire_cooldown`/
+`weapon_fire_rate` so holding the key fires repeatedly rather than once)
+spawns a `Projectile` (`game/world/projectile.py`) from the ship's nose,
+inheriting the ship's own velocity. A `Projectile` draws as whatever's
+actually installed in the ship's first weapon slot's own shop icon
+(`ship_outfits.json`'s `icon_shape`/`icon_color`, resolved by
+`SpaceScreen._equipped_weapon_icon` - falls back to `laser_cannon`'s config
+if the slot is empty), rotated to face its direction of travel via a
+rotation-capable `angle` param on `ui_theme.draw_item_icon` - so a fired
+shot always visibly matches its Outfitter-menu icon rather than a fixed
+look, and a future weapon outfit gets a distinct projectile for free just by
+setting its own `icon_shape`/`icon_color`.
+
+**Asteroid damage:** `Asteroid` (`game/world/asteroid.py`) carries a
+`health` pool (`max(5, size * 2)`) and `take_damage()`.
+`SpaceScreen._check_projectile_asteroid_collision` checks every live
+projectile each frame against `AsteroidField.asteroids`; the collision
+radius is `asteroid.size + PROJECTILE_SIZE` (roughly the asteroid's own
+drawn radius - both the round-circle and jagged draw paths scale off
+`size`, see `Asteroid.draw`), not a fixed hitbox, so aiming reliably lands
+on a big asteroid's edge and not just dead-center. Every hit (not just a
+destroying one) spawns a spark-burst `Explosion` (`game/world/explosion.py`
+- a brief, purely cosmetic particle effect, not a `WorldObject`, tracked in
+`SpaceScreen.explosions`) and plays the `"impact"` sound (see
+docs/SOUND.md).
+
+**Breakup / mining, on an asteroid's health reaching zero**
+(`SpaceScreen._destroy_asteroid`):
+- **size > 12** (a "large" asteroid): breaks into 2-4 smaller `Asteroid`
+  fragments (`_spawn_asteroid_fragments`) flung outward from the impact
+  point, each inheriting the parent's `asteroid_type` (so a fragment is
+  still minable/breakable in its own right, recursively, down to the small
+  case below).
+- **size ≤ 12** (a "small" asteroid): destroyed outright, adding
+  `asteroid_type["mine_yield"]` units of `"ore"` to the player's cargo
+  (`Possessions.add_cargo`) - a toast confirms the amount. `mine_yield` is
+  per-type config (`asteroid_types.json`, alongside `shape`/`color`/
+  jaggedness), so different rock types can be worth different amounts.
+
+Mined ore sells like any other commodity, at a quartermaster's `"shop":
+{"type": "commodities"}` (see `config/stories/default/commodities.json`'s
+`"ore"` entry) - no separate mining-specific economy code.
+
+Asteroids (and their fragments) are pure scenery for save purposes: neither
+`AsteroidField` nor anything it spawns is captured by
+`SpaceScreen.get_state()`/`restore_state()` (see SAVE_SYSTEM.md) - only the
+ore that ends up in `Possessions.cargo` is.
 
 ## SpaceScreen Responsibility
 

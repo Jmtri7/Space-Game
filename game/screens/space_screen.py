@@ -23,6 +23,7 @@ from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
 from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE
 from game.world.asteroid import Asteroid
+from game.world.explosion import Explosion
 from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
@@ -234,6 +235,9 @@ class SpaceScreen(ScreenBase):
         # Laser fire rate limiting (frames between shots when holding X)
         self.weapon_fire_cooldown = 0
         self.weapon_fire_rate = 18  # frames between shots (~3.3 shots/second at 60fps)
+        # Spark-burst effects (see game/world/explosion.py) - one per laser
+        # hit on an asteroid, purely cosmetic (not saved, not collidable).
+        self.explosions = []
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -1421,6 +1425,7 @@ class SpaceScreen(ScreenBase):
             self.asteroid_field.update()
         with perf.span("sim.projectiles"):
             self._update_projectiles()
+            self.explosions = [e for e in self.explosions if e.update()]
         # Update weapon fire cooldown
         if self.weapon_fire_cooldown > 0:
             self.weapon_fire_cooldown -= 1
@@ -1557,6 +1562,8 @@ class SpaceScreen(ScreenBase):
             self.asteroid_field.draw(surface)
             for projectile in self.projectiles:
                 projectile.draw(surface)
+            for explosion in self.explosions:
+                explosion.draw(surface)
             for ai_ship in self.ai_ships:
                 ai_ship.draw(surface)
             self.player.draw(surface)
@@ -1943,30 +1950,47 @@ class SpaceScreen(ScreenBase):
         self.projectiles = alive_projectiles
 
     def _check_projectile_asteroid_collision(self, projectile):
-        """Check if projectile hits an asteroid; damage it and handle breakup/mining."""
-        hit_distance = PROJECTILE_SIZE + 5
+        """Check if projectile hits an asteroid; damage it and handle breakup/mining.
+
+        Collision radius is asteroid.size (roughly the asteroid's own drawn
+        radius - see Asteroid.draw, both the round-circle and jagged cases
+        scale their silhouette off `size`) plus a small allowance for the
+        projectile's own size, so a shot only registers within the rock's
+        actual silhouette instead of a small fixed radius that barely
+        covers a big asteroid's center. On overlap with more than one
+        asteroid (rare, but possible where two drift close together) the
+        one it's penetrated deepest into wins, not just whichever sorts
+        first."""
         hit_asteroid = None
-        min_dist = hit_distance
-
-        # Check all asteroids in the active field
+        best_penetration = -1
         for asteroid in self.asteroid_field.asteroids:
-            dist = math.sqrt((projectile.x - asteroid.x) ** 2 + (projectile.y - asteroid.y) ** 2)
-            if dist < min_dist:
+            collision_radius = asteroid.size + PROJECTILE_SIZE
+            dist = math.hypot(projectile.x - asteroid.x, projectile.y - asteroid.y)
+            penetration = collision_radius - dist
+            if penetration > best_penetration:
+                best_penetration = penetration
                 hit_asteroid = asteroid
-                min_dist = dist
 
-        if hit_asteroid is None:
+        if hit_asteroid is None or best_penetration < 0:
             return False
+
+        self._spawn_impact_explosion(projectile.x, projectile.y)
+        sound_board.play("impact")
 
         # Damage the asteroid
         if hit_asteroid.take_damage(projectile.damage):
             # Asteroid destroyed
             self._destroy_asteroid(hit_asteroid)
-        else:
-            # Visual feedback: asteroid flashes or sparks (kept simple for now)
-            pass
 
         return True
+
+    def _spawn_impact_explosion(self, x, y):
+        """Spark burst at a laser-asteroid impact point (see
+        game/world/explosion.py) - fired every hit, not just a
+        destroying/final one, so continuous fire against a big asteroid
+        reads as a series of hits landing rather than nothing happening
+        until it breaks."""
+        self.explosions.append(Explosion(x, y))
 
     def _destroy_asteroid(self, asteroid):
         """Handle asteroid destruction: add ore to cargo or spawn fragments."""

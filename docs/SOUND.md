@@ -57,6 +57,7 @@ this to sit well below the rest).
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
 | `alert` | two high triangle beeps | (available; unused by default) |
 | `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** — holding **X** in the space view, see `SpaceScreen._update_weapon_fire` |
+| `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **a laser hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
 
 ## Wiring
 
@@ -79,6 +80,11 @@ this to sit well below the rest).
 - **Weapon fire:** `SpaceScreen._update_weapon_fire()` - called every frame
   **X** is held (rate-limited by `weapon_fire_cooldown`/`weapon_fire_rate`,
   not once per keypress, so holding the key fires repeatedly rather than once).
+- **Weapon impact:** `SpaceScreen._check_projectile_asteroid_collision()` -
+  every laser hit on an asteroid, alongside the spark-burst visual
+  (`game/world/explosion.py`'s `Explosion`, spawned by
+  `_spawn_impact_explosion()`) - see docs/ARCHITECTURE.md's asteroid mining
+  section for the collision/damage/breakup flow this sits in.
 
 `master_volume` (default `0.55`) on the `SoundBoard` scales everything.
 `sound_board.muted` (toggled by **Ctrl+M**, see below) silences it.

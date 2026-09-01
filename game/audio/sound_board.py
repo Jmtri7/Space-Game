@@ -17,8 +17,9 @@ audio device, `SDL_AUDIODRIVER` unset on a headless box), so callers never
 have to guard the call.
 
 The board currently defines: `ping` (message received / menu button pressed),
-`blip`, `confirm`, `deny`, `alert`, and `laser` (the laser cannon, see
-SpaceScreen._update_weapon_fire). Add more with `define()`.
+`blip`, `confirm`, `deny`, `alert`, `laser` (the laser cannon, see
+SpaceScreen._update_weapon_fire), and `impact` (a laser hitting an asteroid,
+see SpaceScreen._check_projectile_asteroid_collision). Add more with `define()`.
 """
 import math
 import os
@@ -256,6 +257,15 @@ class SoundBoard:
             {"freq": 1800.0, "freq_end": 300.0, "dur": 0.09, "wave": "square", "attack": 0.002, "decay": 0.05, "amp": 0.6},
             {"freq": 900.0, "freq_end": 150.0, "dur": 0.09, "wave": "saw", "attack": 0.002, "decay": 0.05, "amp": 0.3},
         ], volume=0.5)
+        # "impact" - a laser hitting an asteroid: a quick noise crackle (the
+        # spark burst, see game/world/explosion.py) over a low thud for
+        # weight. Short and quiet (volume=0.4) since it can fire once per
+        # laser tick against a durable asteroid - a rapid staccato of hits,
+        # not one sound overpowering the next.
+        self.define("impact", [
+            {"freq": 3200.0, "dur": 0.05, "wave": "noise", "attack": 0.001, "decay": 0.025, "amp": 0.5},
+            {"freq": 110.0, "freq_end": 60.0, "dur": 0.07, "wave": "triangle", "attack": 0.001, "decay": 0.04, "amp": 0.45},
+        ], volume=0.4)
 
 
 # Shared instance - see module docstring.
