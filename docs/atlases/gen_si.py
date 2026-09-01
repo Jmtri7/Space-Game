@@ -332,11 +332,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         for s, grp in ((-1, "leg_l"), (1, "leg_r")):
             _grp(grp)
             cx = s * 1.7
+            # a clean trapezoid hip -> ankle (no mid vertex, so the walk-cycle
+            # shear in Person._place doesn't kink it at the calf)
             P.append(opoly([(_gx(s * 3.4), _gy(12.3)),
-                            (_gx(cx + s * 1.15), _gy(6.8)),
                             (_gx(cx + s * 0.95), _gy(1.6)),
                             (_gx(cx - s * 0.95), _gy(1.6)),
-                            (_gx(cx - s * 1.15), _gy(6.8)),
                             (_gx(s * 0.15), _gy(12.3))], leg, d=1.3))
         if knee:
             _grp("leg_l"); P.append(opoly([(_gx(-2.3), _gy(8.6)), (_gx(-0.3), _gy(8.6)),
