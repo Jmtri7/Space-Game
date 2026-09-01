@@ -16,6 +16,7 @@ are new: redrawn on the current body with each culture's signature
 import importlib
 import math
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -169,14 +170,21 @@ def card_from_plate(src, label):
             f'{inner}</svg><figcaption><b>{label}</b></figcaption></figure>')
 
 
+def _code(s):
+    return re.sub(r"`([^`]+)`", r'<code class="f">\1</code>', s)
+
+
 def outfit_card(mod, key):
     fn, name, role = mod.OUTFITS[key]
     base, pre, post = fn()
     inner = (poly([(0, 0), (140, 0), (140, 210), (0, 210)], GRID)
              + pre + "".join(figure_parts(**base)) + post)
+    detail = _code(getattr(mod, "DETAILS", {}).get(key, ""))
     return (f'<figure class="card"><svg viewBox="0 0 140 210" role="img" '
             f'aria-label="Front view of the {name} on the shared body.">{GRIDDEF}{inner}</svg>'
-            f'<figcaption><b>{name}</b><p class="role">{role}</p></figcaption></figure>')
+            f'<figcaption><b>{name}</b><p class="role">{role}</p>'
+            f'<p class="detail" style="font-size:.72rem;line-height:1.55;margin:.55rem 0 0;opacity:.92">{detail}</p>'
+            f'</figcaption></figure>')
 
 
 def build(key):

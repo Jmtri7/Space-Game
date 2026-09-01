@@ -261,3 +261,82 @@ OUTFITS = {
  "ranger": (ranger, "Ranger", "long survey treks, no station for weeks"),
  "bounty_hunter": (bounty_hunter, "Bounty Hunter", "the board pays by the head"),
 }
+
+# Full read-out of every drawn piece on each outfit: the recoloured base keys
+# (graphics.json *_color) followed by the baked signature geometry. Rendered
+# under each atlas card. Backtick spans name the graphics.json / figure_parts key.
+DETAILS = {
+ "space_suit":
+   "A sealed EVA suit and nothing else. Mid-grey hard shell (`suit`), darker "
+   "grey boots (`boot`), a plain domed pressure helmet (`helmet`) with the "
+   "regulation visor gap over the eyes. No role detail — this is the "
+   "neutral suit the player starts in.",
+ "flight_suit":
+   "Slate flight suit (`suit`), black boots (`boot`), light-grey flight helmet "
+   "(`helmet`). Detail: an X of dark webbing across the chest (the ejection "
+   "harness), a checklist board strapped to the right thigh with two cyan "
+   "reference lines, and a small comms box with a red indicator on the right "
+   "of the helmet.",
+ "mechanic":
+   "Olive coveralls (`suit`), dark boots (`boot`), an amber hard hat "
+   "(`helmet`) with a forehead lamp, a webbing belt (`belt`). Detail: a "
+   "low-slung tool belt with three pouches and two hanging loops, a rolled-back "
+   "cuff on the left forearm, and a pad strapped over each knee.",
+ "dockworker":
+   "Blue-grey work suit (`suit`), dark boots (`boot`), amber hard hat "
+   "(`helmet`). Detail: a hi-vis orange tabard over the chest with a darker "
+   "cross-band and two shoulder straps, and heavy dark gloves on both hands.",
+ "miner":
+   "Tan rock suit (`suit`), dark boots (`boot`), a pale-gold hard hat "
+   "(`helmet`) with a lamp. Detail: a boxy life-support pack on the back, a "
+   "tool belt, a drill stem down the back-right to a dark drill bit, an "
+   "ore-sample pouch on the right hip, and a short strap across the left shin.",
+ "security":
+   "Dark blue-grey uniform (`suit`), black boots (`boot`), grey helmet "
+   "(`helmet`) with a cyan visor (`visor`). Detail: a padded stab vest with "
+   "two seams, a baton sheathed on the right hip, and a small shoulder radio "
+   "with a cyan lamp on the left.",
+ "station_command":
+   "Navy tunic (`suit`), near-black boots (`boot`), pale service helmet "
+   "(`helmet`), white stand collar (`collar`), dark epaulettes (`shoulders`), "
+   "a gold badge of office (`badge`) on the left breast. Detail: a "
+   "double-breasted grid of gold buttons (two columns of four), a pipped rank "
+   "board on each shoulder, and a peaked cap with a dark brim over the helmet.",
+ "marshal":
+   "A long charcoal coat (`suit`, `coat` cut), black boots (`boot`), a dark "
+   "brimmed hat (`hat`). Detail: the coat skirt falls to mid-shin, a holstered "
+   "sidearm rides the right hip behind the arm, a gold five-point marshal's "
+   "star sits on the left breast, and the wide-brim hat crowns the head.",
+ "medic":
+   "White med coat (`suit`, `coat` cut), pale boots (`boot`), a mint helmet "
+   "(`helmet`), a red cross badge (`badge` + `badge_cross`) on the breast. "
+   "Detail: the coat skirt, a red armband with a white cross on the left upper "
+   "arm, and a white med satchel on the right hip with a red cross on its flap.",
+ "surgeon":
+   "Pale scrub suit (`suit`) with a coat skirt, pale boots (`boot`), bare "
+   "head. Detail: a tie-on surgical mask over the nose and mouth with ear "
+   "ties, a scrub cap over the crown, white surgical gloves on both hands, and "
+   "a small red status dot at the sternum.",
+ "researcher":
+   "Grey-blue lab coat (`suit`, `coat` cut), grey boots (`boot`), bare head "
+   "with a clear work visor (`visor`). Detail: a three-pen array (red / cyan / "
+   "gold) in the breast pocket and a grey specimen case on the right hip with "
+   "two ruled lines.",
+ "civilian":
+   "Plain blue-grey clothes (`suit`), dark shoes (`boot`), bare head. Detail: "
+   "a soft folded collar and a shoulder satchel on a cross-body strap.",
+ "smuggler":
+   "Dark green worn clothes (`suit`) and boots (`boot`) under a long coat. "
+   "Detail: a deep raised hood with the face in shadow (only two glinting eyes "
+   "show), a bulge of contraband inside the coat front, and a torn hem.",
+ "ranger":
+   "Field green (`suit`, `coat` cut), dark boots (`boot`), bare head. Detail: "
+   "a tall trek pack with a bedroll lashed on top, a field-coat skirt, a "
+   "canteen on the right hip behind the arm, a hood, a cross-body pack strap, "
+   "and a small gold compass on the chest.",
+ "bounty_hunter":
+   "Near-black armour (`suit`), black boots (`boot`), a dark helmet (`helmet`) "
+   "with a red visor (`visor`), a back pack (`backpack`). Detail: three "
+   "stacked riveted chest-plate segments, a diagonal bandolier with three "
+   "shell loops, and a small metal trophy tag at the belt.",
+}

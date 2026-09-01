@@ -136,3 +136,49 @@ OUTFITS = {
  "envoy": (envoy, "Envoy", "speaks for the Concord off-world"),
  "magistrate": (magistrate, "Magistrate", "the Concord's judgment, worn"),
 }
+
+# Full read-out of every drawn piece per outfit. The Vherathi signature is the
+# grown resin helmet dome carrying asymmetric CLUSTERS of glass eye-bubbles
+# (each a dark ring + mint glass + a bright highlight), plus resin-node beads
+# tracing up the torso in place of connecting filaments.
+DETAILS = {
+ "hardsuit":
+   "The standard grown vacsuit: deep-purple resin shell (`suit`), darker boots "
+   "(`boot`) and sleeves (`sleeve`). Signature: the grown dome with an "
+   "asymmetric eye-bubble cluster (four left, two right) and a line of six "
+   "mint resin-node beads up the torso.",
+ "softsuit":
+   "Station softsuit, no dome: lilac shell (`suit`), pale boots (`boot`), "
+   "muted sleeves (`sleeve`), bare head. Signature: three small eye-bubbles "
+   "worn as a half-mask on the left of the face, and a branching run of "
+   "resin-node beads up the right side of the torso toward the shoulder.",
+ "reefwright":
+   "The hull-grower's suit: mauve shell (`suit`), purple boots (`boot`) and "
+   "sleeves (`sleeve`), one grown pauldron on the left shoulder "
+   "(`shoulders_side`). Signature: full dome and eye-bubble cluster, a mint "
+   "tool baldric from the left shoulder to the right hip with four dark tool "
+   "clips down it, and the torso resin beads.",
+ "vault_warden":
+   "Vault guard: deep-purple shell (`suit`, `boot`, `sleeve`), uneven grown "
+   "spikes over the shoulders (`spikes` + `spikes_side`), a chest piece "
+   "(`chest`) and a belt (`belt`). Signature: a large left-weighted "
+   "eye-bubble cluster (five bubbles), a grown mint guard-blade down the left "
+   "forearm, and the torso beads.",
+ "tide_pilot":
+   "The skiff pilot: a flight helmet (`helmet`) with a mint visor (`visor`), "
+   "purple suit (`suit`, `boot`, `sleeve`), a mint collar (`collar`). "
+   "Signature: a small three-bubble cluster grown onto the right side of the "
+   "flight helmet, and a branching run of resin beads on the upper torso.",
+ "envoy":
+   "The off-world envoy, bare head: violet robe-suit (`suit`), pale boots "
+   "(`boot`), muted sleeves (`sleeve`), a mint collar (`collar`), a mint "
+   "baldric sash (`sash`), a white badge (`badge`). Signature: a worn "
+   "eye-bubble half-cluster (three left, two right) and a single branch of "
+   "resin beads up the right torso.",
+ "magistrate":
+   "The Concord's judgment: a long asymmetric robe (`suit`, `coat` cut) in "
+   "violet, dark boots (`boot`), a grown helm (`helmet`), a chest piece "
+   "(`chest`), a mint collar (`collar`), a pale sash (`sash`), a mint badge "
+   "(`badge`). Signature: a dense six-bubble left cluster on the dome and "
+   "three branching runs of resin beads across the torso.",
+}

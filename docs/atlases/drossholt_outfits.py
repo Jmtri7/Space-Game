@@ -149,3 +149,47 @@ OUTFITS = {
  "foreman": (foreman, "Foreman", "runs the yard crew"),
  "hauler": (hauler, "Hauler", "moves the heavy freight by hand"),
 }
+
+# Full read-out of every drawn piece per outfit. The Drossholt signature is
+# mismatched riveted patch-plates bolted on at odd angles (each with four
+# corner bolt dots), a bolted box respirator over the mouth with a hose down
+# the right side to a hip canister, and one oversized mismatched pauldron.
+DETAILS = {
+ "vacsuit":
+   "The standard bolted vacuum suit: tan shell (`suit`), rust boots (`boot`), "
+   "tan sleeves (`sleeve`), an amber hard hat (`helmet`). Signature: three "
+   "mismatched riveted patch-plates across the torso, the bolted box "
+   "respirator with a hose to a right-hip canister, and one oversized pauldron "
+   "with an accent stud over the left shoulder.",
+ "coveralls":
+   "Yard coveralls, no vacuum: pale-tan shell (`suit`), rust boots (`boot`), "
+   "tan sleeves (`sleeve`), a work belt (`belt`), bare head. Signature: two "
+   "riveted patch-plates and a dust scarf tied over the nose and mouth.",
+ "cutterman":
+   "Torches derelicts apart: tan shell (`suit`, `sleeve`), rust boots "
+   "(`boot`), an amber hard hat (`helmet`), a stowed cutting torch on the hip "
+   "(`torch`), a pauldron (`shoulders`), a belt (`belt`), a back pack "
+   "(`backpack`). Signature: patch-plates, the box respirator, and a heavy "
+   "riveted cutting gauntlet on the left forearm.",
+ "tallyman":
+   "Counts what comes off the ships: pale-tan shell (`suit`, `sleeve`), rust "
+   "boots (`boot`), a soft cap (`cap`), a belt (`belt`), a gold tally badge "
+   "(`badge`). Signature: one patch-plate, a riveted chest ledger board with "
+   "three ruled lines, and a stylus on a short cord.",
+ "gun_bosun":
+   "Runs the Bulwark's guns: rust shell (`suit`, `sleeve`), rust boots "
+   "(`boot`), an amber hard hat (`helmet`) with a near-black visor (`visor`), "
+   "a chest piece (`chest`), a belt (`belt`). Signature: patch-plates, a "
+   "diagonal ammo bandolier with four shell loops, and the box respirator.",
+ "foreman":
+   "Runs the yard crew: ochre shell (`suit`), rust boots (`boot`), tan "
+   "sleeves (`sleeve`), an amber hard hat (`helmet`), a pauldron "
+   "(`shoulders`), a belt (`belt`), an amber badge (`badge`). Signature: "
+   "patch-plates, a hi-vis amber foreman panel on the chest, one big left "
+   "pauldron, and a clipboard on the right hip behind the arm.",
+ "hauler":
+   "Moves heavy freight by hand: sandy shell (`suit`), rust boots (`boot`), "
+   "tan sleeves (`sleeve`), a back pack (`backpack`), a belt (`belt`), bare "
+   "head. Signature: one patch-plate and a heavy load strap over each "
+   "shoulder down to the waist.",
+}

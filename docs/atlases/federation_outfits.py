@@ -155,3 +155,47 @@ OUTFITS = {
  "gate_warden": (gate_warden, "Gate Warden", "customs & the transponder log"),
  "fleet_command": (fleet_command, "Fleet Command", "the flag tier - Procyon Gate control"),
 }
+
+# Full read-out of every drawn piece per outfit. Every Federation outfit carries
+# the shared signature: a horizontal visor-slit helmet (dark slit + cyan line +
+# chin guard), a white centreline stripe from the collar down, an amber
+# hazard-chevron flash on the right upper arm, and a stencilled SF-### number.
+DETAILS = {
+ "rating":
+   "Blue issue coveralls (`suit`), dark boots (`boot`), a blue-grey helmet "
+   "(`helmet`), a white collar (`collar`). Signature: the visor-slit helmet, "
+   "the white centreline stripe, the amber chevron flash on the right arm, and "
+   "an `SF-114` stencil.",
+ "pilot":
+   "Light-grey flight helmet (`helmet`), slate suit (`suit`), dark boots "
+   "(`boot`). Signature: visor-slit helmet, centreline stripe (to mid-torso), "
+   "chevron flash, `SF-221` stencil — plus an X flight harness across the "
+   "chest and a checklist board on the right thigh with two cyan lines.",
+ "officer":
+   "A dark-navy frock coat (`suit`, `coat` cut), near-black boots (`boot`), a "
+   "peaked cap (`hat`), a white collar (`collar`), dark epaulettes "
+   "(`shoulders`). Signature: centreline stripe and chevron flash — plus the "
+   "coat skirt to mid-shin, a holstered sidearm on the right hip behind the "
+   "arm, a peaked cap with a dark brim, three amber cuff-braid rings on the "
+   "left forearm, an amber rank board on each shoulder, and an amber command "
+   "diamond on the left breast.",
+ "marine":
+   "Boarding armour (`suit`), black boots (`boot`), a dark helmet (`helmet`) "
+   "with a cyan visor (`visor`), a back pack (`backpack`). Signature: the "
+   "chevron flash and an `M-07` stencil — plus three stacked carapace segments "
+   "with three rivet dots and a shin guard on each leg.",
+ "gate_warden":
+   "Blue-grey uniform (`suit`), dark boots (`boot`), a helmet (`helmet`), a "
+   "white collar (`collar`). Signature: the visor-slit helmet — plus a hi-vis "
+   "amber over-vest with a dark `SF` badge and a cyan lamp, a scanner wand "
+   "held down the right side with a glass tip, and a data slate in the left "
+   "hand.",
+ "fleet_command":
+   "A flag-officer greatcoat (`suit`, `coat` cut), near-black boots (`boot`), "
+   "a white cap (`hat`), a white collar (`collar`), white epaulettes "
+   "(`shoulders`). Signature: centreline stripe, chevron flash, a `FLAG` "
+   "stencil — plus the greatcoat to the shin, a double-breasted grid of gold "
+   "buttons (two columns of four), a heavy gold rank board on each shoulder "
+   "with three lines, a 'scrambled-egg' cap with a dark brim and gold braid, "
+   "and a gold flag diamond on the left breast.",
+}

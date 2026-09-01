@@ -7,12 +7,13 @@ from the repo root:  python docs/atlases/gen_common.py
 """
 import math
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from gen_si import figure_parts, poly, circ, bar, dashed_bar, GRID
 from atlas_shell import css, DEFS, GRIDDEF
-from common_kit import OUTFITS
+from common_kit import OUTFITS, DETAILS
 
 ACCENT, ACCENT_RGB = "#8fb9c8", "143,185,200"
 
@@ -59,12 +60,18 @@ def outfit_inner(key):
             + pre + "".join(figure_parts(**base)) + post)
 
 
+def _code(s):
+    return re.sub(r"`([^`]+)`", r'<code class="f">\1</code>', s)
+
+
 def outfit_card(key):
     _fn, name, role = OUTFITS[key]
+    detail = _code(DETAILS.get(key, ""))
     return f"""<figure class="card">
       <svg viewBox="0 0 140 210" role="img" aria-label="Front view of the {name} on the shared body.">{GRIDDEF}{outfit_inner(key)}</svg>
       <figcaption><b>{name}</b><p class="role">{role}</p>
-        <div class="keyline">{KEYLINES.get(key, "")}</div></figcaption>
+        <div class="keyline">{KEYLINES.get(key, "")}</div>
+        <p class="detail" style="font-size:.72rem;line-height:1.55;margin:.55rem 0 0;opacity:.92">{detail}</p></figcaption>
     </figure>"""
 
 
