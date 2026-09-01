@@ -8,7 +8,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import poly, circ, offset_poly
+from gen_si import poly, circ, offset_poly, _arm_rot
 
 OUT = "#141219"
 WAIST = 103
@@ -90,7 +90,8 @@ def vault_warden():
                 chest="#3a264e", belt="#2f1e3c")
     post = (eye_bubbles("#7a5c96", left=((59, 42, 3.6), (57, 51, 2.8), (63, 49, 2.2),
                                          (60, 34, 2.6), (65, 40, 1.8)), right=((81, 44, 2.4),))
-            + op_s([(49, 66), (54, 64), (56, 118), (52, 134), (48, 122), (47, 88)], "#8fffcf")  # grown guard-blade down the left forearm
+            + op_s([_arm_rot(-1, x, y) for x, y in
+                    [(49, 66), (54, 64), (56, 118), (52, 134), (48, 122), (47, 88)]], "#8fffcf")  # grown guard-blade down the left forearm
             + veins())
     return base, "", post
 

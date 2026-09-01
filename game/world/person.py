@@ -63,11 +63,12 @@ class Person:
     LEG_HEIGHT = 10.5       # walk-cycle knob: notional hip-to-ankle length
     HIP_OVERLAP = 1.5       # (paired with LEG_HEIGHT for the stride amplitude)
     ARM_LENGTH = 11.0       # walk-cycle knob: notional shoulder-to-wrist length
-    ARM_REST_SPLAY = 3.0    # near arm forward / far arm back a touch at a standstill
 
+    # The far limbs (the left-side groups) draw behind the torso, the near
+    # limbs (right-side) in front - the small resting arm splay is baked into
+    # the figure geometry (gen_si.ARM_REST_DEG), not applied here.
     _BACK_GROUPS = frozenset(("arm_l", "hand_l", "leg_l", "boot_l"))
     _FRONT_GROUPS = frozenset(("arm_r", "hand_r", "leg_r", "boot_r"))
-    _BACK_TINT = -48        # the far arm + far leg draw this much darker
 
     SKIN_COLOR = (225, 180, 145)   # figure "skin" token; head/hands are shaded from this
     EYE_COLOR = (40, 30, 30)
@@ -126,17 +127,16 @@ class Person:
         """Per-frame fore/aft wrist offset (dx) for the left (far) arm then the
         right (near) arm. The two swing *opposite* each other and counter to
         the stride - the natural human gait - about the shoulder (the offset
-        ramps in from 0 at the shoulder to full at the wrist, see _place). At a
-        standstill they settle to a small ARM_REST_SPLAY (near arm a touch
-        forward, far arm a touch back) rather than hanging dead straight."""
+        ramps in from 0 at the shoulder to full at the wrist, see _place).
+        Returns (0, 0) at a standstill; the relaxed splay of the rest pose is
+        baked into the arm geometry, not added here."""
         amt = self.walk_intensity
-        rest = self.ARM_REST_SPLAY * (1.0 - amt)
-        sw = 0.0
-        if amt:
-            swing = math.sin(self.walk_phase)
-            sw = math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
+        if not amt:
+            return 0.0, 0.0
+        swing = math.sin(self.walk_phase)
+        sw = math.sin(math.radians(swing * self.WALK_ARM_DEG * amt)) * self.ARM_LENGTH
         # left/far arm trails the leading (left) leg; right/near arm leads
-        return -sw - rest, sw + rest
+        return -sw, sw
 
     def _advance_walk(self, distance):
         """Advance the walk cycle by the distance just walked and ramp the
@@ -194,8 +194,9 @@ class Person:
     def _place(self, gx, gy, group, stance, arm):
         """Figure-space point (game units, feet at origin) -> world point,
         with the walk-cycle transform for its animation group applied and the
-        whole figure mirrored about self.x when it faces left."""
-        f = self.facing
+        whole figure mirrored about self.x for its facing. The baked figure
+        faces screen-left, so facing +1 (right) is the mirrored one."""
+        f = -self.facing
         gx *= f
         hip_dy, ((adx_l, ady_l), (adx_r, ady_r)) = stance
         if group == "body":
@@ -214,11 +215,9 @@ class Person:
             return self.x + gx + adx * f * t, self.y + gy + hip_dy
         return self.x + gx, self.y + gy
 
-    def _emit(self, surface, parts, stance, arm, scale, dy=0.0, tint=0):
+    def _emit(self, surface, parts, stance, arm, scale, dy=0.0):
         for p in parts:
             col = self._fig_color(p["color"])
-            if tint:
-                col = self._shade(col, tint)
             grp = p.get("group", "body")     # signature parts ride the torso
             if "points" in p:
                 pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
@@ -248,8 +247,8 @@ class Person:
         o = self.outfit
         helmeted = "helmet_color" in o
 
-        def emit(parts, dy=0.0, tint=0):
-            self._emit(surface, parts, stance, arm, scale, dy, tint)
+        def emit(parts, dy=0.0):
+            self._emit(surface, parts, stance, arm, scale, dy)
 
         # Culture / role signature (eye-bubble helm, patch-plates, tool belt,
         # ...): "pre" behind the body, "post" over it. Opted in by the outfit's
@@ -263,8 +262,8 @@ class Person:
         if sig and sig["pre"]:
             emit(sig["pre"])
 
-        # Far arm + far leg first, behind the torso and a shade darker.
-        emit(self._groups(fig.BASE, self._BACK_GROUPS), tint=self._BACK_TINT)
+        # Far arm + far leg first, behind the torso.
+        emit(self._groups(fig.BASE, self._BACK_GROUPS))
 
         # Torso (+ neck).
         emit(self._groups(fig.BASE, ("body",)))

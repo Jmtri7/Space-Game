@@ -1197,11 +1197,9 @@ class TestPersonWalkCycle(unittest.TestCase):
         self.assertEqual(hip_dy, 0.0)
         self.assertEqual(ankles, ((0.0, 0.0), (0.0, 0.0)))
 
-    def test_a_still_persons_arms_settle_to_a_small_splay(self):
-        # near (right) arm a touch forward, far (left) arm a touch back
-        far, near = Person(0.0, 0.0)._arm_swing()
-        self.assertAlmostEqual(far, -Person.ARM_REST_SPLAY, places=6)
-        self.assertAlmostEqual(near, Person.ARM_REST_SPLAY, places=6)
+    def test_a_still_person_adds_no_arm_swing(self):
+        # the relaxed splay is baked into the figure geometry, not _arm_swing
+        self.assertEqual(Person(0.0, 0.0)._arm_swing(), (0.0, 0.0))
 
     def test_the_arms_swing_opposite_each_other_and_counter_to_the_stride(self):
         p = Person(0.0, 0.0)

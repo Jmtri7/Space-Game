@@ -507,8 +507,12 @@ function buildFigure(svg, c, opts){
   const aTogether = opts.armTogether === true;
   const aPhase = opts.armPhase === undefined ? -1 : opts.armPhase;
   const swArm = aPhase * sw;
-  const armDegL = swArm * aAmp;
-  const armDegR = (aTogether ? swArm : -swArm) * aAmp;
+  // the arms also hang a small constant angle out from the body at rest
+  // (gen_si.ARM_REST_DEG, baked into figure_parts) - so even a standing figure
+  // reads relaxed and a touch open
+  const REST_SPLAY = 12;
+  const armDegL = swArm * aAmp - REST_SPLAY;
+  const armDegR = (aTogether ? swArm : -swArm) * aAmp + REST_SPLAY;
   const armDegFor = s => (s === -1 ? armDegL : armDegR);
 
   const bob = -Math.abs(sw) * 0.5;                 // body dips a little at the stride extremes

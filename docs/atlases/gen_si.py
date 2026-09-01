@@ -224,6 +224,26 @@ def _gy(u):
 FIG_HIP_Y = round(_gy(12.3))         # 139 - where the legs join the torso
 FIG_FOOT_Y = round(_gy(1.6))         # 194 - ankle line; boots ~3 below, ground ~10
 
+# Resting arm splay: each arm hangs a small angle out from the body about the
+# shoulder joint, so the default pose reads relaxed and slightly open (and, in
+# the side-on in-game render, one arm slightly ahead of the other). Baked into
+# the figure geometry here so the atlases and the game agree. _arm_rot maps a
+# point on the notional straight-down arm to its splayed position; the
+# *_outfits.py signature files import it to re-anchor arm-mounted detail.
+ARM_REST_DEG = 12
+_ARM_PIVOT = (3.05, 25.9)            # shoulder joint, study coords (|x|, y)
+
+
+def _arm_rot(s, ax, ay):
+    """Atlas point on the straight arm -> atlas point after the resting splay.
+    s = -1 for the left arm, +1 for the right; both rotate outward."""
+    ux, uy = (ax - 70.0) / _G_SCALE, (_G_GROUND - ay) / _G_SCALE
+    px, py = s * _ARM_PIVOT[0], _ARM_PIVOT[1]
+    ang = math.radians(s * ARM_REST_DEG)
+    ca, sa = math.cos(ang), math.sin(ang)
+    dx, dy = ux - px, uy - py
+    return _gx(px + dx * ca - dy * sa), _gy(py + dx * sa + dy * ca)
+
 
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                  hat=None, cap=None, no_helmet=False, legged=True, arms=True, coat=False,
@@ -246,6 +266,43 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     waist_hw = 13
     belt_y = waist_y - 4
     foot_y = FIG_FOOT_Y if legged else round(_gy(6.5))
+
+    # The figure reads side-on: the LEFT arm + LEFT leg are the FAR limbs, drawn
+    # behind the torso; the RIGHT arm + leg are the NEAR limbs, drawn over it.
+    # So one arm and one leg of each pair sits in front, the other behind (the
+    # grounded-person study's layering). person.py picks the same split by
+    # animation group and mirrors on facing.
+    def _arm_shaft(s):
+        return [(_gx(s * 2.1), _gy(26.6)), (_gx(s * 2.6), _gy(25.97)),
+                (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
+                (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
+                (_gx(s * 1.9), _gy(13.6))]
+
+    def _leg_trap(s):
+        cx = s * 1.7
+        # a clean trapezoid hip -> ankle (no mid vertex, so the walk-cycle
+        # shear in Person._place doesn't kink it at the calf)
+        return [(_gx(s * 3.4), _gy(12.3)), (_gx(cx + s * 0.95), _gy(1.6)),
+                (_gx(cx - s * 0.95), _gy(1.6)), (_gx(s * 0.15), _gy(12.3))]
+
+    def _knee(s):
+        return [(_gx(s * 0.3), _gy(8.6)), (_gx(s * 2.3), _gy(8.6)),
+                (_gx(s * 2.3), _gy(6.6)), (_gx(s * 0.3), _gy(6.6))]
+
+    def _emit_arm(s):
+        _grp("arm_l" if s < 0 else "arm_r")
+        P.append(opoly([_arm_rot(s, x, y) for x, y in _arm_shaft(s)], sleeve, d=1.3))
+        _grp("hand_l" if s < 0 else "hand_r")
+        P.append(ocirc(*_arm_rot(s, _gx(s * 2.5), _gy(12.7)), 3.2, SKINF, d=1.1))
+
+    def _emit_leg(s):
+        _grp("leg_l" if s < 0 else "leg_r")
+        P.append(opoly(_leg_trap(s), leg, d=1.3))
+        if knee:
+            _grp("leg_l" if s < 0 else "leg_r")
+            P.append(opoly(_knee(s), knee, d=1.0))
+        _grp("boot_l" if s < 0 else "boot_r")
+        P.append(opoly(ngon(_gx(s * 1.7), 197, 9, 6, 12), boot, d=1.3))
 
     _grp("body"); _gate(None)
 
@@ -272,6 +329,13 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if blade:                                    # grown guard-blade down one arm
         P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=1.0))
 
+    # ---- far arm + far leg (behind the torso) ----
+    _grp("body"); _gate(None)
+    if arms:
+        _emit_arm(-1)
+    if legged:
+        _emit_leg(-1)
+
     # torso - one smooth hourglass from the hip, through the cinched waist, up
     # to a narrow rounded shoulder (no armpit notch). _gt is the Grounded study
     # torso (left-silhouette half-widths, neck line down to hip); mirrored for
@@ -291,9 +355,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                     (_gx(1.15), _gy(28.7)), (_gx(1.15), _gy(26.4))], SKINF, d=1.0))
 
     # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
-    # the waist. Drawn BEFORE the arms so the arm hangs over it and only its
-    # inner edge / lower end shows past the hand; the belt, drawn later, laps
-    # its top strap.
+    # the waist. Drawn before the near arm so the arm hangs over it.
     _grp("body")
     if pod:
         P.append(opoly([(82, waist_y - 6), (88, waist_y - 6), (87, waist_y), (83, waist_y)], pod))  # hanger strap
@@ -305,48 +367,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                        (88, waist_y + 1)], "#5a5560"))          # nozzle head
         P.append(circ(92, waist_y - 5, 1.2, "#8a8590"))         # tip
 
-    # arms - narrow rounded shoulders: a domed cap over the top of the upper
-    # arm that tucks under the torso's shoulder point (no armpit gap, no block
-    # sticking out), then a straight shaft to the wrist. Drawn over the torso
-    # and the hip kit; shoulder pads (later) cover the very top. The Grounded
-    # study settled on this shoulder.
-    if arms:
-        for s, grp in ((-1, "arm_l"), (1, "arm_r")):
-            _grp(grp)
-            P.append(opoly([(_gx(s * 2.3), _gy(25.5)), (_gx(s * 2.6), _gy(25.97)),
-                            (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
-                            (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
-                            (_gx(s * 1.9), _gy(13.6))], sleeve, d=1.3))
-        _grp("hand_l"); P.append(ocirc(_gx(-2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
-        _grp("hand_r"); P.append(ocirc(_gx(2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
-
     _grp("body")
     if hipline:
         P.append(dashed_bar(70 - waist_hw - 2, waist_y, 70 + waist_hw + 2, waist_y, 1.1, accent))
     if band:                                      # chest band, above the belt
         P.append(opoly([(54, 88), (86, 88), (84, 100), (56, 100)], band, d=1.0))
-
-    # legs + boots (or the old foot oval). Legs always join at the true hip
-    # line (Grounded study), even under a coat.
-    if legged:
-        for s, grp in ((-1, "leg_l"), (1, "leg_r")):
-            _grp(grp)
-            cx = s * 1.7
-            # a clean trapezoid hip -> ankle (no mid vertex, so the walk-cycle
-            # shear in Person._place doesn't kink it at the calf)
-            P.append(opoly([(_gx(s * 3.4), _gy(12.3)),
-                            (_gx(cx + s * 0.95), _gy(1.6)),
-                            (_gx(cx - s * 0.95), _gy(1.6)),
-                            (_gx(s * 0.15), _gy(12.3))], leg, d=1.3))
-        if knee:
-            _grp("leg_l"); P.append(opoly([(_gx(-2.3), _gy(8.6)), (_gx(-0.3), _gy(8.6)),
-                                           (_gx(-0.3), _gy(6.6)), (_gx(-2.3), _gy(6.6))], knee, d=1.0))
-            _grp("leg_r"); P.append(opoly([(_gx(0.3), _gy(8.6)), (_gx(2.3), _gy(8.6)),
-                                           (_gx(2.3), _gy(6.6)), (_gx(0.3), _gy(6.6))], knee, d=1.0))
-        _grp("boot_l"); P.append(opoly(ngon(_gx(-1.7), 197, 9, 6, 12), boot, d=1.3))
-        _grp("boot_r"); P.append(opoly(ngon(_gx(1.7), 197, 9, 6, 12), boot, d=1.3))
-    else:
-        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=1.3))
 
     # helmet / hat / cap - same head height for every outfit
     _grp("body")
@@ -386,6 +411,16 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(poly(rrect(66, belt_y + 2, 8, 5, 1), buckle or "#7a7a84"))
         _gate(None)
 
+    # ---- near arm + near leg (over the torso) ----
+    _grp("body"); _gate(None)
+    if arms:
+        _emit_arm(1)
+    if legged:
+        _emit_leg(1)
+    else:
+        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=1.3))
+
+    _grp("body"); _gate(None)
     if shoulders:                                # sit outboard + high, over the arm tops
         _gate("shoulder_color")
         if shoulders_side in ("both", "left"):
