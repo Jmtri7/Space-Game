@@ -273,7 +273,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # grounded-person study's layering). person.py picks the same split by
     # animation group and mirrors on facing.
     def _arm_shaft(s):
-        return [(_gx(s * 2.1), _gy(26.6)), (_gx(s * 2.6), _gy(25.97)),
+        # domed top centred on the shoulder joint, endpoints level with the
+        # shoulder line so the (rotated) cap tucks under the torso, no spike
+        return [(_gx(s * 2.3), _gy(25.5)), (_gx(s * 2.6), _gy(25.97)),
                 (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
                 (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
                 (_gx(s * 1.9), _gy(13.6))]

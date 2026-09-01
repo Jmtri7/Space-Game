@@ -48,7 +48,7 @@ that document as the work crosses areas. You should not need to read every doc.
   during development; the working principles (cross-cutting concerns,
   generalisation strategy); how to contribute a new pattern.
 - **[DESIGN_ATLAS.md](DESIGN_ATLAS.md)** — the committed HTML asset-mockup
-  Artifacts: when to make one, how to keep it honest, the SVG→`parts`
+  pages: when to make one, how to keep it honest, the SVG→`parts`
   extraction tooling, and the hard technical rules for the pages.
 - **[SOUND.md](SOUND.md)** — the runtime sound board and procedurally generated
   background music (no asset files).

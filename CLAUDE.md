@@ -20,7 +20,7 @@ CLAUDE.md  (you are here — the protocol)
     ├── SAVE_SYSTEM.md    ⚠️ — save format, story/save split, story versioning
     ├── UI_FLOW.md        — screen state machine, modals, the fixed-timestep loop, perf panel
     ├── DESIGN_PATTERNS.md — reusable patterns + working principles
-    ├── DESIGN_ATLAS.md   — the asset-mockup Artifacts and the SVG→parts pipeline
+    ├── DESIGN_ATLAS.md   — the asset-mockup HTML pages and the SVG→parts pipeline
     ├── SOUND.md          — runtime-synthesized SFX and music
     ├── WORKFLOW.md       — edit → restart → test → commit loop, testing, commit format
     ├── BUILD.md          — PyInstaller Windows packaging

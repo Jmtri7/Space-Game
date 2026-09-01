@@ -1,15 +1,15 @@
 # Design Atlases
 
-A **design atlas** is a published visual document (a Claude Artifact) that draws
-out a family of the game's assets — ships, outfits, buildings, decorations,
-stations — in more detail than the current `config/` JSON expresses, so a human
-can look at a whole set at once and decide what to build. It is a **design
-tool, not a spec**: nothing in an atlas is wired into the game until someone
-does it deliberately, and every plate says so.
+A **design atlas** is a self-contained HTML page that draws out a family of the
+game's assets — ships, outfits, buildings, decorations, stations — in more
+detail than the current `config/` JSON expresses, so a human can look at a whole
+set at once and decide what to build. It is a **design tool, not a spec**:
+nothing in an atlas is wired into the game until someone does it deliberately,
+and every plate says so.
 
-Each atlas's HTML **source is committed** under [`docs/atlases/`](atlases/); the
-published Claude Artifact is a *render* of that file, at a stable URL. This doc
-is the how: how to make one, how to keep it honest, and which ones exist.
+Each atlas's HTML is committed under [`docs/atlases/`](atlases/) and is the only
+copy that matters — open the file in a browser (or the preview pane) to view it.
+This doc is the how: how to make one, how to keep it honest, and which ones exist.
 
 ## Restructure in progress
 
@@ -107,23 +107,23 @@ weapons system.
 
 ## Current atlases
 
-| Atlas | Source | Published URL |
-|---|---|---|
-| **Grounded Person Model** *(hand-authored, interactive)* | [`docs/atlases/grounded-person.html`](atlases/grounded-person.html) | https://claude.ai/code/artifact/f1dbba15-75d6-40c7-9d46-45f5e7c9c276 |
-| **Common Kit** | [`docs/atlases/common-kit.html`](atlases/common-kit.html) | https://claude.ai/code/artifact/801028b3-1b57-4883-b19a-ce6bdac213dc |
-| **Sol Federation** | [`docs/atlases/sol-federation.html`](atlases/sol-federation.html) | https://claude.ai/code/artifact/fedf43de-02d7-4251-8c64-6263442678eb |
-| **Vherathi Concord** | [`docs/atlases/vherathi-concord.html`](atlases/vherathi-concord.html) | https://claude.ai/code/artifact/d352d82f-d0f3-4165-94c6-32e14415de1f |
-| **Drossholt Company** | [`docs/atlases/drossholt-company.html`](atlases/drossholt-company.html) | https://claude.ai/code/artifact/5124a8b1-4c9e-4c3c-b341-9c778e9d13d7 |
-| **Past the Reach** | [`docs/atlases/past-the-reach.html`](atlases/past-the-reach.html) | https://claude.ai/code/artifact/d822ff88-5b66-4203-8b3c-e9c7459052fb |
-| **Kaethar Directorate** | [`docs/atlases/kaethar-directorate.html`](atlases/kaethar-directorate.html) | https://claude.ai/code/artifact/87a840a9-b921-482c-b14a-351dd1353469 |
-| **The Vetl** | [`docs/atlases/the-vetl.html`](atlases/the-vetl.html) | https://claude.ai/code/artifact/c046ebc1-2d81-4160-b956-0cc4e4312fc6 |
-| **The Salt Crows** | [`docs/atlases/salt-crows.html`](atlases/salt-crows.html) | https://claude.ai/code/artifact/bca33565-f999-45cf-b8b2-55eeff986310 |
-| **Deeprock Mining Consortium** | [`docs/atlases/deeprock-consortium.html`](atlases/deeprock-consortium.html) | https://claude.ai/code/artifact/d24ab6df-142b-4012-9b41-0f12b0720937 |
-| **The Ashfall Rite** | [`docs/atlases/ashfall-rite.html`](atlases/ashfall-rite.html) | https://claude.ai/code/artifact/b123b6e5-653d-42f9-b9c5-adc146af735d |
-| **The Meridian Free Ports** | [`docs/atlases/meridian-free-ports.html`](atlases/meridian-free-ports.html) | https://claude.ai/code/artifact/150329e8-d18e-40f8-93ee-092f060f33fc |
-| **The Theln Drift** | [`docs/atlases/theln-drift.html`](atlases/theln-drift.html) | https://claude.ai/code/artifact/13308051-79e6-4c1c-a61c-820ea9b5f962 |
-| ~~Resin & Rivets~~ *(superseded by Vherathi Concord + Drossholt Company; still the plate source for their hardware)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) | https://claude.ai/code/artifact/36db8620-a17d-4480-97bd-52a2cbb7da4f |
-| ~~Standard Issue~~ *(removed — Common Kit + Sol Federation; the issue-hardware generators moved into `gen_si.py`)* | — | ~~https://claude.ai/code/artifact/674398c7-3cb8-49ab-988e-d9b6fe1c01ce~~ |
+| Atlas | Source |
+|---|---|
+| **Grounded Person Model** *(hand-authored, interactive)* | [`docs/atlases/grounded-person.html`](atlases/grounded-person.html) |
+| **Common Kit** | [`docs/atlases/common-kit.html`](atlases/common-kit.html) |
+| **Sol Federation** | [`docs/atlases/sol-federation.html`](atlases/sol-federation.html) |
+| **Vherathi Concord** | [`docs/atlases/vherathi-concord.html`](atlases/vherathi-concord.html) |
+| **Drossholt Company** | [`docs/atlases/drossholt-company.html`](atlases/drossholt-company.html) |
+| **Past the Reach** | [`docs/atlases/past-the-reach.html`](atlases/past-the-reach.html) |
+| **Kaethar Directorate** | [`docs/atlases/kaethar-directorate.html`](atlases/kaethar-directorate.html) |
+| **The Vetl** | [`docs/atlases/the-vetl.html`](atlases/the-vetl.html) |
+| **The Salt Crows** | [`docs/atlases/salt-crows.html`](atlases/salt-crows.html) |
+| **Deeprock Mining Consortium** | [`docs/atlases/deeprock-consortium.html`](atlases/deeprock-consortium.html) |
+| **The Ashfall Rite** | [`docs/atlases/ashfall-rite.html`](atlases/ashfall-rite.html) |
+| **The Meridian Free Ports** | [`docs/atlases/meridian-free-ports.html`](atlases/meridian-free-ports.html) |
+| **The Theln Drift** | [`docs/atlases/theln-drift.html`](atlases/theln-drift.html) |
+| ~~Resin & Rivets~~ *(superseded by Vherathi Concord + Drossholt Company; still the plate source for their hardware)* | [`docs/atlases/resin-and-rivets.html`](atlases/resin-and-rivets.html) |
+| ~~Standard Issue~~ *(removed — Common Kit + Sol Federation; the issue-hardware generators moved into `gen_si.py`)* | — |
 
 - **Grounded Person Model** — the design study that worked out the "Grounded"
   body + face pass now in `figure_parts`. **Hand-authored, not generated by a
@@ -134,7 +134,7 @@ weapons system.
   on the head; the body in a few `graphics.json` outfits; and the figure at
   on-screen distances. It's a record of a **shipped** decision, kept because
   the interactive walk and the proportion rationale don't live anywhere else.
-  Update it by editing the HTML directly, then re-publish to its URL.
+  Update it by editing the HTML directly.
 
 - **Common Kit** — the shared `Person` body and the culture-neutral outfits,
   split out of Standard Issue. **Body chapter:** a labelled cinched-waist
@@ -224,15 +224,11 @@ compatibility.
   here gets built, split it out — a shipped culture belongs in its own atlas
   (or Resin & Rivets' successor), not in a proposals file.
 
-### Updating a published atlas
+### Updating an atlas
 
-1. Edit the file in `docs/atlases/`.
-2. Re-publish it to its **existing** URL — `Artifact` with `url:` set to the row
-   above (from any conversation), or just re-publish the same file path in the
-   conversation that last published it. Publishing *without* the URL creates a
-   separate artifact and orphans the link.
-3. Commit the HTML change, and update this table / the notes above if scope or
-   URL moved.
+1. Edit the file in `docs/atlases/` (or re-run its `gen_*.py` for a generated one).
+2. Open it in a browser to check it.
+3. Commit the HTML change, and update this table / the notes above if scope moved.
 
 ## When to make one
 
@@ -508,12 +504,11 @@ as firing *from* that port (all shipped):
   `config/` or code, either mark that plate done or drop it — an atlas full of
   already-shipped work stops being a design tool. Mention the atlas in the
   commit (`atlas:` prefix) so the next agent knows to reconcile it.
-- **Edit the source, then republish.** The HTML in `docs/atlases/` is the master;
-  update it and re-publish to the **same URL** (see "Updating a published atlas"
-  above) so the table's link keeps working. Only mint a new URL for a genuinely
-  new subject. Commit the HTML change with the `atlas:` prefix.
+- **The committed HTML is the atlas.** There is no other copy to keep in sync;
+  edit the file (or its `gen_*.py`), view it in a browser, commit with the
+  `atlas:` prefix.
 - **Keep the table.** The "Current atlases" table here is the index; a new atlas
-  isn't done until its row (source path + URL) exists.
+  isn't done until its row (source path) exists.
 
 See also: [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) for in-engine drawing
 conventions, and the per-culture `theme` strings in
