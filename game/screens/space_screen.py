@@ -12,7 +12,7 @@ from game.utils import (
     set_camera_zoom, set_camera_zoom_limits,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
-    get_asteroid_type, get_missions, get_story
+    get_asteroid_type, get_commodity, get_missions, get_story
 )
 import game.utils as utils
 from game.perf_metrics import metrics as perf
@@ -21,9 +21,10 @@ from game.ui.ui_theme import draw_glass_panel, draw_glow_message, draw_controls_
 from game.screens.screen_base import ScreenBase
 from game.screens.location_screen import LocationScreen
 from game.world.player_controller import PlayerController
-from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE
+from game.world.projectile import Projectile, PROJECTILE_SPEED, PROJECTILE_SIZE, PROJECTILE_DAMAGE
 from game.world.asteroid import Asteroid
 from game.world.explosion import Explosion
+from game.world.ore_pickup import OrePickup, PICKUP_RANGE
 from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
@@ -230,14 +231,21 @@ class SpaceScreen(ScreenBase):
         self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_h)
         self.hail_banner = None  # (text, color) for a transient hail-related message (see below)
         self.hail_banner_timer = 0
-        # Projectiles (laser shots) currently in flight
+        # Projectiles (weapon shots) currently in flight
         self.projectiles = []
-        # Laser fire rate limiting (frames between shots when holding X)
+        # Fire rate limiting (frames between shots when holding X) - the
+        # cooldown length itself comes from whatever weapon's actually
+        # equipped (see _equipped_weapon_stats's "fire_rate"), so this is
+        # just the countdown, not a fixed rate.
         self.weapon_fire_cooldown = 0
-        self.weapon_fire_rate = 18  # frames between shots (~3.3 shots/second at 60fps)
-        # Spark-burst effects (see game/world/explosion.py) - one per laser
+        # Spark-burst effects (see game/world/explosion.py) - one per weapon
         # hit on an asteroid, purely cosmetic (not saved, not collidable).
         self.explosions = []
+        # Drifting mined-ore chunks (see game/world/ore_pickup.py) - spawned
+        # when a small asteroid is destroyed, collected by flying over them
+        # with cargo room. Not saved, same as asteroids/explosions/
+        # projectiles - see OrePickup's own docstring.
+        self.ore_pickups = []
         # HUD panel rects from the most recently drawn frame - a mouse click
         # on one of them (minimap, info panel, controls, status) shouldn't
         # also be interpreted as a click-to-target in the world behind it.
@@ -1426,6 +1434,7 @@ class SpaceScreen(ScreenBase):
         with perf.span("sim.projectiles"):
             self._update_projectiles()
             self.explosions = [e for e in self.explosions if e.update()]
+            self._update_ore_pickups()
         # Update weapon fire cooldown
         if self.weapon_fire_cooldown > 0:
             self.weapon_fire_cooldown -= 1
@@ -1560,6 +1569,8 @@ class SpaceScreen(ScreenBase):
             self.station.draw(surface)
             self.moon.draw(surface)
             self.asteroid_field.draw(surface)
+            for pickup in self.ore_pickups:
+                pickup.draw(surface)
             for projectile in self.projectiles:
                 projectile.draw(surface)
             for explosion in self.explosions:
@@ -1892,14 +1903,18 @@ class SpaceScreen(ScreenBase):
                 self.systems[dest_sid].ai_ships.append(ai_ship)
                 ai_ship.system_id = dest_sid
 
-    def _equipped_weapon_icon(self):
-        """(icon_shape, icon_color) for whatever's installed in the flown
-        ship's first weapon slot, falling back to the laser cannon's own
-        config (in case nothing's actually installed - a new pilot's
-        placeholder ship has no outfits yet, but should still fire
-        something that looks like a laser) - so a fired projectile always
-        matches its outfit's own Outfitter-menu icon rather than a fixed
-        look. See ui_theme.draw_item_icon / ship_outfits.json."""
+    def _equipped_weapon_stats(self):
+        """Full stat dict for whatever's installed in the flown ship's first
+        weapon slot, falling back to the laser cannon's own config (in case
+        nothing's actually installed - a new pilot's placeholder ship has no
+        outfits yet, but should still fire something) - so every field a
+        fired shot needs (damage/fire_rate/speed/size/spread/count/icon/
+        sound) always resolves to a real weapon's config, never a partial
+        or missing one. `.get(key, laser_cannon's value)` per-field (not a
+        whole-dict fallback) so a weapon outfit that only overrides some
+        fields still inherits sane defaults for the rest. See
+        ship_outfits.json's laser_cannon/pulse_blaster/heavy_cannon/
+        scatter_gun for the range this spans."""
         possessions = self.player.person.possessions
         ship_type_id = possessions.active_ship()
         weapon_outfit_id = None
@@ -1911,28 +1926,62 @@ class SpaceScreen(ScreenBase):
                     if installed:
                         weapon_outfit_id = installed
                         break
+        baseline = get_ship_outfit(self.story, "laser_cannon")
         outfit = get_ship_outfit(self.story, weapon_outfit_id or "laser_cannon")
-        icon_shape = outfit.get("icon_shape", "blade")
-        icon_color = tuple(outfit.get("icon_color", (100, 200, 255)))
-        return icon_shape, icon_color
+        return {
+            "icon_shape": outfit.get("icon_shape", baseline.get("icon_shape", "blade")),
+            "icon_color": tuple(outfit.get("icon_color", baseline.get("icon_color", (100, 200, 255)))),
+            "damage": outfit.get("damage", baseline.get("damage", PROJECTILE_DAMAGE)),
+            "fire_rate": outfit.get("fire_rate", baseline.get("fire_rate", 18)),
+            "projectile_speed": outfit.get("projectile_speed", baseline.get("projectile_speed", PROJECTILE_SPEED)),
+            "projectile_size": outfit.get("projectile_size", baseline.get("projectile_size", PROJECTILE_SIZE)),
+            "spread": outfit.get("spread", baseline.get("spread", 0)),
+            "projectile_count": max(1, outfit.get("projectile_count", baseline.get("projectile_count", 1))),
+            "fire_sound": outfit.get("fire_sound", baseline.get("fire_sound", "laser")),
+        }
 
     def _update_weapon_fire(self):
-        """Fire laser if cooldown allows."""
+        """Fire the equipped weapon if its cooldown allows - one shot for a
+        precise weapon, a fan of `projectile_count` pellets across `spread`
+        degrees for a shotgun-style one (see ship_outfits.json's
+        scatter_gun). A single-pellet weapon with spread>0 (pulse_blaster)
+        instead gets one shot at a random angle within that spread, for a
+        rapid-fire weapon that's fast but not perfectly accurate."""
         if self.weapon_fire_cooldown > 0:
             return
         if not self.player.ship:
             return
-        rad = math.radians(self.player.angle)
-        projectile_x = self.player.x + math.sin(rad) * self.player.ship.size
-        projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
-        projectile_vel_x = self.player.velocity_x + math.sin(rad) * PROJECTILE_SPEED
-        projectile_vel_y = self.player.velocity_y - math.cos(rad) * PROJECTILE_SPEED
-        icon_shape, icon_color = self._equipped_weapon_icon()
-        projectile = Projectile(projectile_x, projectile_y, projectile_vel_x, projectile_vel_y,
-                                 angle=self.player.angle, icon_shape=icon_shape, icon_color=icon_color)
-        self.projectiles.append(projectile)
-        self.weapon_fire_cooldown = self.weapon_fire_rate
-        sound_board.play("laser")
+        stats = self._equipped_weapon_stats()
+        count = stats["projectile_count"]
+        spread = stats["spread"]
+
+        if count == 1:
+            fire_angles = [self.player.angle + (random.uniform(-spread / 2, spread / 2) if spread else 0)]
+        else:
+            # Evenly fan the pellets across the arc, each with a little of
+            # its own jitter so a multi-pellet shot doesn't look like a
+            # perfectly rigid comb.
+            jitter = spread / (count * 4) if spread else 0
+            fire_angles = [
+                self.player.angle - spread / 2 + spread * i / (count - 1) + random.uniform(-jitter, jitter)
+                for i in range(count)
+            ]
+
+        for fire_angle in fire_angles:
+            rad = math.radians(fire_angle)
+            projectile_x = self.player.x + math.sin(rad) * self.player.ship.size
+            projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
+            projectile_vel_x = self.player.velocity_x + math.sin(rad) * stats["projectile_speed"]
+            projectile_vel_y = self.player.velocity_y - math.cos(rad) * stats["projectile_speed"]
+            projectile = Projectile(
+                projectile_x, projectile_y, projectile_vel_x, projectile_vel_y,
+                angle=fire_angle, icon_shape=stats["icon_shape"], icon_color=stats["icon_color"],
+                size=stats["projectile_size"], damage=stats["damage"],
+            )
+            self.projectiles.append(projectile)
+
+        self.weapon_fire_cooldown = stats["fire_rate"]
+        sound_board.play(stats["fire_sound"])
 
     def _update_projectiles(self):
         """Update all projectiles; handle collisions with asteroids."""
@@ -1964,7 +2013,7 @@ class SpaceScreen(ScreenBase):
         hit_asteroid = None
         best_penetration = -1
         for asteroid in self.asteroid_field.asteroids:
-            collision_radius = asteroid.size + PROJECTILE_SIZE
+            collision_radius = asteroid.size + projectile.size
             dist = math.hypot(projectile.x - asteroid.x, projectile.y - asteroid.y)
             penetration = collision_radius - dist
             if penetration > best_penetration:
@@ -1993,18 +2042,18 @@ class SpaceScreen(ScreenBase):
         self.explosions.append(Explosion(x, y))
 
     def _destroy_asteroid(self, asteroid):
-        """Handle asteroid destruction: add ore to cargo or spawn fragments."""
-        possessions = self.player.person.possessions
-
+        """Handle asteroid destruction: spawn drifting ore debris, or fragments."""
         # Large asteroids break into smaller fragments
         if asteroid.size > 12:
             self._spawn_asteroid_fragments(asteroid)
         else:
-            # Small asteroids give ore to player
+            # Small asteroids scatter their ore as drifting debris (see
+            # game/world/ore_pickup.py) - the player has to fly over it with
+            # cargo room to actually collect it (_update_ore_pickups), not
+            # credited to cargo on the kill directly.
             if asteroid.asteroid_type:
                 ore_amount = asteroid.asteroid_type.get("mine_yield", 10)
-                possessions.add_cargo("ore", ore_amount)
-                self._show_toast(f"Mined {ore_amount} ore", CYAN)
+                self._spawn_ore_debris(asteroid.x, asteroid.y, asteroid.velocity_x, asteroid.velocity_y, ore_amount)
 
         # Remove from field - this is tricky since it's managed by AsteroidField
         # We need to find and remove it from the appropriate chunk
@@ -2045,3 +2094,52 @@ class SpaceScreen(ScreenBase):
             if asteroid in chunk_asteroids:
                 chunk_asteroids.remove(asteroid)
                 break
+
+    def _spawn_ore_debris(self, x, y, base_velocity_x, base_velocity_y, total_amount):
+        """Scatter total_amount of ore as 1-3 separate OrePickup chunks
+        drifting outward from (x, y) - a debris field rather than one static
+        pile, matching the fragments a destroyed asteroid already leaves
+        behind. Each chunk's own drift (see OrePickup.__init__) is layered
+        on top of the source asteroid's velocity, so debris from a fast-
+        moving asteroid keeps some of that motion instead of snapping to a
+        dead stop."""
+        commodity = get_commodity(self.story, "ore")
+        icon_shape = commodity.get("icon_shape", "crate")
+        icon_color = tuple(commodity.get("icon_color", (150, 110, 80)))
+
+        chunk_count = min(total_amount, random.randint(1, 3))
+        base_share = total_amount // chunk_count
+        remainder = total_amount - base_share * chunk_count
+        for i in range(chunk_count):
+            amount = base_share + (1 if i < remainder else 0)
+            if amount <= 0:
+                continue
+            pickup = OrePickup(x, y, amount, commodity_id="ore", icon_shape=icon_shape, icon_color=icon_color)
+            pickup.velocity_x += base_velocity_x
+            pickup.velocity_y += base_velocity_y
+            self.ore_pickups.append(pickup)
+
+    def _update_ore_pickups(self):
+        """Advance drifting ore chunks, expire old ones, and collect
+        whatever the player has flown over and has cargo room for. A
+        pickup is all-or-nothing (needs the player's ship to have room for
+        its *entire* amount) rather than a partial top-up - simpler to
+        reason about than a chunk that's half-collected and still drifting."""
+        possessions = self.player.person.possessions
+        ship = self.player.ship
+        alive_pickups = []
+        for pickup in self.ore_pickups:
+            if not pickup.update():
+                continue  # Expired - dispersed into nothing
+
+            distance = pickup.get_distance(self.player.x, self.player.y)
+            if ship and distance < PICKUP_RANGE + ship.size:
+                capacity_remaining = ship.cargo_capacity - possessions.cargo_quantity_total()
+                if pickup.amount <= capacity_remaining:
+                    possessions.add_cargo(pickup.commodity_id, pickup.amount)
+                    self._show_toast(f"Collected {pickup.amount} ore", CYAN)
+                    sound_board.play("pickup")
+                    continue  # Collected - drop it, don't keep drifting
+
+            alive_pickups.append(pickup)
+        self.ore_pickups = alive_pickups

@@ -56,8 +56,12 @@ this to sit well below the rest).
 | `confirm` | rising perfect-fifth chime | **engaging autopilot** (Space, space view) |
 | `deny` | low detuned sawtooth buzz | (available; unused by default) |
 | `alert` | two high triangle beeps | (available; unused by default) |
-| `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** — holding **X** in the space view, see `SpaceScreen._update_weapon_fire` |
-| `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **a laser hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
+| `laser` | square-wave "pew" - fast downward `freq_end` sweep, layered with a quieter saw an octave down (mixed quiet, `volume=0.5`) | **firing the laser cannon** (`ship_outfits.json`'s default weapon) — holding **X** in the space view, see `SpaceScreen._update_weapon_fire` |
+| `blaster` | thinner, higher, shorter version of `laser` (mixed quiet, `volume=0.4`) | **firing the pulse blaster** — matches its much faster `fire_rate` |
+| `cannon` | deep triangle thud sweep plus a short noise crack | **firing the heavy cannon** — matches its slow `fire_rate` and heavy single hit |
+| `scatter` | three overlapping quick noise cracks plus a low thud | **firing the scatter gun** — echoes its multi-pellet spread |
+| `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **any weapon hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
+| `pickup` | quick two-note upward sparkle | **collecting a drifting ore chunk** — see `SpaceScreen._update_ore_pickups` |
 
 ## Wiring
 
@@ -78,13 +82,19 @@ this to sit well below the rest).
   `_cycle_npc_target` / `_select_person_target_at` in
   [`game/screens/location_screen.py`](../game/screens/location_screen.py).
 - **Weapon fire:** `SpaceScreen._update_weapon_fire()` - called every frame
-  **X** is held (rate-limited by `weapon_fire_cooldown`/`weapon_fire_rate`,
-  not once per keypress, so holding the key fires repeatedly rather than once).
+  **X** is held (rate-limited by `weapon_fire_cooldown`/the equipped
+  weapon's own `fire_rate`, not once per keypress, so holding the key fires
+  repeatedly rather than once). Which sound plays (`laser`/`blaster`/
+  `cannon`/`scatter`) is per-weapon config (`ship_outfits.json`'s
+  `fire_sound`), resolved by `_equipped_weapon_stats()` alongside every
+  other per-weapon stat - see docs/ARCHITECTURE.md's "Weapons & Asteroid
+  Mining".
 - **Weapon impact:** `SpaceScreen._check_projectile_asteroid_collision()` -
-  every laser hit on an asteroid, alongside the spark-burst visual
-  (`game/world/explosion.py`'s `Explosion`, spawned by
-  `_spawn_impact_explosion()`) - see docs/ARCHITECTURE.md's asteroid mining
-  section for the collision/damage/breakup flow this sits in.
+  every hit on an asteroid, from any weapon, alongside the spark-burst
+  visual (`game/world/explosion.py`'s `Explosion`, spawned by
+  `_spawn_impact_explosion()`).
+- **Ore pickup:** `SpaceScreen._update_ore_pickups()` - collecting a
+  drifting `OrePickup` (see docs/ARCHITECTURE.md's "Ore pickups").
 
 `master_volume` (default `0.55`) on the `SoundBoard` scales everything.
 `sound_board.muted` (toggled by **Ctrl+M**, see below) silences it.

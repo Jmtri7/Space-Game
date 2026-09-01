@@ -118,11 +118,14 @@ only appears under a section if it currently has items there.
 
 - [ ] Sell all button.
 - [ ] Picking up and dropping items.
-- [x] Asteroid mining. (Done - laser cannon damages asteroids on a health
-      pool sized off `size`; a large one breaks into smaller fragments, a
-      small one yields ore on destruction, type-dependent via
-      asteroid_types.json's mine_yield - sold at a quartermaster like any
-      other commodity. See ARCHITECTURE.md's "Weapons & Asteroid Mining".)
+- [x] Asteroid mining. (Done - any of 4 weapon outfits (laser cannon,
+      pulse blaster, heavy cannon, scatter gun - each its own damage/fire
+      rate/spread/projectile look) damages asteroids on a health pool sized
+      off `size`; a large one breaks into smaller fragments, a small one
+      scatters its ore as drifting pickups the player has to fly over (with
+      cargo room) to collect, type-dependent via asteroid_types.json's
+      mine_yield - sold at a quartermaster like any other commodity. See
+      ARCHITECTURE.md's "Weapons & Asteroid Mining".)
 - [ ] More ways to make money.
 - [ ] Ilsa Farrow should sell things — give her a shop/merchant role.
 - [ ] Make some commodities usable for various purposes (not just tradeable).

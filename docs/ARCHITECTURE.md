@@ -553,34 +553,50 @@ active one is ever drawn/given a camera).
 
 ## Weapons & Asteroid Mining
 
-**Firing:** every ship type carries at least one `"weapon"` slot in its
-`ship_types.json` `slots` list (see "`ship_types.json`" fields and the
-Outfitting section below); holding **X** in the Space View
-(`SpaceScreen._update_weapon_fire`, rate-limited by `weapon_fire_cooldown`/
-`weapon_fire_rate` so holding the key fires repeatedly rather than once)
-spawns a `Projectile` (`game/world/projectile.py`) from the ship's nose,
-inheriting the ship's own velocity. A `Projectile` draws as whatever's
-actually installed in the ship's first weapon slot's own shop icon
-(`ship_outfits.json`'s `icon_shape`/`icon_color`, resolved by
-`SpaceScreen._equipped_weapon_icon` - falls back to `laser_cannon`'s config
-if the slot is empty), rotated to face its direction of travel via a
-rotation-capable `angle` param on `ui_theme.draw_item_icon` - so a fired
-shot always visibly matches its Outfitter-menu icon rather than a fixed
-look, and a future weapon outfit gets a distinct projectile for free just by
-setting its own `icon_shape`/`icon_color`.
+**Weapon outfits:** every ship type carries at least one `"weapon"` slot in
+its `ship_types.json` `slots` list (see "`ship_types.json`" fields and the
+Outfitting section below). A weapon outfit (`ship_outfits.json`, `slot_type:
+"weapon"`) is a full stat bundle, not just cosmetic: `damage`, `fire_rate`
+(cooldown frames between shots), `projectile_speed`, `projectile_size`,
+`spread` (degrees), `projectile_count`, plus its own `icon_shape`/
+`icon_color` and `fire_sound`. The story ships four - `laser_cannon`
+(balanced baseline), `pulse_blaster` (fast/weak/slightly inaccurate),
+`heavy_cannon` (slow single heavy slug), `scatter_gun` (multi-pellet fan) -
+but adding a fifth is pure config, no code.
+
+**Firing:** holding **X** in the Space View
+(`SpaceScreen._update_weapon_fire`, rate-limited by
+`weapon_fire_cooldown`/the equipped weapon's own `fire_rate` so holding the
+key fires repeatedly rather than once) resolves the flown ship's actual
+loadout via `SpaceScreen._equipped_weapon_stats` - the outfit installed in
+its first weapon slot, each field falling back individually to
+`laser_cannon`'s value so a partial config still works, and falling back to
+`laser_cannon` entirely if the slot is empty (a new pilot's placeholder ship
+has no outfits yet, but should still fire *something*). `projectile_count
+== 1` fires one shot, randomly offset within `spread` degrees if the weapon
+has any (`pulse_blaster`); `projectile_count > 1` fans that many pellets
+evenly across the `spread` arc with a little jitter each, rather than a
+rigid comb (`scatter_gun`). Each shot spawns a `Projectile`
+(`game/world/projectile.py`) from the ship's nose, inheriting the ship's own
+velocity, sized/coloured/shaped after the firing weapon's own
+`projectile_size`/`icon_shape`/`icon_color` and rotated to face its travel
+direction (a rotation-capable `angle` param on `ui_theme.draw_item_icon`) -
+so a fired shot always visibly matches its Outfitter-menu icon, and carries
+that weapon's own `damage`.
 
 **Asteroid damage:** `Asteroid` (`game/world/asteroid.py`) carries a
 `health` pool (`max(5, size * 2)`) and `take_damage()`.
 `SpaceScreen._check_projectile_asteroid_collision` checks every live
 projectile each frame against `AsteroidField.asteroids`; the collision
-radius is `asteroid.size + PROJECTILE_SIZE` (roughly the asteroid's own
+radius is `asteroid.size + projectile.size` (roughly the asteroid's own
 drawn radius - both the round-circle and jagged draw paths scale off
 `size`, see `Asteroid.draw`), not a fixed hitbox, so aiming reliably lands
 on a big asteroid's edge and not just dead-center. Every hit (not just a
 destroying one) spawns a spark-burst `Explosion` (`game/world/explosion.py`
 - a brief, purely cosmetic particle effect, not a `WorldObject`, tracked in
 `SpaceScreen.explosions`) and plays the `"impact"` sound (see
-docs/SOUND.md).
+docs/SOUND.md) - the same for every weapon; only the fire sound differs
+per-weapon.
 
 **Breakup / mining, on an asteroid's health reaching zero**
 (`SpaceScreen._destroy_asteroid`):
@@ -589,20 +605,38 @@ docs/SOUND.md).
   point, each inheriting the parent's `asteroid_type` (so a fragment is
   still minable/breakable in its own right, recursively, down to the small
   case below).
-- **size ≤ 12** (a "small" asteroid): destroyed outright, adding
-  `asteroid_type["mine_yield"]` units of `"ore"` to the player's cargo
-  (`Possessions.add_cargo`) - a toast confirms the amount. `mine_yield` is
-  per-type config (`asteroid_types.json`, alongside `shape`/`color`/
-  jaggedness), so different rock types can be worth different amounts.
+- **size ≤ 12** (a "small" asteroid): destroyed outright, scattering
+  `asteroid_type["mine_yield"]` units of `"ore"` as 1-3 drifting
+  `OrePickup` chunks (`game/world/ore_pickup.py`,
+  `SpaceScreen._spawn_ore_debris`) rather than crediting cargo directly -
+  see "Ore pickups" below. `mine_yield` is per-type config
+  (`asteroid_types.json`, alongside `shape`/`color`/jaggedness), so
+  different rock types can be worth different amounts.
+
+**Ore pickups:** an `OrePickup` drifts at a slow constant velocity (plus a
+share of the destroyed asteroid's own velocity) and slowly tumbles, purely
+cosmetic flourishes; it expires after `LIFETIME_FRAMES` (~60s) if never
+collected, fading out over its last `FADE_FRAMES`, so a heavily-mined field
+doesn't accumulate debris without bound. Each frame,
+`SpaceScreen._update_ore_pickups` checks every live pickup against the
+player's distance (`PICKUP_RANGE + ship.size`) and the ship's remaining
+cargo room (`ship.cargo_capacity - Possessions.cargo_quantity_total()`) -
+collection is all-or-nothing (the *entire* chunk's amount has to fit) rather
+than a partial top-up, so a full hold just leaves it drifting instead of
+partially draining it. A successful pickup calls `Possessions.add_cargo`,
+shows a toast, and plays the `"pickup"` sound (docs/SOUND.md).
 
 Mined ore sells like any other commodity, at a quartermaster's `"shop":
 {"type": "commodities"}` (see `config/stories/default/commodities.json`'s
 `"ore"` entry) - no separate mining-specific economy code.
 
-Asteroids (and their fragments) are pure scenery for save purposes: neither
-`AsteroidField` nor anything it spawns is captured by
-`SpaceScreen.get_state()`/`restore_state()` (see SAVE_SYSTEM.md) - only the
-ore that ends up in `Possessions.cargo` is.
+Asteroids, fragments, and ore pickups are all pure scenery for save
+purposes: none of `AsteroidField`, anything it spawns, `Explosion`, or
+`OrePickup` is captured by `SpaceScreen.get_state()`/`restore_state()` (see
+SAVE_SYSTEM.md) - only the ore that's actually been collected into
+`Possessions.cargo` is. A save/load or system jump while a debris field is
+still drifting simply forgets it - the same choice already made for
+`AsteroidField` itself.
 
 ## SpaceScreen Responsibility
 

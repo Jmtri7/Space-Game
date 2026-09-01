@@ -17,9 +17,13 @@ audio device, `SDL_AUDIODRIVER` unset on a headless box), so callers never
 have to guard the call.
 
 The board currently defines: `ping` (message received / menu button pressed),
-`blip`, `confirm`, `deny`, `alert`, `laser` (the laser cannon, see
-SpaceScreen._update_weapon_fire), and `impact` (a laser hitting an asteroid,
-see SpaceScreen._check_projectile_asteroid_collision). Add more with `define()`.
+`blip`, `confirm`, `deny`, `alert`, four weapon-fire sounds - `laser`
+(baseline), `blaster` (pulse_blaster), `cannon` (heavy_cannon), `scatter`
+(scatter_gun), one per ship_outfits.json weapon (see
+SpaceScreen._update_weapon_fire) - `impact` (any of them hitting an
+asteroid, see SpaceScreen._check_projectile_asteroid_collision), and
+`pickup` (collecting drifting ore, see SpaceScreen._update_ore_pickups).
+Add more with `define()`.
 """
 import math
 import os
@@ -266,6 +270,37 @@ class SoundBoard:
             {"freq": 3200.0, "dur": 0.05, "wave": "noise", "attack": 0.001, "decay": 0.025, "amp": 0.5},
             {"freq": 110.0, "freq_end": 60.0, "dur": 0.07, "wave": "triangle", "attack": 0.001, "decay": 0.04, "amp": 0.45},
         ], volume=0.4)
+        # "blaster" - pulse_blaster's fire sound: thinner and higher than
+        # "laser", and shorter (0.05s vs 0.09s) to match its much faster
+        # fire_rate - it needs to read as a rapid chatter, not a machine-gun
+        # of overlapping "laser"s.
+        self.define("blaster", [
+            {"freq": 2600.0, "freq_end": 1100.0, "dur": 0.05, "wave": "square", "attack": 0.001, "decay": 0.03, "amp": 0.55},
+        ], volume=0.4)
+        # "cannon" - heavy_cannon's fire sound: a deep punchy thud (low
+        # triangle sweep) plus a short noise crack for the muzzle blast -
+        # the polar opposite of "blaster", matching its slow fire_rate and
+        # heavy single-hit damage.
+        self.define("cannon", [
+            {"freq": 180.0, "freq_end": 45.0, "dur": 0.16, "wave": "triangle", "attack": 0.002, "decay": 0.09, "amp": 0.8},
+            {"freq": 2200.0, "dur": 0.04, "wave": "noise", "attack": 0.001, "decay": 0.02, "amp": 0.35},
+        ], volume=0.6)
+        # "scatter" - scatter_gun's fire sound: three quick overlapping
+        # noise cracks (tiny delays) reading as one wide blast, echoing its
+        # multi-pellet spread rather than one clean tone.
+        self.define("scatter", [
+            {"freq": 2000.0, "dur": 0.06, "wave": "noise", "attack": 0.001, "decay": 0.035, "amp": 0.5},
+            {"freq": 1500.0, "dur": 0.06, "wave": "noise", "attack": 0.001, "decay": 0.035, "amp": 0.4, "delay": 0.012},
+            {"freq": 250.0, "freq_end": 90.0, "dur": 0.08, "wave": "triangle", "attack": 0.001, "decay": 0.05, "amp": 0.45},
+        ], volume=0.5)
+        # "pickup" - collecting a drifting ore chunk (see
+        # game/world/ore_pickup.py / SpaceScreen._update_ore_pickups): a
+        # quick two-note upward sparkle, distinct from "confirm"'s slower
+        # perfect-fifth chime so cargo collection reads as its own thing.
+        self.define("pickup", [
+            {"freq": 880.0, "dur": 0.07, "wave": "sine", "attack": 0.003, "decay": 0.05, "amp": 0.7},
+            {"freq": 1318.51, "dur": 0.11, "wave": "sine", "attack": 0.003, "decay": 0.08, "amp": 0.6, "delay": 0.045},
+        ], volume=0.5)
 
 
 # Shared instance - see module docstring.

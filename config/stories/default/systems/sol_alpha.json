@@ -241,7 +241,7 @@
             "role": "outfitter",
             "outfit": "vherathi_reefwright",
             "greeting": "Need to fit your ship out with something new?",
-            "shop": {"type": "outfits", "stock": ["laser_cannon", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
+            "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "heavy_cannon", "scatter_gun", "afterburner", "ion_thruster", "cargo_expansion", "reinforced_hull"]}
           },
           {
             "name": "Ilsae Farrune",

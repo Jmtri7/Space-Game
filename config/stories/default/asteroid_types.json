@@ -1,8 +1,11 @@
 {
   "gray_rock": {
     "name": "Gray Rock",
-    "shape": "round",
-    "color": [150, 150, 150]
+    "shape": "jagged",
+    "color": [150, 150, 150],
+    "vertex_count_range": [14, 18],
+    "jaggedness": 0.12,
+    "spin_speed_range": [-0.6, 0.6]
   },
   "brown_rock": {
     "name": "Brown Rock",
