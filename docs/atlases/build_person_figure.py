@@ -94,12 +94,14 @@ for k, kw in SPECS.items():
     ACC[k] = [p for p in variant if ident(p) not in bare_ne_k]
 
 # animation pivots + limb spans, Person game units, feet at (0, 0)
-PIVOTS = {"leg_l": list(g(63.5, HIP_Y)), "leg_r": list(g(76.5, HIP_Y)),
-          "arm_l": list(g(50, 68)), "arm_r": list(g(90, 68))}
+_ARM_SH_Y = gen_si._gy(25.5)     # arm-swing pivot (Grounded study shoulder line)
+_ARM_WR_Y = gen_si._gy(13.6)     # wrist line
+PIVOTS = {"leg_l": list(g(gen_si._gx(-1.7), HIP_Y)), "leg_r": list(g(gen_si._gx(1.7), HIP_Y)),
+          "arm_l": list(g(gen_si._gx(-3.05), _ARM_SH_Y)), "arm_r": list(g(gen_si._gx(3.05), _ARM_SH_Y))}
 LEG_HIP_Y, _   = g(0, HIP_Y)[1], None
 LEG_ANKLE_Y    = g(0, ANKLE_Y)[1]
-ARM_SHOULDER_Y = g(0, 68)[1]
-ARM_WRIST_Y    = g(0, 120)[1]
+ARM_SHOULDER_Y = g(0, _ARM_SH_Y)[1]
+ARM_WRIST_Y    = g(0, _ARM_WR_Y)[1]
 
 def d(v):
     return json.dumps(v, separators=(",", ":"))

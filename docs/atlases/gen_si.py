@@ -202,10 +202,27 @@ def arcband(x0, x1, ytop, sag, w, fill, samp=12):
     return poly(top + bot[::-1], fill)
 
 # ---------------------------------------------------------------- the figure
-# Body proportion anchors (figure-space y). build_person_figure.py imports
-# these so the walk-cycle pivots track any change here.
-FIG_HIP_Y = 146      # where the legs join the torso (non-coat)
-FIG_FOOT_Y = 194     # ankle line; boots sit ~3 below, ground ~10 below
+# The shared Person silhouette follows the "Grounded Person" study
+# (docs/atlases/grounded-person.html): a ~6.1-head figure with a small head,
+# a short neck, a long torso, legs on the true half-body line, and narrow
+# rounded shoulders the domed arm top tucks under. That study works in its own
+# units (feet at 0, y up, ~5.15 atlas units each); _gx / _gy map them into
+# atlas figure-space (centre x = 70, y down). build_person_figure.py imports
+# the anchors below so the walk-cycle pivots track any change here.
+_G_SCALE = 5.15                       # atlas units per Grounded study unit
+_G_GROUND = 202.2                     # atlas-y of the sole (study u = 0)
+
+
+def _gx(dx):
+    return 70.0 + _G_SCALE * dx
+
+
+def _gy(u):
+    return _G_GROUND - _G_SCALE * u
+
+
+FIG_HIP_Y = round(_gy(12.3))         # 139 - where the legs join the torso
+FIG_FOOT_Y = round(_gy(1.6))         # 194 - ankle line; boots ~3 below, ground ~10
 
 
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
@@ -220,141 +237,148 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     leg = leg or boot
     sleeve = sleeve or suit
     P = []
-    hip_y = (FIG_HIP_Y + 6) if (torso_long or coat) else FIG_HIP_Y
-    hw = 21 if (torso_long or coat) else 19        # hip half-width - nearly the chest's (21),
-                                                   # so the torso reads as an hourglass; legs hang inside it
-    # A cinched waist about halfway up the standing figure (well above the hip
-    # line). Every belt, sash end and hip pouch anchors here (waist_y), not at
-    # the hip; the torso pinches to waist_hw and flares back out to the hip
-    # below - so a loose coat still drapes from a real waist.
-    waist_y = 108
-    waist_hw = hw - 7         # a gentle pinch between chest and hip
+    long_torso = torso_long or coat
+    hip_y = round(_gy(10.8)) if long_torso else FIG_HIP_Y   # a coat hem drops lower
+    # A cinched waist about halfway up the standing figure, well above the hip
+    # line. Every belt, sash end and hip pouch anchors here (waist_y), not at
+    # the hip; the torso pinches in at the waist and flares back out below.
+    waist_y = round(_gy(19.2))               # 103
+    waist_hw = 13
     belt_y = waist_y - 4
-    foot_y = FIG_FOOT_Y if legged else 166
+    foot_y = FIG_FOOT_Y if legged else round(_gy(6.5))
 
     _grp("body"); _gate(None)
 
-    P.append(poly(ngon(70, (foot_y + 3) if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
+    P.append(poly(ngon(70, (foot_y + 8) if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
 
     # back pieces
     if backpack:
         _grp("body"); _gate("backpack_color")
-        P.append(opoly(rrect(48, 60, 44, 86, 6), backpack, d=1.3))
+        P.append(opoly(rrect(50, 62, 40, 74, 6), backpack, d=1.3))
     if spikes:                                   # rooted low - shoulder pads sit over the base
         _grp("body"); _gate("spike_color")
         if spikes_side in ("both", "left"):
-            P.append(opoly([(44, 86), (53, 81), (39, 52)], spikes, d=1.1))
+            P.append(opoly([(46, 80), (54, 76), (42, 50)], spikes, d=1.1))
         if spikes_side in ("both", "right"):
-            P.append(opoly([(96, 86), (87, 81), (101, 52)], spikes, d=1.1))
+            P.append(opoly([(94, 80), (86, 76), (98, 50)], spikes, d=1.1))
         if spikes_side == "uneven":              # Vherathi asymmetry
-            P.append(opoly([(46, 86), (55, 81), (42, 46)], spikes, d=1.1))
-            P.append(opoly([(96, 86), (88, 82), (100, 60)], spikes, d=1.1))
+            P.append(opoly([(47, 80), (55, 76), (44, 46)], spikes, d=1.1))
+            P.append(opoly([(94, 80), (87, 77), (97, 58)], spikes, d=1.1))
     if antenna:
         _grp("body"); _gate("antenna_color")
-        P.append(bar(79, 36, 88, 18, 1.3, antenna))
-        P.append(ocirc(88, 18, 2.2, antenna, d=1.1))
+        P.append(bar(80, 34, 88, 16, 1.3, antenna))
+        P.append(ocirc(88, 16, 2.2, antenna, d=1.1))
     _gate(None)
     if blade:                                    # grown guard-blade down one arm
-        P.append(opoly([(38, 56), (46, 56), (49, 138), (45, 158), (40, 150)], blade, d=1.0))
+        P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=1.0))
 
-    # torso - one smooth hourglass outline from the hip, through the cinched
-    # waist, up to a rounded shoulder with no armpit notch, then a short flat
-    # neck across the top. _side is the left silhouette (dx from centre, y);
-    # the right is its mirror, so the curve is symmetric by construction.
+    # torso - one smooth hourglass from the hip, through the cinched waist, up
+    # to a narrow rounded shoulder (no armpit notch). _gt is the Grounded study
+    # torso (left-silhouette half-widths, neck line down to hip); mirrored for
+    # the right, so the curve is symmetric by construction.
     _grp("body"); _gate(None)
-    # left silhouette, hip (bottom) -> neck (top). The upper torso is a broad
-    # near-vertical column (shoulder to just above the waist), tapering only
-    # gently; the real narrowing is the waist cinch; then a gentle flare back
-    # to the hip. dx from centre eases monotonically each way - no bulge under
-    # the arm, no kink. Mirrored for the right.
-    _side = [(-hw, hip_y), (-hw, hip_y - 5),
-             (-(hw - 1), (hip_y + waist_y) / 2),
-             (-(waist_hw + 4), waist_y + 10), (-(waist_hw + 1), waist_y + 3),
-             (-waist_hw, waist_y), (-(waist_hw + 2), waist_y - 9),
-             (-(waist_hw + 5), waist_y - 18), (-(hw - 1), 82),
-             (-hw, 72), (-hw, 66), (-(hw - 4), 62), (-9, 59), (-4.5, 57)]
-    torso = ([(70 + dx, y) for dx, y in _side]
-             + [(70 - dx, y) for dx, y in reversed(_side)])
+    _gt = [(2.6, 26.5), (3.2, 25.9), (3.55, 24.7), (3.5, 23.1),
+           (3.3, 21.2), (2.5, 19.2), (3.4, 12.3)]
+    if long_torso:
+        _gt = _gt[:-1] + [(3.7, 10.8)]
+    torso = ([(_gx(-h), _gy(y)) for h, y in _gt]
+             + [(_gx(h), _gy(y)) for h, y in reversed(_gt)])
     P.append(opoly(torso, suit, d=1.5))
 
+    # short neck - a skin column from the collar line up under the jaw, over
+    # the torso and behind the head.
+    P.append(opoly([(_gx(-1.15), _gy(26.4)), (_gx(-1.15), _gy(28.7)),
+                    (_gx(1.15), _gy(28.7)), (_gx(1.15), _gy(26.4))], SKINF, d=1.0))
+
     # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
-    # the belt line. Drawn BEFORE the arms so the arm hangs over it and only
-    # its inner edge / lower end shows past the hand (it never sits in front
-    # of the arm); the belt, drawn later, laps its top strap.
+    # the waist. Drawn BEFORE the arms so the arm hangs over it and only its
+    # inner edge / lower end shows past the hand; the belt, drawn later, laps
+    # its top strap.
     _grp("body")
     if pod:
-        P.append(opoly([(80, waist_y - 6), (86, waist_y - 6), (85, waist_y), (81, waist_y)], pod))  # hanger strap
-        P.append(opoly(rrect(78, waist_y - 2, 12, 16, 2), pod, d=1.0))
-        P.append(bar(80, waist_y + 4, 88, waist_y + 4, 0.8, "#2a2a30"))                             # flap seam
+        P.append(opoly([(82, waist_y - 6), (88, waist_y - 6), (87, waist_y), (83, waist_y)], pod))  # hanger strap
+        P.append(opoly(rrect(80, waist_y - 2, 12, 16, 2), pod, d=1.0))
+        P.append(bar(82, waist_y + 4, 90, waist_y + 4, 0.8, "#2a2a30"))                             # flap seam
     if torch:                                     # a stowed cutter - canister + nozzle, not lit
-        P.append(opoly(rrect(79, waist_y - 1, 9, 15, 1), torch, d=1.0))
-        P.append(poly([(83, waist_y - 1), (88, waist_y - 7), (91, waist_y - 4),
-                       (86, waist_y + 1)], "#5a5560"))          # nozzle head
-        P.append(circ(90, waist_y - 5, 1.2, "#8a8590"))         # tip
+        P.append(opoly(rrect(81, waist_y - 1, 9, 15, 1), torch, d=1.0))
+        P.append(poly([(85, waist_y - 1), (90, waist_y - 7), (93, waist_y - 4),
+                       (88, waist_y + 1)], "#5a5560"))          # nozzle head
+        P.append(circ(92, waist_y - 5, 1.2, "#8a8590"))         # tip
 
     # arms - narrow rounded shoulders: a domed cap over the top of the upper
     # arm that tucks under the torso's shoulder point (no armpit gap, no block
     # sticking out), then a straight shaft to the wrist. Drawn over the torso
-    # and the hip kit; shoulder pads (later) cover the very top. ab is the wrist
-    # line. The Grounded study settled on this shoulder.
+    # and the hip kit; shoulder pads (later) cover the very top. The Grounded
+    # study settled on this shoulder.
     if arms:
-        ab = 120
-        _grp("arm_l"); P.append(opoly([(45, 85), (46, 74), (49, 67), (53, 69),
-                                       (55, 74), (53, ab), (45, ab + 1)], sleeve, d=1.3))
-        _grp("arm_r"); P.append(opoly([(95, 85), (94, 74), (91, 67), (87, 69),
-                                       (85, 74), (87, ab), (95, ab + 1)], sleeve, d=1.3))
-        _grp("hand_l"); P.append(ocirc(49, ab + 3, 3.1, SKINF, d=1.1))
-        _grp("hand_r"); P.append(ocirc(91, ab + 3, 3.1, SKINF, d=1.1))
+        for s, grp in ((-1, "arm_l"), (1, "arm_r")):
+            _grp(grp)
+            P.append(opoly([(_gx(s * 2.3), _gy(25.5)), (_gx(s * 2.6), _gy(25.97)),
+                            (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
+                            (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
+                            (_gx(s * 1.9), _gy(13.6))], sleeve, d=1.3))
+        _grp("hand_l"); P.append(ocirc(_gx(-2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
+        _grp("hand_r"); P.append(ocirc(_gx(2.5), _gy(13.6) + 3, 3.2, SKINF, d=1.1))
 
     _grp("body")
     if hipline:
         P.append(dashed_bar(70 - waist_hw - 2, waist_y, 70 + waist_hw + 2, waist_y, 1.1, accent))
     if band:                                      # chest band, above the belt
-        P.append(opoly([(50, 92), (90, 92), (89, 105), (51, 105)], band, d=1.0))
+        P.append(opoly([(54, 88), (86, 88), (84, 100), (56, 100)], band, d=1.0))
 
-    # legs + boots (or the old foot oval)
+    # legs + boots (or the old foot oval). Legs always join at the true hip
+    # line (Grounded study), even under a coat.
     if legged:
-        _grp("leg_l"); P.append(opoly([(58, hip_y - 2), (69, hip_y - 2), (68, foot_y), (59, foot_y)], leg, d=1.3))
-        _grp("leg_r"); P.append(opoly([(71, hip_y - 2), (82, hip_y - 2), (81, foot_y), (72, foot_y)], leg, d=1.3))
+        for s, grp in ((-1, "leg_l"), (1, "leg_r")):
+            _grp(grp)
+            cx = s * 1.7
+            P.append(opoly([(_gx(s * 3.4), _gy(12.3)),
+                            (_gx(cx + s * 1.15), _gy(6.8)),
+                            (_gx(cx + s * 0.95), _gy(1.6)),
+                            (_gx(cx - s * 0.95), _gy(1.6)),
+                            (_gx(cx - s * 1.15), _gy(6.8)),
+                            (_gx(s * 0.15), _gy(12.3))], leg, d=1.3))
         if knee:
-            _grp("leg_l"); P.append(opoly([(58, 158), (69, 158), (69, 168), (58, 168)], knee, d=1.0))
-            _grp("leg_r"); P.append(opoly([(71, 158), (82, 158), (82, 168), (71, 168)], knee, d=1.0))
-        _grp("boot_l"); P.append(opoly(ngon(63.5, foot_y + 3, 10, 7, 12), boot, d=1.3))
-        _grp("boot_r"); P.append(opoly(ngon(76.5, foot_y + 3, 10, 7, 12), boot, d=1.3))
+            _grp("leg_l"); P.append(opoly([(_gx(-2.3), _gy(8.6)), (_gx(-0.3), _gy(8.6)),
+                                           (_gx(-0.3), _gy(6.6)), (_gx(-2.3), _gy(6.6))], knee, d=1.0))
+            _grp("leg_r"); P.append(opoly([(_gx(0.3), _gy(8.6)), (_gx(2.3), _gy(8.6)),
+                                           (_gx(2.3), _gy(6.6)), (_gx(0.3), _gy(6.6))], knee, d=1.0))
+        _grp("boot_l"); P.append(opoly(ngon(_gx(-1.7), 197, 9, 6, 12), boot, d=1.3))
+        _grp("boot_r"); P.append(opoly(ngon(_gx(1.7), 197, 9, 6, 12), boot, d=1.3))
     else:
-        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 14, 10, 14), SKINL, d=1.3))
+        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=1.3))
 
     # helmet / hat / cap - same head height for every outfit
     _grp("body")
     if helmet:
-        _gate("helmet_color"); P.append(ocirc(70, 50, helmet_r, helmet, d=1.8)); _gate(None)
+        _gate("helmet_color"); P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, helmet, d=1.8)); _gate(None)
     if hat:
-        P.append(ocirc(70, 50, helmet_r, hat, d=1.8))
+        P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, hat, d=1.8))
     if cap:                                       # flat brimmed cap over the head
-        P.append(opoly([(54, 48), (86, 48), (82, 40), (74, 35), (66, 35), (58, 40)], cap, d=1.2))
+        P.append(opoly([(56, 40), (84, 40), (80, 32), (73, 27), (65, 27), (58, 32)], cap, d=1.2))
 
     # front torso pieces: chest plate -> sash (over it) -> collar (over sash) -> belt
     if chest:
         _gate("chest_plate_color")
-        P.append(opoly([(56, 75), (84, 75), (81, 110), (59, 110)], chest, d=1.2))
+        P.append(opoly([(57, 72), (83, 72), (80, 106), (60, 106)], chest, d=1.2))
         if rivets:
-            for rx in (62, 78):
-                for ry in (84, 100):
+            for rx in (63, 77):
+                for ry in (80, 98):
                     P.append(circ(rx, ry, 1.4, rivets))
         _gate(None)
     if sash:      # a baldric: over the left shoulder, across the chest, tucked
                   # under the belt at the opposite (right) hip
         _gate("sash_color")
-        P.append(opoly([(45, 63), (53, 60),                 # over the top of the left shoulder
-                        (60, 78), (69, 94),                  # diagonally across the chest
-                        (82, waist_y + 2),                   # down to the right waist
-                        (75, waist_y + 9),                   # band width at the waist end
-                        (61, 92), (52, 76), (41, 66)],       # back up the underside
+        P.append(opoly([(52, 65), (58, 62),                 # over the top of the left shoulder
+                        (64, 80), (72, 95),                  # diagonally across the chest
+                        (83, waist_y + 2),                   # down to the right waist
+                        (77, waist_y + 9),                   # band width at the waist end
+                        (66, 96), (58, 82), (48, 68)],       # back up the underside
                        sash, d=1.1))
         _gate(None)
     if collar:
         _gate("collar_color")
-        P.append(opoly([(55, 62), (85, 62), (81, 74), (59, 74)], collar, d=1.1))
+        P.append(opoly([(58, 63), (82, 63), (79, 74), (61, 74)], collar, d=1.1))
         _gate(None)
     if belt:                                       # over the top of the hip kit's strap
         _gate("belt_color")
@@ -365,15 +389,15 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if shoulders:                                # sit outboard + high, over the arm tops
         _gate("shoulder_color")
         if shoulders_side in ("both", "left"):
-            P.append(ocirc(46, 77, 7, shoulders, d=1.2))
+            P.append(ocirc(52, 69, 6, shoulders, d=1.2))
         if shoulders_side in ("both", "right"):
-            P.append(ocirc(94, 77, 7, shoulders, d=1.2))
+            P.append(ocirc(88, 69, 6, shoulders, d=1.2))
         _gate(None)
     if harness:
         if harness_side in ("both", "left"):
-            P.append(bar(56, 90, 84, 120, 2, harness))
+            P.append(bar(56, 84, 82, 116, 2, harness))
         if harness_side in ("both", "right"):
-            P.append(bar(84, 90, 56, 120, 2, harness))
+            P.append(bar(84, 84, 58, 116, 2, harness))
 
     # face - always ringed, so it has an edge wherever it clears the helmet.
     # The Grounded face kit: shallow D-ears (bare head only, tucked under the
@@ -382,50 +406,52 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # tone. fr is the face radius so every feature scales with helmet vs bare.
     _grp("body"); _gate(None)
     if helmet or hat:
-        fr, face_cx, face_cy = 12.0, 70.0, 53.0
-        P.append(ocirc(face_cx, 52, fr, SKINF, d=1.4))
+        fr, face_cx, face_cy = 11.5, 70.0, round(_gy(29.9), 1)
+        P.append(ocirc(face_cx, face_cy, fr, SKINF, d=1.4))
     else:
-        fr, face_cx, face_cy = 15.0, 70.0, 49.0
+        fr, face_cx, face_cy = 14.0, 70.0, round(_gy(30.4), 1)
         for sgn in (-1, 1):
-            P.append(opoly([(face_cx + sgn * fr * dx, 48 + fr * dy)
+            P.append(opoly([(face_cx + sgn * fr * dx, face_cy + fr * dy)
                             for dx, dy in EAR_D], SKINF, d=1.0))
-        P.append(ocirc(face_cx, 48, fr, SKINF, d=1.8))
+        P.append(ocirc(face_cx, face_cy, fr, SKINF, d=1.8))
 
     if visor:
         _gate("visor_color")
-        P.append(opoly([(55, face_cy - 3.5), (85, face_cy - 3.5),
-                        (83, face_cy + 4.5), (57, face_cy + 4.5)], visor, d=1.2))
+        P.append(opoly([(face_cx - fr * 0.98, face_cy - fr * 0.5),
+                        (face_cx + fr * 0.98, face_cy - fr * 0.5),
+                        (face_cx + fr * 0.9, face_cy + fr * 0.22),
+                        (face_cx - fr * 0.9, face_cy + fr * 0.22)], visor, d=1.2))
         _gate(None)
     elif eyes:
-        eye_cy = face_cy - fr * 0.06
-        brow_y = face_cy - fr * 0.48
+        eye_cy = face_cy - fr * 0.08
+        brow_y = face_cy - fr * 0.36
         for sgn in (-1, 1):
             exc = face_cx + sgn * fr * 0.42
-            P.append(opoly(ngon(exc, eye_cy, fr * 0.20, fr * 0.14, 14), EYEW, d=0.7))
-            P.append(poly(ngon(exc, eye_cy, fr * 0.12, fr * 0.14, 12), EYE))
-            bw, bh = fr * 0.19, fr * 0.07
+            P.append(opoly(ngon(exc, eye_cy, fr * 0.22, fr * 0.15, 14), EYEW, d=0.7))
+            P.append(poly(ngon(exc, eye_cy, fr * 0.135, fr * 0.15, 12), EYE))
+            bw, bh = fr * 0.20, fr * 0.08
             P.append(poly([(exc - bw, brow_y), (exc + bw, brow_y),
                            (exc + bw, brow_y + bh), (exc - bw, brow_y + bh)], BROW))
-        P.append(poly(ngon(face_cx, face_cy + fr * 0.30, fr * 0.22, fr * 0.09, 12), SKINL))
-        P.append(bar(face_cx - fr * 0.22, face_cy + fr * 0.60,
-                     face_cx + fr * 0.22, face_cy + fr * 0.60, 0.9, SKINL))
+        P.append(poly(ngon(face_cx, face_cy + fr * 0.28, fr * 0.22, fr * 0.09, 12), SKINL))
+        P.append(bar(face_cx - fr * 0.22, face_cy + fr * 0.58,
+                     face_cx + fr * 0.22, face_cy + fr * 0.58, 0.9, SKINL))
 
     if badge_cross:
         _gate("badge_color")
-        cx, cy = 70, 99
+        cx, cy = 70, 95
         P.append(opoly([(cx-3,cy-6),(cx+3,cy-6),(cx+3,cy-3),(cx+6,cy-3),(cx+6,cy+3),
                         (cx+3,cy+3),(cx+3,cy+6),(cx-3,cy+6),(cx-3,cy+3),(cx-6,cy+3),
                         (cx-6,cy-3),(cx-3,cy-3)], badge, d=0.9))
         _gate(None)
     elif badge:                                   # a small diamond, worn on the left breast
         _gate("badge_color")
-        P.append(opoly([(61,84),(65,89),(61,94),(57,89)], badge, d=0.9))
+        P.append(opoly([(62,82),(66,87),(62,92),(58,87)], badge, d=0.9))
         _gate(None)
 
     if helmet_ring:
-        P.append(dots_ring(70, 48, 20, accent, n=26, dot=1.0))
+        P.append(dots_ring(70, round(_gy(30.4), 1), 18, accent, n=26, dot=1.0))
     if accent_dot:
-        P.append(circ(70, 200, 2.6, accent))
+        P.append(circ(70, 203, 2.6, accent))
     return P
 
 

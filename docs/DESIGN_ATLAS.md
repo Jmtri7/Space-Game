@@ -64,36 +64,46 @@ into `game/world/person_figure.py` via `build_person_figure.py`, so the game
 has it; `past-the-reach.html` shows it; `resin-and-rivets.html` picks it up on
 its next regenerate.
 
-**Body: the Grounded pass.** On top of the cinched waist, `figure_parts` carries
-the "Grounded" face + shoulder pass worked out in the person-redesign artifact:
-**narrow rounded shoulders** — the torso curves out to a modest shoulder point
-and the upper arm gets a **domed top** that tucks under it (no block sticking
-out) — and a **face kit** that always shows on a bare or hatted head (hidden by
-a helmet or a visor): **oval eyes** with a full-height pupil, a short **straight
-brow** over each, a tan **under-nose shadow** (`SKINL`), a soft **mouth** line in
-the same tone, and shallow **D-ears** tucked under the face circle. Every feature
-scales with the face radius (`fr` = 15 bare, 12 helmeted). Baked into
-`person_figure.py` — the D-ears lead `BARE_HEAD`, so `Person._HELM_FACE_DY` now
-picks the face circle out of the list rather than assuming index 0; the eyes are
-`ngon` polygons, so `tests/test_helpers.py::test_visor_replaces_the_eyes` counts
-the polygon delta (8) instead of circles. The Common Kit / Sol Federation /
-Vherathi Concord / Drossholt Company atlases all render it (re-run
-`gen_common.py` + `gen_split.py`).
+**Body: the Grounded pass (full proportion remap).** `figure_parts` is now
+generated straight from the [`grounded-person.html`](atlases/grounded-person.html)
+study's proportion spec via a `_gx` / `_gy` transform (`_G_SCALE` 5.15 atlas
+units per study unit, `_G_GROUND` 202.2): a **~6.1-head figure** — small head
+(`fr` = 14 bare, 11.5 helmeted, down from 15/12), a **short neck** (a `SKINF`
+column from the collar line up under the jaw), a **long torso**, and **legs on
+the true half-body line** (`FIG_HIP_Y` 139, was 146; slight ankle taper + a
+mid-calf point). **Narrow rounded shoulders** — the torso curves out to a modest
+shoulder point (`attachHalf` ~3, arms tuck in close) and the upper arm gets a
+**domed top** that tucks under it. The **face kit** shows on a bare or hatted
+head (hidden by a helmet or a visor): **oval eyes** with a full-height pupil, a
+short **straight brow** over each, a tan **under-nose shadow** (`SKINL`), a soft
+**mouth** line, and shallow **D-ears**; every feature scales with `fr`. Baked
+into `person_figure.py` — the D-ears lead `BARE_HEAD`, so `Person._HELM_FACE_DY`
+picks the face circle out of the list; the eyes are `ngon` polygons, so
+`tests/test_helpers.py::test_visor_replaces_the_eyes` counts the polygon delta
+(8). `person.py`'s `LEG_HEIGHT` / `ARM_LENGTH` walk-cycle knobs and
+`build_person_figure.py`'s pivots track the new limb lengths. Moving the arms in
+meant **re-anchoring every outfit signature** (`common_kit.py` /
+`federation_outfits.py` / `vherathi_outfits.py` / `drossholt_outfits.py`) to the
+new lines: waist `y103`, belt `y99`, hands `(57/83, 133)`, arm shaft `x50-60` /
+`x80-90`, bare head `(70, 46)` r14. The Common Kit / Sol Federation / Vherathi
+Concord / Drossholt Company atlases all render it (re-run `gen_common.py` +
+`gen_split.py` + `build_person_figure.py` + `build_figure_signatures.py`).
 
 **Signature-accessory pass (with the Grounded body).** Moving the arms/hands in
 meant re-anchoring the signature layers in `common_kit.py` / `federation_outfits.py`
 / `vherathi_outfits.py` / `drossholt_outfits.py`. The rules that came out of it:
 anything on the **hip / thigh that the arm should cover** (holster, sidearm,
 clipboard, canteen, respirator canister) goes in **`pre`**, not `post`; **gloves**
-sit at the hand anchors `(49, 91)`; a **badge** is a small diamond on the **left
-breast** (`figure_parts` moved it off-centre — `(61, 88)`); the Federation
-**centreline stripe** starts at the collar `y67` (clear of the chin/mouth) and the
-**chevron flash** sits *on* the right upper arm (`x85–93`); the Vherathi **helmet
-dome** is a rounded arc that hugs the head and covers the ears, and a **sash** is
-a baldric over the left shoulder to the opposite hip (`figure_parts` `sash` +
-each culture's own). **Held weapons were removed for now** (mechanic's wrench,
-ranger's rifle, marine's carbine, bounty-hunter's shoulder weapon) — they come
-back with the weapons system.
+sit at the hand anchors `(57, 83)` at `y133`; a **badge** is a small diamond on
+the **left breast** `(62, 84)`; the Federation **centreline stripe** starts at the
+collar `y66` (clear of the chin/mouth) and the **chevron flash** sits *on* the
+right upper arm (`x81–89`); the Vherathi **helmet dome** is a rounded arc that
+hugs the (smaller) head and covers the ears, and a **sash** is a baldric over the
+left shoulder to the opposite hip (`figure_parts` `sash` + each culture's own).
+These anchors were all re-fitted for the full Grounded proportion remap above.
+**Held weapons were removed for now** (mechanic's wrench, ranger's rifle,
+marine's carbine, bounty-hunter's shoulder weapon) — they come back with the
+weapons system.
 
 ## Current atlases
 

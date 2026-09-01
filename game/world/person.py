@@ -50,9 +50,9 @@ class Person:
     # arm_r / hand_l / hand_r / leg_l / leg_r / boot_l / boot_r). The legs
     # and arms carry the walk cycle; the arms swing together, counter to the
     # stride (see _leg_stance / _arm_swing and _place).
-    LEG_HEIGHT = 11         # walk-cycle knob: notional hip-to-ankle length
+    LEG_HEIGHT = 10.5       # walk-cycle knob: notional hip-to-ankle length
     HIP_OVERLAP = 1.5       # (paired with LEG_HEIGHT for the stride amplitude)
-    ARM_LENGTH = 9.0        # walk-cycle knob: notional shoulder-to-wrist length
+    ARM_LENGTH = 11.0       # walk-cycle knob: notional shoulder-to-wrist length
 
     SKIN_COLOR = (225, 180, 145)   # figure "skin" token; head/hands are shaded from this
     EYE_COLOR = (40, 30, 30)

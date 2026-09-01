@@ -217,9 +217,9 @@ def build():
           nothing sticking out); a hip pouch draws <em>behind</em> the arm.
         </p>
         <dl class="spec">
-          <dt>FIG_HIP_Y</dt><dd>146 &nbsp; (legs join here)</dd>
+          <dt>FIG_HIP_Y</dt><dd>139 &nbsp; (legs join here)</dd>
           <dt>FIG_FOOT_Y</dt><dd>194 &nbsp; (ankle line)</dd>
-          <dt>waist_y</dt><dd>111 &nbsp; belt at 104</dd>
+          <dt>waist_y</dt><dd>103 &nbsp; belt at 99</dd>
           <dd class="full">Collision / arrival-distance checks still read <code class="f">self.x</code>/<code class="f">self.y</code> (the ground point) &mdash; unchanged. No save impact: NPCs and outfits are rebuilt from story config on load, never stored.</dd>
         </dl>
         <div class="keys"><span><b>affects</b> player &middot; every NPC &middot; every AI pilot</span></div>
