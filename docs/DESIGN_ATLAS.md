@@ -413,16 +413,17 @@ grew fat enough to swallow the nose. Rings render as `_ring_quads` (a strip),
 lines as a thin quad. The in-game silhouette matches the plate
 primitive-for-primitive.
 
-**The atlas figure is front-view; the in-game figure is side-on.** The
-`figure_parts` plate (and every `*_outfits.py` card) is a flat front elevation —
-best for reading an outfit. `Person.draw` takes the same part list and turns it
-to a walking side view: `self.facing` (±1, from the last horizontal step)
-mirrors every figure-space x; the left-side animation groups draw *behind* the
-torso a shade darker (the far arm + far leg), the right-side groups draw in
-*front* (the near arm + leg); and `_arm_swing` swings the arms opposite each
-other, counter to the stride, settling to a small splay at rest. So an outfit
-still only needs its front-view geometry — the side-on read is all in
-`person.py`.
+**The figure reads side-on, from `figure_parts` outward.** `figure_parts` emits
+the **far arm + far leg** (the left-side animation groups) *behind* the torso
+and the **near arm + leg** (right-side) *in front* — the grounded-person study's
+layering — and bakes a small **resting arm splay** (`gen_si.ARM_REST_DEG`, via
+`_arm_rot`; the `*_outfits.py` signatures wrap arm-mounted detail through the
+same helper). So every atlas card and `grounded-person.html` show it directly.
+`Person.draw` adds only what's motion-dependent: `self.facing` (±1, from the
+last mostly-horizontal step, kept when idle) mirrors every figure-space x about
+`self.x` — the baked figure faces screen-left, so facing +1 is the mirrored
+one — and `_arm_swing` swings the arms opposite each other, counter to the
+stride, over that splayed rest pose.
 
 ## Turning a plate into config
 
