@@ -145,13 +145,14 @@
   <header>
     <p class="eyebrow">space-game · character model</p>
     <h1>The Grounded Person model</h1>
-    <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; a short torso over long legs (hip up at ~47% of height), shorter arms, bigger feet, a trapezius yoke that sweeps up behind the neck, rounded shoulders, a masc / femme split on the torso and hip width, and a flat one-direction shade down one side of each limb &mdash; then the face kit worked out on it: the egg-shaped head &mdash; tall rounded crown, high hairline, turned a shallow 3/4 toward the way the figure faces with the features clustered that side and a little smaller &mdash; the narrow oval eyes tilted up a touch at the outer corner, one short gently-arched brow, the small oval-shadow nose, a set of flat hairstyles that fit the head (plus a flush buzz-cut shadow) and skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
+    <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; a short torso over long legs (hip up at ~47% of height), a trapezius yoke that sweeps up behind the neck, rounded shoulders, a masc / femme split on the torso and hip width, and a flat one-direction shade down one side of each limb &mdash; then the face kit worked out on it.</p>
+    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. Then the hairstyles and skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
   </header>
 
   <section>
     <div class="sec-head">
       <h2 class="sec">1 &nbsp;The body</h2>
-      <p>Head-count ticks up the left &mdash; about six and a half now, with the short torso over long legs. The top of the torso curves up behind the neck as a trapezius yoke, then sweeps down and out over the shoulder cap to meet the domed arm top in one smooth line. The waist pinches, then the hip curves back out &mdash; a convex flare, not a straight taper. The side shade is a strip that follows that curve.</p>
+      <p>Head-count ticks up the left &mdash; a little under seven now that the head has come down to 5.2 u, with the short torso over long legs. The head sits high enough to leave about a unit of bare neck above the collar, which is most of what makes the figure read upright rather than hunched. The top of the torso curves up behind the neck as a trapezius yoke, then sweeps down and out over the shoulder cap to meet the domed arm top in one smooth line. The waist pinches, then the hip curves back out &mdash; a convex flare, not a straight taper. The side shade is a strip that follows that curve. Below the hip the leg has three stops &mdash; thigh, knee, calf &mdash; so it carries a line instead of tapering straight to the ankle, and the boot is a foot: a low toe box over a compact heel.</p>
     </div>
     <div class="lead">
       <div class="plate is-pick" style="align-items:center">
@@ -203,7 +204,7 @@
   <section>
     <div class="sec-head">
       <h2 class="sec">4 &nbsp;Hair &amp; skin</h2>
-      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. Flat single-colour fills, and none of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that peaks over the crown (0.02 face-radii for the buzz, 0.22 for the curls) and fades to nothing at the temples, so the hair melts into the head silhouette. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn. Distinct shapes: a snug buzz, a rounded crop, a left side part with a stepped parting, a receding pair of temple bays around a forelock, a scalloped ring of curl clumps, a slicked crown for the bun (knot tucked into it) and the high ponytail, and a crown plus a panel down each side for the long. <b>Kade</b> is the flush buzz-cut shadow &mdash; one fill mixed from skin and hair, built the same way with zero lift.</p>
+      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. Flat single-colour fills, and none of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that peaks over the crown (0.02 face-radii for the buzz, 0.22 for the curls) and fades to nothing at the temples, so the hair melts into the head silhouette. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn. Distinct shapes: a snug buzz, a rounded crop, a left side part with a stepped parting, a receding pair of temple bays around a forelock, a scalloped ring of curl clumps, a slicked crown for the bun (knot tucked into it) and the high ponytail, and a crown plus a panel down each side for the long &mdash; that panel starts on the crescent's own temple point and hands back to the hairline short of it, so the two shapes meet without a wedge of bare temple between them or a spur of hair standing off the side of the head. <b>Kade</b> is the flush buzz-cut shadow &mdash; one fill mixed from skin and hair, built the same way with zero lift.</p>
     </div>
     <div class="grid" id="grid-hair"></div>
   </section>
@@ -243,7 +244,7 @@
   </section>
 
   <footer>
-    <p><strong>To apply:</strong> move the proportion stops in <code>gen_si.figure_parts()</code> &mdash; new head/neck sizes, a short torso over long legs (hip at study-y 16.6), shorter arms, the trapezius yoke and shoulder-cap curve, the domed arm top, and the bigger foot-shaped boot (toe toward the facing direction) &mdash; then re-run <code>build_person_figure.py</code>. The model ships as a <strong>masc / femme</strong> pair &mdash; no neutral. <code>bodyVariant()</code> gives each build its own torso silhouette and hip / arm-attach / leg-stance widths over a shared base (head, limbs, height, walk). <strong>Face kit</strong> &mdash; the egg-shaped head, oval eyes (each rotated ~7&deg; so the outer corner sits higher), gently-arched brow, narrow oval-shadow nose and D-ears become part of the base head; one new optional key set (<code>hair</code> enum + <code>hair_color</code>) resolved in <code>Person._fig_color</code> / <code>draw</code>, with a <code>fig.HAIR</code> table baked the same way as <code>ACC</code> &mdash; the <code>stubble</code> option is a single fill a shade between skin and hair, clipped to the crown, so a shaved head still reads; defaults reproduce the current look, and NPC rosters / <code>graphics.json</code> opt in per character. (This page draws the parts with no outline at all &mdash; fills only. Each arm, leg and the torso carries a fixed shade polygon down its screen-right side, and the neck a short band where the head's jaw casts onto it &mdash; each shape hand-built off the part's own anchor points, riding the same walk transform, filled at <code>shade(fill, -24)</code>. The torso shade is a strip whose inner and outer edges both parallel the body's side curve, so it stays off to one side; the neck shade's lower edge parallels the chin and its deepest point sits toward the facing side. Hair that hangs behind the back (long, ponytail) draws before the body so the torso covers its inner half. The head is drawn turned toward the facing direction &mdash; skull off-centre by <code>HEAD_DX</code>, features over by <code>FACE_DX</code> and scaled <code>FACE_S</code>, the hair riding the skull centre (it is built off the skull profile, so it cannot have an offset of its own), near ear showing, far ear covered &mdash; and <code>face:&nbsp;-1</code> just mirrors the whole group so a right-facing figure turns its head right. Hairstyles are flat single-colour fills, and <code>HAIR_SHAPE</code> is <em>generated</em>, not typed: <code>buildHair()</code> walks the skull profile (<code>headR()</code>, sampled on <code>HEAD_SHAPE</code>'s own vertices so a flat style never cuts a chord inside the head) and offsets it by a per-style <code>crown</code> / <code>temple</code> lift, stops at <code>tempAng</code>, and closes the shape with a hairline curve (<code>peak</code>, <code>q</code>, plus optional <code>dip</code> for a widow's peak, <code>bay</code> for temple recession and <code>skew</code>&nbsp;/&nbsp;<code>sweep</code>&nbsp;/&nbsp;<code>part</code>&nbsp;/&nbsp;<code>jog</code> for the side part). <code>curls</code> adds a rim of lump circles riding that same edge, and <code>long</code> hangs a panel down each side of the face. In the baked table these become plain point lists, exactly as now. In <code>person_figure.py</code> the outline is its own slightly-larger shape behind each part, per the atlas pipeline; dropping it means removing that backing shape, and each shade bakes as one extra fill in the part's <code>figure_parts</code> entry.)</p>
+    <p><strong>To apply:</strong> move the proportion stops in <code>gen_si.figure_parts()</code> &mdash; new head/neck sizes (a smaller head, higher, on a slimmer neck), a short torso over long legs (hip at study-y 16.6), shorter arms, the trapezius yoke and shoulder-cap curve, the domed arm top, the three-stop leg and the foot-shaped boot (toe toward the facing direction) &mdash; then re-run <code>build_person_figure.py</code>. The model ships as a <strong>masc / femme</strong> pair &mdash; no neutral. <code>bodyVariant()</code> gives each build its own torso silhouette and hip / arm-attach / leg-stance widths over a shared base (head, limbs, height, walk). <strong>Face kit</strong> &mdash; the egg-shaped head, almond eyes (sclera, iris, pupil, catchlight and a lash line that crops the iris, each rotated ~6&deg; so the outer corner sits higher), the fine tapered brow, the bridge-and-tip nose, the two-part lips and the low D-ears become part of the base head; one new optional key set (<code>hair</code> enum + <code>hair_color</code>) resolved in <code>Person._fig_color</code> / <code>draw</code>, with a <code>fig.HAIR</code> table baked the same way as <code>ACC</code> &mdash; the <code>stubble</code> option is a single fill a shade between skin and hair, clipped to the crown, so a shaved head still reads; defaults reproduce the current look, and NPC rosters / <code>graphics.json</code> opt in per character. (This page draws the parts with no outline at all &mdash; fills only. Each arm, leg and the torso carries a fixed shade polygon down its screen-right side, the head a leaf-shaped one across its far cheek and jaw, and the neck a short band where the head's jaw casts onto it &mdash; each shape hand-built off the part's own anchor points, riding the same walk transform, filled at <code>shade(fill, -24)</code>. The torso shade is a strip whose inner and outer edges both parallel the body's side curve, so it stays off to one side; the neck shade's lower edge parallels the chin and its deepest point sits toward the facing side. Hair that hangs behind the back (long, ponytail) draws before the body so the torso covers its inner half. The head is drawn turned toward the facing direction &mdash; skull off-centre by <code>HEAD_DX</code>, features over by <code>FACE_DX</code> and scaled <code>FACE_S</code>, the hair riding the skull centre (it is built off the skull profile, so it cannot have an offset of its own), near ear showing, far ear covered &mdash; and <code>face:&nbsp;-1</code> just mirrors the whole group so a right-facing figure turns its head right. Hairstyles are flat single-colour fills, and <code>HAIR_SHAPE</code> is <em>generated</em>, not typed: <code>buildHair()</code> walks the skull profile (<code>headR()</code>, sampled on <code>HEAD_SHAPE</code>'s own vertices so a flat style never cuts a chord inside the head) and offsets it by a per-style <code>crown</code> / <code>temple</code> lift, stops at <code>tempAng</code>, and closes the shape with a hairline curve (<code>peak</code>, <code>q</code>, plus optional <code>dip</code> for a widow's peak, <code>bay</code> for temple recession and <code>skew</code>&nbsp;/&nbsp;<code>sweep</code>&nbsp;/&nbsp;<code>part</code>&nbsp;/&nbsp;<code>jog</code> for the side part). <code>curls</code> adds a rim of lump circles riding that same edge, and <code>long</code> hangs a panel down each side of the face. In the baked table these become plain point lists, exactly as now. In <code>person_figure.py</code> the outline is its own slightly-larger shape behind each part, per the atlas pipeline; dropping it means removing that backing shape, and each shade bakes as one extra fill in the part's <code>figure_parts</code> entry.)</p>
   </footer>
 </div>
 
@@ -253,21 +254,31 @@ const COL = { suit:"#6f7c8b", legs:"#4b5560", boot:"#38424d", skin:"#d9ac86" };
 const STROKE = "none";   // outlines dropped — parts read by fill alone
 const PUPIL = "#1a2530"; // eye pupil / feature ink, was the shared stroke colour
 
-/* the head outline — an egg: a tall, full, round crown (plenty of forehead
-   above the brow), widest at the cheekbone, a narrower jaw tapering to a
-   soft point. Fairly narrow overall (x 0.82 at the widest). Normalised to
-   face-radius units, centre 0, crown at HEAD_CROWN. Used by both the full
-   figure and the head cards so the silhouette matches. */
-const HEAD_CROWN = 1.26;
+/* the head outline — an egg: a full, round crown, the widest point up at the
+   cheekbone (y 0.19), then a long clean taper through the jaw to a small
+   rounded chin. The cranium is narrower than the cheekbone and the jaw
+   narrower again, so the face reads as a soft oval rather than a slab.
+   Normalised to face-radius units, centre 0, crown at HEAD_CROWN. Used by
+   both the full figure and the head cards so the silhouette matches. */
+const HEAD_CROWN = 1.21;
 const HEAD_SHAPE = [
-  [ 0.00,  1.26], [ 0.22,  1.24], [ 0.44,  1.14], [ 0.62,  0.98],
-  [ 0.76,  0.76], [ 0.84,  0.46], [ 0.85,  0.16], [ 0.84,  0.00],
-  [ 0.80, -0.28], [ 0.70, -0.52], [ 0.52, -0.75], [ 0.32, -0.92],
-  [ 0.14, -1.01], [ 0.00, -1.04],
-  [-0.14, -1.01], [-0.32, -0.92], [-0.52, -0.75], [-0.70, -0.52],
-  [-0.80, -0.28], [-0.84,  0.00], [-0.85,  0.16], [-0.84,  0.46],
-  [-0.76,  0.76], [-0.62,  0.98], [-0.44,  1.14], [-0.22,  1.24],
+  [ 0.00,  1.21], [ 0.20,  1.19], [ 0.40,  1.10], [ 0.57,  0.95],
+  [ 0.70,  0.74], [ 0.78,  0.47], [ 0.81,  0.19], [ 0.80,  0.02],
+  [ 0.75, -0.26], [ 0.64, -0.51], [ 0.49, -0.73], [ 0.32, -0.90],
+  [ 0.15, -1.00], [ 0.00, -1.02],
+  [-0.15, -1.00], [-0.32, -0.90], [-0.49, -0.73], [-0.64, -0.51],
+  [-0.75, -0.26], [-0.80,  0.02], [-0.81,  0.19], [-0.78,  0.47],
+  [-0.70,  0.74], [-0.57,  0.95], [-0.40,  1.10], [-0.20,  1.19],
 ];
+/* the side plane of the head — the same one light direction the limbs carry,
+   but shaped like a face rather than ruled down it: a leaf that is barely
+   there at the crown, widest across the far cheek and jaw, and gone again by
+   the chin. A constant-width strip reads as a stripe painted on the face. */
+const HEAD_SHADE = (function(){
+  const h = HEAD_SHAPE.filter(p => p[0] > 0.001);
+  const W = y => 0.03 + 0.19*Math.exp(-Math.pow((y + 0.20)/0.62, 2));
+  return h.concat(h.map(([x,y]) => [Math.max(0, x - W(y)), y]).reverse());
+})();
 /* face-y of the head's lower silhouette at a given face-x (|x| ≤ ~0.9) —
    drives the chin-following neck shadow, auto-tracks HEAD_SHAPE */
 function headLowerY(fx){
@@ -377,12 +388,17 @@ function buildHair(st){
   if (st.lappet == null) return outer.concat(inner);
   // long - the crescent plus a panel down each side of the face. Wound as one
   // loop: right panel down and back up, across the hairline, left panel down
-  // and back up, then over the crown to the start.
-  const L = st.lappet;
-  const outR = [[0.90,0.29],[0.98,0.02],[1.00,-0.38],[0.96,-0.78],[0.82,L]];
-  const inR  = [[0.62,L+0.08],[0.66,-0.50],[0.72,0.10],[0.80,0.29]];
+  // and back up, then over the crown to the start. The panel starts on the
+  // crescent's own temple point and hands back to the hairline SHORT of it —
+  // run the hairline all the way out and the loop doubles back on itself,
+  // leaving a spur of hair standing off the temple.
+  const L = st.lappet, T0 = hairEdge(st, T);
+  const cut = inner.filter(p => Math.abs(p[0]) < xT*0.92);
+  const join = cut[cut.length - 1];
+  const outR = [[T0[0],T0[1]],[0.86,0.10],[0.88,-0.30],[0.85,-0.72],[0.755,L]];
+  const inR  = [[0.62,L+0.08],[0.66,-0.50],[0.74,0.12],[join[0], join[1]]];
   const flip = p => p.map(q => [-q[0], q[1]]);
-  return [].concat(outR, inR, inner.slice().reverse(),
+  return [].concat(outR, inR, cut.slice().reverse(),
                    flip(inR).reverse(), flip(outR).reverse(), outer.slice().reverse());
 }
 const HAIR_SHAPE = {};
@@ -443,57 +459,137 @@ function shade(col, amt){
   return "rgb(" + toRGB(col).map(c => Math.max(0, Math.min(255, c+amt))).join(",") + ")";
 }
 function rgb(a){ return "rgb(" + a.join(",") + ")"; }
+/* a lip tone mixed off the skin — a touch deeper and redder, so it reads on
+   every skin token without becoming a painted-on colour */
+function lipTone(skin){
+  const c = toRGB(skin);
+  return rgb([Math.min(255, Math.round(c[0]*0.84 + 34)),
+              Math.round(c[1]*0.72 + 23), Math.round(c[2]*0.72 + 22)]);
+}
+/* feature primitives in local unit space (mx/my map units -> px, k = px/unit) */
+function _rot(pts, deg){
+  const a = deg*Math.PI/180, cs = Math.cos(a), sn = Math.sin(a);
+  return pts.map(([x,y]) => [x*cs - y*sn, x*sn + y*cs]);
+}
+function _poly(g, pts, mx, my, fill){
+  const e = document.createElementNS(NS,"polygon");
+  e.setAttribute("points", pts.map(q => mx(q[0]).toFixed(2)+","+my(q[1]).toFixed(2)).join(" "));
+  e.setAttribute("fill", fill); e.setAttribute("stroke", STROKE);
+  e.setAttribute("stroke-linejoin","round"); g.appendChild(e); return e;
+}
+function _ell(g, cx, cy, rx, ry, mx, my, k, fill){
+  const e = document.createElementNS(NS,"ellipse");
+  e.setAttribute("cx", mx(cx)); e.setAttribute("cy", my(cy));
+  e.setAttribute("rx", rx*k); e.setAttribute("ry", ry*k);
+  e.setAttribute("fill", fill); g.appendChild(e); return e;
+}
 
 /* ==================================================================
-   SHARED FEATURE DRAWERS  (mx/my map local unit offsets -> px; s scales feature size)
+   THE FACE KIT
+   Every feature is written in FACE-RADIUS units from the face centre, +y up;
+   mx/my map a unit offset to px and k is px per face-radius, so the whole kit
+   scales with the head and one set of code draws the figure and the head card.
    ================================================================== */
-/* coords are in FACE-RADIUS units from face centre; mx/my map them to px; k = px per face-radius */
-function drawEyes(g, cx, cy, ex, style, mx, my, k){
-  const mk = (tag, at) => { const e = document.createElementNS(NS, tag);
-    for (const [a,v] of Object.entries(at)) e.setAttribute(a, v); g.appendChild(e); return e; };
-  const TILT = 7;   // each eye tips so its outer corner sits a little higher
+const EYE_CY = 0.05, EYE_EX = 0.375, EYE_RX = 0.185, EYE_RY = 0.118;
+const EYE_TILT = 6;              // each eye tips so its outer corner sits higher
+const BROW_CY = 0.29;
+const IRIS_DEF = "#4b3325";      // warm brown unless a character sets its own
+const SCLERA = "#f2ece4", GLINT = "#f8f5ef";
+
+/* the eye opening: a full, rounded upper lid over a shallower lower one —
+   an almond, not the old wide oval. Wound as one loop, upper edge first. */
+function almondPts(rx, ry){
+  const p = [], N = 9;
+  for (let i = 0; i <= N; i++){
+    const t = i/N;
+    p.push([-rx + 2*rx*t, ry*Math.pow(Math.sin(Math.PI*t), 0.78)]);
+  }
+  for (let i = N; i >= 0; i--){
+    const t = i/N;
+    p.push([-rx + 2*rx*t, -0.78*ry*Math.pow(Math.sin(Math.PI*t), 1.2)]);
+  }
+  return p;
+}
+const EYE_ALMOND = almondPts(EYE_RX, EYE_RY);
+/* the lash line rides the upper lid — thickest over the iris, tapering into
+   both corners. It doubles as the crop that takes the top off the iris, which
+   is what makes the eye read lidded instead of staring. */
+const EYE_LASH = (function(){
+  const up = EYE_ALMOND.slice(0, 10), back = [];
+  for (let i = up.length - 1; i >= 0; i--){
+    const t = i/(up.length - 1);
+    back.push([up[i][0], up[i][1] + 0.052*Math.pow(Math.sin(Math.PI*t), 0.5)]);
+  }
+  return up.concat(back);
+})();
+
+function drawEyes(g, cx, cy, ex, iris, mx, my, k){
   for (const sgn of [-1, 1]){
-    const x = cx + sgn*ex, px = mx(x), py = my(cy);
-    const rot = `rotate(${(-sgn*TILT).toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)})`;
-    // a narrow almond — wide, not very tall; the pupil spans the full height
-    mk("ellipse", { cx: px, cy: py, rx: 0.22*k, ry: 0.125*k, transform: rot,
-      fill: "#f4efe7", stroke: STROKE, "stroke-width": Math.max(0.5, 0.05*k) });
-    mk("ellipse", { cx: px, cy: py, rx: 0.135*k, ry: 0.125*k, transform: rot, fill: PUPIL });
+    const ox = cx + sgn*ex, oy = cy;
+    const at = pts => _rot(pts, -sgn*EYE_TILT).map(([x,y]) => [ox + x, oy + y]);
+    const ix = ox + sgn*0.012, iy = oy + 0.022;
+    _poly(g, at(EYE_ALMOND), mx, my, SCLERA);
+    _ell(g, ix, iy, 0.112, 0.112, mx, my, k, iris || IRIS_DEF);
+    _ell(g, ix, iy, 0.052, 0.052, mx, my, k, PUPIL);
+    _ell(g, ix - 0.040, iy + 0.058, 0.027, 0.027, mx, my, k, GLINT);
+    _poly(g, at(EYE_LASH), mx, my, PUPIL);
   }
 }
+
+/* one brow over each eye — a fine tapered stroke that thickens over the inner
+   third and thins to a point outward, with a gentle arch toward the outer end */
 function drawBrows(g, cx, cy, ex, style, col, mx, my, k){
-  // settled: one brow over each eye — a short bar with a slight upward arch
-  // (crest toward the outer end), tapering a touch thinner outward (or none)
   if (style === "none") return;
   for (const sgn of [-1,1]){
-    const x = cx + sgn*ex, hw = 0.21, th = 0.08, arch = 0.085, N = 6;
+    const x = cx + sgn*ex, hw = 0.185, arch = 0.048, N = 7;
     const lo = [], hi = [];
     for (let i = 0; i <= N; i++){
       const t = i / N;                                   // 0 inner end -> 1 outer end
       const px = x + sgn*(2*hw*t - hw);
-      const lift = arch * Math.sin(Math.PI * Math.pow(t, 1.4));
+      const lift = arch * Math.sin(Math.PI * Math.pow(t, 1.25));
+      const th = 0.058 * (1 - 0.75*Math.pow(t, 1.6))
+                       * (0.45 + 0.55*Math.sin(Math.PI*Math.pow(t, 0.5)));
       lo.push([px, cy + lift]);
-      hi.push([px, cy + lift + th*(1 - 0.3*t)]);
+      hi.push([px, cy + lift + th]);
     }
-    const e = document.createElementNS(NS,"polygon");
-    e.setAttribute("points", lo.concat(hi.reverse())
-      .map(q => mx(q[0]).toFixed(1)+","+my(q[1]).toFixed(1)).join(" "));
-    e.setAttribute("fill", col); e.setAttribute("stroke", STROKE);
-    e.setAttribute("stroke-width", Math.max(0.4, 0.05*k)); e.setAttribute("stroke-linejoin","round");
-    g.appendChild(e);
+    _poly(g, lo.concat(hi.reverse()), mx, my, col);
   }
 }
-const NOSE_SHADE = -42;
+
+/* the nose is two soft shadows, not a blob: a slim bridge running down from
+   under the brows, widening into a small rounded tip shadow */
+const NOSE_BRIDGE = -13, NOSE_SHADE = -34;
 function drawNose(g, style, skin, mx, my, k){
-  // settled: the nose is a small tan sideways oval (under-nose shadow)
-  const e = document.createElementNS(NS,"ellipse");
-  e.setAttribute("cx", mx(0.0)); e.setAttribute("cy", my(-0.28));
-  e.setAttribute("rx", 0.17*k); e.setAttribute("ry", 0.09*k);
-  e.setAttribute("fill", shade(skin, NOSE_SHADE));
-  g.appendChild(e);
+  _poly(g, [[-0.030,0.155],[0.030,0.155],[0.052,-0.150],[0.070,-0.215],
+            [-0.070,-0.215],[-0.052,-0.150]], mx, my, shade(skin, NOSE_BRIDGE));
+  _ell(g, 0, -0.238, 0.082, 0.050, mx, my, k, shade(skin, NOSE_SHADE));
 }
-// shallow "D" ear, flat side to the head, mirrored on both sides
-const EAR_D = [[0.77,0.23],[0.77,-0.23],[0.88,-0.19],[0.95,-0.04],[0.95,0.11],[0.88,0.21]];
+
+/* the mouth: an upper lip with a small cupid's bow over a fuller lower lip,
+   split by a seam that rides a touch higher at the corners than at the centre
+   — enough of a lift to read as pleasant rather than as a slot */
+const MOUTH_CY = -0.55, MOUTH_HW = 0.150;
+function drawMouth(g, skin, mx, my, k){
+  const hw = MOUTH_HW, y0 = MOUTH_CY, N = 8;
+  const lip = lipTone(skin), upper = shade(lip, -22), lower = shade(lip, 12);
+  const seam = [], top = [], bot = [];
+  for (let i = 0; i <= N; i++){
+    const t = i/N, x = -hw + 2*hw*t, w = Math.sin(Math.PI*t);
+    const sy = y0 + 0.018 - 0.030*w;
+    top.push([x, sy + 0.048*Math.pow(w, 0.8) - 0.016*Math.exp(-Math.pow(x/0.045, 2))]);
+    seam.push([x, sy]);
+    bot.push([x, sy - 0.040 - 0.046*Math.pow(w, 0.9)]);
+  }
+  _poly(g, top.concat(seam.slice().reverse()), mx, my, upper);
+  _poly(g, seam.concat(bot.reverse()), mx, my, lower);
+  _poly(g, seam.concat(seam.slice().reverse().map(([x,y]) => [x, y - 0.014])),
+        mx, my, shade(lip, -52));
+}
+
+/* shallow "D" ear, flat side to the head, mirrored on both sides. It sits low
+   — brow to nose-base, where an ear really is — and barely clears the skull,
+   so it reads as an ear rather than a knob. */
+const EAR_D = [[0.70,0.12],[0.70,-0.34],[0.79,-0.31],[0.85,-0.16],[0.85,-0.01],[0.79,0.10]];
 function drawEars(g, skin, mx, my, k){
   for (const s of [-1,1]){
     const e = document.createElementNS(NS,"polygon");
@@ -504,19 +600,21 @@ function drawEars(g, skin, mx, my, k){
     g.appendChild(e);
   }
 }
-function drawMouth(g, skin, mx, my, k){
-  const e = document.createElementNS(NS,"line");
-  e.setAttribute("x1", mx(-0.22)); e.setAttribute("x2", mx(0.22));
-  e.setAttribute("y1", my(-0.58)); e.setAttribute("y2", my(-0.58));
-  e.setAttribute("stroke", shade(skin, NOSE_SHADE));   // same tone as the nose shadow
-  e.setAttribute("stroke-width", Math.max(0.7, 0.11*k));
-  e.setAttribute("stroke-linecap","round"); g.appendChild(e);
+
+/* the whole kit, drawn back to front: nose and mouth, then the eyes over
+   them, then the brows. One call site for the figure and the head card. */
+function drawFaceKit(g, hd, mx, my, k){
+  const skin = hd.skin || COL.skin;
+  drawNose(g, "oval", skin, mx, my, k);
+  drawMouth(g, skin, mx, my, k);
+  drawEyes(g, 0, EYE_CY, EYE_EX, hd.eyeCol, mx, my, k);
+  drawBrows(g, 0, BROW_CY, EYE_EX, "arched", hd.browCol || "#3a2c24", mx, my, k);
 }
 
 /* ==================================================================
    FULL FIGURE   (game units: feet at origin, y negative up)
    ================================================================== */
-const K = 5.6, ORIGIN = 66, GROUND = 200, VB_W = 132, VB_H = 214;
+const K = 5.6, ORIGIN = 66, GROUND = 202, VB_W = 132, VB_H = 214;
 const fx = u => ORIGIN + u * K;
 const fy = u => GROUND - u * K;
 
@@ -557,6 +655,7 @@ function fline(p, x1, y1, x2, y2, col, w){
    tracks the geometry. They ride through the same walk transform as the
    part, then fill with shade(baseColour, SHADE_AMT). No runtime clipping. */
 const SHADE_AMT = -24;
+const FACE_SHADE = -13;   // the head's side plane, far lighter than the limbs'
 const _mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 
 function armShadePts(sign, c){
@@ -565,13 +664,14 @@ function armShadePts(sign, c){
   return [ a[2], a[3], a[4], a[5], _mid(a[5], a[6]) ];
 }
 function legShadePts(sign, c){
-  // leg poly: 0 hip-out, 1 knee-out, 2 ankle-out, 3 ankle-in, 4 knee-in, 5 hip-in
-  const p = legPts(sign, c).pts;
-  const outer = [p[0], p[1], p[2]], inner = [p[5], p[4], p[3]];
+  // the leg poly runs hip -> stops -> ankle down one side and back up the
+  // other, however many stops there are: take the two sides, then close the
+  // shade along the centre line between them
+  const p = legPts(sign, c).pts, n = (p.length - 2) / 2;
+  const outer = p.slice(0, n + 1), inner = p.slice(n + 1).reverse();
   // shade the screen-right edge whichever side of the leg that is
   const edge = sign > 0 ? outer : inner;
-  return [ edge[0], edge[1], edge[2],
-           _mid(p[2], p[3]), _mid(p[1], p[4]), _mid(p[0], p[5]) ];
+  return edge.concat(outer.map((q, i) => _mid(q, inner[i])).reverse());
 }
 function torsoShadePts(c){
   // a shade strip hugging the +x side — both edges follow the body curve,
@@ -584,7 +684,7 @@ function neckShadePts(c){
   // contact shadow the head casts on the neck — a curved band whose upper
   // edge sits right under the chin line and whose lower edge parallels it.
   // The turned head's chin sits toward the facing side, so the shadow does too.
-  const nh = c.neck.half, fr = c.head.r, fcy = c.head.cy, W = 0.72, N = 6;
+  const nh = c.neck.half, fr = c.head.r, fcy = c.head.cy, W = 0.62, N = 6;
   const dx = fr * HAIR_DX;
   const top = [], bot = [];
   for (let i = 0; i <= N; i++){
@@ -611,15 +711,15 @@ function bootPts(cx, w, c){
   // side profile, toe toward -x (screen-forward): heel behind at +x, ankle
   // collar, instep, a long low rounded toe box down to the ground
   return [
-    [cx + w*0.96, a*1.14],     // back of the ankle collar
-    [cx - w*0.46, a*1.10],     // front of the ankle collar
-    [cx - w*0.98, a*0.60],     // instep
-    [cx - w*1.78, a*0.40],     // top of the toe box
-    [cx - w*2.62, a*0.15],     // toe tip, rounded, near the ground
-    [cx - w*2.62, 0],          // toe tip, sole
-    [cx + w*1.22, 0],          // sole back to the heel
-    [cx + w*1.52, a*0.38],     // heel back
-    [cx + w*1.10, a*0.88],     // up to the ankle
+    [cx + w*0.86, a*1.22],     // back of the ankle collar
+    [cx - w*0.44, a*1.18],     // front of the ankle collar
+    [cx - w*0.92, a*0.68],     // instep
+    [cx - w*1.58, a*0.44],     // top of the toe box
+    [cx - w*2.08, a*0.17],     // toe tip, rounded, near the ground
+    [cx - w*2.08, 0],          // toe tip, sole
+    [cx + w*1.10, 0],          // sole back to the heel
+    [cx + w*1.34, a*0.40],     // heel back
+    [cx + w*1.00, a*0.96],     // up to the ankle
   ];
 }
 function armPts(sign, c){
@@ -637,6 +737,20 @@ function armPts(sign, c){
     [wx-tb, wy],
   ], wx, wy };
 }
+/* the hand — a small tapered mitt hung off the wrist in the arm's own local
+   space, so it rides the arm's rotation like the rest of the limb */
+function handPts(sign, c){
+  const a = armPts(sign, c), x = a.wx, y = a.wy, r = c.hand;
+  return [
+    [x - r*0.88, y + r*0.12],
+    [x - r*0.96, y - r*0.55],
+    [x - r*0.72, y - r*1.34],
+    [x - r*0.12, y - r*1.72],
+    [x + r*0.56, y - r*1.48],
+    [x + r*0.94, y - r*0.78],
+    [x + r*0.92, y + r*0.12],
+  ];
+}
 function torsoPts(c){
   const s = c.torso;
   return s.map(([h,y]) => [-h,y]).concat(s.map(([h,y]) => [h,y]).reverse());
@@ -651,7 +765,7 @@ function waistHalf(c){ return waistPt(c)[0]; }
 // 3/4; the whole-figure mirror flips it for figures facing the other way.
 // The hair is built off the skull profile, so it rides the SKULL centre —
 // give it an offset of its own and it slides off the crown on one side.
-const HEAD_DX = 0.09, FACE_DX = 0.22, FACE_S = 0.88;
+const HEAD_DX = 0.07, FACE_DX = 0.16, FACE_S = 0.90;
 const HAIR_DX = HEAD_DX;        // hair centre == skull centre, front and back
 const HEAD_TURN_DX = HAIR_DX;   // the behind-hair (drawn earlier) matches the front
 function figFace(g, c, hd, dy){
@@ -671,16 +785,15 @@ function figFace(g, c, hd, dy){
   const efx = u => fx(fCx + u*faceR*FACE_S), efy = u => fy(faceCy + u*faceR*FACE_S);
   const kf = faceR * K * FACE_S;
   const hfx = u => fx(hCx + u*faceR), hfy = u => fy(faceCy + u*faceR);
-  if (!helm) drawEars(g, hd.skin || COL.skin, hfx, hfy, faceR * K);
-  fpoly(g, HEAD_SHAPE.map(([x,y]) => [hCx + x*faceR, faceCy + y*faceR]), hd.skin || COL.skin);
+  const skin = hd.skin || COL.skin;
+  if (!helm) drawEars(g, skin, hfx, hfy, faceR * K);
+  fpoly(g, HEAD_SHAPE.map(([x,y]) => [hCx + x*faceR, faceCy + y*faceR]), skin);
+  fpoly(g, HEAD_SHADE.map(([x,y]) => [hCx + x*faceR, faceCy + y*faceR]), shade(skin, FACE_SHADE), 0);
   if (hd.visor && helm){
     fpoly(g, [[hCx-faceR*0.98, faceCy+faceR*0.44],[hCx+faceR*0.98, faceCy+faceR*0.44],
               [hCx+faceR*0.92, faceCy-faceR*0.32],[hCx-faceR*0.92, faceCy-faceR*0.32]], hd.visor, 1.1);
   } else {
-    drawEyes(g, 0, 0.08, 0.42, "oval", efx, efy, kf);
-    drawBrows(g, 0, 0.34, 0.42, "straight", hd.browCol || "#2b2320", efx, efy, kf);
-    drawNose(g, "oval", hd.skin || COL.skin, efx, efy, kf);
-    drawMouth(g, hd.skin || COL.skin, efx, efy, kf);
+    drawFaceKit(g, Object.assign({}, hd, { skin }), efx, efy, kf);
   }
   if (!helm) hairFrontFig(g, haCx, hcy, r, hd);
 }
@@ -790,7 +903,7 @@ function buildFigure(svg, c, opts){
   // the arms also hang a small constant angle out from the body at rest
   // (gen_si.ARM_REST_DEG, baked into figure_parts) - so even a standing figure
   // reads relaxed and a touch open
-  const REST_SPLAY = 12;
+  const REST_SPLAY = 7;
   const armDegL = swArm * aAmp - REST_SPLAY;
   const armDegR = (aTogether ? swArm : -swArm) * aAmp + REST_SPLAY;
   const armDegFor = s => (s === -1 ? armDegL : armDegR);
@@ -815,8 +928,7 @@ function buildFigure(svg, c, opts){
   const ab = armPts(-1, c);
   { fpoly(g, armXf(-1, ab.pts), sleevec);
     fpoly(g, armXf(-1, armShadePts(-1, c)), shade(sleevec, SHADE_AMT), 0); }
-  { const w = up(rotP([ab.wx, ab.wy], [-c.attachHalf, c.armShoulderY], armDegL));
-    fdot(g, w[0], w[1], c.hand, skin, true); }
+  fpoly(g, armXf(-1, handPts(-1, c)), skin);
 
   for (const s of [-1,1]){
     const L = legPts(s, c);
@@ -839,8 +951,7 @@ function buildFigure(svg, c, opts){
   const af = armPts(1, c);
   { fpoly(g, armXf(1, af.pts), sleevec);
     fpoly(g, armXf(1, armShadePts(1, c)), shade(sleevec, SHADE_AMT), 0); }
-  { const w = up(rotP([af.wx, af.wy], [c.attachHalf, c.armShoulderY], armDegR));
-    fdot(g, w[0], w[1], c.hand, skin, true); }
+  fpoly(g, armXf(1, handPts(1, c)), skin);
 
   const hd2 = Object.assign({}, hd, { helmet: o.helmet_color || hd.helmet, visor: o.visor_color || hd.visor });
   figFace(g, c, hd2, bob);
@@ -891,18 +1002,18 @@ function drawHeadCard(svg, hd, sizeK){
 
   // accurate neck + shoulders, scaled from the figure (head r = 1 here):
   // the trapezius yoke and shoulder cap, then the neck column on top.
-  const YOKE = [[0.39,-1.07],[0.63,-1.18],[0.90,-1.38],[1.12,-1.60],[1.31,-1.82],[1.42,-2.14]];
-  P(YOKE.map(([x,y]) => [-x,y]).concat([[-1.5,-2.95],[1.5,-2.95]])
+  const YOKE = [[0.38,-1.35],[0.64,-1.44],[0.92,-1.62],[1.15,-1.81],[1.35,-2.00],[1.45,-2.27]];
+  P(YOKE.map(([x,y]) => [-x,y]).concat([[-1.55,-3.10],[1.55,-3.10]])
      .concat(YOKE.slice().reverse().map(([x,y]) => [x,y])), hd.suitHint || "#6f7c8b");
 
   // neck column (skin), matching the figure's neck.half / neck length
-  P([[-0.42,-1.47],[-0.42,-0.70],[0.42,-0.70],[0.42,-1.47]], hd.skin);
-  { const W = 0.62, N = 6, tp = [], bt = [];   // contact shadow, lower edge parallels the chin
+  P([[-0.37,-1.72],[-0.37,-0.70],[0.37,-0.70],[0.37,-1.72]], hd.skin);
+  { const W = 0.40, N = 6, tp = [], bt = [];   // contact shadow, lower edge parallels the chin
     for (let i = 0; i <= N; i++){
-      const x = -0.42 + 0.84*i/N, chin = headLowerY(x) + 0.05;
+      const x = -0.37 + 0.74*i/N, chin = headLowerY(x) + 0.05;
       tp.push([x, chin]); bt.push([x, chin - W]);
     }
-    P(tp.concat(bt.reverse()), shade(hd.skin, SHADE_AMT)); }
+    P(tp.concat(bt.reverse()), shade(hd.skin, -18)); }
 
   if (hd.helmet) D(0, 0, 1.2, hd.helmet, true);   // thin outline, matches the rest
   const faceR = hd.helmet ? 0.82 : 1.0;
@@ -910,16 +1021,15 @@ function drawHeadCard(svg, hd, sizeK){
   const efx = u => lx(u*faceR), efy = u => ly(faceCy + u*faceR);
   const kf = faceR * k;
   if (!hd.helmet) drawEars(g, hd.skin, efx, efy, kf);
-  // the same egg-shaped head the full figure draws (HEAD_SHAPE)
+  // the same egg-shaped head the full figure draws (HEAD_SHAPE), carrying the
+  // same side plane
   P(HEAD_SHAPE.map(([x,y]) => [x*faceR, faceCy + y*faceR]), hd.skin);
+  P(HEAD_SHADE.map(([x,y]) => [x*faceR, faceCy + y*faceR]), shade(hd.skin, FACE_SHADE));
   if (hd.visor && hd.helmet){
     P([[-0.98*faceR, faceCy+0.44*faceR],[0.98*faceR, faceCy+0.44*faceR],
        [0.9*faceR, faceCy-0.34*faceR],[-0.9*faceR, faceCy-0.34*faceR]], hd.visor, 1.1);
   } else {
-    drawEyes(g, 0, 0.08, 0.42, "oval", efx, efy, kf);
-    drawBrows(g, 0, 0.34, 0.42, "straight", hd.browCol || "#2b2320", efx, efy, kf);
-    drawNose(g, "oval", hd.skin, efx, efy, kf);
-    drawMouth(g, hd.skin, efx, efy, kf);
+    drawFaceKit(g, hd, efx, efy, kf);
   }
   if (!hd.helmet) hairFrontHeadLocal(P, D, hd);
 }
@@ -955,21 +1065,26 @@ function shadeHex(hex, amt){ return shade(hex, amt); }
 
 /* ================= DATA ================= */
 const GROUNDED = {
-  head:{cx:0, cy:32.1, r:2.72}, neck:{half:1.15, y0:28.1},
+  // a smaller head (Ø 5.2 u, was 5.4) set higher on a slimmer neck that is
+  // actually visible — the old head sat with its chin on the collarbone
+  head:{cx:0, cy:32.4, r:2.60}, neck:{half:0.96, y0:28.0},
   // the top two points are the trapezius yoke — they ride up beside the neck
-  // (x 1.05, just inside neck.half) and sweep down and out over a rounded
+  // (x ~0.95, just inside neck.half) and sweep down and out over a rounded
   // shoulder cap that is slightly wider than the hip. Then an hourglass waist
-  // and a convex hip flare. The torso is short (~12.6 u) over long legs — the
+  // and a convex hip flare. The torso is short (~12.3 u) over long legs — the
   // hip rides up to 16.6, so the legs run the whole lower 16.6 u.
-  torso:[[1.05,29.2],[1.72,28.93],[2.45,28.42],[3.05,27.88],[3.55,27.33],[3.8,26.6],
-         [3.72,25.55],[3.45,24.36],[2.95,23.08],[2.4,21.9],[2.66,20.71],[3.18,19.16],
+  torso:[[0.95,28.9],[1.66,28.66],[2.38,28.20],[3.00,27.70],[3.50,27.20],[3.78,26.50],
+         [3.70,25.44],[3.43,24.26],[2.95,23.00],[2.44,21.86],[2.68,20.70],[3.18,19.16],
          [3.48,17.7],[3.5,16.6]],
-  hipY:16.6, ankleY:1.2, hipHalf:3.4, ankleW:0.95, legMids:[{w:1.15,y:8.6}],
-  armShoulderY:27.2, armWristY:14.6, armTop:1.5, armBot:1.2, attachHalf:3.05, hand:0.62,
+  // thigh, knee, calf: three stops, so the leg has a line instead of being a
+  // straight tapered stick
+  hipY:16.6, ankleY:1.2, hipHalf:3.4, ankleW:0.95,
+  legMids:[{w:1.38,y:12.6},{w:1.05,y:8.2},{w:1.16,y:5.4}],
+  armShoulderY:26.5, armWristY:14.3, armTop:1.40, armBot:0.94, attachHalf:3.02, hand:0.60,
 };
 const LEAD_STATS = {
-  "head : height":"1 : 6.5", "head Ø":"5.4 u", "neck":"added, 2.3 u",
-  "shoulder":"6.9 u", "torso":"12.6 u", "leg of body":"47%", "hand Ø":"1.2 u",
+  "head : height":"1 : 6.8", "head Ø":"5.2 u", "neck":"1.9 u wide, 1.0 u bare",
+  "shoulder":"6.9 u", "torso":"12.3 u", "leg of body":"47%", "hand":"1.1 × 1.8 u",
 };
 
 /* the model ships as two builds — there is no neutral. They share everything
@@ -977,17 +1092,17 @@ const LEAD_STATS = {
    silhouette and the hip / arm-attach / leg-stance widths. masc: broader
    upper torso, narrower hip, softer waist. femme: narrower shoulders, sharper
    waist, wider hip. */
-const TORSO_MASC = [[1.10,29.25],[1.85,28.97],[2.65,28.47],[3.35,27.88],[3.95,27.28],[4.2,26.55],
-  [4.1,25.46],[3.8,24.27],[3.2,22.99],[2.62,21.8],[2.78,20.62],[3.02,19.07],[3.24,17.7],[3.26,16.6]];
-const TORSO_FEMME = [[1.00,29.15],[1.60,28.88],[2.28,28.38],[2.80,27.83],[3.22,27.33],[3.46,26.64],
-  [3.40,25.55],[3.18,24.36],[2.68,23.08],[2.14,21.99],[2.62,20.8],[3.36,19.16],[3.74,17.6],[3.74,16.6]];
+const TORSO_MASC = [[0.98,28.95],[1.72,28.68],[2.52,28.20],[3.24,27.62],[3.88,27.02],[4.16,26.32],
+  [4.06,25.30],[3.76,24.16],[3.18,22.92],[2.60,21.76],[2.78,20.60],[3.02,19.07],[3.24,17.7],[3.26,16.6]];
+const TORSO_FEMME = [[0.92,28.88],[1.52,28.62],[2.20,28.14],[2.74,27.60],[3.18,27.08],[3.44,26.40],
+  [3.38,25.35],[3.16,24.22],[2.70,23.00],[2.20,21.95],[2.66,20.80],[3.36,19.16],[3.74,17.6],[3.74,16.6]];
 function bodyVariant(build){
   if (build === "masc")
-    return { ...GROUNDED, torso:TORSO_MASC, hipHalf:3.15, attachHalf:3.28, ankleW:1.0 };
-  return { ...GROUNDED, torso:TORSO_FEMME, hipHalf:3.52, attachHalf:2.9, ankleW:0.88 };
+    return { ...GROUNDED, torso:TORSO_MASC, hipHalf:3.15, attachHalf:3.34, ankleW:1.0 };
+  return { ...GROUNDED, torso:TORSO_FEMME, hipHalf:3.52, attachHalf:2.82, ankleW:0.88 };
 }
 const BUILDS = [
-  { key:"masc",  name:"Masc",  note:"shoulders 8.4 u · hip 6.5 u" },
+  { key:"masc",  name:"Masc",  note:"shoulders 8.3 u · hip 6.3 u" },
   { key:"femme", name:"Femme", note:"shoulders 6.9 u · hip 7.5 u" },
 ];
 
@@ -995,17 +1110,19 @@ const S_UMBER="#4a3423", S_BROWN="#6e4a31", S_TAN="#c08a58",
       S_OLIVE="#9c7c50", S_LIGHT="#dcae88", S_PALE="#e7ccb5", S_ROSE="#e0b59a";
 const H_BLACK="#1b191d", H_DARKBROWN="#33241b", H_AUBURN="#6a3320",
       H_BROWN="#4c3323", H_BLONDE="#c39a5b", H_GREY="#82828a";
+const E_DARK="#3d2a1e", E_BROWN="#5b3a24", E_HAZEL="#7a5a2c",
+      E_GREEN="#4a6047", E_BLUE="#41637a", E_GREY="#5d6b70";
 
 const HAIR = [
-  { name:"Kade",  skin:S_TAN,   hair:"stubble",  hairCol:H_DARKBROWN, desc:"buzz-cut shadow, flush" },
-  { name:"Rell",  skin:S_UMBER, hair:"buzz",     hairCol:H_BLACK,     desc:"buzz" },
-  { name:"Oda",   skin:S_BROWN, hair:"crop",     hairCol:H_DARKBROWN, desc:"crop" },
-  { name:"Ives",  skin:S_TAN,   hair:"sidepart", hairCol:H_AUBURN,    desc:"side part" },
-  { name:"Bku",   skin:S_BROWN, hair:"curls",    hairCol:H_BLACK,     desc:"curls" },
-  { name:"Sano",  skin:S_OLIVE, hair:"bun",      hairCol:H_BLACK,     desc:"topknot" },
-  { name:"Marn",  skin:S_LIGHT, hair:"long",     hairCol:H_BLONDE,    desc:"long" },
-  { name:"Voss",  skin:S_PALE,  hair:"receding", hairCol:H_GREY,      desc:"receding / thin, grey" },
-  { name:"Talia", skin:S_ROSE,  hair:"ponytail", hairCol:H_BROWN,     desc:"ponytail" },
+  { name:"Kade",  skin:S_TAN,   hair:"stubble",  hairCol:H_DARKBROWN, eye:E_HAZEL, desc:"buzz-cut shadow, flush" },
+  { name:"Rell",  skin:S_UMBER, hair:"buzz",     hairCol:H_BLACK,     eye:E_DARK,  desc:"buzz" },
+  { name:"Oda",   skin:S_BROWN, hair:"crop",     hairCol:H_DARKBROWN, eye:E_BROWN, desc:"crop" },
+  { name:"Ives",  skin:S_TAN,   hair:"sidepart", hairCol:H_AUBURN,    eye:E_GREEN, desc:"side part" },
+  { name:"Bku",   skin:S_BROWN, hair:"curls",    hairCol:H_BLACK,     eye:E_DARK,  desc:"curls" },
+  { name:"Sano",  skin:S_OLIVE, hair:"bun",      hairCol:H_BLACK,     eye:E_BROWN, desc:"topknot" },
+  { name:"Marn",  skin:S_LIGHT, hair:"long",     hairCol:H_BLONDE,    eye:E_BLUE,  desc:"long" },
+  { name:"Voss",  skin:S_PALE,  hair:"receding", hairCol:H_GREY,      eye:E_GREY,  desc:"receding / thin, grey" },
+  { name:"Talia", skin:S_ROSE,  hair:"ponytail", hairCol:H_BROWN,     eye:E_HAZEL, desc:"ponytail" },
 ];
 
 const OUTFITS = [
@@ -1042,14 +1159,18 @@ function mkSvg(cls, vbw, vbh){
   s.setAttribute("width", dim[0]); s.setAttribute("height", dim[1]);
   return s;
 }
+// the brow reads a shade deeper than the hair, so a blonde or grey head still
+// has a face; near-black hair lifts instead, or the brow vanishes into it
 function browColFor(hairCol){
-  return hairCol === H_GREY ? "#7d6f63" : shade(hairCol, -8);
+  if (hairCol === H_GREY) return "#78706a";
+  return shade(hairCol, hairCol === H_BLACK ? 22 : -26);
 }
 
 /* 1 — body (the lead figure is the femme build, with a flush buzz-cut shadow) */
 buildFigure(document.getElementById("lead-fig"), bodyVariant("femme"), {
   ticks:true,
-  head:{ skin:S_TAN, hair:"stubble", hairCol:H_DARKBROWN, browCol:browColFor(H_DARKBROWN) },
+  head:{ skin:S_TAN, hair:"stubble", hairCol:H_DARKBROWN,
+         browCol:browColFor(H_DARKBROWN), eyeCol:E_HAZEL },
 });
 const ls = document.getElementById("lead-stats");
 for (const [k,v] of Object.entries(LEAD_STATS)) ls.insertAdjacentHTML("beforeend", `<dt>${k}</dt><dd>${v}</dd>`);
@@ -1063,7 +1184,8 @@ BUILDS.forEach(b => {
   const svg = mkSvg("stage", VB_W, VB_H); el.appendChild(svg);
   buildFigure(svg, bodyVariant(b.key), {
     outfit:{ suit_color:rgb([111,124,139]), boot_color:rgb([56,66,77]) },
-    head:{ skin:S_TAN, hair:"crop", hairCol:H_DARKBROWN, browCol:browColFor(H_DARKBROWN) },
+    head:{ skin:S_TAN, hair:"crop", hairCol:H_DARKBROWN,
+           browCol:browColFor(H_DARKBROWN), eyeCol:E_BROWN },
   });
   el.insertAdjacentHTML("beforeend", `<p class="spec">${b.note}</p>`);
   gb.appendChild(el);
@@ -1081,7 +1203,8 @@ function drawWalk(){
   buildFigure(walkFig, bodyVariant("masc"), {
     phase: walkPhase,
     outfit: { suit_color: rgb([111, 124, 139]), boot_color: rgb([56, 66, 77]) },
-    head: { skin: S_TAN, hair: "crop", hairCol: H_DARKBROWN, browCol: browColFor(H_DARKBROWN) },
+    head: { skin: S_TAN, hair: "crop", hairCol: H_DARKBROWN,
+            browCol: browColFor(H_DARKBROWN), eyeCol: E_BROWN },
   });
 }
 function walkFrame(t){
@@ -1106,7 +1229,8 @@ if (walkPlaying) requestAnimationFrame(walkFrame);
   buildFigure(document.getElementById(id), bodyVariant("masc"), {
     face, phase: 0.9,
     outfit: { suit_color: rgb([111, 124, 139]), boot_color: rgb([56, 66, 77]) },
-    head: { skin: S_TAN, hair: "crop", hairCol: H_DARKBROWN, browCol: browColFor(H_DARKBROWN) },
+    head: { skin: S_TAN, hair: "crop", hairCol: H_DARKBROWN,
+            browCol: browColFor(H_DARKBROWN), eyeCol: E_BROWN },
   });
 });
 
@@ -1118,7 +1242,8 @@ HAIR.forEach(f => {
   el.innerHTML = `<p class="tag">${f.name}</p>`;
   const svg = mkSvg("stage-head", HB_W, HB_H); svg._cx = HCX; svg._cy = HCY;
   el.appendChild(svg);
-  drawHeadCard(svg, { skin:f.skin, hair:f.hair, hairCol:f.hairCol, browCol:browColFor(f.hairCol) });
+  drawHeadCard(svg, { skin:f.skin, hair:f.hair, hairCol:f.hairCol,
+                      browCol:browColFor(f.hairCol), eyeCol:f.eye });
   el.insertAdjacentHTML("beforeend", `<p class="spec">${f.desc}</p>`);
   gh.appendChild(el);
 });
@@ -1136,7 +1261,7 @@ OUTFITS.forEach((ot, i) => {
   buildFigure(svg, bodyVariant(build), {
     outfit:o,
     head:{ skin:ot.face.skin, hair:ot.face.hair, hairCol:ot.face.hairCol,
-           browCol:browColFor(ot.face.hairCol) },
+           browCol:browColFor(ot.face.hairCol), eyeCol:ot.face.eye },
   });
   el.insertAdjacentHTML("beforeend", `<p class="cap"><b>${ot.face.name}</b> &middot; ${build} &mdash; ${ot.cap}</p>`);
   go.appendChild(el);
@@ -1152,7 +1277,8 @@ BODY_PX.forEach(d => {
   cell.appendChild(svg);
   buildFigure(svg, bodyVariant("femme"), {
     outfit:{ suit_color:rgb([96,110,120]), boot_color:rgb([60,66,72]) },
-    head:{ skin:S_LIGHT, hair:"long", hairCol:H_BLONDE, browCol:browColFor(H_BLONDE) },
+    head:{ skin:S_LIGHT, hair:"long", hairCol:H_BLONDE,
+           browCol:browColFor(H_BLONDE), eyeCol:E_BLUE },
   });
   cell.insertAdjacentHTML("beforeend", `<span>${d.l} · ${d.px}px</span>`);
   db.appendChild(cell);
@@ -1183,7 +1309,8 @@ const zoomReset = document.getElementById("zoom-reset");
 const zoomRead = document.getElementById("zoom-read");
 buildFigure(zoomFig, bodyVariant("masc"), {
   outfit:{ suit_color:rgb([111,124,139]), boot_color:rgb([56,66,77]) },
-  head:{ skin:S_TAN, hair:"crop", hairCol:H_DARKBROWN, browCol:browColFor(H_DARKBROWN) },
+  head:{ skin:S_TAN, hair:"crop", hairCol:H_DARKBROWN,
+         browCol:browColFor(H_DARKBROWN), eyeCol:E_BROWN },
 });
 function applyZoom(z){
   const w = VB_W / z, h = VB_H / z;

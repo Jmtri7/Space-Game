@@ -160,11 +160,9 @@ weapons system.
   arm-attach / leg-stance widths: masc broader up top and narrower at the
   hip, femme the reverse) and every figure on the page is one or the other;
   swaps the head oval for a big **egg** (`HEAD_SHAPE` polygon — tall full
-  rounded crown to `HEAD_CROWN` 1.26, x 0.85 at the widest, tapered chin;
+  rounded crown to `HEAD_CROWN`, widest at the cheekbone, tapered chin;
   hairlines sit high on the forehead; the tick axis measures to the real
-  crown), gives the brow a **slight arch** and rotates each
-  eye ~7° so its **outer corner sits higher**, narrows the nose oval and the
-  eye height, and **generates** every **hairstyle** as a
+  crown), and **generates** every **hairstyle** as a
   **flat single-colour fill** built from the skull rather than drawn by hand
   — `buildHair()` traces `headR()` (the `HEAD_SHAPE` profile as a polar
   function, sampled on the head's own vertices so a flat style never cuts a
@@ -177,10 +175,14 @@ weapons system.
   a stepped `part`/`jog`, `receding` cuts `bay` temple bays around a `dip`
   forelock, `bun`/`ponytail` use a tight `sleek` crown (knot tucked into it /
   high tail behind), `curls` scallops the built edge with a rim of clumps, and
-  `long` hangs a panel down each side of the face over one back drape. Plus a
+  `long` hangs a panel down each side of the face over one back drape — the
+  panel starts on the crescent's own temple point and hands back to the
+  hairline *short* of it (`buildHair`'s `cut` / `join`), because running the
+  hairline all the way out makes the loop double back and leaves a spur of
+  hair standing off the temple. Plus a
   `stubble` (one fill mixed from skin + hair, built the same way with zero
   lift, a flush buzz-cut shadow the §1 lead figure wears);
-  reshapes the boot to a bigger **foot profile** (long low toe box pointing
+  reshapes the boot to a **foot profile** (low toe box pointing
   the way the figure faces — screen-left as built — with a compact heel);
   draws the head **turned a shallow 3/4** toward the facing direction (skull
   off-centre `HEAD_DX`, features clustered further over `FACE_DX` and smaller
@@ -190,10 +192,43 @@ weapons system.
   it);
   gives each arm / leg a **fixed one-direction shade polygon** down its
   screen-right side — the torso's a curve-following side strip, the neck's a
-  band whose lower edge parallels the chin — moves behind-the-back hair (long,
+  band whose lower edge parallels the chin, and `legShadePts` reads the leg's
+  stops off the polygon rather than indexing fixed slots, so adding a stop
+  doesn't tear it — moves behind-the-back hair (long,
   ponytail) ahead of the body so the torso occludes it, and adds a
   **facing left/right** demo (`face: -1` mirrors the group, = `Person.facing`),
   head cards with an accurate neck + trapezius yoke, and a zoom-scrub section.
+
+  **Then a redraw for looks** (the current state of the page). The head came
+  **down** (r 2.72 → 2.60 u) and **up** (cy 32.1 → 32.4) over a **slimmer
+  neck** (half 1.15 → 0.96) with the torso top dropped ~0.3 u, so ~1 u of neck
+  is actually bare above the collar instead of the chin sitting on the
+  collarbone — about 6.8 heads by the page's own tick metric. The skull is
+  narrower overall, clearly widest at the **cheekbone** (y 0.19) and tapered
+  through a narrower jaw to a small rounded chin. The **face kit is rewritten**
+  (`drawFaceKit` is now the one call site for both the figure and the head
+  cards): **almond eyes** — a built `almondPts` opening with a full upper lid
+  over a shallower lower one, sclera / iris / pupil / catchlight, and an
+  `EYE_LASH` band along the lid that doubles as the crop taking the top off the
+  iris, which is what makes the eye read lidded instead of staring — set closer
+  together (`EYE_EX` 0.42 → 0.375) and tilted 6°; a **fine tapered brow**
+  (thickest over the inner third, thinning to a point outward) sitting lower;
+  a **nose** of a slim bridge shadow running into a small soft tip, replacing
+  the dark oval blob; and a **two-part mouth** — upper lip with a cupid's bow
+  over a fuller lower lip in a `lipTone()` mixed off the skin, its seam a touch
+  higher at the corners than at the centre. Per-character **`eyeCol`** joins
+  `hairCol` / `browCol`, and `browColFor` now takes the brow a shade *deeper*
+  than the hair (lifting it for near-black) so a blonde or grey head still has
+  a face. The head carries the same one-direction shade as the limbs, but
+  shaped like a face rather than ruled down it — `HEAD_SHADE` is a leaf, barely
+  there at the crown, widest across the far cheek and jaw, gone by the chin, at
+  a much lighter `FACE_SHADE`. The **ears** dropped to brow-to-nose-base height
+  and barely clear the skull. On the body: the leg gained **thigh / knee /
+  calf** stops, the **boot** lost its flipper toe, the **hand** became a
+  tapered mitt polygon carried through the arm transform instead of a circle at
+  the wrist, the arms taper to a slimmer wrist and hang closer at rest
+  (`REST_SPLAY` 12° → 7°), and the head turn was eased (`FACE_DX` 0.22 → 0.16).
+
   These are deliberately ahead of `figure_parts` until a re-bake; the "One
   uniform outline weight" / "long torso" language above describes the current
   bake, not the study.

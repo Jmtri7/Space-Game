@@ -31,7 +31,9 @@ SHAD  = "#2a3444"
 GRID  = "url(#grid)"
 
 # shallow "D" ear as (dx, dy) from the face centre in head-radii - the
-# grounded-person.html EAR_D exactly (its y is up, so negated here): flat side
+# grounded-person.html EAR_D as it stood at the bake (the study has since moved
+# its ear lower and tucked it in further; that lands here on the next re-bake -
+# see docs/DESIGN_ATLAS.md): flat side
 # tucked just inside the oval's edge (0.88 r), a shallow bulge to ~1.06 r,
 # ~0.5 r tall. Mirrored on both sides. dy is SVG-down (positive = lower).
 EAR_D = [(0.88, -0.26), (0.88, 0.24), (0.99, 0.20),
