@@ -165,11 +165,17 @@ weapons system.
   crown), gives the brow a **slight arch** and rotates each
   eye ~7° so its **outer corner sits higher**, narrows the nose oval and the
   eye height, and reworks every **hairstyle** as a **flat single-colour fill**
-  that fits the head — each `HAIR_SHAPE` crescent parallels the skull with a
-  per-style offset (close at the temples, more over the crown) and its inner
-  hairline tucks just inside the skull, so no gap; `curls` adds a lump ring,
-  `long`'s back is one big drape. Plus a `stubble` (one crown-clipped fill
-  mixed from skin + hair, a flush buzz-cut shadow the §1 lead figure wears);
+  that fits the head — each `HAIR_SHAPE` crescent's outer edge is the
+  skull profile pushed out a hair (snug styles clear the crown by ~0.05
+  face-radii, fuller ones by ~0.13, none balloon wide of the temples) and it
+  **wraps the temple down over the ear-top**; the inner edge is a clean
+  hairline band across the forehead well above the brow. `sidepart` carries
+  volume to one side with a stepped part, `receding` cuts gentle temple bays
+  and a forelock, `bun`/`ponytail` use a tight `sleek` crown (topknot / high
+  tail on top / behind), `curls` adds a skull-hugging clump ring over a `cap`
+  base, and `long`'s back is one big drape. Plus a `stubble` (one fill mixed
+  from skin + hair that wraps the same way, a flush buzz-cut shadow the §1
+  lead figure wears);
   reshapes the boot to a bigger **foot profile** (long low toe box pointing
   the way the figure faces — screen-left as built — with a compact heel);
   draws the head **turned a shallow 3/4** toward the facing direction (skull
