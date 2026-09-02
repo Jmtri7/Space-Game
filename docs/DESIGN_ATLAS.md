@@ -164,24 +164,29 @@ weapons system.
   hairlines sit high on the forehead; the tick axis measures to the real
   crown), gives the brow a **slight arch** and rotates each
   eye ~7° so its **outer corner sits higher**, narrows the nose oval and the
-  eye height, and reworks every **hairstyle** as a **flat single-colour fill**
-  that fits the head — each `HAIR_SHAPE` crescent's outer edge is the
-  skull profile pushed out a hair (snug styles clear the crown by ~0.05
-  face-radii, fuller ones by ~0.13, none balloon wide of the temples) and it
-  **wraps the temple down over the ear-top**; the inner edge is a clean
-  hairline band across the forehead well above the brow. `sidepart` carries
-  volume to one side with a stepped part, `receding` cuts gentle temple bays
-  and a forelock, `bun`/`ponytail` use a tight `sleek` crown (topknot / high
-  tail on top / behind), `curls` adds a skull-hugging clump ring over a `cap`
-  base, and `long`'s back is one big drape. Plus a `stubble` (one fill mixed
-  from skin + hair that wraps the same way, a flush buzz-cut shadow the §1
-  lead figure wears);
+  eye height, and **generates** every **hairstyle** as a
+  **flat single-colour fill** built from the skull rather than drawn by hand
+  — `buildHair()` traces `headR()` (the `HEAD_SHAPE` profile as a polar
+  function, sampled on the head's own vertices so a flat style never cuts a
+  chord inside it), pushes it out by a lift that peaks over the crown (`crown`,
+  0.02 for `buzz` up to 0.22 for `curls`) and fades to nothing at the temples,
+  **ends the crescent at `tempAng` — a temple point kept above the brow**, so
+  the temple stays bare and the ear clear, then closes it with a hairline that
+  falls from a high `peak` to that same point, giving every style a sideburn
+  taper instead of a blunt horizontal chop. `sidepart` adds `skew`/`sweep` and
+  a stepped `part`/`jog`, `receding` cuts `bay` temple bays around a `dip`
+  forelock, `bun`/`ponytail` use a tight `sleek` crown (knot tucked into it /
+  high tail behind), `curls` scallops the built edge with a rim of clumps, and
+  `long` hangs a panel down each side of the face over one back drape. Plus a
+  `stubble` (one fill mixed from skin + hair, built the same way with zero
+  lift, a flush buzz-cut shadow the §1 lead figure wears);
   reshapes the boot to a bigger **foot profile** (long low toe box pointing
   the way the figure faces — screen-left as built — with a compact heel);
   draws the head **turned a shallow 3/4** toward the facing direction (skull
   off-centre `HEAD_DX`, features clustered further over `FACE_DX` and smaller
-  `FACE_S`, hair centre / under-chin shadow over by `HAIR_DX`, near ear
-  showing / far ear covered; the whole-figure mirror flips
+  `FACE_S`, hair and under-chin shadow riding the skull centre — the hair is
+  built off the skull profile, so an offset of its own would slide it off the
+  crown — near ear showing / far ear covered; the whole-figure mirror flips
   it);
   gives each arm / leg a **fixed one-direction shade polygon** down its
   screen-right side — the torso's a curve-following side strip, the neck's a
