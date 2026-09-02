@@ -232,25 +232,38 @@ weapons system.
   changed. A style now bakes into a **part list** — `{p|c, t}` pieces in
   head-radius units — instead of one polygon, and `drawHairPieces()` walks the
   same list for the figure and the head card, so they cannot drift apart.
-  Every style carries **three tones**: the fill, a **shade wedge** down the far
-  (+x) side — out along the outer edge, back along the hairline the crescent
-  *actually draws*, so it can never sit lower than the hair does — and a
-  **sheen** arcing over the near side of the crown just inside the outer edge,
-  thickest in the middle and tapering to a point at each end (both clamped
-  against `lineHi`, the top of the hairline, so neither can leak onto the
-  face). `hairTone()` scales rather than offsets, so near-black hair still
-  separates. The hairline gained **`tips`** — the even samples hang down as
-  pointed locks, the odd ones lift into the notches, with a per-lock depth
-  table so a fringe isn't a regular sawtooth; a smooth swept hairline was most
-  of why every flat style read as a swim cap. Per style: `sidepart` draws the
-  **parting** itself as a line up over the crown (last, so it cuts the sheen);
-  `curls`' far-side clumps carry the shade tone, which is what models a curly
-  head; `bun`'s knot sits **proud** of the slicked crown with its own shade and
-  a catch of sheen instead of being a disc tucked inside it; `ponytail` gained
-  a tie; and `long`'s back drape was widened to fall **past the shoulders** —
-  narrower than that and the torso swallows it whole and the style reads as
-  hair that stops at the jaw. `stubble` is the one style with no shade or
-  sheen: it is a shadow on the scalp, not a mass of hair.
+  Every piece past the fill is one object: **`hairCrescent()`**, a ribbon that
+  runs along the hair's own outer edge between two angles, swells in the middle
+  and tapers to a point at both ends, with its depth on each ray capped by
+  **`bandDepth()`** — a bisection for how far in from the edge that ray can
+  travel before it leaves the hair through the hairline. So the **shade** (far
+  side), the **sheen** (thinner, held off the edge over the near crown) and the
+  **parting** all have no visible ends and no straight chord across the mass,
+  and none of them can be deeper than the hair over it. A shade built as a
+  wedge between the edge and the hairline — the first attempt — reads as a
+  second colour painted on along a straight line; this doesn't.
+  `hairTone()` scales rather than offsets, so near-black hair still separates.
+  The hairline gained **`tips`**, locks that *straddle* the curve (points below
+  it, notches above) at uneven depths — a smooth swept hairline was most of why
+  every flat style read as a swim cap, and locks that merely ride on top of the
+  curve read as bumps. `lean` slides the crown's peak off centre; **`wave`**
+  ripples the lift itself, which is how `curls` gets a clumpy silhouette
+  instead of circles pasted onto a smooth one.
+
+  The junctions are where a style actually goes wrong, and each is now built:
+  `long`'s side lock leaves the crescent **along the crescent's own curve**
+  rather than stepping straight out to full width (which put a horn on each
+  side of the head), its inner edge follows **`headHalfAt()`** while there is a
+  cheek to hug and then holds a line past the jaw, and it hands back to the
+  hairline *short* of the temple. The back **drape** starts inside the front
+  hair's silhouette (its corner used to poke out over each temple) and draws in
+  the **shade** tone — at the same tone as the locks in front of it the whole
+  side of the head merges into one flat slab. `bun`'s knot sits **proud** of
+  the slicked crown with its own shade; `ponytail`'s tail is a tapered rope
+  built from a centre line by **`tailParts()`**; and the drape falls **past the
+  shoulders**, since narrower than that the torso swallows it whole and the
+  style reads as hair that stops at the jaw. `stubble` is the one style with no
+  shade or sheen: it is a shadow on the scalp, not a mass of hair.
 
   These are deliberately ahead of `figure_parts` until a re-bake; the "One
   uniform outline weight" / "long torso" language above describes the current
