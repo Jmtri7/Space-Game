@@ -146,7 +146,7 @@
     <p class="eyebrow">space-game · character model</p>
     <h1>The Grounded Person model</h1>
     <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; a short torso over long legs (hip up at ~47% of height), a trapezius yoke that sweeps up behind the neck, rounded shoulders, a masc / femme split on the torso and hip width, and a flat one-direction shade down one side of each limb &mdash; then the face kit worked out on it.</p>
-    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. The <b>hair</b> was redrawn on the same terms: still generated from the skull, but in three tones instead of one &mdash; a shade ribbon down the far side and a sheen over the near crown, both following the hair's own contour and tapering to nothing at each end, so nothing reads as a second colour laid on across a straight edge &mdash; with the hairline cut into pointed locks that straddle it, a drawn parting on the side part, a rippled silhouette on the curls, a knot that sits proud of the crown for the bun, and a long style whose side locks leave the crown along its own curve over a drape that falls past the shoulders in shadow. Then the skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
+    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. The <b>hair</b> was redrawn on the same terms: still generated from the skull, but in three tones instead of one &mdash; a shade ribbon down the far side and a sheen over the near crown, both following the hair's own contour and tapering to nothing at each end, so nothing reads as a second colour laid on across a straight edge &mdash; with volume on a plateau lift rather than a crown bulge (a bulge only makes the skull taller, which is what helmet hair is) and a ripple over that, the hairline cut into pointed locks that straddle it, a drawn parting on the side part, a rippled silhouette on the curls, a knot that sits proud of the crown for the bun, and a long style whose side locks leave the crown along its own curve over a drape that falls past the shoulders in shadow. Then the skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
   </header>
 
   <section>
@@ -204,9 +204,9 @@
   <section>
     <div class="sec-head">
       <h2 class="sec">4 &nbsp;Hair &amp; skin</h2>
-      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. None of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that peaks over the crown (0.03 face-radii for the buzz, 0.24 for the curls) and fades to nothing at the temples, so the hair melts into the head silhouette. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn.</p>
+      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. None of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that is a <b>plateau, not a bulge</b>: it ramps up over the first sixth of the sweep, holds right across the sides and the crown (0.08 face-radii for the buzz, 0.43 for the curls), and ramps back down into the far sideburn. That is the difference between hair and a helmet. A lift that only swells over the crown leaves the outline an offset copy of the skull, however deep you make it; a plateau stands the mass off the head everywhere, and because the ramp leaves the skull tangentially rather than as a cusp, the two ends don't spike. On top of it every style carries a <b>ripple</b>, gentle on most and pulled into clumps on the curls, so no edge is a clean arc. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn.</p>
       <p><b>Three tones, and no straight edges anywhere.</b> A style bakes into a <em>part list</em> rather than a single shape, and every piece on it past the fill is the same object: a <b>contour ribbon</b> that runs along the hair's own outer edge between two angles, swells in the middle and tapers to a point at both ends. The <b>shade</b> is one down the far side, the <b>sheen</b> a thinner one held just off the edge over the near side of the crown, the <b>parting</b> another. None of them has an end you can see or a straight chord across the mass &mdash; which is exactly what a shade laid on as a flat wedge looks like &mdash; and none can be deeper than the hair beneath it, because each ray's depth is capped by how far it can travel in from the edge before it reaches the hairline. The tones are scaled off the hair colour rather than offset from it, so near-black hair still separates instead of clamping to the same black. The figure and the head card walk the same list.</p>
-      <p><b>And the hairline is cut into locks.</b> A smooth swept hairline is what made every flat style read as a swim cap; the fuller ones now hang it in pointed locks that <em>straddle</em> the curve &mdash; each point below it, each notch above &mdash; at uneven depths, so a fringe reads as cut hair rather than a row of bumps sitting on a line. Distinct shapes: a snug buzz, a cropped fringe over a crown that sits a little off centre, a left side part with a stepped parting and the parting itself opened up over the crown, a receding pair of temple bays around a forelock, a curl mass whose <em>silhouette itself</em> is rippled into clumps (no circles pasted on top of a smooth one), a slicked crown under a knot that sits proud of it for the bun, a tapered rope of a tail for the ponytail, and for the long, a lock down each side of the face over a drape behind.</p>
+      <p><b>And the hairline is cut into locks.</b> A smooth swept hairline is what made every flat style read as a swim cap; the fuller ones now hang it in pointed locks that <em>straddle</em> the curve &mdash; each point below it, each notch above &mdash; at uneven depths, so a fringe reads as cut hair rather than a row of bumps sitting on a line. Distinct shapes: a snug buzz, a cropped fringe over a crown that sits a little off centre, a left side part &mdash; combed rather than cut, so no locks: a stepped parting, the parting itself opened up over the crown, and a hairline that sweeps low across one brow and back off the other, a receding pair of temple bays around a forelock, a curl mass whose <em>silhouette itself</em> is rippled into clumps (no circles pasted on top of a smooth one), a slicked crown under a knot that sits proud of it for the bun, a tapered rope of a tail for the ponytail, and for the long, a lock down each side of the face over a drape behind.</p>
       <p><b>Where the pieces meet</b> is where a hairstyle goes wrong, and each junction is now built rather than eyeballed. The long lock leaves the crescent <em>along the crescent's own curve</em> instead of stepping straight out to its full width, which used to put a horn on each side of the head; its inner edge hugs the skull while there is a cheek to hug and then holds a line past the jaw, so it is thin where it presses to the cheekbone and full where it hangs free, and never floats off the face with daylight behind it; and it hands back to the hairline <em>short</em> of the temple, since running the hairline all the way out doubles the loop back on itself. The back drape starts inside the front hair's silhouette rather than poking a corner out over each temple, and it draws in the <b>shade</b> tone &mdash; it is behind the head, and at the same tone as the locks in front of it the whole side of the head merges into one flat slab. <b>Kade</b> is the flush buzz-cut shadow &mdash; one fill mixed from skin and hair, built the same way with zero lift, and the one style with no shade or sheen: it is a shadow on the scalp, not a mass of hair.</p>
     </div>
     <div class="grid" id="grid-hair"></div>
@@ -301,11 +301,14 @@ function headLowerY(fx){
    handful of numbers, so nothing can float off the crown, balloon past the
    temples or chop off in mid-air:
 
-     - OUTER edge: the skull radius plus lift(angle). The lift peaks over the
-       crown (`lean` slides that peak off centre) and fades to nothing at the
-       temples, so the hair melts into the head silhouette instead of standing
-       proud of it. `wave` ripples that same radius, which is how the curls get
-       a lumpy silhouette without circles pasted on top of one.
+     - OUTER edge: the skull radius plus lift(angle). The lift is a PLATEAU,
+       not a bulge: it ramps up over the first sixth of the sweep, holds right
+       across the sides and crown, and ramps back down into the far sideburn,
+       so the mass stands off the head everywhere instead of tracing it. A
+       lift that only peaks over the crown makes the outline an offset copy of
+       the skull, which is what helmet hair is. `lean` carries the bulk to one
+       side; `wave` ripples the same radius, gently on most styles and into
+       clumps on the curls.
      - the crescent ENDS at tempAng, the angle of the temple point, kept above
        the brow so the temple stays bare and the ear clear.
      - INNER edge: the hairline, from a high crown `peak` down to that same
@@ -351,37 +354,62 @@ const HAIR_STYLE = {
   // no shade or sheen: it is a shadow on the scalp, not a mass of hair
   stubble:  { crown:0.00, temple:0.00, tempAng:26, peak:0.62, q:2.2, dip:0.05, bay:0, flat:true },
   // buzz - the barest skim of hair, a rounded natural hairline, no locks
-  buzz:     { crown:0.05, temple:0.00, tempAng:26, peak:0.68, q:2.4, dip:0.06, bay:0 },
+  buzz:     { crown:0.08, temple:0.008, tempAng:25, peak:0.68, q:2.4, dip:0.06, bay:0,
+              wave:{n:2.2, a:0.011, p:0.7} },
   // crop - real volume over a crown that sits a little off centre, and a
   // fringe cut into locks of uneven depth
-  crop:     { crown:0.19, temple:0.035, tempAng:24, peak:0.78, q:2.6, dip:0.04, bay:0.02,
-              lean:0.16, tips:{n:5, d:0.13, v:[1, 0.72, 1.15, 0.85, 0.95]} },
+  crop:     { crown:0.285, temple:0.025, tempAng:22, peak:0.78, q:2.6, dip:0.04, bay:0.02,
+              lean:0.16, wave:{n:2.1, a:0.044, p:1.1},
+              tips:{n:5, d:0.13, v:[1, 0.72, 1.15, 0.85, 0.95]} },
   // sleek - combed back for the bun and the ponytail: flat, high hairline
-  sleek:    { crown:0.07, temple:0.01, tempAng:27, peak:0.82, q:2.2, dip:0,    bay:0.03 },
+  sleek:    { crown:0.12, temple:0.015, tempAng:26, peak:0.82, q:2.2, dip:0, bay:0.03,
+              wave:{n:1.8, a:0.016, p:2.1} },
   // sidepart - volume carried to one side, the hairline stepping up at the
   // part, and the parting itself opened up over the crown
-  sidepart: { crown:0.20, temple:0.02, tempAng:24, peak:0.74, q:2.6, dip:0,    bay:0.02,
-              skew:0.42, part:-0.26, sweep:0.15, jog:0.13, lean:0.10,
-              tips:{n:4, d:0.10, v:[0.85, 1.15, 0.7, 1.0]} },
+  sidepart: { crown:0.305, temple:0.02, tempAng:22, peak:0.80, q:2.6, dip:0, bay:0.02,
+              skew:0.44, part:-0.26, sweep:0.25, jog:0.16, lean:0.14,
+              wave:{n:2.2, a:0.034, p:0.4} },
   // receding - thin over the crown, deep bays at the temples, a forelock left
   // standing in the middle. Too little hair to carry a highlight.
-  receding: { crown:0.05, temple:0.00, tempAng:31, peak:0.88, q:3.2, dip:0.14, bay:0.20,
-              noSheen:true },
+  receding: { crown:0.08, temple:0.005, tempAng:30, peak:0.88, q:3.2, dip:0.14, bay:0.20,
+              wave:{n:2.0, a:0.013, p:1.6}, noSheen:true },
   // curls - the most volume, and the silhouette itself rippled into clumps
-  curls:    { crown:0.27, temple:0.075, tempAng:24, peak:0.72, q:2.6, dip:0.02, bay:0.02,
-              wave:{n:4.5, a:0.062}, tips:{n:6, d:0.08, v:[1.2, 0.7, 1.0, 0.8, 1.15, 0.9]} },
+  curls:    { crown:0.43, temple:0.05, tempAng:22, tuck:0.20, peak:0.72, q:2.6, dip:0.02, bay:0.02,
+              wave:{n:4.5, a:0.070, lobe:true},
+              tips:{n:6, d:0.08, v:[1.2, 0.7, 1.0, 0.8, 1.15, 0.9]} },
   // long - crop volume up top, plus a lock down each side of the face
-  long:     { crown:0.17, temple:0.03, tempAng:20, peak:0.78, q:2.6, dip:0.04, bay:0.02,
-              lappet:true, tips:{n:5, d:0.15, v:[0.9, 1.2, 0.7, 1.1, 0.85]} },
+  long:     { crown:0.285, temple:0.025, tempAng:19, peak:0.78, q:2.6, dip:0.04, bay:0.02,
+              lappet:true, wave:{n:2.0, a:0.042, p:2.6},
+              tips:{n:5, d:0.15, v:[0.9, 1.2, 0.7, 1.1, 0.85]} },
 };
+/* The lift is what decides whether a style reads as hair or as a helmet. A
+   narrow bulge over the crown (sin^0.7) only makes the skull taller — the
+   outline stays an offset copy of the skull, which is exactly what a helmet
+   is. What replaces it is a PLATEAU: a smoothstep ramp up over the first
+   `tuck` of the sweep, flat across the sides and crown, and a matching ramp
+   back down into the far sideburn. So the mass stands off the head all the
+   way round and only tucks in at the two tips — and because the ramp leaves
+   the skull tangentially rather than as a cusp (which any power of a sine
+   does), the tips don't spike. A slight swell over the crown keeps it from
+   reading as a bowl, and `lean` carries the bulk to one side. `wave` then
+   rides on top of all of it, so no style's edge is a clean arc. */
+const _ramp = t => t <= 0 ? 0 : t >= 1 ? 1 : t*t*(3 - 2*t);
 function hairLift(st, deg){
   const u = (deg - st.tempAng) / (180 - 2*st.tempAng);
   if (u <= 0 || u >= 1) return st.temple;
-  const w = Math.sin(Math.PI * Math.pow(u, 1 + (st.lean || 0)));
-  let l = st.temple + (st.crown - st.temple) * Math.pow(w, 0.7);
-  if (st.wave)   // fuller lobes and tighter valleys than a plain sine gives
-    l += st.wave.a * Math.pow(w, 0.5)
-       * (Math.pow(Math.abs(Math.sin(Math.PI*st.wave.n*u)), 0.55)*2 - 0.9);
+  const tuck = st.tuck || 0.17;
+  const w = _ramp(u/tuck) * _ramp((1 - u)/tuck)      // plateau with soft tips
+          * (0.76 + 0.24*Math.sin(Math.PI*u))        // a little fuller up top
+          * (1 + (st.lean || 0)*(2*u - 1));          // and carried to one side
+  let l = st.temple + (st.crown - st.temple) * w;
+  if (st.wave){
+    const amp = st.wave.a * Math.pow(Math.max(0, w), 0.45);
+    // clumps for the curls - fuller lobes and tighter valleys than a sine
+    // gives; everywhere else a plain ripple, just enough to break the arc
+    l += st.wave.lobe
+       ? amp * (Math.pow(Math.abs(Math.sin(Math.PI*st.wave.n*u)), 0.55)*2 - 0.9)
+       : amp * Math.sin(2*Math.PI*st.wave.n*u + (st.wave.p || 0));
+  }
   return st.skew ? l * (1 - st.skew*Math.cos(deg*Math.PI/180)) : l;
 }
 function edgeR(st, deg){ return headR(deg) + hairLift(st, deg); }
@@ -401,7 +429,7 @@ function buildHairParts(st){
   // sample the outer edge on the skull's OWN vertex angles as well as evenly,
   // so a flat-to-the-head style traces the silhouette exactly instead of
   // cutting chords inside it and letting skin show through at the corners
-  const angs = [], steps = st.wave ? 72 : 20;
+  const angs = [], steps = st.wave ? Math.max(64, Math.round(st.wave.n*22)) : 28;
   for (let i = 0; i <= steps; i++) angs.push(T + (180 - 2*T)*i/steps);
   for (const p of HEAD_SHAPE){
     const a = Math.atan2(p[1], p[0]) * 180/Math.PI;
@@ -438,7 +466,7 @@ function buildHairParts(st){
      under it. `gap` holds it off the silhouette; `bias` slides the fat part
      of it toward the first angle (<1) or the second (>1). */
   function hairCrescent(a0, a1, gap, depth, bias){
-    const N = st.wave ? 40 : 24, out = [], back = [];
+    const N = st.wave ? 48 : 24, out = [], back = [];
     for (let i = 0; i <= N; i++){
       const u = i/N, a = a0 + (a1 - a0)*u;
       const e = Math.sin(Math.PI * Math.pow(u, bias || 1));
@@ -489,8 +517,8 @@ function buildHairParts(st){
     // step straight out to the lock's full width and the corner reads as a
     // horn stuck on the side of the head
     const ys = [0.20, 0.02, -0.30, -0.62, -0.90];
-    const xs = [0.836, 0.879, 0.906, 0.912, 0.896];
-    const outR = [[xT, yT]].concat(ys.map((y, i) => [xs[i], y])).concat([[0.66, -1.20]]);
+    const xs = [1.045, 1.095, 1.130, 1.140, 1.120].map(k => k*xT);
+    const outR = [[xT, yT]].concat(ys.map((y, i) => [xs[i], y])).concat([[0.80*xT, -1.20]]);
     const inR  = [[0.52, -1.11]].concat(ys.slice().reverse().map(
                      y => [Math.max(headHalfAt(y) - 0.035, 0.50), y]))
                            .concat([[join[0], join[1]]]);

@@ -165,8 +165,9 @@ weapons system.
   crown), and **generates** every **hairstyle** from the skull rather than
   drawing it by hand — `buildHairParts()` traces `headR()` (the `HEAD_SHAPE` profile as a polar
   function, sampled on the head's own vertices so a flat style never cuts a
-  chord inside it), pushes it out by a lift that peaks over the crown (`crown`,
-  0.02 for `buzz` up to 0.22 for `curls`) and fades to nothing at the temples,
+  chord inside it), pushes it out by a lift (`crown`, 0.08 for `buzz` up to 0.43
+  for `curls`) shaped as a plateau — ramp up, hold across the sides and crown,
+  ramp back down into the far sideburn —
   **ends the crescent at `tempAng` — a temple point kept above the brow**, so
   the temple stays bare and the ear clear, then closes it with a hairline that
   falls from a high `peak` to that same point, giving every style a sideburn
@@ -246,9 +247,21 @@ weapons system.
   The hairline gained **`tips`**, locks that *straddle* the curve (points below
   it, notches above) at uneven depths — a smooth swept hairline was most of why
   every flat style read as a swim cap, and locks that merely ride on top of the
-  curve read as bumps. `lean` slides the crown's peak off centre; **`wave`**
-  ripples the lift itself, which is how `curls` gets a clumpy silhouette
-  instead of circles pasted onto a smooth one.
+  curve read as bumps. `lean` carries the bulk to one side; **`wave`** ripples
+  the lift itself, gently on most styles and into clumps on `curls`, so no
+  edge is a clean arc.
+
+  **The lift shape is what decides helmet or hair.** It started as
+  `sin(u)^0.7` — a bulge over the crown — and no amount of depth fixed the
+  read, because the outline stayed an offset copy of the skull. It is now a
+  **plateau**: a smoothstep ramp over the first `tuck` (~1/6) of the sweep,
+  flat across the sides and crown, and a matching ramp down into the far
+  sideburn, times a slight swell over the crown so it isn't a bowl. The ramp
+  matters as much as the plateau — any power of a sine leaves a cusp at the
+  ends, which showed up as a spike off each temple; a smoothstep leaves the
+  skull tangentially. `sidepart` dropped its `tips` in the same pass: it is
+  combed, not cut, and with a fringe on it it was the crop in another
+  colour.
 
   The junctions are where a style actually goes wrong, and each is now built:
   `long`'s side lock leaves the crescent **along the crescent's own curve**
