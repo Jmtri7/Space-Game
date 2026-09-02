@@ -30,11 +30,12 @@ BROW  = "#3d2e24"     # eyebrow
 SHAD  = "#2a3444"
 GRID  = "url(#grid)"
 
-# shallow "D" ear as (dx, dy) from the face centre in head-radii: flat side
-# just outside the thick face outline (~1.12 r), a gentle bulge out past it,
+# shallow "D" ear as (dx, dy) from the face centre in head-radii - the
+# grounded-person.html EAR_D exactly (its y is up, so negated here): flat side
+# tucked just inside the oval's edge (0.88 r), a shallow bulge to ~1.06 r,
 # ~0.5 r tall. Mirrored on both sides. dy is SVG-down (positive = lower).
-EAR_D = [(1.02, -0.30), (1.02, 0.26), (1.18, 0.20),
-         (1.30, 0.02), (1.30, -0.12), (1.18, -0.26)]
+EAR_D = [(0.88, -0.26), (0.88, 0.24), (0.99, 0.20),
+         (1.06, 0.04), (1.06, -0.12), (0.99, -0.22)]
 
 # ---------------------------------------------------------------- primitives
 def fmt(pts): return " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
@@ -390,9 +391,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # helmet / hat / cap - same head height for every outfit
     _grp("body")
     if helmet:
-        _gate("helmet_color"); P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, helmet, d=_FD)); _gate(None)
+        _gate("helmet_color"); P.append(ooval(70, round(_gy(30.0), 1), helmet_r * 0.92, helmet_r, helmet)); _gate(None)
     if hat:
-        P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, hat, d=_FD))
+        P.append(ooval(70, round(_gy(30.0), 1), helmet_r * 0.92, helmet_r, hat))
     if cap:                                       # flat brimmed cap over the head
         P.append(opoly([(56, 40), (84, 40), (80, 32), (73, 27), (65, 27), (58, 32)], cap, d=1.2))
 

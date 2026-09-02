@@ -70,7 +70,13 @@ study's proportion spec via a `_gx` / `_gy` transform (`_G_SCALE` 5.15 atlas
 units per study unit, `_G_GROUND` 202.2): a **~6.1-head figure** — a small
 **oval** head (`ooval`: a many-sided polygon, x-radius `0.92·fr`, taller than
 wide — not a circle, matching the study; `fr` = 14 bare, 11.5 helmeted, down
-from 15/12), a **short neck** (a `SKINF`
+from 15/12). The **helmet / hat** dome is the same oval (`helmet_r·0.92` x /
+`helmet_r` y), not a circle, so it reads as an egg around the egg-shaped head;
+the Vherathi grown dome (`vherathi_outfits._dome_pts`) got the same 0.9-x
+squash. **Shallow D-ears** — `EAR_D` is now the study's exact profile (flat
+side tucked *inside* the oval edge at `0.88·fr`, a small bulge to `1.06·fr`),
+where it used to stand off at `1.02–1.30·fr` and read as knobs. A **short
+neck** (a `SKINF`
 column from the collar line up under the jaw), a **long torso**, and **legs on
 the true half-body line** (`FIG_HIP_Y` 139, was 146; slight ankle taper + a
 mid-calf point). **Narrow rounded shoulders** — the torso curves out to a modest
@@ -78,7 +84,7 @@ shoulder point (`attachHalf` ~3, arms tuck in close) and the upper arm gets a
 **domed top** that tucks under it. The **face kit** shows on a bare or hatted
 head (hidden by a helmet or a visor): **oval eyes** with a full-height pupil, a
 short **straight brow** over each, a tan **under-nose shadow** (`SKINL`), a soft
-**mouth** line, and shallow **D-ears**; every feature scales with `fr`. **One
+**mouth** line, and the D-ears above; every feature scales with `fr`. **One
 uniform outline weight** (`_FD` = 1.0) on every structural part — head, torso,
 neck, arms, hands, legs, boots, helmet dome — so the figure reads with the
 study's single thin edge instead of the old per-part `d` (head was `1.8`, torso

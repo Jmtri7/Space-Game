@@ -66,11 +66,18 @@ helm_ne_k = {ident(p) for p in helm_ne}
 
 BASE       = [p for p in bare_ne if ident(p) in helm_ne_k]
 BARE_HEAD  = [p for p in bare_ne if ident(p) not in helm_ne_k]      # big face (+outline)
-HELMET     = [p for p in helm_ne if ident(p) not in bare_ne_k]      # ring + small face
-# split the helmet run: circles at the head centre with the largest radius are
-# the ring; the rest is the face it frames (drawn later, over the chest pieces).
-_ring_r = max(p["circle"][2] for p in HELMET if "circle" in p)
-HELMET_RING = [p for p in HELMET if "circle" in p and p["circle"][2] >= _ring_r - 2.0 * S]
+HELMET     = [p for p in helm_ne if ident(p) not in bare_ne_k]      # dome + small face
+# split the helmet run by size: the dome oval (outline + fill) is markedly
+# wider than the face oval it frames. The face is drawn later, over the chest
+# pieces. (Both are oval polygons now - the Grounded head shape.)
+def _width(p):
+    if "points" in p:
+        xs = [x for x, _ in p["points"]]
+        return max(xs) - min(xs)
+    return p["circle"][2] * 2
+_ws = sorted(_width(p) for p in HELMET)
+_cut = (_ws[0] + _ws[-1]) / 2
+HELMET_RING = [p for p in HELMET if _width(p) >= _cut]
 HELMET_FACE = [p for p in HELMET if p not in HELMET_RING]
 
 EYES_BARE = [p for p in bare if ident(p) not in {ident(q) for q in bare_ne}]

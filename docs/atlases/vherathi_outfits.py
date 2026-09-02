@@ -20,16 +20,17 @@ def op_s(pts, fill, d=1.1, ol=OUT):
 
 
 def _dome_pts():
-    """A rounded grown helmet dome that hugs the head (circle r14 at 70,45.6)
-    and comes down past the ear line - bigger radius on the left (grown side)."""
+    """A rounded grown helmet dome that hugs the head - an OVAL now (0.9 x /
+    1.0 y, matching the Grounded oval head at 70,45.6) - and comes down past
+    the ear line, bigger on the left (grown side)."""
     cx, cy = 70, 45
     pts = []
     for a in range(200, 341, 14):          # crown arc, left temple -> right temple
         r = 18.0 if a < 270 else 16.4      # left side grown a touch fuller
-        pts.append((cx + r * math.cos(math.radians(a)),
+        pts.append((cx + r * 0.9 * math.cos(math.radians(a)),
                     cy + r * math.sin(math.radians(a))))
     # down each side past the ears, then a soft jaw line under the chin bulge
-    pts += [(84, 55), (79, 58), (70, 57), (61, 58), (56, 55)]
+    pts += [(82, 55), (77, 58), (70, 57), (63, 58), (58, 55)]
     return pts
 
 
