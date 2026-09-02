@@ -2,7 +2,7 @@
 import math
 import pygame
 import game.aa_draw as aa
-from game.utils import to_screen, get_scale
+from game.utils import to_screen, get_scale, screen_affine
 
 
 def _ring_quads(center, r, band, segs):
@@ -49,9 +49,19 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color):
     cos_a, sin_a = math.cos(rad), math.sin(rad)
     scale = get_scale()
 
-    def project(x, y):
-        x, y = x * unit, y * unit
-        return to_screen(ox + (x * cos_a - y * sin_a), oy + (x * sin_a + y * cos_a))
+    aff = screen_affine()
+    if aff and not angle:
+        # unrotated: fold ox/oy, unit and the camera transform into two
+        # multiply-adds - project() is called ~100 times per building.
+        a, tx, ty = aff
+        _m, _bx, _by = unit * a, ox * a + tx, oy * a + ty
+
+        def project(x, y):
+            return (round(x * _m + _bx), round(y * _m + _by))
+    else:
+        def project(x, y):
+            x, y = x * unit, y * unit
+            return to_screen(ox + (x * cos_a - y * sin_a), oy + (x * sin_a + y * cos_a))
 
     def thick_seg(p, q, half):
         dx, dy = q[0] - p[0], q[1] - p[1]

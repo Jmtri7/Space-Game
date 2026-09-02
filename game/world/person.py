@@ -1,7 +1,7 @@
 """Base class for NPCs and other characters in the game."""
 import math
 import game.aa_draw as aa
-from game.utils import to_screen, get_scale
+from game.utils import to_screen, get_scale, screen_affine
 from game.world.possessions import Possessions
 from game.world import person_figure as fig
 from game.world.figure_signatures import SIGNATURE
@@ -41,6 +41,9 @@ class Person:
         self.walk_phase = 0.0
         self.walk_intensity = 0.0
         self._walked_this_frame = False
+        # token -> resolved (r, g, b), filled lazily in _fig_color. The outfit
+        # is effectively immutable for a Person, so a colour only resolves once.
+        self._color_cache = {}
         # Which way the body faces: +1 = right (screen +x), -1 = left. Set from
         # the last horizontal step in step_toward and kept when standing still,
         # so the figure is always drawn facing the way it last walked. draw()
@@ -159,7 +162,13 @@ class Person:
         return (int(s[1:3], 16), int(s[3:5], 16), int(s[5:7], 16))
 
     def _fig_color(self, tok):
-        """Resolve a figure colour token against this Person's outfit."""
+        """Resolve a figure colour token against this Person's outfit (cached)."""
+        c = self._color_cache.get(tok)
+        if c is None:
+            c = self._color_cache[tok] = self._resolve_fig_color(tok)
+        return c
+
+    def _resolve_fig_color(self, tok):
         o = self.outfit
         if isinstance(tok, str) and tok.startswith("#"):
             return self._hex(tok)               # signature pieces carry literal colours
@@ -216,18 +225,41 @@ class Person:
         return self.x + gx, self.y + gy
 
     def _emit(self, surface, parts, stance, arm, scale, dy=0.0):
+        # A Person is only ever drawn in an (unrotated) interior, so the affine
+        # fast path (one multiply-add per figure point) is essentially always
+        # taken; the to_screen branch is the fallback for a rotated view.
+        place = self._place
+        polygon, circle = aa.polygon, aa.circle
+        aff = screen_affine()
+        if aff:
+            a, tx, ty = aff
+            for p in parts:
+                col = self._fig_color(p["color"])
+                grp = p.get("group", "body")     # signature parts ride the torso
+                if "points" in p:
+                    pts = []
+                    for gx, gy in p["points"]:
+                        wx, wy = place(gx, gy + dy, grp, stance, arm)
+                        pts.append((round(wx * a + tx), round(wy * a + ty)))
+                    if len(pts) >= 3:
+                        polygon(surface, col, pts)
+                else:
+                    cx, cy, r = p["circle"]
+                    wx, wy = place(cx, cy + dy, grp, stance, arm)
+                    circle(surface, col, (round(wx * a + tx), round(wy * a + ty)),
+                           max(1, int(r * scale)))
+            return
         for p in parts:
             col = self._fig_color(p["color"])
-            grp = p.get("group", "body")     # signature parts ride the torso
+            grp = p.get("group", "body")
             if "points" in p:
-                pts = [to_screen(*self._place(gx, gy + dy, grp, stance, arm))
-                       for gx, gy in p["points"]]
+                pts = [to_screen(*place(gx, gy + dy, grp, stance, arm)) for gx, gy in p["points"]]
                 if len(pts) >= 3:
-                    aa.polygon(surface, col, pts)
+                    polygon(surface, col, pts)
             else:
                 cx, cy, r = p["circle"]
-                wx, wy = self._place(cx, cy + dy, grp, stance, arm)
-                aa.circle(surface, col, to_screen(wx, wy), max(1, int(r * scale)))
+                circle(surface, col, to_screen(*place(cx, cy + dy, grp, stance, arm)),
+                       max(1, int(r * scale)))
 
     def draw(self, surface):
         scale = get_scale()

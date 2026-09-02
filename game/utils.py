@@ -38,6 +38,22 @@ class Camera:
         self.zoom = CAMERA_ZOOM
         self.zoom_min = CAMERA_ZOOM_MIN
         self.zoom_max = CAMERA_ZOOM_MAX
+        # (scale, world_offset_x, world_offset_y) - a pure function of screen
+        # size + zoom, so it's memoised and rebuilt only when one of those
+        # changes (set_screen_size / set_zoom). to_screen() runs thousands of
+        # times a frame; without this each call recomputed the scale twice and
+        # both offsets.
+        self._view_cache = None
+
+    def _view(self):
+        c = self._view_cache
+        if c is None:
+            scale = min(self.screen_width / GAME_WIDTH,
+                        self.screen_height / GAME_HEIGHT) * self.zoom
+            off_x = (self.screen_width - GAME_WIDTH * scale) / 2
+            off_y = (self.screen_height - GAME_HEIGHT * scale) / 2
+            c = self._view_cache = (scale, off_x, off_y)
+        return c
 
     def set_offset(self, x, y):
         self.offset_x = x
@@ -46,6 +62,7 @@ class Camera:
     def set_zoom(self, zoom):
         """Set the world-render magnification, clamped to [zoom_min, zoom_max]."""
         self.zoom = max(self.zoom_min, min(self.zoom_max, zoom))
+        self._view_cache = None
 
     def set_zoom_limits(self, lo, hi):
         """Set the bounds the active screen allows the wheel zoom to reach,
@@ -86,33 +103,42 @@ class Camera:
     def set_screen_size(self, width, height):
         self.screen_width = width
         self.screen_height = height
+        self._view_cache = None
 
     def get_scale(self):
         """Get rendering scale based on window size."""
-        return min(self.screen_width / GAME_WIDTH, self.screen_height / GAME_HEIGHT) * self.zoom
+        return self._view()[0]
 
     def get_world_offset(self):
         """Get rendering offset to center game world."""
-        scale = self.get_scale()
-        offset_x = (self.screen_width - GAME_WIDTH * scale) / 2
-        offset_y = (self.screen_height - GAME_HEIGHT * scale) / 2
+        _, offset_x, offset_y = self._view()
         return (offset_x, offset_y)
 
     def to_screen(self, x, y):
         """Convert world coordinates to screen coordinates."""
-        scale = self.get_scale()
-        offset_x, offset_y = self.get_world_offset()
+        scale, offset_x, offset_y = self._view()
         x_camera = x - self.offset_x
         y_camera = y - self.offset_y
-        x_camera, y_camera = self._rotate_about_center(x_camera, y_camera)
+        if self.angle:
+            x_camera, y_camera = self._rotate_about_center(x_camera, y_camera)
         return (int(round(x_camera * scale + offset_x)), int(round(y_camera * scale + offset_y)))
+
+    def screen_affine(self):
+        """`(scale, tx, ty)` such that a world point maps to screen as
+        `(round(x*scale + tx), round(y*scale + ty))` - the flat fast path for
+        code that projects many points a frame (figures, hull `parts`). Returns
+        `None` while the view is rotated (Space View Q/E); callers fall back to
+        `to_screen()` then."""
+        if self.angle:
+            return None
+        scale, off_x, off_y = self._view()
+        return (scale, off_x - self.offset_x * scale, off_y - self.offset_y * scale)
 
     def to_world(self, sx, sy):
         """Convert screen coordinates back to world coordinates - the
         inverse of to_screen(), used to resolve a mouse click's screen
         position to the world position it points at (e.g. click-to-target)."""
-        scale = self.get_scale()
-        offset_x, offset_y = self.get_world_offset()
+        scale, offset_x, offset_y = self._view()
         x_camera = (sx - offset_x) / scale
         y_camera = (sy - offset_y) / scale
         x_camera, y_camera = self._rotate_about_center(x_camera, y_camera, inverse=True)
@@ -221,6 +247,12 @@ def get_offset():
 def to_screen(x, y):
     """Convert world coordinates to screen coordinates."""
     return _camera.to_screen(x, y)
+
+
+def screen_affine():
+    """(scale, tx, ty) for bulk point projection, or None when the view is
+    rotated - see Camera.screen_affine."""
+    return _camera.screen_affine()
 
 
 def to_world(x, y):
