@@ -149,6 +149,44 @@ weapons system.
   the interactive walk and the proportion rationale don't live anywhere else.
   Update it by editing the HTML directly.
 
+  **The study has since been iterated past the shipped bake** — a later pass
+  drops all outlines (fills only), runs a **leggy** proportion — short torso
+  (~12.6 u), hip up at study-y 16.6 (~47% of height), shorter arms, bigger
+  feet — reshapes the torso to an
+  hourglass with a **trapezius yoke** that curves up behind the neck and a
+  **convex hip flare** (a curve back out from the waist, not a straight
+  taper); splits the body into **masc / femme** with no neutral (`bodyVariant()`
+  — a shared base, each build setting its own torso silhouette and hip /
+  arm-attach / leg-stance widths: masc broader up top and narrower at the
+  hip, femme the reverse) and every figure on the page is one or the other;
+  swaps the head oval for a big **egg** (`HEAD_SHAPE` polygon — tall full
+  rounded crown to `HEAD_CROWN` 1.26, x 0.85 at the widest, tapered chin;
+  hairlines sit high on the forehead; the tick axis measures to the real
+  crown), gives the brow a **slight arch** and rotates each
+  eye ~7° so its **outer corner sits higher**, narrows the nose oval and the
+  eye height, and reworks every **hairstyle** as a **flat single-colour fill**
+  that fits the head — each `HAIR_SHAPE` crescent parallels the skull with a
+  per-style offset (close at the temples, more over the crown) and its inner
+  hairline tucks just inside the skull, so no gap; `curls` adds a lump ring,
+  `long`'s back is one big drape. Plus a `stubble` (one crown-clipped fill
+  mixed from skin + hair, a flush buzz-cut shadow the §1 lead figure wears);
+  reshapes the boot to a bigger **foot profile** (long low toe box pointing
+  the way the figure faces — screen-left as built — with a compact heel);
+  draws the head **turned a shallow 3/4** toward the facing direction (skull
+  off-centre `HEAD_DX`, features clustered further over `FACE_DX` and smaller
+  `FACE_S`, hair centre / under-chin shadow over by `HAIR_DX`, near ear
+  showing / far ear covered; the whole-figure mirror flips
+  it);
+  gives each arm / leg a **fixed one-direction shade polygon** down its
+  screen-right side — the torso's a curve-following side strip, the neck's a
+  band whose lower edge parallels the chin — moves behind-the-back hair (long,
+  ponytail) ahead of the body so the torso occludes it, and adds a
+  **facing left/right** demo (`face: -1` mirrors the group, = `Person.facing`),
+  head cards with an accurate neck + trapezius yoke, and a zoom-scrub section.
+  These are deliberately ahead of `figure_parts` until a re-bake; the "One
+  uniform outline weight" / "long torso" language above describes the current
+  bake, not the study.
+
 - **Common Kit** — the shared `Person` body and the culture-neutral outfits,
   split out of Standard Issue. **Body chapter:** a labelled cinched-waist
   anatomy plate + the accessory slot map (both **shipped** — `person_figure.py`
