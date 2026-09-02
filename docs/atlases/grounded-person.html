@@ -146,7 +146,7 @@
     <p class="eyebrow">space-game · character model</p>
     <h1>The Grounded Person model</h1>
     <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; a short torso over long legs (hip up at ~47% of height), a trapezius yoke that sweeps up behind the neck, rounded shoulders, a masc / femme split on the torso and hip width, and a flat one-direction shade down one side of each limb &mdash; then the face kit worked out on it.</p>
-    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. Then the hairstyles and skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
+    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. The <b>hair</b> was redrawn on the same terms: still generated from the skull, but in three tones instead of one &mdash; a shade wedge down the far side and a sheen over the near crown &mdash; with the hairline cut into pointed locks, a drawn parting on the side part, a knot that sits proud of the crown for the bun, and a long drape that actually falls past the shoulders. Then the skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
   </header>
 
   <section>
@@ -204,7 +204,9 @@
   <section>
     <div class="sec-head">
       <h2 class="sec">4 &nbsp;Hair &amp; skin</h2>
-      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. Flat single-colour fills, and none of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that peaks over the crown (0.02 face-radii for the buzz, 0.22 for the curls) and fades to nothing at the temples, so the hair melts into the head silhouette. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn. Distinct shapes: a snug buzz, a rounded crop, a left side part with a stepped parting, a receding pair of temple bays around a forelock, a scalloped ring of curl clumps, a slicked crown for the bun (knot tucked into it) and the high ponytail, and a crown plus a panel down each side for the long &mdash; that panel starts on the crescent's own temple point and hands back to the hairline short of it, so the two shapes meet without a wedge of bare temple between them or a spur of hair standing off the side of the head. <b>Kade</b> is the flush buzz-cut shadow &mdash; one fill mixed from skin and hair, built the same way with zero lift.</p>
+      <p>Hairstyles on the Grounded head &mdash; the same egg-shaped head, ears and features the full figure draws, at a different scale &mdash; each with a different skin token. None of them is a free-hand outline: every style is <b>built from the skull</b> from a handful of numbers, so it cannot float off the crown, balloon past the temples or stop in a blunt horizontal chop. The outer edge is the skull's own profile &mdash; traced through its real vertices &mdash; pushed out by a lift that peaks over the crown (0.03 face-radii for the buzz, 0.24 for the curls) and fades to nothing at the temples, so the hair melts into the head silhouette. Each crescent <b>ends at a temple point kept above the brow</b>, leaving the temple bare and the ear clear, and its inner hairline sweeps from a high crown peak down to meet that same point &mdash; so every style tapers to a sideburn.</p>
+      <p><b>Three tones, not one flat fill.</b> A style bakes into a <em>part list</em> rather than a single shape: the crescent, a <b>shade wedge</b> down the far side (the outer edge on the way out, the hairline the crescent actually draws on the way back, so it can never sit lower than the hair does), and a <b>sheen</b> arcing over the near side of the crown just inside the outer edge, thickest in the middle and tapering to a point at each end. The tones are scaled off the hair colour rather than offset from it, so near-black hair still separates instead of clamping to the same black. The figure and the head card walk the same list.</p>
+      <p><b>And the hairline is cut into locks.</b> A smooth swept hairline is what made every flat style read as a swim cap; the fuller ones now hang the hairline in pointed locks of uneven depth, so a fringe reads as hair. Distinct shapes: a snug buzz, a cropped fringe, a left side part with a stepped parting and the parting itself drawn up over the crown, a receding pair of temple bays around a forelock, a scalloped rim of curl clumps whose far-side lumps carry the shade tone, a slicked crown under a knot that sits proud of it for the bun, a tied tail for the ponytail, and for the long, a lock down each side of the face over a drape that falls <em>wider than the shoulders</em> &mdash; narrower than that and the torso swallows it whole and the style reads as hair that stops at the jaw. The side lock starts on the crescent's own temple point and hands back to the hairline short of it, so the two shapes meet without a wedge of bare temple between them or a spur of hair standing off the side of the head. <b>Kade</b> is the flush buzz-cut shadow &mdash; one fill mixed from skin and hair, built the same way with zero lift, and the one style with no shade or sheen: it is a shadow on the scalp, not a mass of hair.</p>
     </div>
     <div class="grid" id="grid-hair"></div>
   </section>
@@ -244,7 +246,7 @@
   </section>
 
   <footer>
-    <p><strong>To apply:</strong> move the proportion stops in <code>gen_si.figure_parts()</code> &mdash; new head/neck sizes (a smaller head, higher, on a slimmer neck), a short torso over long legs (hip at study-y 16.6), shorter arms, the trapezius yoke and shoulder-cap curve, the domed arm top, the three-stop leg and the foot-shaped boot (toe toward the facing direction) &mdash; then re-run <code>build_person_figure.py</code>. The model ships as a <strong>masc / femme</strong> pair &mdash; no neutral. <code>bodyVariant()</code> gives each build its own torso silhouette and hip / arm-attach / leg-stance widths over a shared base (head, limbs, height, walk). <strong>Face kit</strong> &mdash; the egg-shaped head, almond eyes (sclera, iris, pupil, catchlight and a lash line that crops the iris, each rotated ~6&deg; so the outer corner sits higher), the fine tapered brow, the bridge-and-tip nose, the two-part lips and the low D-ears become part of the base head; one new optional key set (<code>hair</code> enum + <code>hair_color</code>) resolved in <code>Person._fig_color</code> / <code>draw</code>, with a <code>fig.HAIR</code> table baked the same way as <code>ACC</code> &mdash; the <code>stubble</code> option is a single fill a shade between skin and hair, clipped to the crown, so a shaved head still reads; defaults reproduce the current look, and NPC rosters / <code>graphics.json</code> opt in per character. (This page draws the parts with no outline at all &mdash; fills only. Each arm, leg and the torso carries a fixed shade polygon down its screen-right side, the head a leaf-shaped one across its far cheek and jaw, and the neck a short band where the head's jaw casts onto it &mdash; each shape hand-built off the part's own anchor points, riding the same walk transform, filled at <code>shade(fill, -24)</code>. The torso shade is a strip whose inner and outer edges both parallel the body's side curve, so it stays off to one side; the neck shade's lower edge parallels the chin and its deepest point sits toward the facing side. Hair that hangs behind the back (long, ponytail) draws before the body so the torso covers its inner half. The head is drawn turned toward the facing direction &mdash; skull off-centre by <code>HEAD_DX</code>, features over by <code>FACE_DX</code> and scaled <code>FACE_S</code>, the hair riding the skull centre (it is built off the skull profile, so it cannot have an offset of its own), near ear showing, far ear covered &mdash; and <code>face:&nbsp;-1</code> just mirrors the whole group so a right-facing figure turns its head right. Hairstyles are flat single-colour fills, and <code>HAIR_SHAPE</code> is <em>generated</em>, not typed: <code>buildHair()</code> walks the skull profile (<code>headR()</code>, sampled on <code>HEAD_SHAPE</code>'s own vertices so a flat style never cuts a chord inside the head) and offsets it by a per-style <code>crown</code> / <code>temple</code> lift, stops at <code>tempAng</code>, and closes the shape with a hairline curve (<code>peak</code>, <code>q</code>, plus optional <code>dip</code> for a widow's peak, <code>bay</code> for temple recession and <code>skew</code>&nbsp;/&nbsp;<code>sweep</code>&nbsp;/&nbsp;<code>part</code>&nbsp;/&nbsp;<code>jog</code> for the side part). <code>curls</code> adds a rim of lump circles riding that same edge, and <code>long</code> hangs a panel down each side of the face. In the baked table these become plain point lists, exactly as now. In <code>person_figure.py</code> the outline is its own slightly-larger shape behind each part, per the atlas pipeline; dropping it means removing that backing shape, and each shade bakes as one extra fill in the part's <code>figure_parts</code> entry.)</p>
+    <p><strong>To apply:</strong> move the proportion stops in <code>gen_si.figure_parts()</code> &mdash; new head/neck sizes (a smaller head, higher, on a slimmer neck), a short torso over long legs (hip at study-y 16.6), shorter arms, the trapezius yoke and shoulder-cap curve, the domed arm top, the three-stop leg and the foot-shaped boot (toe toward the facing direction) &mdash; then re-run <code>build_person_figure.py</code>. The model ships as a <strong>masc / femme</strong> pair &mdash; no neutral. <code>bodyVariant()</code> gives each build its own torso silhouette and hip / arm-attach / leg-stance widths over a shared base (head, limbs, height, walk). <strong>Face kit</strong> &mdash; the egg-shaped head, almond eyes (sclera, iris, pupil, catchlight and a lash line that crops the iris, each rotated ~6&deg; so the outer corner sits higher), the fine tapered brow, the bridge-and-tip nose, the two-part lips and the low D-ears become part of the base head; one new optional key set (<code>hair</code> enum + <code>hair_color</code>) resolved in <code>Person._fig_color</code> / <code>draw</code>, with a <code>fig.HAIR</code> table baked the same way as <code>ACC</code> &mdash; the <code>stubble</code> option is a single fill a shade between skin and hair, clipped to the crown, so a shaved head still reads; defaults reproduce the current look, and NPC rosters / <code>graphics.json</code> opt in per character. (This page draws the parts with no outline at all &mdash; fills only. Each arm, leg and the torso carries a fixed shade polygon down its screen-right side, the head a leaf-shaped one across its far cheek and jaw, and the neck a short band where the head's jaw casts onto it &mdash; each shape hand-built off the part's own anchor points, riding the same walk transform, filled at <code>shade(fill, -24)</code>. The torso shade is a strip whose inner and outer edges both parallel the body's side curve, so it stays off to one side; the neck shade's lower edge parallels the chin and its deepest point sits toward the facing side. Hair that hangs behind the back (long, ponytail) draws before the body so the torso covers its inner half. The head is drawn turned toward the facing direction &mdash; skull off-centre by <code>HEAD_DX</code>, features over by <code>FACE_DX</code> and scaled <code>FACE_S</code>, the hair riding the skull centre (it is built off the skull profile, so it cannot have an offset of its own), near ear showing, far ear covered &mdash; and <code>face:&nbsp;-1</code> just mirrors the whole group so a right-facing figure turns its head right. Hairstyles are <em>generated</em>, not typed: <code>buildHairParts()</code> walks the skull profile (<code>headR()</code>, sampled on <code>HEAD_SHAPE</code>'s own vertices so a flat style never cuts a chord inside the head) and offsets it by a per-style <code>crown</code> / <code>temple</code> lift, stops at <code>tempAng</code>, and closes the shape with a hairline curve (<code>peak</code>, <code>q</code>, plus optional <code>dip</code> for a widow's peak, <code>bay</code> for temple recession, <code>tips</code> to cut the hairline into pointed locks, and <code>skew</code>&nbsp;/&nbsp;<code>sweep</code>&nbsp;/&nbsp;<code>part</code>&nbsp;/&nbsp;<code>jog</code> for the side part). It returns a <b>part list</b> &mdash; the crescent, a shade wedge down the far side, a sheen over the near crown, and per-style extras (<code>curls</code> a rim of lump circles riding that same edge with the far ones shaded, <code>sidepart</code> the parting line, <code>bun</code> a knot proud of the crown, <code>long</code> a lock down each side of the face over a shoulder-wide drape) &mdash; and <code>drawHairPieces()</code> walks it for both the figure and the head card. Each hair colour resolves to three tones through <code>hairTone()</code>, scaled rather than offset so black hair still separates. In the baked table these become plain point lists per tone, exactly as now. In <code>person_figure.py</code> the outline is its own slightly-larger shape behind each part, per the atlas pipeline; dropping it means removing that backing shape, and each shade bakes as one extra fill in the part's <code>figure_parts</code> entry.)</p>
   </footer>
 </div>
 
@@ -294,22 +296,32 @@ function headLowerY(fx){
 }
 
 /* ---------- hairstyles, built from the skull ----------------------------
-   No style is a free-hand outline any more. Each one is the head's own
-   profile plus a handful of numbers, so nothing can float off the crown,
-   balloon past the temples or chop off in mid-air:
+   No style is a free-hand outline. Each one is the head's own profile plus a
+   handful of numbers, so nothing can float off the crown, balloon past the
+   temples or chop off in mid-air:
 
      - OUTER edge: the skull radius plus lift(angle). The lift peaks over the
        crown and fades to almost nothing at the temples, so the hair melts
        into the head silhouette instead of standing proud of it.
      - the crescent ENDS at tempAng, the angle of the temple point. That is
-       kept above the brow (y 0.34) so the temple stays bare and the ear (top
-       at y 0.23) is clear; only the fuller styles bring it down past that.
+       kept above the brow so the temple stays bare and the ear clear; only
+       the fuller styles bring it down past that.
      - INNER edge: the hairline. It peaks high at the centre (peak, well above
-       the brow at 0.34) and falls away to the temple point along a curve of
-       exponent q, with an optional widow's peak (dip) and temple bays (bay).
+       the brow) and falls away to the temple point along a curve of exponent
+       q, with an optional widow's peak (dip) and temple bays (bay) — and,
+       where a style asks for it, cut into pointed locks (tips), which is most
+       of what stops a flat style reading as a swim cap.
 
    Because both edges land on the same temple point, every crescent tapers to
-   a sideburn rather than ending in a blunt horizontal cut.                 */
+   a sideburn rather than ending in a blunt horizontal cut.
+
+   A style then bakes down to a PART LIST rather than one flat fill: the
+   crescent, a shade wedge down the far side, a sheen band arcing over the
+   near side of the crown, plus whatever the style adds — a part line, a rim
+   of curl clumps, a knot, a tail. The figure and the head card walk the same
+   list, so they cannot drift apart, and every piece is built off the same two
+   edges as the fill and clamped to the hairline, so none of them can leak
+   onto the face.                                                          */
 function headR(deg){                 // the skull profile as a polar function
   const th = deg*Math.PI/180, dx = Math.cos(th), dy = Math.sin(th);
   for (let i = 0; i < HEAD_SHAPE.length; i++){
@@ -324,26 +336,31 @@ function headR(deg){                 // the skull profile as a polar function
   return 1;
 }
 const HAIR_STYLE = {
-  // stubble - flush to the skull, no volume at all; low, soft hairline
-  stubble:  { crown:0.00, temple:0.00, tempAng:26, peak:0.62, q:2.2, dip:0.05, bay:0 },
-  // buzz - the barest skim of hair, a rounded natural hairline
-  buzz:     { crown:0.02, temple:0.00, tempAng:26, peak:0.68, q:2.4, dip:0.06, bay:0 },
-  // crop - a little steady volume over the crown, forehead still open
-  crop:     { crown:0.11, temple:0.025, tempAng:24, peak:0.74, q:2.6, dip:0.04, bay:0.02 },
+  // stubble - flush to the skull, no volume at all; low, soft hairline, and
+  // no shade or sheen: it is a shadow on the scalp, not a mass of hair
+  stubble:  { crown:0.00, temple:0.00, tempAng:26, peak:0.62, q:2.2, dip:0.05, bay:0, flat:true },
+  // buzz - the barest skim of hair, a rounded natural hairline, no locks
+  buzz:     { crown:0.03, temple:0.00, tempAng:26, peak:0.68, q:2.4, dip:0.06, bay:0 },
+  // crop - steady volume over the crown and a fringe cut into locks
+  crop:     { crown:0.16, temple:0.03, tempAng:24, peak:0.76, q:2.6, dip:0.04, bay:0.02,
+              tips:{n:5, d:0.11, v:[1, 0.66, 1.15, 0.80, 0.95]} },
   // sleek - combed back for the bun and the ponytail: flat, high hairline
   sleek:    { crown:0.05, temple:0.01, tempAng:27, peak:0.82, q:2.2, dip:0,    bay:0.03 },
   // sidepart - volume carried to one side, the hairline stepping up at the
-  // part and sweeping low across the brow on the heavy side
-  sidepart: { crown:0.13, temple:0.02, tempAng:24, peak:0.72, q:2.6, dip:0,    bay:0.02,
-              skew:0.45, part:-0.26, sweep:0.15, jog:0.13 },
+  // part and sweeping low across the brow on the heavy side, with the parting
+  // itself drawn in as a line up over the crown
+  sidepart: { crown:0.16, temple:0.02, tempAng:24, peak:0.72, q:2.6, dip:0,    bay:0.02,
+              skew:0.45, part:-0.26, sweep:0.15, jog:0.13,
+              tips:{n:4, d:0.08, v:[0.85, 1.15, 0.7, 1.0]} },
   // receding - thin over the crown, deep bays at the temples, a forelock
   // left standing in the middle
   receding: { crown:0.03, temple:0.00, tempAng:31, peak:0.88, q:3.2, dip:0.14, bay:0.20 },
   // curls - the most volume, and a scalloped rim of clumps on top of it
-  curls:    { crown:0.22, temple:0.06, tempAng:24, peak:0.72, q:2.6, dip:0.02, bay:0.02 },
-  // long - crop volume up top, plus a panel down each side framing the face
-  long:     { crown:0.11, temple:0.03, tempAng:20, peak:0.74, q:2.6, dip:0.04, bay:0.02,
-              lappet:-1.12 },
+  curls:    { crown:0.24, temple:0.06, tempAng:24, peak:0.72, q:2.6, dip:0.02, bay:0.02,
+              tips:{n:6, d:0.06, v:[1.2, 0.7, 1.0, 0.8, 1.15, 0.9]} },
+  // long - crop volume up top, plus a lock down each side of the face
+  long:     { crown:0.14, temple:0.03, tempAng:20, peak:0.76, q:2.6, dip:0.04, bay:0.02,
+              lappet:-1.12, tips:{n:5, d:0.13, v:[0.9, 1.2, 0.7, 1.1, 0.85]} },
 };
 function hairLift(st, deg){
   const w = Math.sin(Math.PI * (deg - st.tempAng) / (180 - 2*st.tempAng));
@@ -354,7 +371,58 @@ function hairEdge(st, deg){
   const th = deg*Math.PI/180, r = headR(deg) + hairLift(st, deg);
   return [r*Math.cos(th), r*Math.sin(th)];
 }
-function buildHair(st){
+/* three tones off the one hair colour. Scaled rather than offset, so
+   near-black hair still separates instead of clamping to the same black. */
+function hairTone(col, t){
+  if (t === "sheen") return rgb(toRGB(col).map(v => Math.min(255, Math.round(v*1.14 + 26))));
+  if (t === "shade") return rgb(toRGB(col).map(v => Math.round(v*0.70 + 6)));
+  return col;
+}
+
+/* curls - lumps riding the built silhouette, so they scallop the outline
+   instead of hiding inside it: a rim following the outer edge with the radius
+   varied a little so it doesn't read as beads on a string, then a second row
+   set further in to fill the crown. The far-side clumps carry the shade tone,
+   which is what does the modelling on a curly head. */
+const CURL_CLUMPS = (function(){
+  const st = HAIR_STYLE.curls, cl = [], inset = (p, d) => {
+    const m = Math.hypot(p[0], p[1]); return [p[0]*(1 - d/m), p[1]*(1 - d/m)];
+  };
+  const a0 = st.tempAng + 26, span = 180 - 2*a0;
+  for (let i = 0; i <= 9; i++){
+    const p = inset(hairEdge(st, a0 + span*i/9), 0.15);
+    cl.push({ c:[p[0], p[1], 0.245 + 0.032*((i % 3) - 1)], t: p[0] > 0.22 ? "shade" : "base" });
+  }
+  for (let i = 0; i <= 5; i++){
+    const p = inset(hairEdge(st, 36 + 108*i/5), 0.44);
+    cl.push({ c:[p[0], p[1], 0.26], t: p[0] > 0.22 ? "shade" : "base" });
+  }
+  return cl;
+})();
+
+/* the knot for the bun - a real ball of hair sitting proud of the slicked
+   crown rather than a disc tucked inside it, with its own far-side shade and
+   a catch of sheen on the near side */
+const BUN_PIECES = (function(){
+  const cx = 0.17, cy = 1.30, rx = 0.37, ry = 0.32, N = 16;
+  const knot = [], sh = [];
+  for (let i = 0; i < N; i++){
+    const a = 2*Math.PI*i/N;
+    knot.push([cx + rx*Math.cos(a), cy + ry*Math.sin(a)]);
+  }
+  for (let i = 0; i <= 8; i++){
+    const a = -Math.PI/2 + Math.PI*i/8;
+    sh.push([cx + rx*Math.cos(a), cy + ry*Math.sin(a)]);
+  }
+  for (let i = 8; i >= 0; i--){
+    const a = -Math.PI/2 + Math.PI*i/8;
+    sh.push([cx + rx*0.44*Math.cos(a), cy + ry*0.44*Math.sin(a)]);
+  }
+  return [{ p:knot, t:"base" }, { p:sh, t:"shade" },
+          { c:[cx - rx*0.36, cy + ry*0.40, 0.095], t:"sheen" }];
+})();
+
+function buildHairParts(st, extra){
   const T = st.tempAng;
   // sample the outer edge on the skull's OWN vertex angles as well as evenly,
   // so a flat-to-the-head style traces the silhouette exactly instead of
@@ -376,73 +444,145 @@ function buildHair(st){
     if (st.sweep) y += st.sweep * (x/xT) * (1 - Math.pow(s, 3));
     return y;
   };
-  const inner = [], N = 18;                  // the hairline, left temple to right
+  // the top of the hairline wherever locks are cut into it - anything that has
+  // to stay clear of the face is clamped against this, not against line()
+  const lineHi = x => line(x) + (st.tips ? st.tips.d : 0);
+  const polar = (deg, r) => { const th = deg*Math.PI/180; return [r*Math.cos(th), r*Math.sin(th)]; };
+
+  // the hairline, left temple to right. tips cuts it into locks: the even
+  // samples hang down as the points, the odd ones lift into the notches.
+  const N = st.tips ? 2*st.tips.n : 18;
+  const inner = [];
   for (let i = 0; i <= N; i++){
     const x = -xT + 2*xT*i/N;
     if (st.part != null && i > 0 && x >= st.part && -xT + 2*xT*(i-1)/N < st.part){
       inner.push([st.part, line(st.part)]);              // the part: a clean step
       inner.push([st.part, line(st.part) + st.jog]);     // up in the hairline
     }
-    inner.push([x, line(x)]);
+    const v = st.tips && st.tips.v ? st.tips.v[((i - 1) >> 1) % st.tips.v.length] : 1;
+    inner.push([x, line(x) + (st.tips && i % 2 && i < N ? st.tips.d * v : 0)]);
   }
-  if (st.lappet == null) return outer.concat(inner);
-  // long - the crescent plus a panel down each side of the face. Wound as one
-  // loop: right panel down and back up, across the hairline, left panel down
-  // and back up, then over the crown to the start. The panel starts on the
-  // crescent's own temple point and hands back to the hairline SHORT of it —
-  // run the hairline all the way out and the loop doubles back on itself,
-  // leaving a spur of hair standing off the temple.
-  const L = st.lappet, T0 = hairEdge(st, T);
-  const cut = inner.filter(p => Math.abs(p[0]) < xT*0.92);
-  const join = cut[cut.length - 1];
-  const outR = [[T0[0],T0[1]],[0.86,0.10],[0.88,-0.30],[0.85,-0.72],[0.755,L]];
-  const inR  = [[0.62,L+0.08],[0.66,-0.50],[0.74,0.12],[join[0], join[1]]];
-  const flip = p => p.map(q => [-q[0], q[1]]);
-  return [].concat(outR, inR, cut.slice().reverse(),
-                   flip(inR).reverse(), flip(outR).reverse(), outer.slice().reverse());
+
+  const front = [];
+  let outR = null;
+  if (st.lappet == null){
+    front.push({ p: outer.concat(inner), t:"base" });
+  } else {
+    // long - the crescent plus a lock down each side of the face. Wound as one
+    // loop: right lock down and back up, across the hairline, left lock down
+    // and back up, then over the crown to the start. The lock starts on the
+    // crescent's own temple point and hands back to the hairline SHORT of it —
+    // run the hairline all the way out and the loop doubles back on itself,
+    // leaving a spur of hair standing off the temple.
+    const L = st.lappet, T0 = hairEdge(st, T);
+    const cut = inner.filter(p => Math.abs(p[0]) < xT*0.92);
+    const join = cut[cut.length - 1];
+    outR = [[T0[0],T0[1]],[0.86,0.10],[0.88,-0.30],[0.85,-0.72],[0.755,L]];
+    const inR = [[0.62,L+0.08],[0.66,-0.50],[0.74,0.12],[join[0], join[1]]];
+    const flip = p => p.map(q => [-q[0], q[1]]);
+    front.push({ p: [].concat(outR, inR, cut.slice().reverse(),
+                              flip(inR).reverse(), flip(outR).reverse(),
+                              outer.slice().reverse()), t:"base" });
+  }
+  if (st.flat) return { front };
+
+  // SHADE - the far (+x) side of the band: down the outer edge from partway
+  // over the crown to the temple, then back along the hairline the crescent
+  // actually draws, so it can never sit lower than the hair does
+  const A = T + (90 - T)*0.58, wedge = [];
+  for (let i = 0; i <= 10; i++) wedge.push(hairEdge(st, T + (A - T)*i/10));
+  const xA = wedge[wedge.length - 1][0];
+  for (const p of inner) if (p[0] >= xA) wedge.push(p);
+  front.push({ p: wedge, t:"shade" });
+  if (outR)                                   // and on down the far lock
+    front.push({ p: outR.concat(outR.map(([x,y], i) =>
+      [x - (0.050 + 0.018*i/(outR.length - 1)), y]).reverse()), t:"shade" });
+
+  if (extra) for (const e of extra) front.push(e);
+
+  // SHEEN - a gloss arcing over the near (-x) side of the crown, just inside
+  // the outer edge, thickest in the middle and tapering to a point at each end
+  const S0 = 100, S1 = Math.min(148, 180 - T - 14), M = 10, top = [], bot = [];
+  for (let i = 0; i <= M; i++){
+    const a = S0 + (S1 - S0)*i/M;
+    const e = Math.pow(Math.sin(Math.PI*i/M), 0.6);
+    const r = headR(a) + hairLift(st, a);
+    const p0 = polar(a, r - 0.045), p1 = polar(a, r - 0.045 - 0.15*e);
+    const ty = Math.max(p0[1], lineHi(p0[0]) + 0.12);
+    top.push([p0[0], ty]);
+    bot.push([p1[0], Math.min(ty - 0.015, Math.max(p1[1], lineHi(p1[0]) + 0.05))]);
+  }
+  front.push({ p: top.concat(bot.reverse()), t:"sheen" });
+
+  // the parting itself, drawn last so it cuts across the sheen
+  if (st.part != null){
+    const b = [st.part, line(st.part) + st.jog*0.55], t2 = hairEdge(st, 104), pl = [];
+    for (const s of [-1, 1])
+      for (let i = 0; i <= 5; i++){
+        const u = (s < 0 ? i : 5 - i)/5, w = s*(0.022 + 0.030*u);
+        pl.push([b[0] + (t2[0]-b[0])*u + w, b[1] + (t2[1]-b[1])*u]);
+      }
+    front.push({ p: pl, t:"shade" });
+  }
+  return { front };
 }
-const HAIR_SHAPE = {};
-for (const k in HAIR_STYLE) if (k !== "stubble") HAIR_SHAPE[k] = buildHair(HAIR_STYLE[k]);
-const STUBBLE = buildHair(HAIR_STYLE.stubble);
+
+const HAIR_PARTS = {};
+for (const k of ["buzz","crop","sleek","sidepart","receding","long"])
+  HAIR_PARTS[k] = buildHairParts(HAIR_STYLE[k]);
+HAIR_PARTS.curls = buildHairParts(HAIR_STYLE.curls, CURL_CLUMPS);
+HAIR_PARTS.bun = { front: HAIR_PARTS.sleek.front.concat(BUN_PIECES) };
+HAIR_PARTS.ponytail = { front: HAIR_PARTS.sleek.front.slice() };
+HAIR_PARTS.stubble = { front: [{ p: buildHairParts(HAIR_STYLE.stubble).front[0].p, t:"stubble" }] };
+
 function stubbleCol(skin, hairCol){          // one fill, part skin part hair
   const s = toRGB(skin), h = toRGB(hairCol || "#241c1a");
   return "rgb(" + s.map((v,i) => Math.max(0, Math.round(v*0.55 + h[i]*0.45 - 12))).join(",") + ")";
 }
-function hairKey(s){
-  return (s === "bun" || s === "ponytail") ? "sleek"
-       : HAIR_SHAPE[s] ? s : "crop";
-}
-// curls - lumps riding the built silhouette, so they scallop the outline
-// instead of hiding inside it: a rim following the outer edge, then a second
-// row set further in to fill the crown.
-const CURL_CLUMPS = (function(){
-  const st = HAIR_STYLE.curls, cl = [], inset = (p, d) => {
-    const m = Math.hypot(p[0], p[1]); return [p[0]*(1 - d/m), p[1]*(1 - d/m)];
-  };
-  const a0 = st.tempAng + 30, span = 180 - 2*a0;
-  for (let i = 0; i <= 8; i++){
-    const p = inset(hairEdge(st, a0 + span*i/8), 0.17);
-    cl.push([p[0], p[1], 0.26]);
+function hairKey(s){ return HAIR_PARTS[s] ? s : "crop"; }
+
+/* the hair that falls behind the back - drawn before the body so the torso
+   and shoulders cover its inner half. endY sets how far down it reaches, so
+   the figure and the head card can crop it differently. */
+const HAIR_BACK_FIG  = { long:-3.60, ponytail:-2.90 };
+const HAIR_BACK_CARD = { long:-3.05, ponytail:-2.50 };
+function hairBackParts(s, ends){
+  const e = ends[s];
+  if (s === "long"){
+    // the drape has to be WIDER than the shoulders or the torso swallows it
+    // whole and the style reads as hair that stops at the jaw; it hugs the
+    // skull at the top and flares out over the shoulders as it falls
+    const half = [[1.00,0.62],[1.12,-0.20],[1.36,e*0.30],[1.52,e*0.60],
+                  [1.44,e*0.84],[1.05,e*0.97],[0.50,e*1.02]];
+    const flip = p => p.map(q => [-q[0], q[1]]);
+    return [
+      { p: flip(half).concat([[0, e*1.04]], half.slice().reverse(),
+                             [[0.45,0.30],[-0.45,0.30]]), t:"base" },
+      { p: half.concat([[0.50,e*0.92],[0.98,e*0.86],[1.30,e*0.56],
+                        [1.16,e*0.26],[0.94,-0.20],[0.84,0.62]]), t:"shade" },
+    ];
   }
-  for (let i = 0; i <= 5; i++){
-    const p = inset(hairEdge(st, 34 + 112*i/5), 0.46);
-    cl.push([p[0], p[1], 0.27]);
+  if (s === "ponytail"){
+    return [
+      { p:[[0.16,0.92],[0.62,0.86],[0.98,0.34],[1.08,-0.40],[1.00,e*0.55],
+           [0.86,e*0.88],[0.70,e],[0.50,e*0.93],[0.54,e*0.52],
+           [0.56,-0.35],[0.40,0.28],[0.10,0.62]], t:"base" },
+      { p:[[0.98,0.34],[1.08,-0.40],[1.00,e*0.55],[0.86,e*0.88],[0.70,e],
+           [0.62,e*0.96],[0.82,e*0.80],[0.90,e*0.50],[0.94,-0.34],[0.86,0.30]], t:"shade" },
+      { p:[[0.70,0.76],[1.00,0.30],[1.04,0.12],[0.74,0.60]], t:"shade" },   // the tie
+    ];
   }
-  return cl;
-})();
-// the long fall down the back and the ponytail - drawn before the body, so
-// the torso covers the inner half. Both hug the skull at the top and flare
-// only a little past it, then taper; endY sets how far down they reach.
-function longBack(endY){
-  const w = 1.02;
-  return [[-0.95,0.62],[-w,-0.25],[-w*0.97,endY*0.48],[-w*0.80,endY*0.80],
-          [-0.50,endY*0.97],[0,endY],[0.50,endY*0.97],[w*0.80,endY*0.80],
-          [w*0.97,endY*0.48],[w,-0.25],[0.95,0.62],[0.45,0.30],[-0.45,0.30]];
+  if (s === "afro") return [{ c:[0, 0.44, 1.55], t:"base" }];
+  return [];
 }
-function ponyTail(endY){
-  return [[0.16,0.92],[0.62,0.86],[0.98,0.34],[1.08,-0.40],[1.00,endY*0.55],
-          [0.86,endY*0.88],[0.70,endY],[0.50,endY*0.93],[0.54,endY*0.52],
-          [0.56,-0.35],[0.40,0.28],[0.10,0.62]];
+function drawHairPieces(list, poly, dot, hd){
+  const col = hd.hairCol || "#241c1a";
+  for (const piece of list){
+    const fill = piece.t === "stubble" ? stubbleCol(hd.skin || COL.skin, hd.hairCol)
+                                       : hairTone(col, piece.t);
+    if (piece.c) dot(piece.c[0], piece.c[1], piece.c[2], fill);
+    else poly(piece.p, fill);
+  }
 }
 
 /* ---------- colour helpers ---------- */
@@ -798,33 +938,19 @@ function figFace(g, c, hd, dy){
   if (!helm) hairFrontFig(g, haCx, hcy, r, hd);
 }
 
+function figHairEmitters(g, cx, cy, r){
+  return [ (pts, fill) => fpoly(g, pts.map(([x,y]) => [cx + r*x, cy + r*y]), fill, 0),
+           (dx, dy, rad, fill) => fdot(g, cx + r*dx, cy + r*dy, rad*r, fill, false) ];
+}
 function hairBehindFig(g, cx, cy, r, hd){
-  const s = hd.hair, col = hd.hairCol || "#241c1a";
-  if (!s || s === "none") return;
-  const D = (dx, dy, rad) => fdot(g, cx + r*dx, cy + r*dy, r*rad, col, true);
-  const Q = pts => fpoly(g, pts.map(([x,y]) => [cx + r*x, cy + r*y]), col, 1.1);
-  if (s === "afro") D(0, 0.44, 1.55);
-  else if (s === "long") Q(longBack(-3.6));
-  else if (s === "ponytail"){
-    Q(ponyTail(-2.9));
-    D(0.42, 0.88, 0.22);   // the gather, where the tail leaves the crown
-  }
+  if (!hd.hair || hd.hair === "none") return;
+  const [Q, D] = figHairEmitters(g, cx, cy, r);
+  drawHairPieces(hairBackParts(hd.hair, HAIR_BACK_FIG), Q, D, hd);
 }
 function hairFrontFig(g, cx, cy, r, hd){
-  const s = hd.hair, col = hd.hairCol || "#241c1a";
-  if (!s || s === "none") return;
-  if (s === "stubble"){
-    fpoly(g, STUBBLE.map(([x,y]) => [cx + r*x, cy + r*y]), stubbleCol(hd.skin || COL.skin, hd.hairCol));
-    return;
-  }
-  const key = hairKey(s);
-  fpoly(g, HAIR_SHAPE[key].map(([x,y]) => [cx + r*x, cy + r*y]), col, 1.0);
-  if (s === "curls")
-    for (const [ax,ay,ar] of CURL_CLUMPS)
-      fdot(g, cx + ax*r, cy + ay*r, ar*r, col, true);
-  if (s === "bun")
-    fdot(g, cx + 0.10*r, cy + 1.20*r, 0.38*r, col, true);   // the knot, tucked
-                                        // into the slicked crown, not perched on it
+  if (!hd.hair || hd.hair === "none") return;
+  const [Q, D] = figHairEmitters(g, cx, cy, r);
+  drawHairPieces(HAIR_PARTS[hairKey(hd.hair)].front, Q, D, hd);
 }
 
 function figAcc(g, c, o, phase){
@@ -1034,31 +1160,19 @@ function drawHeadCard(svg, hd, sizeK){
   if (!hd.helmet) hairFrontHeadLocal(P, D, hd);
 }
 
-/* head-card hair — the same shapes as hairBehindFig / hairFrontFig, in
+/* head-card hair — the same baked part lists the figure walks, in
    head-radius units (r = 1 here) */
 function hairBehindHeadLocal(P, D, hd){
-  const s = hd.hair, col = hd.hairCol || "#241c1a";
-  if (!s || s === "none") return;
-  if (s === "afro") D(0, 0.44, 1.55, col, true);
-  else if (s === "long") P(longBack(-3.05), col);
-  else if (s === "ponytail"){
-    P(ponyTail(-2.5), col);
-    D(0.42, 0.88, 0.22, col, true);   // the gather, where the tail leaves the crown
-  }
+  if (!hd.hair || hd.hair === "none") return;
+  drawHairPieces(hairBackParts(hd.hair, HAIR_BACK_CARD),
+                 (pts, fill) => P(pts, fill),
+                 (cx, cy, r, fill) => D(cx, cy, r, fill, false), hd);
 }
 function hairFrontHeadLocal(P, D, hd){
-  const col = hd.hairCol || "#241c1a";
-  const s = hd.hair;
-  if (!s || s === "none") return;
-  if (s === "stubble"){
-    P(STUBBLE, stubbleCol(hd.skin, hd.hairCol));
-    return;
-  }
-  const key = hairKey(s);
-  P(HAIR_SHAPE[key], col, 1.0);
-  if (s === "curls")
-    for (const [ax,ay,ar] of CURL_CLUMPS) D(ax, ay, ar, col, true);
-  if (s === "bun") D(0.10, 1.20, 0.38, col, true);   // the knot, tucked in
+  if (!hd.hair || hd.hair === "none") return;
+  drawHairPieces(HAIR_PARTS[hairKey(hd.hair)].front,
+                 (pts, fill) => P(pts, fill),
+                 (cx, cy, r, fill) => D(cx, cy, r, fill, false), hd);
 }
 
 function shadeHex(hex, amt){ return shade(hex, amt); }

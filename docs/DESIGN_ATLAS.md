@@ -162,9 +162,8 @@ weapons system.
   swaps the head oval for a big **egg** (`HEAD_SHAPE` polygon — tall full
   rounded crown to `HEAD_CROWN`, widest at the cheekbone, tapered chin;
   hairlines sit high on the forehead; the tick axis measures to the real
-  crown), and **generates** every **hairstyle** as a
-  **flat single-colour fill** built from the skull rather than drawn by hand
-  — `buildHair()` traces `headR()` (the `HEAD_SHAPE` profile as a polar
+  crown), and **generates** every **hairstyle** from the skull rather than
+  drawing it by hand — `buildHairParts()` traces `headR()` (the `HEAD_SHAPE` profile as a polar
   function, sampled on the head's own vertices so a flat style never cuts a
   chord inside it), pushes it out by a lift that peaks over the crown (`crown`,
   0.02 for `buzz` up to 0.22 for `curls`) and fades to nothing at the temples,
@@ -228,6 +227,30 @@ weapons system.
   tapered mitt polygon carried through the arm transform instead of a circle at
   the wrist, the arms taper to a slimmer wrist and hang closer at rest
   (`REST_SPLAY` 12° → 7°), and the head turn was eased (`FACE_DX` 0.22 → 0.16).
+
+  **Hair redrawn on the same terms.** The generator survived; what it emits
+  changed. A style now bakes into a **part list** — `{p|c, t}` pieces in
+  head-radius units — instead of one polygon, and `drawHairPieces()` walks the
+  same list for the figure and the head card, so they cannot drift apart.
+  Every style carries **three tones**: the fill, a **shade wedge** down the far
+  (+x) side — out along the outer edge, back along the hairline the crescent
+  *actually draws*, so it can never sit lower than the hair does — and a
+  **sheen** arcing over the near side of the crown just inside the outer edge,
+  thickest in the middle and tapering to a point at each end (both clamped
+  against `lineHi`, the top of the hairline, so neither can leak onto the
+  face). `hairTone()` scales rather than offsets, so near-black hair still
+  separates. The hairline gained **`tips`** — the even samples hang down as
+  pointed locks, the odd ones lift into the notches, with a per-lock depth
+  table so a fringe isn't a regular sawtooth; a smooth swept hairline was most
+  of why every flat style read as a swim cap. Per style: `sidepart` draws the
+  **parting** itself as a line up over the crown (last, so it cuts the sheen);
+  `curls`' far-side clumps carry the shade tone, which is what models a curly
+  head; `bun`'s knot sits **proud** of the slicked crown with its own shade and
+  a catch of sheen instead of being a disc tucked inside it; `ponytail` gained
+  a tie; and `long`'s back drape was widened to fall **past the shoulders** —
+  narrower than that and the torso swallows it whole and the style reads as
+  hair that stops at the jaw. `stubble` is the one style with no shade or
+  sheen: it is a shadow on the scalp, not a mass of hair.
 
   These are deliberately ahead of `figure_parts` until a re-bake; the "One
   uniform outline weight" / "long torso" language above describes the current
