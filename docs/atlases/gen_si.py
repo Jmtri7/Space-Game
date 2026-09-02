@@ -148,6 +148,18 @@ def opoly(pts, fill, d=1.3, ol=OUT, cls=None):
 def ocirc(cx, cy, r, fill, d=1.6, ol=OUT):
     return circ(cx, cy, r + d, ol) + circ(cx, cy, r, fill)
 
+# One uniform outline weight for every structural part of the shared body,
+# matching the Grounded study (docs/atlases/grounded-person.html) where the
+# head, torso and limbs all carry the same thin edge (there it's a 1.1 stroke
+# half-tucked under the fill; here the offset sits fully outside, so a slightly
+# smaller number reads the same). Accessory layers keep their own weights.
+_FD = 1.0
+
+def ooval(cx, cy, rx, ry, fill, d=_FD, ol=OUT, n=30):
+    """An oval as a many-sided polygon with the uniform body outline - the
+    Grounded head/face shape (taller than wide), strokeless-safe."""
+    return opoly(ngon(cx, cy, rx, ry, n), fill, d=d, ol=ol)
+
 def ring_strip(cx, cy, r_out, r_in, col, n=40, op=None):
     """A torus of n radial quad segments - the centre stays empty."""
     out = []
@@ -293,18 +305,18 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
 
     def _emit_arm(s):
         _grp("arm_l" if s < 0 else "arm_r")
-        P.append(opoly([_arm_rot(s, x, y) for x, y in _arm_shaft(s)], sleeve, d=1.3))
+        P.append(opoly([_arm_rot(s, x, y) for x, y in _arm_shaft(s)], sleeve, d=_FD))
         _grp("hand_l" if s < 0 else "hand_r")
-        P.append(ocirc(*_arm_rot(s, _gx(s * 2.5), _gy(12.7)), 3.2, SKINF, d=1.1))
+        P.append(ocirc(*_arm_rot(s, _gx(s * 2.5), _gy(12.7)), 3.2, SKINF, d=_FD))
 
     def _emit_leg(s):
         _grp("leg_l" if s < 0 else "leg_r")
-        P.append(opoly(_leg_trap(s), leg, d=1.3))
+        P.append(opoly(_leg_trap(s), leg, d=_FD))
         if knee:
             _grp("leg_l" if s < 0 else "leg_r")
-            P.append(opoly(_knee(s), knee, d=1.0))
+            P.append(opoly(_knee(s), knee, d=_FD))
         _grp("boot_l" if s < 0 else "boot_r")
-        P.append(opoly(ngon(_gx(s * 1.7), 197, 9, 6, 12), boot, d=1.3))
+        P.append(opoly(ngon(_gx(s * 1.7), 197, 9, 6, 12), boot, d=_FD))
 
     _grp("body"); _gate(None)
 
@@ -329,7 +341,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(ocirc(88, 16, 2.2, antenna, d=1.1))
     _gate(None)
     if blade:                                    # grown guard-blade down one arm
-        P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=1.0))
+        P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=_FD))
 
     # ---- far arm + far leg (behind the torso) ----
     _grp("body"); _gate(None)
@@ -349,12 +361,12 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _gt = _gt[:-1] + [(3.7, 10.8)]
     torso = ([(_gx(-h), _gy(y)) for h, y in _gt]
              + [(_gx(h), _gy(y)) for h, y in reversed(_gt)])
-    P.append(opoly(torso, suit, d=1.5))
+    P.append(opoly(torso, suit, d=_FD))
 
     # short neck - a skin column from the collar line up under the jaw, over
     # the torso and behind the head.
     P.append(opoly([(_gx(-1.15), _gy(26.4)), (_gx(-1.15), _gy(28.7)),
-                    (_gx(1.15), _gy(28.7)), (_gx(1.15), _gy(26.4))], SKINF, d=1.0))
+                    (_gx(1.15), _gy(28.7)), (_gx(1.15), _gy(26.4))], SKINF, d=_FD))
 
     # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
     # the waist. Drawn before the near arm so the arm hangs over it.
@@ -378,9 +390,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # helmet / hat / cap - same head height for every outfit
     _grp("body")
     if helmet:
-        _gate("helmet_color"); P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, helmet, d=1.8)); _gate(None)
+        _gate("helmet_color"); P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, helmet, d=_FD)); _gate(None)
     if hat:
-        P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, hat, d=1.8))
+        P.append(ocirc(70, round(_gy(30.0), 1), helmet_r, hat, d=_FD))
     if cap:                                       # flat brimmed cap over the head
         P.append(opoly([(56, 40), (84, 40), (80, 32), (73, 27), (65, 27), (58, 32)], cap, d=1.2))
 
@@ -420,7 +432,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if legged:
         _emit_leg(1)
     else:
-        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=1.3))
+        _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=_FD))
 
     _grp("body"); _gate(None)
     if shoulders:                                # sit outboard + high, over the arm tops
@@ -442,15 +454,17 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # a tan sideways-oval under-nose shadow, and a soft mouth line in the same
     # tone. fr is the face radius so every feature scales with helmet vs bare.
     _grp("body"); _gate(None)
+    # The head reads as a Grounded-study oval - taller than wide (x radius
+    # 0.92 * fr) - not a circle, with the same thin outline as the body.
     if helmet or hat:
         fr, face_cx, face_cy = 11.5, 70.0, round(_gy(29.9), 1)
-        P.append(ocirc(face_cx, face_cy, fr, SKINF, d=1.4))
+        P.append(ooval(face_cx, face_cy, fr * 0.92, fr, SKINF))
     else:
         fr, face_cx, face_cy = 14.0, 70.0, round(_gy(30.4), 1)
         for sgn in (-1, 1):
             P.append(opoly([(face_cx + sgn * fr * dx, face_cy + fr * dy)
-                            for dx, dy in EAR_D], SKINF, d=1.0))
-        P.append(ocirc(face_cx, face_cy, fr, SKINF, d=1.8))
+                            for dx, dy in EAR_D], SKINF, d=_FD))
+        P.append(ooval(face_cx, face_cy, fr * 0.92, fr, SKINF))
 
     if visor:
         _gate("visor_color")

@@ -7,6 +7,12 @@ from game.world import person_figure as fig
 from game.world.figure_signatures import SIGNATURE
 
 
+def _face_cy(parts):
+    """Centre-y of the head oval - the largest polygon in a face part list."""
+    face = max((p for p in parts if "points" in p), key=lambda p: len(p["points"]))
+    return sum(y for _, y in face["points"]) / len(face["points"])
+
+
 class Person:
     """Base class for anyone with a position and a body - the player's own
     walking self (see PlayerCharacter), NPCs, and a ship's pilot all share
@@ -99,10 +105,10 @@ class Person:
 
     # How far a helmeted face sits below a bare one - the visor is extracted
     # at the bare-head position, so it's nudged down onto a helmeted face.
-    # Both lists lead with the D-ear polygons now, so pick out the face circle.
+    # The head is an oval polygon now (the largest part in each list); the ears
+    # (bare only) are far smaller, so pick by vertex count and take its centre.
     _HELM_FACE_DY = round(
-        next(p for p in fig.HELMET_FACE if "circle" in p)["circle"][1]
-        - next(p for p in fig.BARE_HEAD if "circle" in p)["circle"][1], 3)
+        _face_cy(fig.HELMET_FACE) - _face_cy(fig.BARE_HEAD), 3)
 
     @staticmethod
     def _shade(color, amount):

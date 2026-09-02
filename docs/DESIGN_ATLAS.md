@@ -67,8 +67,10 @@ its next regenerate.
 **Body: the Grounded pass (full proportion remap).** `figure_parts` is now
 generated straight from the [`grounded-person.html`](atlases/grounded-person.html)
 study's proportion spec via a `_gx` / `_gy` transform (`_G_SCALE` 5.15 atlas
-units per study unit, `_G_GROUND` 202.2): a **~6.1-head figure** — small head
-(`fr` = 14 bare, 11.5 helmeted, down from 15/12), a **short neck** (a `SKINF`
+units per study unit, `_G_GROUND` 202.2): a **~6.1-head figure** — a small
+**oval** head (`ooval`: a many-sided polygon, x-radius `0.92·fr`, taller than
+wide — not a circle, matching the study; `fr` = 14 bare, 11.5 helmeted, down
+from 15/12), a **short neck** (a `SKINF`
 column from the collar line up under the jaw), a **long torso**, and **legs on
 the true half-body line** (`FIG_HIP_Y` 139, was 146; slight ankle taper + a
 mid-calf point). **Narrow rounded shoulders** — the torso curves out to a modest
@@ -76,9 +78,14 @@ shoulder point (`attachHalf` ~3, arms tuck in close) and the upper arm gets a
 **domed top** that tucks under it. The **face kit** shows on a bare or hatted
 head (hidden by a helmet or a visor): **oval eyes** with a full-height pupil, a
 short **straight brow** over each, a tan **under-nose shadow** (`SKINL`), a soft
-**mouth** line, and shallow **D-ears**; every feature scales with `fr`. Baked
-into `person_figure.py` — the D-ears lead `BARE_HEAD`, so `Person._HELM_FACE_DY`
-picks the face circle out of the list; the eyes are `ngon` polygons, so
+**mouth** line, and shallow **D-ears**; every feature scales with `fr`. **One
+uniform outline weight** (`_FD` = 1.0) on every structural part — head, torso,
+neck, arms, hands, legs, boots, helmet dome — so the figure reads with the
+study's single thin edge instead of the old per-part `d` (head was `1.8`, torso
+`1.5`). Baked into `person_figure.py` — the D-ears lead `BARE_HEAD`, and the
+head is now the largest polygon in `BARE_HEAD` / `HELMET_FACE`, so
+`Person._HELM_FACE_DY` picks it by vertex count (`person._face_cy`); the eyes
+are `ngon` polygons, so
 `tests/test_helpers.py::test_visor_replaces_the_eyes` counts the polygon delta
 (8). `person.py`'s `LEG_HEIGHT` / `ARM_LENGTH` walk-cycle knobs and
 `build_person_figure.py`'s pivots track the new limb lengths. Moving the arms in

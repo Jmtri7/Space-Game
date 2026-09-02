@@ -507,7 +507,7 @@ class TestPersonOutfitRendering(unittest.TestCase):
         # pupil), a brow over each, an under-nose shadow and a mouth line, all
         # polygons now (EYES_BARE, 10 parts). The visored face draws the visor
         # plate (2 polys) over that area instead, so it emits 8 fewer polygons;
-        # circles (head, ears-as-polys aside, hands) are unchanged.
+        # circles (the hands - the head and ears are polygons now) are unchanged.
         self.assertEqual(polys_plain - polys_visor, 8)
         self.assertEqual(circles_plain, circles_visor)
 
