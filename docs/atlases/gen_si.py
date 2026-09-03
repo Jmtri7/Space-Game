@@ -30,15 +30,6 @@ BROW  = "#3d2e24"     # eyebrow
 SHAD  = "#2a3444"
 GRID  = "url(#grid)"
 
-# shallow "D" ear as (dx, dy) from the face centre in head-radii - the
-# grounded-person.html EAR_D as it stood at the bake (the study has since moved
-# its ear lower and tucked it in further; that lands here on the next re-bake -
-# see docs/DESIGN_ATLAS.md): flat side
-# tucked just inside the oval's edge (0.88 r), a shallow bulge to ~1.06 r,
-# ~0.5 r tall. Mirrored on both sides. dy is SVG-down (positive = lower).
-EAR_D = [(0.88, -0.26), (0.88, 0.24), (0.99, 0.20),
-         (1.06, 0.04), (1.06, -0.12), (0.99, -0.22)]
-
 # ---------------------------------------------------------------- primitives
 def fmt(pts): return " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
 
@@ -224,6 +215,539 @@ def arcband(x0, x1, ytop, sag, w, fill, samp=12):
 # units (feet at 0, y up, ~5.15 atlas units each); _gx / _gy map them into
 # atlas figure-space (centre x = 70, y down). build_person_figure.py imports
 # the anchors below so the walk-cycle pivots track any change here.
+
+# ================================================================== Grounded
+# The face kit, the hairstyles and the hard hat, ported from the study in
+# docs/atlases/grounded-person.html. Everything below works in FACE-RADIUS
+# units around the face centre with +y UP (the study's convention); _fp maps a
+# list of them into atlas space, where +y is down. Kept as one block so the
+# two can be diffed against each other.
+#
+# The shapes are generated, not typed: a hairstyle is the skull's own profile
+# pushed out by a lift, closed by a hairline, and every piece past the fill
+# (shade, sheen, the parting, the helmet's brim) is a contour ribbon that runs
+# along that same edge and tapers to a point at both ends.
+# ---------------------------------------------------------------------------
+IRIS  = "#4b3325"     # default iris
+GLINT = "#f8f5ef"     # catchlight
+SKINS = "#e7c39e"     # the head's far side, one step off SKINF
+
+HEAD_CROWN = 1.21
+HEAD_SHAPE = [
+    (0.00, 1.21), (0.20, 1.19), (0.40, 1.10), (0.57, 0.95),
+    (0.70, 0.74), (0.78, 0.47), (0.81, 0.19), (0.80, 0.02),
+    (0.75, -0.26), (0.64, -0.51), (0.49, -0.73), (0.32, -0.90),
+    (0.15, -1.00), (0.00, -1.02),
+    (-0.15, -1.00), (-0.32, -0.90), (-0.49, -0.73), (-0.64, -0.51),
+    (-0.75, -0.26), (-0.80, 0.02), (-0.81, 0.19), (-0.78, 0.47),
+    (-0.70, 0.74), (-0.57, 0.95), (-0.40, 1.10), (-0.20, 1.19),
+]
+# the head's side plane: a leaf, barely there at the crown, widest across the
+# far cheek and jaw, gone by the chin. A constant-width strip reads as a
+# stripe ruled down the face.
+HEAD_SHADE = ([p for p in HEAD_SHAPE if p[0] > 0.001]
+              + [(max(0.0, x - (0.03 + 0.19 * math.exp(-((y + 0.20) / 0.62) ** 2))), y)
+                 for x, y in reversed([p for p in HEAD_SHAPE if p[0] > 0.001])])
+
+# shallow "D" ear, low on the head (brow to nose base) and barely clear of the
+# skull, so it reads as an ear rather than a knob
+EAR_D = [(0.70, 0.12), (0.70, -0.34), (0.79, -0.31),
+         (0.85, -0.16), (0.85, -0.01), (0.79, 0.10)]
+
+_HEAD_HALF = sorted([p for p in HEAD_SHAPE if p[0] >= 0], key=lambda p: -p[1])
+
+
+def head_r(deg):
+    """The skull profile as a polar function."""
+    th = math.radians(deg)
+    dx, dy = math.cos(th), math.sin(th)
+    for i in range(len(HEAD_SHAPE)):
+        a, b = HEAD_SHAPE[i], HEAD_SHAPE[(i + 1) % len(HEAD_SHAPE)]
+        ex, ey = b[0] - a[0], b[1] - a[1]
+        den = ex * dy - ey * dx
+        if abs(den) < 1e-9:
+            continue
+        u = (a[1] * dx - a[0] * dy) / den
+        if u < 0 or u > 1:
+            continue
+        t = (a[0] + u * ex) / dx if abs(dx) > abs(dy) else (a[1] + u * ey) / dy
+        if t > 0:
+            return t
+    return 1.0
+
+
+def head_half_at(y):
+    """The skull's half-width at a height - what a fall of hair has to hug."""
+    if y >= _HEAD_HALF[0][1]:
+        return _HEAD_HALF[0][0]
+    for i in range(len(_HEAD_HALF) - 1):
+        a, b = _HEAD_HALF[i], _HEAD_HALF[i + 1]
+        if y >= b[1]:
+            return a[0] + (a[1] - y) / (a[1] - b[1]) * (b[0] - a[0])
+    return 0.0
+
+
+def _fp(pts, cx, cy, fr):
+    """Face-radius units (+y up) -> atlas space (+y down)."""
+    return [(cx + x * fr, cy - y * fr) for x, y in pts]
+
+
+def _tone(col, amt):
+    c = col.lstrip("#")
+    v = [int(c[i:i + 2], 16) for i in (0, 2, 4)]
+    return "#%02x%02x%02x" % tuple(max(0, min(255, round(x * amt[0] + amt[1]))) for x in v)
+
+
+def hair_tone(col, t):
+    """Three tones off one hair colour. Scaled rather than offset, so
+    near-black hair still separates instead of clamping to the same black."""
+    if t == "sheen":
+        return _tone(col, (1.16, 26))
+    if t == "shade":
+        return _tone(col, (0.68, 5))
+    return col
+
+
+# ---------------------------------------------------------------- hairstyles
+HAIR_STYLE = {
+    "stubble":  dict(crown=0.00, temple=0.00, tempAng=26, peak=0.62, q=2.2, dip=0.05, bay=0, flat=True),
+    "buzz":     dict(crown=0.08, temple=0.008, tempAng=25, peak=0.68, q=2.4, dip=0.06, bay=0,
+                     wave=dict(n=2.2, a=0.011, p=0.7), burn=0.72),
+    "crop":     dict(crown=0.285, temple=0.025, tempAng=22, peak=0.78, q=2.6, dip=0.04, bay=0.02,
+                     lean=0.16, wave=dict(n=2.1, a=0.044, p=1.1), burn=1.0,
+                     tips=dict(n=5, d=0.13, v=[1, 0.72, 1.15, 0.85, 0.95])),
+    "sleek":    dict(crown=0.12, temple=0.015, tempAng=26, peak=0.82, q=2.2, dip=0, bay=0.03,
+                     wave=dict(n=1.8, a=0.016, p=2.1), burn=0.85),
+    "sidepart": dict(crown=0.305, temple=0.02, tempAng=22, peak=0.80, q=2.6, dip=0, bay=0.02,
+                     skew=0.44, part=-0.26, sweep=0.25, jog=0.16, lean=0.14,
+                     wave=dict(n=2.2, a=0.034, p=0.4), burn=1.15),
+    "receding": dict(crown=0.08, temple=0.005, tempAng=30, peak=0.88, q=3.2, dip=0.14, bay=0.20,
+                     wave=dict(n=2.0, a=0.013, p=1.6), burn=0.8, noSheen=True),
+    "curls":    dict(crown=0.43, temple=0.05, tempAng=22, tuck=0.20, peak=0.72, q=2.6, dip=0.02, bay=0.02,
+                     wave=dict(n=4.5, a=0.070, lobe=True), burn=1.1,
+                     tips=dict(n=6, d=0.08, v=[1.2, 0.7, 1.0, 0.8, 1.15, 0.9])),
+    "long":     dict(crown=0.285, temple=0.025, tempAng=19, peak=0.78, q=2.6, dip=0.04, bay=0.02,
+                     lappet=True, fall=dict(a=56, f=0.30, y=-1.30),
+                     wave=dict(n=2.0, a=0.042, p=2.6),
+                     tips=dict(n=5, d=0.15, v=[0.9, 1.2, 0.7, 1.1, 0.85])),
+}
+
+
+def _ramp(t):
+    return 0.0 if t <= 0 else 1.0 if t >= 1 else t * t * (3 - 2 * t)
+
+
+def hair_lift(st, deg):
+    """The lift is what decides whether a style reads as hair or as a helmet.
+    A bulge over the crown only makes the skull taller - the outline stays an
+    offset copy of the skull, which is what helmet hair is. This is a PLATEAU:
+    a smoothstep ramp up over the first `tuck` of the sweep, flat across the
+    sides and the crown, and a matching ramp back down into the far sideburn,
+    so the mass stands off the head everywhere and only tucks in at the tips.
+    The ramp matters as much as the plateau - any power of a sine leaves a
+    cusp, which shows up as a spike off each temple."""
+    T = st["tempAng"]
+    u = (deg - T) / (180 - 2 * T)
+    if u <= 0 or u >= 1:
+        return st["temple"]
+    tuck = st.get("tuck", 0.17)
+    w = (_ramp(u / tuck) * _ramp((1 - u) / tuck)
+         * (0.76 + 0.24 * math.sin(math.pi * u))
+         * (1 + st.get("lean", 0) * (2 * u - 1)))
+    l = st["temple"] + (st["crown"] - st["temple"]) * w
+    wv = st.get("wave")
+    if wv:
+        amp = wv["a"] * max(0.0, w) ** 0.45
+        if wv.get("lobe"):    # clumps: fuller lobes and tighter valleys
+            l += amp * (abs(math.sin(math.pi * wv["n"] * u)) ** 0.55 * 2 - 0.9)
+        else:
+            l += amp * math.sin(2 * math.pi * wv["n"] * u + wv.get("p", 0))
+    return l * (1 - st["skew"] * math.cos(math.radians(deg))) if st.get("skew") else l
+
+
+def edge_r(st, deg):
+    return head_r(deg) + hair_lift(st, deg)
+
+
+def _polar(deg, r):
+    th = math.radians(deg)
+    return (r * math.cos(th), r * math.sin(th))
+
+
+def hair_edge(st, deg):
+    return _polar(deg, edge_r(st, deg))
+
+
+def build_hair_parts(st):
+    """A style bakes into a PART LIST - {"p": pts, "t": tone} polygons and
+    {"c": (x, y, r), "t": tone} circles - rather than one flat fill."""
+    T = st["tempAng"]
+    wv = st.get("wave")
+    steps = max(64, round(wv["n"] * 22)) if wv else 28
+    angs = [T + (180 - 2 * T) * i / steps for i in range(steps + 1)]
+    for px, py in HEAD_SHAPE:
+        a = math.degrees(math.atan2(py, px))
+        if T + 0.5 < a < 180 - T - 0.5:
+            angs.append(a)
+    angs.sort()
+    outer = [hair_edge(st, a) for a in angs]
+    xT, yT = outer[0]
+
+    def line(x):
+        s = min(1.0, abs(x) / xT)
+        y = st["peak"] - (st["peak"] - yT) * s ** st["q"]
+        if st.get("bay"):
+            y += st["bay"] * (math.sin(math.pi * (s - 0.42) / 0.58) if s > 0.42 else 0)
+        if st.get("dip"):
+            y -= st["dip"] * max(0.0, 1 - (s / 0.34) ** 2)
+        if st.get("sweep"):
+            y += st["sweep"] * (x / xT) * (1 - s ** 3)
+        return y
+
+    tips = st.get("tips")
+
+    def line_lo(x):
+        return line(x) - (tips["d"] * 0.62 if tips else 0)
+
+    def band_depth(deg):
+        """How far a ray can travel in from the outer edge before it leaves
+        the hair through the hairline. Caps every ribbon's depth, so none of
+        them can be deeper than the hair over it."""
+        r = edge_r(st, deg)
+        th = math.radians(deg)
+
+        def out(t):
+            q = r - t
+            return q * math.sin(th) < line_lo(q * math.cos(th))
+        if not out(r):
+            return r
+        lo, hi = 0.0, r
+        for _ in range(22):
+            m = (lo + hi) / 2
+            if out(m):
+                hi = m
+            else:
+                lo = m
+        return lo
+
+    def crescent(a0, a1, gap, depth, bias=1.0):
+        """A ribbon along the outer edge between two angles, swelling in the
+        middle and tapering to a point at both ends. No visible end, no
+        straight chord across the mass - which is what a shade laid on as a
+        flat wedge looks like."""
+        N = 48 if wv else 24
+        top, bot = [], []
+        for i in range(N + 1):
+            u = i / N
+            a = a0 + (a1 - a0) * u
+            e = math.sin(math.pi * u ** bias)
+            room = band_depth(a) * 0.78
+            g = min(gap, room)
+            d = min(depth * e, room - g)
+            r = edge_r(st, a)
+            top.append(_polar(a, r - g))
+            bot.append(_polar(a, r - g - d))
+        return top + bot[::-1]
+
+    # the hairline, left temple to right. tips cuts it into locks that
+    # STRADDLE the curve - points below it, notches above - so a fringe reads
+    # as cut hair instead of a row of bumps sitting on a line.
+    N = 2 * tips["n"] if tips else 18
+    inner = []
+    for i in range(N + 1):
+        x = -xT + 2 * xT * i / N
+        if st.get("part") is not None and i > 0 and x >= st["part"] > -xT + 2 * xT * (i - 1) / N:
+            inner.append((st["part"], line(st["part"])))
+            inner.append((st["part"], line(st["part"]) + st["jog"]))
+        off = 0.0
+        if tips and 0 < i < N:
+            v = tips.get("v")
+            m = v[(i >> 1) % len(v)] if v else 1
+            off = (0.48 if i % 2 else -0.62) * tips["d"] * m
+        inner.append((x, line(x) + off))
+
+    front = []
+    if not st.get("lappet"):
+        front.append({"p": outer + inner, "t": "base"})
+    else:
+        # long - the fall CASCADES off the top of the head rather than hanging
+        # from the temple: its outer edge leaves the crown high up and is the
+        # crescent's own radius plus a flare that opens as it comes down, so
+        # the hair sweeps from the top of the skull out over the ear and past
+        # the jaw in one line. Its inner edge hugs the skull while there is a
+        # cheek to hug and then holds a line past the jaw. It hands back to
+        # the hairline SHORT of the temple - run the hairline all the way out
+        # and the loop doubles back on itself.
+        F = st["fall"]
+        cut = [p for p in inner if abs(p[0]) < xT * 0.92]
+        join = cut[-1]
+        crown = [hair_edge(st, a) for a in angs if F["a"] <= a <= 180 - F["a"]]
+        outR = []
+        for i in range(11):
+            a = F["a"] - (F["a"] - 4) * i / 10
+            outR.append(_polar(a, edge_r(st, a)
+                               + F["f"] * _ramp((F["a"] - a) / (F["a"] - 22))))
+        w0 = outR[-1][0]
+        outR += [(w0, -0.34), (w0 * 0.97, -0.72), (w0 * 0.86, -1.02), (w0 * 0.64, F["y"])]
+        inR = ([(w0 * 0.50, F["y"] + 0.10)]
+               + [(max(head_half_at(y) - 0.035, w0 * 0.44), y)
+                  for y in (-0.90, -0.62, -0.30, 0.02, 0.24)]
+               + [join])
+        flip = lambda p: [(-x, y) for x, y in p]
+        front.append({"p": outR + inR + cut[::-1] + flip(inR)[::-1]
+                           + flip(outR)[::-1] + crown[::-1], "t": "base"})
+        nO = len(outR)
+        front.append({"p": outR + [(x - (0.045 + 0.21 * _ramp(i / (nO - 1) / 0.45)
+                                         * (1 - _ramp((i / (nO - 1) - 0.74) / 0.26))), y)
+                                   for i, (x, y) in enumerate(outR)][::-1], "t": "shade"})
+
+    # a wisp of hair in front of the ear. The crescent tapers to a clean point
+    # at the temple, which is tidier than any real head.
+    if st.get("burn"):
+        k = st["burn"]
+        bx, w, ln = xT - 0.05 * k, 0.135 * k, 0.54 * k
+        top = line(bx) + 0.12
+        sb = [(bx + w * 0.55, top), (bx + w * 0.44, top - ln * 0.52),
+              (bx - w * 0.02, top - ln), (bx - w * 0.62, top - ln * 0.40),
+              (bx - w * 0.58, top)]
+        front.append({"p": sb, "t": "shade", "o": False})
+        front.append({"p": [(-x, y) for x, y in sb], "t": "base", "o": False})
+
+    if st.get("flat"):
+        return {"front": front, "line": line, "xT": xT, "yT": yT}
+
+    front.append({"p": crescent(st["fall"]["a"] if st.get("fall") else T, 104, 0, 0.34, 0.60),
+                  "t": "shade"})
+    if not st.get("noSheen"):
+        front.append({"p": crescent(min(148, 180 - T - 12), 96, 0.035, 0.145, 0.85),
+                      "t": "sheen"})
+    if st.get("part") is not None:                  # the parting, over the crown
+        b = (st["part"], line(st["part"]) + st["jog"] * 0.5)
+        t2 = hair_edge(st, 102)
+        pl = []
+        for s in (-1, 1):
+            for i in range(7):
+                u = (i if s < 0 else 6 - i) / 6
+                w = s * 0.048 * (1 - u) * (0.35 + 0.65 * (1 - u) ** 0.4)
+                pl.append((b[0] + (t2[0] - b[0]) * u + w, b[1] + (t2[1] - b[1]) * u))
+        front.append({"p": pl, "t": "shade"})
+    return {"front": front, "line": line, "xT": xT, "yT": yT}
+
+
+HAIR_PARTS = {k: build_hair_parts(v)["front"]
+              for k, v in HAIR_STYLE.items() if k not in ("sleek",)}
+_SLEEK = build_hair_parts(HAIR_STYLE["sleek"])["front"]
+HAIR_PARTS["sleek"] = _SLEEK
+# the knot for the bun - a ball of hair proud of the slicked crown, its
+# outline rippled a touch so it isn't a plain ellipse
+_BUN = []
+_bcx, _bcy, _brx, _bry, _bN = 0.16, 1.30, 0.38, 0.33, 20
+
+
+def _bun_at(i, k):
+    a = 2 * math.pi * i / _bN
+    m = k * (1 + 0.045 * math.sin(3 * a + 0.9))
+    return (_bcx + _brx * m * math.cos(a), _bcy + _bry * m * math.sin(a))
+
+
+_BUN.append({"p": [_bun_at(i, 1) for i in range(_bN)], "t": "base"})
+_BUN.append({"p": [_bun_at(i, 1) for i in range(-_bN // 4, _bN // 4 + 1)]
+                  + [_bun_at(i, 0.52) for i in range(_bN // 4, -_bN // 4 - 1, -1)], "t": "shade"})
+_BUN.append({"c": (_bcx - _brx * 0.34, _bcy + _bry * 0.38, 0.10), "t": "sheen"})
+HAIR_PARTS["bun"] = _SLEEK + _BUN
+HAIR_PARTS["ponytail"] = list(_SLEEK)
+
+
+def tail_parts(spine):
+    """A tapered rope of hair from a centre line of (x, y, half-width) stops:
+    the outline, then a shade strip down whichever side faces away."""
+    A, B, M = [], [], []
+    for i, (x, y, w) in enumerate(spine):
+        q = spine[min(i + 1, len(spine) - 1)]
+        o = spine[max(i - 1, 0)]
+        dx, dy = q[0] - o[0], q[1] - o[1]
+        m = math.hypot(dx, dy) or 1.0
+        dx, dy = dx / m, dy / m
+        A.append((x - dy * w, y + dx * w))
+        B.append((x + dy * w, y - dx * w))
+        M.append((x, y))
+    far, near = (A, B) if sum(p[0] for p in A) > sum(p[0] for p in B) else (B, A)
+    half = [(p[0] * 0.34 + M[i][0] * 0.66, p[1] * 0.34 + M[i][1] * 0.66)
+            for i, p in enumerate(far)]
+    return [{"p": far + near[::-1], "t": "base"},
+            {"p": far + half[::-1], "t": "shade"}]
+
+
+def hair_back_parts(style, e):
+    """Hair that falls behind the back - emitted before the torso so the body
+    covers its inner half. e is how far down it reaches."""
+    if style == "long":
+        # the drape has to be WIDER than the shoulders or the torso swallows
+        # it whole, and it is BEHIND the head, so it reads in shadow - at the
+        # same tone as the falls in front of it the whole side of the head
+        # merges into one flat slab. Its top starts inside the front hair's
+        # silhouette, or its corner pokes out over each temple as a horn.
+        half = [(0.70, 0.42), (1.06, -0.20), (1.34, e * 0.30), (1.50, e * 0.60),
+                (1.42, e * 0.84), (1.04, e * 0.97), (0.50, e * 1.02)]
+        lit = [(-x, y) for x, y in half]
+        return [{"p": lit + [(0, e * 1.04)] + half[::-1] + [(0.45, 0.30), (-0.45, 0.30)],
+                 "t": "shade"},
+                {"p": lit + [(-0.50, e * 0.94), (-0.96, e * 0.86), (-1.28, e * 0.58),
+                             (-1.14, e * 0.28), (-0.90, -0.20), (-0.60, 0.42)], "t": "base"}]
+    if style == "ponytail":
+        return tail_parts([(0.30, 0.86, 0.30), (0.66, 0.76, 0.34), (0.92, 0.46, 0.36),
+                           (1.02, 0.05, 0.34), (1.02, e * 0.34, 0.30), (0.94, e * 0.66, 0.25),
+                           (0.82, e * 0.88, 0.17), (0.74, e, 0.06)])
+    return []
+
+
+# ------------------------------------------------------------- the hard hat
+# A helmet is a hairstyle in everything but name, so it goes through the same
+# generator and comes back with the same shade ribbon and sheen in its own
+# colour. The layering is what matters: the old dome was a plain oval drawn
+# BEHIND the head, so it could only be a halo round the face; this shell draws
+# OVER the finished full-size head. A helmet covers a head, it doesn't replace
+# one. The shell is shallow and stops high on the forehead, and the brim below
+# it is wider, nearly flat underneath, and in the SHADE tone - in the base
+# tone it merges into the shell and the whole thing reads as a turban.
+HELMET_STYLE = dict(crown=0.22, temple=0.085, tempAng=8, peak=0.74,
+                    q=3.0, dip=0, bay=0, tuck=0.14)
+_HELM = build_hair_parts(HELMET_STYLE)
+
+
+def _helmet_extra():
+    line, xT = _HELM["line"], _HELM["xT"]
+    N, W, flat = 20, 0.985, line(0) - 0.185
+    top, bot = [], []
+    for i in range(N + 1):
+        t = -1 + 2 * i / N
+        x = W * t
+        y0 = line(max(-xT, min(xT, x)))
+        top.append((x, y0 + 0.04))
+        bot.append((x, min(y0 - 0.075, flat + 0.05 * t * t)))
+    rib = [(-0.085, 0.78), (0.025, 0.78), (0.015, 1.40), (-0.075, 1.40)]
+    jaw = (-0.16, -0.42, -0.66, -0.82)
+    strap = ([(-(head_half_at(y) + 0.05), y) for y in jaw]
+             + [(-(head_half_at(y) - 0.03), y) for y in reversed(jaw)])
+    return [{"p": rib, "t": "shade"},
+            {"p": strap, "t": "shade"},
+            {"p": top + bot[::-1], "t": "shade", "o": True},
+            {"c": (-0.03, 1.06, 0.175), "t": "shade"},
+            {"c": (-0.03, 1.06, 0.107), "f": "#f7f0d6"},
+            {"c": (-0.065, 1.088, 0.040), "f": "#ffffff"}]
+
+
+_HX = _helmet_extra()
+HELMET_LIST = _HELM["front"] + _HX               # rib, strap, brim, lamp
+HAT_LIST = _HELM["front"] + [_HX[0], _HX[2]]     # rib + brim, no lamp or strap
+
+
+def emit_hair(pieces, col, cx, cy, fr):
+    """Walk a baked part list into atlas polygons/circles. Pieces on the
+    SILHOUETTE take the body's uniform outline; shade, sheen and the small
+    details are internal, so they don't."""
+    out = []
+    for pc in pieces:
+        fill = pc.get("f") or hair_tone(col, pc.get("t", "base"))
+        edge = pc.get("o", pc.get("t") == "base") and not pc.get("f")
+        if "c" in pc:
+            x, y, r = pc["c"]
+            out.append((ocirc if edge else circ)(cx + x * fr, cy - y * fr, r * fr, fill)
+                       if edge else circ(cx + x * fr, cy - y * fr, r * fr, fill))
+        else:
+            pts = _fp(pc["p"], cx, cy, fr)
+            out.append(opoly(pts, fill, d=_FD) if edge else poly(pts, fill))
+    return out
+
+
+# ---------------------------------------------------------------- the face
+_EYE_CY, _EYE_EX, _EYE_RX, _EYE_RY, _EYE_TILT = 0.05, 0.375, 0.185, 0.118, 6
+_BROW_CY = 0.29
+
+
+def _almond(rx, ry):
+    """The eye opening: a full, rounded upper lid over a shallower lower one -
+    an almond, not a wide oval."""
+    p, N = [], 9
+    for i in range(N + 1):
+        t = i / N
+        p.append((-rx + 2 * rx * t, ry * math.sin(math.pi * t) ** 0.78))
+    for i in range(N, -1, -1):
+        t = i / N
+        p.append((-rx + 2 * rx * t, -0.78 * ry * math.sin(math.pi * t) ** 1.2))
+    return p
+
+
+_EYE_ALMOND = _almond(_EYE_RX, _EYE_RY)
+# the lash line rides the upper lid, and doubles as the crop that takes the
+# top off the iris - which is what makes the eye read lidded, not staring
+_EYE_LASH = _EYE_ALMOND[:10] + [(x, y + 0.052 * math.sin(math.pi * i / 9) ** 0.5)
+                                for i, (x, y) in reversed(list(enumerate(_EYE_ALMOND[:10])))]
+
+
+def _rot(pts, deg):
+    a = math.radians(deg)
+    cs, sn = math.cos(a), math.sin(a)
+    return [(x * cs - y * sn, x * sn + y * cs) for x, y in pts]
+
+
+def lip_tone(skin):
+    c = skin.lstrip("#")
+    v = [int(c[i:i + 2], 16) for i in (0, 2, 4)]
+    return "#%02x%02x%02x" % (min(255, round(v[0] * 0.84 + 34)),
+                              round(v[1] * 0.72 + 23), round(v[2] * 0.72 + 22))
+
+
+def face_kit(cx, cy, fr, skin=SKINF, brow=BROW, iris=IRIS):
+    """Nose and mouth, then the eyes over them, then the brows. Everything is
+    a polygon or a circle, so the strokeless / no-<ellipse> rule holds."""
+    P = []
+    lo = _tone(skin, (1.0, -13))      # nose bridge
+    tip = _tone(skin, (1.0, -34))     # nose tip
+    P.append(poly(_fp([(-0.030, 0.155), (0.030, 0.155), (0.052, -0.150),
+                       (0.070, -0.215), (-0.070, -0.215), (-0.052, -0.150)], cx, cy, fr), lo))
+    P.append(poly(ngon(cx, cy + 0.238 * fr, 0.082 * fr, 0.050 * fr, 12), tip))
+
+    lip = lip_tone(skin)
+    upper, lower, seam_c = _tone(lip, (1.0, -22)), _tone(lip, (1.0, 12)), _tone(lip, (1.0, -52))
+    hw, y0, N = 0.150, -0.55, 8
+    seam, top, bot = [], [], []
+    for i in range(N + 1):
+        t = i / N
+        x = -hw + 2 * hw * t
+        w = math.sin(math.pi * t)
+        sy = y0 + 0.018 - 0.030 * w
+        top.append((x, sy + 0.048 * w ** 0.8 - 0.016 * math.exp(-(x / 0.045) ** 2)))
+        seam.append((x, sy))
+        bot.append((x, sy - 0.040 - 0.046 * w ** 0.9))
+    P.append(poly(_fp(top + seam[::-1], cx, cy, fr), upper))
+    P.append(poly(_fp(seam + bot[::-1], cx, cy, fr), lower))
+    P.append(poly(_fp(seam + [(x, y - 0.014) for x, y in seam[::-1]], cx, cy, fr), seam_c))
+
+    for sgn in (-1, 1):
+        ox, oy = sgn * _EYE_EX, _EYE_CY
+        at = lambda pts: [(ox + x, oy + y) for x, y in _rot(pts, -sgn * _EYE_TILT)]
+        ix, iy = ox + sgn * 0.012, oy + 0.022
+        P.append(poly(_fp(at(_EYE_ALMOND), cx, cy, fr), EYEW))
+        P.append(circ(cx + ix * fr, cy - iy * fr, 0.112 * fr, iris))
+        P.append(circ(cx + ix * fr, cy - iy * fr, 0.052 * fr, EYE))
+        P.append(circ(cx + (ix - 0.040) * fr, cy - (iy + 0.058) * fr, 0.027 * fr, GLINT))
+        P.append(poly(_fp(at(_EYE_LASH), cx, cy, fr), EYE))
+
+    for sgn in (-1, 1):                # a fine tapered brow, thickest inboard
+        x0, hw2, arch, N2 = sgn * _EYE_EX, 0.185, 0.048, 7
+        lo_e, hi_e = [], []
+        for i in range(N2 + 1):
+            t = i / N2
+            px = x0 + sgn * (2 * hw2 * t - hw2)
+            lift = arch * math.sin(math.pi * t ** 1.25)
+            th = 0.058 * (1 - 0.75 * t ** 1.6) * (0.45 + 0.55 * math.sin(math.pi * t ** 0.5))
+            lo_e.append((px, _BROW_CY + lift))
+            hi_e.append((px, _BROW_CY + lift + th))
+        P.append(poly(_fp(lo_e + hi_e[::-1], cx, cy, fr), brow))
+    return P
+
+
 _G_SCALE = 5.15                       # atlas units per Grounded study unit
 _G_GROUND = 202.2                     # atlas-y of the sole (study u = 0)
 
@@ -268,7 +792,8 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                  badge_cross=False, belt=None, buckle=None, visor=None, harness=None,
                  harness_side="both", pod=None, blade=None, knee=None, torch=None,
                  hipline=False, helmet_ring=False, accent_dot=False,
-                 accent="#8fb9c8", eyes=True):
+                 accent="#8fb9c8", eyes=True,
+                 hair=None, hair_col="#33241b", eye_col=IRIS, brow_col=None):
     leg = leg or boot
     sleeve = sleeve or suit
     P = []
@@ -346,6 +871,16 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if blade:                                    # grown guard-blade down one arm
         P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=_FD))
 
+    # hair that falls behind the back, before the body so the torso and
+    # shoulders cover its inner half
+    _grp("body")
+    if hair and not (helmet or hat or cap):
+        _gate("hair_color")
+        for part in hair_back_parts(hair, -3.60 if hair == "long" else -2.90):
+            P.append(poly(_fp(part["p"], 70.0, round(_gy(30.4), 1), 14.0),
+                          hair_tone(hair_col, part["t"])))
+        _gate(None)
+
     # ---- far arm + far leg (behind the torso) ----
     _grp("body"); _gate(None)
     if arms:
@@ -368,8 +903,8 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
 
     # short neck - a skin column from the collar line up under the jaw, over
     # the torso and behind the head.
-    P.append(opoly([(_gx(-1.15), _gy(26.4)), (_gx(-1.15), _gy(28.7)),
-                    (_gx(1.15), _gy(28.7)), (_gx(1.15), _gy(26.4))], SKINF, d=_FD))
+    P.append(opoly([(_gx(-0.98), _gy(26.4)), (_gx(-0.98), _gy(29.1)),
+                    (_gx(0.98), _gy(29.1)), (_gx(0.98), _gy(26.4))], SKINF, d=_FD))
 
     # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
     # the waist. Drawn before the near arm so the arm hangs over it.
@@ -390,12 +925,10 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if band:                                      # chest band, above the belt
         P.append(opoly([(54, 88), (86, 88), (84, 100), (56, 100)], band, d=1.0))
 
-    # helmet / hat / cap - same head height for every outfit
+    # helmet / hat / cap. The shell is drawn AFTER the face, further down -
+    # a helmet covers a head, it doesn't replace one - so only the flat cap is
+    # still emitted here, over the crown.
     _grp("body")
-    if helmet:
-        _gate("helmet_color"); P.append(ooval(70, round(_gy(30.0), 1), helmet_r * 0.92, helmet_r, helmet)); _gate(None)
-    if hat:
-        P.append(ooval(70, round(_gy(30.0), 1), helmet_r * 0.92, helmet_r, hat))
     if cap:                                       # flat brimmed cap over the head
         P.append(opoly([(56, 40), (84, 40), (80, 32), (73, 27), (65, 27), (58, 32)], cap, d=1.2))
 
@@ -451,44 +984,41 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         if harness_side in ("both", "right"):
             P.append(bar(84, 84, 58, 116, 2, harness))
 
-    # face - always ringed, so it has an edge wherever it clears the helmet.
-    # The Grounded face kit: shallow D-ears (bare head only, tucked under the
-    # face), oval eyes with a full-height pupil, a short straight brow over each,
-    # a tan sideways-oval under-nose shadow, and a soft mouth line in the same
-    # tone. fr is the face radius so every feature scales with helmet vs bare.
+    # The head and the Grounded face kit. The head is FULL SIZE whether or
+    # not there is a helmet - the shell goes over it further down, it doesn't
+    # replace it - and it carries the same one-direction side plane the limbs
+    # do, shaped as a leaf across the far cheek and jaw.
     _grp("body"); _gate(None)
-    # The head reads as a Grounded-study oval - taller than wide (x radius
-    # 0.92 * fr) - not a circle, with the same thin outline as the body.
-    if helmet or hat:
-        fr, face_cx, face_cy = 11.5, 70.0, round(_gy(29.9), 1)
-        P.append(ooval(face_cx, face_cy, fr * 0.92, fr, SKINF))
-    else:
-        fr, face_cx, face_cy = 14.0, 70.0, round(_gy(30.4), 1)
-        for sgn in (-1, 1):
-            P.append(opoly([(face_cx + sgn * fr * dx, face_cy + fr * dy)
-                            for dx, dy in EAR_D], SKINF, d=_FD))
-        P.append(ooval(face_cx, face_cy, fr * 0.92, fr, SKINF))
+    fr, face_cx, face_cy = 14.0, 70.0, round(_gy(30.4), 1)
+    for sgn in (-1, 1):
+        P.append(opoly(_fp([(sgn * dx, dy) for dx, dy in EAR_D], face_cx, face_cy, fr),
+                       SKINF, d=_FD))
+    P.append(opoly(_fp(HEAD_SHAPE, face_cx, face_cy, fr), SKINF, d=_FD))
+    P.append(poly(_fp(HEAD_SHADE, face_cx, face_cy, fr), SKINS))
 
     if visor:
         _gate("visor_color")
-        P.append(opoly([(face_cx - fr * 0.98, face_cy - fr * 0.5),
-                        (face_cx + fr * 0.98, face_cy - fr * 0.5),
-                        (face_cx + fr * 0.9, face_cy + fr * 0.22),
-                        (face_cx - fr * 0.9, face_cy + fr * 0.22)], visor, d=1.2))
+        P.append(opoly([(face_cx - fr * 0.98, face_cy - fr * 0.42),
+                        (face_cx + fr * 0.98, face_cy - fr * 0.42),
+                        (face_cx + fr * 0.9, face_cy + fr * 0.32),
+                        (face_cx - fr * 0.9, face_cy + fr * 0.32)], visor, d=1.2))
         _gate(None)
     elif eyes:
-        eye_cy = face_cy - fr * 0.08
-        brow_y = face_cy - fr * 0.36
-        for sgn in (-1, 1):
-            exc = face_cx + sgn * fr * 0.42
-            P.append(opoly(ngon(exc, eye_cy, fr * 0.22, fr * 0.15, 14), EYEW, d=0.7))
-            P.append(poly(ngon(exc, eye_cy, fr * 0.135, fr * 0.15, 12), EYE))
-            bw, bh = fr * 0.20, fr * 0.08
-            P.append(poly([(exc - bw, brow_y), (exc + bw, brow_y),
-                           (exc + bw, brow_y + bh), (exc - bw, brow_y + bh)], BROW))
-        P.append(poly(ngon(face_cx, face_cy + fr * 0.28, fr * 0.22, fr * 0.09, 12), SKINL))
-        P.append(bar(face_cx - fr * 0.22, face_cy + fr * 0.58,
-                     face_cx + fr * 0.22, face_cy + fr * 0.58, 0.9, SKINL))
+        P.extend(face_kit(face_cx, face_cy, fr, SKINF,
+                          brow_col or _tone(hair_col, (0.74, 0)), eye_col))
+
+    # hair, or the shell over the top of the head
+    _grp("body")
+    if helmet or hat:
+        _gate("helmet_color" if helmet else None)
+        P.extend(emit_hair(HELMET_LIST if helmet else HAT_LIST,
+                           helmet or hat, face_cx, face_cy, fr))
+        _gate(None)
+    elif hair and not cap:
+        _gate("hair_color")
+        P.extend(emit_hair(HAIR_PARTS.get(hair, HAIR_PARTS["crop"]),
+                           hair_col, face_cx, face_cy, fr))
+        _gate(None)
 
     if badge_cross:
         _gate("badge_color")

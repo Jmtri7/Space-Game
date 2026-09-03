@@ -22,7 +22,7 @@ per-atlas accent colour.
 
 | atlas | from | holds | state |
 |---|---|---|---|
-| **Common Kit** | Standard Issue ch. 01–04 | shared `Person` body (cinched-waist anatomy + accessory slot map) + the culture-neutral civilian / service outfits, each with a role detail | **built** — `gen_common.py` + `common_kit.py` |
+| **Common Kit** | Standard Issue ch. 01–04 | shared `Person` body (cinched-waist anatomy + accessory slot map) + the culture-neutral civilian / service outfits, each with a role detail. **Carries the Grounded study's redrawn face kit, hairstyles and hard hat** (see below) | **built** — `gen_common.py` + `common_kit.py` |
 | **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: issued ships, Standard Ring station, buildings, hazard decal, spine-and-bays interior + Federation crew/command outfits (visor-slit / stencil signature) | **built** — `gen_split.py` + `federation_outfits.py` |
 | **Vherathi Concord** | Resin & Rivets, Vherathi half | 6 grown hulls, reef station, 4 buildings, 6 furniture/deco, 4 layouts + outfits with asymmetric eye-bubble helm clusters + resin-bead glow | **built** — `gen_split.py` + `vherathi_outfits.py` |
 | **Drossholt Company** | Resin & Rivets, Drossholt half | 5 bolted hulls, welded station, 4 buildings, 7 furniture/deco, 2 layouts + outfits with riveted patch-plates + box respirator | **built** — `gen_split.py` + `drossholt_outfits.py` |
@@ -301,7 +301,24 @@ weapons system.
   style reads as hair that stops at the jaw. `stubble` is the one style with no
   shade or sheen: it is a shadow on the scalp, not a mass of hair.
 
-  These are deliberately ahead of `figure_parts` until a re-bake; the "One
+  **The face kit, the hairstyles and the hard hat are now ported into
+  `gen_si.py`,** so the **Common Kit** atlas draws them too — the whole block
+  sits under a `# ==== Grounded` banner there and is a straight port of the
+  study's JS (same names, same numbers), kept as one piece so the two can be
+  diffed. `figure_parts` gained `hair` / `hair_col` / `eye_col` / `brow_col`;
+  `emit_hair()` walks a baked part list and gives **silhouette** pieces the
+  body's uniform outline while shade, sheen and the small details go without,
+  which is what the outlined Common Kit style needs (an outline round the
+  brim's near-zero tapering end reads as a stick, so the brim keeps a minimum
+  thickness). The helmet moved from *behind* the head to *over* it there too,
+  and the head no longer shrinks under one. The **proportions** did not move:
+  every outfit signature in `common_kit.py` / `federation_outfits.py` /
+  `vherathi_outfits.py` / `drossholt_outfits.py` anchors to them, so the
+  study's smaller head, three-stop leg, foot-shaped boot and mitt hand stay
+  ahead of the bake until that is done deliberately. Only the neck came across
+  (slimmer, a touch taller), since nothing anchors to it.
+
+  The rest is deliberately ahead of `figure_parts` until a re-bake; the "One
   uniform outline weight" / "long torso" language above describes the current
   bake, not the study.
 

@@ -79,7 +79,7 @@ def anatomy_svg():
     fig = "".join(figure_parts(suit="#565660", boot="#3f3f48", no_helmet=True, hipline=True))
     g = f'<g transform="translate(66,6) scale(1.0)">{fig}</g>'
     lab = ('<g fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="7">'
-           '<text x="6" y="46">oval eyes, straight brow,</text>'
+           '<text x="6" y="46">almond eyes, tapered brow,</text>'
            '<text x="6" y="55">under-nose shadow, D-ears</text>'
            '<text x="6" y="96">narrow rounded shoulder,</text><text x="6" y="105">domed arm top</text>'
            '<text x="6" y="140">cinched waist —</text><text x="6" y="149">belts anchor here</text>'
@@ -91,7 +91,7 @@ def anatomy_svg():
              + dashed_bar(122, 52, 150, 52, 0.8, ACCENT, dash=2.4, gap=2.2)
              + dashed_bar(126, 152, 150, 152, 0.8, ACCENT, dash=2.4, gap=2.2))
     return (f'<svg viewBox="0 0 240 210" role="img" aria-label="Labelled anatomy of the shared Person body: '
-            f'a head with oval eyes, a short straight brow, a tan under-nose shadow and shallow D-ears; '
+            f'a head with almond eyes, a fine tapered brow, a bridge-and-tip nose, two-part lips and low D-ears; '
             f'narrow rounded shoulders with a domed arm top connecting flush; a cinched waist where belts sit; '
             f'a hip that flares back to near the chest width; and longer legs on two boots.">{GRIDDEF}'
             f'<polygon points="0,0 240,0 240,210 0,210" fill="url(#grid)"/>{lines}{g}{lab}</svg>')
@@ -174,11 +174,17 @@ def build():
       (<code class="f">person.py</code>'s <code class="f">_leg_stance</code> /
       <code class="f">_arm_swing</code>), has a <b>cinched waist</b> with the
       belts moved up to it, <b>narrow rounded shoulders</b> with a domed arm
-      top, and the Grounded <b>face kit</b> &mdash; oval eyes with a full-height
-      pupil, a short straight brow, a tan under-nose shadow, a soft mouth line
-      and shallow D-ears &mdash; all baked from
+      top, and the Grounded <b>face kit</b> &mdash; almond eyes with an iris,
+      a pupil and a catchlight under a lash line, a fine tapered brow, a nose
+      built from a bridge shadow into a soft tip, two-part lips and low D-ears,
+      over a head that carries the same one-direction side plane the limbs do.
+      The waist, shoulders and arm top are baked from
       <code class="f">gen_si.figure_parts</code> into
-      <code class="f">person_figure.py</code>. The <em>role-detail</em> pieces
+      <code class="f">person_figure.py</code>; the redrawn face kit, the
+      <b>hairstyles</b> and the <b>hard hat</b> are new here, ahead of the
+      next bake &mdash; all three generated off the skull's own profile, so
+      hair and helmet alike are the head's outline pushed out by a lift and
+      closed by a hairline (see the Grounded Person study). The <em>role-detail</em> pieces
       below (tool belt, tabard, hood, mask) are baked by
       <code class="f">build_figure_signatures.py</code> into
       <code class="f">game/world/figure_signatures.py</code>, and
@@ -202,8 +208,11 @@ def build():
       boots and walks with them; it has a <b>cinched waist</b> about halfway up
       where every belt sits, a hip that flares back to near the chest width, and
       <b>narrow rounded shoulders</b> the domed arm top connects flush to. The
-      face carries the Grounded kit: oval eyes, a straight brow, an under-nose
-      shadow and shallow D-ears &mdash; hidden under a helmet or a visor.
+      face carries the Grounded kit: almond eyes with an iris, a pupil and a
+      catchlight under a lash line, a fine tapered brow, a bridge-and-tip nose
+      and two-part lips, with low D-ears and a leaf of shade across the far
+      cheek. A helmet no longer replaces it &mdash; the shell is drawn
+      <em>over</em> a full-size head, so the face still reads under the brim.
     </p>
 
     <article class="plate">
@@ -215,7 +224,8 @@ def build():
         <p class="role">person.py &middot; person_figure.py</p>
         <p>
           The cinched waist, narrow rounded shoulders and the Grounded face kit
-          (oval eyes, straight brow, under-nose shadow, D-ears) are in
+          (almond eyes, tapered brow, bridge-and-tip nose, two-part lips,
+          low D-ears) are in
           <code class="f">gen_si.figure_parts</code> and baked to
           <code class="f">person_figure.py</code> by
           <code class="f">build_person_figure.py</code>. <b>Belts, sashes, hip
