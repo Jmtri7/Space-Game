@@ -68,7 +68,7 @@ CULTURES = {
  "vherathi": dict(
    file="vherathi-concord.html", title="Vherathi Concord", mark="Vherathi <em>Concord</em>",
    accent="#78ffc8", accent_rgb="120,255,200",
-   src="resin-and-rivets.html", outfits="vherathi_outfits",
+   src="resin-and-rivets.html", outfits="vherathi_outfits", hw="vherathi_hardware",
    pal=dict(hull="#483060", hull_lo="#2f1e3c", glass="#78ffc8", thrust="#dc5aff",
             trim="#96789e", shadow="#241830"),
    tagline="Ships and cities <em>grown</em>, not assembled",
@@ -85,7 +85,7 @@ CULTURES = {
    ],
    ships=["Resin Skiff", "Reliquary Hauler", "Thornwing Corvette", "Spinewing Skiff",
           "Chorus Tender", "Pale Ark"],
-   station=["redesigned Vherathi station"],
+   station=["redesigned Vherathi station", "Vherathi Bloom Cluster", "Vherathi Reef Spire"],
    buildings=["Concord Spire", "Vherathi Bloompod", "Vherathi Gathering Hall", "Dock Antler"],
    deco=["Vherathi Light Column", "Vherathi Fern Basin", "Vherathi Lounge Pod",
          "Vherathi Concierge Desk", "Vherathi Resin Bench", "Vein Arch"],
@@ -93,11 +93,20 @@ CULTURES = {
             "curved Vherathi room corner", "Vherathi concourse circle with furniture"],
    status="<b>The <code class=\"f\">vherathi</code> culture shipped</b> "
           "(story <code class=\"f\">1.10.0</code>) &mdash; Alpha Station and its "
-          "moon rebuilt to the grown floor-plan model, every hull / building / "
-          "furniture silhouette extracted into <code class=\"f\">parts</code>. The "
-          "hardware plates below are those shipped SVGs, and the outfit redraws "
-          "now ship too &mdash; the eye-bubble helm clusters and resin-bead glow "
-          "are baked into <code class=\"f\">figure_signatures.py</code>.",
+          "moon rebuilt to the grown floor-plan model, every building silhouette "
+          "extracted into <code class=\"f\">parts</code>, and the outfit redraws ship "
+          "too &mdash; the eye-bubble helm clusters and resin-bead glow are baked "
+          "into <code class=\"f\">figure_signatures.py</code>. "
+          "<b>Ships, station and furniture/decorations below are a REDESIGN</b> "
+          "(<code class=\"f\">vherathi_hardware.py</code>, generated the way the "
+          "Federation's own hardware is, not grabbed from resin-and-rivets.html) "
+          "&mdash; shaded instead of outlined for a more three-dimensional read, "
+          "plus two new station variants (Bloom Cluster, Reef Spire). Not yet "
+          "extracted into <code class=\"f\">parts</code> or wired into "
+          "<code class=\"f\">config/stories/default</code>; the shipped silhouettes "
+          "for those categories are still the old <code class=\"f\">resin-and-rivets.html</code> "
+          "ones until that's done deliberately (see docs/DESIGN_ATLAS.md). Buildings "
+          "and layouts are unchanged.",
  ),
  "drossholt": dict(
    file="drossholt-company.html", title="Drossholt Company", mark="Drossholt <em>Company</em>",
@@ -161,10 +170,20 @@ def strip_svg(svg):
     return vb, inner
 
 
-def card_from_plate(src, label):
+def card_from_plate(src, label, hw=None):
     # src is None for the Federation - its hardware plates are generated straight
-    # from gen_si.issue_plate rather than grabbed from an atlas HTML.
-    svg = issue_plate(label) if src is None else grab(src, label)
+    # from gen_si.issue_plate rather than grabbed from an atlas HTML. `hw`, when
+    # given, is a per-culture module (vherathi_hardware) generating SOME plates
+    # (ships / station / furniture) straight from Python the same way; anything
+    # it doesn't cover (currently: buildings, layouts) falls through to grab().
+    svg = None
+    if hw is not None:
+        try:
+            svg = hw.plate(label)
+        except StopIteration:
+            svg = None
+    if svg is None:
+        svg = issue_plate(label) if src is None else grab(src, label)
     vb, inner = strip_svg(svg)
     return (f'<figure class="card"><svg viewBox="{vb}" role="img" aria-label="{label}">'
             f'{inner}</svg><figcaption><b>{label}</b></figcaption></figure>')
@@ -196,6 +215,9 @@ def build(key):
     set_outline(key != "vherathi")
     c = CULTURES[key]
     src = c["src"]
+    hw = c.get("hw")
+    if hw is not None:
+        hw = importlib.import_module(hw)
     mod = importlib.import_module(c["outfits"])
     pal = c["pal"]
 
@@ -203,11 +225,11 @@ def build(key):
         return (f'<section class="chapter" id="{sid}"><p class="chapter-kicker">{title}</p>'
                 f'<h2>{title}</h2>{cards_html}</section>')
 
-    ships = "".join(card_from_plate(src, s) for s in c["ships"])
-    stations = "".join(card_from_plate(src, s) for s in c["station"])
-    buildings = "".join(card_from_plate(src, b) for b in c["buildings"])
-    deco = "".join(card_from_plate(src, d) for d in c["deco"])
-    layouts = "".join(card_from_plate(src, l) for l in c["layouts"])
+    ships = "".join(card_from_plate(src, s, hw) for s in c["ships"])
+    stations = "".join(card_from_plate(src, s, hw) for s in c["station"])
+    buildings = "".join(card_from_plate(src, b, hw) for b in c["buildings"])
+    deco = "".join(card_from_plate(src, d, hw) for d in c["deco"])
+    layouts = "".join(card_from_plate(src, l, hw) for l in c["layouts"])
     outfits = "".join(outfit_card(mod, k) for k in mod.OUTFITS)
 
     swatches = "".join(f'<div class="sw"><i style="background:{pal[k]}"></i>'

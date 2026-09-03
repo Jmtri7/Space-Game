@@ -24,7 +24,7 @@ per-atlas accent colour.
 |---|---|---|---|
 | **Common Kit** | Standard Issue ch. 01–04 | shared `Person` body (cinched-waist anatomy + accessory slot map) + the culture-neutral civilian / service outfits, each with a role detail. **Carries the Grounded study's redrawn face kit, hairstyles and hard hat** (see below) | **built** — `gen_common.py` + `common_kit.py` |
 | **Sol Federation** | Standard Issue ch. 05 | the `standard_issue` culture: issued ships, Standard Ring station, buildings, hazard decal, spine-and-bays interior + Federation crew/command outfits (visor-slit / stencil signature) | **built** — `gen_split.py` + `federation_outfits.py` |
-| **Vherathi Concord** | Resin & Rivets, Vherathi half | 6 grown hulls, reef station, 4 buildings, 6 furniture/deco, 4 layouts + outfits with asymmetric eye-bubble helm clusters + resin-bead glow | **built** — `gen_split.py` + `vherathi_outfits.py` |
+| **Vherathi Concord** | Resin & Rivets, Vherathi half | 6 grown hulls + 3 stations (2 new) + 6 furniture/deco, **regenerated shaded** by `vherathi_hardware.py`; 4 buildings + 4 layouts still from Resin & Rivets; outfits with asymmetric eye-bubble helm clusters, branching resin veins + shoulder pads | **built** — `gen_split.py` + `vherathi_outfits.py` + `vherathi_hardware.py` |
 | **Drossholt Company** | Resin & Rivets, Drossholt half | 5 bolted hulls, welded station, 4 buildings, 7 furniture/deco, 2 layouts + outfits with riveted patch-plates + box respirator | **built** — `gen_split.py` + `drossholt_outfits.py` |
 | **Past the Reach** | (unchanged) | the seven *proposed* cultures — mockup only | done |
 
@@ -463,6 +463,71 @@ compatibility.
   atlases (`extract_atlas.py` now folds the strokeless idioms back to compact
   parts — see "Strokeless specimens"), so the in-game `parts` are current with
   these plates again.
+
+  **The Vherathi outfits went through a second fit pass** on top of the first
+  overhaul (asymmetric dome, branching resin vein, grown carapace). Fixes: a
+  cosine blend replaced a hard step in `gen_si.head_shell`'s `grow` factor — the
+  step landed exactly at the crown and chin, where two neighbouring samples a
+  fraction of a degree apart jumped from radius×1.0 to radius×`grow`, reading
+  as a spike and splitting `shade_of`'s far-side crescent into two disconnected
+  pieces at the same spot; a plain cosine blend has no such seam, front to
+  back. Every domed outfit now wears the shared **`collar`** slot (a bare neck
+  under a helm reads unfinished). The gill-vanes are shorter and fan wider
+  instead of reading as long blades. The torso vein branches — a trunk plus two
+  thinner forks — instead of one wire, and stops clear of the collar's lower
+  edge (its old top end ran *under* the collar, leaving only the last bead
+  showing above it, like a stray mark with nothing attached). The carapace is
+  now `carapace()`, built off `torso_half_at()` so its outer edge is the body's
+  own silhouette rather than a quad floating over the chest. `vault_warden` and
+  `envoy` gained an asymmetric shoulder pad (`shoulders` + `shoulders_side`)
+  with a couple of resin beads riding it, and `vault_warden` lost its generic
+  forearm blade (weapons are a separate system, coming later). The softsuit's
+  half-mask uses the new **`gen_si.head_side_patch(y0, y1, side)`** — one side
+  of `head_band`, closing on the centreline — instead of a flat quad, so it
+  hugs the cheek's actual curve. `tide_pilot`'s helm-mounted cluster and vane
+  fin were floating because their anchor coordinates were guessed; fixed by
+  rendering the bare `helmet=` shell alone, regexing its polygons by fill
+  colour to read its *real* new-space extent, and mounting onto that (via the
+  new **`gen_si.fig_pts()`**, a generic escape hatch: wrap a whole shape of
+  real atlas coordinates in one call and it lands correctly when the layer is
+  drawn through `fig_remap()` — the same trick `arm_top()` / `hand_shape()`
+  already use for their one anchor point each, generalised to arbitrary
+  geometry). `envoy`'s stole now starts exactly on `arm_top(-1)` and ends well
+  past the waist on the opposite hip, instead of two points that were each
+  only approximately near where they needed to be. These lessons are now
+  general guidance in `common_kit.py`'s header (an outfit author for *any*
+  future culture reads it, not just Vherathi's) — see "Refitting an outfit"
+  there for the anchoring helpers and the two failure-mode symptoms (floating
+  vs. a stray mark) that both come from ungrounded geometry, and for the
+  outline-vs-shading rule now stated as a general principle rather than a
+  Vherathi-only choice.
+
+  **Ships, station and furniture/decorations are now GENERATED**, the same
+  move Sol Federation's hardware already made — `vherathi_hardware.py`,
+  `gen_split.py`'s `hw=` hook (falls back to `grab()` for anything it doesn't
+  cover, which today is buildings and layouts). Same silhouette language the
+  grabbed plates already had — asymmetric, faceted, tapering to one dominant
+  point, a spine of glass beads instead of a window grid — redrawn with the
+  vherathi_outfits.py shading technique (`hull()`: fill + a far-side crescent
+  in the culture's own `hull_lo`, never an invented tone, + a lit sliver on the
+  near edge) instead of the old offset-outline. Thruster ports are a grown
+  asymmetric resin flare per the doc's own culture cue (see "Specimen SVG
+  conventions" below), the exhaust a separate `class="flame"` shape rooted
+  inside and drawn first so the port occludes its base. **Two new station
+  designs** — Vherathi Bloom Cluster (pods clustered around a spine, no ring
+  symmetry) and Vherathi Reef Spire (the vertical counterpart to the ships'
+  own tapering-to-one-point language) — sit alongside the reshaded original
+  ring station. One bug worth knowing the shape of: a vein path routed *through*
+  a small lit highlight dot drawn earlier bit two notches out of it, reading as
+  a pair of stray arrow-like marks; the fix in both places it happened (the
+  ring station's reactor core, the bloom cluster's hub pod) was to draw the
+  highlight dot **last**, after the vein, not to avoid crossing it — a vein
+  is allowed to run near a highlight, but whichever is drawn second wins, so
+  draw the one you want intact second. **Not extracted into `parts` or wired
+  into `config/stories/default`** — that stays a deliberate follow-up, the
+  same way the Grounded body stays ahead of a `person_figure.py` re-bake until
+  asked for; the shipped in-game hulls/station/furniture are still the old
+  `resin-and-rivets.html` ones. Buildings and layouts are untouched.
 - **Standard Issue** *(removed)* — was the shared `Person` body + culture-neutral
   kit + the Sol Federation look, all now split into **Common Kit** + **Sol
   Federation**. Its `standard_issue` culture, ships/station, **Procyon Gate**

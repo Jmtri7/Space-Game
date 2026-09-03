@@ -903,16 +903,52 @@ def head_dome(out=2.0, y_bot=None, n=16, wide=1.0):
 def head_shell(out=2.6, grow=1.0, n=34):
     """The WHOLE head silhouette pushed out by `out` - a helm grown on the
     skull, chin and all, rather than a dome cut off with a flat hem. `grow`
-    swells one side only, for cultures whose kit is never symmetric."""
+    swells one side only, for cultures whose kit is never symmetric.
+
+    The swell factor is a COSINE blend, not a step at the left/right split:
+    `k` was `grow if cos(th) < 0 else 1.0`, a hard jump exactly at the crown
+    and chin (th = 90 / 270, where cos flips sign) - two neighbouring samples
+    a fraction of a degree apart landing at radius*1.0 and radius*grow, which
+    reads as a spike stuck on the dome. Blending continuously through those
+    poles removes the spike and, as a side effect, gives shade_of() a simple
+    convex-ish silhouette to crescent-shade instead of one with a notch in it -
+    which is what was breaking the shadow into two pieces."""
     cx, cy, fr = 70.0, FIG_HEAD_CY, FIG_HEAD_R
     pts = []
     for i in range(n):
         a = 360.0 * i / n
         th = math.radians(a)
         r = head_r(a) * fr + out
-        k = grow if math.cos(th) < 0 else 1.0
+        k = 1.0 + (grow - 1.0) * (1 - math.cos(th)) / 2
         pts.append((cx + r * math.cos(th) * k, cy - r * math.sin(th)))
     return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
+
+
+def fig_pts(pts):
+    """Points already in the figure's real (NEW) atlas space -> inverse-mapped
+    under fig_remap(), so a signature layer can draw ANY new-space geometry -
+    not just what head_shell / arm_top / hand_shape already cover - and have
+    it land correctly once the whole layer is drawn through the remap. Pass
+    the *whole* shape through this once; do not wrap individual points and
+    mix them into an otherwise-raw old-space polygon one at a time."""
+    return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
+
+
+def head_side_patch(y0, y1, side=-1, out=0.3, n=8):
+    """A patch of skin over one side of the face (side=-1 left, +1 right),
+    hugging the skull's own curve out to `out` past it and closing on the
+    CENTRELINE - a resin half-mask, a scar, an implant panel, anything that
+    only covers half the face and has to follow its curve rather than cut a
+    straight chord across it. y0/y1 are NEW-space atlas y (see FIG_HEAD_CY /
+    FIG_HEAD_R for the head's own span)."""
+    cx, cy, fr = 70.0, FIG_HEAD_CY, FIG_HEAD_R
+    edge, ctr = [], []
+    for i in range(n + 1):
+        y = y0 + (y1 - y0) * i / n
+        h = head_half_at((cy - y) / fr) * fr + out
+        edge.append((cx + side * h, y))
+        ctr.append((cx, y))
+    return fig_pts(edge + ctr[::-1])
 
 
 def _cap_shade(pts, cx, frac=0.42):

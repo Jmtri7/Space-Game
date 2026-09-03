@@ -34,15 +34,65 @@ coordinates - or re-author the whole file and drop the adapter.
 
   Don't guess at the body - ask it. These come back in atlas coordinates,
   already inverse-mapped, so they can be used from this file directly:
-    hand_shape(s, grow)   the mitt, for a glove that covers the hand
-    arm_top(s)            the centre of the arm's domed top, for a pad
-    head_band_fig(y0, y1) a band whose sides follow the skull, for a mask
-                          or a visor (y is in the NEW space - see gen_si)
-    head_dome(out, y_bot) a dome over the head and its hair, for a hood
-    _arm_rot(s, x, y)     a point carried onto the splayed arm
+    hand_shape(s, grow)     the mitt, for a glove that covers the hand
+    arm_top(s)              the centre of the arm's domed top, for a pad or
+                            anything else that should read as ROOTED to the
+                            shoulder (a vane, a strap, a stole)
+    head_band_fig(y0, y1)   a band whose sides follow the skull, for a mask
+                            or a visor (y is in the NEW space - see gen_si)
+    head_side_patch(y0, y1, side) one side of that band, closing on the
+                            centreline - a half-mask, a scar, an implant
+    head_dome(out, y_bot)   a dome over the head and its hair, for a hood
+    head_shell(out, grow)   the WHOLE head (chin included) pushed out, for a
+                            helm that covers the head rather than capping it
+    torso_half_at(u), torso_band(u0,u1) the torso's own half-width / a band
+                            following it, for a chest plate flush to the body
+    fig_pts(pts)            the escape hatch: ANY new-space geometry (not just
+                            what the helpers above cover), inverse-mapped so
+                            it lands correctly when the layer is drawn through
+                            fig_remap() - wrap the WHOLE shape in one call, do
+                            not fig_pts() a single point and mix it into an
+                            otherwise-raw list of old-space numbers
+    _arm_rot(s, x, y)       a point carried onto the splayed arm
   And don't draw a second hat over the `helmet` shell: drop the helmet key
   and let the signature's own headgear be the headgear, or the shell's brim
   shows underneath it as a stray line.
+
+  If you're mounting decoration onto a SHARED shell you didn't draw (the
+  flight `helmet`, a `hat`, a `cap`) - don't guess where its edges are. Render
+  `figure_parts(**base)` alone with nothing else, regex out the polygons by
+  fill colour, and read their real x/y extent off that. A guess that happens
+  to look plausible in old-space numbers can still land the decoration
+  floating well clear of the shell once the remap (or the shell's own
+  geometry, which isn't old-space at all) gets hold of it.
+
+  Two failure modes worth knowing by their symptom, because both come from
+  the same root cause - geometry that isn't anchored to something real:
+    - a piece reads as FLOATING, disconnected from the body: its start point
+      was a guessed coordinate rather than arm_top() / a measured shell edge
+      / a torso edge from torso_half_at(). Anchor the geometry, don't place it
+      near where the anchor probably is.
+    - a piece reads as a STRAY MARK - a lone dot or spike with no visible
+      connection to anything: usually the far/thin end of a tapered shape
+      (vein(), ribbon()) has been drawn UNDER something else (a collar, a
+      helmet shell) that was emitted after it, leaving only the tip showing.
+      Either stop the shape clear of whatever will cover it, or draw it after
+      that layer instead of before.
+
+  PREFER SHADING TO OUTLINES on any new work (see gen_si.set_outline - this
+  atlas draws with it off). Where two polygons of the same colour meet,
+  separate them with a shade on the far side of one of them - the body's own
+  one-direction light - not a line between them, and taper that shade to
+  nothing at both ends (a crescent, not a constant-width inset: a constant
+  inset reads as a seam ruled down the piece). vherathi_outfits.far_side /
+  shade_of is the reference implementation; gen_si._cap_shade is the same
+  idea for a small rounded cap. This applies as much to a SILHOUETTE FUNCTION
+  as to a single shape: if it swells one part of a shape more than another (a
+  culture's kit is never perfectly symmetric), blend the swell factor
+  CONTINUOUSLY across the shape rather than stepping it at some boundary -
+  gen_si.head_shell's `grow` blends by cosine for exactly this reason; a hard
+  step there was reading as a spike, and was breaking its own far-side shade
+  into two disconnected pieces at the same spot.
 """
 import math
 import pathlib
