@@ -6,7 +6,10 @@ smuggler's hood, a surgeon's mask...). Strokeless <polygon>/<circle>.
 build_outfit(key) -> (base_opts, pre_svg, post_svg)
 composed by gen_common.py as:  grid + pre + figure_parts(**base) + post
 
-Figure anchors after the full Grounded proportion remap (~6.1-head figure):
+These signatures are authored against the PREVIOUS figure space and are drawn
+through gen_si.fig_remap(), which maps the old anchor lines onto the Grounded
+body's. Keep new work in these coordinates - or re-author the whole file and
+drop the adapter. Old anchors:
 chest y72-106 (x57-83), waist y103 (x57-83), belt y95-108, hip y139, legs
 y139-194, arms x50-60 / x80-90 y66-132, hands (57/83, 133), bare head (70,46)
 r14 with the mouth line at y54, helmeted face (70,48) r11.5. Anything on the
@@ -74,13 +77,9 @@ def toolbelt(col):
     return "".join(o)
 
 
-def hardhat(col, lamp=None):
-    o = [op_s([(53, 42), (87, 42), (83, 33), (74, 27), (66, 27), (57, 33)], col)]
-    o.append(bar(53, 40, 87, 40, 1.6, col))
-    if lamp:
-        o.append(op_s(rrect(66, 27, 8, 5, 1), "#3a3a40"))
-        o.append(circ(70, 27, 2.2, lamp))
-    return "".join(o)
+# (the hard hat itself now comes from figure_parts' `helmet` key - a shell
+# drawn over the head with its own brim, rib, strap and lamp - so the
+# signature layers no longer draw one)
 
 
 # ---------------------------------------------------------------- outfits
@@ -100,8 +99,7 @@ def flight_suit():
 
 def mechanic():
     base = dict(helmet="#f0aa37", suit="#524e48", boot="#2e2a26")
-    post = (hardhat("#f0aa37", lamp="#fff2c0")
-            + toolbelt("#3a352f")
+    post = (toolbelt("#3a352f")
             + op_s([_arm_rot(-1, x, y) for x, y in [(51, 95), (60, 95), (60, 124), (51, 124)]], "#3a352f")   # rolled sleeve cuff L (over the arm)
             + op_s(rrect(53, 150, 13, 9, 2), "#3a352f") + op_s(rrect(71, 150, 13, 9, 2), "#3a352f"))  # knee pads
     return base, "", post
@@ -115,7 +113,6 @@ def dockworker():
             + bar(60, 88, 80, 88, 1.6, "#c46a10")
             + op_s([(57, 64), (64, 64), (62, 84), (55, 84)], "#f2962a")     # strap L
             + op_s([(76, 64), (83, 64), (85, 84), (78, 84)], "#f2962a")     # strap R
-            + hardhat("#f2962a")
             + ocirc(*_arm_rot(-1, 57, 133), 4.0, "#2a303a", d=1.0) + ocirc(*_arm_rot(1, 83, 133), 4.0, "#2a303a", d=1.0))  # heavy gloves
     return base, pre, post
 
@@ -123,8 +120,7 @@ def dockworker():
 def miner():
     base = dict(helmet="#ebcd5f", suit="#7a6648", boot="#483828")
     pre = op_s(rrect(49, 60, 42, 60, 5), "#5c4d34")                          # life-support backpack
-    post = (hardhat("#ebcd5f", lamp="#fff2c0")
-            + toolbelt("#463826")
+    post = (toolbelt("#463826")
             + rib([(90, 62), (92, 92), (90, 126)], 2.0, "#6a5a3c")           # drill stem down the back-right
             + poly([(87, 124), (95, 126), (91, 138)], "#3a2e1e")             # drill bit
             + op_s(rrect(78, 110, 12, 14, 2), "#463826")                     # ore-sample pouch
@@ -179,7 +175,8 @@ def medic():
 
 def surgeon():
     # no hard helmet - a scrub cap and a tie-on mask on a bare head
-    base = dict(no_helmet=True, suit="#e9eded", boot="#b0bcbc", coat=True)
+    base = dict(no_helmet=True, suit="#e9eded", boot="#b0bcbc", coat=True,
+                hair="sleek", hair_col="#4c3323")
     pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 158), (48, 158)], "#f0f4f4")
     post = (op_s([(58, 47), (82, 47), (80, 60), (60, 60)], "#dfeae6")                 # mask over nose + mouth
             + bar(60, 50, 53, 45, 0.9, "#dfeae6") + bar(80, 50, 87, 45, 0.9, "#dfeae6")  # ear ties
@@ -190,7 +187,8 @@ def surgeon():
 
 
 def researcher():
-    base = dict(no_helmet=True, suit="#8c98a4", boot="#5c626c", coat=True, visor="#cfe0f0")
+    base = dict(no_helmet=True, suit="#8c98a4", boot="#5c626c", coat=True, visor="#cfe0f0",
+                hair="sidepart", hair_col="#33241b")
     pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 154), (48, 154)], "#9aa6b2")
     post = ("".join(bar(x, 74, x, 84, 1.4, c) for x, c in ((63, "#e15a5a"), (66, "#8fb9c8"), (69, "#e0c060")))  # pen array
             + op_s(rrect(82, 102, 14, 18, 2), "#7c8894")                              # specimen case
@@ -199,7 +197,8 @@ def researcher():
 
 
 def civilian():
-    base = dict(no_helmet=True, suit="#606e78", boot="#3c4248")
+    base = dict(no_helmet=True, suit="#606e78", boot="#3c4248",
+                hair="crop", hair_col="#6a3320")
     post = (op_s([(59, 63), (81, 63), (78, 73), (62, 73)], "#4c5860")                 # soft collar
             + op_s(rrect(83, 98, 12, 20, 3), "#54606a")                               # a satchel
             + rib([(59, 64), (89, 102)], 1.4, "#54606a"))                             # strap
@@ -207,7 +206,8 @@ def civilian():
 
 
 def smuggler():
-    base = dict(no_helmet=True, suit="#2e3431", boot="#1e211f")
+    base = dict(no_helmet=True, suit="#2e3431", boot="#1e211f",
+                hair="stubble", hair_col="#1b191d")
     # a deep hood instead of a helmet + a long worn coat
     pre = op_s([(46, WAIST), (94, WAIST), (98, 170), (42, 170)], "#262b28")
     post = (op_s([(53, 50), (87, 50), (83, 26), (70, 19), (57, 26)], "#2a2f2c")       # hood
@@ -219,7 +219,8 @@ def smuggler():
 
 
 def ranger():
-    base = dict(no_helmet=True, suit="#3a4a44", boot="#26302c", coat=True)
+    base = dict(no_helmet=True, suit="#3a4a44", boot="#26302c", coat=True,
+                hair="long", hair_col="#4c3323")
     pre = (op_s(rrect(48, 54, 44, 58, 6), "#2e3a36")                                  # big trek pack
            + op_s(rrect(46, 46, 48, 12, 4), "#5a4a36")                                # bedroll on top
            + op_s([(49, WAIST), (91, WAIST), (95, 168), (45, 168)], "#33413c"))       # field-coat skirt

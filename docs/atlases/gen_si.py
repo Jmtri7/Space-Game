@@ -68,6 +68,8 @@ def figure_shapes(**tokens):
     return out
 
 def poly(pts, fill, cls=None, op=None):
+    if _XF:
+        pts = _xf_shape(pts)
     if cls != "flame" and not (op is not None and op < 0.2):
         _rec("points", [(round(x, 2), round(y, 2)) for x, y in pts], fill)
     a = f' class="{cls}"' if cls else ""
@@ -75,6 +77,8 @@ def poly(pts, fill, cls=None, op=None):
     return f'<polygon{a} points="{fmt(pts)}" fill="{fill}"{o}/>'
 
 def circ(cx, cy, r, fill, op=None):
+    if _XF:
+        cy = _pw(cy)
     _rec("circle", [round(cx, 2), round(cy, 2), round(r, 2)], fill)
     o = f' opacity="{op}"' if op is not None else ""
     return f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{fill}"{o}/>'
@@ -274,6 +278,18 @@ def head_r(deg):
         if t > 0:
             return t
     return 1.0
+
+
+def head_lower_y(fx):
+    """The head's lower silhouette at a given face-x - what the neck's contact
+    shadow follows, so it tracks HEAD_SHAPE instead of being typed out."""
+    a = abs(fx)
+    pts = sorted([p for p in HEAD_SHAPE if p[0] >= 0 and p[1] <= 0.001])
+    for i in range(len(pts) - 1):
+        if a <= pts[i + 1][0]:
+            t = (a - pts[i][0]) / (pts[i + 1][0] - pts[i][0])
+            return pts[i][1] + t * (pts[i + 1][1] - pts[i][1])
+    return pts[-1][1]
 
 
 def head_half_at(y):
@@ -760,8 +776,52 @@ def _gy(u):
     return _G_GROUND - _G_SCALE * u
 
 
-FIG_HIP_Y = round(_gy(12.3))         # 139 - where the legs join the torso
-FIG_FOOT_Y = round(_gy(1.6))         # 194 - ankle line; boots ~3 below, ground ~10
+# The body, straight off the study's GROUNDED table. The study ships a
+# masc/femme pair; the atlas draws one shared body, so this is the neutral
+# base both builds are cut from.
+_GT = [(0.95, 28.9), (1.66, 28.66), (2.38, 28.20), (3.00, 27.70), (3.50, 27.20),
+       (3.78, 26.50), (3.70, 25.44), (3.43, 24.26), (2.95, 23.00), (2.44, 21.86),
+       (2.68, 20.70), (3.18, 19.16), (3.48, 17.7), (3.5, 16.6)]
+_HIP_U, _ANKLE_U, _HIP_HALF, _ANKLE_W = 16.6, 1.2, 3.4, 0.95
+_LEG_MIDS = [(1.38, 12.6), (1.05, 8.2), (1.16, 5.4)]   # thigh, knee, calf
+_A_SY, _A_WY, _A_TOP, _A_BOT, _A_HALF, _A_HAND = 26.5, 14.3, 1.40, 0.94, 3.02, 0.60
+_NECK_HALF, _NECK_Y0 = 0.96, 28.0
+_HEAD_U, _HEAD_R_U = 32.4, 2.60
+_WAIST_U, _WAIST_HALF_U = 21.86, 2.44           # the narrowest point of the torso
+
+FIG_HIP_Y = round(_gy(_HIP_U))       # 117 - where the legs join the torso
+FIG_FOOT_Y = round(_gy(_ANKLE_U))    # 196 - ankle line; boots sit on the ground
+FIG_KNEE_Y = round(_gy(_LEG_MIDS[1][1]))        # 160
+FIG_WAIST_Y = round(_gy(_WAIST_U))              # 90
+FIG_COLLAR_Y = round(_gy(_GT[0][1]))            # 53 - the trapezius yoke tip
+FIG_HEAD_CY = round(_gy(_HEAD_U), 1)            # 35.3
+FIG_HEAD_R = round(_G_SCALE * _HEAD_R_U, 2)     # 13.39
+
+
+# old anchor line -> new one. Monotonic, so the map inverts cleanly.
+_XF_KNOTS = [(31.6, round(_gy(_HEAD_U + _HEAD_R_U * 1.21), 1)),   # crown
+             (45.6, round(_gy(_HEAD_U), 1)),                      # head centre
+             (59.6, round(_gy(_HEAD_U - _HEAD_R_U * 1.02), 1)),   # chin
+             (65.7, float(round(_gy(_GT[0][1])))),                # collar / yoke
+             (68.8, float(round(_gy(26.5)))),                     # shoulder cap
+             (103.3, float(round(_gy(_WAIST_U)))),                # waist
+             (138.9, float(round(_gy(_HIP_U)))),                  # hip
+             (158.0, float(round(_gy(_LEG_MIDS[1][1])))),         # knee
+             (194.0, float(round(_gy(_ANKLE_U)))),                # ankle
+             (202.2, 202.2)]                                      # ground
+
+
+def _shade(col, amt=-24):
+    """The one-direction shade every part carries down its screen-right side."""
+    c = col.lstrip("#")
+    if len(c) != 6:
+        return col
+    v = [int(c[i:i + 2], 16) for i in (0, 2, 4)]
+    return "#%02x%02x%02x" % tuple(max(0, min(255, x + amt)) for x in v)
+
+
+def _mid(a, b):
+    return ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
 
 # Resting arm splay: each arm hangs a small angle out from the body about the
 # shoulder joint, so the default pose reads relaxed and slightly open (and, in
@@ -769,19 +829,94 @@ FIG_FOOT_Y = round(_gy(1.6))         # 194 - ankle line; boots ~3 below, ground 
 # the figure geometry here so the atlases and the game agree. _arm_rot maps a
 # point on the notional straight-down arm to its splayed position; the
 # *_outfits.py signature files import it to re-anchor arm-mounted detail.
-ARM_REST_DEG = 12
-_ARM_PIVOT = (3.05, 25.9)            # shoulder joint, study coords (|x|, y)
+ARM_REST_DEG = 7
+_ARM_PIVOT = (_A_HALF, _A_SY)        # shoulder joint, study coords (|x|, y)
+
+
+# ------------------------------------------------------- the signature remap
+# The *_outfits.py signature files are authored against the PREVIOUS figure
+# (chest y72-106, waist y103, hip y139, knee ~y158, hands (57/83, 133), bare
+# head (70, 46) r14). The body below is the Grounded study's, which moves every
+# one of those lines - the torso is shorter and higher, the legs much longer.
+# Rather than re-typing several hundred coordinates across four signature
+# files, they are drawn through this adapter: a piecewise-linear map from the
+# old anchor lines onto the new ones.
+#
+# It maps SHAPES, not points: each poly()/circ() is translated by the map's
+# offset at its own centre and scaled about that centre by the map's average
+# slope over its span, clamped. Mapping points directly would stretch a knee
+# pad to two and a half times its height, because the thigh really did get
+# that much longer; this keeps a piece of kit its own size and puts it where
+# it belongs. x is untouched - the new torso and stance are the same width.
+#
+# figure_parts draws in the NEW space and must stay outside the adapter; wrap
+# only the call that builds an outfit's signature SVG.
+_XF = False   # _XF_KNOTS is the table above
+
+
+def _pw(v, inv=False):
+    ks = [(b, a) for a, b in _XF_KNOTS] if inv else _XF_KNOTS
+    lo, hi = ks[0], ks[1]
+    if v >= ks[-1][0]:
+        lo, hi = ks[-2], ks[-1]
+    elif v > ks[0][0]:
+        for i in range(len(ks) - 1):
+            if v <= ks[i + 1][0]:
+                lo, hi = ks[i], ks[i + 1]
+                break
+    return lo[1] + (v - lo[0]) * (hi[1] - lo[1]) / (hi[0] - lo[0])
+
+
+def _xf_shape(pts):
+    ys = [p[1] for p in pts]
+    y0, y1 = min(ys), max(ys)
+    c = (y0 + y1) / 2.0
+    k = 1.0 if y1 - y0 < 1e-6 else max(0.85, min(1.45, (_pw(y1) - _pw(y0)) / (y1 - y0)))
+    nc = _pw(c)
+    return [(x, nc + (y - c) * k) for x, y in pts]
+
+
+def _xon():
+    global _XF
+    _XF = True
+
+
+def _xoff():
+    global _XF
+    _XF = False
+
+
+class fig_remap:
+    """Draw a layer authored in the old figure space."""
+    def __enter__(self):
+        _xon()
+        return self
+
+    def __exit__(self, *a):
+        _xoff()
+        return False
 
 
 def _arm_rot(s, ax, ay):
     """Atlas point on the straight arm -> atlas point after the resting splay.
-    s = -1 for the left arm, +1 for the right; both rotate outward."""
+    s = -1 for the left arm, +1 for the right; both rotate outward.
+
+    Under the remap the input is a point on the OLD arm, so it is first
+    stretched onto the new arm's shoulder-to-wrist span, splayed by the new
+    rest angle, and then run back through the map's inverse - because the
+    shape it belongs to is about to be mapped forward again."""
+    old = _XF
+    if old:
+        u = (_G_GROUND - ay) / _G_SCALE
+        u = _A_SY + (u - 25.9) * (_A_SY - _A_WY) / (25.9 - 12.7)
+        ay = _gy(u)
     ux, uy = (ax - 70.0) / _G_SCALE, (_G_GROUND - ay) / _G_SCALE
     px, py = s * _ARM_PIVOT[0], _ARM_PIVOT[1]
     ang = math.radians(s * ARM_REST_DEG)
     ca, sa = math.cos(ang), math.sin(ang)
     dx, dy = ux - px, uy - py
-    return _gx(px + dx * ca - dy * sa), _gy(py + dx * sa + dy * ca)
+    nx, ny = _gx(px + dx * ca - dy * sa), _gy(py + dx * sa + dy * ca)
+    return (nx, _pw(ny, inv=True)) if old else (nx, ny)
 
 
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
@@ -798,59 +933,100 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     sleeve = sleeve or suit
     P = []
     long_torso = torso_long or coat
-    hip_y = round(_gy(10.8)) if long_torso else FIG_HIP_Y   # a coat hem drops lower
+    hip_y = 147 if long_torso else 139     # old-space: mapped with the rest
     # A cinched waist about halfway up the standing figure, well above the hip
     # line. Every belt, sash end and hip pouch anchors here (waist_y), not at
     # the hip; the torso pinches in at the waist and flares back out below.
-    waist_y = round(_gy(19.2))               # 103
-    waist_hw = 13
+    waist_y = 103                            # old-space; the map lands it on
+    waist_hw = 13                            # the new torso's narrowest point
     belt_y = waist_y - 4
-    foot_y = FIG_FOOT_Y if legged else round(_gy(6.5))
+    foot_y = 194 if legged else 168          # old-space, like the rest
 
     # The figure reads side-on: the LEFT arm + LEFT leg are the FAR limbs, drawn
     # behind the torso; the RIGHT arm + leg are the NEAR limbs, drawn over it.
     # So one arm and one leg of each pair sits in front, the other behind (the
     # grounded-person study's layering). person.py picks the same split by
     # animation group and mirrors on facing.
-    def _arm_shaft(s):
-        # domed top centred on the shoulder joint, endpoints level with the
-        # shoulder line so the (rotated) cap tucks under the torso, no spike
-        return [(_gx(s * 2.3), _gy(25.5)), (_gx(s * 2.6), _gy(25.97)),
-                (_gx(s * 3.05), _gy(26.12)), (_gx(s * 3.5), _gy(25.97)),
-                (_gx(s * 3.8), _gy(25.5)), (_gx(s * 3.1), _gy(13.6)),
-                (_gx(s * 1.9), _gy(13.6))]
+    # ---- study geometry, in study units; _gp maps a list into atlas space ----
+    def _gp(pts):
+        return [(_gx(x), _gy(y)) for x, y in pts]
 
-    def _leg_trap(s):
-        cx = s * 1.7
-        # a clean trapezoid hip -> ankle (no mid vertex, so the walk-cycle
-        # shear in Person._place doesn't kink it at the calf)
-        return [(_gx(s * 3.4), _gy(12.3)), (_gx(cx + s * 0.95), _gy(1.6)),
-                (_gx(cx - s * 0.95), _gy(1.6)), (_gx(s * 0.15), _gy(12.3))]
+    def _arm_u(s):
+        """arm poly in study units: 0-1 top-left, 2 apex, 3-4 top-right,
+        5 wrist-right, 6 wrist-left. A domed top rounds into the shoulder."""
+        sx, sy = s * _A_HALF, _A_SY
+        wx, wy = s * (_A_HALF - 0.55), _A_WY
+        tt, tb = _A_TOP * 0.5, _A_BOT * 0.5
+        return [(sx - tt, sy), (sx - tt * 0.6, sy + tt * 0.62), (sx, sy + tt * 0.82),
+                (sx + tt * 0.6, sy + tt * 0.62), (sx + tt, sy), (wx + tb, wy), (wx - tb, wy)]
+
+    def _hand_u(s):
+        """a tapered mitt hung off the wrist in the arm's own space, so it
+        rides the splay like the rest of the limb - not a ball at the joint"""
+        a = _arm_u(s)
+        x, y, r = a[5][0] - _A_BOT * 0.5, a[5][1], _A_HAND
+        return [(x - r * 0.88, y + r * 0.12), (x - r * 0.96, y - r * 0.55),
+                (x - r * 0.72, y - r * 1.34), (x - r * 0.12, y - r * 1.72),
+                (x + r * 0.56, y - r * 1.48), (x + r * 0.94, y - r * 0.78),
+                (x + r * 0.92, y + r * 0.12)]
+
+    def _leg_u(s):
+        """thigh, knee and calf stops, so the leg carries a line instead of
+        tapering straight from hip to ankle"""
+        cx = s * _HIP_HALF * 0.5
+        pts = [(s * _HIP_HALF, _HIP_U)]
+        pts += [(cx + s * w, y) for w, y in _LEG_MIDS]
+        pts.append((cx + s * _ANKLE_W, _ANKLE_U))
+        pts.append((cx - s * _ANKLE_W, _ANKLE_U))
+        pts += [(cx - s * w, y) for w, y in reversed(_LEG_MIDS)]
+        pts.append((s * 0.15, _HIP_U))
+        return pts
+
+    def _leg_shade_u(s):
+        p = _leg_u(s)
+        n = (len(p) - 2) // 2
+        outer, inner = p[:n + 1], p[n + 1:][::-1]
+        edge = outer if s > 0 else inner
+        return edge + [_mid(o, inner[i]) for i, o in enumerate(outer)][::-1]
+
+    def _boot_u(s):
+        """a foot: a low toe box pointing the way the figure faces, over a
+        compact heel"""
+        cx, w, a = s * _HIP_HALF * 0.5, _ANKLE_W, _ANKLE_U
+        return [(cx + w * 0.86, a * 1.22), (cx - w * 0.44, a * 1.18),
+                (cx - w * 0.92, a * 0.68), (cx - w * 1.58, a * 0.44),
+                (cx - w * 2.08, a * 0.17), (cx - w * 2.08, 0), (cx + w * 1.10, 0),
+                (cx + w * 1.34, a * 0.40), (cx + w * 1.00, a * 0.96)]
 
     def _knee(s):
-        return [(_gx(s * 0.3), _gy(8.6)), (_gx(s * 2.3), _gy(8.6)),
-                (_gx(s * 2.3), _gy(6.6)), (_gx(s * 0.3), _gy(6.6))]
+        cx = s * _HIP_HALF * 0.5
+        return _gp([(cx - s * 1.15, 9.3), (cx + s * 1.15, 9.3),
+                    (cx + s * 1.05, 7.1), (cx - s * 1.05, 7.1)])
 
     def _emit_arm(s):
         _grp("arm_l" if s < 0 else "arm_r")
-        P.append(opoly([_arm_rot(s, x, y) for x, y in _arm_shaft(s)], sleeve, d=_FD))
+        a = _arm_u(s)
+        P.append(opoly([_arm_rot(s, *_gp([p])[0]) for p in a], sleeve, d=_FD))
+        P.append(poly([_arm_rot(s, *_gp([p])[0])
+                       for p in [a[2], a[3], a[4], a[5], _mid(a[5], a[6])]], _shade(sleeve)))
         _grp("hand_l" if s < 0 else "hand_r")
-        P.append(ocirc(*_arm_rot(s, _gx(s * 2.5), _gy(12.7)), 3.2, SKINF, d=_FD))
+        P.append(opoly([_arm_rot(s, *_gp([p])[0]) for p in _hand_u(s)], SKINF, d=_FD))
 
     def _emit_leg(s):
-        _grp("leg_l" if s < 0 else "leg_r")
-        P.append(opoly(_leg_trap(s), leg, d=_FD))
-        if knee:
-            _grp("leg_l" if s < 0 else "leg_r")
-            P.append(opoly(_knee(s), knee, d=_FD))
         _grp("boot_l" if s < 0 else "boot_r")
-        P.append(opoly(ngon(_gx(s * 1.7), 197, 9, 6, 12), boot, d=_FD))
+        P.append(opoly(_gp(_boot_u(s)), boot, d=_FD))
+        _grp("leg_l" if s < 0 else "leg_r")
+        P.append(opoly(_gp(_leg_u(s)), leg, d=_FD))
+        P.append(poly(_gp(_leg_shade_u(s)), _shade(leg)))
+        if knee:
+            P.append(opoly(_knee(s), knee, d=_FD))
 
     _grp("body"); _gate(None)
 
     P.append(poly(ngon(70, (foot_y + 8) if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
 
     # back pieces
+    _xon()
     if backpack:
         _grp("body"); _gate("backpack_color")
         P.append(opoly(rrect(50, 62, 40, 74, 6), backpack, d=1.3))
@@ -877,10 +1053,11 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     if hair and not (helmet or hat or cap):
         _gate("hair_color")
         for part in hair_back_parts(hair, -3.60 if hair == "long" else -2.90):
-            P.append(poly(_fp(part["p"], 70.0, round(_gy(30.4), 1), 14.0),
+            P.append(poly(_fp(part["p"], 70.0, FIG_HEAD_CY, FIG_HEAD_R),
                           hair_tone(hair_col, part["t"])))
         _gate(None)
 
+    _xoff()
     # ---- far arm + far leg (behind the torso) ----
     _grp("body"); _gate(None)
     if arms:
@@ -893,21 +1070,37 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     # torso (left-silhouette half-widths, neck line down to hip); mirrored for
     # the right, so the curve is symmetric by construction.
     _grp("body"); _gate(None)
-    _gt = [(2.6, 26.5), (3.2, 25.9), (3.55, 24.7), (3.5, 23.1),
-           (3.3, 21.2), (2.5, 19.2), (3.4, 12.3)]
+    _gt = list(_GT)
     if long_torso:
-        _gt = _gt[:-1] + [(3.7, 10.8)]
+        _gt = _gt[:-1] + [(3.7, 14.6)]
     torso = ([(_gx(-h), _gy(y)) for h, y in _gt]
              + [(_gx(h), _gy(y)) for h, y in reversed(_gt)])
     P.append(opoly(torso, suit, d=_FD))
+    # a strip whose inner and outer edges both parallel the body's side curve,
+    # so the shade sits off to one side instead of filling half the torso
+    P.append(poly([(_gx(h), _gy(y)) for h, y in _gt]
+                  + [(_gx(max(0.3, h - 1.35)), _gy(y)) for h, y in reversed(_gt)],
+                  _shade(suit)))
 
-    # short neck - a skin column from the collar line up under the jaw, over
-    # the torso and behind the head.
-    P.append(opoly([(_gx(-0.98), _gy(26.4)), (_gx(-0.98), _gy(29.1)),
-                    (_gx(0.98), _gy(29.1)), (_gx(0.98), _gy(26.4))], SKINF, d=_FD))
+    # a slimmer neck, long enough to actually show above the collar - the old
+    # column put the chin on the collarbone
+    P.append(opoly([(_gx(-_NECK_HALF), _gy(_NECK_Y0)),
+                    (_gx(-_NECK_HALF), _gy(_HEAD_U - _HEAD_R_U * 0.7)),
+                    (_gx(_NECK_HALF), _gy(_HEAD_U - _HEAD_R_U * 0.7)),
+                    (_gx(_NECK_HALF), _gy(_NECK_Y0))], SKINF, d=_FD))
+    # the contact shadow the jaw casts on it: a band whose lower edge
+    # parallels the chin, deepest toward the facing side
+    _ns, _nb = [], []
+    for _i in range(7):
+        _x = -_NECK_HALF + 2 * _NECK_HALF * _i / 6
+        _c = _HEAD_U + head_lower_y(_x / _HEAD_R_U) * _HEAD_R_U + 0.06
+        _ns.append((_gx(_x), _gy(_c)))
+        _nb.append((_gx(_x), _gy(_c - 0.62)))
+    P.append(poly(_ns + _nb[::-1], _shade(SKINF)))
 
     # hip kit - a pouch or a stowed cutting torch on the right hip, hung from
     # the waist. Drawn before the near arm so the arm hangs over it.
+    _xon()
     _grp("body")
     if pod:
         P.append(opoly([(82, waist_y - 6), (88, waist_y - 6), (87, waist_y), (83, waist_y)], pod))  # hanger strap
@@ -962,6 +1155,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _gate(None)
 
     # ---- near arm + near leg (over the torso) ----
+    _xoff()
     _grp("body"); _gate(None)
     if arms:
         _emit_arm(1)
@@ -971,6 +1165,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=_FD))
 
     _grp("body"); _gate(None)
+    _xon()
     if shoulders:                                # sit outboard + high, over the arm tops
         _gate("shoulder_color")
         if shoulders_side in ("both", "left"):
@@ -984,12 +1179,13 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         if harness_side in ("both", "right"):
             P.append(bar(84, 84, 58, 116, 2, harness))
 
+    _xoff()
     # The head and the Grounded face kit. The head is FULL SIZE whether or
     # not there is a helmet - the shell goes over it further down, it doesn't
     # replace it - and it carries the same one-direction side plane the limbs
     # do, shaped as a leaf across the far cheek and jaw.
     _grp("body"); _gate(None)
-    fr, face_cx, face_cy = 14.0, 70.0, round(_gy(30.4), 1)
+    fr, face_cx, face_cy = FIG_HEAD_R, 70.0, FIG_HEAD_CY
     for sgn in (-1, 1):
         P.append(opoly(_fp([(sgn * dx, dy) for dx, dy in EAR_D], face_cx, face_cy, fr),
                        SKINF, d=_FD))
@@ -1020,6 +1216,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                            hair_col, face_cx, face_cy, fr))
         _gate(None)
 
+    _xon()
     if badge_cross:
         _gate("badge_color")
         cx, cy = 70, 95
@@ -1032,8 +1229,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(opoly([(62,82),(66,87),(62,92),(58,87)], badge, d=0.9))
         _gate(None)
 
+    _xoff()
     if helmet_ring:
-        P.append(dots_ring(70, round(_gy(30.4), 1), 18, accent, n=26, dot=1.0))
+        P.append(dots_ring(70, FIG_HEAD_CY, FIG_HEAD_R * 1.35, accent, n=26, dot=1.0))
     if accent_dot:
         P.append(circ(70, 203, 2.6, accent))
     return P

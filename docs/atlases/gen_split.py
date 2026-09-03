@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import figure_parts, poly, GRID, issue_plate
+from gen_si import figure_parts, poly, GRID, issue_plate, fig_remap
 from atlas_shell import css, DEFS, GRIDDEF
 from atlas_plates import grab
 
@@ -176,7 +176,10 @@ def _code(s):
 
 def outfit_card(mod, key):
     fn, name, role = mod.OUTFITS[key]
-    base, pre, post = fn()
+    # the signature layers are authored against the pre-Grounded figure;
+    # fig_remap puts them on the new body's anchor lines (see gen_si)
+    with fig_remap():
+        base, pre, post = fn()
     inner = (poly([(0, 0), (140, 0), (140, 210), (0, 210)], GRID)
              + pre + "".join(figure_parts(**base)) + post)
     detail = _code(getattr(mod, "DETAILS", {}).get(key, ""))

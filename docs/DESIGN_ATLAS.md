@@ -310,13 +310,38 @@ weapons system.
   body's uniform outline while shade, sheen and the small details go without,
   which is what the outlined Common Kit style needs (an outline round the
   brim's near-zero tapering end reads as a stick, so the brim keeps a minimum
-  thickness). The helmet moved from *behind* the head to *over* it there too,
-  and the head no longer shrinks under one. The **proportions** did not move:
-  every outfit signature in `common_kit.py` / `federation_outfits.py` /
-  `vherathi_outfits.py` / `drossholt_outfits.py` anchors to them, so the
-  study's smaller head, three-stop leg, foot-shaped boot and mitt hand stay
-  ahead of the bake until that is done deliberately. Only the neck came across
-  (slimmer, a touch taller), since nothing anchors to it.
+  thickness; the sideburn takes none, or it reads as a tab stuck on the
+  temple). The helmet moved from *behind* the head to *over* it there too, and
+  the head no longer shrinks under one.
+
+  **Then the proportions followed** — `figure_parts` now draws the study's
+  `GROUNDED` table directly (torso, hip, leg stops, arm, hand, boot, neck,
+  head), so the two are the same body. That moves every anchor line the
+  outfit signatures were written against: the torso top 66→53, the waist
+  103→90, the hip 139→117, the knee 158→160, the hand from just above the hip
+  to well below it. Rather than re-typing several hundred coordinates across
+  four signature files, they are drawn through **`fig_remap()`** — a
+  piecewise-linear map from the old anchor lines onto the new ones, applied to
+  **shapes rather than points**: each `poly()`/`circ()` is translated by the
+  map's offset at its own centre and scaled about that centre by the map's
+  average slope over its span, clamped. Mapping points would stretch a knee
+  pad to two and a half times its height, because the thigh really did get
+  that much longer; this keeps a piece of kit its own size and puts it where
+  it belongs. x is untouched — the new torso and stance are the same width.
+  `figure_parts`' own accessory layers (collar, shoulders, sash, belt, cap,
+  badge, backpack…) are authored in the same old space and go through the same
+  map, bracketed by `_xon()`/`_xoff()`; the body itself draws in the new space
+  and stays outside it. `_arm_rot()` is the one special case: under the map it
+  stretches the point onto the new arm's shoulder-to-wrist span, splays it by
+  the new rest angle, then runs it back through the map's *inverse*, because
+  the shape it belongs to is about to be mapped forward again.
+
+  Two consequences worth knowing: **new signature work stays in the old
+  coordinates** (or the whole file gets re-authored and the adapter dropped),
+  and `common_kit.py` no longer draws its own hard hat — `figure_parts` does,
+  from the `helmet` key. The bare-headed civilian outfits gained hairstyles at
+  the same time. Still ahead of `person_figure.py` until
+  `build_person_figure.py` is re-run.
 
   The rest is deliberately ahead of `figure_parts` until a re-bake; the "One
   uniform outline weight" / "long torso" language above describes the current

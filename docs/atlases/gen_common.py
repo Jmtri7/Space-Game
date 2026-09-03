@@ -11,7 +11,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import figure_parts, poly, circ, bar, dashed_bar, GRID
+from gen_si import figure_parts, poly, circ, bar, dashed_bar, GRID, fig_remap
 from atlas_shell import css, DEFS, GRIDDEF
 from common_kit import OUTFITS, DETAILS
 
@@ -55,7 +55,10 @@ KEYLINES = {
 
 def outfit_inner(key):
     fn, _n, _r = OUTFITS[key]
-    base, pre, post = fn()
+    # the signature layers are authored against the pre-Grounded figure;
+    # fig_remap puts them on the new body's anchor lines (see gen_si)
+    with fig_remap():
+        base, pre, post = fn()
     return (poly([(0, 0), (140, 0), (140, 210), (0, 210)], GRID)
             + pre + "".join(figure_parts(**base)) + post)
 
@@ -178,13 +181,16 @@ def build():
       a pupil and a catchlight under a lash line, a fine tapered brow, a nose
       built from a bridge shadow into a soft tip, two-part lips and low D-ears,
       over a head that carries the same one-direction side plane the limbs do.
-      The waist, shoulders and arm top are baked from
-      <code class="f">gen_si.figure_parts</code> into
-      <code class="f">person_figure.py</code>; the redrawn face kit, the
-      <b>hairstyles</b> and the <b>hard hat</b> are new here, ahead of the
-      next bake &mdash; all three generated off the skull's own profile, so
-      hair and helmet alike are the head's outline pushed out by a lift and
-      closed by a hairline (see the Grounded Person study). The <em>role-detail</em> pieces
+      The whole body is now the Grounded study's, not an approximation of it:
+      the head came down and up over a slimmer neck, the torso is shorter and
+      higher, the legs run the lower 47% of the figure with thigh / knee /
+      calf stops, the boot is a foot and the hand a tapered mitt, and every
+      limb, the torso and the neck carry the same one-direction shade. The
+      <b>hairstyles</b> and the <b>hard hat</b> come off the skull's own
+      profile too &mdash; hair and helmet alike are the head's outline pushed
+      out by a lift and closed by a hairline (see the Grounded Person study).
+      All of it is ahead of <code class="f">person_figure.py</code> until
+      <code class="f">build_person_figure.py</code> is re-run. The <em>role-detail</em> pieces
       below (tool belt, tabard, hood, mask) are baked by
       <code class="f">build_figure_signatures.py</code> into
       <code class="f">game/world/figure_signatures.py</code>, and
