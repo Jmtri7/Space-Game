@@ -263,10 +263,19 @@ weapons system.
   combed, not cut, and with a fringe on it it was the crop in another
   colour.
 
+  `long` **cascades** (`fall`): the side fall leaves the crown high up
+  (~56°) and its outer edge is the crescent's own radius plus a flare that
+  opens as it comes down, so the hair sweeps from the top of the skull out over
+  the ear and past the jaw in one line rather than reading as a slab clipped to
+  the side of the head — and the crown arc is trimmed to the two attachment
+  angles so the crescent can't cut a chord across it. Every other style but
+  `stubble` hangs a **`burn`**, a tapered sideburn wisp below the hairline and
+  inboard of the ear (so it reads *in front* of it), its top edge set inside
+  the hair so it joins rather than floats; the crescent's clean taper into the
+  temple was tidier than any real head.
+
   The junctions are where a style actually goes wrong, and each is now built:
-  `long`'s side lock leaves the crescent **along the crescent's own curve**
-  rather than stepping straight out to full width (which put a horn on each
-  side of the head), its inner edge follows **`headHalfAt()`** while there is a
+  the fall's inner edge follows **`headHalfAt()`** while there is a
   cheek to hug and then holds a line past the jaw, and it hands back to the
   hairline *short* of the temple. The back **drape** starts inside the front
   hair's silhouette (its corner used to poke out over each temple) and draws in
