@@ -274,6 +274,20 @@ weapons system.
   the hair so it joins rather than floats; the crescent's clean taper into the
   temple was tidier than any real head.
 
+  **The helmet goes through the same generator.** A hard hat is a hairstyle in
+  everything but name, so `HELMET_STYLE` is a `buildHairParts()` style — a
+  shallow shell (`crown` 0.22) with a high, flat front edge (`peak` 0.74,
+  `q` 3.0, `tempAng` 8) — and it comes back with the same shade ribbon and
+  sheen in the helmet's own colour. What changed the read most was the
+  **layering**: the old dome was a plain circle drawn *behind* the head, so it
+  could only ever be a halo round the face; the shell draws **over** the
+  finished full-size head. A helmet covers a head, it doesn't replace it, so
+  the face no longer shrinks under one. On top go a **brim** — wider than the
+  shell, nearly flat underneath, tapering to a lip at each end, and in the
+  **shade** tone, because in the base tone it merges straight into the shell
+  and the whole thing reads as a turban — a moulded rib, a chin strap and a
+  lamp.
+
   The junctions are where a style actually goes wrong, and each is now built:
   the fall's inner edge follows **`headHalfAt()`** while there is a
   cheek to hug and then holds a line past the jaw, and it hands back to the

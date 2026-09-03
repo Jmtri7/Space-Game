@@ -146,7 +146,7 @@
     <p class="eyebrow">space-game · character model</p>
     <h1>The Grounded Person model</h1>
     <p>One proportion pass on the shared body in <span class="mono">person_figure.py</span> &mdash; a short torso over long legs (hip up at ~47% of height), a trapezius yoke that sweeps up behind the neck, rounded shoulders, a masc / femme split on the torso and hip width, and a flat one-direction shade down one side of each limb &mdash; then the face kit worked out on it.</p>
-    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. The <b>hair</b> was redrawn on the same terms: still generated from the skull, but in three tones instead of one &mdash; a shade ribbon down the far side and a sheen over the near crown, both following the hair's own contour and tapering to nothing at each end, so nothing reads as a second colour laid on across a straight edge &mdash; with volume on a plateau lift rather than a crown bulge (a bulge only makes the skull taller, which is what helmet hair is) and a ripple over that, the hairline cut into pointed locks that straddle it, a drawn parting on the side part, a rippled silhouette on the curls, a knot that sits proud of the crown for the bun, a wisp of sideburn hanging in front of the ear on every style that has one, and a long style that <b>cascades</b> &mdash; the fall leaves the crown high up and sweeps out over the ear and past the jaw in one line, over a drape that falls past the shoulders in shadow. Then the skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
+    <p>The model has since been <b>redrawn for looks</b>. The head is smaller and sits higher, on a slimmer neck that is actually <em>visible</em> instead of resting its chin on the collarbone; the skull is widest at the cheekbone and tapers through a narrower jaw to a small rounded chin. The face kit that goes on it is new work: <b>almond eyes</b> with a real upper lid &mdash; iris, pupil and a catchlight under a lash line that crops the top of the iris &mdash; a <b>fine tapered brow</b> that thickens over the inner third, a <b>nose</b> built from a slim bridge shadow into a small soft tip instead of a dark blob, and a <b>two-part mouth</b>, an upper lip with a cupid's bow over a fuller lower one, its seam riding a touch higher at the corners. The head carries the same one-direction shade the limbs do, shaped as a leaf across the far cheek and jaw. On the body: the leg gets a thigh / knee / calf line, the boot a proper foot, the hand a tapered mitt instead of a ball, and the arms hang closer at rest. The <b>hair</b> was redrawn on the same terms: still generated from the skull, but in three tones instead of one &mdash; a shade ribbon down the far side and a sheen over the near crown, both following the hair's own contour and tapering to nothing at each end, so nothing reads as a second colour laid on across a straight edge &mdash; with volume on a plateau lift rather than a crown bulge (a bulge only makes the skull taller, which is what helmet hair is) and a ripple over that, the hairline cut into pointed locks that straddle it, a drawn parting on the side part, a rippled silhouette on the curls, a knot that sits proud of the crown for the bun, a wisp of sideburn hanging in front of the ear on every style that has one, a mechanic's hard hat built by the same generator as the hair &mdash; a shallow shell drawn <em>over</em> the finished head, with a shaded brim and a lamp, in place of the disc that used to sit behind it like a halo &mdash; and a long style that <b>cascades</b> &mdash; the fall leaves the crown high up and sweeps out over the ear and past the jaw in one line, over a drape that falls past the shoulders in shadow. Then the skin tones, which way it faces, and how each holds up as the figure shrinks on screen.</p>
   </header>
 
   <section>
@@ -579,7 +579,7 @@ function buildHairParts(st){
       }
     front.push({ p: pl, t:"shade" });
   }
-  return { front };
+  return { front, line, xT, yT };
 }
 
 const HAIR_PARTS = {};
@@ -611,6 +611,55 @@ function stubbleCol(skin, hairCol){          // one fill, part skin part hair
   return "rgb(" + s.map((v,i) => Math.max(0, Math.round(v*0.55 + h[i]*0.45 - 12))).join(",") + ")";
 }
 function hairKey(s){ return HAIR_PARTS[s] ? s : "crop"; }
+
+/* ---------- the work helmet -------------------------------------------
+   A helmet is a hairstyle in everything but name: a shell built off the same
+   skull profile, with a much bigger lift and a lower front edge. So it goes
+   through `buildHairParts` and comes back with the same shade ribbon and
+   sheen every style gets, in the helmet's own colour — which is most of why
+   it now reads as a moulded shell rather than the flat disc it was.
+
+   The important part is the LAYERING: the disc used to be drawn behind the
+   head, so it could only ever be a halo round the face. The shell is drawn
+   OVER the finished head, its front edge crossing the forehead above the
+   brows and its sides coming down over the ears, and the head underneath is
+   drawn full size — a helmet covers a head, it doesn't replace it.        */
+/* a HARD HAT, not a bonnet: the shell is shallow and stops high on the
+   forehead, and the brim below it is wider than the shell and clearly
+   separated. A deep shell wrapped smoothly down to the brows is a turban. */
+const HELMET_STYLE = { crown:0.22, temple:0.085, tempAng:8, peak:0.74,
+                       q:3.0, dip:0, bay:0, tuck:0.14 };
+const HELMET_PARTS = buildHairParts(HELMET_STYLE);
+const HELMET_EXTRA = (function(){
+  const line = HELMET_PARTS.line, xT = HELMET_PARTS.xT;
+  // the brim - wider than the shell, sagging in the middle, sitting clear
+  // below the shell's own edge. This is the piece that says "hard hat".
+  const N = 20, W = 1.02, flat = line(0) - 0.185, top = [], bot = [];
+  for (let i = 0; i <= N; i++){
+    const t = -1 + 2*i/N, x = W*t, y0 = line(Math.max(-xT, Math.min(xT, x)));
+    top.push([x, y0 + 0.04]);
+    // a nearly straight underside: thick across the front, tapering to a lip
+    // at the ends, which is what makes it read as a projecting brim
+    bot.push([x, Math.min(y0 - 0.035, flat + 0.05*t*t)]);
+  }
+  // the moulded rib, front to back over the crown - a narrow strip head-on
+  const rib = [[-0.085, 0.78],[0.025, 0.78],[0.015, 1.40],[-0.075, 1.40]];
+  // the chin strap, hugging the jaw down from under the shell
+  const jaw = [-0.16, -0.42, -0.66, -0.82], strap = [];
+  for (const y of jaw)                   strap.push([-(headHalfAt(y) + 0.05), y]);
+  for (const y of jaw.slice().reverse()) strap.push([-(headHalfAt(y) - 0.03), y]);
+  return [
+    { p: rib,   t:"shade" },
+    { p: strap, t:"shade" },
+    // the brim takes the SHADE tone - it is a horizontal surface seen edge
+    // on, and in the base tone it just merges into the shell above it
+    { p: top.concat(bot.reverse()), t:"shade" },
+    { c:[-0.03, 1.06, 0.175], t:"shade" },          // lamp housing
+    { c:[-0.03, 1.06, 0.107], f:"#f7f0d6" },        // lens
+    { c:[-0.065, 1.088, 0.040], f:"#ffffff" },      // catchlight on it
+  ];
+})();
+const HELMET_LIST = HELMET_PARTS.front.concat(HELMET_EXTRA);
 
 /* a tapered rope of hair from a centre line of [x, y, half-width] stops: the
    outline, then a shade strip down whichever side of it faces away. Used for
@@ -670,8 +719,9 @@ function hairBackParts(s, ends){
 function drawHairPieces(list, poly, dot, hd){
   const col = hd.hairCol || "#241c1a";
   for (const piece of list){
-    const fill = piece.t === "stubble" ? stubbleCol(hd.skin || COL.skin, hd.hairCol)
-                                       : hairTone(col, piece.t);
+    const fill = piece.f ? piece.f
+               : piece.t === "stubble" ? stubbleCol(hd.skin || COL.skin, hd.hairCol)
+               : hairTone(col, piece.t);
     if (piece.c) dot(piece.c[0], piece.c[1], piece.c[2], fill);
     else poly(piece.p, fill);
   }
@@ -1003,12 +1053,8 @@ const HEAD_TURN_DX = HAIR_DX;   // the behind-hair (drawn earlier) matches the f
 function figFace(g, c, hd, dy){
   dy = dy || 0;
   const r = c.head.r, cx = c.head.cx, helm = hd.helmet, hcy = c.head.cy + dy;
-  let faceCy = hcy, faceR = r;
-  if (helm){
-    // helmet dome — a plain stroked circle, same 1.1px outline as every other part
-    fdot(g, cx - r*HEAD_DX, hcy, r*1.2, hd.helmet, true);
-    faceR = r*0.82; faceCy = hcy - r*0.16;
-  }
+  const faceCy = hcy, faceR = r;   // the head is full size under a helmet: the
+                                   // shell goes over it, it doesn't replace it
   // hair that falls behind the body is drawn earlier in buildFigure
   const hCx = cx - faceR*HEAD_DX;                  // skull centre
   const fCx = cx - faceR*FACE_DX;                  // feature-cluster centre
@@ -1018,16 +1064,18 @@ function figFace(g, c, hd, dy){
   const kf = faceR * K * FACE_S;
   const hfx = u => fx(hCx + u*faceR), hfy = u => fy(faceCy + u*faceR);
   const skin = hd.skin || COL.skin;
-  if (!helm) drawEars(g, skin, hfx, hfy, faceR * K);
+  drawEars(g, skin, hfx, hfy, faceR * K);
   fpoly(g, HEAD_SHAPE.map(([x,y]) => [hCx + x*faceR, faceCy + y*faceR]), skin);
   fpoly(g, HEAD_SHADE.map(([x,y]) => [hCx + x*faceR, faceCy + y*faceR]), shade(skin, FACE_SHADE), 0);
   if (hd.visor && helm){
-    fpoly(g, [[hCx-faceR*0.98, faceCy+faceR*0.44],[hCx+faceR*0.98, faceCy+faceR*0.44],
+    fpoly(g, [[hCx-faceR*0.98, faceCy+faceR*0.42],[hCx+faceR*0.98, faceCy+faceR*0.42],
               [hCx+faceR*0.92, faceCy-faceR*0.32],[hCx-faceR*0.92, faceCy-faceR*0.32]], hd.visor, 1.1);
   } else {
     drawFaceKit(g, Object.assign({}, hd, { skin }), efx, efy, kf);
   }
-  if (!helm) hairFrontFig(g, haCx, hcy, r, hd);
+  const [Q, D] = figHairEmitters(g, haCx, hcy, r);
+  if (helm) drawHairPieces(HELMET_LIST, Q, D, { hairCol: helm });
+  else hairFrontFig(g, haCx, hcy, r, hd);
 }
 
 function figHairEmitters(g, cx, cy, r){
@@ -1233,23 +1281,24 @@ function drawHeadCard(svg, hd, sizeK){
     }
     P(tp.concat(bt.reverse()), shade(hd.skin, -18)); }
 
-  if (hd.helmet) D(0, 0, 1.2, hd.helmet, true);   // thin outline, matches the rest
-  const faceR = hd.helmet ? 0.82 : 1.0;
-  const faceCy = hd.helmet ? -0.16 : 0;
+  const faceR = 1.0, faceCy = 0;   // the shell goes over the head, not round it
   const efx = u => lx(u*faceR), efy = u => ly(faceCy + u*faceR);
   const kf = faceR * k;
-  if (!hd.helmet) drawEars(g, hd.skin, efx, efy, kf);
+  drawEars(g, hd.skin, efx, efy, kf);
   // the same egg-shaped head the full figure draws (HEAD_SHAPE), carrying the
   // same side plane
   P(HEAD_SHAPE.map(([x,y]) => [x*faceR, faceCy + y*faceR]), hd.skin);
   P(HEAD_SHADE.map(([x,y]) => [x*faceR, faceCy + y*faceR]), shade(hd.skin, FACE_SHADE));
   if (hd.visor && hd.helmet){
-    P([[-0.98*faceR, faceCy+0.44*faceR],[0.98*faceR, faceCy+0.44*faceR],
+    P([[-0.98*faceR, faceCy+0.42*faceR],[0.98*faceR, faceCy+0.42*faceR],
        [0.9*faceR, faceCy-0.34*faceR],[-0.9*faceR, faceCy-0.34*faceR]], hd.visor, 1.1);
   } else {
     drawFaceKit(g, hd, efx, efy, kf);
   }
-  if (!hd.helmet) hairFrontHeadLocal(P, D, hd);
+  if (hd.helmet)
+    drawHairPieces(HELMET_LIST, (pts, fill) => P(pts, fill),
+                   (cx, cy, r, fill) => D(cx, cy, r, fill, false), { hairCol: hd.helmet });
+  else hairFrontHeadLocal(P, D, hd);
 }
 
 /* head-card hair — the same baked part lists the figure walks, in
@@ -1343,7 +1392,7 @@ const OUTFITS = [
     face:HAIR[3], cap:"Dark coat, raised collar; face still reads." },
   { name:"Mechanic", src:"mechanic",
     o:{ helmet_color:[240,170,55], suit_color:[82,78,72], boot_color:[46,42,38], belt_color:[58,54,48] },
-    face:HAIR[0], cap:"Helmet on &mdash; hair and brow hidden, only the visor gap shows." },
+    face:HAIR[0], cap:"Hard hat on &mdash; the shell sits <i>on</i> the head, not behind it, so the face reads under the brim." },
 ];
 
 const DIST_HEADS = [
