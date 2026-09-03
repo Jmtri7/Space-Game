@@ -78,7 +78,9 @@ def rib(pts, w, col, op=None):
     return poly(left + right[::-1], col, op=op)
 
 
-COAT_CUT = 152         # old-space y of the coat's own hem
+COAT_CUT = 147         # a shade above the coat's own hem: the remap places a
+                       # shape by its centre, so a cut exactly on the hem can
+                       # land a unit or two below it and leave a gap
 
 
 def skirt_over_legs(pts, col):
@@ -112,7 +114,7 @@ def dots(x0, y0, x1, y1, n, r, col):
 
 
 def op_s(pts, fill, d=1.2, ol=OUT):
-    return poly(offset_poly(pts, d), ol) + poly(pts, fill)
+    return opoly(pts, fill, d=d, ol=ol)      # honours gen_si.set_outline
 
 
 def star(cx, cy, r, col, n=5):

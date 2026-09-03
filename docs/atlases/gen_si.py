@@ -140,10 +140,28 @@ def offset_poly(pts, d, miter_limit=2.0):
             out.append((b[0] + mx / ml * d / cosv, b[1] + my / ml * d / cosv))
     return out
 
+# Outlines are per-atlas. The newer work drops them: where two polygons of the
+# same colour meet, the separation comes from the one-direction SHADE each part
+# carries rather than from a line between them, which is both cleaner at small
+# sizes and consistent with the Grounded study. Older atlases still switch them
+# on. Everything outlined goes through opoly/ocirc, so this is the only place
+# that has to know.
+_OUTLINE = True
+
+
+def set_outline(on):
+    global _OUTLINE
+    _OUTLINE = bool(on)
+
+
 def opoly(pts, fill, d=1.3, ol=OUT, cls=None):
+    if not _OUTLINE:
+        return poly(pts, fill, cls=cls)
     return poly(offset_poly(pts, d), ol) + poly(pts, fill, cls=cls)
 
 def ocirc(cx, cy, r, fill, d=1.6, ol=OUT):
+    if not _OUTLINE:
+        return circ(cx, cy, r, fill)
     return circ(cx, cy, r + d, ol) + circ(cx, cy, r, fill)
 
 # One uniform outline weight for every structural part of the shared body,
@@ -882,6 +900,21 @@ def head_dome(out=2.0, y_bot=None, n=16, wide=1.0):
     return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
 
 
+def head_shell(out=2.6, grow=1.0, n=34):
+    """The WHOLE head silhouette pushed out by `out` - a helm grown on the
+    skull, chin and all, rather than a dome cut off with a flat hem. `grow`
+    swells one side only, for cultures whose kit is never symmetric."""
+    cx, cy, fr = 70.0, FIG_HEAD_CY, FIG_HEAD_R
+    pts = []
+    for i in range(n):
+        a = 360.0 * i / n
+        th = math.radians(a)
+        r = head_r(a) * fr + out
+        k = grow if math.cos(th) < 0 else 1.0
+        pts.append((cx + r * math.cos(th) * k, cy - r * math.sin(th)))
+    return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
+
+
 def _cap_shade(pts, cx, frac=0.42):
     """The far half of a rounded cap, pulled in toward its centre - the same
     one-direction shade the body carries, for a pad or a plate."""
@@ -1256,8 +1289,8 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         P.append(opoly(_ribbon(_sb, (_gx(1.7), _gy(22.4)), 4.6), sash, d=1.1))
         P.append(opoly(_ribbon((_gx(1.2), _gy(23.0)), (_gx(2.9), _gy(21.1)), 4.6),
                        sash, d=1.1))
-        P.append(opoly(_ribbon((_gx(-0.2), _gy(21.2)), (_gx(3.0), _gy(21.2)), 4.2),
-                       sash, d=1.1))                       # round the waist
+        P.append(opoly(_ribbon((_gx(0.2), _gy(19.9)), (_gx(3.2), _gy(19.9)), 4.2),
+                       sash, d=1.1))              # under the belt, round the waist
         _gate(None)
     if collar:
         _gate("collar_color")

@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import figure_parts, poly, GRID, issue_plate, fig_remap
+from gen_si import figure_parts, poly, GRID, issue_plate, fig_remap, set_outline
 from atlas_shell import css, DEFS, GRIDDEF
 from atlas_plates import grab
 
@@ -191,6 +191,9 @@ def outfit_card(mod, key):
 
 
 def build(key):
+    # the Vherathi redraw is drawn on shading alone; the older culture atlases
+    # still carry outlines (see gen_si.set_outline)
+    set_outline(key != "vherathi")
     c = CULTURES[key]
     src = c["src"]
     mod = importlib.import_module(c["outfits"])

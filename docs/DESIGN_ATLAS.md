@@ -376,6 +376,20 @@ weapons system.
      the hands back on top. Cut anywhere else and the repeat reads as a
      separate panel.
 
+  **No outlines on new work.** Outlines are per-atlas now
+  (`gen_si.set_outline`, honoured by `opoly` / `ocirc`, which everything
+  outlined goes through). **Common Kit** and the **Vherathi** redraw are drawn
+  without them; the older culture atlases still switch them on. The rule that
+  replaces the outline: *where two polygons of the same colour meet, separate
+  them with a shade on the far side of one of them* — the same one light
+  direction the body carries — not with a line between them. That is why every
+  slot (visor, pads, chest plate, sash, collar, helmet shell) grew a shade in
+  the fit pass, and why the body's limbs, torso, neck and head each carry one.
+  Make the shade a **crescent that tapers to nothing at both ends**, not a
+  constant-width inset: a constant inset reads as a seam ruled down the middle
+  of the piece (`vherathi_outfits.far_side` shows the shape, and clips to the
+  far half first so it works on any polygon).
+
   Ask the body rather than guessing at it: **`hand_shape()`** (the mitt, for a
   glove that covers the hand), **`arm_top()`** (the centre of the arm's domed
   top, for a pad), **`head_band_fig()`** (a band whose sides follow the skull,

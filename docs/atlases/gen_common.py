@@ -11,7 +11,8 @@ import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from gen_si import figure_parts, poly, circ, bar, dashed_bar, GRID, fig_remap
+from gen_si import (figure_parts, poly, circ, bar, dashed_bar, GRID, fig_remap,
+                    set_outline)
 from atlas_shell import css, DEFS, GRIDDEF
 from common_kit import OUTFITS, DETAILS
 
@@ -51,6 +52,9 @@ KEYLINES = {
  "ranger": "suit · boot · coat · +trek pack · slung rifle · compass",
  "bounty_hunter": "helmet · suit · boot · visor · backpack · +plates · bandolier",
 }
+
+
+set_outline(False)     # this atlas is drawn on shading alone - see gen_si
 
 
 def outfit_inner(key):
