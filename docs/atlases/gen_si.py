@@ -864,16 +864,18 @@ def head_band_fig(y0, y1, inset=0.0, n=8):
     return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
 
 
-def head_dome(out=2.0, y_bot=None, n=16):
+def head_dome(out=2.0, y_bot=None, n=16, wide=1.0):
     """A dome following the skull outward by `out` - a hood or a soft cap that
-    sits ON the head and its hair instead of tenting over it in a trapezoid."""
+    sits ON the head and its hair instead of tenting over it in a trapezoid.
+    `wide` stretches it sideways only, so a hood can clear a head of long hair
+    without growing into a stovepipe."""
     cx, cy, fr = 70.0, FIG_HEAD_CY, FIG_HEAD_R
     top = []
     for i in range(n + 1):
         a = 6 + (180 - 12) * i / n
         r = head_r(a) * fr + out
         th = math.radians(a)
-        top.append((cx + r * math.cos(th), cy - r * math.sin(th)))
+        top.append((cx + r * math.cos(th) * wide, cy - r * math.sin(th)))
     if y_bot is None:
         y_bot = cy + fr * 0.35
     pts = [(top[0][0], y_bot)] + top + [(top[-1][0], y_bot)]

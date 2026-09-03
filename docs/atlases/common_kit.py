@@ -146,7 +146,8 @@ def space_suit():
 
 def flight_suit():
     base = dict(helmet="#ced6dc", suit="#3a4658", boot="#282e38")
-    post = (rib([(59, 65), (70, 88), (81, 65)], 2.0, "#2b3542")        # chest harness, X-straps
+    post = (rib([(56, 68), (84, 100)], 2.0, "#2b3542")                 # chest harness, X-straps
+            + rib([(84, 68), (56, 100)], 2.0, "#2b3542")
             + op_s(rrect(75, 142, 11, 15, 1), "#2b3542")               # thigh checklist board
             + bar(77, 146, 84, 146, 0.9, "#8fb9c8") + bar(77, 150, 84, 150, 0.9, "#8fb9c8")
             + op_s(rrect(75, 41, 7, 6, 1), "#2b3542")                  # helmet comms box
@@ -274,17 +275,17 @@ def civilian():
                 hair="crop", hair_col="#6a3320")
     pre = op_s(rrect(78, 102, 11, 18, 3), "#54606a")                                  # satchel, behind the arm
     post = (op_s([(59, 63), (81, 63), (78, 73), (62, 73)], "#4c5860")                 # soft collar
-            + rib([(53.5, 67), (81, 101)], 1.8, "#54606a"))                           # strap: shoulder to under the far arm
+            + rib([(54, 69), (83, 100)], 1.8, "#54606a"))                             # strap: over the shoulder cap, out to the far edge
     return base, pre, post
 
 
 def smuggler():
-    base = dict(no_helmet=True, suit="#2e3431", boot="#1e211f",
+    base = dict(no_helmet=True, suit="#2e3431", boot="#1e211f", coat=True,
                 hair="stubble", hair_col="#1b191d")
     # a deep hood instead of a helmet + a long worn coat
     _sk = [(51, WAIST), (89, WAIST), (93, 170), (47, 170)]
     pre = op_s(_sk, "#262b28")
-    post = (op_s(head_dome(3.2, 36.6), "#2a2f2c")                                    # hood, down to the brow
+    post = (op_s(head_dome(3.4, 36.6, wide=1.16), "#2a2f2c")                         # hood, down to the brow
             + poly(head_band_fig(28.0, 36.0, inset=1.5), "#14100f")                   # eyes in shadow
             + circ(66, 44, 1.2, "#8a8f88") + circ(74, 44, 1.2, "#8a8f88")             # eyes in the dark
             + op_s([(62, 92), (78, 92), (76, 122), (64, 122)], "#20241f")             # inner-coat bulge (contraband)
@@ -300,8 +301,8 @@ def ranger():
     pre = (op_s(rrect(48, 54, 44, 58, 6), "#2e3a36")                                  # big trek pack
            + op_s(rrect(46, 46, 48, 12, 4), "#5a4a36")                                # bedroll on top
            + op_s(_sk, "#33413c"))       # field-coat skirt
-    post = (op_s(head_dome(3.0, 35.8), "#33413c")                                    # hood, down to the brow
-            + rib([(53.5, 67), (80, 103)], 2.0, "#4a4038")                            # pack strap: shoulder to under the far arm
+    post = (op_s(head_dome(3.6, 35.8, wide=1.34), "#33413c")                         # hood, wide enough for the hair
+            + rib([(54, 69), (83, 101)], 2.0, "#4a4038")                              # pack strap: over the shoulder cap, out to the far edge
             + circ(61, 74, 2.2, "#e0c060"))                                           # compass
     pre = pre + op_s(rrect(81, BELT + 2, 6, 9, 1), "#26302c")                         # canteen on the hip (behind arm)
     post = skirt_over_legs(_sk, "#33413c") + post

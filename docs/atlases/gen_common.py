@@ -105,7 +105,7 @@ def slotmap_svg():
         helmet="#3a3a44", suit="#55555f", leg="#3f3f48", boot="#333333",
         backpack="#3a3a44", spikes="#4a4a55", antenna="#4a4a55", collar="#6a6a75",
         shoulders="#6a6a75", chest="#63636e", sash="#75757f", badge="#8a8a94",
-        belt="#4a4a54", buckle="#7a7a84", visor="#5a5a64", pod="#5a5a64"))
+        belt="#4a4a54", buckle="#7a7a84", visor="#5a5a64"))
     g = f'<g transform="translate(66,6)">{fig}</g>'
     lab = ('<g fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="6.5">'
            '<text x="6" y="20">antenna_color</text>'
