@@ -303,6 +303,19 @@ def head_half_at(y):
     return 0.0
 
 
+def head_band(cx, cy, fr, y0, y1, inset=0.0, n=8):
+    """A band across the head whose sides follow the SKULL'S OWN PROFILE, so a
+    visor, mask or cap sits on the round of the head instead of cutting across
+    it with a straight chord. y0 is the upper atlas y."""
+    left, right = [], []
+    for i in range(n + 1):
+        y = y0 + (y1 - y0) * i / n
+        h = max(0.6, head_half_at((cy - y) / fr) * fr - inset)
+        left.append((cx - h, y))
+        right.append((cx + h, y))
+    return right + left[::-1]
+
+
 def _fp(pts, cx, cy, fr):
     """Face-radius units (+y up) -> atlas space (+y down)."""
     return [(cx + x * fr, cy - y * fr) for x, y in pts]
@@ -802,6 +815,79 @@ FIG_HEAD_CY = round(_gy(_HEAD_U), 1)            # 35.3
 FIG_HEAD_R = round(_G_SCALE * _HEAD_R_U, 2)     # 13.39
 
 
+def torso_half_at(u):
+    """The torso's half-width (study units) at a study height - what a chest
+    plate, a band or a collar has to follow to sit ON the body."""
+    pts = sorted(_GT, key=lambda p: -p[1])
+    if u >= pts[0][1]:
+        return pts[0][0]
+    for i in range(len(pts) - 1):
+        a, b = pts[i], pts[i + 1]
+        if u >= b[1]:
+            return a[0] + (a[1] - u) / (a[1] - b[1]) * (b[0] - a[0])
+    return pts[-1][0]
+
+
+def torso_band(u0, u1, inset=0.0, n=6):
+    """A panel down the front of the torso, its sides tracking the body."""
+    left, right = [], []
+    for i in range(n + 1):
+        u = u0 + (u1 - u0) * i / n
+        h = max(0.4, torso_half_at(u) - inset)
+        left.append((_gx(-h), _gy(u)))
+        right.append((_gx(h), _gy(u)))
+    return right + left[::-1]
+
+
+def arm_top(s):
+    """Atlas centre of the domed top of arm s, after the resting splay - where
+    a shoulder pad actually sits."""
+    return _arm_rot(s, _gx(s * _A_HALF), _gy(_A_SY + _A_TOP * 0.24), new=True)
+
+
+def hand_shape(s, grow=0.0):
+    """The mitt at the end of arm s, in atlas coordinates after the splay, so
+    a glove can be drawn ON the hand rather than as a circle near it."""
+    wx, wy, r = s * (_A_HALF - 0.55), _A_WY, _A_HAND + grow
+    pts = [(wx - r * 0.88, wy + r * 0.12), (wx - r * 0.96, wy - r * 0.55),
+           (wx - r * 0.72, wy - r * 1.34), (wx - r * 0.12, wy - r * 1.72),
+           (wx + r * 0.56, wy - r * 1.48), (wx + r * 0.94, wy - r * 0.78),
+           (wx + r * 0.92, wy + r * 0.12)]
+    return [_arm_rot(s, _gx(x), _gy(y), new=True) for x, y in pts]
+
+
+def head_band_fig(y0, y1, inset=0.0, n=8):
+    """head_band on the figure's own head, in atlas coordinates - and
+    inverse-mapped under fig_remap, so a signature layer authored in the old
+    space can still put a mask or a cap on the round of the skull."""
+    pts = head_band(70.0, FIG_HEAD_CY, FIG_HEAD_R, y0, y1, inset, n)
+    return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
+
+
+def head_dome(out=2.0, y_bot=None, n=16):
+    """A dome following the skull outward by `out` - a hood or a soft cap that
+    sits ON the head and its hair instead of tenting over it in a trapezoid."""
+    cx, cy, fr = 70.0, FIG_HEAD_CY, FIG_HEAD_R
+    top = []
+    for i in range(n + 1):
+        a = 6 + (180 - 12) * i / n
+        r = head_r(a) * fr + out
+        th = math.radians(a)
+        top.append((cx + r * math.cos(th), cy - r * math.sin(th)))
+    if y_bot is None:
+        y_bot = cy + fr * 0.35
+    pts = [(top[0][0], y_bot)] + top + [(top[-1][0], y_bot)]
+    return [(x, _pw(y, inv=True)) for x, y in pts] if _XF else pts
+
+
+def _cap_shade(pts, cx, frac=0.42):
+    """The far half of a rounded cap, pulled in toward its centre - the same
+    one-direction shade the body carries, for a pad or a plate."""
+    far = [p for p in pts if p[0] >= cx]
+    mid = [(cx + (x - cx) * frac, y) for x, y in far]
+    return far + mid[::-1]
+
+
 # old anchor line -> new one. Monotonic, so the map inverts cleanly.
 _XF_KNOTS = [(31.6, round(_gy(_HEAD_U + _HEAD_R_U * 1.21), 1)),   # crown
              (45.6, round(_gy(_HEAD_U), 1)),                      # head centre
@@ -901,15 +987,17 @@ class fig_remap:
         return False
 
 
-def _arm_rot(s, ax, ay):
+def _arm_rot(s, ax, ay, new=False):
     """Atlas point on the straight arm -> atlas point after the resting splay.
     s = -1 for the left arm, +1 for the right; both rotate outward.
 
     Under the remap the input is a point on the OLD arm, so it is first
     stretched onto the new arm's shoulder-to-wrist span, splayed by the new
     rest angle, and then run back through the map's inverse - because the
-    shape it belongs to is about to be mapped forward again."""
-    old = _XF
+    shape it belongs to is about to be mapped forward again. Pass new=True for
+    a point already in the new body's coordinates (it still comes back
+    inverse-mapped, so it can be handed to a remapped signature layer)."""
+    old = _XF and not new
     if old:
         u = (_G_GROUND - ay) / _G_SCALE
         u = _A_SY + (u - 25.9) * (_A_SY - _A_WY) / (25.9 - 12.7)
@@ -920,7 +1008,7 @@ def _arm_rot(s, ax, ay):
     ca, sa = math.cos(ang), math.sin(ang)
     dx, dy = ux - px, uy - py
     nx, ny = _gx(px + dx * ca - dy * sa), _gy(py + dx * sa + dy * ca)
-    return (nx, _pw(ny, inv=True)) if old else (nx, ny)
+    return (nx, _pw(ny, inv=True)) if _XF else (nx, ny)
 
 
 def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
@@ -1030,26 +1118,31 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     P.append(poly(ngon(70, (foot_y + 8) if legged else 172, 30, 7, 14), "#ffffff", op=0.05))
 
     # back pieces
-    _xon()
+    # These are authored against the real body, not the old figure, so they
+    # sit outside the remap - see the note above fig_remap.
     if backpack:
         _grp("body"); _gate("backpack_color")
-        P.append(opoly(rrect(50, 62, 40, 74, 6), backpack, d=1.3))
-    if spikes:                                   # rooted low - shoulder pads sit over the base
+        P.append(opoly(rrect(51, 52, 38, 63, 6), backpack, d=1.3))
+    if spikes:            # rooted at the shoulder; the pads then cover the root
         _grp("body"); _gate("spike_color")
+        _sl = [(_gx(-3.55), _gy(25.4)), (_gx(-2.35), _gy(26.4)), (_gx(-4.6), _gy(30.6))]
+        _sr = [(x + 2 * (70 - x), y) for x, y in _sl]
         if spikes_side in ("both", "left"):
-            P.append(opoly([(46, 80), (54, 76), (42, 50)], spikes, d=1.1))
+            P.append(opoly(_sl, spikes, d=1.1))
         if spikes_side in ("both", "right"):
-            P.append(opoly([(94, 80), (86, 76), (98, 50)], spikes, d=1.1))
+            P.append(opoly(_sr, spikes, d=1.1))
         if spikes_side == "uneven":              # Vherathi asymmetry
-            P.append(opoly([(47, 80), (55, 76), (44, 46)], spikes, d=1.1))
-            P.append(opoly([(94, 80), (87, 77), (97, 58)], spikes, d=1.1))
-    if antenna:
+            P.append(opoly([(_gx(-3.5), _gy(25.4)), (_gx(-2.3), _gy(26.5)),
+                            (_gx(-4.9), _gy(31.6))], spikes, d=1.1))
+            P.append(opoly(_sr, spikes, d=1.1))
+    if antenna:           # short, and rooted on the shell rather than the air
         _grp("body"); _gate("antenna_color")
-        P.append(bar(80, 34, 88, 16, 1.3, antenna))
-        P.append(ocirc(88, 16, 2.2, antenna, d=1.1))
+        _ax, _ay = 70 + FIG_HEAD_R * 0.60, FIG_HEAD_CY - FIG_HEAD_R * 1.16
+        P.append(bar(_ax, _ay, _ax + 3.0, _ay - 8.5, 1.1, antenna))
+        P.append(ocirc(_ax + 3.0, _ay - 8.5, 1.5, antenna, d=1.0))
     _gate(None)
     if blade:                                    # grown guard-blade down one arm
-        P.append(opoly([(44, 60), (50, 60), (52, 132), (48, 150), (43, 142)], blade, d=_FD))
+        P.append(opoly([(46, 60), (51, 60), (52, 122), (48, 142), (44, 133)], blade, d=_FD))
 
     # hair that falls behind the back, before the body so the torso and
     # shoulders cover its inner half
@@ -1119,44 +1212,61 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     _grp("body")
     if hipline:
         P.append(dashed_bar(70 - waist_hw - 2, waist_y, 70 + waist_hw + 2, waist_y, 1.1, accent))
+    _xoff()
     if band:                                      # chest band, above the belt
-        P.append(opoly([(54, 88), (86, 88), (84, 100), (56, 100)], band, d=1.0))
+        P.append(opoly(torso_band(24.2, 22.2, 0.18), band, d=1.0))
+    _xon()
 
     # helmet / hat / cap. The shell is drawn AFTER the face, further down -
     # a helmet covers a head, it doesn't replace one - so only the flat cap is
     # still emitted here, over the crown.
     _grp("body")
+    _xoff()
     if cap:                                       # flat brimmed cap over the head
-        P.append(opoly([(56, 40), (84, 40), (80, 32), (73, 27), (65, 27), (58, 32)], cap, d=1.2))
+        P.append(opoly([(56.5, 28.5), (83.5, 28.5), (80.5, 22.5), (74, 18.2),
+                        (66, 18.2), (59.5, 22.5)], cap, d=1.2))
 
     # front torso pieces: chest plate -> sash (over it) -> collar (over sash) -> belt
     if chest:
         _gate("chest_plate_color")
-        P.append(opoly([(57, 72), (83, 72), (80, 106), (60, 106)], chest, d=1.2))
+        _cp = torso_band(25.2, 20.4, 0.42)
+        P.append(opoly(_cp, chest, d=1.2))
+        P.append(poly(_cap_shade(_cp, 70, 0.52), _shade(chest, -22)))
         if rivets:
-            for rx in (63, 77):
-                for ry in (80, 98):
+            for rx in (63.5, 76.5):
+                for ry in (_gy(24.4), _gy(21.4)):
                     P.append(circ(rx, ry, 1.4, rivets))
         _gate(None)
-    if sash:      # a baldric: over the left shoulder, across the chest, tucked
-                  # under the belt at the opposite (right) hip
+    if sash:      # a baldric of even width: up OVER the top of the left
+                  # shoulder, down across the chest, and then round the waist
+                  # on the right, so both ends read as going somewhere
         _gate("sash_color")
-        P.append(opoly([(52, 65), (58, 62),                 # over the top of the left shoulder
-                        (64, 80), (72, 95),                  # diagonally across the chest
-                        (83, waist_y + 2),                   # down to the right waist
-                        (77, waist_y + 9),                   # band width at the waist end
-                        (66, 96), (58, 82), (48, 68)],       # back up the underside
+        _sh = arm_top(-1)
+        def _ribbon(p0, p1, w):
+            dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+            m = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / m * w / 2, dx / m * w / 2
+            return [(p0[0] + nx, p0[1] + ny), (p1[0] + nx, p1[1] + ny),
+                    (p1[0] - nx, p1[1] - ny), (p0[0] - nx, p0[1] - ny)]
+        _sb = (_sh[0] - 1.0, _sh[1] - 4.2)                # clear over the pad
+        P.append(opoly(_ribbon(_sb, (_gx(1.7), _gy(22.4)), 4.6), sash, d=1.1))
+        P.append(opoly(_ribbon((_gx(1.2), _gy(23.0)), (_gx(2.9), _gy(21.1)), 4.6),
                        sash, d=1.1))
+        P.append(opoly(_ribbon((_gx(-0.2), _gy(21.2)), (_gx(3.0), _gy(21.2)), 4.2),
+                       sash, d=1.1))                       # round the waist
         _gate(None)
     if collar:
         _gate("collar_color")
-        P.append(opoly([(58, 63), (82, 63), (79, 74), (61, 74)], collar, d=1.1))
+        P.append(opoly([(59.5, 55.0), (80.5, 55.0), (77.5, 66.5), (62.5, 66.5)],
+                       collar, d=1.1))
         _gate(None)
-    if belt:                                       # over the top of the hip kit's strap
+    if belt:            # hugging the waist, over the top of the hip kit's strap
         _gate("belt_color")
-        P.append(opoly(rrect(70 - waist_hw - 4, belt_y, 2 * (waist_hw + 4), 9, 2), belt, d=1.1))
-        P.append(poly(rrect(66, belt_y + 2, 8, 5, 1), buckle or "#7a7a84"))
+        _bw = _WAIST_HALF_U + 0.28
+        P.append(opoly(rrect(_gx(-_bw), _gy(21.4), 2 * _bw * _G_SCALE, 6.6, 2), belt, d=1.1))
+        P.append(poly(rrect(67.2, _gy(21.4) + 1.6, 5.6, 3.6, 1), buckle or "#7a7a84"))
         _gate(None)
+    _xon()
 
     # ---- near arm + near leg (over the torso) ----
     _xoff()
@@ -1169,14 +1279,17 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=_FD))
 
     _grp("body"); _gate(None)
-    _xon()
-    if shoulders:                                # sit outboard + high, over the arm tops
+    if shoulders:      # a cap sat squarely on the top centre of each arm, so
+                       # it reads as a pad ON the shoulder, not beside it
         _gate("shoulder_color")
-        if shoulders_side in ("both", "left"):
-            P.append(ocirc(52, 69, 6, shoulders, d=1.2))
-        if shoulders_side in ("both", "right"):
-            P.append(ocirc(88, 69, 6, shoulders, d=1.2))
+        for _s in (-1, 1):
+            if shoulders_side in ("both", "left" if _s < 0 else "right"):
+                _c = arm_top(_s)
+                _pad = ngon(_c[0], _c[1] - 0.6, 5.6, 4.0, 16)
+                P.append(opoly(_pad, shoulders, d=1.2))
+                P.append(poly(_cap_shade(_pad, _c[0], 0.40), _shade(shoulders, -22)))
         _gate(None)
+    _xon()
     if harness:
         if harness_side in ("both", "left"):
             P.append(bar(56, 84, 82, 116, 2, harness))
@@ -1197,11 +1310,16 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     P.append(poly(_fp(HEAD_SHADE, face_cx, face_cy, fr), SKINS))
 
     if visor:
+        # sides on the skull's own profile, bottom edge kept ABOVE the tip of
+        # the nose, and the same one-direction shade the rest of the body has
         _gate("visor_color")
-        P.append(opoly([(face_cx - fr * 0.98, face_cy - fr * 0.42),
-                        (face_cx + fr * 0.98, face_cy - fr * 0.42),
-                        (face_cx + fr * 0.9, face_cy + fr * 0.32),
-                        (face_cx - fr * 0.9, face_cy + fr * 0.32)], visor, d=1.2))
+        _vt, _vb = face_cy - fr * 0.46, face_cy + fr * 0.215
+        _vs = head_band(face_cx, face_cy, fr, _vt, _vb, inset=0.6)
+        P.append(opoly(_vs, visor, d=1.2))
+        P.append(poly(_cap_shade(_vs, face_cx, 0.34), _shade(visor, -26)))
+        P.append(poly([(face_cx - fr * 0.62, _vt + 1.4), (face_cx - fr * 0.20, _vt + 1.4),
+                       (face_cx - fr * 0.34, _vb - 1.6), (face_cx - fr * 0.70, _vb - 1.6)],
+                      _shade(visor, 30)))                          # a catch of light
         _gate(None)
     elif eyes:
         P.extend(face_kit(face_cx, face_cy, fr, SKINF,
@@ -1221,20 +1339,19 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                            hair_col, face_cx, face_cy, fr))
         _gate(None)
 
-    _xon()
     if badge_cross:
         _gate("badge_color")
-        cx, cy = 70, 95
+        cx, cy = 70, round(_gy(23.4), 1)
         P.append(opoly([(cx-3,cy-6),(cx+3,cy-6),(cx+3,cy-3),(cx+6,cy-3),(cx+6,cy+3),
                         (cx+3,cy+3),(cx+3,cy+6),(cx-3,cy+6),(cx-3,cy+3),(cx-6,cy+3),
                         (cx-6,cy-3),(cx-3,cy-3)], badge, d=0.9))
         _gate(None)
-    elif badge:                                   # a small diamond, worn on the left breast
+    elif badge:            # a small diamond over the heart, high on the breast
         _gate("badge_color")
-        P.append(opoly([(62,82),(66,87),(62,92),(58,87)], badge, d=0.9))
+        bx, by = _gx(-1.55), _gy(24.3)
+        P.append(opoly([(bx, by-2.3), (bx+2.3, by), (bx, by+2.3), (bx-2.3, by)],
+                       badge, d=0.9))
         _gate(None)
-
-    _xoff()
     if helmet_ring:
         P.append(dots_ring(70, FIG_HEAD_CY, FIG_HEAD_R * 1.35, accent, n=26, dot=1.0))
     if accent_dot:

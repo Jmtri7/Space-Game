@@ -356,6 +356,33 @@ weapons system.
   hem dropped, because a hem drawn for the old short leg stopped mid-thigh on
   the new one and read as a box over the knees.
 
+  **Refitting an outfit — the checklist.** The accessory *slots* themselves
+  (visor, shoulder pads, chest plate, sash, collar, belt, badge, antenna,
+  spikes, cap) are now authored **in the new body's coordinates**, outside the
+  adapter, so they fit exactly; the per-outfit signature layers are still in
+  the old ones. Three facts about the new body catch most refits out, and
+  `common_kit.py`'s header repeats them:
+
+  1. **The arms hang close** — x50–56 and x84–90 at the waist, over a torso
+     only x57–83 wide. Anything wider than the torso crosses a sleeve. Hip kit
+     goes in `pre` so the near arm covers it.
+  2. **The head is small** — about 22 wide. A hood or brim drawn much wider
+     reads as baggy.
+  3. **A coat skirt in `pre` sits behind the legs**, so the near leg draws over
+     it. Put it in `pre` *and* repeat it in `post` via `skirt_over_legs()`,
+     which cuts at the coat's own hem — cut anywhere else and the repeat reads
+     as a separate panel.
+
+  Ask the body rather than guessing at it: **`hand_shape()`** (the mitt, for a
+  glove that covers the hand), **`arm_top()`** (the centre of the arm's domed
+  top, for a pad), **`head_band_fig()`** (a band whose sides follow the skull,
+  for a mask or visor), **`head_dome()`** (a dome over the head *and its hair*,
+  for a hood) and **`_arm_rot()`** all return atlas coordinates already
+  inverse-mapped, so a remapped signature file can use them directly. And never
+  draw a second hat over the `helmet` shell — drop the helmet key, or the
+  shell's brim shows under the signature's own headgear as a stray line down
+  the jaw.
+
   Two consequences worth knowing: **new signature work stays in the old
   coordinates** (or the whole file gets re-authored and the adapter dropped),
   and `common_kit.py` no longer draws its own hard hat — `figure_parts` does,

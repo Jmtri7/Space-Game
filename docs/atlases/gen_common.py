@@ -37,11 +37,11 @@ CHAPTERS = [
 KEYLINES = {
  "space_suit": "helmet · suit · boot",
  "flight_suit": "helmet · suit · boot · +harness",
- "mechanic": "helmet · suit · boot · belt · +hardhat lamp · knee pads",
+ "mechanic": "helmet(lamp) · suit · boot · belt · +tool belt · knee pads",
  "dockworker": "helmet · suit · boot · chest_plate · +hi-vis tabard",
  "miner": "helmet · suit · boot · +lamp · backpack · drill",
  "security": "helmet · suit · boot · visor · +vest · baton",
- "station_command": "helmet · suit · boot · collar · shoulders · +braid · cap",
+ "station_command": "suit · boot · collar · shoulders · badge · +braid · cap",
  "marshal": "hat · suit · boot · coat · +star · holster",
  "medic": "helmet · suit · boot · badge(cross) · +armband · satchel",
  "surgeon": "helmet · suit · boot · visor · +mask · scrub cap · gloves",
@@ -108,17 +108,17 @@ def slotmap_svg():
         belt="#4a4a54", buckle="#7a7a84", visor="#5a5a64", pod="#5a5a64"))
     g = f'<g transform="translate(66,6)">{fig}</g>'
     lab = ('<g fill="#8b97ab" font-family="IBM Plex Mono, monospace" font-size="6.5">'
-           '<text x="6" y="28">antenna_color</text>'
-           '<text x="6" y="66">helmet_color</text>'
-           '<text x="6" y="86">spike_color</text>'
-           '<text x="6" y="120">shoulder_color</text>'
-           '<text x="6" y="150">chest_plate_color</text>'
-           '<text x="234" y="70" text-anchor="end">visor_color</text>'
-           '<text x="234" y="100" text-anchor="end">collar_color</text>'
-           '<text x="234" y="120" text-anchor="end">sash_color</text>'
-           '<text x="234" y="140" text-anchor="end">badge_color</text>'
-           '<text x="234" y="162" text-anchor="end">belt_color / buckle</text>'
-           '<text x="234" y="182" text-anchor="end">backpack_color (behind)</text></g>')
+           '<text x="6" y="20">antenna_color</text>'
+           '<text x="6" y="34">helmet_color</text>'
+           '<text x="6" y="58">spike_color</text>'
+           '<text x="6" y="74">shoulder_color</text>'
+           '<text x="6" y="98">chest_plate_color</text>'
+           '<text x="234" y="44" text-anchor="end">visor_color</text>'
+           '<text x="234" y="64" text-anchor="end">collar_color</text>'
+           '<text x="234" y="80" text-anchor="end">badge_color</text>'
+           '<text x="234" y="96" text-anchor="end">sash_color</text>'
+           '<text x="234" y="112" text-anchor="end">belt_color / buckle</text>'
+           '<text x="234" y="140" text-anchor="end">backpack_color (behind)</text></g>')
     return (f'<svg viewBox="0 0 240 210" role="img" aria-label="Accessory slot map: every optional outfit colour '
             f'key shown at once in grey - antenna, helmet, spikes, shoulders, chest plate, visor, collar, sash, '
             f'badge, belt, backpack.">{GRIDDEF}'
