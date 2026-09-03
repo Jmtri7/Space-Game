@@ -1161,6 +1161,8 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _emit_arm(-1)
     if legged:
         _emit_leg(-1)
+        if long_torso:
+            _emit_leg(1)          # a coat covers both legs
 
     # torso - one smooth hourglass from the hip, through the cinched waist, up
     # to a narrow rounded shoulder (no armpit notch). _gt is the Grounded study
@@ -1257,8 +1259,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
         _gate(None)
     if collar:
         _gate("collar_color")
-        P.append(opoly([(59.5, 55.0), (80.5, 55.0), (77.5, 66.5), (62.5, 66.5)],
-                       collar, d=1.1))
+        _co = [(60.5, 51.8), (79.5, 51.8), (78.0, 63.5), (62.0, 63.5)]
+        P.append(opoly(_co, collar, d=1.1))
+        P.append(poly(_cap_shade(_co, 70, 0.46), _shade(collar, -20)))
         _gate(None)
     if belt:            # hugging the waist, over the top of the hip kit's strap
         _gate("belt_color")
@@ -1273,9 +1276,9 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     _grp("body"); _gate(None)
     if arms:
         _emit_arm(1)
-    if legged:
-        _emit_leg(1)
-    else:
+    if legged and not long_torso:
+        _emit_leg(1)              # under a coat this leg went behind the torso
+    elif not legged:
         _grp("body"); P.append(opoly(ngon(70, hip_y + 12, 13, 9, 14), SKINL, d=_FD))
 
     _grp("body"); _gate(None)

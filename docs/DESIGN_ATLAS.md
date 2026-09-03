@@ -368,10 +368,13 @@ weapons system.
      goes in `pre` so the near arm covers it.
   2. **The head is small** — about 22 wide. A hood or brim drawn much wider
      reads as baggy.
-  3. **A coat skirt in `pre` sits behind the legs**, so the near leg draws over
-     it. Put it in `pre` *and* repeat it in `post` via `skirt_over_legs()`,
-     which cuts at the coat's own hem — cut anywhere else and the repeat reads
-     as a separate panel.
+  3. **A coat covers the legs.** `coat=True` now draws *both* legs behind the
+     torso (the near leg is otherwise drawn over it, leaving a band of bare
+     leg from the hip to the hem that no amount of repeating the skirt fixes).
+     The flare below the hem still needs repeating: keep the skirt in `pre`
+     and pass it through `skirt_over_legs()`, which cuts at the hem and puts
+     the hands back on top. Cut anywhere else and the repeat reads as a
+     separate panel.
 
   Ask the body rather than guessing at it: **`hand_shape()`** (the mitt, for a
   glove that covers the hand), **`arm_top()`** (the centre of the arm's domed

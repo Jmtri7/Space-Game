@@ -26,9 +26,11 @@ coordinates - or re-author the whole file and drop the adapter.
       covers it; only its outer sliver should show.
     - the HEAD IS SMALL: about 22 wide and 27 tall. A hood or brim drawn much
       wider than that reads as baggy.
-    - a COAT SKIRT in `pre` sits behind the legs, so the near leg draws over
-      it. Put the skirt in `pre` and repeat it in `post` through
-      skirt_over_legs(), which cuts at the coat's own hem.
+    - a COAT (`coat=True`) puts BOTH legs behind the torso, so the coat's
+      own body covers them down to its hem. The skirt below that still needs
+      repeating: put it in `pre` and pass it through skirt_over_legs(), which
+      cuts at the hem and puts the hands back on top. Prepend the result to
+      `post` so the outfit's own detail still lands over the coat.
 
   Don't guess at the body - ask it. These come back in atlas coordinates,
   already inverse-mapped, so they can be used from this file directly:
@@ -48,7 +50,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from gen_si import (poly, circ, ngon, rrect, opoly, ocirc, bar, offset_poly, _u,
-                    _arm_rot, hand_shape, head_band_fig, head_dome)
+                    _arm_rot, hand_shape, head_band_fig, head_dome, SKINF)
 
 OUT = "#141219"
 WAIST = 103
@@ -76,17 +78,19 @@ def rib(pts, w, col, op=None):
     return poly(left + right[::-1], col, op=op)
 
 
-COAT_CUT = 152         # old-space y of the coat's own hem (below the hands)
+COAT_CUT = 152         # old-space y of the coat's own hem
 
 
 def skirt_over_legs(pts, col):
     """The part of a coat skirt below the coat's hem, repeated in `post` so it
     falls over the legs instead of behind them.
 
-    The whole skirt can't live in `post` - it would bury the arms and hands -
-    and in `pre` alone the near leg is drawn on top of it. Cutting at the hem
-    means the repeat starts exactly where the coat's own body ends, so the
-    join doesn't read as a separate panel."""
+    The whole skirt can't live in `post` - it would bury the arms - and in
+    `pre` alone the NEAR leg is drawn on top of it, since figure_parts draws
+    that leg after the torso. Cutting at the hip covers the leg for its whole
+    length; it also catches the hands, so those are drawn back on afterwards.
+    Put the result at the FRONT of `post`, so the outfit's own detail still
+    lands on top of the coat."""
     out, n = [], len(pts)
     for i in range(n):
         a, b = pts[i], pts[(i + 1) % n]
@@ -96,7 +100,10 @@ def skirt_over_legs(pts, col):
         if a_in != b_in:
             t = (COAT_CUT - a[1]) / (b[1] - a[1])
             out.append((a[0] + t * (b[0] - a[0]), COAT_CUT))
-    return op_s(out, col) if len(out) >= 3 else ""
+    if len(out) < 3:
+        return ""
+    return (op_s(out, col)
+            + op_s(hand_shape(-1), SKINF, d=1.0) + op_s(hand_shape(1), SKINF, d=1.0))
 
 
 def dots(x0, y0, x1, y1, n, r, col):
@@ -165,8 +172,8 @@ def dockworker():
             + bar(60, 88, 80, 88, 1.6, "#c46a10")
             + op_s([(57, 64), (64, 64), (62, 84), (55, 84)], "#f2962a")     # strap L
             + op_s([(76, 64), (83, 64), (85, 84), (78, 84)], "#f2962a")     # strap R
-            + op_s(hand_shape(-1, 0.55), "#2a303a", d=1.0)
-            + op_s(hand_shape(1, 0.55), "#2a303a", d=1.0))                  # heavy gloves
+            + op_s(hand_shape(-1, 0.18), "#2a303a", d=1.0)
+            + op_s(hand_shape(1, 0.18), "#2a303a", d=1.0))                  # heavy gloves
     return base, pre, post
 
 
@@ -212,7 +219,7 @@ def marshal():
            + bar(80, BELT, 88, BELT, 1.4, "#1a1a1e"))                              # (behind the arm)
     post = (star(62, 86, 5.5, "#e0c060")                                                       # marshal star, left breast
             + op_s([(57, 38), (83, 38), (88, 34), (80, 27), (60, 27), (52, 34)], "#3a3a40"))   # brim hat
-    post = post + skirt_over_legs(_sk, "#2b2e35")
+    post = skirt_over_legs(_sk, "#2b2e35") + post
     return base, pre, post
 
 
@@ -228,7 +235,7 @@ def medic():
             + poly([_arm_rot(-1, x, y) for x, y in [(52, 83), (57, 83), (57, 79), (52, 79)]], "#eef2f2")  # white cross on it
             + poly([_arm_rot(-1, x, y) for x, y in [(53, 85), (56, 85), (56, 77), (53, 77)]], "#eef2f2")
 )
-    post = post + skirt_over_legs(_sk, "#eef2f2")
+    post = skirt_over_legs(_sk, "#eef2f2") + post
     return base, pre, post
 
 
@@ -242,10 +249,10 @@ def surgeon():
             + bar(61, 50, 58.5, 46.5, 0.9, "#dfeae6")
             + bar(79, 50, 81.5, 46.5, 0.9, "#dfeae6")                                 # ear ties
             + op_s(head_dome(1.6, 30.0), "#dfeae6")                                    # scrub cap over the crown
-            + op_s(hand_shape(-1, 0.45), "#eef2f2", d=1.0)
-            + op_s(hand_shape(1, 0.45), "#eef2f2", d=1.0)                    # gloves
+            + op_s(hand_shape(-1, 0.12), "#eef2f2", d=1.0)
+            + op_s(hand_shape(1, 0.12), "#eef2f2", d=1.0)                    # gloves
             + circ(70, 95, 2.0, "#e15a5a"))
-    post = post + skirt_over_legs(_sk, "#f0f4f4")
+    post = skirt_over_legs(_sk, "#f0f4f4") + post
     return base, pre, post
 
 
@@ -258,7 +265,7 @@ def researcher():
            + bar(79, 108, 86, 108, 0.9, "#5c626c") + bar(79, 114, 86, 114, 0.9, "#5c626c"))
     post = ("".join(bar(x, 74, x, 84, 1.4, c) for x, c in ((63, "#e15a5a"), (66, "#8fb9c8"), (69, "#e0c060")))  # pen array
 )
-    post = post + skirt_over_legs(_sk, "#9aa6b2")
+    post = skirt_over_legs(_sk, "#9aa6b2") + post
     return base, pre, post
 
 
@@ -267,7 +274,7 @@ def civilian():
                 hair="crop", hair_col="#6a3320")
     pre = op_s(rrect(78, 102, 11, 18, 3), "#54606a")                                  # satchel, behind the arm
     post = (op_s([(59, 63), (81, 63), (78, 73), (62, 73)], "#4c5860")                 # soft collar
-            + rib([(56, 68), (62, 62), (78, 96)], 1.7, "#54606a"))                    # strap over the shoulder
+            + rib([(53.5, 67), (81, 101)], 1.8, "#54606a"))                           # strap: shoulder to under the far arm
     return base, pre, post
 
 
@@ -277,12 +284,12 @@ def smuggler():
     # a deep hood instead of a helmet + a long worn coat
     _sk = [(51, WAIST), (89, WAIST), (93, 170), (47, 170)]
     pre = op_s(_sk, "#262b28")
-    post = (op_s(head_dome(4.4, 48), "#2a2f2c")                                      # hood
-            + poly(head_band_fig(27.0, 37.5, inset=1.6), "#14100f")                   # face in shadow
+    post = (op_s(head_dome(3.2, 36.6), "#2a2f2c")                                    # hood, down to the brow
+            + poly(head_band_fig(28.0, 36.0, inset=1.5), "#14100f")                   # eyes in shadow
             + circ(66, 44, 1.2, "#8a8f88") + circ(74, 44, 1.2, "#8a8f88")             # eyes in the dark
             + op_s([(62, 92), (78, 92), (76, 122), (64, 122)], "#20241f")             # inner-coat bulge (contraband)
             )
-    post = post + skirt_over_legs(_sk, "#262b28")
+    post = skirt_over_legs(_sk, "#262b28") + post
     return base, pre, post
 
 
@@ -293,11 +300,11 @@ def ranger():
     pre = (op_s(rrect(48, 54, 44, 58, 6), "#2e3a36")                                  # big trek pack
            + op_s(rrect(46, 46, 48, 12, 4), "#5a4a36")                                # bedroll on top
            + op_s(_sk, "#33413c"))       # field-coat skirt
-    post = (op_s(head_dome(4.0, 46), "#33413c")                                      # hood
-            + rib([(56, 68), (62, 62), (76, 98)], 2.0, "#4a4038")                     # pack strap over the shoulder
+    post = (op_s(head_dome(3.0, 35.8), "#33413c")                                    # hood, down to the brow
+            + rib([(53.5, 67), (80, 103)], 2.0, "#4a4038")                            # pack strap: shoulder to under the far arm
             + circ(61, 74, 2.2, "#e0c060"))                                           # compass
     pre = pre + op_s(rrect(81, BELT + 2, 6, 9, 1), "#26302c")                         # canteen on the hip (behind arm)
-    post = post + skirt_over_legs(_sk, "#33413c")
+    post = skirt_over_legs(_sk, "#33413c") + post
     return base, pre, post
 
 
