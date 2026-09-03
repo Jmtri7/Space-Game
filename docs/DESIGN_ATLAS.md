@@ -336,6 +336,26 @@ weapons system.
   the new rest angle, then runs it back through the map's *inverse*, because
   the shape it belongs to is about to be mapped forward again.
 
+  **What the map could not fix** was the fit of individual accessories, since
+  it only moves things vertically. Two changes in the body caught most of the
+  kit out: the arms now hang **closer** (rest splay 12° → 7°), so anything on
+  the hip that used to be tucked behind a sleeve poked out in front of it —
+  the tool belt, the security baton, the marshal's holster, the ranger's
+  canteen, the miner's drill stem and ore pouch, the medic's and researcher's
+  satchels; those moved inboard, and most moved into `pre` so the near arm
+  covers them. And the head is **smaller**, so hoods, brims and caps drawn for
+  the old one read baggy — the smuggler's and ranger's hoods, the marshal's
+  brim, the surgeon's scrub cap and the ear ties on their mask all came in.
+  Gloves were r4 balls stuck on a wrist that is now a tapered mitt. Two
+  details had been left behind by their own parents (the red cross for a
+  satchel that moved, the reference lines for a case that moved) and were
+  re-anchored to them. The helmet lost its chin strap — the shell is often
+  hidden under an outfit's own headgear, and then the strap was the only part
+  showing, a stray coloured line down the jaw — and the lamp became opt-in
+  (`lamp=True`), since a flight helmet should not wear a headtorch. The coat
+  hem dropped, because a hem drawn for the old short leg stopped mid-thigh on
+  the new one and read as a box over the knees.
+
   Two consequences worth knowing: **new signature work stays in the old
   coordinates** (or the whole file gets re-authored and the adapter dropped),
   and `common_kit.py` no longer draws its own hard hat — `figure_parts` does,

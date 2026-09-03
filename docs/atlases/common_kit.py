@@ -69,11 +69,11 @@ def star(cx, cy, r, col, n=5):
 
 def toolbelt(col):
     """A low-slung utility belt with pouches + loops, over the waist belt."""
-    o = [op_s(rrect(56, BELT + 2, 28, 8, 2), col)]
-    for x in (58, 66, 78):
-        o.append(op_s(rrect(x, BELT + 8, 7, 10, 1), col))
-    for x in (73, 82):
-        o.append(bar(x, BELT + 3, x, BELT + 13, 1.4, "#2a2a2e"))
+    o = [op_s(rrect(58, BELT + 2, 24, 8, 2), col)]
+    for x in (59, 66, 74):
+        o.append(op_s(rrect(x, BELT + 8, 6, 9, 1), col))
+    for x in (72, 80):
+        o.append(bar(x, BELT + 3, x, BELT + 12, 1.4, "#2a2a2e"))
     return "".join(o)
 
 
@@ -89,19 +89,20 @@ def space_suit():
 
 def flight_suit():
     base = dict(helmet="#ced6dc", suit="#3a4658", boot="#282e38")
-    post = (rib([(53, 63), (70, 90), (87, 63)], 2.0, "#2b3542")        # chest harness, X-straps
-            + op_s(rrect(78, 142, 12, 16, 1), "#2b3542")               # thigh checklist board
-            + bar(80, 146, 88, 146, 0.9, "#8fb9c8") + bar(80, 150, 88, 150, 0.9, "#8fb9c8")
-            + op_s(rrect(83, 42, 8, 7, 1), "#2b3542")                  # helmet comms box
-            + circ(87, 45, 1.2, "#e15a5a"))
+    post = (rib([(59, 65), (70, 88), (81, 65)], 2.0, "#2b3542")        # chest harness, X-straps
+            + op_s(rrect(75, 142, 11, 15, 1), "#2b3542")               # thigh checklist board
+            + bar(77, 146, 84, 146, 0.9, "#8fb9c8") + bar(77, 150, 84, 150, 0.9, "#8fb9c8")
+            + op_s(rrect(75, 41, 7, 6, 1), "#2b3542")                  # helmet comms box
+            + circ(78.5, 44, 1.2, "#e15a5a"))
     return base, "", post
 
 
 def mechanic():
-    base = dict(helmet="#f0aa37", suit="#524e48", boot="#2e2a26")
+    base = dict(helmet="#f0aa37", lamp=True, suit="#524e48", boot="#2e2a26")
     post = (toolbelt("#3a352f")
             + op_s([_arm_rot(-1, x, y) for x, y in [(51, 95), (60, 95), (60, 124), (51, 124)]], "#3a352f")   # rolled sleeve cuff L (over the arm)
-            + op_s(rrect(53, 150, 13, 9, 2), "#3a352f") + op_s(rrect(71, 150, 13, 9, 2), "#3a352f"))  # knee pads
+            + op_s(rrect(55, 150, 11, 9, 2), "#3a352f")
+            + op_s(rrect(74, 150, 11, 9, 2), "#3a352f"))                    # knee pads
     return base, "", post
 
 
@@ -113,17 +114,18 @@ def dockworker():
             + bar(60, 88, 80, 88, 1.6, "#c46a10")
             + op_s([(57, 64), (64, 64), (62, 84), (55, 84)], "#f2962a")     # strap L
             + op_s([(76, 64), (83, 64), (85, 84), (78, 84)], "#f2962a")     # strap R
-            + ocirc(*_arm_rot(-1, 57, 133), 4.0, "#2a303a", d=1.0) + ocirc(*_arm_rot(1, 83, 133), 4.0, "#2a303a", d=1.0))  # heavy gloves
+            + ocirc(*_arm_rot(-1, 57, 135), 2.4, "#2a303a", d=1.0)
+            + ocirc(*_arm_rot(1, 83, 135), 2.4, "#2a303a", d=1.0))          # heavy gloves
     return base, pre, post
 
 
 def miner():
-    base = dict(helmet="#ebcd5f", suit="#7a6648", boot="#483828")
+    base = dict(helmet="#ebcd5f", lamp=True, suit="#7a6648", boot="#483828")
     pre = op_s(rrect(49, 60, 42, 60, 5), "#5c4d34")                          # life-support backpack
+    pre = (pre + rib([(88, 62), (90, 92), (88, 126)], 2.0, "#6a5a3c")        # drill stem down the back-right
+           + poly([(85, 124), (93, 126), (89, 138)], "#3a2e1e")              # drill bit
+           + op_s(rrect(76, 108, 11, 13, 2), "#463826"))                     # ore-sample pouch (behind the arm)
     post = (toolbelt("#463826")
-            + rib([(90, 62), (92, 92), (90, 126)], 2.0, "#6a5a3c")           # drill stem down the back-right
-            + poly([(87, 124), (95, 126), (91, 138)], "#3a2e1e")             # drill bit
-            + op_s(rrect(78, 110, 12, 14, 2), "#463826")                     # ore-sample pouch
             + bar(56, 154, 66, 154, 1.4, "#5c4d34"))
     return base, pre, post
 
@@ -132,9 +134,9 @@ def security():
     base = dict(helmet="#606874", suit="#3a3f48", boot="#24272e", visor="#8fb9c8")
     post = (op_s([(56, 68), (84, 68), (82, 104), (58, 104)], "#2c3038")     # padded vest
             + bar(59, 80, 81, 80, 1.2, "#4a505a") + bar(59, 91, 81, 91, 1.2, "#4a505a")
-            + op_s(rrect(84, BELT + 2, 5, 20, 1), "#20232a")                 # baton on the hip
-            + op_s(rrect(49, 63, 8, 6, 1), "#20232a") + circ(53, 63, 1.4, "#8fb9c8"))  # shoulder radio
-    return base, "", post
+            + op_s(rrect(53, 66, 7, 6, 1), "#20232a") + circ(56.5, 69, 1.3, "#8fb9c8"))  # shoulder radio
+    pre = op_s(rrect(79, BELT + 2, 5, 19, 1), "#20232a")                        # baton (behind the arm)
+    return base, pre, post
 
 
 def station_command():
@@ -152,24 +154,25 @@ def station_command():
 
 def marshal():
     base = dict(hat="#3a3a40", helmet_r=17, suit="#33363e", boot="#1e2024", coat=True)
-    pre = (op_s([(49, WAIST), (91, WAIST), (95, 176), (45, 176)], "#2b2e35")       # long coat skirt
-           + op_s(rrect(85, BELT + 2, 8, 16, 1), "#1a1a1e")                        # holster on the right hip
-           + bar(84, BELT, 92, BELT, 1.4, "#1a1a1e"))                              # (behind the arm)
+    pre = (op_s([(52, WAIST), (88, WAIST), (91, 176), (49, 176)], "#2b2e35")       # long coat skirt
+           + op_s(rrect(81, BELT + 2, 7, 15, 1), "#1a1a1e")                        # holster on the right hip
+           + bar(80, BELT, 88, BELT, 1.4, "#1a1a1e"))                              # (behind the arm)
     post = (star(62, 86, 5.5, "#e0c060")                                                       # marshal star, left breast
-            + op_s([(53, 39), (87, 39), (93, 35), (83, 27), (57, 27), (47, 35)], "#3a3a40"))   # brim hat
+            + op_s([(57, 38), (83, 38), (88, 34), (80, 27), (60, 27), (52, 34)], "#3a3a40"))   # brim hat
     return base, pre, post
 
 
 def medic():
     base = dict(helmet="#d2ece6", suit="#e6eaea", boot="#b0bcbc", coat=True,
                 badge="#e15a5a", badge_cross=True)
-    pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 158), (48, 158)], "#eef2f2")   # coat skirt
+    pre = (op_s([(53, WAIST - 2), (87, WAIST - 2), (89, 158), (51, 158)], "#eef2f2")  # coat skirt
+           + op_s(rrect(77, 104, 11, 13, 2), "#eef2f2")                          # med satchel (behind the arm)
+           + poly([(84, 106), (89, 106), (89, 109), (86.5, 109), (86.5, 113), (84.5, 113),
+                   (84.5, 109), (82, 109)], "#e15a5a"))                          # cross on its flap
     post = (op_s([_arm_rot(-1, x, y) for x, y in [(50, 74), (59, 74), (59, 90), (50, 90)]], "#e15a5a")   # arm band, left upper arm
             + poly([_arm_rot(-1, x, y) for x, y in [(52, 83), (57, 83), (57, 79), (52, 79)]], "#eef2f2")  # white cross on it
             + poly([_arm_rot(-1, x, y) for x, y in [(53, 85), (56, 85), (56, 77), (53, 77)]], "#eef2f2")
-            + op_s(rrect(83, 100, 14, 16, 2), "#eef2f2")                              # med satchel
-            + poly([(87, 104), (93, 104), (93, 108), (90, 108), (90, 112), (88, 112),
-                    (88, 108), (85, 108)], "#e15a5a"))                                # cross on the flap
+)
     return base, pre, post
 
 
@@ -177,11 +180,13 @@ def surgeon():
     # no hard helmet - a scrub cap and a tie-on mask on a bare head
     base = dict(no_helmet=True, suit="#e9eded", boot="#b0bcbc", coat=True,
                 hair="sleek", hair_col="#4c3323")
-    pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 158), (48, 158)], "#f0f4f4")
+    pre = op_s([(53, WAIST - 2), (87, WAIST - 2), (89, 158), (51, 158)], "#f0f4f4")
     post = (op_s([(58, 47), (82, 47), (80, 60), (60, 60)], "#dfeae6")                 # mask over nose + mouth
-            + bar(60, 50, 53, 45, 0.9, "#dfeae6") + bar(80, 50, 87, 45, 0.9, "#dfeae6")  # ear ties
-            + op_s([(56, 40), (84, 40), (81, 30), (70, 26), (59, 30)], "#dfeae6")      # scrub cap over the crown
-            + ocirc(*_arm_rot(-1, 57, 133), 3.6, "#eef2f2", d=1.0) + ocirc(*_arm_rot(1, 83, 133), 3.6, "#eef2f2", d=1.0)  # gloves
+            + bar(61, 50, 58.5, 45.5, 0.9, "#dfeae6")
+            + bar(79, 50, 81.5, 45.5, 0.9, "#dfeae6")                                 # ear ties
+            + op_s([(58, 40), (82, 40), (79, 30), (70, 26), (61, 30)], "#dfeae6")      # scrub cap over the crown
+            + ocirc(*_arm_rot(-1, 57, 135), 2.3, "#eef2f2", d=1.0)
+            + ocirc(*_arm_rot(1, 83, 135), 2.3, "#eef2f2", d=1.0)            # gloves
             + circ(70, 95, 2.0, "#e15a5a"))
     return base, pre, post
 
@@ -189,29 +194,30 @@ def surgeon():
 def researcher():
     base = dict(no_helmet=True, suit="#8c98a4", boot="#5c626c", coat=True, visor="#cfe0f0",
                 hair="sidepart", hair_col="#33241b")
-    pre = op_s([(50, WAIST - 2), (90, WAIST - 2), (92, 154), (48, 154)], "#9aa6b2")
+    pre = (op_s([(53, WAIST - 2), (87, WAIST - 2), (89, 154), (51, 154)], "#9aa6b2")
+           + op_s(rrect(77, 102, 11, 16, 2), "#7c8894")                          # specimen case (behind the arm)
+           + bar(79, 108, 86, 108, 0.9, "#5c626c") + bar(79, 114, 86, 114, 0.9, "#5c626c"))
     post = ("".join(bar(x, 74, x, 84, 1.4, c) for x, c in ((63, "#e15a5a"), (66, "#8fb9c8"), (69, "#e0c060")))  # pen array
-            + op_s(rrect(82, 102, 14, 18, 2), "#7c8894")                              # specimen case
-            + bar(84, 108, 94, 108, 0.9, "#5c626c") + bar(84, 114, 94, 114, 0.9, "#5c626c"))
+)
     return base, pre, post
 
 
 def civilian():
     base = dict(no_helmet=True, suit="#606e78", boot="#3c4248",
                 hair="crop", hair_col="#6a3320")
+    pre = op_s(rrect(78, 102, 11, 18, 3), "#54606a")                                  # satchel, behind the arm
     post = (op_s([(59, 63), (81, 63), (78, 73), (62, 73)], "#4c5860")                 # soft collar
-            + op_s(rrect(83, 98, 12, 20, 3), "#54606a")                               # a satchel
-            + rib([(59, 64), (89, 102)], 1.4, "#54606a"))                             # strap
-    return base, "", post
+            + rib([(60, 65), (84, 104)], 1.4, "#54606a"))                             # strap
+    return base, pre, post
 
 
 def smuggler():
     base = dict(no_helmet=True, suit="#2e3431", boot="#1e211f",
                 hair="stubble", hair_col="#1b191d")
     # a deep hood instead of a helmet + a long worn coat
-    pre = op_s([(46, WAIST), (94, WAIST), (98, 170), (42, 170)], "#262b28")
-    post = (op_s([(53, 50), (87, 50), (83, 26), (70, 19), (57, 26)], "#2a2f2c")       # hood
-            + poly([(58, 48), (82, 48), (78, 36), (62, 36)], "#14100f")               # hood shadow over the face
+    pre = op_s([(51, WAIST), (89, WAIST), (93, 170), (47, 170)], "#262b28")
+    post = (op_s([(57, 50), (83, 50), (80, 29), (70, 23), (60, 29)], "#2a2f2c")       # hood
+            + poly([(61, 48), (79, 48), (76, 37), (64, 37)], "#14100f")               # hood shadow over the face
             + circ(66, 44, 1.2, "#8a8f88") + circ(74, 44, 1.2, "#8a8f88")             # eyes in the dark
             + op_s([(62, 92), (78, 92), (76, 122), (64, 122)], "#20241f")             # inner-coat bulge (contraband)
             + bar(52, 122, 56, 110, 1.4, "#3a3f3b"))                                  # worn hem tear
@@ -223,11 +229,11 @@ def ranger():
                 hair="long", hair_col="#4c3323")
     pre = (op_s(rrect(48, 54, 44, 58, 6), "#2e3a36")                                  # big trek pack
            + op_s(rrect(46, 46, 48, 12, 4), "#5a4a36")                                # bedroll on top
-           + op_s([(49, WAIST), (91, WAIST), (95, 168), (45, 168)], "#33413c"))       # field-coat skirt
-    post = (op_s([(53, 48), (87, 48), (83, 26), (70, 18), (57, 26)], "#33413c")       # hood
+           + op_s([(52, WAIST), (88, WAIST), (91, 168), (49, 168)], "#33413c"))       # field-coat skirt
+    post = (op_s([(57, 48), (83, 48), (80, 29), (70, 23), (60, 29)], "#33413c")       # hood
             + rib([(50, 66), (60, 104), (64, 140)], 2.0, "#4a4038")                   # cross-body pack strap
             + circ(61, 74, 2.2, "#e0c060"))                                           # compass
-    pre = pre + op_s(rrect(85, BELT + 2, 7, 10, 1), "#26302c")                        # canteen on the hip (behind arm)
+    pre = pre + op_s(rrect(81, BELT + 2, 6, 9, 1), "#26302c")                         # canteen on the hip (behind arm)
     return base, pre, post
 
 

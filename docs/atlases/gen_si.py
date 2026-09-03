@@ -632,6 +632,9 @@ _HELM = build_hair_parts(HELMET_STYLE)
 
 
 def _helmet_extra():
+    """The shell, the brim and the rib. No chin strap: the shell is often
+    hidden under an outfit's own headgear, and then the strap is all that
+    shows - a stray coloured line down the side of the jaw."""
     line, xT = _HELM["line"], _HELM["xT"]
     N, W, flat = 20, 0.985, line(0) - 0.185
     top, bot = [], []
@@ -642,20 +645,21 @@ def _helmet_extra():
         top.append((x, y0 + 0.04))
         bot.append((x, min(y0 - 0.075, flat + 0.05 * t * t)))
     rib = [(-0.085, 0.78), (0.025, 0.78), (0.015, 1.40), (-0.075, 1.40)]
-    jaw = (-0.16, -0.42, -0.66, -0.82)
-    strap = ([(-(head_half_at(y) + 0.05), y) for y in jaw]
-             + [(-(head_half_at(y) - 0.03), y) for y in reversed(jaw)])
     return [{"p": rib, "t": "shade"},
-            {"p": strap, "t": "shade"},
-            {"p": top + bot[::-1], "t": "shade", "o": True},
-            {"c": (-0.03, 1.06, 0.175), "t": "shade"},
-            {"c": (-0.03, 1.06, 0.107), "f": "#f7f0d6"},
-            {"c": (-0.065, 1.088, 0.040), "f": "#ffffff"}]
+            {"p": top + bot[::-1], "t": "shade", "o": True}]
+
+
+# the lamp is a miner's fitting - opt in with lamp=True, or a flight helmet
+# ends up wearing a headtorch
+LAMP_PIECES = [{"c": (-0.03, 1.06, 0.175), "t": "shade"},
+               {"c": (-0.03, 1.06, 0.107), "f": "#f7f0d6"},
+               {"c": (-0.065, 1.088, 0.040), "f": "#ffffff"}]
 
 
 _HX = _helmet_extra()
-HELMET_LIST = _HELM["front"] + _HX               # rib, strap, brim, lamp
-HAT_LIST = _HELM["front"] + [_HX[0], _HX[2]]     # rib + brim, no lamp or strap
+HELMET_LIST = _HELM["front"] + _HX               # shell, rib, brim
+HELMET_LAMP_LIST = HELMET_LIST + LAMP_PIECES
+HAT_LIST = list(HELMET_LIST)
 
 
 def emit_hair(pieces, col, cx, cy, fr):
@@ -927,7 +931,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
                  badge_cross=False, belt=None, buckle=None, visor=None, harness=None,
                  harness_side="both", pod=None, blade=None, knee=None, torch=None,
                  hipline=False, helmet_ring=False, accent_dot=False,
-                 accent="#8fb9c8", eyes=True,
+                 accent="#8fb9c8", eyes=True, lamp=False,
                  hair=None, hair_col="#33241b", eye_col=IRIS, brow_col=None):
     leg = leg or boot
     sleeve = sleeve or suit
@@ -1072,7 +1076,7 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     _grp("body"); _gate(None)
     _gt = list(_GT)
     if long_torso:
-        _gt = _gt[:-1] + [(3.7, 14.6)]
+        _gt = _gt[:-1] + [(3.7, 10.6)]   # a coat hem, ~40% down the long leg
     torso = ([(_gx(-h), _gy(y)) for h, y in _gt]
              + [(_gx(h), _gy(y)) for h, y in reversed(_gt)])
     P.append(opoly(torso, suit, d=_FD))
@@ -1207,7 +1211,8 @@ def figure_parts(*, suit, boot, leg=None, sleeve=None, helmet=None, helmet_r=18,
     _grp("body")
     if helmet or hat:
         _gate("helmet_color" if helmet else None)
-        P.extend(emit_hair(HELMET_LIST if helmet else HAT_LIST,
+        P.extend(emit_hair((HELMET_LAMP_LIST if lamp else HELMET_LIST) if helmet
+                           else HAT_LIST,
                            helmet or hat, face_cx, face_cy, fr))
         _gate(None)
     elif hair and not cap:
