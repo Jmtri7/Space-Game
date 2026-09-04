@@ -9,9 +9,9 @@
   "camera_zoom": 2.0,
   "camera_zoom_min": 1.0,
   "camera_zoom_max": 7.0,
-  "interior_camera_zoom": 3.2,
-  "interior_camera_zoom_min": 1.75,
-  "interior_camera_zoom_max": 7.0,
+  "interior_camera_zoom": 14.0,
+  "interior_camera_zoom_min": 7.0,
+  "interior_camera_zoom_max": 21.0,
   "walking_speed": 2.0,
   "start": {
     "location": "station",
