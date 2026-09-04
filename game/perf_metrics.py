@@ -134,10 +134,17 @@ class PerfMetrics:
 metrics = PerfMetrics()
 
 
-def draw_overlay(surface):
+def draw_overlay(surface, zoom=None, zoom_kind=None):
     """Bottom-left translucent panel of `metrics`, drawn by `main.py` after
     the active screen's own draw() so it appears on every screen. No-op
-    unless `constants.DEBUG_MODE` (toggled with the backtick key)."""
+    unless `constants.DEBUG_MODE` (toggled with the backtick key).
+
+    zoom / zoom_kind: the active view's camera zoom factor and its kind
+    ("space" or "interior"), appended as one extra line when known - None on
+    a screen with no camera (menus, dialogs). main.py passes these in since
+    it's the one place that already knows which screen instance just drew;
+    zoom is an instantaneous camera value, not a frame-timing rolling stat,
+    so it bypasses PerfMetrics.record()/span() rather than being folded in."""
     if not constants.DEBUG_MODE:
         return
 
@@ -146,7 +153,11 @@ def draw_overlay(surface):
     pad = int(8 * ui_scale)
     line_h = font.get_linesize()
 
-    rendered = [font.render(text, True, (0, 255, 0)) for text in metrics.summary_lines()]
+    lines = metrics.summary_lines()
+    if zoom is not None:
+        lines.append(f"{zoom_kind} zoom  {zoom:.2f}x")
+
+    rendered = [font.render(text, True, (0, 255, 0)) for text in lines]
     width = max((s.get_width() for s in rendered), default=0) + pad * 2
     height = line_h * len(rendered) + pad * 2
 

@@ -577,7 +577,12 @@ The loop times each phase with `time.perf_counter()` deltas and feeds them to
 (it's a few `perf_counter` calls and deque appends per frame); only the
 bottom-left overlay that `perf_metrics.draw_overlay(screen)` paints is gated on
 `constants.DEBUG_MODE`. Everything shown is a rolling average + peak over the
-last `WINDOW` frames (~2 s).
+last `WINDOW` frames (~2 s), except the final `space zoom` / `interior zoom`
+line: an instantaneous read of whichever screen instance actually drew that
+frame's `camera_zoom` (`main.py` resolves this the same way its draw branches
+do, including through `pause`/`missions`/`shop` to the screen they overlay),
+passed straight into `draw_overlay()` rather than through `PerfMetrics`. Blank
+on a screen with no camera (menus, dialogs).
 
 **Agents — the frame budget.** The game holds 60 FPS by doing all of a frame's
 work (input + simulation + render + present) in **under 16.67 ms**. Monitor the

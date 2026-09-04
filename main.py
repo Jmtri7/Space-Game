@@ -1156,7 +1156,25 @@ def main():
                 set_screen_size(*screen.get_size())
 
             # DEBUG-only perf panel, drawn over whatever screen is active.
-            perf_metrics.draw_overlay(screen)
+            # Zoom is read off whichever screen instance actually drew this
+            # frame - "pause"/"missions"/"shop" draw a Space/interior screen
+            # behind their own overlay, so resolve through those the same
+            # way the draw branches above do.
+            _zoom_screen = current_screen
+            if _zoom_screen == "pause":
+                _zoom_screen = previous_screen
+            elif _zoom_screen == "missions":
+                _zoom_screen = missions_return_screen
+            elif _zoom_screen == "shop":
+                _zoom_screen = shop_return_screen
+            _zoom, _zoom_kind = None, None
+            if _zoom_screen == "game" and game_screen:
+                _zoom, _zoom_kind = game_screen.camera_zoom, "space"
+            elif _zoom_screen == "station" and station_interior:
+                _zoom, _zoom_kind = station_interior.camera_zoom, "interior"
+            elif _zoom_screen == "moon" and moon_interior:
+                _zoom, _zoom_kind = moon_interior.camera_zoom, "interior"
+            perf_metrics.draw_overlay(screen, zoom=_zoom, zoom_kind=_zoom_kind)
             t_after_render = time.perf_counter()
 
             pygame.display.flip()
