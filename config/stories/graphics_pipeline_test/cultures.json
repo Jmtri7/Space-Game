@@ -1,0 +1,12 @@
+{
+  "orbital_std": {
+    "name": "Standard Orbital",
+    "description": "Plain grey station build - pressed panel walls, a lit core, warm dock lamps. The baseline the pipeline test dresses everything in.",
+    "metal_color": [154, 164, 173],
+    "glass_color": [127, 216, 200],
+    "thrust_color": [255, 178, 87],
+    "wall_color": [44, 48, 55],
+    "floor_color": [92, 100, 109],
+    "wall_trim_color": [120, 130, 140]
+  }
+}

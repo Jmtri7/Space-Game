@@ -1,0 +1,27 @@
+{
+  "id": "graphics_pipeline_test",
+  "version": "0.1.0",
+  "name": "Graphics Pipeline Test",
+  "description": "A proving ground for the design-JSON graphics pipeline: one courier, one trade ring, one concourse. Not a story yet - a place to see the assets render in the engine.",
+  "difficulty": "normal",
+  "starting_system": "proving_ground",
+  "default_outfit": "civilian_femme",
+  "camera_zoom": 2.0,
+  "camera_zoom_min": 1.0,
+  "camera_zoom_max": 7.0,
+  "interior_camera_zoom": 3.2,
+  "interior_camera_zoom_min": 1.75,
+  "interior_camera_zoom_max": 7.0,
+  "walking_speed": 2.0,
+  "start": {
+    "location": "station",
+    "interior": "concourse",
+    "credits": 5000,
+    "ship": "courier",
+    "items": {},
+    "outfits": [],
+    "flags": {}
+  },
+  "jump": { "travel_frames": 150, "speed": 40, "arrival_distance": 1400, "self_min_distance": 3200 },
+  "ships": { "player_type": null }
+}

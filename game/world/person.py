@@ -267,8 +267,56 @@ class Person:
                 circle(surface, col, to_screen(*place(cx, cy + dy, grp, stance, arm)),
                        max(1, int(r * scale)))
 
+    def _draw_pipeline_body(self, surface):
+        """Draw a Person whose outfit names a design-pipeline body
+        (docs/GRAPHICS_PIPELINE.md): the body + its set's articles, expanded
+        once and deformed to the walk cycle. Colours are already resolved to
+        [r, g, b] by expand(); groups are irrelevant here - the list is drawn
+        back to front as returned. The body faces screen-left, so facing +1
+        mirrors x about self.x, exactly like the baked figure."""
+        from game.graphics import story_assets
+        story = self.outfit.get("_story")
+        rest = story_assets.body_frame(story, self.outfit, None)
+        if not rest:
+            return
+        k = min(1.0, self.walk_intensity)
+        if k > 0.02:
+            t = (self.walk_phase / (2 * math.pi)) % 1.0
+            full = story_assets.body_frame(story, self.outfit, t)
+            parts = [dict(fp, points=[[rx + (fx - rx) * k, ry + (fy - ry) * k]
+                                      for (rx, ry), (fx, fy) in zip(rp["points"], fp["points"])])
+                     for rp, fp in zip(rest, full)]
+        else:
+            parts = rest
+        f = -self.facing
+        aff = screen_affine()
+        polygon = aa.polygon
+        for p in parts:
+            pts = p.get("points")
+            if not pts or len(pts) < 3:
+                continue
+            col = p["color"]
+            col = self._hex(col) if isinstance(col, str) else tuple(col)
+            if aff:
+                a, tx, ty = aff
+                proj = [(round((self.x + gx * f) * a + tx), round((self.y + gy) * a + ty))
+                        for gx, gy in pts]
+            else:
+                proj = [to_screen(self.x + gx * f, self.y + gy) for gx, gy in pts]
+            polygon(surface, col, proj)
+
     def draw(self, surface):
         scale = get_scale()
+
+        if self.outfit.get("body"):
+            if self._walked_this_frame:
+                self._walked_this_frame = False
+            elif self.walk_intensity:
+                self.walk_intensity *= self.WALK_INTENSITY_DECAY
+                if self.walk_intensity < 0.01:
+                    self.walk_intensity = 0.0
+            self._draw_pipeline_body(surface)
+            return
 
         # Walk cycle: _advance_walk ramps walk_intensity in while moving;
         # ease it back out on any frame we didn't move. draw() is the one

@@ -2,17 +2,17 @@
   "identity": "The trade ring's public concourse: one wide hall with a docking bay off the east side. You enter from the west airlock, cross the hall past the central column, and pass through to the dock. A bench sits against the south wall.",
   "tier": "interior",
   "palette": "ship_std",
-  "units": "absolute local units, top-down, +y is south (screen-down). Player is 31 u tall, 7.4 u wide; lanes want >= 15 u clear.",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down). Lanes want >= 15 u clear.",
   "rooms": [
-    { "id": "hall", "material": "hull", "points": [ [ 0, 0 ], [ 120, 0 ], [ 120, 64 ], [ 0, 64 ] ] },
-    { "id": "dock", "material": "hull_dk", "points": [ [ 120, 14 ], [ 172, 14 ], [ 172, 50 ], [ 120, 50 ] ] }
+    { "id": "hall", "material": "hull", "points": [ [ 0, 0 ], [ 360, 0 ], [ 360, 200 ], [ 0, 200 ] ] },
+    { "id": "dock", "material": "hull_dk", "points": [ [ 360, 44 ], [ 520, 44 ], [ 520, 164 ], [ 360, 164 ] ] }
   ],
   "portals": [
-    { "id": "airlock", "to": "outside", "points": [ [ -3, 22 ], [ 1, 22 ], [ 1, 42 ], [ -3, 42 ] ] },
-    { "id": "dock_mouth", "between": [ "hall", "dock" ], "points": [ [ 118, 22 ], [ 122, 22 ], [ 122, 42 ], [ 118, 42 ] ] }
+    { "id": "airlock", "to": "outside", "points": [ [ -8, 78 ], [ 2, 78 ], [ 2, 126 ], [ -8, 126 ] ] },
+    { "id": "dock_mouth", "between": [ "hall", "dock" ], "points": [ [ 356, 78 ], [ 364, 78 ], [ 364, 126 ], [ 356, 126 ] ] }
   ],
   "placements": [
-    { "decoration": "column", "at": [ 60, 32 ], "angle": 0, "note": "on the centre-line on purpose; hall is built around it" },
-    { "decoration": "bench", "at": [ 26, 61.6 ], "angle": 0, "note": "flush to the south wall, clear of every lane" }
+    { "decoration": "column", "at": [ 180, 100 ], "angle": 0, "note": "on the centre-line on purpose; hall is built around it" },
+    { "decoration": "bench", "at": [ 74, 192 ], "angle": 0, "note": "flush to the south wall, clear of every lane" }
   ]
 }

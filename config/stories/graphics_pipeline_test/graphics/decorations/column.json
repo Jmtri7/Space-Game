@@ -1,14 +1,14 @@
 {
-  "identity": "A structural support column, octagonal in plan with a wider base ring. It stands on the concourse centre-line on purpose: the hall is built around it and traffic parts around it.",
+  "identity": "A structural support column, octagonal in plan with a wider base ring, about 0.7 m across. It stands on the concourse centre-line on purpose: the hall is built around it and traffic parts around it.",
   "tier": "decoration",
   "palette": "ship_std",
-  "units": "absolute local units, top-down, origin at the column axis.",
+  "units": "absolute local units (31 = player height), top-down, origin at the column axis.",
   "silhouette": [
-    { "group": "shaft", "material": "hull_dk", "note": "base ring",
-      "points": [ [ 0.0, -3.4 ], [ 2.4, -2.4 ], [ 3.4, 0.0 ], [ 2.4, 2.4 ], [ 0.0, 3.4 ], [ -2.4, 2.4 ], [ -3.4, 0.0 ], [ -2.4, -2.4 ] ] }
+    { "group": "shaft", "material": "hull_dk", "shade": false, "note": "base ring; flat - a crescent on a small top-down octagon reads as a broken ring",
+      "points": [ [ 0.0, -6.0 ], [ 4.24, -4.24 ], [ 6.0, 0.0 ], [ 4.24, 4.24 ], [ 0.0, 6.0 ], [ -4.24, 4.24 ], [ -6.0, 0.0 ], [ -4.24, -4.24 ] ] }
   ],
   "details": [
     { "group": "shaft", "material": "hull", "role": "detail", "min_px": 20, "note": "shaft",
-      "points": [ [ 0.0, -2.4 ], [ 1.7, -1.7 ], [ 2.4, 0.0 ], [ 1.7, 1.7 ], [ 0.0, 2.4 ], [ -1.7, 1.7 ], [ -2.4, 0.0 ], [ -1.7, -1.7 ] ] }
+      "points": [ [ 0.0, -4.2 ], [ 2.97, -2.97 ], [ 4.2, 0.0 ], [ 2.97, 2.97 ], [ 0.0, 4.2 ], [ -2.97, 2.97 ], [ -4.2, 0.0 ], [ -2.97, -2.97 ] ] }
   ]
 }

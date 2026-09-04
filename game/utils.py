@@ -442,6 +442,11 @@ def get_graphics_asset(story, asset_type, asset_id):
     graphics = load_json(f"config/stories/{story}/graphics.json") or {}
     asset_category = graphics.get(asset_type, {})
     asset = dict(asset_category.get(asset_id, {}))
+    if "design" in asset:
+        from game.graphics.story_assets import attach_design
+        attach_design(story, asset, kind=asset_type)
+    if asset_type == "outfits" and "body" in asset:
+        asset["_story"] = story          # Person needs it to expand the pipeline body
     return _resolve_culture_palette(story, asset)
 
 
@@ -450,6 +455,9 @@ def get_building_type(story, building_type_id):
     with culture colors resolved."""
     building_types = load_json(f"config/stories/{story}/building_types.json") or {}
     asset = dict(building_types.get(building_type_id, {}))
+    if "design" in asset:
+        from game.graphics.story_assets import attach_design
+        attach_design(story, asset, kind="decorations")
     return _resolve_culture_palette(story, asset)
 
 

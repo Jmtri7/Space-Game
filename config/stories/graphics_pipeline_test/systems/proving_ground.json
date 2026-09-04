@@ -1,0 +1,42 @@
+{
+  "name": "Proving Ground",
+  "description": "An empty parking orbit with one trade ring. Somewhere to look at the assets.",
+  "star_map_position": { "x": 0, "y": 0 },
+  "station_asset": "trade_ring",
+  "central_star": { "x": 0.5, "y": 0.5, "name": "PG-1", "size": 70, "color": [255, 214, 170] },
+  "player_start": { "x": 0.32, "y": 0.5 },
+  "star_seed": 4242,
+  "asteroid_field": { "per_chunk_range": [0, 1], "types": [
+    { "type": "gray_rock", "weight": 1, "size_range": [3, 10], "speed_range": [0.05, 0.2], "mine_yield": 8 }
+  ] },
+  "station": {
+    "x": 0.62,
+    "y": 0.42,
+    "name": "Trade Ring",
+    "interiors": {
+      "concourse": {
+        "label": "Concourse",
+        "culture": "orbital_std",
+        "portals": [
+          { "x": -2, "y": 102, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Hall", "polygon": [[0, 0], [360, 0], [360, 200], [0, 200]] },
+          { "label": "Dock", "polygon": [[356, 44], [520, 44], [520, 164], [356, 164]] }
+        ],
+        "decorations": [
+          { "layer": "floor", "shape": "line", "points": [[8, 100], [352, 100]], "color": [120, 130, 140], "width": 2 },
+          { "layer": "floor", "shape": "line", "points": [[360, 104], [512, 104]], "color": [120, 130, 140], "width": 2 }
+        ],
+        "structures": [
+          { "x": 180, "y": 100, "building_type": "pipeline_column" },
+          { "x": 74, "y": 192, "building_type": "pipeline_bench" }
+        ],
+        "npcs": [
+          { "name": "Deckhand", "x": 250, "y": 70, "behavior": "wander", "outfit": "civilian_masc",
+            "greeting": "Pipeline's holding together so far.", "dialogue_options": ["Leave"] }
+        ]
+      }
+    }
+  }
+}

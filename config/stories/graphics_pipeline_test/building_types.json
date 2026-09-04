@@ -1,0 +1,16 @@
+{
+  "pipeline_bench": {
+    "name": "Bench",
+    "description": "A slatted public bench. Furniture: a low collision footprint, placed clear of every traffic lane.",
+    "design": "decorations/bench",
+    "culture": "orbital_std",
+    "footprint": { "width": 24, "depth": 9 }
+  },
+  "pipeline_column": {
+    "name": "Support Column",
+    "description": "An octagonal structural column. The concourse is laid out around it, so it is allowed to stand on the centre-line.",
+    "design": "decorations/column",
+    "culture": "orbital_std",
+    "footprint": { "width": 13, "depth": 13 }
+  }
+}

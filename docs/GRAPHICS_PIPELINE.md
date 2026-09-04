@@ -402,6 +402,32 @@ player:
 | `person` | ~1× player | body section | as needed; face kit exempt |
 | `decoration` | 0.3–2× player | furniture, props | ~16 |
 
+## In the game
+
+The engine draws a pipeline asset through the **same `parts` list** the atlas
+renders — `WorldObject.draw_parts` already takes `{points, color}` polygons with
+`[r, g, b]` or `#hex` colours, which is exactly what `expand()` emits. Nothing
+is baked: the design JSON stays the only source of geometry, expanded at load
+and cached.
+
+- **Catalogue entries point at a design.** In `graphics.json` /
+  `building_types.json` an entry carries `"design": "<kind>/<name>"` (plus the
+  plain metadata the engine still needs — `size`, `rotation_speed`,
+  `local_points`, `culture`, `windows`, …) instead of an inline `parts` list.
+  `get_graphics_asset` / `get_building_type` call
+  `game/graphics/story_assets.py`'s `attach_design`, which runs `expand()` once
+  (cached) and fills in `parts`. Ships keep fractional coords (`Ship.draw`
+  passes `unit=size`); stations and decorations are scaled to absolute units
+  (`LandingSite.draw` / `draw_parts` use `unit=1`), and their `local_points`
+  are authored absolute to match.
+- **People.** An `outfits` entry names a pipeline body — `{body, set, palette}`.
+  `Person.draw` detects this and renders through `story_assets.body_frame`: the
+  body + its set's articles composed via `compose_worn`, expanded once, then
+  deformed each frame by `apply_walk` at the Person's own walk-cycle phase and
+  faded in by `walk_intensity`. The body faces screen-left, so `facing == 1`
+  mirrors x — same rule as the baked figure. The `default` story's baked
+  `person_figure` path is untouched.
+
 ## Atlas
 
 A design atlas is a generated page: one plate per asset, the specimen drawn by
@@ -487,23 +513,26 @@ mechanism on the **smallest asset that exercises it**.
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |
-| **H — in game** | the story boots and the renderer draws all of the above | screenshot from a running build |
+| **H — in game** ✅ | the story boots and the renderer draws all of the above | `graphics_pipeline_test` story: courier + trade ring in space, concourse + bench + column + pipeline-bodied walkers in the interior |
 
 Gates are sequential: B needs A, D needs B and C, E needs D, H needs everything.
 Move a gate or add one when the work shows a seam that needs sign-off.
 
 ## Minimal asset set (pipeline test)
 
-Until gate H passes, the `graphics_pipeline_test` story carries only what the
-gates need and no more:
+All eight gates pass. The `graphics_pipeline_test` story carries only what the
+gates needed and no more, and is a bootable story (`story.json` + one system +
+`concourse` interior; starts docked at the trade ring with a courier):
 
-- 1 body (`human`), 1 palette (`civilian`), `materials.json`
-- 3 articles — one top, one bottom, one footwear — and 1 set composing them
-- 1 ship, 1 station
-- 1 interior with 2 decorations (one that blocks a lane on purpose, one that
-  must not)
+- 2 bodies (`human_masc` / `human_femme`), 1 palette (`civilian`),
+  `materials.json`, `rig_walk.json`
+- articles — tops, bottoms, footwear, hair — and sets composing them
+- face kits (2 each of eyes / brows / nose / lips)
+- 1 ship (`courier`), 1 station (`trade_ring`)
+- 1 interior (`concourse`) with 2 decorations — `column` blocks a lane on
+  purpose (`blocks_lane`), `bench` must not
 
-New assets wait until the pipeline is proven end to end.
+Grow the set now by the per-asset gates, not the build gates.
 
 ## Authoring checklist
 

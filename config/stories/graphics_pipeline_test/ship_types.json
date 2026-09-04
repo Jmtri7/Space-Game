@@ -1,0 +1,19 @@
+{
+  "courier": {
+    "name": "Courier",
+    "description": "A blunt-nosed civilian courier - stubby delta hull, raised canopy, two outboard engine pods.",
+    "max_thrust": 0.14,
+    "max_velocity": 2.4,
+    "rotation_speed": 3.5,
+    "size": 11,
+    "color": [154, 164, 173],
+    "shape": "triangle",
+    "cost": 6000,
+    "cargo_capacity": 18,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.2 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85 },
+      { "id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55 }
+    ]
+  }
+}

@@ -1,20 +1,20 @@
 {
-  "identity": "A public bench seen top-down: two end skids and a slatted seat. A person sits along its length. Sits against a wall and never blocks a lane.",
+  "identity": "A public bench seen top-down: two end skids and a slatted seat, about 1.4 m long. A person sits along its length. Sits against a wall and never blocks a lane.",
   "tier": "decoration",
   "palette": "ship_std",
-  "units": "absolute local units, top-down, origin at the seat centre; +y is the wall side.",
+  "units": "absolute local units (31 = player height), top-down, origin at the seat centre; +y is the wall side.",
   "silhouette": [
-    { "group": "seat", "material": "hull_dk", "points": [ [ -5.0, -1.6 ], [ 5.0, -1.6 ], [ 5.0, 1.6 ], [ -5.0, 1.6 ] ] }
+    { "group": "seat", "material": "hull_dk", "points": [ [ -12.0, -4.0 ], [ 12.0, -4.0 ], [ 12.0, 4.0 ], [ -12.0, 4.0 ] ] }
   ],
   "details": [
     { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "front slat",
-      "points": [ [ -4.6, -1.3 ], [ 4.6, -1.3 ], [ 4.6, -0.35 ], [ -4.6, -0.35 ] ] },
+      "points": [ [ -11.0, -3.2 ], [ 11.0, -3.2 ], [ 11.0, -0.8 ], [ -11.0, -0.8 ] ] },
     { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "back slat",
-      "points": [ [ -4.6, 0.35 ], [ 4.6, 0.35 ], [ 4.6, 1.3 ], [ -4.6, 1.3 ] ] },
+      "points": [ [ -11.0, 0.8 ], [ 11.0, 0.8 ], [ 11.0, 3.2 ], [ -11.0, 3.2 ] ] },
     { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "left skid",
-      "points": [ [ -4.7, -1.5 ], [ -3.9, -1.5 ], [ -3.9, 1.5 ], [ -4.7, 1.5 ] ] },
+      "points": [ [ -11.4, -3.7 ], [ -9.4, -3.7 ], [ -9.4, 3.7 ], [ -11.4, 3.7 ] ] },
     { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "right skid",
-      "points": [ [ 3.9, -1.5 ], [ 4.7, -1.5 ], [ 4.7, 1.5 ], [ 3.9, 1.5 ] ] }
+      "points": [ [ 9.4, -3.7 ], [ 11.4, -3.7 ], [ 11.4, 3.7 ], [ 9.4, 3.7 ] ] }
   ],
-  "sit": [ [ -3.0, -0.2 ], [ 0.0, -0.2 ], [ 3.0, -0.2 ] ]
+  "sit": [ [ -7.0, -0.5 ], [ 0.0, -0.5 ], [ 7.0, -0.5 ] ]
 }
