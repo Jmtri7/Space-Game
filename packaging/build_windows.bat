@@ -22,6 +22,9 @@ REM onedir is a single real process and doesn't have that failure mode.
 python -m PyInstaller --onedir --windowed --name SpaceGame --distpath build\dist --workpath build\pyinstaller --specpath build\pyinstaller main.py
 
 xcopy /e /i /y config build\dist\SpaceGame\config >nul
+REM Design reference (HTML atlases under config\stories\*\atlases) is not
+REM runtime config - keep it out of the shipped build.
+for /d /r build\dist\SpaceGame\config %%d in (atlases) do rmdir /s /q "%%d" 2>nul
 
 echo.
 echo Build complete: build\dist\SpaceGame\SpaceGame.exe

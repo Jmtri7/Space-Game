@@ -16,7 +16,7 @@ that document as the work crosses areas. You should not need to read every doc.
 | Add or modify a menu, dialog, or screen transition | [UI_FLOW.md](UI_FLOW.md) | [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) |
 | Work on frame timing / performance / the perf panel | [UI_FLOW.md](UI_FLOW.md#frame-timing-metrics) | [PHYSICS.md](PHYSICS.md#frame-timing--smooth-motion--two-deliberate-tradeoffs) |
 | Add or edit sound / music | [SOUND.md](SOUND.md) | |
-| Create or edit a design atlas (asset mockups) | [DESIGN_ATLAS.md](DESIGN_ATLAS.md) | |
+| Add or change a graphic asset (ship, station, body, outfit, decoration, interior) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md) | [DESIGN_ATLAS.md](DESIGN_ATLAS.md) for the frozen `default`-story art |
 | Add an entity, screen, role/routine, or ship type | [ARCHITECTURE.md](ARCHITECTURE.md#extensibility-points) | [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) |
 | Generalise a repeated solution into a reusable pattern | [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) | |
 | Run tests, restart the game, write a commit message | [WORKFLOW.md](WORKFLOW.md) | |
@@ -47,9 +47,14 @@ that document as the work crosses areas. You should not need to read every doc.
 - **[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)** — reusable patterns discovered
   during development; the working principles (cross-cutting concerns,
   generalisation strategy); how to contribute a new pattern.
-- **[DESIGN_ATLAS.md](DESIGN_ATLAS.md)** — the committed HTML asset-mockup
-  pages: when to make one, how to keep it honest, the SVG→`parts`
-  extraction tooling, and the hard technical rules for the pages.
+- **[GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md)** — the current asset pipeline:
+  committed design JSON → `game/graphics/expand.py` → flat parts list, drawn
+  identically by the game and the atlas viewer. Materials, auto-shade, the
+  anchor/curve fitting model, the walk rig, LOD, collision, interiors, the
+  approval gates. Used by the `graphics_pipeline_test` story.
+- **[DESIGN_ATLAS.md](DESIGN_ATLAS.md)** — the retired atlas-generator toolchain
+  that built the `default` story's art. That art is now frozen, hand-maintained
+  source; the reference HTML mockups live in `config/stories/default/atlases/`.
 - **[SOUND.md](SOUND.md)** — the runtime sound board and procedurally generated
   background music (no asset files).
 - **[WORKFLOW.md](WORKFLOW.md)** — the edit → restart → test → commit loop,

@@ -37,12 +37,12 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color):
     [r,g,b], "#rrggbb", "metal", "glass", or "shade:<n>".
 
     The list is drawn back-to-front with **no synthesised outline of any
-    kind** - it's exactly the polygons and circles the atlas plate draws, and
-    an outline there is already its own slightly-larger polygon/circle part
-    sitting behind the fill (see docs/atlases/extract_atlas.py). So the
-    in-game silhouette matches the plate primitive-for-primitive, and the
-    outline scales with the shape instead of being a fixed-pixel border that
-    swallows a small ship's nose."""
+    kind** - it's exactly the polygons and circles the design defines, and an
+    outline (where one exists) is already its own slightly-larger
+    polygon/circle part sitting behind the fill. So the in-game silhouette
+    matches the design primitive-for-primitive, and the outline scales with
+    the shape instead of being a fixed-pixel border that swallows a small
+    ship's nose."""
     if not parts:
         return
     rad = math.radians(angle)

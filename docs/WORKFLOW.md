@@ -100,7 +100,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 ```
 
 Prefixes seen in history: `Feature:`, `Fix:`, `Improve:`, `controls:` (when a
-keyboard binding changed — see [CONTROLS.md](CONTROLS.md)), `atlas:` (when a
-design atlas needs reconciling — see [DESIGN_ATLAS.md](DESIGN_ATLAS.md)).
+keyboard binding changed — see [CONTROLS.md](CONTROLS.md)), `pipeline:` (asset
+pipeline / design JSON — see [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md)).
 
 Only commit or push when the user asks.

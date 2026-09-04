@@ -29,10 +29,8 @@ class Person:
         # drawn over the shared body below - helmet_color/suit_color/
         # boot_color/leg_color/sleeve_color, any of which may be absent.
         # None/{} means bare body, no outfit. The body silhouette itself is
-        # shared across everyone: it's extracted from the Standard Issue
-        # atlas figure into game/world/person_figure.py (see
-        # docs/atlases/build_person_figure.py), the same "atlas is the source
-        # of truth" pipeline ships and buildings use. An outfit recolours
+        # shared across everyone: frozen data in game/world/person_figure.py
+        # (see docs/DESIGN_ATLAS.md). An outfit recolours
         # that figure and switches on optional accessory pieces - each just
         # another colour key (helmet_color, shoulder_color, spike_color,
         # collar_color, chest_plate_color, sash_color, belt_color,
@@ -75,7 +73,7 @@ class Person:
 
     # The far limbs (the left-side groups) draw behind the torso, the near
     # limbs (right-side) in front - the small resting arm splay is baked into
-    # the figure geometry (gen_si.ARM_REST_DEG), not applied here.
+    # the figure geometry in person_figure.py, not applied here.
     _BACK_GROUPS = frozenset(("arm_l", "hand_l", "leg_l", "boot_l"))
     _FRONT_GROUPS = frozenset(("arm_r", "hand_r", "leg_r", "boot_r"))
 

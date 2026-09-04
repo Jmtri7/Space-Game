@@ -419,12 +419,14 @@ the currently defined cultures (e.g. the Vherathi Concord).
 - Implements `draw(surface)` — a face-on foot-to-head stack (two boots, two
   legs, a tapering torso with an arm per shoulder, a head), with the outfit's
   colors and accessory pieces drawn over the shared body shape (see below).
-  The silhouette + every accessory piece is **data**, extracted from the
-  Standard Issue atlas figure into `game/world/person_figure.py` by
-  `docs/atlases/build_person_figure.py` (same "atlas is the source of truth"
-  pipeline as ship/building `parts`); `draw()` resolves colour tokens per
+  The silhouette + every accessory piece is **data** in
+  `game/world/person_figure.py` (frozen hand-maintained source — see
+  [DESIGN_ATLAS.md](DESIGN_ATLAS.md)); `draw()` resolves colour tokens per
   outfit, applies the walk transform per animation group, and blits — it has
-  no body geometry of its own. See [DESIGN_ATLAS.md](DESIGN_ATLAS.md).
+  no body geometry of its own. A story whose `outfits` entry names a pipeline
+  body (`{body, set, palette}`) instead renders through
+  `game/graphics/story_assets.py` + `expand()` — see
+  [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md).
 - Provides `get_distance(x, y)` for interaction checks
 - Owns the shared **walk cycle**: `step_toward()` → `_advance_walk()` advances
   `walk_phase` by the distance walked and ramps `walk_intensity`; `draw()`
@@ -824,9 +826,11 @@ also carry an optional **`parts`** list — filled polygons / circles /
 polylines (each with a `color`) drawn back-to-front by
 `WorldObject.draw_parts()` with **no synthesised outline** (an outline is
 already its own slightly-larger polygon/circle part), for multi-shape detail
-the single base silhouette can't express (extracted from the design-atlas
-SVGs; see
-[DESIGN_ATLAS.md](DESIGN_ATLAS.md)). When `parts` is present it is the
+the single base silhouette can't express. For the `default` story these lists
+are frozen data in `config/stories/default/graphics.json` /
+`building_types.json` ([DESIGN_ATLAS.md](DESIGN_ATLAS.md)); a pipeline story's
+entry instead names a `"design"` and `expand()` fills `parts` at load
+([GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md)). When `parts` is present it is the
 *whole* drawn silhouette — `Ship.draw` / `LandingSite._draw_station` skip the
 flat base polygon and the `windows` dots entirely — but `shape` / dims /
 `local_points` still drive `_building_footprint` / `_structure_depth` /

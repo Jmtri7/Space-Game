@@ -183,7 +183,8 @@ only appears under a section if it currently has items there.
 
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame
       already handles that.
-- [ ] Verify the graphics extractor actually writes extracted graphics into the
-      config JSON.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
       user who wants help creating one.
+- [ ] Migrate the `default` story onto the design-JSON pipeline
+      (docs/GRAPHICS_PIPELINE.md) so its art is regenerable again, then drop
+      `person_figure.py` / `figure_signatures.py` and the old draw paths.
