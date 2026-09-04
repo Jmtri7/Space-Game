@@ -1,0 +1,80 @@
+{
+  "identity": "A civilian trade ring — an octagonal hub on four spokes, each ending in a blocky docking pod, with a thin wheel rim linking the pods. A lit core at the centre. Reads at a distance as a bright-cored cross inside a ring.",
+  "tier": "station",
+  "palette": "ship_std",
+  "size": 46,
+  "scale_note": "about 30x the player tall; you dock at one of the four pods.",
+  "units": "fractions of `size`; radially symmetric, so orientation is free.",
+  "silhouette": [
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70, "note": "wheel rim, octant 1 of 8 - built as radial trapezoids so the centre stays open space",
+      "points": [ [ 0.0, -0.82 ], [ 0.58, -0.58 ], [ 0.735, -0.735 ], [ 0.0, -1.04 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ 0.58, -0.58 ], [ 0.82, 0.0 ], [ 1.04, 0.0 ], [ 0.735, -0.735 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ 0.82, 0.0 ], [ 0.58, 0.58 ], [ 0.735, 0.735 ], [ 1.04, 0.0 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ 0.58, 0.58 ], [ 0.0, 0.82 ], [ 0.0, 1.04 ], [ 0.735, 0.735 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ 0.0, 0.82 ], [ -0.58, 0.58 ], [ -0.735, 0.735 ], [ 0.0, 1.04 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ -0.58, 0.58 ], [ -0.82, 0.0 ], [ -1.04, 0.0 ], [ -0.735, 0.735 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ -0.82, 0.0 ], [ -0.58, -0.58 ], [ -0.735, -0.735 ], [ -1.04, 0.0 ] ] },
+    { "group": "rim", "material": "hull_dk", "flatten_px": 70,
+      "points": [ [ -0.58, -0.58 ], [ 0.0, -0.82 ], [ 0.0, -1.04 ], [ -0.735, -0.735 ] ] },
+    {
+      "group": "spokes", "material": "hull", "flatten_px": 55, "shade": false,
+      "note": "the four spokes as one plus-shape from the hub to the pods; drawn flat (a crescent on a concave plus reads as a spike into the centre).",
+      "points": [
+        [ -0.15, -0.92 ], [ 0.15, -0.92 ], [ 0.15, -0.15 ],
+        [ 0.92, -0.15 ], [ 0.92, 0.15 ], [ 0.15, 0.15 ],
+        [ 0.15, 0.92 ], [ -0.15, 0.92 ], [ -0.15, 0.15 ],
+        [ -0.92, 0.15 ], [ -0.92, -0.15 ], [ -0.15, -0.15 ]
+      ]
+    },
+    {
+      "group": "hub", "material": "hull", "flatten_px": 45, "shade": false,
+      "note": "octagonal core hull; drawn flat - too small for a crescent to read as anything but a spike.",
+      "points": [
+        [ 0.0, -0.34 ], [ 0.24, -0.24 ], [ 0.34, 0.0 ], [ 0.24, 0.24 ],
+        [ 0.0, 0.34 ], [ -0.24, 0.24 ], [ -0.34, 0.0 ], [ -0.24, -0.24 ]
+      ]
+    },
+    {
+      "group": "core", "material": "glass", "flatten_px": 200, "shade": false,
+      "note": "the lit core; flat, the glow gives it life.",
+      "points": [
+        [ 0.0, -0.15 ], [ 0.11, -0.11 ], [ 0.15, 0.0 ], [ 0.11, 0.11 ],
+        [ 0.0, 0.15 ], [ -0.11, 0.11 ], [ -0.15, 0.0 ], [ -0.11, -0.11 ]
+      ]
+    },
+    {
+      "group": "pod_n", "material": "hull_dk", "flatten_px": 60,
+      "points": [ [ -0.26, -1.12 ], [ 0.26, -1.12 ], [ 0.34, -0.94 ], [ 0.26, -0.8 ], [ -0.26, -0.8 ], [ -0.34, -0.94 ] ] },
+    {
+      "group": "pod_s", "material": "hull_dk", "flatten_px": 60,
+      "points": [ [ -0.26, 1.12 ], [ 0.26, 1.12 ], [ 0.34, 0.94 ], [ 0.26, 0.8 ], [ -0.26, 0.8 ], [ -0.34, 0.94 ] ] },
+    {
+      "group": "pod_e", "material": "hull_dk", "flatten_px": 60,
+      "points": [ [ 1.12, -0.26 ], [ 1.12, 0.26 ], [ 0.94, 0.34 ], [ 0.8, 0.26 ], [ 0.8, -0.26 ], [ 0.94, -0.34 ] ] },
+    {
+      "group": "pod_w", "material": "hull_dk", "flatten_px": 60,
+      "points": [ [ -1.12, -0.26 ], [ -1.12, 0.26 ], [ -0.94, 0.34 ], [ -0.8, 0.26 ], [ -0.8, -0.26 ], [ -0.94, -0.34 ] ] }
+  ],
+  "details": [
+    { "group": "hub", "material": "lamp", "role": "detail", "min_px": 18,
+      "note": "core glow", "circle": [ 0.0, 0.0, 0.22 ] },
+    { "group": "spokes", "material": "hull_dk", "role": "detail", "min_px": 90,
+      "note": "window band, N spoke", "points": [ [ -0.1, -0.85 ], [ 0.1, -0.85 ], [ 0.1, -0.28 ], [ -0.1, -0.28 ] ] },
+    { "group": "spokes", "material": "hull_dk", "role": "detail", "min_px": 90,
+      "note": "window band, E spoke", "points": [ [ 0.28, -0.1 ], [ 0.85, -0.1 ], [ 0.85, 0.1 ], [ 0.28, 0.1 ] ] },
+    { "group": "spokes", "material": "hull_dk", "role": "detail", "min_px": 90,
+      "note": "window band, S spoke", "points": [ [ -0.1, 0.28 ], [ 0.1, 0.28 ], [ 0.1, 0.85 ], [ -0.1, 0.85 ] ] },
+    { "group": "spokes", "material": "hull_dk", "role": "detail", "min_px": 90,
+      "note": "window band, W spoke", "points": [ [ -0.85, -0.1 ], [ -0.28, -0.1 ], [ -0.28, 0.1 ], [ -0.85, 0.1 ] ] },
+    { "group": "pod_n", "material": "lamp", "role": "detail", "min_px": 30, "note": "dock light", "circle": [ 0.0, -1.06, 0.05 ] },
+    { "group": "pod_s", "material": "lamp", "role": "detail", "min_px": 30, "note": "dock light", "circle": [ 0.0, 1.06, 0.05 ] },
+    { "group": "pod_e", "material": "lamp", "role": "detail", "min_px": 30, "note": "dock light", "circle": [ 1.06, 0.0, 0.05 ] },
+    { "group": "pod_w", "material": "lamp", "role": "detail", "min_px": 30, "note": "dock light", "circle": [ -1.06, 0.0, 0.05 ] }
+  ]
+}

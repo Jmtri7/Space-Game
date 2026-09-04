@@ -1,0 +1,21 @@
+{
+  "identity": "soft nose",
+  "details": [
+    {
+      "material": "skin",
+      "tone": "dark",
+      "note": "nose bridge shadow, short and soft, near side of centre",
+      "points": [ [ -0.3, -28.8 ], [ -0.22, -28.2 ], [ -0.09, -28.11 ], [ -0.15, -28.75 ] ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "material": "skin",
+      "tone": "dark",
+      "note": "nose tip, soft",
+      "points": [ [ -0.05, -28.1 ], [ 0.13, -28.03 ], [ 0.2, -27.83 ], [ 0.06, -27.69 ], [ -0.12, -27.75 ], [ -0.17, -27.93 ] ],
+      "group": "face",
+      "role": "detail"
+    }
+  ]
+}

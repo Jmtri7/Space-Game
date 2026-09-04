@@ -1,0 +1,4 @@
+{
+  "identity": "Bench footprint: the seat plus a small margin. Solid to walkers; must be placed clear of every lane.",
+  "footprint": [ [ -5.0, -1.8 ], [ 5.0, -1.8 ], [ 5.0, 1.8 ], [ -5.0, 1.8 ] ]
+}

@@ -1,0 +1,43 @@
+{
+  "identity": "Long. A wide sheet falls behind the body past the shoulders; a solid cap over the scalp and a panel down each side beside the face.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "under": [ "torso" ],
+      "material": "hair",
+      "note": "back sheet - behind the whole body, only what clears the silhouette shows (beside the neck, past the shoulders).",
+      "points": [ [ 2.1, -30.8 ], [ 2.8, -27.0 ], [ 2.4, -22.4 ], [ 0.0, -21.6 ], [ -2.7, -22.4 ], [ -3.05, -27.0 ], [ -2.35, -30.8 ], [ -0.3, -32.1 ] ]
+    },
+    {
+      "group": "torso",
+      "over": [ "head" ],
+      "material": "hair",
+      "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
+      "points": [ [ 1.35, -29.2 ], [ -2.2, -28.5 ], [ -2.5, -30.4 ], [ -1.6, -31.8 ], [ -0.3, -32.1 ], [ 1.1, -31.7 ], [ 2.15, -30.3 ], [ 1.85, -28.5 ] ],
+      "fits": [
+        {
+          "curve": "head.hairline",
+          "from": 0,
+          "to": 0
+        }
+      ]
+    },
+    {
+      "group": "torso",
+      "over": [ "head" ],
+      "material": "hair",
+      "note": "near-side panel, beside the cheek, past the jaw.",
+      "points": [ [ 2.2, -29.0 ], [ 2.5, -26.0 ], [ 2.0, -24.8 ], [ 1.5, -26.8 ], [ 1.6, -28.9 ] ]
+    },
+    {
+      "group": "torso",
+      "over": [ "head" ],
+      "material": "hair",
+      "note": "far-side panel.",
+      "points": [ [ -2.55, -29.0 ], [ -2.85, -26.0 ], [ -2.35, -24.8 ], [ -1.9, -26.8 ], [ -2.0, -28.9 ] ]
+    }
+  ]
+}

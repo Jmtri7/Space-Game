@@ -1,0 +1,29 @@
+{
+  "identity": "Pulled back sleek to a round bun behind the crown.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "under": [ "head" ],
+      "material": "hair",
+      "note": "the knot, behind the head; only what clears the skull shows.",
+      "points": [ [ -1.6, -31.0 ], [ -2.6, -31.2 ], [ -2.95, -30.5 ], [ -2.9, -29.5 ], [ -2.35, -29.1 ], [ -1.65, -29.5 ] ]
+    },
+    {
+      "group": "torso",
+      "over": [ "head" ],
+      "material": "hair",
+      "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
+      "points": [ [ 1.35, -29.2 ], [ -2.0, -28.7 ], [ -2.15, -30.1 ], [ -1.4, -31.4 ], [ -0.3, -31.6 ], [ 0.7, -31.4 ], [ 1.65, -30.1 ], [ 1.55, -28.7 ] ],
+      "fits": [
+        {
+          "curve": "head.hairline",
+          "from": 0,
+          "to": 0
+        }
+      ]
+    }
+  ]
+}

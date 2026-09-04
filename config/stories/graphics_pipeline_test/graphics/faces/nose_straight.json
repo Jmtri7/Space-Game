@@ -1,0 +1,21 @@
+{
+  "identity": "straight nose",
+  "details": [
+    {
+      "material": "skin",
+      "tone": "dark",
+      "note": "nose bridge shadow, straight",
+      "points": [ [ -0.36, -28.95 ], [ -0.3, -28.1 ], [ -0.12, -27.99 ], [ -0.2, -28.9 ] ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "material": "skin",
+      "tone": "dark",
+      "note": "nose tip, broader",
+      "points": [ [ -0.1, -28.01 ], [ 0.16, -27.95 ], [ 0.26, -27.73 ], [ 0.12, -27.55 ], [ -0.14, -27.61 ], [ -0.22, -27.81 ] ],
+      "group": "face",
+      "role": "detail"
+    }
+  ]
+}

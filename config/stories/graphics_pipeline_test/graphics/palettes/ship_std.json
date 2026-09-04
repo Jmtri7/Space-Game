@@ -1,0 +1,10 @@
+{
+  "identity": "Standard civilian ship palette: pale grey hull, a darker structural grey, teal canopy glass, a warm thruster glow.",
+  "hull": "#9aa4ad",
+  "hull_dk": "#5c646d",
+  "engine": "#43484f",
+  "metal": "#7c828b",
+  "glass": "#7fd8c8",
+  "lamp": "#ffd98a",
+  "thrust": "#ffb257"
+}

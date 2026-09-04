@@ -1,0 +1,54 @@
+{
+  "identity": "Plain denim trousers, an alternative to the skirt. A hip panel plus a fitted tube down each leg to the ankle. Each tube's top is the leg's own dome, so it swings with the leg exactly as the bare leg does; the hip panel is drawn last and reaches wide enough to stay over the tube tops through the whole stride.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "leg_far", "material": "denim",
+      "note": "far leg tube. 0 fits leg_far.leg_far_top (dome), 1 fits leg_far.leg_far_out (down the outside), 3 fits leg_far.inseam reversed (ankle->centre); 2 the ankle hem, 4 crosses the centre so it overlaps the near leg.",
+      "points": [
+        [ -0.12, -15.4 ],
+        [ -3.0, -14.9 ],
+        [ -1.3, -1.2 ],
+        [ -0.9, -1.6 ],
+        [ 0.5, -13.6 ]
+      ],
+      "fits": [
+        { "curve": "leg_far.leg_far_top", "from": 0, "to": 0 },
+        { "curve": "leg_far.leg_far_out", "from": 1, "to": 1 },
+        { "curve": "leg_far.inseam", "from": 3, "to": 3, "reverse": true }
+      ]
+    },
+    {
+      "group": "leg_near", "material": "denim",
+      "note": "near leg tube.",
+      "points": [
+        [ 0.12, -15.4 ],
+        [ 3.0, -14.9 ],
+        [ 1.3, -1.2 ],
+        [ 0.9, -1.6 ],
+        [ -0.5, -13.6 ]
+      ],
+      "fits": [
+        { "curve": "leg_near.leg_near_top", "from": 0, "to": 0 },
+        { "curve": "leg_near.leg_near_out", "from": 1, "to": 1 },
+        { "curve": "leg_near.inseam", "from": 3, "to": 3, "reverse": true }
+      ]
+    },
+    {
+      "group": "torso", "over": ["leg_near"], "material": "denim",
+      "note": "hip panel / seat, drawn last. Its whole outline is the wearer's lower torso: 0 fits torso.low_waist across the top, 1 fits torso.lower_torso_right down the right side and underside to the crotch, 2 fits torso.lower_torso_left reversed back up the left. Sits flush with the body, never proud of it.",
+      "points": [
+        [ 0.0, -17.2 ],
+        [ 3.1, -16.6 ],
+        [ -3.1, -16.6 ]
+      ],
+      "fits": [
+        { "curve": "torso.low_waist", "from": 0, "to": 0 },
+        { "curve": "torso.lower_torso_right", "from": 1, "to": 1 },
+        { "curve": "torso.lower_torso_left", "from": 2, "to": 2, "reverse": true }
+      ]
+    }
+  ]
+}

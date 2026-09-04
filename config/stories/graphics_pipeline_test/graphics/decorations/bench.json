@@ -1,0 +1,20 @@
+{
+  "identity": "A public bench seen top-down: two end skids and a slatted seat. A person sits along its length. Sits against a wall and never blocks a lane.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "units": "absolute local units, top-down, origin at the seat centre; +y is the wall side.",
+  "silhouette": [
+    { "group": "seat", "material": "hull_dk", "points": [ [ -5.0, -1.6 ], [ 5.0, -1.6 ], [ 5.0, 1.6 ], [ -5.0, 1.6 ] ] }
+  ],
+  "details": [
+    { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "front slat",
+      "points": [ [ -4.6, -1.3 ], [ 4.6, -1.3 ], [ 4.6, -0.35 ], [ -4.6, -0.35 ] ] },
+    { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "back slat",
+      "points": [ [ -4.6, 0.35 ], [ 4.6, 0.35 ], [ 4.6, 1.3 ], [ -4.6, 1.3 ] ] },
+    { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "left skid",
+      "points": [ [ -4.7, -1.5 ], [ -3.9, -1.5 ], [ -3.9, 1.5 ], [ -4.7, 1.5 ] ] },
+    { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "right skid",
+      "points": [ [ 3.9, -1.5 ], [ 4.7, -1.5 ], [ 4.7, 1.5 ], [ 3.9, 1.5 ] ] }
+  ],
+  "sit": [ [ -3.0, -0.2 ], [ 0.0, -0.2 ], [ 3.0, -0.2 ] ]
+}

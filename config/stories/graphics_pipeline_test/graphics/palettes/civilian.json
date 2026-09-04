@@ -1,0 +1,17 @@
+{
+  "identity": "Default civilian palette: warm neutral skin, muted workaday cloth.",
+  "skin": "#c69b74",
+  "hair": "#3b2b21",
+  "eye": "#5a4633",
+  "sclera": "#efe8db",
+  "iris": "#6b4a2e",
+  "pupil": "#1a1109",
+  "lip": "#b07a63",
+  "cloth": "#8a8f98",
+  "denim": "#4d5a6b",
+  "leather": "#6b4a35",
+  "knit": "#9a8c6f",
+  "metal": "#9298a0",
+  "glass": "#bfe6dd",
+  "lamp": "#ffd98a"
+}

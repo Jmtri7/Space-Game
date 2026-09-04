@@ -1,0 +1,22 @@
+{
+  "identity": "A short crop. A solid cap over the scalp coming down just past the temples.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [ "head" ],
+      "material": "hair",
+      "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
+      "points": [ [ 1.35, -29.2 ], [ -2.2, -28.5 ], [ -2.5, -30.4 ], [ -1.6, -31.7 ], [ -0.3, -32.0 ], [ 1.1, -31.6 ], [ 2.1, -30.2 ], [ 1.8, -28.5 ] ],
+      "fits": [
+        {
+          "curve": "head.hairline",
+          "from": 0,
+          "to": 0
+        }
+      ]
+    }
+  ]
+}

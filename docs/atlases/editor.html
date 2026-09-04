@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Graphics Pipeline - vertex editor</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #15171c; color: #c9ccd2;
+         font: 13px/1.5 system-ui, sans-serif; height: 100vh; display: flex; }
+  #side { width: 260px; flex: 0 0 260px; background: #1b1e24; border-right: 1px solid #2a2e37;
+          padding: 12px; overflow-y: auto; }
+  #stage { flex: 1; position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; display: block; background: #0d0f13; touch-action: none; }
+  h1 { font-size: 14px; margin: 0 0 10px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #8a94a6;
+       margin: 16px 0 6px; }
+  button { font: inherit; background: #2a2f3a; color: #d9dce2; border: 1px solid #3a4150;
+           border-radius: 5px; padding: 5px 9px; cursor: pointer; }
+  button:hover { background: #333a47; }
+  button.on { background: #3f5a70; border-color: #5a7f9a; }
+  label { display: flex; align-items: center; gap: 6px; margin: 3px 0; cursor: pointer; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  select, input[type=number] { font: inherit; background: #12141a; color: #d9dce2;
+           border: 1px solid #3a4150; border-radius: 4px; padding: 3px 5px; }
+  #secList label { justify-content: flex-start; gap: 6px; }
+  #secList .nm { flex: 1; }
+  #secList .nm.sel { color: #9fd0e6; font-weight: 600; }
+  #secList .eye { padding: 0; width: 20px; height: 20px; line-height: 1; font-size: 11px;
+                  border-radius: 4px; color: #9fd0e6; }
+  #secList .eye:hover { background: #3a4150; }
+  #out { width: 100%; height: 160px; font: 11px/1.4 ui-monospace, monospace;
+         background: #12141a; color: #b9c2cc; border: 1px solid #2a2e37; border-radius: 5px;
+         padding: 6px; resize: vertical; }
+  #hud { position: absolute; left: 10px; bottom: 10px; font: 11px ui-monospace, monospace;
+         color: #8a94a6; background: #12141ac0; padding: 4px 8px; border-radius: 4px; }
+  #drop { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+          background: #0d0f13d0; font-size: 16px; color: #9fd0e6; pointer-events: none; }
+  .hint { color: #6b7280; font-size: 11px; margin: 4px 0; }
+  .handle { fill: #ffcf6a; stroke: #1b1e24; stroke-width: 1; cursor: grab; }
+  .handle.shade { fill: #79b7ff; }
+  .handle.detail { fill: #9be07a; }
+  .edge { stroke: #ffcf6a55; stroke-width: 1; fill: none; pointer-events: stroke; cursor: copy; }
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>Vertex editor</h1>
+  <div class="row">
+    <button id="load">Load file</button>
+    <button id="loadBox">Load ← box</button>
+    <button id="reset">Reset</button>
+  </div>
+  <input type="file" id="file" accept=".json" hidden>
+  <div class="hint">Drag a <code>body/*.json</code> onto the canvas, click Load file, or paste JSON into the Output box and hit "Load ← box". Kept in this browser between visits.</div>
+
+  <h2>View</h2>
+  <label><input type="checkbox" id="tShade" checked> shading</label>
+  <label><input type="checkbox" id="tHandles" checked> vertex handles</label>
+  <label><input type="checkbox" id="tEdges" checked> insert points (edge click)</label>
+  <label><input type="checkbox" id="tSplay" checked> apply rest_splay</label>
+  <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
+  <label><input type="checkbox" id="tSnap"> snap 0.05</label>
+  <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
+
+  <h2>Sections</h2>
+  <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
+  <div id="secList"></div>
+
+  <h2>Selected section</h2>
+  <div id="secEdit"><div class="hint">none</div></div>
+
+  <h2>Output</h2>
+  <div class="row">
+    <button id="copy">Copy</button>
+    <button id="dl">Download</button>
+    <button id="undo">Undo (Z)</button>
+  </div>
+  <textarea id="out" spellcheck="false"></textarea>
+</div>
+<div id="stage">
+  <svg id="svg"></svg>
+  <div id="hud"></div>
+  <div id="drop">drop body JSON</div>
+</div>
+
+<script>
+// ---- embedded materials + palette (small, rarely change) -------------------
+const MATERIALS = {
+  light: [-0.82, -0.57],
+  scale: { PLAYER_H: 31.0 },
+  materials: {
+    skin:{tone_dark:-26,tone_light:18}, hair:{tone_dark:-22,tone_light:24},
+    eye:{tone_dark:-12,tone_light:12}, cloth:{tone_dark:-30,tone_light:22},
+    denim:{tone_dark:-26,tone_light:18}, leather:{tone_dark:-34,tone_light:16},
+    knit:{tone_dark:-24,tone_light:20}, metal:{tone_dark:-40,tone_light:48},
+    glass:{tone_dark:-20,tone_light:44}, lamp:{tone_dark:0,tone_light:0,emissive:true}
+  }
+};
+const PALETTE = { skin:"#c69b74", hair:"#3b2b21", eye:"#5a4633", cloth:"#8a8f98",
+  denim:"#4d5a6b", leather:"#6b4a35", knit:"#9a8c6f", metal:"#9298a0",
+  glass:"#bfe6dd", lamp:"#ffd98a" };
+const MATNAMES = Object.keys(MATERIALS.materials);
+
+// ---- colour + shading: hand-port of game/graphics/expand.py ---------------
+// Keep in sync with expand.py (_crescent, shade_bands, resolve_color).
+function hexToRgb(s){s=s.replace('#','');return [0,2,4].map(i=>parseInt(s.substr(i,2),16));}
+function clamp(c){return Math.max(0,Math.min(255,Math.round(c)));}
+function resolveColor(mat, tone){
+  let base = Array.isArray(mat) ? mat.slice() : (mat[0]==='#' ? hexToRgb(mat) : hexToRgb(PALETTE[mat]));
+  const spec = MATERIALS.materials[mat] || {};
+  const d = tone==='dark' ? (spec.tone_dark??-28) : tone==='light' ? (spec.tone_light??22) : 0;
+  return base.map(v=>clamp(v+d));
+}
+function rgb(c){return `rgb(${c[0]},${c[1]},${c[2]})`;}
+function signedArea(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=a[0]*b[1]-b[0]*a[1];}return s/2;}
+function vnorms(p){const m=p.length,o=[];for(let i=0;i<m;i++){const p0=p[(i-1+m)%m],p1=p[i],p2=p[(i+1)%m];let nx=0,ny=0;
+  for(const[a,b]of[[p0,p1],[p1,p2]]){nx+=b[1]-a[1];ny-=b[0]-a[0];}const n=Math.hypot(nx,ny)||1;o.push([nx/n,ny/n]);}return o;}
+function extentAlong(p,nx,ny){const v=p.map(q=>nx*q[0]+ny*q[1]);return [Math.min(...v),Math.max(...v)];}
+function rayHit(px,py,dx,dy,pts){let best=Infinity;const m=pts.length;
+  for(let i=0;i<m;i++){const a=pts[i],b=pts[(i+1)%m];const ex=b[0]-a[0],ey=b[1]-a[1];const den=dx*ey-dy*ex;
+   if(Math.abs(den)<1e-9)continue;const t=((a[0]-px)*ey-(a[1]-py)*ex)/den;const u=((a[0]-px)*dy-(a[1]-py)*dx)/den;
+   if(t>1e-6&&u>=-1e-6&&u<=1+1e-6&&t<best)best=t;}return best;}
+function runs(flags){const m=flags.length;if(flags.every(x=>x))return[[...Array(m).keys()]];if(!flags.some(x=>x))return[];
+  let R=[],cur=[];for(let i=0;i<m;i++){if(flags[i])cur.push(i);else if(cur.length){R.push(cur);cur=[];}}
+  if(cur.length)R.push(cur);if(R.length>=2&&R[0][0]===0&&R[R.length-1][R[R.length-1].length-1]===m-1){R[0]=R.pop().concat(R[0]);}
+  return R.filter(r=>r.length>=2);}
+function relax(ch,k,w){for(let n=0;n<k;n++){const o=[ch[0]];for(let i=1;i<ch.length-1;i++)o.push(ch[i]+w*((ch[i-1]+ch[i+1])/2-ch[i]));o.push(ch[ch.length-1]);ch=o;}return ch;}
+function crescent(region,ldir,maxFrac,capFrac,thresh){
+  let pts = signedArea(region)>0 ? region : region.slice().reverse();
+  const m=pts.length; if(m<4)return[];
+  const[dx,dy]=ldir; const nrm=vnorms(pts);
+  const face=nrm.map(([nx,ny])=>nx*dx+ny*dy);
+  const perp=extentAlong(pts,-dy,dx); const reach=(perp[1]-perp[0])||1;
+  if(reach<0.9)return[];
+  const maxDepth=reach*maxFrac;
+  const rs=runs(face.map(f=>f>thresh)); if(!rs.length)return[];
+  const run=rs.reduce((a,b)=>b.length>a.length?b:a);
+  const dense=[];
+  for(let k=0;k<run.length-1;k++){const a=pts[run[k]],b=pts[run[k+1]],na=nrm[run[k]],nb=nrm[run[k+1]];
+    for(const s of[0,1/3,2/3]){let nx=na[0]+s*(nb[0]-na[0]),ny=na[1]+s*(nb[1]-na[1]);const nl=Math.hypot(nx,ny)||1;
+      dense.push([a[0]+s*(b[0]-a[0]),a[1]+s*(b[1]-a[1]),nx/nl,ny/nl]);}}
+  dense.push([pts[run[run.length-1]][0],pts[run[run.length-1]][1],nrm[run[run.length-1]][0],nrm[run[run.length-1]][1]]);
+  const r=dense.length;
+  let depth=dense.map(([vx,vy,nx,ny],k)=>{const taper=Math.pow(Math.sin(Math.PI*(k+0.5)/r),0.85);
+    const cap=rayHit(vx,vy,-nx,-ny,pts)*capFrac;return Math.min(maxDepth*taper,cap);});
+  depth=relax(depth,7,0.5);
+  const ox=relax(dense.map(d=>d[0]),1,0.25), oy=relax(dense.map(d=>d[1]),1,0.25);
+  const ix=relax(dense.map((d,k)=>d[0]-d[2]*Math.max(1e-3,depth[k])),6,0.42);
+  const iy=relax(dense.map((d,k)=>d[1]-d[3]*Math.max(1e-3,depth[k])),6,0.42);
+  const step=Math.max(1,Math.floor(r/18)); const keep=[];
+  for(let k=0;k<r;k+=step)keep.push(k); if(keep[keep.length-1]!==r-1)keep.push(r-1);
+  const poly=keep.map(k=>[ox[k],oy[k]]).concat(keep.slice().reverse().map(k=>[ix[k],iy[k]]));
+  return poly.length>=3?[poly]:[];
+}
+function shadeBands(region,mat){
+  if(MATERIALS.materials[mat]?.emissive)return[[],[]];
+  let[lx,ly]=MATERIALS.light;const L=Math.hypot(lx,ly)||1;lx/=L;ly/=L;
+  return [crescent(region,[-lx,-ly],0.22,0.55,0.16), crescent(region,[lx,ly],0.09,0.45,0.2)];
+}
+function rotAbout(p,c,deg){const a=deg*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),x=p[0]-c[0],y=p[1]-c[1];
+  return [c[0]+x*ca-y*sa, c[1]+x*sa+y*ca];}
+
+// ---- state ---------------------------------------------------------------
+let D = null;            // the design object
+let selSec = null;
+const shown = new Set(); // section names with handles visible
+const hidden = new Set(); // section names not drawn
+let view = { x: 0, y: -16, s: 14 };   // world centre + px/unit
+let history = [];
+
+function pushHistory(){ history.push(JSON.stringify(D)); if(history.length>60) history.shift(); }
+function snap(v){ return document.getElementById('tSnap').checked ? Math.round(v/0.05)*0.05 : v; }
+
+function restTransforms(){
+  const out={};
+  const arm = D.rig?.rest_splay?.arm, piv = D.pivots||{};
+  if(arm && document.getElementById('tSplay').checked){
+    out.arm_near = out.hand_near = [piv.arm_near, -arm];
+    out.arm_far  = out.hand_far  = [piv.arm_far,  arm];
+  }
+  return out;
+}
+
+// ---- render ------------------------------------------------------------
+const svg = document.getElementById('svg');
+function W2S(x,y){ const r=svg.getBoundingClientRect();
+  return [ r.width/2 + (x-view.x)*view.s, r.height/2 + (y-view.y)*view.s ]; }
+function S2W(sx,sy){ const r=svg.getBoundingClientRect();
+  return [ view.x + (sx-r.width/2)/view.s, view.y + (sy-r.height/2)/view.s ]; }
+
+function polyStr(pts){ return pts.map(p=>{const s=W2S(p[0],p[1]);return s[0].toFixed(1)+','+s[1].toFixed(1);}).join(' '); }
+
+function render(){
+  if(!D){ svg.innerHTML=''; return; }
+  const xf = restTransforms();
+  const order = D.draw_order || Object.keys(D.sections);
+  let g = '';
+  const ph = MATERIALS.scale.PLAYER_H;
+  if(document.getElementById('tTicks').checked){
+    for(let k=0;k<=7;k++){ const s=W2S(view.x-6, -ph*k/7);
+      g += `<line x1="${s[0]-30}" y1="${s[1]}" x2="${s[0]}" y2="${s[1]}" stroke="#33404f"/>`; }
+  }
+  const groundS = W2S(0,0);
+  g += `<line x1="0" y1="${groundS[1]}" x2="10000" y2="${groundS[1]}" stroke="#2b3a2b"/>`;
+
+  const draw = (pts, fill) => { if(pts.length>=3) g += `<polygon points="${polyStr(pts)}" fill="${fill}"/>`; };
+
+  const showShade = document.getElementById('tShade').checked;
+  for(const name of order){
+    const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
+    const tr = xf[sec.group||name];
+    const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
+    const pts = sec.points.map(tf);
+    draw(pts, rgb(resolveColor(sec.material, sec.tone||'mid')));
+    if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
+      let dark, lite;
+      if(sec.shade_dark||sec.shade_light){
+        dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
+        lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
+      } else { [dark,lite] = shadeBands(pts, sec.material); }
+      lite.forEach(p=>draw(p, rgb(resolveColor(sec.material,'light'))));
+      dark.forEach(p=>draw(p, rgb(resolveColor(sec.material,'dark'))));
+    }
+    (sec.details||[]).forEach(d=>{ if(d.points) draw(d.points.map(tf), rgb(resolveColor(d.material, d.tone||'mid'))); });
+  }
+
+  // handles
+  if(document.getElementById('tHandles').checked){
+    for(const name of shown){
+      const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
+      g += handleSet(sec.points, name, 'points', 'handle');
+      if(sec.shade_dark) g += handleSet(sec.shade_dark, name, 'shade_dark', 'handle shade');
+      if(sec.shade_light) g += handleSet(sec.shade_light, name, 'shade_light', 'handle shade');
+      (sec.details||[]).forEach((d,di)=>{ if(d.points) g += handleSet(d.points, name, 'detail:'+di, 'handle detail'); });
+    }
+  }
+  svg.innerHTML = g;
+}
+function handleSet(pts, sec, key, cls){
+  let s = '';
+  if(document.getElementById('tEdges').checked){
+    for(let i=0;i<pts.length;i++){ const a=W2S(...pts[i]), b=W2S(...pts[(i+1)%pts.length]);
+      s += `<line class="edge" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-sec="${sec}" data-key="${key}" data-i="${i}"/>`; }
+  }
+  pts.forEach((p,i)=>{ const c=W2S(...p);
+    s += `<circle class="${cls}" cx="${c[0]}" cy="${c[1]}" r="4" data-sec="${sec}" data-key="${key}" data-i="${i}"/>`; });
+  return s;
+}
+
+// ---- editing ---------------------------------------------------------
+function getArr(sec, key){
+  const S = D.sections[sec];
+  if(key==='points') return S.points;
+  if(key==='shade_dark') return S.shade_dark;
+  if(key==='shade_light') return S.shade_light;
+  if(key.startsWith('detail:')) return S.details[+key.split(':')[1]].points;
+}
+function mirrorTwin(sec){
+  const m = sec.match(/(.*)_(near|far|l|r)$/); if(!m) return null;
+  const flip = {near:'far',far:'near',l:'r',r:'l'}[m[2]];
+  return D.sections[m[1]+'_'+flip] ? m[1]+'_'+flip : null;
+}
+
+let drag = null;
+svg.addEventListener('pointerdown', e=>{
+  const t = e.target;
+  if(e.button===1 || e.shiftKey && !t.dataset.sec){ drag={pan:true, sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y}; return; }
+  if(t.classList.contains('handle')){
+    if(e.altKey || e.button===2){ // delete
+      const arr = getArr(t.dataset.sec, t.dataset.key);
+      if(arr.length>3){ pushHistory(); arr.splice(+t.dataset.i,1); sync(); }
+      return;
+    }
+    pushHistory();
+    drag = { sec:t.dataset.sec, key:t.dataset.key, i:+t.dataset.i };
+    svg.setPointerCapture(e.pointerId);
+  }
+});
+svg.addEventListener('dblclick', e=>{
+  const t = e.target;
+  if(t.classList.contains('edge')){
+    const arr = getArr(t.dataset.sec, t.dataset.key); const i=+t.dataset.i;
+    const a=arr[i], b=arr[(i+1)%arr.length];
+    pushHistory();
+    arr.splice(i+1,0,[ (a[0]+b[0])/2, (a[1]+b[1])/2 ]);
+    sync();
+  }
+});
+svg.addEventListener('pointermove', e=>{
+  const w = S2W(e.clientX - svg.getBoundingClientRect().left, e.clientY - svg.getBoundingClientRect().top);
+  document.getElementById('hud').textContent = `x ${w[0].toFixed(2)}  y ${w[1].toFixed(2)}   zoom ${view.s.toFixed(1)}`;
+  if(!drag) return;
+  if(drag.pan){ view.x = drag.vx - (e.clientX-drag.sx)/view.s; view.y = drag.vy - (e.clientY-drag.sy)/view.s; render(); return; }
+  const arr = getArr(drag.sec, drag.key);
+  const nx = snap(w[0]), ny = snap(w[1]);
+  const old = arr[drag.i].slice();
+  arr[drag.i] = [nx, ny];
+  if(document.getElementById('tMirror').checked){
+    const tw = mirrorTwin(drag.sec);
+    if(tw){ const ta = (drag.key==='points') ? D.sections[tw].points
+              : drag.key.startsWith('detail:') ? (D.sections[tw].details||[])[+drag.key.split(':')[1]]?.points
+              : D.sections[tw][drag.key];
+      if(ta && ta[drag.i]) ta[drag.i] = [-nx, ny]; }
+  }
+  sync();
+});
+svg.addEventListener('pointerup', ()=>{ drag=null; });
+svg.addEventListener('contextmenu', e=>e.preventDefault());
+svg.addEventListener('wheel', e=>{
+  e.preventDefault();
+  const before = S2W(e.clientX-svg.getBoundingClientRect().left, e.clientY-svg.getBoundingClientRect().top);
+  view.s *= e.deltaY<0 ? 1.12 : 1/1.12;
+  view.s = Math.max(3, Math.min(90, view.s));
+  const after = S2W(e.clientX-svg.getBoundingClientRect().left, e.clientY-svg.getBoundingClientRect().top);
+  view.x += before[0]-after[0]; view.y += before[1]-after[1];
+  render();
+}, {passive:false});
+
+document.addEventListener('keydown', e=>{
+  if((e.key==='z'||e.key==='Z') && !e.target.matches('textarea,input')){ undo(); }
+});
+
+// ---- side panel -----------------------------------------------------
+function buildSecList(){
+  const el = document.getElementById('secList'); el.innerHTML='';
+  const order = D.draw_order || Object.keys(D.sections);
+  const bar = document.createElement('div'); bar.className='row';
+  bar.innerHTML = `<button id="allShow">show all</button><button id="allHide">hide all</button>`;
+  el.appendChild(bar);
+  bar.querySelector('#allShow').onclick = ()=>{ hidden.clear(); buildSecList(); render(); };
+  bar.querySelector('#allHide').onclick = ()=>{ order.forEach(n=>hidden.add(n)); buildSecList(); render(); };
+  order.forEach(name=>{
+    const row = document.createElement('label');
+    row.innerHTML = `<button class="eye" title="show / hide this part">${hidden.has(name)?'–':'●'}</button>
+      <span class="nm ${name===selSec?'sel':''}">${name}</span>
+      <input type="checkbox" title="show vertex handles" ${shown.has(name)?'checked':''}>`;
+    row.querySelector('.eye').onclick = ev=>{ ev.preventDefault();
+      hidden.has(name) ? hidden.delete(name) : hidden.add(name); buildSecList(); render(); };
+    row.querySelector('.nm').onclick = ev=>{ ev.preventDefault(); selSec=name; shown.add(name); hidden.delete(name);
+      buildSecList(); buildSecEdit(); render(); };
+    row.querySelector('input').onchange = ev=>{ ev.target.checked ? shown.add(name) : shown.delete(name); render(); };
+    el.appendChild(row);
+  });
+}
+function buildSecEdit(){
+  const el = document.getElementById('secEdit');
+  if(!selSec){ el.innerHTML='<div class="hint">none</div>'; return; }
+  const S = D.sections[selSec];
+  el.innerHTML = `
+    <div class="row">material
+      <select id="mMat">${MATNAMES.map(m=>`<option ${m===S.material?'selected':''}>${m}</option>`).join('')}</select>
+    </div>
+    <div class="row">tone
+      <select id="mTone">${['mid','dark','light'].map(t=>`<option ${t===(S.tone||'mid')?'selected':''}>${t}</option>`).join('')}</select>
+    </div>
+    <div class="row">
+      <button id="mFreeze">${S.shade_dark?'recompute auto-shade':'freeze shade → editable'}</button>
+    </div>
+    <div class="hint">${S.points.length} vertices${S.shade_dark?' · manual shade':''}</div>`;
+  document.getElementById('mMat').onchange = e=>{ pushHistory(); S.material=e.target.value; sync(); };
+  document.getElementById('mTone').onchange = e=>{ pushHistory(); S.tone=e.target.value; if(S.tone==='mid')delete S.tone; sync(); };
+  document.getElementById('mFreeze').onclick = ()=>{
+    pushHistory();
+    if(S.shade_dark){ delete S.shade_dark; delete S.shade_light; }
+    else {
+      const [dark,lite] = shadeBands(S.points, S.material);
+      if(dark[0]) S.shade_dark = dark[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
+      if(lite[0]) S.shade_light = lite[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
+    }
+    shown.add(selSec); sync(); buildSecEdit();
+  };
+}
+
+// ---- io ------------------------------------------------------------
+function round(o){ return JSON.parse(JSON.stringify(o), (k,v)=> typeof v==='number' ? +v.toFixed(3) : v); }
+function sync(){ document.getElementById('out').value = JSON.stringify(round(D), null, 2); render(); }
+function undo(){ if(history.length){ D = JSON.parse(history.pop()); sync(); buildSecList(); buildSecEdit(); } }
+
+function loadDesign(obj){
+  D = obj; selSec=null; shown.clear(); hidden.clear();
+  (D.draw_order||Object.keys(D.sections)).forEach(n=>shown.add(n));
+  try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
+  fitView(); buildSecList(); buildSecEdit(); sync();
+}
+function fitView(){
+  let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  for(const s of Object.values(D.sections)) for(const p of s.points){
+    mnx=Math.min(mnx,p[0]);mny=Math.min(mny,p[1]);mxx=Math.max(mxx,p[0]);mxy=Math.max(mxy,p[1]);
+  }
+  view.x=(mnx+mxx)/2; view.y=(mny+mxy)/2;
+  const r=svg.getBoundingClientRect();
+  view.s = Math.min(r.width/(mxx-mnx+6), r.height/(mxy-mny+6));
+}
+
+document.getElementById('load').onclick = ()=>document.getElementById('file').click();
+document.getElementById('file').onchange = e=>{
+  const f=e.target.files[0]; if(!f)return;
+  f.text().then(t=>loadDesign(JSON.parse(t)));
+};
+document.getElementById('loadBox').onclick = ()=>{
+  try{ loadDesign(JSON.parse(document.getElementById('out').value)); }
+  catch(e){ alert('Bad JSON: '+e.message); }
+};
+document.getElementById('reset').onclick = ()=>{ localStorage.removeItem('gpEditorBody'); location.reload(); };
+document.getElementById('copy').onclick = ()=>navigator.clipboard.writeText(document.getElementById('out').value);
+document.getElementById('dl').onclick = ()=>{
+  const name = (D.variant?('human_'+D.variant):'body')+'.json';
+  const b=new Blob([document.getElementById('out').value],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
+};
+document.getElementById('undo').onclick = undo;
+['tShade','tHandles','tEdges','tSplay','tTicks'].forEach(id=>
+  document.getElementById(id).onchange = render);
+
+const stage = document.getElementById('stage');
+stage.addEventListener('dragover', e=>{ e.preventDefault(); document.getElementById('drop').style.display='flex'; });
+stage.addEventListener('dragleave', ()=> document.getElementById('drop').style.display='none');
+stage.addEventListener('drop', e=>{
+  e.preventDefault(); document.getElementById('drop').style.display='none';
+  const f=e.dataTransfer.files[0]; if(f) f.text().then(t=>loadDesign(JSON.parse(t)));
+});
+window.addEventListener('resize', render);
+
+// boot: last body from localStorage, else a message
+const saved = localStorage.getItem('gpEditorBody');
+if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
+if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+</script>
+</body>
+</html>

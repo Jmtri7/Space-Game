@@ -1,0 +1,9 @@
+{
+  "identity": "Trade-ring hitbox. The outer octagon of the rim plus the four pods that stick past it, in `size` fractions. Its own file — physics and docking checks read this, never a parts list.",
+  "footprint": [
+    [ 0.0, -1.12 ], [ 0.34, -0.94 ], [ 0.78, -0.78 ], [ 0.94, -0.34 ],
+    [ 1.12, 0.0 ], [ 0.94, 0.34 ], [ 0.78, 0.78 ], [ 0.34, 0.94 ],
+    [ 0.0, 1.12 ], [ -0.34, 0.94 ], [ -0.78, 0.78 ], [ -0.94, 0.34 ],
+    [ -1.12, 0.0 ], [ -0.94, -0.34 ], [ -0.78, -0.78 ], [ -0.34, -0.94 ]
+  ]
+}
