@@ -145,6 +145,14 @@ global light vector (`materials.json` `light` key, default up-left):
   it works on any polygon shape.
 - **light** — a thinner sliver on the near edge, `tone_light`, same taper.
 
+The ribbon's outer edge is the region silhouette verbatim and its inner edge is
+a depth-capped inward offset that is Laplacian-relaxed and corner-cut (Chaikin)
+for smoothness, then snapped back inside wherever a smoothing pass pushed it out
+across a concave stretch. So the shade is always **fully contained within the
+region** — it never bleeds past the silhouette — and a coarsely faceted region
+still gets a smoothly curved shade. Vertex count per ribbon is bounded (~30–45)
+regardless of the region's own count.
+
 Details are not auto-shaded; they are drawn as authored, over the region.
 
 Shininess is a later addition to this stage and changes nothing upstream.
@@ -191,6 +199,17 @@ An **article region or detail** declares one of:
 Reproportion the body → anchors and curves move → every article follows, with
 no coordinate migration. Articles are authored once, against the reference
 body, and never need re-fitting when proportions change.
+
+**A fully-traced region (`"fits": []`, every vertex free) stops being
+body-portable.** It renders correctly on the body it was traced against and
+literally unchanged — same fixed coordinates — on any other, so a garment two
+bodies share (via one outfit set, or two sets naming the same article) will
+look wrong on whichever body it wasn't traced for. `tank_top_femme.json` /
+`tank_top_masc.json` are separate files for exactly this reason: the femme
+one is a hand-traced redesign (`fits: []`), so masc gets its own
+curve-fitted file rather than sharing it. When a redesign trades fits for a
+full trace, check whether anything else still expects that file to fit both
+bodies before saving over the shared name.
 
 ## Bodies
 
@@ -438,15 +457,184 @@ viewer — it holds no geometry and no copy of anything.
 ## Vertex editor
 
 [`docs/atlases/editor.html`](atlases/editor.html) is a standalone page for
-dragging a design's vertices by hand. Load a design JSON (file drop, or paste
-into the output box), and it renders exactly what `expand()` would — its
-shading is a hand-port of `expand.py` and must be kept in step with it. Drag any
-handle; double-click an edge to insert a point; alt-click to delete. Each
+dragging a design's vertices by hand. It renders exactly what `expand()` would —
+its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
+any handle; double-click an edge to insert a point; alt-click to delete. Each
 section has an eye toggle to hide/show it (isolate a limb, or drop the far side
-to work on the near one) and a checkbox for its handles. "Freeze
-shade → editable" replaces a region's computed crescent with an explicit
-`shade_dark` / `shade_light` point list you can then drag. Copy or download the
-updated JSON back over the source file.
+to work on the near one) and a checkbox for its handles. The **original ghost**
+(dashed blue) is the on-disk shape, drawn behind the live edit so a redesign
+pass always shows its own before/after. "Freeze shade → editable" replaces a
+region's computed crescent with an explicit `shade_dark` / `shade_light` point
+list you can then drag.
+
+Load a design three ways: `?file=<repo-relative path>` in the URL (needs the
+page served over http — `python -m http.server` from the repo root, not
+`file://`), file-drop onto the canvas, or paste into the Output box and hit
+"Load ← box". When loaded by `?file=`, the real `materials.json` and the
+design's palette are fetched too, so tones and colours match the game exactly.
+Coverage today is **body designs** (`sections`); other kinds (`regions`
+articles, `silhouette` ships) are being folded in.
+
+**Face mode** — `?file=<body>&edit=face`. Loads the body, pulls in its
+`head.face` slot files (`faces/<slot>_<name>.json`), inlines their `details` on
+the head so the whole kit can be nudged on the model, and **locks every body
+silhouette vertex** — only the face pieces (polygons and `circle` details, each
+with a centre and a radius handle) are draggable. The side panel lists the
+pieces grouped by source file; click one to isolate its handles. Every merged
+detail carries a `_src` tag naming the file it came from — Copy/Download/the
+Output box all keep it (this is the one field `expand()` and a real committed
+design file never see; the agent strips it when it writes the split files
+back). On save the agent groups the edited details by `_src` and writes each
+group to the file it belongs in — mechanical, no guessing from `note` text.
+A `.face-export.json` download is that merged, `_src`-tagged view, not a
+design file to drop straight into `config/` — hand it to the agent instead.
+
+**Tailor mode** — `?file=<article>&fitbody=<body>`. Loads the article (a
+`regions` design) and draws the named body underneath as a **locked,
+read-only backdrop** (its own vertices never show handles). Each region's
+authored `points` render two ways: the **Fit** panel and handle colour show
+the raw, sparse authored array (fit placeholders included), while the drawn
+shape is always the real `_apply_fits` + `outset` result, so what you see is
+what the game draws. A handle is <span style="color:#b479ff">▪</span>
+**fitted** (its position is spliced from a body curve at expand time —
+dragging it does nothing) or <span style="color:#ffcf6a">▪</span> **free**
+(an authored coordinate — drag it like normal). Select one fitted-or-free
+vertex to open the Fit panel: a dropdown of every `section.curve` on the
+body, a reverse checkbox, **apply** (writes a single-point `fits` entry) and
+**make free** (drops the fit, leaving the vertex at the curve's midpoint so
+it doesn't jump to a stale placeholder). `D.sections` is a display-only alias
+for `D.regions` in this mode (`region0`, `region1`, …) — reused so the
+existing multiselect/scale/rotate/layer/handle machinery works on regions
+unchanged; it's stripped back out before it ever reaches `#out`/Copy/Download.
+Select two (same region) instead of one and the panel switches to bulk mode:
+**make all free** clears every fitted vertex in the selection at once.
+
+**Filling in an edge between two snapped vertices — no curve names involved.**
+Every garment vertex is a plain free point (drag + snap onto the body, below).
+To trace a whole stretch of the body's edge: snap two vertices onto the body
+(**snap to body vertices**), select both, and the panel finds which body
+*section* they both landed on and offers to **generate the N vertices between
+them** — copied straight off that section's own silhouette, no curve lookup,
+no dropdown. A polygon has two ways around between any two points; a
+checkbox picks the short way (default) or the long way, showing the vertex
+count for each so you can tell which is which before committing. Applying
+replaces whatever was between the two selected vertices (other placeholders
+included) with the traced points, as plain coordinates — a one-time trace,
+not a live fit: it won't follow if the body is reshaped later. If the two
+selected vertices aren't both snapped onto the same body section, the panel
+just says so instead of guessing.
+
+This is separate from (and doesn't require understanding) the `fits: [{curve,
+from, to}]` mechanism a real garment file like `tank_top_masc.json` already uses —
+selecting a single vertex still shows the curve-name panel for inspecting or
+clearing an existing fit, since that's how the shipped data works and the
+purple/free colour coding still reflects it.
+
+Every body vertex also renders as a small dot (**show body vertices**,
+on by default) — visible even where the garment covers the skin, since it
+draws on top of the cloth. With **snap free vertices to them** on (also
+default), dragging a free vertex within the given pixel radius snaps it to
+the exact coordinate of the nearest body vertex — the highlighted dot. This
+is a one-time alignment, not a live fit: the vertex becomes a normal authored
+coordinate that happens to match the body right now, and won't follow if the
+body is reshaped later (use the Fit panel's curve dropdown for that instead).
+
+**Switching articles without retyping the URL.** Once a design is loaded, a
+**switch to** dropdown appears listing every `articles/*.json` next to it —
+picking one navigates to that article, keeping the current `fitbody` (or
+dropping it if you weren't in tailor mode). It's populated by fetching the
+directory listing `python -m http.server` serves for a folder with no
+`index.html`; on a server that doesn't do that, the dropdown just stays
+hidden rather than showing something broken. In tailor mode a second
+**fit against** dropdown does the same for `body/*.json` — swaps which body
+the *same* article is checked against without retyping the URL.
+
+**Hiding body parts.** In tailor mode, the Fit panel lists every body
+section with two toggles: the eye hides the part entirely (fill *and* its
+vertex dots — the dot toggle is implied off and greys out while the part is
+hidden); the dot on its own hides just the vertex dots, leaving the fill
+visible as a plain reference silhouette with nothing to accidentally snap
+onto. Neither is saved anywhere — it's a decluttering aid, reset per page
+load.
+
+**A single-point fit, unfolded.** A garment vertex fitted to a curve stands
+in for the *whole* curve — that's normal (`shoes.json`'s one placeholder per
+foot is exactly this, doing real work), but it means there's nothing to
+hand-tune point by point. Selecting a single vertex shows an **unfold into N
+vertices** button next to the curve dropdown: pick a curve (or leave the one
+it's already fitted to) and unfold drops any fit on that vertex and replaces
+it with the curve's own points as plain, independently-draggable vertices —
+same splice-and-reindex machinery as the two-vertex "generate between," just
+triggered from one vertex instead of a fresh selection. It works whether the
+vertex is currently fitted *or* already free (clearing a fit with "make free"
+doesn't strand you — pick the curve again and unfold same as before).
+
+**Inserting more than one point.** Double-click an edge, or select two
+adjacent vertices and press **I** — both insert points evenly spaced between
+the pair. The **insert N point(s) at a time** field (View) controls how many;
+default 1. That's still not the only way to add vertices — "generate
+between" and "unfold" (above) both add many at once, tracing the body rather
+than interpolating a straight line.
+
+**Selecting a whole polygon.** Double-click any one of its handles (shift to
+add another polygon to the selection).
+
+**Draw order against the body.** A region's `over`/`under` (body section or
+group names — same field the real game's `compose_worn` reads) is honoured
+in the preview: a region tagged `"under": ["torso"]` draws behind the whole
+body, `"over": ["head"]` draws after it, exactly like hair's back-drape and
+front-cap regions are meant to. Without an explicit `over`/`under` a region
+draws with its own animation group, same as the game. The reference body's
+head also gets its `faces/<slot>_<name>.json` kit pulled in for the preview
+(same mechanism as face mode) — the raw body file carries no inline face
+details, so without this the head would render bare no matter what. **Hide
+face** (Fit panel) is a one-click shortcut for hiding the head part — shape
+*and* its now-populated eyes/nose/lips together — handy while eyeballing
+where hair sits without the face competing for attention; it's the same
+underlying toggle as unchecking "head" in the body-parts list below it, kept
+in sync either way.
+
+### Editing a design with the agent
+
+When the user wants to reshape an existing asset — "let's redesign the femme
+body", "the skirt hem needs work", "fix the courier canopy" — the agent runs
+this loop rather than hand-editing coordinates:
+
+1. **Open it.** Start `python -m http.server 8777` at the repo root, open the
+   Browser pane at
+   `http://127.0.0.1:8777/docs/atlases/editor.html?file=<path to the design JSON>`.
+   For an article, the bare body is the reference; open the body too if the fit
+   matters.
+2. **User edits** in the pane — drags vertices, toggles sections, freezes shade
+   where auto is wrong.
+3. **Preview before writing.** When the user says they're done, the agent reads
+   the edited JSON out of the page (`#out` textarea), regenerates that asset's
+   atlas plate through the real `expand()` (not the editor's JS port — this is
+   where any drift shows), and shows the before/after render plus a JSON diff.
+4. **Confirm, then replace.** Only on an explicit yes does the agent write the
+   file over the old one. Update `identity` / notes and any dependent doc in the
+   same change (the two binding rules still apply).
+
+The agent stays in the loop for step 4 — the editor never writes to the repo.
+
+**Autosave drafts, and a sharp edge.** The editor autosaves the live edit to
+`localStorage` under `gpDraft:<loadedPath>` (plus `:face` or `:fit:<fitbody>`
+for those modes) on every change, and offers to restore it on next load of
+the same design — so a browser crash or an accidental navigation doesn't
+lose work. The gotcha: **these keys are shared by every tab open on the same
+origin**, not per-tab. If the agent opens its own scratch tab on the same
+`http://127.0.0.1:8777` origin and loads the *same* file+mode the user is
+mid-edit on — even just to verify something — it silently overwrites the
+user's in-progress draft with whatever the scratch tab last held. Rules that
+follow from this: always open a **fresh** scratch tab for any editor
+verification, never navigate or reset a tab the user is actively using, and
+avoid loading the exact file+mode combination the user has open unless the
+goal *is* to read their draft. When recovering drafts after a session gap
+(e.g. "save what I've edited"), read every `gpDraft:*` key in the user's own
+tab via `javascript_tool`, diff each against the on-disk file, and treat only
+genuine, non-trivial differences as real work — many keys will just be
+stale residue from earlier autosaves already superseded by a save, or a
+scratch tab's own leftovers.
 
 **Shade overrides.** A region (body section or ship silhouette entry) may carry
 `"shade": false` to draw flat, or explicit `"shade_dark"` / `"shade_light"`
@@ -509,7 +697,7 @@ mechanism on the **smallest asset that exercises it**.
 | **A — mechanics** ✅ | design JSON → `expand()` → specimen, end to end | one body renders on a plate |
 | **B — reference body** ✅ | proportions, sections, anchors, curves, draw order | `human_masc` / `human_femme` |
 | **C — material & shade** ✅ | auto-shade (tapered crescents) + palette tones | side-lit crescents, one continuous per region |
-| **D — fit** ✅ | `group` / `fits` against the body | `tank_top` sides spliced from the femme torso curves |
+| **D — fit** ✅ | `group` / `fits` against the body | `tank_top_masc` sides spliced from the masc torso curves |
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |

@@ -24,11 +24,11 @@
   select, input[type=number] { font: inherit; background: #12141a; color: #d9dce2;
            border: 1px solid #3a4150; border-radius: 4px; padding: 3px 5px; }
   #secList label { justify-content: flex-start; gap: 6px; }
-  #secList .nm { flex: 1; }
+  #secList .nm, #bodyPartList .nm { flex: 1; }
   #secList .nm.sel { color: #9fd0e6; font-weight: 600; }
-  #secList .eye { padding: 0; width: 20px; height: 20px; line-height: 1; font-size: 11px;
+  #secList .eye, #bodyPartList .eye { padding: 0; width: 20px; height: 20px; line-height: 1; font-size: 11px;
                   border-radius: 4px; color: #9fd0e6; }
-  #secList .eye:hover { background: #3a4150; }
+  #secList .eye:hover, #bodyPartList .eye:hover { background: #3a4150; }
   #out { width: 100%; height: 160px; font: 11px/1.4 ui-monospace, monospace;
          background: #12141a; color: #b9c2cc; border: 1px solid #2a2e37; border-radius: 5px;
          padding: 6px; resize: vertical; }
@@ -40,6 +40,15 @@
   .handle { fill: #ffcf6a; stroke: #1b1e24; stroke-width: 1; cursor: grab; }
   .handle.shade { fill: #79b7ff; }
   .handle.detail { fill: #9be07a; }
+  .handle.sel { fill: #ff5b5b; stroke: #fff; stroke-width: 1.5; }
+  .handle.fitted { fill: #b479ff; }
+  .handle-legend-free { color: #ffcf6a; }
+  .handle-legend-fit { color: #b479ff; }
+  .bodybit { opacity: 0.85; }
+  .bodyvert { fill: #5aa0ff; stroke: #0d0f13; stroke-width: 0.5; opacity: 0.75; pointer-events: none; }
+  .bodyvert.snaptarget { fill: #fff; opacity: 1; }
+  .marquee { fill: #79b7ff22; stroke: #79b7ff; stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }
+  .gizmo { fill: #ffd24a; stroke: #1b1e24; stroke-width: 1; cursor: nwse-resize; }
   .edge { stroke: #ffcf6a55; stroke-width: 1; fill: none; pointer-events: stroke; cursor: copy; }
 </style>
 </head>
@@ -54,14 +63,75 @@
   <input type="file" id="file" accept=".json" hidden>
   <div class="hint">Drag a <code>body/*.json</code> onto the canvas, click Load file, or paste JSON into the Output box and hit "Load ← box". Kept in this browser between visits.</div>
 
+  <div class="hint" id="src"></div>
+  <div class="row" id="switcherRow" style="display:none">
+    switch to <select id="articlePicker" style="flex:1"><option value="">— articles —</option></select>
+  </div>
+
   <h2>View</h2>
   <label><input type="checkbox" id="tShade" checked> shading</label>
+  <label><input type="checkbox" id="tGhost" checked> original ghost</label>
   <label><input type="checkbox" id="tHandles" checked> vertex handles</label>
   <label><input type="checkbox" id="tEdges" checked> insert points (edge click)</label>
+  <label>insert <input type="number" id="insertCount" value="1" min="1" max="30" style="width:44px">
+    point(s) at a time (dbl-click an edge, or select 2 + <b>I</b>) — evenly spaced between the two</label>
   <label><input type="checkbox" id="tSplay" checked> apply rest_splay</label>
   <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
   <label><input type="checkbox" id="tSnap"> snap 0.05</label>
   <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
+  <label><input type="checkbox" id="tLasso"> lasso select (freehand)</label>
+  <div class="hint">drag empty space = box-select · <b>shift</b> = add · click+drag a
+    selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
+    arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
+
+  <h2>Reference image</h2>
+  <div class="row">
+    <button id="refLoad">load image…</button>
+    <button id="refRemove">remove</button>
+  </div>
+  <input type="file" id="refFile" accept="image/*" hidden>
+  <div id="refPanel"></div>
+  <div class="hint">A tracing aid only — never saved with the design, and it
+    resets if you reload the page.</div>
+
+  <div id="fitPanelSec">
+    <h2>Fit</h2>
+    <div class="hint">Every garment vertex is a plain free point you can drag
+      and snap onto the body (below). <b>To fill in an edge:</b> snap two
+      vertices onto the body, select both, and generate the body's own
+      points between them — no dropdown, no curve names. Select 2+ that
+      aren't both snapped to free several at once. (A vertex a real garment
+      file already fits to a named curve shows <b class="handle-legend-fit">●</b>
+      purple and won't drag until you clear that — select just it to do so.)</div>
+    <div class="row" id="bodyPickerRow" style="display:none">fit against <select id="bodyPicker" style="flex:1"></select></div>
+    <label><input type="checkbox" id="tHideFace"> hide face (useful while fitting hair)</label>
+    <label><input type="checkbox" id="tBodyVerts" checked> show body vertices</label>
+    <label><input type="checkbox" id="tSnapBody" checked> snap free vertices to them
+      within <input type="number" id="snapDist" value="14" min="2" max="60" style="width:44px">px</label>
+    <div class="hint">Snapping copies a body vertex's exact position — it's a
+      one-time alignment, not a live fit; if the body reshapes later this
+      vertex won't follow (use the Fit panel's curve dropdown for that).</div>
+    <div class="hint">Body parts — eye = show/hide the part, dot = show/hide
+      just its snap-able vertices (keeps the part visible, less clutter).</div>
+    <div id="bodyPartList"></div>
+    <div id="fitPanel"><div class="hint">none selected</div></div>
+  </div>
+
+  <h2>Polygons</h2>
+  <div class="row" id="pTargetRow">attach new pieces to <select id="pTarget" style="flex:1"></select></div>
+  <div class="row">
+    <button id="pAdd">+ polygon</button>
+    <button id="pAddC">+ circle</button>
+    <button id="pDel">− selected polygon(s)</button>
+  </div>
+  <div class="hint">dbl-click a handle = select its whole polygon (shift = add).
+    2+ selected points show a scale handle at each corner; drag one, or use
+    <b>[</b> <b>]</b> to scale and <b>,</b> <b>.</b> to rotate about the
+    selection's centre. <b>To insert a vertex</b>, click one end of the edge,
+    shift-click the other end, then press <b>I</b> — reliable even on a tiny,
+    crowded edge where dbl-clicking the line itself is hard to aim (that still
+    works too, once you isolate the piece in the list below to declutter it).</div>
+  <div id="polyEdit"><div class="hint">select one whole polygon to edit its fill</div></div>
 
   <h2>Sections</h2>
   <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
@@ -81,26 +151,43 @@
 <div id="stage">
   <svg id="svg"></svg>
   <div id="hud"></div>
-  <div id="drop">drop body JSON</div>
+  <div id="drop">drop body JSON, or an image for the reference overlay</div>
 </div>
 
 <script>
 // ---- embedded materials + palette (small, rarely change) -------------------
-const MATERIALS = {
+// Fallback materials + palette; when the page is opened with ?file= (served
+// over http) the real materials.json + the design's palette are fetched and
+// merged over these, so nothing here has to be kept up to date.
+let MATERIALS = {
   light: [-0.82, -0.57],
   scale: { PLAYER_H: 31.0 },
   materials: {
     skin:{tone_dark:-26,tone_light:18}, hair:{tone_dark:-22,tone_light:24},
-    eye:{tone_dark:-12,tone_light:12}, cloth:{tone_dark:-30,tone_light:22},
+    eye:{tone_dark:-12,tone_light:12}, sclera:{tone_dark:-10,tone_light:6},
+    iris:{tone_dark:-16,tone_light:16}, pupil:{tone_dark:0,tone_light:0},
+    lip:{tone_dark:-16,tone_light:14}, cloth:{tone_dark:-30,tone_light:22},
     denim:{tone_dark:-26,tone_light:18}, leather:{tone_dark:-34,tone_light:16},
     knit:{tone_dark:-24,tone_light:20}, metal:{tone_dark:-40,tone_light:48},
     glass:{tone_dark:-20,tone_light:44}, lamp:{tone_dark:0,tone_light:0,emissive:true}
   }
 };
-const PALETTE = { skin:"#c69b74", hair:"#3b2b21", eye:"#5a4633", cloth:"#8a8f98",
-  denim:"#4d5a6b", leather:"#6b4a35", knit:"#9a8c6f", metal:"#9298a0",
-  glass:"#bfe6dd", lamp:"#ffd98a" };
-const MATNAMES = Object.keys(MATERIALS.materials);
+let PALETTE = { skin:"#c69b74", hair:"#3b2b21", eye:"#5a4633",
+  sclera:"#efe8db", iris:"#6b4a2e", pupil:"#1a1109", lip:"#b07a63",
+  cloth:"#8a8f98", denim:"#4d5a6b", leather:"#6b4a35", knit:"#9a8c6f",
+  metal:"#9298a0", glass:"#bfe6dd", lamp:"#ffd98a" };
+let MATNAMES = Object.keys(MATERIALS.materials);
+async function loadMatPal(){
+  if(!GBASE) return;
+  try{
+    const m = await fetch('/' + GBASE + '/materials.json');
+    if(m.ok){ MATERIALS = await m.json(); MATNAMES = Object.keys(MATERIALS.materials||{}); }
+  }catch(e){}
+  try{
+    const p = await fetch('/' + GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
+    if(p.ok) PALETTE = await p.json();
+  }catch(e){}
+}
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
 // Keep in sync with expand.py (_crescent, shade_bands, resolve_color).
@@ -126,6 +213,38 @@ function runs(flags){const m=flags.length;if(flags.every(x=>x))return[[...Array(
   if(cur.length)R.push(cur);if(R.length>=2&&R[0][0]===0&&R[R.length-1][R[R.length-1].length-1]===m-1){R[0]=R.pop().concat(R[0]);}
   return R.filter(r=>r.length>=2);}
 function relax(ch,k,w){for(let n=0;n<k;n++){const o=[ch[0]];for(let i=1;i<ch.length-1;i++)o.push(ch[i]+w*((ch[i-1]+ch[i+1])/2-ch[i]));o.push(ch[ch.length-1]);ch=o;}return ch;}
+function resampleOpen(ch,n){
+  if(ch.length<2||n<2)return ch.map(p=>p.slice());
+  const seg=[];for(let i=0;i<ch.length-1;i++)seg.push(Math.hypot(ch[i+1][0]-ch[i][0],ch[i+1][1]-ch[i][1]));
+  const total=seg.reduce((a,b)=>a+b,0)||1; const out=[ch[0].slice()]; let acc=0,j=0;
+  for(let k=1;k<n-1;k++){const target=total*k/(n-1);
+    while(j<seg.length&&acc+seg[j]<target){acc+=seg[j];j++;}
+    if(j>=seg.length)break;
+    const t=(target-acc)/(seg[j]||1),a=ch[j],b=ch[j+1];
+    out.push([a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])]);}
+  out.push(ch[ch.length-1].slice());return out;
+}
+function chaikinOpen(ch,iters){
+  for(let n=0;n<(iters||1);n++){ if(ch.length<3)break;
+    const o=[ch[0].slice()];
+    for(let i=0;i<ch.length-1;i++){const a=ch[i],b=ch[i+1];
+      o.push([0.75*a[0]+0.25*b[0],0.75*a[1]+0.25*b[1]]);
+      o.push([0.25*a[0]+0.75*b[0],0.25*a[1]+0.75*b[1]]);}
+    o.push(ch[ch.length-1].slice());ch=o;}
+  return ch;
+}
+function pip(x,y,poly){let inside=false,n=poly.length,j=n-1;
+  for(let i=0;i<n;i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];
+    if((yi>y)!=(yj>y) && x < (xj-xi)*(y-yi)/(yj-yi+1e-12)+xi) inside=!inside; j=i;}
+  return inside;}
+function clipToPoly(pt,poly){
+  if(pip(pt[0],pt[1],poly)) return pt;
+  let best=pt.slice(),bd=1e18,n=poly.length;
+  for(let i=0;i<n;i++){const[ax,ay]=poly[i],[bx,by]=poly[(i+1)%n];
+    const ex=bx-ax,ey=by-ay; let t=((pt[0]-ax)*ex+(pt[1]-ay)*ey)/(ex*ex+ey*ey||1e-12);
+    t=Math.max(0,Math.min(1,t)); const px=ax+t*ex,py=ay+t*ey,d=(pt[0]-px)**2+(pt[1]-py)**2;
+    if(d<bd){bd=d;best=[px,py];}}
+  return best;}
 function crescent(region,ldir,maxFrac,capFrac,thresh){
   let pts = signedArea(region)>0 ? region : region.slice().reverse();
   const m=pts.length; if(m<4)return[];
@@ -136,21 +255,27 @@ function crescent(region,ldir,maxFrac,capFrac,thresh){
   const maxDepth=reach*maxFrac;
   const rs=runs(face.map(f=>f>thresh)); if(!rs.length)return[];
   const run=rs.reduce((a,b)=>b.length>a.length?b:a);
-  const dense=[];
-  for(let k=0;k<run.length-1;k++){const a=pts[run[k]],b=pts[run[k+1]],na=nrm[run[k]],nb=nrm[run[k+1]];
-    for(const s of[0,1/3,2/3]){let nx=na[0]+s*(nb[0]-na[0]),ny=na[1]+s*(nb[1]-na[1]);const nl=Math.hypot(nx,ny)||1;
-      dense.push([a[0]+s*(b[0]-a[0]),a[1]+s*(b[1]-a[1]),nx/nl,ny/nl]);}}
-  dense.push([pts[run[run.length-1]][0],pts[run[run.length-1]][1],nrm[run[run.length-1]][0],nrm[run[run.length-1]][1]]);
-  const r=dense.length;
-  let depth=dense.map(([vx,vy,nx,ny],k)=>{const taper=Math.pow(Math.sin(Math.PI*(k+0.5)/r),0.85);
-    const cap=rayHit(vx,vy,-nx,-ny,pts)*capFrac;return Math.min(maxDepth*taper,cap);});
-  depth=relax(depth,7,0.5);
-  const ox=relax(dense.map(d=>d[0]),1,0.25), oy=relax(dense.map(d=>d[1]),1,0.25);
-  const ix=relax(dense.map((d,k)=>d[0]-d[2]*Math.max(1e-3,depth[k])),6,0.42);
-  const iy=relax(dense.map((d,k)=>d[1]-d[3]*Math.max(1e-3,depth[k])),6,0.42);
-  const step=Math.max(1,Math.floor(r/18)); const keep=[];
-  for(let k=0;k<r;k+=step)keep.push(k); if(keep[keep.length-1]!==r-1)keep.push(r-1);
-  const poly=keep.map(k=>[ox[k],oy[k]]).concat(keep.slice().reverse().map(k=>[ix[k],iy[k]]));
+  const outer0=run.map(i=>pts[i].slice());
+  const n=Math.min(60,Math.max(3*outer0.length,16));
+  const outer=resampleOpen(outer0,n);
+  let nx=[],ny=[];
+  for(let i=0;i<n;i++){const a=outer[Math.max(0,i-1)],b=outer[Math.min(n-1,i+1)];
+    const tx=b[0]-a[0],ty=b[1]-a[1],tl=Math.hypot(tx,ty)||1; nx.push(ty/tl); ny.push(-tx/tl);}
+  nx=relax(nx,3,0.5); ny=relax(ny,3,0.5);
+  for(let i=0;i<n;i++){const nl=Math.hypot(nx[i],ny[i])||1; nx[i]/=nl; ny[i]/=nl;}
+  let depth=[];
+  for(let i=0;i<n;i++){const taper=Math.pow(Math.sin(Math.PI*(i+0.5)/n),0.85);
+    const cap=rayHit(outer[i][0],outer[i][1],-nx[i],-ny[i],pts)*capFrac;
+    depth.push(Math.min(maxDepth*taper,cap));}
+  depth=relax(depth,6,0.5);
+  const ix=relax(outer.map((p,i)=>p[0]-nx[i]*Math.max(1e-3,depth[i])),6,0.45);
+  const iy=relax(outer.map((p,i)=>p[1]-ny[i]*Math.max(1e-3,depth[i])),6,0.45);
+  // outer edge = the silhouette run verbatim (cannot spill); inner edge is the
+  // capped inward offset, corner-cut, and snapped back in wherever a smoothing
+  // pass pushed it out across a concave stretch.
+  const inner=ix.map((a,i)=>clipToPoly([a,iy[i]],pts));
+  const innerC=resampleOpen(chaikinOpen(inner,1),16).map(p=>clipToPoly(p,pts));
+  const poly=outer0.concat(innerC.slice().reverse());
   return poly.length>=3?[poly]:[];
 }
 function shadeBands(region,mat){
@@ -160,21 +285,82 @@ function shadeBands(region,mat){
 }
 function rotAbout(p,c,deg){const a=deg*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),x=p[0]-c[0],y=p[1]-c[1];
   return [c[0]+x*ca-y*sa, c[1]+x*sa+y*ca];}
+function ngon(cx,cy,r,n){ n = n || Math.max(6, Math.min(24, Math.round(r*2)));
+  return Array.from({length:n}, (_,k)=>[cx+r*Math.cos(2*Math.PI*k/n), cy+r*Math.sin(2*Math.PI*k/n)]); }
+function detailPoly(d){ return d.points ? d.points : d.circle ? ngon(d.circle[0],d.circle[1],d.circle[2]) : null; }
+
+// ---- tailoring: article `regions` fit against a reference body (port of
+// expand.py's _curve / _apply_fits / _outset) ---------------------------
+function bodyCurve(body, ref){                    // "<section>.<curve>" -> body-space polyline
+  const [sec, name] = ref.split('.');
+  const c = body.sections[sec]?.curves?.[name];
+  return c ? c.map(p=>p.slice()) : null;
+}
+function applyFits(points, fits, body){
+  const pts = points.map(p=>p.slice());
+  const ordered = (fits||[]).slice().sort((a,b)=>b.from-a.from);
+  for(const f of ordered){
+    let seg = bodyCurve(body, f.curve);
+    if(!seg) continue;
+    if(f.reverse) seg = seg.slice().reverse();
+    pts.splice(f.from, f.to-f.from+1, ...seg);
+  }
+  return pts;
+}
+function outsetPts(pts, d){
+  if(!d) return pts;
+  const poly = signedArea(pts)>0 ? pts : pts.slice().reverse();
+  const nrm = vnorms(poly);
+  const out = poly.map(([x,y],i)=>[x+nrm[i][0]*d, y+nrm[i][1]*d]);
+  return poly===pts ? out : out.slice().reverse();
+}
+function curveOptions(){                          // ["torso.side_right", ...] across bodyDesign
+  const out = [];
+  if(!bodyDesign) return out;
+  for(const [sname, sec] of Object.entries(bodyDesign.sections||{}))
+    for(const cname of Object.keys(sec.curves||{})) out.push(sname+'.'+cname);
+  return out;
+}
+function regionFitAt(region, i){                  // the fits entry covering vertex i, if any
+  return (region.fits||[]).find(f=>f.from<=i && i<=f.to) || null;
+}
 
 // ---- state ---------------------------------------------------------------
 let D = null;            // the design object
+let D0 = null;           // the on-disk original, for the ghost overlay
+let loadedPath = null;   // repo-relative path this was fetched from (?file=)
+let GBASE = '';          // .../graphics  (for fetching sibling face slot files)
+const FACE_MODE = new URLSearchParams(location.search).get('edit') === 'face';
+const FITBODY = new URLSearchParams(location.search).get('fitbody');   // tailor mode: an article + the body it's fit against
+const TAILOR_MODE = !!FITBODY;
+if(!FACE_MODE) document.getElementById('pTargetRow').style.display = 'none';
+if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
+const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
+let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
+const bodyHidden = new Set();    // body section names whose fill is hidden (declutter/x-ray)
+const bodyVertsOff = new Set();  // body section names whose snap-vertex dots are hidden
 let selSec = null;
 const shown = new Set(); // section names with handles visible
 const hidden = new Set(); // section names not drawn
+const detPick = new Set(); // FACE_MODE: if non-empty, only these detail indices show handles ("head:3")
 let view = { x: 0, y: -16, s: 14 };   // world centre + px/unit
 let history = [];
+const sel = new Set();       // selected handle ids  "sec|key|i"
+const HANDLES = [];          // {id, sx, sy, sec, key, i} rebuilt each render
+let marq = null;             // {x0,y0,x1,y1} screen-space box select
+let lasso = null;            // [[sx,sy], ...] freehand select path
+let spaceDown = false;
+let lastPolySel = ' '; // signature of `sel` last time the fill panel was rebuilt
+let ref = null;         // {href,iw,ih,cx,cy,wu,opacity,show} - the reference image overlay, session-only
+let refMoveMode = false; // when on, dragging the overlay moves it instead of editing underneath
 
 function pushHistory(){ history.push(JSON.stringify(D)); if(history.length>60) history.shift(); }
 function snap(v){ return document.getElementById('tSnap').checked ? Math.round(v/0.05)*0.05 : v; }
 
-function restTransforms(){
+function restTransforms(design){
+  design = design || D;
   const out={};
-  const arm = D.rig?.rest_splay?.arm, piv = D.pivots||{};
+  const arm = design.rig?.rest_splay?.arm, piv = design.pivots||{};
   if(arm && document.getElementById('tSplay').checked){
     out.arm_near = out.hand_near = [piv.arm_near, -arm];
     out.arm_far  = out.hand_far  = [piv.arm_far,  arm];
@@ -191,8 +377,163 @@ function S2W(sx,sy){ const r=svg.getBoundingClientRect();
 
 function polyStr(pts){ return pts.map(p=>{const s=W2S(p[0],p[1]);return s[0].toFixed(1)+','+s[1].toFixed(1);}).join(' '); }
 
+// ---- tailor mode: body + article parts, tagged and interleaved exactly like
+// the real game's compose_worn, so `over`/`under` (e.g. hair drawing behind
+// the head) previews correctly instead of the article always sitting on top
+// of the whole body. ----------------------------------------------------
+function bodyDrawParts(){
+  if(!bodyDesign) return [];
+  const out = [];
+  const xf = restTransforms(bodyDesign);
+  const order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
+  const showShade = document.getElementById('tShade').checked;
+  for(const name of order){
+    const sec = bodyDesign.sections[name]; if(!sec || bodyHidden.has(name)) continue;
+    const grp = sec.group || name;
+    const tr = xf[grp];
+    const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
+    const pts = sec.points.map(tf);
+    out.push({points: pts, fill: rgb(resolveColor(sec.material, sec.tone||'mid')), group: grp, sec: name});
+    if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
+      let dark, lite;
+      if(sec.shade_dark||sec.shade_light){
+        dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
+        lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
+      } else { [dark,lite] = shadeBands(pts, sec.material); }
+      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.material,'light')), group:grp, sec:name}));
+      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.material,'dark')), group:grp, sec:name}));
+    }
+    (sec.details||[]).forEach(d=>{ const pp = detailPoly(d); if(pp)
+      out.push({points: pp.map(tf), fill: rgb(resolveColor(d.material, d.tone||'mid')), group:grp, sec:name}); });
+  }
+  return out;
+}
+function articleDrawParts(){
+  const out = [];
+  const showShade = document.getElementById('tShade').checked;
+  for(const name of Object.keys(D.sections)){
+    const region = D.sections[name]; if(hidden.has(name)) continue;
+    const grp = region.group || 'torso';
+    const dispPts = bodyDesign
+      ? outsetPts(applyFits(region.points, region.fits, bodyDesign), region.outset ?? D.outset ?? 0.12)
+      : region.points;
+    out.push({points: dispPts, fill: rgb(resolveColor(region.material, region.tone||'mid')), group:grp, over:region.over, under:region.under});
+    if(showShade && region.shade!==false && !MATERIALS.materials[region.material]?.emissive){
+      let dark, lite;
+      if(region.shade_dark||region.shade_light){
+        dark = region.shade_dark ? [region.shade_dark] : [];
+        lite = region.shade_light ? [region.shade_light] : [];
+      } else { [dark,lite] = shadeBands(dispPts, region.material); }
+      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(region.material,'light')), group:grp, over:region.over, under:region.under}));
+      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(region.material,'dark')), group:grp, over:region.over, under:region.under}));
+    }
+    (region.details||[]).forEach(d=>{ const pp = detailPoly(d); if(pp)
+      out.push({points: pp, fill: rgb(resolveColor(d.material, d.tone||'mid')), group:grp, over:region.over, under:region.under}); });
+  }
+  return out;
+}
+function composeWornJS(bodyDes, bodyParts, articleParts){
+  const order = bodyDes.draw_order || Object.keys(bodyDes.sections||{});
+  const groups = {};
+  order.forEach(name=>{ const g = bodyDes.sections[name].group || name; if(!(g in groups)) groups[g] = Object.keys(groups).length; });
+  const keyed = bodyParts.map((p,i)=>[i,p]);
+  const last = {}, first = {};
+  bodyParts.forEach((p,i)=>{
+    for(const k of [p.group, p.sec]){ if(k==null) continue; last[k]=i; if(!(k in first)) first[k]=i; }
+  });
+  const n = bodyParts.length;
+  for(const p of articleParts){
+    let rank;
+    if(p.under && p.under.length) rank = Math.min(...p.under.map(k => k in first ? first[k] : 0)) - 0.5;
+    else if(p.over && p.over.length) rank = Math.max(...p.over.map(k => k in last ? last[k] : n + (groups[k] ?? 999))) + 0.5;
+    else { const g = p.group || 'torso'; rank = (g in last ? last[g] : n + (groups[g] ?? 999)) + 0.5; }
+    keyed.push([rank, p]);
+  }
+  keyed.sort((a,b)=>a[0]-b[0]);
+  return keyed.map(([,p])=>p);
+}
+function bodyVertexList(){    // every body vertex in world space (rest_splay applied), for snap + display
+  if(!bodyDesign) return [];
+  const xf = restTransforms(bodyDesign);
+  const out = [];
+  for(const [name, sec] of Object.entries(bodyDesign.sections||{})){
+    if(bodyVertsOff.has(name) || bodyHidden.has(name)) continue;   // hiding the part hides its vertices too
+    const tr = xf[sec.group||name];
+    const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
+    for(const p of sec.points) out.push(tf(p));
+  }
+  return out;
+}
+function nearestBodyVertex(x, y, maxWorldDist){
+  let best = null, bd = maxWorldDist*maxWorldDist;
+  for(const p of bodyVertexList()){
+    const d = (p[0]-x)**2 + (p[1]-y)**2;
+    if(d < bd){ bd = d; best = p; }
+  }
+  return best;
+}
+let snapTarget = null;   // the body vertex the current drag is about to snap to, if any (for the highlight)
+function drawBodyVertices(){
+  if(!bodyDesign || !document.getElementById('tBodyVerts')?.checked) return '';
+  let g = '';
+  for(const p of bodyVertexList()){ const c = W2S(p[0], p[1]);
+    const isTarget = snapTarget && snapTarget[0]===p[0] && snapTarget[1]===p[1];
+    g += `<circle class="bodyvert${isTarget?' snaptarget':''}" cx="${c[0]}" cy="${c[1]}" r="${isTarget?4:2.5}"/>`; }
+  return g;
+}
+function buildBodyPartList(){
+  const el = document.getElementById('bodyPartList'); if(!el || !bodyDesign) return;
+  const hideFace = document.getElementById('tHideFace');
+  if(hideFace) hideFace.checked = bodyHidden.has('head');   // keep the shortcut in sync with the list below
+  el.innerHTML = '';
+  const bar = document.createElement('div'); bar.className = 'row';
+  bar.innerHTML = `<button id="bpAllShow">show all</button><button id="bpAllHideVerts">hide all verts</button>`;
+  el.appendChild(bar);
+  bar.querySelector('#bpAllShow').onclick = ()=>{ bodyHidden.clear(); bodyVertsOff.clear(); buildBodyPartList(); render(); };
+  bar.querySelector('#bpAllHideVerts').onclick = ()=>{
+    Object.keys(bodyDesign.sections).forEach(n=>bodyVertsOff.add(n)); buildBodyPartList(); render(); };
+  const order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
+  order.forEach(name=>{
+    const row = document.createElement('label');
+    const vertsShown = !bodyVertsOff.has(name) && !bodyHidden.has(name);
+    row.innerHTML = `<button class="eye" title="show/hide this body part">${bodyHidden.has(name)?'–':'●'}</button>
+      <button class="eye" title="show/hide its snap vertices" ${bodyHidden.has(name)?'disabled':''}>${vertsShown?'•':'–'}</button>
+      <span class="nm">${name}</span>`;
+    const eyes = row.querySelectorAll('.eye');
+    eyes[0].onclick = ev=>{ ev.preventDefault();
+      bodyHidden.has(name) ? bodyHidden.delete(name) : bodyHidden.add(name); buildBodyPartList(); render(); };
+    eyes[1].onclick = ev=>{ ev.preventDefault();
+      bodyVertsOff.has(name) ? bodyVertsOff.delete(name) : bodyVertsOff.add(name); buildBodyPartList(); render(); };
+    el.appendChild(row);
+  });
+}
+// a dropdown of every body/*.json to switch which body this same article is
+// fit against - keeps `file=` (the article), only swaps `fitbody=`.
+async function populateBodyPicker(){
+  const row = document.getElementById('bodyPickerRow'), sel_ = document.getElementById('bodyPicker');
+  if(!GBASE) return;
+  try{
+    const r = await fetch('/' + GBASE + '/body/');
+    if(!r.ok) return;
+    const html = await r.text();
+    const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
+      .filter(n=>!n.startsWith('rig_')).sort();
+    if(!names.length) return;
+    const curName = FITBODY.split('/').pop();
+    sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
+    row.style.display = '';
+  }catch(e){ /* no directory listing available */ }
+}
+document.getElementById('bodyPicker').onchange = e=>{
+  const name = e.target.value; if(!name) return;
+  const qs = new URLSearchParams(location.search);
+  qs.set('fitbody', GBASE + '/body/' + name);
+  location.search = qs.toString();
+};
+
 function render(){
   if(!D){ svg.innerHTML=''; return; }
+  HANDLES.length = 0;
   const xf = restTransforms();
   const order = D.draw_order || Object.keys(D.sections);
   let g = '';
@@ -206,45 +547,516 @@ function render(){
 
   const draw = (pts, fill) => { if(pts.length>=3) g += `<polygon points="${polyStr(pts)}" fill="${fill}"/>`; };
 
-  const showShade = document.getElementById('tShade').checked;
-  for(const name of order){
-    const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
-    const tr = xf[sec.group||name];
-    const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
-    const pts = sec.points.map(tf);
-    draw(pts, rgb(resolveColor(sec.material, sec.tone||'mid')));
-    if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
-      let dark, lite;
-      if(sec.shade_dark||sec.shade_light){
-        dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
-        lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
-      } else { [dark,lite] = shadeBands(pts, sec.material); }
-      lite.forEach(p=>draw(p, rgb(resolveColor(sec.material,'light'))));
-      dark.forEach(p=>draw(p, rgb(resolveColor(sec.material,'dark'))));
+  // original ghost: the on-disk shape as a faint outline behind the live edit
+  if(D0 && !TAILOR_MODE && document.getElementById('tGhost').checked){
+    const ghost = (pp,col) => { if(pp && pp.length>=2)
+      g += `<polygon points="${polyStr(pp)}" fill="none" stroke="${col}" stroke-width="1" stroke-dasharray="3 2" opacity="0.55"/>`; };
+    for(const name of (D0.draw_order || Object.keys(D0.sections))){
+      const s = D0.sections[name]; if(!s || hidden.has(name)) continue;
+      const tr = xf[s.group||name];
+      const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
+      if(!FACE_MODE) ghost(s.points.map(tf), '#5aa0ff');
+      (s.details||[]).forEach(d=>{ const pp = detailPoly(d); if(pp) ghost(pp.map(tf), '#5aa0ff'); });
     }
-    (sec.details||[]).forEach(d=>{ if(d.points) draw(d.points.map(tf), rgb(resolveColor(d.material, d.tone||'mid'))); });
+  }
+
+  if(TAILOR_MODE && bodyDesign){
+    // interleave the body's own parts with the article's, honouring each
+    // region's `over`/`under` (body section or group names) exactly like the
+    // real game's compose_worn - so e.g. hair's back regions correctly draw
+    // *behind* the head instead of always on top of the whole body.
+    for(const part of composeWornJS(bodyDesign, bodyDrawParts(), articleDrawParts()))
+      draw(part.points, part.fill);   // points are world-space; draw() maps to screen itself
+  } else {
+    const showShade = document.getElementById('tShade').checked;
+    for(const name of order){
+      const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
+      const tr = xf[sec.group||name];
+      const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
+      const pts = sec.points.map(tf);
+      draw(pts, rgb(resolveColor(sec.material, sec.tone||'mid')));
+      if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
+        let dark, lite;
+        if(sec.shade_dark||sec.shade_light){
+          dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
+          lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
+        } else { [dark,lite] = shadeBands(pts, sec.material); }
+        lite.forEach(p=>draw(p, rgb(resolveColor(sec.material,'light'))));
+        dark.forEach(p=>draw(p, rgb(resolveColor(sec.material,'dark'))));
+      }
+      (sec.details||[]).forEach(d=>{ const pp = detailPoly(d);
+        if(pp) draw(pp.map(tf), rgb(resolveColor(d.material, d.tone||'mid'))); });
+    }
+  }
+
+  if(TAILOR_MODE) g += drawBodyVertices();   // on top of the cloth - visible even where a garment covers the skin
+
+  // reference image overlay - translucent, on top of the fills so you can
+  // compare it against the shapes; pointer-events stay off unless "position"
+  // mode is on, so it never blocks clicking a handle underneath.
+  if(ref && ref.show){
+    const w = ref.wu, h = ref.wu * ref.ih / ref.iw;
+    const tl = W2S(ref.cx - w / 2, ref.cy - h / 2), br = W2S(ref.cx + w / 2, ref.cy + h / 2);
+    g += `<image id="refImgEl" href="${ref.href}" x="${tl[0]}" y="${tl[1]}" width="${br[0] - tl[0]}"
+      height="${br[1] - tl[1]}" opacity="${ref.opacity}" preserveAspectRatio="none"
+      style="pointer-events:${refMoveMode ? 'auto' : 'none'};cursor:${refMoveMode ? 'move' : 'default'}"/>`;
   }
 
   // handles
   if(document.getElementById('tHandles').checked){
     for(const name of shown){
       const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
-      g += handleSet(sec.points, name, 'points', 'handle');
-      if(sec.shade_dark) g += handleSet(sec.shade_dark, name, 'shade_dark', 'handle shade');
-      if(sec.shade_light) g += handleSet(sec.shade_light, name, 'shade_light', 'handle shade');
-      (sec.details||[]).forEach((d,di)=>{ if(d.points) g += handleSet(d.points, name, 'detail:'+di, 'handle detail'); });
+      const tr = xf[sec.group||name];
+      if(!LOCK_POINTS){
+        const fitClass = TAILOR_MODE ? (i => regionFitAt(sec, i) ? 'fitted' : '') : null;
+        g += handleSet(sec.points, name, 'points', 'handle', fitClass);
+        if(sec.shade_dark) g += handleSet(sec.shade_dark, name, 'shade_dark', 'handle shade');
+        if(sec.shade_light) g += handleSet(sec.shade_light, name, 'shade_light', 'handle shade');
+      }
+      (sec.details||[]).forEach((d,di)=>{
+        if(detPick.size && !detPick.has(name+':'+di)) return;
+        if(d.points) g += handleSet(d.points, name, 'detail:'+di, 'handle detail');
+        else if(d.circle){
+          const cS = W2S(d.circle[0], d.circle[1]), rS = W2S(d.circle[0]+d.circle[2], d.circle[1]);
+          const cid = name+'|circle:'+di+'|0';
+          HANDLES.push({id:cid, sx:cS[0], sy:cS[1], sec:name, key:'circle:'+di, i:0});
+          g += `<circle class="handle detail${sel.has(cid)?' sel':''}" cx="${cS[0]}" cy="${cS[1]}" r="4" data-sec="${name}" data-key="circle:${di}" data-i="0"/>`;
+          g += `<circle class="handle detail" cx="${rS[0]}" cy="${rS[1]}" r="3" data-sec="${name}" data-key="circleR:${di}" data-i="0"/>`;
+        }
+      });
     }
   }
+  if(sel.size>=2){
+    const bb=selBBox();
+    if(bb){
+      const a=W2S(bb[0],bb[1]), b=W2S(bb[2],bb[3]);
+      const x=Math.min(a[0],b[0])-14, y=Math.min(a[1],b[1])-14, w=Math.abs(b[0]-a[0])+28, h=Math.abs(b[1]-a[1])+28;
+      g += `<rect class="marquee" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+      for(const [gx,gy] of [[x,y],[x+w,y],[x,y+h],[x+w,y+h]]){
+        g += `<rect class="gizmo" x="${gx-7}" y="${gy-7}" width="14" height="14" data-gizmo="1"/>`;
+      }
+    }
+  }
+  if(marq){
+    const x=Math.min(marq.x0,marq.x1), y=Math.min(marq.y0,marq.y1);
+    g += `<rect class="marquee" x="${x}" y="${y}" width="${Math.abs(marq.x1-marq.x0)}" height="${Math.abs(marq.y1-marq.y0)}"/>`;
+  }
+  if(lasso && lasso.length>1) g += `<polyline class="marquee" points="${lasso.map(p=>p[0]+','+p[1]).join(' ')}"/>`;
   svg.innerHTML = g;
+  maybeBuildPolyEdit();
+  if(TAILOR_MODE) maybeBuildFitPanel();
 }
-function handleSet(pts, sec, key, cls){
+// ---- fill panel: shown when the selection is exactly one whole polygon ----
+function maybeBuildPolyEdit(){
+  const s = [...sel].sort().join(',');
+  if(s === lastPolySel) return;
+  lastPolySel = s;
+  buildPolyEdit();
+}
+// ---- fit panel: shown when the selection is exactly one region vertex -----
+let lastFitSel = ' ';
+function maybeBuildFitPanel(){
+  const s = [...sel].sort().join(',');
+  if(s === lastFitSel) return;
+  lastFitSel = s;
+  buildFitPanel();
+}
+function unfitVertex(region, i){    // drop the fit at vertex i, parking it at the old curve's midpoint
+  const was = regionFitAt(region, i);
+  region.fits = (region.fits||[]).filter(f=>!(f.from<=i && i<=f.to));
+  if(was && bodyDesign){
+    let seg = bodyCurve(bodyDesign, was.curve);
+    if(seg && was.reverse) seg = seg.slice().reverse();
+    if(seg && seg.length) region.points[i] = seg[Math.floor((seg.length-1)/2)].slice();
+  }
+  return !!was;
+}
+function selectedRegionVertices(){   // [{sc, region, i}] - every selected plain outline vertex (not a detail/circle)
+  const out = [];
+  for(const id of sel){ const [sc,ky,iS] = id.split('|');
+    if(ky!=='points') continue;
+    const region = D.sections[sc]; if(!region) continue;
+    out.push({sc, region, i:+iS});
+  }
+  return out;
+}
+function findBodyVertexIndex(pt, eps){    // which body section+index a point sits exactly on, if any
+  if(!bodyDesign) return null;
+  for(const [sname, sec] of Object.entries(bodyDesign.sections||{})){
+    for(let i=0;i<sec.points.length;i++){
+      const p = sec.points[i];
+      if(Math.hypot(p[0]-pt[0], p[1]-pt[1]) < eps) return {sec: sname, i};
+    }
+  }
+  return null;
+}
+function walkBoundary(pts, from, to, dir){    // section polygon indices from `from` to `to`, stepping `dir` (+1/-1)
+  const n = pts.length, out = [];
+  let k = from;
+  for(let guard=0; guard<=n; guard++){
+    out.push(k);
+    if(k===to) break;
+    k = (k+dir+n)%n;
+  }
+  return out;
+}
+function buildFitPanel(){
+  const el = document.getElementById('fitPanel'); if(!el) return;
+  if(sel.size===0){ el.innerHTML = `<div class="hint">select one or more garment vertices</div>`; return; }
+  const verts = selectedRegionVertices();
+  if(verts.length===0){ el.innerHTML = `<div class="hint">select a garment outline vertex (not a detail)</div>`; return; }
+  if(verts.length===2 && verts[0].sc===verts[1].sc){
+    buildSpanFitPanel(verts); return;
+  }
+  if(verts.length>1){
+    const nFitted = verts.filter(v=>regionFitAt(v.region, v.i)).length;
+    el.innerHTML = `
+      <div class="row">${verts.length} vertices selected — ${nFitted} fitted, ${verts.length-nFitted} free</div>
+      <div class="row"><button id="fClearAll" ${nFitted?'':'disabled'}>make all free</button></div>
+      <div class="hint">clears the fit on every fitted vertex in the selection
+        (each parks at its old curve's midpoint); free ones are left alone.
+        Box-select or shift-click several purple dots, then use this instead
+        of clearing them one at a time.</div>`;
+    document.getElementById('fClearAll').onclick = ()=>{
+      pushHistory();
+      verts.forEach(v=>unfitVertex(v.region, v.i));
+      sync(); buildFitPanel();
+    };
+    return;
+  }
+  const {sc, region, i} = verts[0];
+  const existing = regionFitAt(region, i);
+  const opts = curveOptions();
+  const curveLen = c => bodyCurve(bodyDesign, c)?.length || 0;
+  const startCurve = existing ? existing.curve : '';
+  el.innerHTML = `
+    <div class="row">vertex <b>${sc.replace('region','region ')} #${i}</b></div>
+    <div class="row">curve <select id="fCurve"><option value="">— none —</option>
+      ${opts.map(o=>`<option value="${o}" ${o===startCurve?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="row"><label><input type="checkbox" id="fRev" ${existing?.reverse?'checked':''}> reverse</label></div>
+    <div class="row"><button id="fApply">apply as fit</button><button id="fClear">make free</button></div>
+    <div class="row"><button id="fUnfold" ${startCurve?'':'disabled'}>unfold into ${curveLen(startCurve)} vertices</button></div>
+    <div class="hint"><b>apply as fit</b> keeps this one live placeholder (it'll
+      follow the curve if the body reshapes later). <b>unfold</b> replaces it
+      with the picked curve's own points instead, as plain vertices you can
+      hand-tune one by one — works whether this vertex is free or already
+      fitted (pick a curve above first if it's free). This is how to split
+      e.g. <code>shoes.json</code>'s single foot-outline placeholder — and
+      still works after "make free" already cleared its old fit, just pick
+      the curve again.</div>
+    <div class="hint">${existing ? `currently fitted to ${existing.curve}${existing.reverse?' (reversed)':''}` : 'currently free — authored coordinate, drag it normally'}</div>`;
+  const syncUnfoldButton = ()=>{
+    const c = document.getElementById('fCurve').value;
+    const btn = document.getElementById('fUnfold');
+    btn.disabled = !c;
+    btn.textContent = `unfold into ${curveLen(c)} vertices`;
+  };
+  document.getElementById('fCurve').onchange = syncUnfoldButton;
+  document.getElementById('fApply').onclick = ()=>{
+    const curve = document.getElementById('fCurve').value;
+    const reverse = document.getElementById('fRev').checked;
+    pushHistory();
+    unfitVertex(region, i);
+    if(curve){
+      const f = {curve, from:i, to:i};
+      if(reverse) f.reverse = true;
+      region.fits = region.fits||[]; region.fits.push(f);
+    }
+    sync(); buildFitPanel();
+  };
+  document.getElementById('fClear').onclick = ()=>{ pushHistory(); unfitVertex(region, i); sync(); buildFitPanel(); };
+  document.getElementById('fUnfold').onclick = ()=>{
+    const curveName = document.getElementById('fCurve').value; if(!curveName) return;
+    const reverse = document.getElementById('fRev').checked;
+    let seg = bodyCurve(bodyDesign, curveName); if(!seg || !seg.length) return;
+    if(reverse) seg = seg.slice().reverse();
+    const span = regionFitAt(region, i);          // the fit covering this vertex, if any (may be wider than [i,i])
+    const from = span ? span.from : i, to = span ? span.to : i;
+    pushHistory();
+    region.fits = (region.fits||[]).filter(f=>f!==span);
+    const oldLen = to - from + 1;
+    region.points.splice(from, oldLen, ...seg.map(p=>p.slice()));
+    const shift = seg.length - oldLen;
+    if(shift!==0) region.fits.forEach(f=>{ if(f.from>from) f.from+=shift; if(f.to>from) f.to+=shift; });
+    sel.clear();
+    for(let k=0;k<seg.length;k++) sel.add(sc+'|points|'+(from+k));
+    sync(); buildFitPanel();
+  };
+}
+function buildSpanFitPanel(verts){
+  // two vertices, each already snapped onto some body vertex: trace the
+  // body's own boundary between those two points and copy it in as ordinary
+  // free vertices - no curve name involved, no dropdown. This is a one-time
+  // trace (plain coordinates), not a live fit: it won't follow if the body
+  // is reshaped later. (The single-vertex curve-fit panel below is still how
+  // you inspect/clear a `fits` entry a real garment file already has.)
+  const el = document.getElementById('fitPanel'); if(!el) return;
+  const {region, sc} = verts[0];
+  const lo = Math.min(verts[0].i, verts[1].i), hi = Math.max(verts[0].i, verts[1].i);
+  const a = findBodyVertexIndex(region.points[lo], 0.03);
+  const b = findBodyVertexIndex(region.points[hi], 0.03);
+  if(!a || !b || a.sec!==b.sec){
+    el.innerHTML = `
+      <div class="row">span <b>${sc.replace('region','region ')} #${lo}→#${hi}</b></div>
+      <div class="hint">snap both ends onto the body first — drag each one near a
+        blue body-vertex dot with snapping on (View → snap free vertices).
+        They need to land on the <b>same</b> body part.</div>`;
+    return;
+  }
+  if(a.i===b.i){
+    el.innerHTML = `<div class="hint">both ends are snapped to the same body vertex — move one of them apart first.</div>`;
+    return;
+  }
+  const secPts = bodyDesign.sections[a.sec].points;
+  const fwd = walkBoundary(secPts, a.i, b.i, 1);
+  const bwd = walkBoundary(secPts, a.i, b.i, -1);
+  const short = fwd.length<=bwd.length ? fwd : bwd, long = short===fwd ? bwd : fwd;
+  const label = n => `generate ${n} ${n===1?'vertex':'vertices'} between`;
+  el.innerHTML = `
+    <div class="row">span <b>${sc.replace('region','region ')} #${lo}→#${hi}</b> —
+      both ends sit on <b>${a.sec}</b> (body vertex #${a.i} → #${b.i})</div>
+    <label><input type="checkbox" id="fLongWay"> go the long way around
+      (${short.length-2} vs ${long.length-2} vertices in between)</label>
+    <div class="row"><button id="fGenBetween">${label(short.length-2)}</button></div>
+    <div class="hint">copies the body's own boundary points between these two
+      ends in as plain free vertices, replacing anything currently between
+      them. One-time trace, not a live fit.</div>`;
+  document.getElementById('fLongWay').onchange = e=>
+    document.getElementById('fGenBetween').textContent = label((e.target.checked?long:short).length-2);
+  document.getElementById('fGenBetween').onclick = ()=>{
+    const path = document.getElementById('fLongWay').checked ? long : short;
+    const newPts = path.map(k=>secPts[k].slice());
+    pushHistory();
+    region.fits = (region.fits||[]).filter(f => f.to<lo || f.from>hi);   // drop anything the span overlapped
+    region.points.splice(lo, hi-lo+1, ...newPts);
+    const shift = newPts.length - (hi-lo+1);
+    if(shift!==0) region.fits.forEach(f=>{ if(f.from>hi) f.from+=shift; if(f.to>hi) f.to+=shift; });
+    sel.clear();
+    for(let k=0;k<newPts.length;k++) sel.add(sc+'|points|'+(lo+k));
+    sync(); buildFitPanel();
+  };
+}
+function buildPolyEdit(){
+  const el = document.getElementById('polyEdit'); if(!el) return;
+  const groups = new Set();
+  let onlyPoly = sel.size>0;
+  for(const id of sel){ const [sc,ky] = id.split('|');
+    const m = ky.match(/^(?:circle|detail):(\d+)$/);
+    if(!m){ onlyPoly=false; continue; }
+    groups.add(sc+'|'+m[1]);
+  }
+  if(!onlyPoly || groups.size!==1){
+    el.innerHTML = `<div class="hint">select one whole polygon (dbl-click a handle) to edit its fill</div>`;
+    return;
+  }
+  const [sc,diS] = [...groups][0].split('|'); const di=+diS;
+  const arr = D.sections[sc]?.details;
+  const d = arr?.[di];
+  if(!d){ el.innerHTML=''; return; }
+  const fileGroups = FACE_MODE ? ['body', ...new Set(arr.map(x=>x._src).filter(s=>s && s!=='body'))] : null;
+  el.innerHTML = `
+    <div class="row">name <input id="dNote" type="text" style="flex:1;background:#12141a;color:#d9dce2;border:1px solid #3a4150;
+      border-radius:4px;padding:3px 5px" value="${(d.note||'').replace(/"/g,'&quot;')}" placeholder="unnamed"></div>
+    <div class="row">material <select id="dMat">${MATNAMES.map(m=>`<option ${m===d.material?'selected':''}>${m}</option>`).join('')}</select>
+      <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
+        background:${rgb(resolveColor(d.material,d.tone||'mid'))}"></span></div>
+    <div class="row">tone <select id="dTone">${['mid','dark','light'].map(t=>`<option ${t===(d.tone||'mid')?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="row">anim. group <input id="dGroup" type="text" style="flex:1;background:#12141a;color:#d9dce2;
+      border:1px solid #3a4150;border-radius:4px;padding:3px 5px" value="${(d.group||'').replace(/"/g,'&quot;')}" placeholder="(section default)"></div>
+    ${fileGroups ? `<div class="row">file <select id="dSrc">${fileGroups.map(g=>`<option value="${g}" ${g===(d._src||'body')?'selected':''}>${g==='body'?'head (body file)':g}</option>`).join('')}</select></div>` : ''}
+    <div class="row">layer
+      <button id="dToBack" title="send to back">⤓ back</button>
+      <button id="dDown" title="move back one">↓</button>
+      <button id="dUp" title="move forward one">↑</button>
+      <button id="dToFront" title="bring to front">⤒ front</button>
+    </div>
+    <div class="hint">${d.circle ? 'circle detail' : (d.points||[]).length+'-vertex polygon'} — layer ${di+1} of ${arr.length}
+      (later = drawn on top, within this same file group)</div>`;
+  document.getElementById('dNote').onchange = e=>{ pushHistory(); d.note=e.target.value; sync(); buildSecList(); };
+  document.getElementById('dMat').onchange = e=>{ pushHistory(); d.material=e.target.value; sync(); buildPolyEdit(); };
+  document.getElementById('dTone').onchange = e=>{ pushHistory(); d.tone=e.target.value; if(d.tone==='mid') delete d.tone; sync(); buildPolyEdit(); };
+  document.getElementById('dGroup').onchange = e=>{ pushHistory();
+    if(e.target.value) d.group=e.target.value; else delete d.group; sync(); buildPolyEdit(); };
+  if(fileGroups) document.getElementById('dSrc').onchange = e=>{ pushHistory();
+    if(e.target.value==='body') delete d._src; else d._src=e.target.value;
+    sync(); buildSecList(); };
+  const reorder = to => reorderDetail(sc, di, to);
+  document.getElementById('dToBack').onclick = ()=>reorder(0);
+  document.getElementById('dDown').onclick = ()=>reorder(di-1);
+  document.getElementById('dUp').onclick = ()=>reorder(di+1);
+  document.getElementById('dToFront').onclick = ()=>reorder(arr.length-1);
+}
+// move a detail within its owning section's `details` array - draw order
+// within one section is array order (later = on top). Keeps it selected.
+function reorderDetail(sc, di, to){
+  const arr = D.sections[sc].details;
+  to = Math.max(0, Math.min(arr.length-1, to));
+  if(to===di) return;
+  pushHistory();
+  const [item] = arr.splice(di,1);
+  arr.splice(to,0,item);
+  sel.clear();
+  if(item.circle) sel.add(sc+'|circle:'+to+'|0');
+  else for(let k=0;k<item.points.length;k++) sel.add(sc+'|detail:'+to+'|'+k);
+  buildSecList(); sync();
+}
+// ---- selection: each entry is a live reference to a vertex or a circle ----
+function selPts(){
+  const out=[];
+  for(const id of sel){ const [sc,ky,ii]=id.split('|');
+    const S = D.sections[sc]; if(!S) continue;
+    if(ky.startsWith('circle')){
+      const c = S.details?.[+ky.split(':')[1]]?.circle;
+      if(c) out.push({circle:c});
+    } else {
+      const a = getArr(sc,ky);
+      if(a && a[+ii]) out.push({arr:a, i:+ii});
+    }
+  }
+  return out;
+}
+function selBBox(){
+  const P=selPts(); if(!P.length) return null;
+  let x0=1e18,y0=1e18,x1=-1e18,y1=-1e18;
+  for(const p of P){ const [x,y]= p.circle ? p.circle : p.arr[p.i];
+    x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y); }
+  return [x0,y0,x1,y1];
+}
+function selCentre(){ const b=selBBox(); return b ? [(b[0]+b[2])/2,(b[1]+b[3])/2] : [0,0]; }
+function scaleSel(f){
+  const [cx,cy]=selCentre();
+  for(const p of selPts()){
+    if(p.circle){ p.circle[0]=cx+(p.circle[0]-cx)*f; p.circle[1]=cy+(p.circle[1]-cy)*f; p.circle[2]=Math.max(0.01,p.circle[2]*f); }
+    else p.arr[p.i]=[cx+(p.arr[p.i][0]-cx)*f, cy+(p.arr[p.i][1]-cy)*f];
+  }
+  sync();
+}
+function rotateSel(deg){
+  const [cx,cy]=selCentre(), a=deg*Math.PI/180, ca=Math.cos(a), sa=Math.sin(a);
+  for(const p of selPts()){
+    const [x,y]= p.circle ? p.circle : p.arr[p.i];
+    const nx=cx+(x-cx)*ca-(y-cy)*sa, ny=cy+(x-cx)*sa+(y-cy)*ca;
+    if(p.circle){ p.circle[0]=nx; p.circle[1]=ny; } else p.arr[p.i]=[nx,ny];
+  }
+  sync();
+}
+function newDetailRadius(){ return Math.max(0.06, Math.min(3, 24/(view.s || 40))); }
+function uniqueDetailName(host, kind){       // "new polygon", "new polygon 2", ...
+  const used = new Set((host.details||[]).map(d=>d.note));
+  if(!used.has('new '+kind)) return 'new '+kind;
+  let n=2; while(used.has('new '+kind+' '+n)) n++;
+  return 'new '+kind+' '+n;
+}
+function addPoly(){
+  const host = FACE_MODE ? D.sections.head : (selSec && D.sections[selSec]);
+  if(!host){ alert('select a section first'); return; }
+  pushHistory();
+  const r = newDetailRadius();
+  // tone:'dark' so a same-material polygon still shows up as a visibly filled
+  // shape against the mid-tone base instead of blending invisibly into it -
+  // pick the material + tone in the fill panel once it's placed. Give it a
+  // unique name so it's tellable apart in the Sections/Polygons list.
+  const poly = { material: FACE_MODE ? 'skin' : (host.material||'skin'), tone:'dark',
+    note: uniqueDetailName(host, 'polygon'),
+    points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]] };
+  if(FACE_MODE){
+    poly.group='face';
+    const tgt = document.getElementById('pTarget')?.value;
+    if(tgt && tgt!=='body') poly._src = tgt;   // groups it with that face-kit file, not the body
+  }
+  (host.details = host.details||[]).push(poly);
+  const nm = FACE_MODE ? 'head' : selSec, di = host.details.length-1;
+  sel.clear(); for(let k=0;k<4;k++) sel.add(nm+'|detail:'+di+'|'+k);
+  if(FACE_MODE) detPick.clear();
+  buildSecList(); sync();
+}
+function addCircle(){
+  const host = FACE_MODE ? D.sections.head : (selSec && D.sections[selSec]);
+  if(!host){ alert('select a section first'); return; }
+  pushHistory();
+  const r = newDetailRadius();
+  // a round detail is authored as {circle:[cx,cy,r]} - expand() (and this
+  // editor) turn it into an n-gon at render time (6-24 sides by size), the
+  // same as the existing iris/pupil/catchlight pieces.
+  const circ = { material: FACE_MODE ? 'skin' : (host.material||'skin'), tone:'dark',
+    note: uniqueDetailName(host, 'circle'),
+    circle: [view.x, view.y, r] };
+  if(FACE_MODE){
+    circ.group='face';
+    const tgt = document.getElementById('pTarget')?.value;
+    if(tgt && tgt!=='body') circ._src = tgt;
+  }
+  (host.details = host.details||[]).push(circ);
+  const nm = FACE_MODE ? 'head' : selSec, di = host.details.length-1;
+  sel.clear(); sel.add(nm+'|circle:'+di+'|0');
+  if(FACE_MODE) detPick.clear();
+  buildSecList(); sync();
+}
+function delSelPolys(){
+  const byS = {};
+  for(const id of sel){ const [sc,ky]=id.split('|');
+    const m = ky.match(/^(?:circle|detail):(\d+)$/);
+    if(m) (byS[sc]=byS[sc]||new Set()).add(+m[1]);
+  }
+  const scs = Object.keys(byS); if(!scs.length){ alert('select a whole polygon first (dbl-click a handle)'); return; }
+  pushHistory();
+  for(const sc of scs){ const idxs=[...byS[sc]].sort((a,b)=>b-a);
+    for(const di of idxs) D.sections[sc].details.splice(di,1); }
+  sel.clear(); buildSecList(); sync();
+}
+
+// ---- reference image overlay (session-only, never saved with the design) ----
+function loadRefImage(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      // downscale so a big photo doesn't bloat every re-render (the whole SVG
+      // is re-stringified on every edit)
+      const maxDim = 1100;
+      const s = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      const iw = Math.max(1, Math.round(img.naturalWidth * s)), ih = Math.max(1, Math.round(img.naturalHeight * s));
+      const cnv = document.createElement('canvas'); cnv.width = iw; cnv.height = ih;
+      cnv.getContext('2d').drawImage(img, 0, 0, iw, ih);
+      const visW = (svg.getBoundingClientRect().width || 600) / view.s;
+      ref = { href: cnv.toDataURL('image/png'), iw, ih, cx: view.x, cy: view.y,
+              wu: visW * 0.7, opacity: 0.5, show: true };
+      refMoveMode = true;
+      buildRefPanel(); render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function buildRefPanel(){
+  const el = document.getElementById('refPanel');
+  if(!ref){ el.innerHTML = `<div class="hint">no image loaded</div>`; return; }
+  el.innerHTML = `
+    <label><input type="checkbox" id="refShow" ${ref.show?'checked':''}> show</label>
+    <label><input type="checkbox" id="refMove" ${refMoveMode?'checked':''}> position (drag it on the canvas)</label>
+    <div class="row">opacity <input type="range" id="refOpacity" min="0.05" max="1" step="0.05" value="${ref.opacity}" style="flex:1"></div>
+    <div class="row">size <input type="range" id="refScale" min="${ref.wu*0.2}" max="${ref.wu*5}" step="${ref.wu*0.02}" value="${ref.wu}" style="flex:1"></div>`;
+  document.getElementById('refShow').onchange = e=>{ ref.show=e.target.checked; render(); };
+  document.getElementById('refMove').onchange = e=>{ refMoveMode=e.target.checked; render(); };
+  document.getElementById('refOpacity').oninput = e=>{ ref.opacity=+e.target.value; render(); };
+  document.getElementById('refScale').oninput = e=>{ ref.wu=+e.target.value; render(); };
+}
+function handleSet(pts, sec, key, cls, perClass){
   let s = '';
   if(document.getElementById('tEdges').checked){
     for(let i=0;i<pts.length;i++){ const a=W2S(...pts[i]), b=W2S(...pts[(i+1)%pts.length]);
-      s += `<line class="edge" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-sec="${sec}" data-key="${key}" data-i="${i}"/>`; }
+      const attrs = `x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" data-sec="${sec}" data-key="${key}" data-i="${i}"`;
+      // a fat, invisible hit line carries the real click/dblclick target (a 1px
+      // stroke is nearly impossible to land a double-click on); the thin
+      // coloured line on top is cosmetic only and never receives events.
+      s += `<line class="edge" stroke="transparent" stroke-width="14" ${attrs}/>`;
+      s += `<line class="edge" style="pointer-events:none" ${attrs}/>`;
+    }
   }
-  pts.forEach((p,i)=>{ const c=W2S(...p);
-    s += `<circle class="${cls}" cx="${c[0]}" cy="${c[1]}" r="4" data-sec="${sec}" data-key="${key}" data-i="${i}"/>`; });
+  pts.forEach((p,i)=>{ const c=W2S(...p); const id=sec+'|'+key+'|'+i;
+    HANDLES.push({id, sx:c[0], sy:c[1], sec, key, i});
+    const extra = (perClass ? ' '+perClass(i) : '') + (sel.has(id)?' sel':'');
+    s += `<circle class="${cls}${extra}" cx="${c[0]}" cy="${c[1]}" r="4" data-sec="${sec}" data-key="${key}" data-i="${i}"/>`; });
   return s;
 }
 
@@ -263,19 +1075,47 @@ function mirrorTwin(sec){
 }
 
 let drag = null;
+function evtPos(e){ const r=svg.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; }
+
 svg.addEventListener('pointerdown', e=>{
   const t = e.target;
-  if(e.button===1 || e.shiftKey && !t.dataset.sec){ drag={pan:true, sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y}; return; }
+  const [sx,sy] = evtPos(e);
+  if(e.button===1 || spaceDown || (e.altKey && !t.classList.contains('handle'))){
+    drag={pan:true, sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y}; return;
+  }
+  if(t.dataset.gizmo){
+    const [cx,cy]=selCentre(), w=S2W(sx,sy);
+    drag = { scale:true, cx, cy, d0: Math.hypot(w[0]-cx, w[1]-cy) || 1e-6,
+             base: selPts().map(p=> p.circle ? p.circle.slice() : p.arr[p.i].slice()) };
+    pushHistory(); svg.setPointerCapture(e.pointerId); return;
+  }
+  if(t.id==='refImgEl' && refMoveMode && ref){
+    drag = { refMove:true, startW: S2W(sx,sy), base:[ref.cx,ref.cy] };
+    svg.setPointerCapture(e.pointerId); return;
+  }
   if(t.classList.contains('handle')){
-    if(e.altKey || e.button===2){ // delete
-      const arr = getArr(t.dataset.sec, t.dataset.key);
-      if(arr.length>3){ pushHistory(); arr.splice(+t.dataset.i,1); sync(); }
+    const sec=t.dataset.sec, key=t.dataset.key, i=+t.dataset.i, id=sec+'|'+key+'|'+i;
+    if(e.altKey || e.button===2){                     // delete a single vertex
+      const arr = getArr(sec, key);
+      if(arr && arr.length>3){ pushHistory(); arr.splice(i,1); sel.delete(id); sync(); }
       return;
     }
+    if(e.shiftKey && !key.startsWith('circleR')){ sel.has(id)?sel.delete(id):sel.add(id); render(); return; }
+    if(key.startsWith('circleR')){                    // radius-only drag, never multi-select
+      pushHistory(); drag = { radius:true, sec, key }; svg.setPointerCapture(e.pointerId); return;
+    }
+    if(!sel.has(id)){ sel.clear(); sel.add(id); }
     pushHistory();
-    drag = { sec:t.dataset.sec, key:t.dataset.key, i:+t.dataset.i };
+    drag = { move:true, startW: S2W(sx,sy),
+              base: selPts().map(p=> p.circle ? p.circle.slice(0,2) : p.arr[p.i].slice()) };
     svg.setPointerCapture(e.pointerId);
+    return;
   }
+  if(t.classList.contains('edge')) return;   // leave edge clicks alone - dblclick inserts a point there
+  // empty space: box-select, or freehand lasso if that mode is on
+  if(document.getElementById('tLasso').checked){ lasso=[[sx,sy]]; drag={lasso:true, add:e.shiftKey}; }
+  else { marq={x0:sx,y0:sy,x1:sx,y1:sy}; drag={marq:true, add:e.shiftKey}; }
+  svg.setPointerCapture(e.pointerId);
 });
 svg.addEventListener('dblclick', e=>{
   const t = e.target;
@@ -283,70 +1123,260 @@ svg.addEventListener('dblclick', e=>{
     const arr = getArr(t.dataset.sec, t.dataset.key); const i=+t.dataset.i;
     const a=arr[i], b=arr[(i+1)%arr.length];
     pushHistory();
-    arr.splice(i+1,0,[ (a[0]+b[0])/2, (a[1]+b[1])/2 ]);
-    sync();
+    const count = Math.max(1, +document.getElementById('insertCount')?.value || 1);
+    const newPts = [];
+    for(let k=1; k<=count; k++){ const t2 = k/(count+1);
+      newPts.push([a[0]+(b[0]-a[0])*t2, a[1]+(b[1]-a[1])*t2]); }
+    arr.splice(i+1, 0, ...newPts);
+    sel.clear(); for(let k=0;k<count;k++) sel.add(t.dataset.sec+'|'+t.dataset.key+'|'+(i+1+k));
+    sync(); return;
+  }
+  if(t.classList.contains('handle')){                 // select the whole polygon this handle belongs to
+    const sec=t.dataset.sec, key=t.dataset.key;
+    if(!e.shiftKey) sel.clear();
+    if(key.startsWith('circle')) sel.add(sec+'|circle:'+key.split(':')[1]+'|0');
+    else { const arr=getArr(sec,key); for(let i=0;i<arr.length;i++) sel.add(sec+'|'+key+'|'+i); }
+    render();
   }
 });
 svg.addEventListener('pointermove', e=>{
-  const w = S2W(e.clientX - svg.getBoundingClientRect().left, e.clientY - svg.getBoundingClientRect().top);
-  document.getElementById('hud').textContent = `x ${w[0].toFixed(2)}  y ${w[1].toFixed(2)}   zoom ${view.s.toFixed(1)}`;
+  const [sx,sy] = evtPos(e);
+  const w = S2W(sx, sy);
+  document.getElementById('hud').textContent =
+    `x ${w[0].toFixed(2)}  y ${w[1].toFixed(2)}   zoom ${view.s.toFixed(1)}` + (sel.size ? `   sel ${sel.size}` : '');
   if(!drag) return;
   if(drag.pan){ view.x = drag.vx - (e.clientX-drag.sx)/view.s; view.y = drag.vy - (e.clientY-drag.sy)/view.s; render(); return; }
-  const arr = getArr(drag.sec, drag.key);
-  const nx = snap(w[0]), ny = snap(w[1]);
-  const old = arr[drag.i].slice();
-  arr[drag.i] = [nx, ny];
-  if(document.getElementById('tMirror').checked){
-    const tw = mirrorTwin(drag.sec);
-    if(tw){ const ta = (drag.key==='points') ? D.sections[tw].points
-              : drag.key.startsWith('detail:') ? (D.sections[tw].details||[])[+drag.key.split(':')[1]]?.points
-              : D.sections[tw][drag.key];
-      if(ta && ta[drag.i]) ta[drag.i] = [-nx, ny]; }
+  if(drag.marq){ marq.x1=sx; marq.y1=sy; render(); return; }
+  if(drag.lasso){ lasso.push([sx,sy]); render(); return; }
+  if(drag.refMove){
+    ref.cx = drag.base[0] + (w[0]-drag.startW[0]);
+    ref.cy = drag.base[1] + (w[1]-drag.startW[1]);
+    render(); return;
   }
-  sync();
+  if(drag.radius){
+    const di = +drag.key.split(':')[1], cir = D.sections[drag.sec].details[di].circle;
+    cir[2] = Math.max(0.02, Math.hypot(snap(w[0])-cir[0], snap(w[1])-cir[1]));
+    sync(); return;
+  }
+  if(drag.scale){
+    const f = Math.hypot(w[0]-drag.cx, w[1]-drag.cy) / drag.d0;
+    selPts().forEach((p,k)=>{ const b=drag.base[k];
+      if(p.circle){ p.circle[0]=drag.cx+(b[0]-drag.cx)*f; p.circle[1]=drag.cy+(b[1]-drag.cy)*f; p.circle[2]=Math.max(0.01,b[2]*f); }
+      else p.arr[p.i]=[drag.cx+(b[0]-drag.cx)*f, drag.cy+(b[1]-drag.cy)*f];
+    });
+    sync(); return;
+  }
+  if(drag.move){
+    const dx = w[0]-drag.startW[0], dy = w[1]-drag.startW[1];
+    const snapOn = TAILOR_MODE && document.getElementById('tSnapBody')?.checked;
+    const snapWorldDist = snapOn ? (+document.getElementById('snapDist').value || 14) / view.s : 0;
+    const P = selPts();
+    snapTarget = null;
+    P.forEach((p,k)=>{ const b=drag.base[k];
+      let nx = snap(b[0]+dx), ny = snap(b[1]+dy);
+      if(snapOn){ const near = nearestBodyVertex(nx, ny, snapWorldDist); if(near){ nx=near[0]; ny=near[1]; snapTarget=near; } }
+      if(p.circle){ p.circle[0]=nx; p.circle[1]=ny; }
+      else p.arr[p.i]=[nx, ny];
+    });
+    if(sel.size===1 && document.getElementById('tMirror').checked){
+      const [sc,ky,ii] = [...sel][0].split('|');
+      const tw = mirrorTwin(sc);
+      if(tw && !ky.startsWith('circle')){
+        const ta = ky==='points' ? D.sections[tw].points
+                 : ky.startsWith('detail:') ? (D.sections[tw].details||[])[+ky.split(':')[1]]?.points
+                 : D.sections[tw][ky];
+        const src = getArr(sc,ky);
+        if(ta && ta[+ii] && src && src[+ii]) ta[+ii] = [-src[+ii][0], src[+ii][1]];
+      }
+    }
+    sync(); return;
+  }
 });
-svg.addEventListener('pointerup', ()=>{ drag=null; });
+svg.addEventListener('pointerup', ()=>{
+  if(drag && (drag.marq || drag.lasso)){
+    if(!drag.add) sel.clear();
+    const hit = drag.marq
+      ? h => h.sx>=Math.min(marq.x0,marq.x1) && h.sx<=Math.max(marq.x0,marq.x1)
+          && h.sy>=Math.min(marq.y0,marq.y1) && h.sy<=Math.max(marq.y0,marq.y1)
+      : h => pip(h.sx, h.sy, lasso);
+    for(const h of HANDLES){ if(!h.key.startsWith('circleR') && hit(h)) sel.add(h.id); }
+    marq = null; lasso = null;
+  }
+  drag = null; snapTarget = null; render();
+});
 svg.addEventListener('contextmenu', e=>e.preventDefault());
 svg.addEventListener('wheel', e=>{
   e.preventDefault();
   const before = S2W(e.clientX-svg.getBoundingClientRect().left, e.clientY-svg.getBoundingClientRect().top);
   view.s *= e.deltaY<0 ? 1.12 : 1/1.12;
-  view.s = Math.max(3, Math.min(90, view.s));
+  view.s = Math.max(3, Math.min(FACE_MODE ? 800 : 200, view.s));
   const after = S2W(e.clientX-svg.getBoundingClientRect().left, e.clientY-svg.getBoundingClientRect().top);
   view.x += before[0]-after[0]; view.y += before[1]-after[1];
   render();
 }, {passive:false});
 
 document.addEventListener('keydown', e=>{
-  if((e.key==='z'||e.key==='Z') && !e.target.matches('textarea,input')){ undo(); }
+  if(e.target.matches('textarea,input')) return;
+  if(e.key===' '){ spaceDown=true; e.preventDefault(); return; }
+  if(e.key==='z'||e.key==='Z'){ undo(); return; }
+  if(e.key==='Escape'){ sel.clear(); marq=null; lasso=null; render(); return; }
+  if((e.key==='Delete'||e.key==='Backspace') && sel.size){
+    e.preventDefault();
+    // if every selected vertex is a whole polygon's worth, delete the polygon(s); else just the vertices
+    const byArr = new Map();
+    for(const id of sel){ const [sc,ky,ii]=id.split('|'); if(ky.startsWith('circle')) continue;
+      const a=getArr(sc,ky); if(!a) continue;
+      if(!byArr.has(a)) byArr.set(a,[]); byArr.get(a).push(+ii); }
+    let full = byArr.size>0;
+    for(const [a,idxs] of byArr) if(idxs.length < a.length) full = false;
+    const hasCircle = [...sel].some(id => id.split('|')[1].startsWith('circle'));
+    if(hasCircle || (full && byArr.size)){ delSelPolys(); return; }
+    pushHistory();
+    for(const [a,idxs] of byArr){ idxs.sort((x,y)=>y-x); for(const ix of idxs) if(a.length>3) a.splice(ix,1); }
+    sel.clear(); sync(); return;
+  }
+  if((e.key==='i'||e.key==='I') && sel.size===2){
+    e.preventDefault();
+    const [a,b] = [...sel].map(id=>{ const [sc,ky,ii]=id.split('|'); return {sc,ky,i:+ii}; });
+    if(a.sc!==b.sc || a.ky!==b.ky || a.ky.startsWith('circle')){
+      alert('select two adjacent vertices of the same polygon to insert a point between them'); return;
+    }
+    const arr = getArr(a.sc, a.ky), n = arr.length;
+    const lo = Math.min(a.i,b.i), hi = Math.max(a.i,b.i);
+    const insertAt = hi - lo === 1 ? hi : (lo===0 && hi===n-1 ? n : null);
+    if(insertAt===null){ alert('those two vertices are not adjacent on the polygon'); return; }
+    pushHistory();
+    const count = Math.max(1, +document.getElementById('insertCount')?.value || 1);
+    const pa = arr[a.i], pb = arr[b.i];
+    const newPts = [];
+    for(let k=1; k<=count; k++){ const t = k/(count+1);
+      newPts.push([pa[0]+(pb[0]-pa[0])*t, pa[1]+(pb[1]-pa[1])*t]); }
+    arr.splice(insertAt, 0, ...newPts);
+    sel.clear(); for(let k=0;k<count;k++) sel.add(a.sc+'|'+a.ky+'|'+(insertAt+k));
+    sync(); return;
+  }
+  if(e.key==='['){ e.preventDefault(); if(sel.size){ pushHistory(); scaleSel(0.96); } return; }
+  if(e.key===']'){ e.preventDefault(); if(sel.size){ pushHistory(); scaleSel(1/0.96); } return; }
+  if(e.key===','){ e.preventDefault(); if(sel.size){ pushHistory(); rotateSel(-3); } return; }
+  if(e.key==='.'){ e.preventDefault(); if(sel.size){ pushHistory(); rotateSel(3); } return; }
+  const step = document.getElementById('tSnap').checked ? 0.05 : 0.02;
+  const nud = {ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[e.key];
+  if(nud && sel.size){
+    e.preventDefault(); pushHistory();
+    for(const p of selPts()){
+      if(p.circle){ p.circle[0]+=nud[0]; p.circle[1]+=nud[1]; }
+      else { p.arr[p.i][0]+=nud[0]; p.arr[p.i][1]+=nud[1]; }
+    }
+    sync();
+  }
 });
+document.addEventListener('keyup', e=>{ if(e.key===' ') spaceDown=false; });
+document.getElementById('pAdd').onclick = addPoly;
+document.getElementById('pAddC').onclick = addCircle;
+document.getElementById('pDel').onclick = delSelPolys;
+document.getElementById('refLoad').onclick = ()=>document.getElementById('refFile').click();
+document.getElementById('refFile').onchange = e=>{ const f=e.target.files[0]; if(f) loadRefImage(f); e.target.value=''; };
+document.getElementById('refRemove').onclick = ()=>{ ref=null; refMoveMode=false; buildRefPanel(); render(); };
+buildRefPanel();
 
 // ---- side panel -----------------------------------------------------
+function moveSectionOrder(name, delta){
+  if(TAILOR_MODE){
+    // an article has no `draw_order` field - regions draw in array order, so
+    // reorder D.regions itself and rebuild the region0/region1/... aliases.
+    const i = +name.replace('region','');
+    const j = Math.max(0, Math.min(D.regions.length-1, i+delta));
+    if(j===i) return;
+    pushHistory();
+    const [item] = D.regions.splice(i,1); D.regions.splice(j,0,item);
+    relinkTailorSections(); sel.clear();
+    buildSecList(); sync();
+    return;
+  }
+  D.draw_order = D.draw_order || Object.keys(D.sections);   // make it a real, persisted array
+  const order = D.draw_order;
+  const i = order.indexOf(name); if(i<0) return;
+  const j = Math.max(0, Math.min(order.length-1, i+delta));
+  if(j===i) return;
+  pushHistory();
+  order.splice(i,1); order.splice(j,0,name);
+  buildSecList(); sync();
+}
 function buildSecList(){
   const el = document.getElementById('secList'); el.innerHTML='';
+  if(FACE_MODE){ buildFaceList(el); return; }
   const order = D.draw_order || Object.keys(D.sections);
   const bar = document.createElement('div'); bar.className='row';
   bar.innerHTML = `<button id="allShow">show all</button><button id="allHide">hide all</button>`;
   el.appendChild(bar);
   bar.querySelector('#allShow').onclick = ()=>{ hidden.clear(); buildSecList(); render(); };
   bar.querySelector('#allHide').onclick = ()=>{ order.forEach(n=>hidden.add(n)); buildSecList(); render(); };
-  order.forEach(name=>{
+  order.forEach((name,oi)=>{
     const row = document.createElement('label');
     row.innerHTML = `<button class="eye" title="show / hide this part">${hidden.has(name)?'–':'●'}</button>
+      <button class="eye" title="earlier in draw order (further back)" ${oi===0?'disabled':''}>↓</button>
+      <button class="eye" title="later in draw order (further forward)" ${oi===order.length-1?'disabled':''}>↑</button>
       <span class="nm ${name===selSec?'sel':''}">${name}</span>
       <input type="checkbox" title="show vertex handles" ${shown.has(name)?'checked':''}>`;
-    row.querySelector('.eye').onclick = ev=>{ ev.preventDefault();
+    const eyes = row.querySelectorAll('.eye');
+    eyes[0].onclick = ev=>{ ev.preventDefault();
       hidden.has(name) ? hidden.delete(name) : hidden.add(name); buildSecList(); render(); };
+    eyes[1].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, -1); };
+    eyes[2].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, 1); };
     row.querySelector('.nm').onclick = ev=>{ ev.preventDefault(); selSec=name; shown.add(name); hidden.delete(name);
       buildSecList(); buildSecEdit(); render(); };
     row.querySelector('input').onchange = ev=>{ ev.target.checked ? shown.add(name) : shown.delete(name); render(); };
     el.appendChild(row);
   });
 }
+function refreshTargetSelect(groups){
+  const sel_ = document.getElementById('pTarget'); if(!sel_) return;
+  const cur = sel_.value;
+  const opts = groups.includes('body') ? groups : ['body', ...groups];
+  sel_.innerHTML = opts.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${
+    g==='body' ? 'head (baked into this body file)' : g}</option>`).join('');
+}
+function buildFaceList(el){
+  const dets = (D.sections.head && D.sections.head.details) || [];
+  const bar = document.createElement('div'); bar.className='row';
+  bar.innerHTML = `<button id="fAll">all handles</button>`;
+  bar.querySelector('#fAll').onclick = ()=>{ detPick.clear(); buildSecList(); render(); };
+  el.appendChild(bar);
+  const bySrc = {};
+  dets.forEach((d,di)=> (bySrc[d._src||'body'] = bySrc[d._src||'body']||[]).push(di));
+  refreshTargetSelect(Object.keys(bySrc));
+  for(const src of Object.keys(bySrc)){
+    const h = document.createElement('div'); h.className='hint'; h.style.marginTop='6px';
+    h.textContent = src === 'body' ? 'head (in the body file)' : src;
+    el.appendChild(h);
+    bySrc[src].forEach(di=>{
+      const d = dets[di];
+      const row = document.createElement('label');
+      const on = !detPick.size || detPick.has('head:'+di);
+      row.innerHTML = `<button class="eye">${on?'●':'–'}</button>
+        <span class="nm">${(d.note||d.material)}${d.circle?' ○':''}</span>`;
+      row.querySelector('.eye').onclick = ev=>{ ev.preventDefault();
+        detPick.has('head:'+di) ? detPick.delete('head:'+di) : detPick.add('head:'+di);
+        buildSecList(); render(); };
+      row.querySelector('.nm').onclick = ev=>{ ev.preventDefault();
+        detPick.clear(); detPick.add('head:'+di);
+        const t=document.getElementById('pTarget'); if(t) t.value = src;   // new pieces follow what you isolate
+        buildSecList(); render(); };
+      el.appendChild(row);
+    });
+  }
+}
 function buildSecEdit(){
   const el = document.getElementById('secEdit');
+  if(FACE_MODE){        // this panel edits a body SECTION's own base material
+    el.innerHTML = `<div class="hint">this is the head's own skin, not a face
+      piece — use the <b>Polygons</b> fill panel above (select one whole piece)
+      to change an eye/brow/nose/lip's material instead.</div>`;
+    return;
+  }
   if(!selSec){ el.innerHTML='<div class="hint">none</div>'; return; }
   const S = D.sections[selSec];
+  const freezeOk = !TAILOR_MODE || bodyDesign;   // needs the resolved shape, which needs the body
   el.innerHTML = `
     <div class="row">material
       <select id="mMat">${MATNAMES.map(m=>`<option ${m===S.material?'selected':''}>${m}</option>`).join('')}</select>
@@ -355,16 +1385,20 @@ function buildSecEdit(){
       <select id="mTone">${['mid','dark','light'].map(t=>`<option ${t===(S.tone||'mid')?'selected':''}>${t}</option>`).join('')}</select>
     </div>
     <div class="row">
-      <button id="mFreeze">${S.shade_dark?'recompute auto-shade':'freeze shade → editable'}</button>
+      <button id="mFreeze" ${freezeOk?'':'disabled'}>${S.shade_dark?'recompute auto-shade':'freeze shade → editable'}</button>
     </div>
-    <div class="hint">${S.points.length} vertices${S.shade_dark?' · manual shade':''}</div>`;
+    <div class="hint">${S.points.length} vertices${S.shade_dark?' · manual shade':''}
+      ${TAILOR_MODE?' (vertex count includes fit placeholders)':''}</div>`;
   document.getElementById('mMat').onchange = e=>{ pushHistory(); S.material=e.target.value; sync(); };
   document.getElementById('mTone').onchange = e=>{ pushHistory(); S.tone=e.target.value; if(S.tone==='mid')delete S.tone; sync(); };
   document.getElementById('mFreeze').onclick = ()=>{
     pushHistory();
     if(S.shade_dark){ delete S.shade_dark; delete S.shade_light; }
     else {
-      const [dark,lite] = shadeBands(S.points, S.material);
+      // tailor mode: shade the RESOLVED (fitted+outset) shape, never the raw
+      // placeholder points, or the frozen crescent would be nonsense.
+      const shapePts = TAILOR_MODE ? outsetPts(applyFits(S.points, S.fits, bodyDesign), S.outset ?? D.outset ?? 0.12) : S.points;
+      const [dark,lite] = shadeBands(shapePts, S.material);
       if(dark[0]) S.shade_dark = dark[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
       if(lite[0]) S.shade_light = lite[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
     }
@@ -373,16 +1407,152 @@ function buildSecEdit(){
 }
 
 // ---- io ------------------------------------------------------------
-function round(o){ return JSON.parse(JSON.stringify(o), (k,v)=> typeof v==='number' ? +v.toFixed(3) : v); }
-function sync(){ document.getElementById('out').value = JSON.stringify(round(D), null, 2); render(); }
-function undo(){ if(history.length){ D = JSON.parse(history.pop()); sync(); buildSecList(); buildSecEdit(); } }
-
-function loadDesign(obj){
-  D = obj; selSec=null; shown.clear(); hidden.clear();
-  (D.draw_order||Object.keys(D.sections)).forEach(n=>shown.add(n));
-  try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
-  fitView(); buildSecList(); buildSecEdit(); sync();
+// `_src` (which face-kit file a merged detail came from) is kept in the
+// output on purpose: Copy/Download/#out are the hand-off to the agent for
+// the save step, and it needs `_src` to route each piece back to the file it
+// belongs in without guessing from `note` text. The agent strips `_src`
+// itself when it writes the real per-file JSON - it is never meant to reach
+// a committed design file.
+function round(o){ return JSON.parse(
+  // `sections` on an article is a display-only alias for `regions` (see
+  // relinkTailorSections) - never let it leak into the saved/copied JSON.
+  JSON.stringify(o, (k,v)=> (TAILOR_MODE && k==='sections') ? undefined : v),
+  (k,v)=> typeof v==='number' ? +v.toFixed(3) : v); }
+function allFinite(o){
+  if(typeof o === 'number') return Number.isFinite(o);
+  if(Array.isArray(o)) return o.every(allFinite);
+  if(o && typeof o === 'object') return Object.values(o).every(allFinite);
+  return true;
 }
+function draftKey(){ return loadedPath ? 'gpDraft:' + loadedPath + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '') : null; }
+function sync(){
+  document.getElementById('out').value = JSON.stringify(round(D), null, 2);
+  const k = draftKey();
+  // never persist a draft containing NaN/Infinity (a stray divide-by-zero
+  // while dragging, say) - better to lose that one edit than restore garbage
+  // that breaks rendering on the next load.
+  if(k && allFinite(D)){ try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){} }
+  render();
+}
+function undo(){ if(history.length){ D = JSON.parse(history.pop()); if(TAILOR_MODE) relinkTailorSections(); sync(); buildSecList(); buildSecEdit(); } }
+
+function relinkTailorSections(){
+  // an article's `regions` array has no names to key handles/selection by -
+  // alias each region as D.sections["region<i>"] (same object, by reference)
+  // so all the existing section-shaped machinery (handles, multiselect,
+  // scale/rotate, layer order, the fill panel) works on regions unchanged.
+  // round() strips this back out before it ever reaches #out/Copy/Download.
+  D.regions = D.regions || [];
+  D.sections = {};
+  D.regions.forEach((r,i)=>{ D.sections['region'+i] = r; });
+}
+async function loadBodyForTailoring(){
+  try{
+    const r = await fetch('/' + FITBODY.replace(/^\/+/, ''));
+    bodyDesign = r.ok ? await r.json() : null;
+  }catch(e){ bodyDesign = null; }
+  if(!bodyDesign){ alert("couldn't load the reference body: " + FITBODY); return; }
+  await loadBodyFaceKit();   // the raw body file's head has no face details of its own - pull them in
+  bodyHidden.clear(); bodyVertsOff.clear();
+  buildBodyPartList();
+  populateBodyPicker();
+}
+// the reference body is loaded as-is, and its head carries no inline face
+// details (those live in faces/<slot>_<name>.json, per docs/GRAPHICS_PIPELINE.md's
+// face-mode section) - pull them in the same way so the backdrop actually
+// shows eyes/nose/lips instead of a bare head. bodyDesign is read-only here
+// (tailor mode never saves it), so there's no need to tag/undo this later.
+async function loadBodyFaceKit(){
+  const head = bodyDesign.sections && bodyDesign.sections.head; if(!head) return;
+  head.details = head.details || [];
+  const fm = head.face || {};
+  for(const slot of ['brows','eyes','nose','lips']){
+    if(!fm[slot]) continue;
+    try{
+      const r = await fetch('/' + GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
+      if(!r.ok) continue;
+      const fj = await r.json();
+      (fj.details || []).forEach(d => head.details.push(d));
+    }catch(e){ /* face kit unavailable - head just renders bare */ }
+  }
+}
+function loadDesign(obj, path){
+  D = obj; selSec=null; shown.clear(); hidden.clear();
+  if(TAILOR_MODE) relinkTailorSections();
+  else (D.draw_order||Object.keys(D.sections)).forEach(n=>shown.add(n));
+  loadedPath = path || loadedPath;
+  if(loadedPath) GBASE = loadedPath.replace(/\/(body|articles|faces|ships|stations|decorations)\/[^/]*$/, '');
+  document.getElementById('src').textContent = loadedPath
+    ? (FACE_MODE ? 'face on  ' : TAILOR_MODE ? 'tailoring  ' : 'editing  ') + loadedPath
+      + (TAILOR_MODE ? '  — fit against ' + FITBODY : '')
+    : 'unsaved — Download or Copy when done';
+  loadMatPal()
+    .then(()=> FACE_MODE ? mergeFaces() : TAILOR_MODE ? loadBodyForTailoring() : null)
+    .then(()=>{ if(!FACE_MODE) D0 = JSON.parse(JSON.stringify(D)); finishLoad(); });
+}
+function finishLoad(){
+  try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
+  if(FACE_MODE){ shown.clear(); shown.add('head'); selSec = 'head'; }
+  if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
+  buildSecList(); buildSecEdit(); sync();
+  populateArticlePicker();
+  const fit = () => { FACE_MODE ? fitHead() : fitView(); render(); };
+  fit(); requestAnimationFrame(fit);   // re-fit once the svg has its real size
+}
+// a dropdown of every articles/*.json next to this one - relies on the dev
+// server's directory-listing page (python -m http.server does this by
+// default); silently does nothing if that's not available.
+async function populateArticlePicker(){
+  const row = document.getElementById('switcherRow'), sel_ = document.getElementById('articlePicker');
+  if(!GBASE) return;
+  try{
+    const r = await fetch('/' + GBASE + '/articles/');
+    if(!r.ok) return;
+    const html = await r.text();
+    const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1])).sort();
+    if(!names.length) return;
+    const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
+    sel_.innerHTML = `<option value="">— articles —</option>` +
+      names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
+    row.style.display = '';
+  }catch(e){ /* no directory listing available - dropdown just stays hidden */ }
+}
+document.getElementById('articlePicker').onchange = e=>{
+  const name = e.target.value; if(!name) return;
+  const path = GBASE + '/articles/' + name;
+  const qs = new URLSearchParams(location.search);
+  qs.set('file', path);
+  qs.delete('edit');                                   // face mode is for bodies, not articles
+  if(TAILOR_MODE) qs.set('fitbody', FITBODY); else qs.delete('fitbody');
+  location.search = qs.toString();
+};
+// pull the head's face slot files in and inline their details so the whole
+// kit can be edited on the model; each detail remembers which file it is from.
+async function mergeFaces(){
+  const head = D.sections && D.sections.head; if(!head) return;
+  (head.details = head.details || []).forEach(d => d._src = d._src || 'body');
+  if(head.details.some(d => d._src && d._src.startsWith('faces/'))) return;   // a restored draft is already merged
+  const fm = head.face || {};
+  for(const slot of ['brows','eyes','nose','lips']){
+    if(!fm[slot]) continue;
+    const ref = 'faces/' + slot + '_' + fm[slot];
+    try{
+      const r = await fetch('/' + GBASE + '/' + ref + '.json');
+      if(!r.ok) continue;
+      const fj = await r.json();
+      (fj.details || []).forEach(d => { d._src = ref; head.details.push(d); });
+    }catch(e){}
+  }
+  D0 = JSON.parse(JSON.stringify(D));
+}
+function fitHead(){
+  const h = D.sections.head; let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  for(const p of h.points){ mnx=Math.min(mnx,p[0]);mny=Math.min(mny,p[1]);mxx=Math.max(mxx,p[0]);mxy=Math.max(mxy,p[1]); }
+  view.x=(mnx+mxx)/2; view.y=(mny+mxy)/2 - 0.5;
+  const r=svg.getBoundingClientRect();
+  view.s = Math.min(r.width/(mxx-mnx+3), r.height/(mxy-mny+4));
+}
+function resnapshot(){ D0 = JSON.parse(JSON.stringify(D)); render(); }
 function fitView(){
   let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
   for(const s of Object.values(D.sections)) for(const p of s.points){
@@ -402,30 +1572,69 @@ document.getElementById('loadBox').onclick = ()=>{
   try{ loadDesign(JSON.parse(document.getElementById('out').value)); }
   catch(e){ alert('Bad JSON: '+e.message); }
 };
-document.getElementById('reset').onclick = ()=>{ localStorage.removeItem('gpEditorBody'); location.reload(); };
+document.getElementById('reset').onclick = ()=>{
+  try{ localStorage.removeItem('gpEditorBody'); const k=draftKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  location.reload();
+};
 document.getElementById('copy').onclick = ()=>navigator.clipboard.writeText(document.getElementById('out').value);
 document.getElementById('dl').onclick = ()=>{
-  const name = (D.variant?('human_'+D.variant):'body')+'.json';
+  // FACE_MODE downloads are a merged view (face-kit pieces inlined onto the
+  // head, tagged with _src) - name it so it's obviously not a plain body file
+  // that should be dropped straight back into config/.
+  const base = loadedPath ? loadedPath.split('/').pop().replace(/\.json$/, '')
+             : (D.variant ? 'human_'+D.variant : 'body');
+  const name = base + (FACE_MODE ? '.face-export.json' : '.json');
   const b=new Blob([document.getElementById('out').value],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
 };
 document.getElementById('undo').onclick = undo;
-['tShade','tHandles','tEdges','tSplay','tTicks'].forEach(id=>
+['tShade','tGhost','tHandles','tEdges','tSplay','tTicks'].forEach(id=>
   document.getElementById(id).onchange = render);
+if(TAILOR_MODE) ['tBodyVerts','tSnapBody'].forEach(id=>
+  document.getElementById(id).onchange = render);
+if(TAILOR_MODE) document.getElementById('tHideFace').onchange = e=>{
+  e.target.checked ? bodyHidden.add('head') : bodyHidden.delete('head');
+  buildBodyPartList(); render();
+};
 
 const stage = document.getElementById('stage');
 stage.addEventListener('dragover', e=>{ e.preventDefault(); document.getElementById('drop').style.display='flex'; });
 stage.addEventListener('dragleave', ()=> document.getElementById('drop').style.display='none');
 stage.addEventListener('drop', e=>{
   e.preventDefault(); document.getElementById('drop').style.display='none';
-  const f=e.dataTransfer.files[0]; if(f) f.text().then(t=>loadDesign(JSON.parse(t)));
+  const f=e.dataTransfer.files[0]; if(!f) return;
+  if(f.type.startsWith('image/')) loadRefImage(f);
+  else f.text().then(t=>loadDesign(JSON.parse(t)));
 });
 window.addEventListener('resize', render);
 
-// boot: last body from localStorage, else a message
-const saved = localStorage.getItem('gpEditorBody');
-if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
-if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+// boot: ?file=<repo-relative path> (needs the page served over http, not file://),
+// else the last edit from localStorage, else a message.
+const _qFile = new URLSearchParams(location.search).get('file');
+if(_qFile){
+  const _draftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
+  fetch('/' + _qFile.replace(/^\/+/, ''))
+    .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
+    .then(fresh => {
+      let obj = fresh, restored = null;
+      try{
+        const raw = localStorage.getItem(_draftKey);
+        if(raw){ const d = JSON.parse(raw);
+          if(d && d.D && allFinite(d.D)){ obj = d.D; restored = new Date(d.t); }
+          else if(d && d.D){ localStorage.removeItem(_draftKey); }   // corrupt draft - drop it, use the disk copy
+        }
+      }catch(e){}
+      loadDesign(obj, _qFile);
+      if(restored) document.getElementById('src').textContent +=
+        `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
+    })
+    .catch(err => { svg.innerHTML =
+      `<text x="20" y="40" fill="#e06b6b" font-size="14">Couldn't fetch ${_qFile} — ${err}</text>`; });
+} else {
+  const saved = localStorage.getItem('gpEditorBody');
+  if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
+  if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+}
 </script>
 </body>
 </html>

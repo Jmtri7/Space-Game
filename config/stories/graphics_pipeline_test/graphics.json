@@ -38,6 +38,6 @@
   "moons": {},
   "outfits": {
     "civilian_femme": { "body": "human_femme", "set": "civilian_work", "palette": "civilian" },
-    "civilian_masc": { "body": "human_masc", "set": "civilian_work", "palette": "civilian" }
+    "civilian_masc": { "body": "human_masc", "set": "civilian_work_masc", "palette": "civilian" }
   }
 }

@@ -1,0 +1,5 @@
+{
+  "identity": "Everyday civilian: knit tank, denim trousers, slip-on shoes, short hair. Masc-fitted equivalent of civilian_work (which now carries the femme hand-traced tank top).",
+  "palette": "civilian",
+  "articles": ["tank_top_masc", "pants", "shoes", "hair_short"]
+}

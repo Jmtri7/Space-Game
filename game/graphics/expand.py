@@ -144,15 +144,104 @@ def _runs(flags):
     return [r for r in runs if len(r) >= 2]
 
 
+def _pip(x, y, poly):
+    """True if (x, y) is inside the polygon (ray cast, even-odd)."""
+    inside = False
+    n = len(poly)
+    j = n - 1
+    for i in range(n):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi + 1e-12) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _nearest_on_poly(x, y, poly):
+    """The closest point on the polygon's boundary - used to snap a shade
+    vertex that a smoothing pass pushed outside back onto the silhouette."""
+    best, bd = [x, y], 1e18
+    n = len(poly)
+    for i in range(n):
+        ax, ay = poly[i]
+        bx, by = poly[(i + 1) % n]
+        ex, ey = bx - ax, by - ay
+        t = ((x - ax) * ex + (y - ay) * ey) / (ex * ex + ey * ey or 1e-12)
+        t = max(0.0, min(1.0, t))
+        px, py = ax + t * ex, ay + t * ey
+        d = (x - px) ** 2 + (y - py) ** 2
+        if d < bd:
+            bd, best = d, [px, py]
+    return best
+
+
+def _clip_to_poly(pt, poly):
+    """`pt` unchanged if inside `poly`, else snapped to the nearest boundary
+    point - so a ribbon vertex can never sit outside the region."""
+    return pt if _pip(pt[0], pt[1], poly) else _nearest_on_poly(pt[0], pt[1], poly)
+
+
+def _relax_open(chain, k, w):
+    """k passes of endpoint-preserving Laplacian smoothing on a 1-D list."""
+    for _ in range(k):
+        chain = [chain[0]] + [
+            b + w * ((a + c) / 2 - b) for a, b, c in zip(chain, chain[1:], chain[2:])
+        ] + [chain[-1]]
+    return chain
+
+
+def _resample_open(chain, n):
+    """An open polyline resampled to `n` points evenly spaced by arc length.
+    Turns an unevenly-sampled edge (a few long segments, a few short) into a
+    uniform one so the taper and the offset don't facet on the long spans."""
+    if len(chain) < 2 or n < 2:
+        return [list(p) for p in chain]
+    seg = [math.hypot(chain[i + 1][0] - chain[i][0], chain[i + 1][1] - chain[i][1])
+           for i in range(len(chain) - 1)]
+    total = sum(seg) or 1.0
+    out = [list(chain[0])]
+    acc, j = 0.0, 0
+    for k in range(1, n - 1):
+        target = total * k / (n - 1)
+        while j < len(seg) and acc + seg[j] < target:
+            acc += seg[j]
+            j += 1
+        if j >= len(seg):
+            break
+        t = (target - acc) / (seg[j] or 1.0)
+        a, b = chain[j], chain[j + 1]
+        out.append([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])])
+    out.append(list(chain[-1]))
+    return out
+
+
+def _chaikin_open(chain, iters=1):
+    """Corner-cutting subdivision of an open polyline; the two endpoints stay
+    put, every interior corner is rounded off."""
+    for _ in range(iters):
+        if len(chain) < 3:
+            break
+        out = [list(chain[0])]
+        for i in range(len(chain) - 1):
+            a, b = chain[i], chain[i + 1]
+            out.append([0.75 * a[0] + 0.25 * b[0], 0.75 * a[1] + 0.25 * b[1]])
+            out.append([0.25 * a[0] + 0.75 * b[0], 0.25 * a[1] + 0.75 * b[1]])
+        out.append(list(chain[-1]))
+        chain = out
+    return chain
+
+
 def _crescent(region_pts, light_dir, max_frac, cap_frac, thresh):
-    """List of ribbon polygons hugging the region's edge wherever it faces
+    """One smooth ribbon polygon hugging the region's edge wherever it faces
     `light_dir` (pass -light for the dark far edge, +light for the near lit
-    edge). One ribbon per contiguous stretch of facing edge, each swelling in
-    the middle and tapering to nothing at its ends; its inner edge is a
-    parallel inward offset of the outer edge (not a point aimed at the
-    centre), and each ray's depth is capped by how far it fits inside the
-    polygon. A dead band `thresh` around the terminator keeps the dark and
-    light ribbons from meeting or overlapping."""
+    edge). It swells in the middle and tapers to nothing at both ends; the
+    outer edge follows the region silhouette, the inner edge is that edge
+    pushed inward by a smoothed depth profile, capped by how far each ray fits
+    inside the polygon. Both edges are arc-length resampled, Laplacian-relaxed
+    and corner-cut (Chaikin) so a coarse silhouette does not facet the shade.
+    A dead band `thresh` around the terminator keeps the dark and light
+    ribbons from meeting."""
     pts = region_pts if _signed_area(region_pts) > 0 else region_pts[::-1]
     m = len(pts)
     if m < 4:
@@ -170,46 +259,48 @@ def _crescent(region_pts, light_dir, max_frac, cap_frac, thresh):
         return []
     run = max(runs, key=len)                      # one continuous shade per region
 
-    # densify (3 samples / outline segment) so the taper and the smoothing
-    # passes have enough points to make a rounded lens, not a few facets
-    dense = []
-    for k in range(len(run) - 1):
-        a, b = pts[run[k]], pts[run[k + 1]]
-        na, nb = nrm[run[k]], nrm[run[k + 1]]
-        for s in (0.0, 1 / 3, 2 / 3):
-            px, py = a[0] + s * (b[0] - a[0]), a[1] + s * (b[1] - a[1])
-            nx, ny = na[0] + s * (nb[0] - na[0]), na[1] + s * (nb[1] - na[1])
-            nl = math.hypot(nx, ny) or 1.0
-            dense.append((px, py, nx / nl, ny / nl))
-    dense.append((pts[run[-1]][0], pts[run[-1]][1], nrm[run[-1]][0], nrm[run[-1]][1]))
-    r = len(dense)
+    # even, dense samples along the facing edge - only for the normal / depth
+    # math. `n` stays well above the run's own vertex count so the resample
+    # never chords across (and outside) a concave notch.
+    outer0 = [list(pts[i]) for i in run]
+    n = min(60, max(3 * len(outer0), 16))
+    outer = _resample_open(outer0, n)
 
-    def relax(chain, k, w):
-        for _ in range(k):
-            chain = [chain[0]] + [
-                b + w * ((a + c) / 2 - b) for a, b, c in zip(chain, chain[1:], chain[2:])
-            ] + [chain[-1]]
-        return chain
+    # smoothed outward normal at each sample (poly is CCW, so right-hand normal
+    # of the forward tangent points out)
+    nx, ny = [], []
+    for i in range(n):
+        a, b = outer[max(0, i - 1)], outer[min(n - 1, i + 1)]
+        tx, ty = b[0] - a[0], b[1] - a[1]
+        tl = math.hypot(tx, ty) or 1.0
+        nx.append(ty / tl)
+        ny.append(-tx / tl)
+    nx, ny = _relax_open(nx, 3, 0.5), _relax_open(ny, 3, 0.5)
+    for i in range(n):
+        nl = math.hypot(nx[i], ny[i]) or 1.0
+        nx[i], ny[i] = nx[i] / nl, ny[i] / nl
 
-    # depth profile: taper * (how far the ray fits inside), smoothed as a 1-D
-    # signal so a wall the ray hits close doesn't cut a notch in the ribbon
+    # depth profile: sine taper * min(max depth, how far the ray fits inside),
+    # smoothed as a 1-D signal so a near wall cannot notch the ribbon
     depth = []
-    for k, (vx, vy, nx, ny) in enumerate(dense):
-        taper = math.sin(math.pi * (k + 0.5) / r) ** 0.85
-        cap = _ray_hit(vx, vy, -nx, -ny, pts, -1) * cap_frac
+    for i in range(n):
+        taper = math.sin(math.pi * (i + 0.5) / n) ** 0.85
+        cap = _ray_hit(outer[i][0], outer[i][1], -nx[i], -ny[i], pts, -1) * cap_frac
         depth.append(min(max_depth * taper, cap))
-    depth = relax(depth, 7, 0.5)
+    depth = _relax_open(depth, 6, 0.5)
 
-    ox = relax([p[0] for p in dense], 1, 0.25)     # barely soften the outer edge
-    oy = relax([p[1] for p in dense], 1, 0.25)
-    ix = relax([vx - nx * max(1e-3, d) for (vx, _, nx, _), d in zip(dense, depth)], 6, 0.42)
-    iy = relax([vy - ny * max(1e-3, d) for (_, vy, _, ny), d in zip(dense, depth)], 6, 0.42)
+    ix = _relax_open([outer[i][0] - nx[i] * max(1e-3, depth[i]) for i in range(n)], 6, 0.45)
+    iy = _relax_open([outer[i][1] - ny[i] * max(1e-3, depth[i]) for i in range(n)], 6, 0.45)
 
-    step = max(1, r // 18)                         # ~18 points along the ribbon edge
-    keep = list(range(0, r, step))
-    if keep[-1] != r - 1:
-        keep.append(r - 1)
-    poly = ([[ox[k], oy[k]] for k in keep] + [[ix[k], iy[k]] for k in reversed(keep)])
+    # Outer edge = the silhouette run verbatim: it is never resampled or
+    # smoothed, so it cannot leave the region. Inner edge = the depth-capped
+    # inward offset, corner-cut for smoothness, with every point snapped back
+    # inside if a smoothing pass pushed it out across a concave stretch.
+    inner = [_clip_to_poly([ix[i], iy[i]], pts) for i in range(n)]
+    inner_c = [_clip_to_poly(p, pts)
+               for p in _resample_open(_chaikin_open(inner, 1), 16)]
+
+    poly = [list(p) for p in outer0] + [list(p) for p in reversed(inner_c)]
     return [poly] if len(poly) >= 3 else []
 
 
