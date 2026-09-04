@@ -50,6 +50,13 @@
   .marquee { fill: #79b7ff22; stroke: #79b7ff; stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }
   .gizmo { fill: #ffd24a; stroke: #1b1e24; stroke-width: 1; cursor: nwse-resize; }
   .edge { stroke: #ffcf6a55; stroke-width: 1; fill: none; pointer-events: stroke; cursor: copy; }
+  #mirrorPanel { position: absolute; right: 10px; top: 10px; width: 210px; height: 270px;
+                 background: #0d0f13d0; border: 1px solid #2a2e37; border-radius: 6px;
+                 overflow: hidden; display: none; }
+  #mirrorLabel { position: absolute; top: 4px; left: 7px; right: 7px; z-index: 1;
+                 font: 11px ui-monospace, monospace; color: #9fd0e6;
+                 text-shadow: 0 1px 2px #0d0f13; }
+  #mirrorSvg { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
@@ -62,8 +69,21 @@
   </div>
   <input type="file" id="file" accept=".json" hidden>
   <div class="hint">Drag a <code>body/*.json</code> onto the canvas, click Load file, or paste JSON into the Output box and hit "Load ← box". Kept in this browser between visits.</div>
+  <div class="hint">A file picked this way has no known repo path, so the
+    body/face/outfit switcher below (and every other dropdown that depends on
+    it) stays hidden — <b>jump straight to a design</b> instead, below, and
+    those all light up.</div>
+  <div class="row" id="startPickerRow" style="display:none">
+    start on <select id="startBodyPicker" style="flex:1"><option value="">— pick a body —</option></select>
+  </div>
 
   <div class="hint" id="src"></div>
+  <div class="row" id="modeSwitchRow" style="display:none">
+    edit <button id="modeBody">body</button><button id="modeFace">face</button><button id="modeOutfit">outfit</button>
+  </div>
+  <div class="row" id="bodySwitcherRow" style="display:none">
+    body <select id="bodyDirectPicker" style="flex:1"></select>
+  </div>
   <div class="row" id="switcherRow" style="display:none">
     switch to <select id="articlePicker" style="flex:1"><option value="">— articles —</option></select>
   </div>
@@ -80,6 +100,18 @@
   <label><input type="checkbox" id="tSnap"> snap 0.05</label>
   <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
   <label><input type="checkbox" id="tLasso"> lasso select (freehand)</label>
+  <label><input type="checkbox" id="tMirrorBody" checked> compare other body (masc/femme)</label>
+  <div class="row">against <select id="mirrorSrcSel" style="flex:1"><option value="">auto — counterpart</option></select></div>
+  <div class="row">
+    frame <select id="mirrorFrameSel">
+      <option value="fit">fit panel</option>
+      <option value="match">match main view</option>
+    </select>
+    show <select id="mirrorPartSel">
+      <option value="body">whole body</option>
+      <option value="head">head only</option>
+    </select>
+  </div>
   <div class="hint">drag empty space = box-select · <b>shift</b> = add · click+drag a
     selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
     arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
@@ -147,11 +179,24 @@
     <button id="undo">Undo (Z)</button>
   </div>
   <textarea id="out" spellcheck="false"></textarea>
+
+  <h2>Batch download</h2>
+  <div class="hint">Every autosaved draft in this browser, not just the design
+    loaded above - handy after redesigning several articles/bodies in one
+    sitting. Rename a row before downloading if two land on the same filename
+    (e.g. the same article fit against two different bodies).</div>
+  <div class="row"><button id="scanDrafts">rescan</button></div>
+  <div id="draftList"></div>
+  <div class="row"><button id="dlAllDrafts" disabled>download checked</button></div>
 </div>
 <div id="stage">
   <svg id="svg"></svg>
   <div id="hud"></div>
   <div id="drop">drop body JSON, or an image for the reference overlay</div>
+  <div id="mirrorPanel">
+    <div id="mirrorLabel"></div>
+    <svg id="mirrorSvg"></svg>
+  </div>
 </div>
 
 <script>
@@ -285,9 +330,10 @@ function shadeBands(region,mat){
 }
 function rotAbout(p,c,deg){const a=deg*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),x=p[0]-c[0],y=p[1]-c[1];
   return [c[0]+x*ca-y*sa, c[1]+x*sa+y*ca];}
-function ngon(cx,cy,r,n){ n = n || Math.max(6, Math.min(24, Math.round(r*2)));
-  return Array.from({length:n}, (_,k)=>[cx+r*Math.cos(2*Math.PI*k/n), cy+r*Math.sin(2*Math.PI*k/n)]); }
-function detailPoly(d){ return d.points ? d.points : d.circle ? ngon(d.circle[0],d.circle[1],d.circle[2]) : null; }
+function ngon(cx,cy,r,n,rot){ n = n || Math.max(8, Math.min(24, Math.round(r*2)));
+  const a0 = (rot||0)*Math.PI/180;
+  return Array.from({length:n}, (_,k)=>[cx+r*Math.cos(a0+2*Math.PI*k/n), cy+r*Math.sin(a0+2*Math.PI*k/n)]); }
+function detailPoly(d){ return d.points ? d.points : d.circle ? ngon(d.circle[0],d.circle[1],d.circle[2],undefined,d.circle[3]) : null; }
 
 // ---- tailoring: article `regions` fit against a reference body (port of
 // expand.py's _curve / _apply_fits / _outset) ---------------------------
@@ -381,14 +427,15 @@ function polyStr(pts){ return pts.map(p=>{const s=W2S(p[0],p[1]);return s[0].toF
 // the real game's compose_worn, so `over`/`under` (e.g. hair drawing behind
 // the head) previews correctly instead of the article always sitting on top
 // of the whole body. ----------------------------------------------------
-function bodyDrawParts(){
-  if(!bodyDesign) return [];
+function bodyDrawParts(body){
+  body = body || bodyDesign;
+  if(!body) return [];
   const out = [];
-  const xf = restTransforms(bodyDesign);
-  const order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
+  const xf = restTransforms(body);
+  const order = body.draw_order || Object.keys(body.sections);
   const showShade = document.getElementById('tShade').checked;
   for(const name of order){
-    const sec = bodyDesign.sections[name]; if(!sec || bodyHidden.has(name)) continue;
+    const sec = body.sections[name]; if(!sec || bodyHidden.has(name)) continue;
     const grp = sec.group || name;
     const tr = xf[grp];
     const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
@@ -408,14 +455,15 @@ function bodyDrawParts(){
   }
   return out;
 }
-function articleDrawParts(){
+function articleDrawParts(body){
+  body = body || bodyDesign;
   const out = [];
   const showShade = document.getElementById('tShade').checked;
   for(const name of Object.keys(D.sections)){
     const region = D.sections[name]; if(hidden.has(name)) continue;
     const grp = region.group || 'torso';
-    const dispPts = bodyDesign
-      ? outsetPts(applyFits(region.points, region.fits, bodyDesign), region.outset ?? D.outset ?? 0.12)
+    const dispPts = body
+      ? outsetPts(applyFits(region.points, region.fits, body), region.outset ?? D.outset ?? 0.12)
       : region.points;
     out.push({points: dispPts, fill: rgb(resolveColor(region.material, region.tone||'mid')), group:grp, over:region.over, under:region.under});
     if(showShade && region.shade!==false && !MATERIALS.materials[region.material]?.emissive){
@@ -492,37 +540,49 @@ function buildBodyPartList(){
   bar.querySelector('#bpAllShow').onclick = ()=>{ bodyHidden.clear(); bodyVertsOff.clear(); buildBodyPartList(); render(); };
   bar.querySelector('#bpAllHideVerts').onclick = ()=>{
     Object.keys(bodyDesign.sections).forEach(n=>bodyVertsOff.add(n)); buildBodyPartList(); render(); };
+  const hint = document.createElement('div'); hint.className = 'hint';
+  hint.textContent = 'the reorder arrows preview this reference body\'s own draw_order - it\'s never saved (tailor mode only writes the outfit).';
+  el.appendChild(hint);
   const order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
-  order.forEach(name=>{
+  order.forEach((name,oi)=>{
     const row = document.createElement('label');
     const vertsShown = !bodyVertsOff.has(name) && !bodyHidden.has(name);
     row.innerHTML = `<button class="eye" title="show/hide this body part">${bodyHidden.has(name)?'–':'●'}</button>
-      <button class="eye" title="show/hide its snap vertices" ${bodyHidden.has(name)?'disabled':''}>${vertsShown?'•':'–'}</button>
-      <span class="nm">${name}</span>`;
+      <button class="eye" title="earlier in draw order (further back)" ${oi===0?'disabled':''}>↓</button>
+      <button class="eye" title="later in draw order (further forward)" ${oi===order.length-1?'disabled':''}>↑</button>
+      <span class="nm">${name}</span>
+      <button class="eye" title="show/hide its snap vertices" ${bodyHidden.has(name)?'disabled':''}>${vertsShown?'•':'–'}</button>`;
     const eyes = row.querySelectorAll('.eye');
     eyes[0].onclick = ev=>{ ev.preventDefault();
       bodyHidden.has(name) ? bodyHidden.delete(name) : bodyHidden.add(name); buildBodyPartList(); render(); };
-    eyes[1].onclick = ev=>{ ev.preventDefault();
+    eyes[1].onclick = ev=>{ ev.preventDefault(); moveBodyPartOrder(name, -1); };
+    eyes[2].onclick = ev=>{ ev.preventDefault(); moveBodyPartOrder(name, 1); };
+    eyes[3].onclick = ev=>{ ev.preventDefault();
       bodyVertsOff.has(name) ? bodyVertsOff.delete(name) : bodyVertsOff.add(name); buildBodyPartList(); render(); };
     el.appendChild(row);
   });
+}
+// reorders the reference body's own draw_order - a live preview knob only:
+// bodyDesign is read-only in tailor mode (never written back), unlike
+// moveSectionOrder's D.draw_order / D.regions, which do get saved.
+function moveBodyPartOrder(name, delta){
+  bodyDesign.draw_order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
+  const order = bodyDesign.draw_order;
+  const i = order.indexOf(name); if(i<0) return;
+  const j = Math.max(0, Math.min(order.length-1, i+delta));
+  if(j===i) return;
+  order.splice(i,1); order.splice(j,0,name);
+  buildBodyPartList(); render();
 }
 // a dropdown of every body/*.json to switch which body this same article is
 // fit against - keeps `file=` (the article), only swaps `fitbody=`.
 async function populateBodyPicker(){
   const row = document.getElementById('bodyPickerRow'), sel_ = document.getElementById('bodyPicker');
   if(!GBASE) return;
-  try{
-    const r = await fetch('/' + GBASE + '/body/');
-    if(!r.ok) return;
-    const html = await r.text();
-    const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
-      .filter(n=>!n.startsWith('rig_')).sort();
-    if(!names.length) return;
-    const curName = FITBODY.split('/').pop();
-    sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
-    row.style.display = '';
-  }catch(e){ /* no directory listing available */ }
+  const names = await fetchBodyDirNames(); if(!names.length) return;
+  const curName = FITBODY.split('/').pop();
+  sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
+  row.style.display = '';
 }
 document.getElementById('bodyPicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
@@ -617,7 +677,13 @@ function render(){
         if(detPick.size && !detPick.has(name+':'+di)) return;
         if(d.points) g += handleSet(d.points, name, 'detail:'+di, 'handle detail');
         else if(d.circle){
-          const cS = W2S(d.circle[0], d.circle[1]), rS = W2S(d.circle[0]+d.circle[2], d.circle[1]);
+          // the radius handle also carries the n-gon's rotation: it sits at
+          // the circle's own current angle, not fixed to the right, so
+          // dragging it both resizes (distance from centre) and rotates
+          // (angle of the drag) in one motion.
+          const rot0 = (d.circle[3]||0)*Math.PI/180;
+          const cS = W2S(d.circle[0], d.circle[1]);
+          const rS = W2S(d.circle[0]+d.circle[2]*Math.cos(rot0), d.circle[1]+d.circle[2]*Math.sin(rot0));
           const cid = name+'|circle:'+di+'|0';
           HANDLES.push({id:cid, sx:cS[0], sy:cS[1], sec:name, key:'circle:'+di, i:0});
           g += `<circle class="handle detail${sel.has(cid)?' sel':''}" cx="${cS[0]}" cy="${cS[1]}" r="4" data-sec="${name}" data-key="circle:${di}" data-i="0"/>`;
@@ -645,6 +711,140 @@ function render(){
   svg.innerHTML = g;
   maybeBuildPolyEdit();
   if(TAILOR_MODE) maybeBuildFitPanel();
+  renderMirror();
+}
+// ---- mirror preview: the counterpart body (masc<->femme), same view --------
+// While editing a body directly, or an outfit (tailor mode), show the other
+// gender's body/outfit rendered at the exact same pan/zoom so proportions and
+// silhouette read side by side. Purely a reference render - never editable,
+// never saved. Counterpart is found by swapping the `_masc`/`_femme` suffix
+// on the filename (the pipeline's own naming convention for a split asset).
+let mirrorBody = null;      // the fetched comparison body design, or null if none/unavailable
+let mirrorPath = null;      // repo-relative path of that body, for the label
+let mirrorAutoBase = null;  // the body/fitbody path the auto counterpart is derived from
+let mirrorSourceOverride = null;   // explicit body path chosen in the "against" dropdown, or null for the default
+let mirrorUserPicked = false;      // becomes true once the "against" dropdown is touched - stops re-defaulting to self on load
+let mirrorFrameMode = 'fit';       // 'fit' = auto-fit the drawn part into the panel; 'match' = exact main pan/zoom
+let mirrorPart = 'body';           // 'body' | 'head' - which part of the comparison body to draw
+let bodyDirNames = null;    // cached body/*.json directory listing - shared by the mirror "against"
+                             // dropdown and the body switcher below, fetched once per GBASE
+async function fetchBodyDirNames(){
+  if(bodyDirNames) return bodyDirNames;
+  if(!GBASE) return [];
+  try{
+    const r = await fetch('/' + GBASE + '/body/');
+    if(!r.ok) return [];
+    const html = await r.text();
+    bodyDirNames = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
+      .filter(n=>!n.startsWith('rig_')).sort();
+  }catch(e){ bodyDirNames = []; }
+  return bodyDirNames;
+}
+function counterpartPath(path){
+  if(!path) return null;
+  if(/_femme(\.json)$/.test(path)) return path.replace(/_femme(\.json)$/, '_masc$1');
+  if(/_masc(\.json)$/.test(path)) return path.replace(/_masc(\.json)$/, '_femme$1');
+  return null;
+}
+async function loadFaceKitInto(body){
+  const head = body.sections && body.sections.head; if(!head) return;
+  head.details = head.details || [];
+  const fm = head.face || {};
+  for(const slot of ['brows','eyes','nose','lips']){
+    if(!fm[slot]) continue;
+    try{
+      const r = await fetch('/' + GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
+      if(!r.ok) continue;
+      const fj = await r.json();
+      (fj.details || []).forEach(d => head.details.push(d));
+    }catch(e){ /* face kit unavailable - head just renders bare */ }
+  }
+}
+// basePath: the body being edited directly, or (tailor mode) the body the
+// outfit is fit against - either way, the body an auto counterpart is found
+// from when there's no explicit override picked in the dropdown.
+async function loadMirrorBody(basePath){
+  mirrorAutoBase = basePath;
+  if(!mirrorUserPicked) mirrorSourceOverride = basePath;   // default: the very body/outfit being edited, not the counterpart
+  const target = mirrorSourceOverride || counterpartPath(basePath);
+  mirrorBody = null; mirrorPath = null;
+  if(target){
+    try{
+      const r = await fetch('/' + target.replace(/^\/+/, ''));
+      if(r.ok){ mirrorBody = await r.json(); mirrorPath = target; await loadFaceKitInto(mirrorBody); }
+    }catch(e){ mirrorBody = null; }
+  }
+  document.getElementById('mirrorLabel').textContent = mirrorPath
+    ? mirrorPath.split('/').pop().replace(/\.json$/,'') + (mirrorIsSelf() ? ' (live)' : '')
+    : '';
+  populateMirrorSourcePicker();
+  render();
+}
+// true when "against" resolved to the very body/outfit already being edited -
+// in that case the mirror should track the live in-memory edit, not a stale
+// fetch from disk (which never updates again once loaded).
+function mirrorIsSelf(){
+  if(TAILOR_MODE) return !!(mirrorPath && FITBODY && mirrorPath === FITBODY);
+  return !!(mirrorPath && loadedPath && mirrorPath === loadedPath);
+}
+function mirrorLiveBody(){
+  if(!mirrorIsSelf()) return mirrorBody;
+  return TAILOR_MODE ? bodyDesign : D;   // tailor mode never edits the body itself, only D (the outfit)
+}
+// a dropdown of every body/*.json to compare against, overriding the auto
+// masc/femme counterpart - fetched once per GBASE and cached, same
+// directory-listing trick as populateBodyPicker/populateArticlePicker.
+async function populateMirrorSourcePicker(){
+  const sel_ = document.getElementById('mirrorSrcSel'); if(!sel_ || !GBASE) return;
+  const names = await fetchBodyDirNames(); if(!names.length) return;
+  const cur = mirrorSourceOverride ? mirrorSourceOverride.split('/').pop() : '';
+  sel_.innerHTML = `<option value="">auto — counterpart</option>` +
+    names.map(n=>`<option value="${GBASE}/body/${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+}
+document.getElementById('mirrorSrcSel').onchange = e=>{
+  mirrorUserPicked = true;
+  mirrorSourceOverride = e.target.value || null;
+  loadMirrorBody(mirrorAutoBase);
+};
+document.getElementById('mirrorFrameSel').onchange = e=>{ mirrorFrameMode = e.target.value; render(); };
+document.getElementById('mirrorPartSel').onchange = e=>{ mirrorPart = e.target.value; render(); };
+
+function W2Sfor(svgEl, x, y, scale, cx, cy){ const r = svgEl.getBoundingClientRect();
+  scale = scale || view.s; cx = cx===undefined ? view.x : cx; cy = cy===undefined ? view.y : cy;
+  return [ r.width/2 + (x-cx)*scale, r.height/2 + (y-cy)*scale ]; }
+function polyStrFor(svgEl, pts, scale, cx, cy){ return pts.map(p=>{const s=W2Sfor(svgEl,p[0],p[1],scale,cx,cy);return s[0].toFixed(1)+','+s[1].toFixed(1);}).join(' '); }
+function mirrorBBox(body){    // world bbox of whatever mirrorPart selects, for 'fit' framing
+  let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  const secs = mirrorPart==='head' && body.sections.head ? {head: body.sections.head} : body.sections;
+  for(const s of Object.values(secs||{})) for(const p of (s.points||[])){
+    mnx=Math.min(mnx,p[0]);mny=Math.min(mny,p[1]);mxx=Math.max(mxx,p[0]);mxy=Math.max(mxy,p[1]);
+  }
+  return [mnx,mny,mxx,mxy];
+}
+function renderMirror(){
+  const panel = document.getElementById('mirrorPanel'), msvg = document.getElementById('mirrorSvg');
+  const body = mirrorLiveBody();
+  if(!body || !document.getElementById('tMirrorBody').checked){
+    panel.style.display = 'none'; return;
+  }
+  panel.style.display = 'block';
+  const allParts = TAILOR_MODE
+    ? composeWornJS(body, bodyDrawParts(body), articleDrawParts(body))
+    : bodyDrawParts(body);
+  const parts = mirrorPart==='head' ? allParts.filter(p => p.sec==='head' || p.group==='head') : allParts;
+  let scale, cx, cy;
+  if(mirrorFrameMode==='match'){ scale = view.s; cx = view.x; cy = view.y; }
+  else {
+    const [mnx,mny,mxx,mxy] = mirrorBBox(body);
+    const mr = msvg.getBoundingClientRect();
+    const pad = mirrorPart==='head' ? 1.5 : 3;
+    scale = Math.min(mr.width/((mxx-mnx)+pad*2 || 1), mr.height/((mxy-mny)+pad*2 || 1)) || 1;
+    cx = (mnx+mxx)/2; cy = (mny+mxy)/2;
+  }
+  let g = '';
+  const draw = (pts, fill) => { if(pts.length>=3) g += `<polygon points="${polyStrFor(msvg,pts,scale,cx,cy)}" fill="${fill}"/>`; };
+  for(const part of parts) draw(part.points, part.fill);
+  msvg.innerHTML = g;
 }
 // ---- fill panel: shown when the selection is exactly one whole polygon ----
 function maybeBuildPolyEdit(){
@@ -864,6 +1064,7 @@ function buildPolyEdit(){
     <div class="row">anim. group <input id="dGroup" type="text" style="flex:1;background:#12141a;color:#d9dce2;
       border:1px solid #3a4150;border-radius:4px;padding:3px 5px" value="${(d.group||'').replace(/"/g,'&quot;')}" placeholder="(section default)"></div>
     ${fileGroups ? `<div class="row">file <select id="dSrc">${fileGroups.map(g=>`<option value="${g}" ${g===(d._src||'body')?'selected':''}>${g==='body'?'head (body file)':g}</option>`).join('')}</select></div>` : ''}
+    <div class="row"><button id="dDup" title="copy this polygon into the same section, right after itself">⧉ duplicate</button></div>
     <div class="row">layer
       <button id="dToBack" title="send to back">⤓ back</button>
       <button id="dDown" title="move back one">↓</button>
@@ -880,6 +1081,7 @@ function buildPolyEdit(){
   if(fileGroups) document.getElementById('dSrc').onchange = e=>{ pushHistory();
     if(e.target.value==='body') delete d._src; else d._src=e.target.value;
     sync(); buildSecList(); };
+  document.getElementById('dDup').onclick = ()=>duplicateDetail(sc, di);
   const reorder = to => reorderDetail(sc, di, to);
   document.getElementById('dToBack').onclick = ()=>reorder(0);
   document.getElementById('dDown').onclick = ()=>reorder(di-1);
@@ -898,6 +1100,25 @@ function reorderDetail(sc, di, to){
   sel.clear();
   if(item.circle) sel.add(sc+'|circle:'+to+'|0');
   else for(let k=0;k<item.points.length;k++) sel.add(sc+'|detail:'+to+'|'+k);
+  buildSecList(); sync();
+}
+// copies a section's polygon/circle detail into the same section, right after
+// itself - name auto-numbered off the original's own note (stripping any
+// trailing " <n>" first, so duplicating a duplicate counts up rather than
+// piling on a second number).
+function duplicateDetail(sc, di){
+  const arr = D.sections[sc].details;
+  const src = arr[di]; if(!src) return;
+  pushHistory();
+  const copy = JSON.parse(JSON.stringify(src));
+  const base = (copy.note || copy.material || 'piece').replace(/\s+\d+$/, '');
+  const used = new Set(arr.map(x=>x.note));
+  let n = 2; while(used.has(base+' '+n)) n++;
+  copy.note = base+' '+n;
+  arr.splice(di+1, 0, copy);
+  sel.clear();
+  if(copy.circle) sel.add(sc+'|circle:'+(di+1)+'|0');
+  else for(let k=0;k<copy.points.length;k++) sel.add(sc+'|detail:'+(di+1)+'|'+k);
   buildSecList(); sync();
 }
 // ---- selection: each entry is a live reference to a vertex or a circle ----
@@ -936,7 +1157,8 @@ function rotateSel(deg){
   for(const p of selPts()){
     const [x,y]= p.circle ? p.circle : p.arr[p.i];
     const nx=cx+(x-cx)*ca-(y-cy)*sa, ny=cy+(x-cx)*sa+(y-cy)*ca;
-    if(p.circle){ p.circle[0]=nx; p.circle[1]=ny; } else p.arr[p.i]=[nx,ny];
+    if(p.circle){ p.circle[0]=nx; p.circle[1]=ny; p.circle[3]=(p.circle[3]||0)+deg; }   // spin the n-gon itself too, so it turns rigidly with the group
+    else p.arr[p.i]=[nx,ny];
   }
   sync();
 }
@@ -993,16 +1215,34 @@ function addCircle(){
   buildSecList(); sync();
 }
 function delSelPolys(){
-  const byS = {};
+  const byS = {};              // sc -> Set of detail/circle indices to remove
+  const wholeRegions = new Set();   // TAILOR_MODE only: sc names whose own outline is entirely selected -> drop the whole region
   for(const id of sel){ const [sc,ky]=id.split('|');
     const m = ky.match(/^(?:circle|detail):(\d+)$/);
-    if(m) (byS[sc]=byS[sc]||new Set()).add(+m[1]);
+    if(m){ (byS[sc]=byS[sc]||new Set()).add(+m[1]); continue; }
+    if(TAILOR_MODE && ky==='points'){
+      const total = D.sections[sc]?.points.length || 0;
+      const selCount = [...sel].filter(x=>x.startsWith(sc+'|points|')).length;
+      if(total>0 && selCount===total) wholeRegions.add(sc);   // every vertex of the region's own outline is selected
+    }
   }
-  const scs = Object.keys(byS); if(!scs.length){ alert('select a whole polygon first (dbl-click a handle)'); return; }
+  if(!Object.keys(byS).length && !wholeRegions.size){
+    alert('select a whole polygon first (dbl-click a handle)'); return;
+  }
   pushHistory();
-  for(const sc of scs){ const idxs=[...byS[sc]].sort((a,b)=>b-a);
+  for(const sc of Object.keys(byS)){ const idxs=[...byS[sc]].sort((a,b)=>b-a);
     for(const di of idxs) D.sections[sc].details.splice(di,1); }
-  sel.clear(); buildSecList(); sync();
+  if(wholeRegions.size){
+    // a body's own sections (torso, head, ...) are structurally required and
+    // never reach here - only an outfit's own regions (D.regions, aliased as
+    // region0/region1/...) are freestanding design pieces a garment can add
+    // or drop entirely, same as its details.
+    if(selSec && wholeRegions.has(selSec)) selSec = null;
+    const idxs = [...wholeRegions].map(sc=>+sc.replace('region','')).sort((a,b)=>b-a);
+    for(const i of idxs) D.regions.splice(i,1);
+    relinkTailorSections();
+  }
+  sel.clear(); buildSecList(); buildSecEdit(); sync();
 }
 
 // ---- reference image overlay (session-only, never saved with the design) ----
@@ -1155,7 +1395,9 @@ svg.addEventListener('pointermove', e=>{
   }
   if(drag.radius){
     const di = +drag.key.split(':')[1], cir = D.sections[drag.sec].details[di].circle;
-    cir[2] = Math.max(0.02, Math.hypot(snap(w[0])-cir[0], snap(w[1])-cir[1]));
+    const dx = snap(w[0])-cir[0], dy = snap(w[1])-cir[1];
+    cir[2] = Math.max(0.02, Math.hypot(dx, dy));
+    cir[3] = Math.atan2(dy, dx)*180/Math.PI;   // same handle carries rotation - angle of the drag from centre
     sync(); return;
   }
   if(drag.scale){
@@ -1338,26 +1580,62 @@ function refreshTargetSelect(groups){
 }
 function buildFaceList(el){
   const dets = (D.sections.head && D.sections.head.details) || [];
+  // "all handles" toggles: if every piece is already shown, clicking hides
+  // them all instead (a non-matching sentinel in detPick, so the existing
+  // whitelist check - `!detPick.size || detPick.has(id)` - reads false for
+  // every real id without needing its own special case).
+  const allOn = dets.length>0 && dets.every((_,di)=> !detPick.size || detPick.has('head:'+di));
   const bar = document.createElement('div'); bar.className='row';
-  bar.innerHTML = `<button id="fAll">all handles</button>`;
-  bar.querySelector('#fAll').onclick = ()=>{ detPick.clear(); buildSecList(); render(); };
+  bar.innerHTML = `<button id="fAll">${allOn ? 'select none' : 'all handles'}</button>`;
+  bar.querySelector('#fAll').onclick = ()=>{
+    detPick.clear();
+    if(allOn) detPick.add('__none__');
+    buildSecList(); render();
+  };
   el.appendChild(bar);
   const bySrc = {};
   dets.forEach((d,di)=> (bySrc[d._src||'body'] = bySrc[d._src||'body']||[]).push(di));
   refreshTargetSelect(Object.keys(bySrc));
   for(const src of Object.keys(bySrc)){
-    const h = document.createElement('div'); h.className='hint'; h.style.marginTop='6px';
-    h.textContent = src === 'body' ? 'head (in the body file)' : src;
+    const h = document.createElement('div'); h.className='row'; h.style.marginTop='6px';
+    const label = src === 'body' ? 'head (in the body file)' : src;
+    h.innerHTML = `<span class="hint" style="flex:1;margin:0">${label}</span>
+      <button class="secAll" title="show only this file's pieces">all</button>
+      <button class="secNone" title="hide this file's pieces">none</button>`;
     el.appendChild(h);
+    // "all" isolates this one file's pieces (like clicking every row's eye
+    // on); "none" hides just this file's, leaving every other file's current
+    // visibility as it was - materialising the implicit "show all" into an
+    // explicit list first so the other files' state has something to persist in.
+    h.querySelector('.secAll').onclick = ()=>{
+      detPick.clear();
+      bySrc[src].forEach(di=>detPick.add('head:'+di));
+      buildSecList(); render();
+    };
+    h.querySelector('.secNone').onclick = ()=>{
+      if(!detPick.size) dets.forEach((_,di)=>detPick.add('head:'+di));
+      bySrc[src].forEach(di=>detPick.delete('head:'+di));
+      if(!detPick.size) detPick.add('__none__');
+      buildSecList(); render();
+    };
     bySrc[src].forEach(di=>{
       const d = dets[di];
       const row = document.createElement('label');
       const on = !detPick.size || detPick.has('head:'+di);
+      // draw order is this piece's position in the whole head.details array
+      // (the same array reorderDetail/the Polygons panel's layer buttons
+      // move), not just within its own file's group - later drawn on top,
+      // same as everywhere else in the pipeline.
       row.innerHTML = `<button class="eye">${on?'●':'–'}</button>
+        <button class="eye" title="earlier in draw order (further back)" ${di===0?'disabled':''}>↓</button>
+        <button class="eye" title="later in draw order (further forward)" ${di===dets.length-1?'disabled':''}>↑</button>
         <span class="nm">${(d.note||d.material)}${d.circle?' ○':''}</span>`;
-      row.querySelector('.eye').onclick = ev=>{ ev.preventDefault();
+      const eyes = row.querySelectorAll('.eye');
+      eyes[0].onclick = ev=>{ ev.preventDefault();
         detPick.has('head:'+di) ? detPick.delete('head:'+di) : detPick.add('head:'+di);
         buildSecList(); render(); };
+      eyes[1].onclick = ev=>{ ev.preventDefault(); reorderDetail('head', di, di-1); };
+      eyes[2].onclick = ev=>{ ev.preventDefault(); reorderDetail('head', di, di+1); };
       row.querySelector('.nm').onclick = ev=>{ ev.preventDefault();
         detPick.clear(); detPick.add('head:'+di);
         const t=document.getElementById('pTarget'); if(t) t.value = src;   // new pieces follow what you isolate
@@ -1452,29 +1730,16 @@ async function loadBodyForTailoring(){
     bodyDesign = r.ok ? await r.json() : null;
   }catch(e){ bodyDesign = null; }
   if(!bodyDesign){ alert("couldn't load the reference body: " + FITBODY); return; }
-  await loadBodyFaceKit();   // the raw body file's head has no face details of its own - pull them in
+  // the raw body file's head has no face details of its own (those live in
+  // faces/<slot>_<name>.json, per docs/GRAPHICS_PIPELINE.md's face-mode
+  // section) - pull them in so the backdrop shows eyes/nose/lips instead of a
+  // bare head. bodyDesign is read-only here (tailor mode never saves it), so
+  // there's no need to tag/undo this later.
+  await loadFaceKitInto(bodyDesign);
   bodyHidden.clear(); bodyVertsOff.clear();
   buildBodyPartList();
   populateBodyPicker();
-}
-// the reference body is loaded as-is, and its head carries no inline face
-// details (those live in faces/<slot>_<name>.json, per docs/GRAPHICS_PIPELINE.md's
-// face-mode section) - pull them in the same way so the backdrop actually
-// shows eyes/nose/lips instead of a bare head. bodyDesign is read-only here
-// (tailor mode never saves it), so there's no need to tag/undo this later.
-async function loadBodyFaceKit(){
-  const head = bodyDesign.sections && bodyDesign.sections.head; if(!head) return;
-  head.details = head.details || [];
-  const fm = head.face || {};
-  for(const slot of ['brows','eyes','nose','lips']){
-    if(!fm[slot]) continue;
-    try{
-      const r = await fetch('/' + GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
-      if(!r.ok) continue;
-      const fj = await r.json();
-      (fj.details || []).forEach(d => head.details.push(d));
-    }catch(e){ /* face kit unavailable - head just renders bare */ }
-  }
+  loadMirrorBody(FITBODY);   // the same outfit, fit against the counterpart body
 }
 function loadDesign(obj, path){
   D = obj; selSec=null; shown.clear(); hidden.clear();
@@ -1488,7 +1753,8 @@ function loadDesign(obj, path){
     : 'unsaved — Download or Copy when done';
   loadMatPal()
     .then(()=> FACE_MODE ? mergeFaces() : TAILOR_MODE ? loadBodyForTailoring() : null)
-    .then(()=>{ if(!FACE_MODE) D0 = JSON.parse(JSON.stringify(D)); finishLoad(); });
+    .then(()=>{ if(!FACE_MODE) D0 = JSON.parse(JSON.stringify(D)); finishLoad(); })
+    .then(()=>{ if(!TAILOR_MODE) loadMirrorBody(loadedPath); });   // editing a body (or its face) directly
 }
 function finishLoad(){
   try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
@@ -1496,9 +1762,104 @@ function finishLoad(){
   if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
   buildSecList(); buildSecEdit(); sync();
   populateArticlePicker();
+  buildModeSwitch();
+  populateBodyDirectPicker();
   const fit = () => { FACE_MODE ? fitHead() : fitView(); render(); };
   fit(); requestAnimationFrame(fit);   // re-fit once the svg has its real size
 }
+// edit/body/face/outfit switcher: jumps between the three views of the same
+// character without hand-editing the URL. The "body" this all keys off is
+// FITBODY in tailor mode, or the loaded body/*.json itself otherwise -
+// there's nothing to switch from when a bare (unfit) article is loaded on
+// its own, so the row just stays hidden then.
+let modeArticleNames = null;
+async function fetchArticleNames(){
+  if(modeArticleNames) return modeArticleNames;
+  if(!GBASE) return [];
+  try{
+    const r = await fetch('/' + GBASE + '/articles/');
+    if(!r.ok) return [];
+    const html = await r.text();
+    modeArticleNames = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1])).sort();
+  }catch(e){ modeArticleNames = []; }
+  return modeArticleNames;
+}
+function currentBodyPath(){
+  return TAILOR_MODE ? FITBODY : (loadedPath && /\/body\/[^/]+\.json$/.test(loadedPath) ? loadedPath : null);
+}
+function buildModeSwitch(){
+  const el = document.getElementById('modeSwitchRow'); if(!el) return;
+  const bodyPath = currentBodyPath();
+  el.style.display = bodyPath ? '' : 'none';
+  if(!bodyPath) return;
+  el.innerHTML = `
+    edit <button id="modeBody" class="${!FACE_MODE && !TAILOR_MODE?'on':''}">body</button>
+    <button id="modeFace" class="${FACE_MODE?'on':''}">face</button>
+    <button id="modeOutfit" class="${TAILOR_MODE?'on':''}" title="jumps to the ${TAILOR_MODE ? 'current' : 'first'} article fit against this body">outfit</button>`;
+  const go = qs => { location.search = qs.toString(); };
+  document.getElementById('modeBody').onclick = ()=>{
+    const qs = new URLSearchParams(); qs.set('file', bodyPath); go(qs);
+  };
+  document.getElementById('modeFace').onclick = ()=>{
+    const qs = new URLSearchParams(); qs.set('file', bodyPath); qs.set('edit', 'face'); go(qs);
+  };
+  document.getElementById('modeOutfit').onclick = async ()=>{
+    if(TAILOR_MODE) return;   // already here
+    const names = await fetchArticleNames();
+    if(!names.length){ alert('no articles/*.json found in ' + GBASE + '/articles to switch to'); return; }
+    const qs = new URLSearchParams(); qs.set('file', GBASE + '/articles/' + names[0]); qs.set('fitbody', bodyPath); go(qs);
+  };
+}
+// switches which body/*.json is loaded, staying in the same mode (plain or
+// face). Tailor mode already has its own "fit against" picker in the Fit
+// panel for the analogous job (which body the outfit is checked against),
+// so this row only appears when editing a body directly.
+async function populateBodyDirectPicker(){
+  const row = document.getElementById('bodySwitcherRow'), sel_ = document.getElementById('bodyDirectPicker');
+  if(TAILOR_MODE || !GBASE){ row.style.display = 'none'; return; }
+  const names = await fetchBodyDirNames();
+  if(!names.length){ row.style.display = 'none'; return; }
+  const curName = loadedPath ? loadedPath.split('/').pop() : null;
+  sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
+  row.style.display = '';
+}
+document.getElementById('bodyDirectPicker').onchange = e=>{
+  const name = e.target.value; if(!name) return;
+  const qs = new URLSearchParams(location.search);
+  qs.set('file', GBASE + '/body/' + name);
+  location.search = qs.toString();
+};
+// bootstrap picker: a file loaded via Load-file/drag-drop has no known repo
+// path (the browser only gives a bare filename), so GBASE never gets set and
+// every dropdown that depends on it (mode switcher, mirror "against",
+// "switch to" articles, ...) stays hidden - offer a list of real designs by
+// their repo path instead, so picking one goes through the normal ?file=
+// boot path and everything lights up. Only shown before anything is loaded.
+const PIPELINE_STORIES = ['config/stories/graphics_pipeline_test/graphics'];   // add another base here if a second story grows a graphics/ pipeline
+async function populateStartPicker(){
+  const row = document.getElementById('startPickerRow'), sel_ = document.getElementById('startBodyPicker');
+  if(loadedPath){ row.style.display = 'none'; return; }   // a real repo path is already known - the normal switcher covers it
+  for(const base of PIPELINE_STORIES){
+    try{
+      const r = await fetch('/' + base + '/body/');
+      if(!r.ok) continue;
+      const html = await r.text();
+      const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
+        .filter(n=>!n.startsWith('rig_')).sort();
+      if(!names.length) continue;
+      const story = base.split('/')[2] || base;
+      sel_.innerHTML = `<option value="">— pick a body —</option>` +
+        names.map(n=>`<option value="${base}/body/${n}">${n} (${story})</option>`).join('');
+      row.style.display = '';
+      return;
+    }catch(e){ /* no server reachable, or this story has no pipeline dir - try the next */ }
+  }
+}
+document.getElementById('startBodyPicker').onchange = e=>{
+  if(!e.target.value) return;
+  const qs = new URLSearchParams(); qs.set('file', e.target.value);
+  location.search = qs.toString();
+};
 // a dropdown of every articles/*.json next to this one - relies on the dev
 // server's directory-listing page (python -m http.server does this by
 // default); silently does nothing if that's not available.
@@ -1566,10 +1927,10 @@ function fitView(){
 document.getElementById('load').onclick = ()=>document.getElementById('file').click();
 document.getElementById('file').onchange = e=>{
   const f=e.target.files[0]; if(!f)return;
-  f.text().then(t=>loadDesign(JSON.parse(t)));
+  f.text().then(t=>{ loadDesign(JSON.parse(t)); populateStartPicker(); });
 };
 document.getElementById('loadBox').onclick = ()=>{
-  try{ loadDesign(JSON.parse(document.getElementById('out').value)); }
+  try{ loadDesign(JSON.parse(document.getElementById('out').value)); populateStartPicker(); }
   catch(e){ alert('Bad JSON: '+e.message); }
 };
 document.getElementById('reset').onclick = ()=>{
@@ -1588,7 +1949,95 @@ document.getElementById('dl').onclick = ()=>{
   const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
 };
 document.getElementById('undo').onclick = undo;
-['tShade','tGhost','tHandles','tEdges','tSplay','tTicks'].forEach(id=>
+
+// ---- batch download: every gpDraft:* in this browser, not just the loaded
+// design - a redesign pass usually touches several articles/bodies before
+// any of them get saved, and downloading them one at a time (switching the
+// loaded design each time) is tedious. ---------------------------------
+function parseDraftKey(k){                 // "gpDraft:<path>[:face | :fit:<fitbody>]"
+  const rest = k.slice('gpDraft:'.length);
+  let m = rest.match(/^(.*):face$/); if(m) return {path: m[1], mode:'face'};
+  m = rest.match(/^(.*):fit:(.*)$/); if(m) return {path: m[1], mode:'fit', fitbody: m[2]};
+  return {path: rest, mode:'body'};
+}
+function defaultDraftFilename(info){
+  const base = info.path.split('/').pop().replace(/\.json$/, '');
+  return base + (info.mode==='face' ? '.face-export.json' : '.json');
+}
+function roundForExport(o){                 // same as round(), but from a stored draft rather than the live D/TAILOR_MODE
+  const isTailor = Array.isArray(o.regions);
+  return JSON.parse(
+    JSON.stringify(o, (k,v)=> (isTailor && k==='sections') ? undefined : v),
+    (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
+}
+let draftRows = [];   // {key, info, obj:{t,D}, name}
+function scanDrafts(){
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('gpDraft:'));
+  draftRows = keys.map(k=>{
+    let obj = null;
+    try{ obj = JSON.parse(localStorage.getItem(k)); }catch(e){}
+    return obj && allFinite(obj.D) ? {key:k, info: parseDraftKey(k), obj} : null;
+  }).filter(Boolean);
+  draftRows.forEach(r=> r.name = defaultDraftFilename(r.info));
+  // a "fit" draft's default name collides with any other fit of the same
+  // article against a different body (the same real file, two sessions) -
+  // disambiguate those automatically; anything else colliding is left for
+  // the user to rename by hand (the row highlights red either way).
+  const counts = {}; draftRows.forEach(r=> counts[r.name] = (counts[r.name]||0)+1);
+  draftRows.forEach(r=>{
+    if(counts[r.name]>1 && r.info.mode==='fit'){
+      const fitBase = r.info.fitbody.split('/').pop().replace(/\.json$/, '');
+      r.name = r.name.replace(/\.json$/, '.vs-'+fitBase+'.json');
+    }
+  });
+  renderDraftList();
+}
+function renderDraftList(){
+  const el = document.getElementById('draftList');
+  const dlBtn = document.getElementById('dlAllDrafts');
+  if(!draftRows.length){
+    el.innerHTML = `<div class="hint">no drafts found in this browser</div>`;
+    dlBtn.disabled = true; return;
+  }
+  const counts = {}; draftRows.forEach(r=> counts[r.name] = (counts[r.name]||0)+1);
+  el.innerHTML = draftRows.map((r,i)=>{
+    const collided = counts[r.name] > 1;
+    const modeNote = r.info.mode==='fit' ? ' — fit vs ' + r.info.fitbody.split('/').pop()
+                    : r.info.mode==='face' ? ' — face' : '';
+    return `<label style="align-items:flex-start">
+      <input type="checkbox" class="dRowChk" data-i="${i}" checked>
+      <span style="flex:1">
+        <input type="text" class="dRowName" data-i="${i}" value="${r.name.replace(/"/g,'&quot;')}"
+          style="width:100%;background:#12141a;color:#d9dce2;border:1px solid ${collided?'#e0916b':'#3a4150'};
+          border-radius:4px;padding:2px 4px;font:11px ui-monospace,monospace">
+        <div class="hint" style="margin:2px 0 0">${r.info.path}${modeNote} · saved ${new Date(r.obj.t).toLocaleTimeString()}
+          ${collided ? ' · <b style="color:#e0916b">same name as another checked row</b>' : ''}</div>
+      </span>
+    </label>`;
+  }).join('');
+  el.querySelectorAll('.dRowName').forEach(inp => inp.onchange = e=>{
+    draftRows[+e.target.dataset.i].name = e.target.value; renderDraftList();
+  });
+  dlBtn.disabled = false;
+}
+document.getElementById('scanDrafts').onclick = scanDrafts;
+document.getElementById('dlAllDrafts').onclick = ()=>{
+  const chosen = [];
+  document.querySelectorAll('.dRowChk').forEach(chk=>{ if(chk.checked) chosen.push(draftRows[+chk.dataset.i]); });
+  if(!chosen.length) return;
+  const names = chosen.map(r=>r.name);
+  const dupe = names.find((n,i)=>names.indexOf(n)!==i);
+  if(dupe && !confirm(`Two checked rows will both download as "${dupe}" — your browser will save one as something like "${dupe.replace('.json',' (1).json')}" instead of overwriting. Rename one first, or continue anyway?`)) return;
+  chosen.forEach((r,i)=>{
+    setTimeout(()=>{
+      const json = JSON.stringify(roundForExport(r.obj.D), null, 2);
+      const b = new Blob([json], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = r.name; a.click();
+    }, i*200);   // staggered - some browsers throttle/prompt on a burst of same-tick downloads
+  });
+};
+scanDrafts();   // populate on page load too; "rescan" catches drafts saved after that
+['tShade','tGhost','tHandles','tEdges','tSplay','tTicks','tMirrorBody'].forEach(id=>
   document.getElementById(id).onchange = render);
 if(TAILOR_MODE) ['tBodyVerts','tSnapBody'].forEach(id=>
   document.getElementById(id).onchange = render);
@@ -1604,7 +2053,7 @@ stage.addEventListener('drop', e=>{
   e.preventDefault(); document.getElementById('drop').style.display='none';
   const f=e.dataTransfer.files[0]; if(!f) return;
   if(f.type.startsWith('image/')) loadRefImage(f);
-  else f.text().then(t=>loadDesign(JSON.parse(t)));
+  else f.text().then(t=>{ loadDesign(JSON.parse(t)); populateStartPicker(); });
 });
 window.addEventListener('resize', render);
 
@@ -1629,11 +2078,13 @@ if(_qFile){
         `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
     })
     .catch(err => { svg.innerHTML =
-      `<text x="20" y="40" fill="#e06b6b" font-size="14">Couldn't fetch ${_qFile} — ${err}</text>`; });
+      `<text x="20" y="40" fill="#e06b6b" font-size="14">Couldn't fetch ${_qFile} — ${err}</text>`;
+      populateStartPicker(); });
 } else {
   const saved = localStorage.getItem('gpEditorBody');
   if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
   if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+  populateStartPicker();
 }
 </script>
 </body>

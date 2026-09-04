@@ -39,13 +39,15 @@ def resolve_color(material, tone, palette, materials):
 
 # ------------------------------------------------------------- geometry ----
 
-def ngon(cx, cy, r, n=None):
+def ngon(cx, cy, r, n=None, rot=0):
     """A filled circle as an n-sided polygon. n defaults to a count that
-    reads round at the size r (never a real circle - principle 1)."""
+    reads round at the size r (never a real circle - principle 1). rot is
+    degrees, rotating the whole n-gon about its own centre."""
     if n is None:
-        n = max(6, min(24, int(r * 2)))
-    return [[cx + r * math.cos(2 * math.pi * k / n),
-             cy + r * math.sin(2 * math.pi * k / n)] for k in range(n)]
+        n = max(8, min(24, int(r * 2)))
+    a0 = math.radians(rot)
+    return [[cx + r * math.cos(a0 + 2 * math.pi * k / n),
+             cy + r * math.sin(a0 + 2 * math.pi * k / n)] for k in range(n)]
 
 
 def _centroid(pts):
@@ -358,8 +360,10 @@ def _emit_detail(parts, d, group_default, palette, materials, sec_name=None, lod
         return                            # too small on screen to bother drawing
     pts = d.get("points")
     if not pts and d.get("circle"):
-        cx, cy, r = d["circle"]
-        pts = ngon(cx, cy, r)              # a small round detail -> polygon (principle 1)
+        c = d["circle"]
+        cx, cy, r = c[0], c[1], c[2]
+        rot = c[3] if len(c) > 3 else 0    # optional 4th element: degrees, rotates the n-gon in place
+        pts = ngon(cx, cy, r, rot=rot)     # a small round detail -> polygon (principle 1)
     if not pts:
         return
     p = {"points": [list(p) for p in pts],

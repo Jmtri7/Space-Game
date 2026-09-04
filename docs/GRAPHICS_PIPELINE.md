@@ -468,19 +468,66 @@ region's computed crescent with an explicit `shade_dark` / `shade_light` point
 list you can then drag.
 
 Load a design three ways: `?file=<repo-relative path>` in the URL (needs the
-page served over http — `python -m http.server` from the repo root, not
-`file://`), file-drop onto the canvas, or paste into the Output box and hit
-"Load ← box". When loaded by `?file=`, the real `materials.json` and the
-design's palette are fetched too, so tones and colours match the game exactly.
+page served over http, not `file://` — see **serving it** below), file-drop
+onto the canvas, or paste into the Output box and hit "Load ← box". When
+loaded by `?file=`, the real `materials.json` and the design's palette are
+fetched too, so tones and colours match the game exactly.
+
+**Serving it.** Use `python docs/atlases/serve_nocache.py 8777` from the repo
+root, not plain `python -m http.server`. Both serve the same directory
+listing the "switch to" / "fit against" / "against" dropdowns rely on, but
+plain `http.server` sends only `Last-Modified` — no `Cache-Control` — so a
+browser can silently reuse a stale cached copy of `editor.html` itself (not
+just a design JSON) after the agent edits it, showing an old version of the
+tool with no explained cause. `serve_nocache.py` is the identical handler
+plus one header. If a page still looks stale after that (new markup/buttons
+missing), a hard refresh (Ctrl+Shift+R) forces a re-fetch either way.
+
+Opening `editor.html` straight from disk (`file://...`) does not work — every
+`?file=`/directory-listing/materials/palette lookup is a `fetch()` call, which
+browsers block against `file://`. There has to be a server. For a one-click
+launch without a terminal, double-click **`docs/atlases/open_editor.bat`**
+(Windows) — starts `serve_nocache.py` on port 8777 minimized in the
+background if nothing's listening there yet, then opens the editor (no
+`?file=`; use Load file / drag-drop, or bookmark a specific `?file=` URL)
+in the default browser. Safe to double-click again later — if a server's
+already up, the new one just fails to bind and exits; the browser still
+opens against the existing one.
 Coverage today is **body designs** (`sections`); other kinds (`regions`
 articles, `silhouette` ships) are being folded in.
+
+**Loading without a `?file=` URL.** Opening the bare editor (`open_editor.bat`,
+no query string), or picking/dragging a file in, gets you a design with no
+known repo path — the browser's File API only hands over a bare filename, not
+where it lives in the tree — so `GBASE` never gets set and every dropdown
+that depends on it (the mode switcher, mirror "against", "switch to"
+articles, "fit against") stays hidden even once something's loaded. A
+**start on** dropdown appears whenever that's the case, listing every real
+`body/*.json` by its actual repo path (`PIPELINE_STORIES` in the script names
+which story bases to check — currently just `graphics_pipeline_test`, the
+only one with a `graphics/` pipeline; extend that list if a second one grows
+one); picking one goes through the normal `?file=` boot path instead, and
+everything lights up. It hides itself the moment a real path is known.
 
 **Face mode** — `?file=<body>&edit=face`. Loads the body, pulls in its
 `head.face` slot files (`faces/<slot>_<name>.json`), inlines their `details` on
 the head so the whole kit can be nudged on the model, and **locks every body
 silhouette vertex** — only the face pieces (polygons and `circle` details, each
-with a centre and a radius handle) are draggable. The side panel lists the
-pieces grouped by source file; click one to isolate its handles. Every merged
+with a centre and a radius handle) are draggable — the radius handle also
+carries rotation: it sits at the circle's current angle rather than fixed to
+the right, so dragging it both resizes and spins the n-gon in one motion (a
+multi-select group rotate, `,`/`.`, spins each selected circle's own facets
+by the same amount too, not just its position about the pivot). The side
+panel lists the
+pieces grouped by source file; click one to isolate its handles, or use a
+file group's own **all**/**none** buttons to isolate/hide its whole file at
+once. **all handles** above the list shows every piece — and toggles to
+**select none** when everything is already showing, hiding every handle in
+one click instead. Each row also carries reorder arrows (↓/↑, same meaning as
+elsewhere) that move the piece within the whole merged `head.details` array —
+draw order, not just visibility, and not confined to its own file's group;
+they call the same `reorderDetail` the Polygons panel's layer buttons do.
+Every merged
 detail carries a `_src` tag naming the file it came from — Copy/Download/the
 Output box all keep it (this is the one field `expand()` and a real committed
 design file never see; the agent strips it when it writes the split files
@@ -539,6 +586,22 @@ is a one-time alignment, not a live fit: the vertex becomes a normal authored
 coordinate that happens to match the body right now, and won't follow if the
 body is reshaped later (use the Fit panel's curve dropdown for that instead).
 
+**Switching body / face / outfit without retyping the URL.** Once a body
+(plain, `edit=face`, or an outfit fit against one) is loaded, an **edit: body
+/ face / outfit** button row appears near the top of the side panel,
+highlighting whichever you're in. **body** and **face** both jump to
+`?file=<body>` (with/without `&edit=face`); **outfit** jumps to the
+alphabetically-first `articles/*.json` fit against that same body (`fitbody=`)
+— from there use the **switch to** dropdown below to pick a different one, or
+the mode row again to hop back to the body or its face. Hidden when the
+loaded design isn't a body-rooted one (a bare, unfit article, e.g.).
+
+Right below it, a **body** dropdown (plain or face mode only — a
+`body/*.json` directory listing) switches which body is loaded outright,
+staying in the same mode. Tailor mode doesn't show this row; its own **fit
+against** dropdown in the Fit panel is the equivalent there (switches which
+body the outfit is checked against instead of loading the body itself).
+
 **Switching articles without retyping the URL.** Once a design is loaded, a
 **switch to** dropdown appears listing every `articles/*.json` next to it —
 picking one navigates to that article, keeping the current `fitbody` (or
@@ -554,8 +617,10 @@ section with two toggles: the eye hides the part entirely (fill *and* its
 vertex dots — the dot toggle is implied off and greys out while the part is
 hidden); the dot on its own hides just the vertex dots, leaving the fill
 visible as a plain reference silhouette with nothing to accidentally snap
-onto. Neither is saved anywhere — it's a decluttering aid, reset per page
-load.
+onto. A pair of reorder arrows between them previews the reference body's own
+`draw_order` (same up/down arrows as the Sections list elsewhere). Nothing in
+this list is saved anywhere — it's a decluttering/preview aid, reset per page
+load; tailor mode only ever writes the outfit back, never the body.
 
 **A single-point fit, unfolded.** A garment vertex fitted to a curve stands
 in for the *whole* curve — that's normal (`shoes.json`'s one placeholder per
@@ -579,6 +644,52 @@ than interpolating a straight line.
 **Selecting a whole polygon.** Double-click any one of its handles (shift to
 add another polygon to the selection).
 
+**Duplicating a polygon.** With exactly one whole polygon or circle selected,
+its fill panel (name/material/tone/layer) carries a **⧉ duplicate** button:
+copies it into the same section right after itself, auto-numbering the name
+off the original's own note (`"near iris"` → `"near iris 2"`, and duplicating
+that copy in turn counts up rather than stacking a second number). Works the
+same on a body-section polygon as on a face-kit piece — whichever section is
+selected owns the copy.
+
+**Deleting a polygon.** Select a whole polygon or circle (dbl-click) and hit
+**−selected polygon(s)** or Delete/Backspace. This removes a `details` piece
+on any section (face kit, decoration on a garment, …). In tailor mode it also
+removes an **entire outfit region** — select all of a region's own outline
+vertices (dbl-click its fill, not a detail on it) and delete: that drops the
+whole piece from `D.regions`, re-aliasing `region0`/`region1`/… to match. A
+body's own sections (torso, head, …) never delete this way — they're
+structurally required, unlike an outfit's freestanding regions.
+
+**Comparing against the other body.** When the loaded design is a body (plain
+or `edit=face`) or an outfit fit against one (`?fitbody=`), a small **compare
+other body** panel appears in the corner, read-only, rendered by the same
+`expand()`-equivalent draw path as the main canvas. Three controls (View)
+shape it independently of the main edit:
+
+- **against** — which body it shows. Defaults to the body already being
+  edited itself (labelled `(live)`) — the panel then tracks the in-memory
+  edit, not a stale disk fetch, acting as a second, independently framed
+  camera on the same model. The dropdown (a `body/*.json` directory listing,
+  same trick as the tailor mode "fit against" picker) also lists `auto —
+  counterpart`, the body found by swapping `_masc`/`_femme` in the loaded (or
+  `fitbody`) filename, and every other body on disk. Whichever you pick
+  sticks for the rest of the page's session (the default only applies fresh
+  on load); empty/hidden if the loaded design isn't a body-rooted one.
+- **frame** — `fit panel` (default) auto-fits whatever's drawn into the small
+  panel, independent of the main canvas's own zoom; `match main view` reuses
+  the main canvas's exact pan/zoom instead, so the two are pixel-comparable
+  but a tight main crop can run outside the smaller panel.
+- **show** — `whole body` (default) or `head only`. Filters the drawn parts
+  to the body's `head` section — in tailor mode this mostly only matters if
+  the outfit itself has head-group parts.
+
+In tailor mode the panel draws the *same outfit* fit against whichever body
+"against" resolves to, via the same `composeWornJS`/`applyFits` path the main
+canvas uses, so a fit change is checked against the other body's proportions
+without leaving the page. It re-fetches whenever the loaded design, `fitbody`,
+or the "against" choice changes.
+
 **Draw order against the body.** A region's `over`/`under` (body section or
 group names — same field the real game's `compose_worn` reads) is honoured
 in the preview: a region tagged `"under": ["torso"]` draws behind the whole
@@ -600,8 +711,10 @@ When the user wants to reshape an existing asset — "let's redesign the femme
 body", "the skirt hem needs work", "fix the courier canopy" — the agent runs
 this loop rather than hand-editing coordinates:
 
-1. **Open it.** Start `python -m http.server 8777` at the repo root, open the
-   Browser pane at
+1. **Open it.** Start `python docs/atlases/serve_nocache.py 8777` at the repo
+   root (see **Serving it**, above — not plain `http.server`, which can leave
+   the user looking at a stale cached copy of the editor after a later
+   change), open the Browser pane at
    `http://127.0.0.1:8777/docs/atlases/editor.html?file=<path to the design JSON>`.
    For an article, the bare body is the reference; open the body too if the fit
    matters.
@@ -636,6 +749,20 @@ genuine, non-trivial differences as real work — many keys will just be
 stale residue from earlier autosaves already superseded by a save, or a
 scratch tab's own leftovers.
 
+**Batch download.** The **Batch download** panel (bottom of the side panel,
+below Output) lists every `gpDraft:*` key in this browser at once — not just
+the design currently loaded — with a checkbox and an editable filename per
+row, defaulted from the draft's own path (`.face-export.json` for a face
+draft, the article's real name for a `fit` draft). **rescan** refreshes the
+list (e.g. after saving one design mid-session); **download checked** fires
+one `<a download>` per checked row, staggered 200ms apart so a browser
+doesn't throttle a burst of same-tick downloads. Two rows that would land on
+the same filename are highlighted — most commonly the same article edited in
+two separate tailor-mode sessions against different bodies, which the panel
+auto-disambiguates (`hair_bun.vs-human_femme.json` /
+`hair_bun.vs-human_masc.json`); a genuine same-name collision elsewhere is
+left for hand-renaming, with a confirm prompt before downloading anyway.
+
 **Shade overrides.** A region (body section or ship silhouette entry) may carry
 `"shade": false` to draw flat, or explicit `"shade_dark"` / `"shade_light"`
 polygons (one each) used verbatim instead of the auto-shade. `expand()` honours
@@ -646,9 +773,12 @@ them and rotates them with the region under `rest_splay`.
 The **face kit** is `details` on the body's `head` section — eyes (socket,
 sclera, iris, pupil, lid, catchlight), tapered brows, a short nose (bridge
 shadow + soft tip), two-part lips. Each is a small polygon; a round one may be
-written `"circle": [cx, cy, r]` and `expand()` turns it into an ngon. The kit is
-drawn at a shallow 3/4 turn: the near eye larger, the far one compressed. It
-scales with the head.
+written `"circle": [cx, cy, r]` (an optional 4th element, `rot`, rotates the
+n-gon about its own centre in degrees; omitted/0 = unrotated) and `expand()`
+turns it into an ngon — `ngon()`'s side count defaults to an octagon floor
+(`max(8, min(24, r*2))`), never fewer, so a small round detail still reads as
+round rather than faceted. The kit is drawn at a shallow 3/4 turn: the near
+eye larger, the far one compressed. It scales with the head.
 
 **Face slots.** The head section carries a `"face"` map — `{eyes, brows, nose,
 lips: <name>}` — and `load("faces", "<slot>_<name>")` supplies each slot's
