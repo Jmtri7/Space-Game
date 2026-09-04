@@ -35,6 +35,13 @@ MUSIC_CACHE_DIR = "music_cache"
 # other way around. A story's story.json "walking_speed" overrides it.
 WALKING_SPEED = 2.0
 
+# A standing figure's height in world units, feet at y=0 (see
+# docs/GRAPHICS_PIPELINE.md "Scale and world space" - this is the same
+# PLAYER_H every story's graphics/materials.json quotes other sizes
+# against). Used by LocationScreen.update_camera to frame the player at
+# their vertical center instead of their feet.
+PLAYER_H = 31.0
+
 # Grid resolution (world units) for interior navigation - the walkability
 # grid LocationScreen.plan_path builds once per interior and runs A* over
 # to route visiting AI pilots (DockRoutine) around walls/footprints. Small

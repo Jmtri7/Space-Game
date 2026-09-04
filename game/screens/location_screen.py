@@ -1547,8 +1547,12 @@ class LocationScreen(ScreenBase):
         return max(self.camera_zoom_min, min(self.camera_zoom_max, zoom))
 
     def update_camera(self):
-        """Update global camera to follow player"""
-        set_camera_offset(self.player.x - GAME_WIDTH // 2, self.player.y - GAME_HEIGHT // 2)
+        """Update global camera to follow player, framed on their vertical
+        center rather than their feet (self.player.y is the ground position
+        - see person.py; y is negative going up, so half PLAYER_H is
+        subtracted to lift the frame to mid-figure)."""
+        set_camera_offset(self.player.x - GAME_WIDTH // 2,
+                           self.player.y - constants.PLAYER_H / 2 - GAME_HEIGHT // 2)
         # Interiors are always north-up - clear any view rotation the Space
         # View (Q/E) left on the shared camera. The zoom range is the
         # interior's own, separate from the Space View's.
