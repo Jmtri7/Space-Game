@@ -1029,9 +1029,30 @@ class LocationScreen(ScreenBase):
         # drawn behind it just because structures used to be one earlier,
         # unconditional loop.
         with perf.span("render.location_entities"):
+            # Cull NPCs/visitors outside the camera view before drawing -
+            # a pipeline-bodied NPC's walk-cycle deformation
+            # (story_assets.body_frame -> apply_walk) is real per-vertex
+            # Python trig work, and a busy interior can hold far more NPCs
+            # than are ever on screen at once at interior zoom. Margin
+            # keeps a figure's head/label from popping in right at the
+            # edge. Structures and the player are never culled: structures
+            # are few and cheap, and the player is always on screen (the
+            # camera follows them).
+            margin = constants.PLAYER_H * 3
+            sw, sh = surface.get_size()
+            wx0, wy0 = to_world(-margin, -margin)
+            wx1, wy1 = to_world(sw + margin, sh + margin)
+            lo_x, hi_x = min(wx0, wx1), max(wx0, wx1)
+            lo_y, hi_y = min(wy0, wy1), max(wy0, wy1)
+
+            def _in_view(x, y):
+                return lo_x <= x <= hi_x and lo_y <= y <= hi_y
+
             drawables = [(self._structure_depth(structure), self._make_structure_drawer(structure, scale)) for structure in self.structures]
-            drawables += [(character.person.y, character.person.draw) for character in self.npcs]
-            drawables += [(visitor.y, visitor.draw) for visitor in self.visitors]
+            drawables += [(character.person.y, character.person.draw) for character in self.npcs
+                          if _in_view(character.person.x, character.person.y)]
+            drawables += [(visitor.y, visitor.draw) for visitor in self.visitors
+                          if _in_view(visitor.x, visitor.y)]
             drawables.append((self.player.y, self.player.draw))
             drawables.sort(key=lambda item: item[0])
             for _, draw_fn in drawables:
