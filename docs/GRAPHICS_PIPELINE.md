@@ -1220,7 +1220,7 @@ civilian, smuggler, ranger, bounty hunter), rebuilt from the articles above:
 
 - `items/<garment>_<colourway>_{masc,femme}.json` — a `colors` patch (+ `shade`)
   over one base article per recoloured piece (`jacket_navy`, `coat_navy`,
-  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, `hood_black`,
+  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, `hood_field`,
   `backpack_brown`, `bandolier_black`, `star_gold`, `braid_gold`, …). Colours
   are read off the old atlas's prose descriptions.
 - a few small **decal articles** carry geometry the recolours can't:

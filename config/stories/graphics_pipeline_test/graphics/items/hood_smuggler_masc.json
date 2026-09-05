@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the raised hood (hood_masc geometry) recoloured #232c22, deep finish - matches coat_smuggler.",
+  "geometry": "hood_masc",
+  "colors": {
+    "cloth": "#232c22"
+  },
+  "shade": "deep"
+}

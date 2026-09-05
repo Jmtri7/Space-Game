@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the raised hood (hood_femme geometry) recoloured #17181c, deep finish.",
-  "geometry": "hood_femme",
-  "colors": {
-    "cloth": "#17181c"
-  },
-  "shade": "deep"
-}
