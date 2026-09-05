@@ -193,6 +193,14 @@ A **body section** publishes:
 - **edge curves** — `torso_left`, `hip_right`, `head_profile` — an ordered
   polyline along the section's silhouette.
 
+**Curve storage.** A curve in `section.curves` is either a bare polyline
+(legacy) or `{ "pts": [...], "ends": [[x,y],[x,y]], "dir": ±1 }`. `pts` is the
+resolved polyline and the only field `expand()` (`_curve`) reads; `ends` (the
+two endpoint coordinates) and `dir` (the boundary-walk direction) are what the
+vertex editor uses to re-trace `pts` when the body is reshaped — see the editor
+**Curves panel**. The editor writes the object form; hand-written designs may
+use either.
+
 An **article region or detail** declares one of:
 
 - `"group": "<animation group>"` — the piece rides that body part (`torso`,
@@ -661,15 +669,22 @@ other) — a **span** row appears with a **go the long way around** checkbox
 (a polygon has two ways from one point to the other; the checkbox picks
 whichever the curve should trace, showing the vertex count for each) and a
 name field (autocompletes existing names). **save curve** copies that
-boundary run, in order, as the curve's own literal point list — a snapshot,
-not a live reference to the section's points, same as tailor mode's
-"generate N vertices between" trace. Reusing an existing name overwrites it,
-which is how you re-cut a curve after reshaping the body; anything fit to
-`section.curve` elsewhere (via the Fit panel in tailor mode, see below)
-picks up the new shape next time that file is loaded — including from this
-same browser's autosaved draft, so switching straight from a body edit to
-tailoring an outfit against it (or reloading tailor mode) already shows the
-recut curve without saving to disk first. Deleting a curve that some
+boundary run, in order, as the curve's `pts` polyline, and also records its
+two endpoint coordinates and the walk direction (`{ pts, ends, dir }` — see
+**Curve storage**, below). Reusing an existing name overwrites it.
+
+**Auto re-cut.** Because the endpoints are stored, the editor re-traces every
+curve on a section from that section's *current* silhouette on every body-vertex
+move (`recutCurves` in `sync()`: each endpoint snaps to the nearest present
+vertex, `walkBoundary` re-walks the span in the saved `dir`). So moving a body
+point keeps every curve it lies on in line, and any outfit fitted to
+`section.curve` (via the Fit panel in tailor mode, see below) follows on the
+next load — including from this same browser's autosaved draft, so switching
+straight from a body edit to tailoring an outfit against it (or reloading tailor
+mode) already shows the re-cut curve without saving to disk. A **re-cut curves
+from current body shape** button forces the pass and reports the count. A curve
+saved before this carries no `ends` and shows as **static** — re-capture it once
+(same name) to switch it over. Deleting a curve that some
 article's `fits` still names leaves that fit unable to resolve (`bodyCurve`
 returns `null` and the fit is silently skipped) — the panel doesn't check
 other files for references before deleting.
@@ -732,11 +747,22 @@ body is reshaped later (use the Fit panel's curve dropdown for that instead).
 (plain, `edit=face`, or an outfit fit against one) is loaded, an **edit: body
 / face / outfit** button row appears near the top of the side panel,
 highlighting whichever you're in. **body** and **face** both jump to
-`?file=<body>` (with/without `&edit=face`); **outfit** jumps to the
-alphabetically-first `articles/*.json` fit against that same body (`fitbody=`)
-— from there use the **switch to** dropdown below to pick a different one, or
-the mode row again to hop back to the body or its face. Hidden when the
-loaded design isn't a body-rooted one (a bare, unfit article, e.g.).
+`?file=<body>` (with/without `&edit=face`); **outfit** jumps to the article
+you last tailored in this tab (per story, remembered in `sessionStorage` as
+`gpLastArticle:<story>`), or the alphabetically-first `articles/*.json` fit
+against that same body (`fitbody=`) if you haven't tailored one yet — from
+there use the **switch to** dropdown below to pick a different one, or the mode
+row again to hop back to the body or its face. Hidden when the loaded design
+isn't a body-rooted one (a bare, unfit article, e.g.).
+
+**Hide/show state is remembered per tab.** Which body sections you've hidden
+or whose handles you've toggled (body-edit mode), and which backdrop body
+parts / snap-dots you've hidden (tailor mode), are saved to `sessionStorage`
+keyed by path (`gpVis:body:<path>` / `gpVis:tailor:<fitbody>`) and restored on
+load — so the `?file=` navigations the mode/body/article switchers do don't
+reset your setup. `sessionStorage` lives exactly as long as the tab: close it
+and the memory is gone; a second tab starts fresh. Face-mode piece isolation
+isn't persisted (its `detPick` indices shift when details reorder).
 
 Right below it, a **body** dropdown (plain or face mode only — a
 `body/*.json` directory listing) switches which body is loaded outright,
@@ -769,9 +795,10 @@ onto. A pair of reorder arrows between them previews the reference body's own
 `draw_order` (same up/down arrows as the Sections list elsewhere). Above the
 list, **show all** / **hide all** toggles every part at once (the label
 follows state — it reads **show all** only when every part is already
-hidden), beside **hide all verts**. Nothing in
-this list is saved anywhere — it's a decluttering/preview aid, reset per page
-load; tailor mode only ever writes the outfit back, never the body.
+hidden), beside **hide all verts**. This list is a decluttering/preview aid —
+it never touches a file (tailor mode only writes the outfit back, never the
+body) — but the tab remembers it (`sessionStorage`, see **Hide/show state is
+remembered per tab** above) so switching views doesn't clear it.
 
 **A single-point fit, unfolded.** A garment vertex fitted to a curve stands
 in for the *whole* curve — that's normal (a shoe with one placeholder per foot
@@ -909,9 +936,15 @@ write itself can be either hand.
 
 **Autosave drafts, and a sharp edge.** The editor autosaves the live edit to
 `localStorage` under `gpDraft:<loadedPath>` (plus `:face` or `:fit:<fitbody>`
-for those modes) on every change, and offers to restore it on next load of
-the same design — so a browser crash or an accidental navigation doesn't
-lose work. The gotcha: **these keys are shared by every tab open on the same
+for those modes) and offers to restore it on next load of the same design — so
+a browser crash or an accidental navigation doesn't lose work. The draft is
+written **only once the design has actually been edited** this session (`dirty`
+latches in `sync()` when the serialised design first differs from what the first
+`sync()` saw; a restored draft, or JSON pasted/loaded in by hand, starts
+`dirty`) — opening a file and looking at it, or just selecting vertices, leaves
+the drafts list untouched; the first real edit writes the draft immediately. A
+clean "save checked to repo" of the loaded design re-baselines it back to clean.
+The gotcha: **these keys are shared by every tab open on the same
 origin**, not per-tab. If the agent opens its own scratch tab on the same
 `http://127.0.0.1:8777` origin and loads the *same* file+mode the user is
 mid-edit on — even just to verify something — it silently overwrites the

@@ -458,9 +458,14 @@ def expand_body(design, palette, materials, load=None):
 
 def _curve(body, ref):
     """'<section>.<curve>' -> the named edge polyline from a body design, in
-    body coordinates."""
+    body coordinates. A curve is either a bare polyline or a
+    {"pts": [...], "ends": [...], "dir": ...} object - the editor writes the
+    latter so it can re-trace the curve when the body is reshaped; only "pts"
+    is read here."""
     sec, name = ref.split(".")
-    return [list(p) for p in body["sections"][sec]["curves"][name]]
+    c = body["sections"][sec]["curves"][name]
+    pts = c["pts"] if isinstance(c, dict) else c
+    return [list(p) for p in pts]
 
 
 def _apply_fits(points, fits, body):

@@ -5460,6 +5460,32 @@ class TestExpandShadingAndItems(unittest.TestCase):
                          [[1, 0], [2, 0], [2, 1], [1, 1]])
 
 
+class TestCurveFormats(unittest.TestCase):
+    """A body curve is either a bare polyline (legacy) or a
+    {"pts", "ends", "dir"} object the vertex editor writes so it can re-trace
+    the curve when the body is reshaped. `_curve` reads `pts` from either."""
+
+    def _body(self, curve):
+        return {"sections": {"torso": {"curves": {"side": curve}}}}
+
+    def test_curve_reads_bare_polyline(self):
+        from game.graphics.expand import _curve
+        self.assertEqual(_curve(self._body([[0, 0], [1, 2]]), "torso.side"),
+                         [[0, 0], [1, 2]])
+
+    def test_curve_reads_object_form_pts_only(self):
+        from game.graphics.expand import _curve
+        c = {"pts": [[0, 0], [1, 2]], "ends": [[0, 0], [1, 2]], "dir": 1}
+        self.assertEqual(_curve(self._body(c), "torso.side"), [[0, 0], [1, 2]])
+
+    def test_apply_fits_splices_object_form_curve(self):
+        from game.graphics.expand import _apply_fits
+        body = self._body({"pts": [[9, 9], [8, 8]], "ends": [], "dir": 1})
+        out = _apply_fits([[0, 0], [1, 1], [2, 2]],
+                          [{"curve": "torso.side", "from": 1, "to": 1}], body)
+        self.assertEqual(out, [[0, 0], [9, 9], [8, 8], [2, 2]])
+
+
 class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
     """The graphics_pipeline_test story is on the decoupled color/shade model:
     materials.json carries only `shading` profiles, and every design part names

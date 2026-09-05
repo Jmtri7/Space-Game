@@ -607,7 +607,42 @@ function detailPoly(d){ return d.points ? d.points : d.circle ? ngon(d.circle[0]
 function bodyCurve(body, ref){                    // "<section>.<curve>" -> body-space polyline
   const [sec, name] = ref.split('.');
   const c = body.sections[sec]?.curves?.[name];
-  return c ? c.map(p=>p.slice()) : null;
+  const pts = curvePts(c);
+  return pts.length ? pts.map(p=>p.slice()) : null;
+}
+// A curve on disk is either a bare polyline (legacy) or
+// { pts, ends:[[x,y],[x,y]], dir } - `pts` is always the resolved polyline the
+// game reads; `ends`+`dir` let the editor re-trace it (recutCurves) when the
+// body is reshaped.
+function curvePts(c){ return Array.isArray(c) ? c : (c && c.pts) || []; }
+function nearestVertexIndex(pts, p){
+  let best=-1, bd=Infinity;
+  for(let i=0;i<pts.length;i++){
+    const dx=pts[i][0]-p[0], dy=pts[i][1]-p[1], d=dx*dx+dy*dy;
+    if(d<bd){ bd=d; best=i; }
+  }
+  return best;
+}
+// Re-trace each named curve on a body section from the section's CURRENT
+// silhouette: the stored `ends` snap to the nearest present vertices and
+// walkBoundary re-walks the span in the saved direction. So reshaping the body
+// keeps every curve - and every article fitted to it - in line, with no
+// re-capture. Curves saved before this carry no `ends` and are left untouched.
+function recutCurves(secName){
+  const S = (D.sections||{})[secName];
+  if(!S || !S.curves || !Array.isArray(S.points)) return 0;
+  let n = 0;
+  for(const c of Object.values(S.curves)){
+    if(!c || Array.isArray(c) || !c.ends) continue;
+    const a = nearestVertexIndex(S.points, c.ends[0]);
+    const b = nearestVertexIndex(S.points, c.ends[1]);
+    if(a<0 || b<0) continue;
+    const idx = walkBoundary(S.points, a, b, c.dir || 1);
+    c.pts = idx.map(k=>S.points[k].slice());
+    c.ends = [S.points[a].slice(), S.points[b].slice()];
+    n++;
+  }
+  return n;
 }
 function applyFits(points, fits, body){
   const pts = points.map(p=>p.slice());
@@ -659,6 +694,51 @@ const hidden = new Set(); // section names not drawn
 const detPick = new Set(); // FACE_MODE: if non-empty, only these detail indices show handles ("head:3")
 let view = { x: 0, y: -16, s: 14 };   // world centre + px/unit
 let history = [];
+// A draft is written to localStorage only once the design has actually been
+// edited this session - just opening a file (which still runs sync() to fill
+// #out and render) must not create a gpDraft: entry. `savedJSON` is the
+// serialisation sync() first saw for the loaded design; `dirty` latches true
+// the moment a later sync() sees a different one (or a draft was restored on
+// boot, or arbitrary JSON was pasted/loaded in).
+let dirty = false;
+let savedJSON = null;
+
+// --- per-tab UI memory (sessionStorage: lives as long as this tab is open,
+// and survives the ?file= navigations the body/face/outfit switcher does, so
+// hopping between the views of one character doesn't reset which parts you
+// hid/showed). Keyed by path so different characters keep their own setup.
+// Face-piece isolation (`detPick`) uses shifting indices - not persisted.
+function ssGet(k){ try{ return JSON.parse(sessionStorage.getItem(k)); }catch(e){ return null; } }
+function ssSet(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function visKey(){
+  if(!loadedPath || FACE_MODE) return null;
+  return TAILOR_MODE ? 'gpVis:tailor:' + FITBODY : 'gpVis:body:' + loadedPath;
+}
+let _lastVisJSON = '';
+let _visReady = false;   // don't persist until restoreVis() has run for the current load
+function saveVis(){
+  if(!_visReady) return;
+  const k = visKey(); if(!k) return;
+  const v = TAILOR_MODE ? { hidden:[...bodyHidden], vertsOff:[...bodyVertsOff] }
+                        : { hidden:[...hidden], shown:[...shown] };
+  const j = k + '|' + JSON.stringify(v);
+  if(j === _lastVisJSON) return;              // nothing changed - skip the write (render() calls this a lot)
+  _lastVisJSON = j;
+  ssSet(k, v);
+}
+function restoreVis(){
+  _visReady = true;   // from here on, render()'s saveVis() may persist
+  const k = visKey(); if(!k) return;
+  const v = ssGet(k); if(!v) return;
+  if(TAILOR_MODE){
+    bodyHidden.clear();   (v.hidden  ||[]).forEach(n=>bodyHidden.add(n));
+    bodyVertsOff.clear(); (v.vertsOff||[]).forEach(n=>bodyVertsOff.add(n));
+  }else{
+    hidden.clear(); (v.hidden||[]).forEach(n=>hidden.add(n));
+    shown.clear();  (v.shown ||[]).forEach(n=>shown.add(n));
+  }
+}
+
 const sel = new Set();       // selected handle ids  "sec|key|i"
 const HANDLES = [];          // {id, sx, sy, sec, key, i} rebuilt each render
 let marq = null;             // {x0,y0,x1,y1} screen-space box select
@@ -890,6 +970,7 @@ document.getElementById('bodyPicker').onchange = e=>{
 
 function render(){
   if(!D){ svg.innerHTML=''; return; }
+  saveVis();   // persist any hide/show change for the life of this tab (deduped inside)
   HANDLES.length = 0;
   // No transform on the edited design: an article's points are already in the
   // body's rest pose (splay baked in), and body-edit mode edits the stored
@@ -1357,21 +1438,30 @@ function buildCurvesPanel(){
   if(!selSec){ el.innerHTML = '<div class="hint">select a section</div>'; return; }
   const S = D.sections[selSec];
   const names = Object.keys(S.curves||{});
+  const isStatic = c => Array.isArray(c) || !c || !c.ends;
   const rows = names.length ? names.map(name => `
-    <div class="row"><b>${name}</b> (${S.curves[name].length} pts)
+    <div class="row"><b>${name}</b> (${curvePts(S.curves[name]).length} pts)${
+      isStatic(S.curves[name]) ? ' <span class="hint">static</span>' : ''}
       <button data-curve-rename="${name}">rename</button>
       <button data-curve-del="${name}">delete</button></div>`).join('')
     : '<div class="hint">no curves on this section yet</div>';
+  const recutHtml = `<div class="row"><button id="cRecutAll">re-cut curves from current body shape</button></div>
+    <div class="hint">curves re-trace automatically whenever you move a body
+      vertex (endpoints tracked by nearest vertex), so any outfit fitted to
+      <b>${selSec}.&lt;curve&gt;</b> follows too. This button just forces a pass
+      and reports the count. A <i>static</i> curve predates this - re-capture it
+      once (same name) to switch it over.</div>`;
 
   const verts = selectedRegionVertices().filter(v=>v.sc===selSec);
   let captureHtml = `<div class="hint">select two of <b>${selSec}</b>'s own
     vertices (not more) to capture a new curve, or overwrite an existing one,
     from the boundary run between them.</div>`;
-  let short=null, long=null, lo=null, hi=null;
+  let short=null, long=null, lo=null, hi=null, shortDir=1;
   if(verts.length===2){
     lo = Math.min(verts[0].i, verts[1].i); hi = Math.max(verts[0].i, verts[1].i);
     const fwd = walkBoundary(S.points, lo, hi, 1), bwd = walkBoundary(S.points, lo, hi, -1);
     short = fwd.length<=bwd.length ? fwd : bwd; long = short===fwd ? bwd : fwd;
+    shortDir = short===fwd ? 1 : -1;
     captureHtml = `
       <div class="row">span #${lo} → #${hi}</div>
       <label><input type="checkbox" id="cLongWay"> go the long way around
@@ -1388,7 +1478,15 @@ function buildCurvesPanel(){
     captureHtml = `<div class="hint">select exactly two of ${selSec}'s
       vertices (not more) to capture a curve span.</div>`;
   }
-  el.innerHTML = rows + '<hr>' + captureHtml;
+  el.innerHTML = recutHtml + rows + '<hr>' + captureHtml;
+
+  document.getElementById('cRecutAll').onclick = ()=>{
+    pushHistory();
+    let n=0; for(const nm of Object.keys(D.sections||{})) n += recutCurves(nm);
+    sync(); buildCurvesPanel();
+    alert(n ? `re-cut ${n} curve${n===1?'':'s'} from the current body shape`
+            : 'nothing to re-cut - no curves carry endpoints yet (re-capture a static one)');
+  };
 
   names.forEach(name=>{
     const rb = el.querySelector(`[data-curve-rename="${CSS.escape(name)}"]`);
@@ -1418,10 +1516,15 @@ function buildCurvesPanel(){
     document.getElementById('cSave').onclick = ()=>{
       const name = document.getElementById('cName').value.trim();
       if(!name){ alert('name the curve first'); return; }
-      const path = document.getElementById('cLongWay').checked ? long : short;
+      const longWay = document.getElementById('cLongWay').checked;
+      const path = longWay ? long : short;
       pushHistory();
       S.curves = S.curves || {};
-      S.curves[name] = path.map(k=>S.points[k].slice());
+      S.curves[name] = {
+        pts: path.map(k=>S.points[k].slice()),
+        ends: [S.points[path[0]].slice(), S.points[path[path.length-1]].slice()],
+        dir: longWay ? -shortDir : shortDir
+      };
       sync(); buildCurvesPanel();
     };
   }
@@ -2183,12 +2286,21 @@ function allFinite(o){
 }
 function draftKey(){ return loadedPath ? 'gpDraft:' + loadedPath + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '') : null; }
 function sync(){
-  document.getElementById('out').value = JSON.stringify(round(D), null, 2);
+  // reshaping a body drags its section vertices; keep every named curve (and
+  // so every article fitted to one) re-traced against the new shape, live -
+  // this is what lands in #out and the autosaved draft that tailor mode reads.
+  if(!TAILOR_MODE && !FACE_MODE && D && D.sections)
+    for(const nm of Object.keys(D.sections)) recutCurves(nm);
+  const rd = JSON.stringify(round(D), null, 2);
+  document.getElementById('out').value = rd;
+  if(savedJSON === null) savedJSON = rd;          // first sync for this design - the baseline
+  else if(rd !== savedJSON) dirty = true;         // latched: an edit has happened
   const k = draftKey();
   // never persist a draft containing NaN/Infinity (a stray divide-by-zero
   // while dragging, say) - better to lose that one edit than restore garbage
-  // that breaks rendering on the next load.
-  if(k && allFinite(D)){ try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){} }
+  // that breaks rendering on the next load. And only once actually edited, so
+  // opening a file without touching it leaves the drafts list alone.
+  if(k && dirty && allFinite(D)){ try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){} }
   render();
 }
 function undo(){ if(history.length){ D = JSON.parse(history.pop()); if(TAILOR_MODE) relinkTailorSections(); sync(); buildSecList(); buildSecEdit(); buildCurvesPanel(); } }
@@ -2233,12 +2345,15 @@ async function loadBodyForTailoring(){
   // loading it again would duplicate every piece.
   await loadFaceKitInto(bodyDesign);
   bodyHidden.clear(); bodyVertsOff.clear();
+  restoreVis();   // bring back this tab's hidden body parts / vert dots for this fit body
   buildBodyPartList();
   populateBodyPicker();
   loadMirrorBody(FITBODY);   // the same outfit, fit against the counterpart body
 }
 function loadDesign(obj, path){
   D = shimLook(obj); selSec=null; shown.clear(); hidden.clear();
+  dirty = false; savedJSON = null;   // new design - re-baseline; sync() latches dirty on the first real edit
+  _lastVisJSON = ''; _visReady = false;   // re-persist hide/show under whatever key this design resolves to, after restore
   // a regions article loaded on its own (no &fitbody=, so not tailor mode) has
   // no editor view - bail with a hint instead of throwing on D.sections below.
   if(!TAILOR_MODE && !FACE_MODE && !D.sections){
@@ -2266,6 +2381,7 @@ function finishLoad(){
   try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
   if(FACE_MODE){ shown.clear(); shown.add('head'); selSec = 'head'; }
   if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
+  restoreVis();   // this tab's remembered section eye / handle toggles (body-edit mode)
   buildSecList(); buildSecEdit(); buildCurvesPanel(); initLookPanel(); sync();
   populateArticlePicker();
   populateStartPicker();
@@ -2275,6 +2391,12 @@ function finishLoad(){
   if(TAILOR_MODE && FITBODY){
     const st = storyOfPath(FITBODY);
     if(st) try{ localStorage.setItem('gpEditorFitBody:' + st, FITBODY.split('/').pop()); }catch(e){}
+  }
+  // remember the article being tailored, for this tab, so the "outfit" button
+  // in the mode switcher comes back to it instead of the first one alphabetically
+  if(TAILOR_MODE && loadedPath && loadedPath.includes('/articles/')){
+    const st = storyOfPath(loadedPath);
+    if(st) ssSet('gpLastArticle:' + st, loadedPath.split('/').pop());
   }
   populateBodyDirectPicker();
   const fit = () => { FACE_MODE ? fitHead() : fitView(); render(); };
@@ -2304,7 +2426,7 @@ function buildModeSwitch(){
   el.innerHTML = `
     edit <button id="modeBody" class="${!FACE_MODE && !TAILOR_MODE?'on':''}">body</button>
     <button id="modeFace" class="${FACE_MODE?'on':''}">face</button>
-    <button id="modeOutfit" class="${TAILOR_MODE?'on':''}" title="jumps to the ${TAILOR_MODE ? 'current' : 'first'} article fit against this body">outfit</button>`;
+    <button id="modeOutfit" class="${TAILOR_MODE?'on':''}" title="jumps to the ${TAILOR_MODE ? 'current' : 'last-edited (this tab), else first'} article fit against this body">outfit</button>`;
   const go = qs => { location.search = qs.toString(); };
   document.getElementById('modeBody').onclick = ()=>{
     const qs = new URLSearchParams(); qs.set('file', bodyPath); go(qs);
@@ -2316,7 +2438,10 @@ function buildModeSwitch(){
     if(TAILOR_MODE) return;   // already here
     const names = await fetchArticleNames();
     if(!names.length){ alert('no articles/*.json found in ' + GBASE + '/articles to switch to'); return; }
-    const qs = new URLSearchParams(); qs.set('file', GBASE + '/articles/' + names[0]); qs.set('fitbody', bodyPath); go(qs);
+    const st = storyOfPath(bodyPath);
+    const last = st ? ssGet('gpLastArticle:' + st) : null;   // this tab's last-tailored article
+    const pick = (last && names.includes(last)) ? last : names[0];
+    const qs = new URLSearchParams(); qs.set('file', GBASE + '/articles/' + pick); qs.set('fitbody', bodyPath); go(qs);
   };
 }
 // switches which body/*.json is loaded, staying in the same mode (plain or
@@ -2484,10 +2609,11 @@ function fitView(){
 document.getElementById('load').onclick = ()=>document.getElementById('file').click();
 document.getElementById('file').onchange = e=>{
   const f=e.target.files[0]; if(!f)return;
-  f.text().then(t=>{ loadDesign(JSON.parse(t)); populateStartPicker(); });
+  // JSON loaded in by hand is treated as unsaved work from the start
+  f.text().then(t=>{ loadDesign(JSON.parse(t)); dirty = true; populateStartPicker(); });
 };
 document.getElementById('loadBox').onclick = ()=>{
-  try{ loadDesign(JSON.parse(document.getElementById('out').value)); populateStartPicker(); }
+  try{ loadDesign(JSON.parse(document.getElementById('out').value)); dirty = true; populateStartPicker(); }
   catch(e){ alert('Bad JSON: '+e.message); }
 };
 document.getElementById('reset').onclick = ()=>{
@@ -2692,7 +2818,12 @@ document.getElementById('saveAllDrafts').onclick = async ()=>{
   const badPaths = new Set(failed.map(f => f.split(' — ')[0]));
   for(const r of chosen){
     const mine = draftToFiles(r).map(f => f.path);
-    if(!mine.some(pp => badPaths.has(pp))) localStorage.removeItem(r.key);
+    if(!mine.some(pp => badPaths.has(pp))){
+      localStorage.removeItem(r.key);
+      // if we just saved the design that's loaded, it now matches disk -
+      // re-baseline so a later stray sync() doesn't resurrect the draft
+      if(r.key === draftKey()){ dirty = false; savedJSON = JSON.stringify(round(D), null, 2); }
+    }
   }
   scanDrafts();
   alert(`Saved ${plan.length - failed.length} of ${plan.length} file${plan.length===1?'':'s'}.` +
@@ -2753,6 +2884,7 @@ async function runBoot(){
     const draft = (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
     if(draft){ obj = draft.D; restored = new Date(draft.t); }
     loadDesign(obj, _qFile);
+    if(restored) dirty = true;   // a restored draft is unsaved work - keep persisting it
     if(restored) document.getElementById('src').textContent +=
       `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
   } else {
