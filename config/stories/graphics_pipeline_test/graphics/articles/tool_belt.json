@@ -6,29 +6,101 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge).",
       "points": [
-        [-1.639, -19.876],
-        [-2.97, -17.295]
+        [
+          -1.677,
+          -20.46
+        ],
+        [
+          1.806,
+          -20.472
+        ],
+        [
+          2.068,
+          -19.71
+        ],
+        [
+          -1.93,
+          -19.715
+        ]
       ],
-      "fits": [
-        {"curve": "torso.waistline", "from": 0, "to": 0},
-        {"curve": "torso.low_waist", "from": 1, "to": 1, "reverse": true}
-      ],
+      "fits": [],
       "details": [
         {
-          "group": "torso", "material": "leather", "tone": "dark", "note": "hip pouch",
-          "points": [[0.7, -18.7], [1.7, -18.7], [1.85, -16.9], [0.55, -16.9]]
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "hip pouch",
+          "points": [
+            [
+              0.123,
+              -20.426
+            ],
+            [
+              0.536,
+              -20.426
+            ],
+            [
+              0.598,
+              -19.683
+            ],
+            [
+              0.061,
+              -19.683
+            ]
+          ]
         },
         {
-          "group": "torso", "material": "leather", "tone": "dark", "note": "far hip pouch",
-          "points": [[-0.7, -18.7], [-1.7, -18.7], [-1.85, -16.9], [-0.55, -16.9]]
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "far hip pouch",
+          "points": [
+            [
+              -0.455,
+              -20.426
+            ],
+            [
+              -0.868,
+              -20.426
+            ],
+            [
+              -0.93,
+              -19.683
+            ],
+            [
+              -0.393,
+              -19.683
+            ]
+          ]
         },
         {
-          "group": "torso", "material": "metal", "note": "buckle",
-          "points": [[-0.35, -18.9], [0.35, -18.9], [0.35, -18.2], [-0.35, -18.2]]
+          "group": "torso",
+          "material": "metal",
+          "note": "buckle",
+          "points": [
+            [
+              -0.311,
+              -20.509
+            ],
+            [
+              -0.022,
+              -20.509
+            ],
+            [
+              -0.022,
+              -20.22
+            ],
+            [
+              -0.311,
+              -20.22
+            ]
+          ]
         }
       ]
     }

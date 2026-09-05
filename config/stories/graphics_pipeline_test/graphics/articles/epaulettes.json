@@ -6,18 +6,56 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
       "note": "near shoulder board, on shoulder_near.",
-      "points": [[1.55, -24.6], [2.95, -24.7], [2.85, -25.35], [1.55, -25.3]],
+      "points": [
+        [
+          1.55,
+          -24.6
+        ],
+        [
+          2.95,
+          -24.7
+        ],
+        [
+          2.85,
+          -25.35
+        ],
+        [
+          1.55,
+          -25.3
+        ]
+      ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
       "note": "far shoulder board, mirror of the near one.",
-      "points": [[-1.55, -24.6], [-2.95, -24.7], [-2.85, -25.35], [-1.55, -25.3]],
+      "points": [
+        [
+          -1.55,
+          -24.6
+        ],
+        [
+          -2.95,
+          -24.7
+        ],
+        [
+          -2.85,
+          -25.35
+        ],
+        [
+          -1.414,
+          -25.366
+        ]
+      ],
       "fits": []
     }
   ]

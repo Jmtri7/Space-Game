@@ -6,26 +6,83 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "metal",
       "note": "left plate.",
-      "points": [[-2.3, -23.7], [-0.9, -23.9], [-0.95, -21.3], [-2.2, -21.1]],
+      "points": [
+        [
+          -2.3,
+          -23.7
+        ],
+        [
+          -0.9,
+          -23.9
+        ],
+        [
+          -0.95,
+          -21.3
+        ],
+        [
+          -2.2,
+          -21.1
+        ]
+      ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "metal",
       "note": "centre plate, overlapping both side plates slightly.",
-      "points": [[-1.1, -24.0], [1.1, -24.0], [1.05, -20.9], [-1.05, -20.9]],
+      "points": [
+        [
+          -1.1,
+          -24
+        ],
+        [
+          1.1,
+          -24
+        ],
+        [
+          1.05,
+          -20.9
+        ],
+        [
+          -1.05,
+          -20.9
+        ]
+      ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "metal",
       "note": "right plate, mirror of the left.",
-      "points": [[0.9, -23.9], [2.3, -23.7], [2.2, -21.1], [0.95, -21.3]],
+      "points": [
+        [
+          0.9,
+          -23.9
+        ],
+        [
+          2.3,
+          -23.7
+        ],
+        [
+          2.2,
+          -21.1
+        ],
+        [
+          0.95,
+          -21.3
+        ]
+      ],
       "fits": []
     }
   ]

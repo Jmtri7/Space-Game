@@ -6,41 +6,55 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
-      "material": "metal",
-      "note": "left half of the plate. 0 free hem at centre, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free centre seam back down to the hem.",
-      "points": [
-        [0.0, -16.8],
-        [-3.054, -16.604],
-        [-2.169, -24.999],
-        [-0.4, -25.0],
-        [0.0, -20.0]
+      "over": [
+        "leg_near"
       ],
-      "fits": [
-        {"curve": "torso.side_left", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
-      ]
-    },
-    {
-      "group": "torso",
-      "over": ["leg_near"],
       "material": "metal",
       "note": "right half, mirror of the left, meeting it at x=0.",
       "points": [
-        [0.0, -16.8],
-        [3.186, -16.601],
-        [2.159, -24.998],
-        [0.4, -25.0],
-        [0.0, -20.0]
+        [
+          1.324,
+          -21.691
+        ],
+        [
+          2.257,
+          -22.223
+        ],
+        [
+          2.511,
+          -22.911
+        ],
+        [
+          1.24,
+          -23.824
+        ],
+        [
+          -2.115,
+          -23.851
+        ],
+        [
+          -2.899,
+          -23.067
+        ],
+        [
+          -2.561,
+          -22.145
+        ],
+        [
+          -2,
+          -21.708
+        ],
+        [
+          -1.712,
+          -20.665
+        ],
+        [
+          1.142,
+          -20.654
+        ]
       ],
-      "fits": [
-        {"curve": "torso.side_right", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
-      ],
-      "details": [
-        {"group": "torso", "material": "metal", "tone": "dark", "note": "centre seam",
-         "points": [[-0.12, -25.0], [0.12, -25.0], [0.1, -16.8], [-0.1, -16.8]]}
-      ]
+      "fits": [],
+      "details": []
     }
   ]
 }

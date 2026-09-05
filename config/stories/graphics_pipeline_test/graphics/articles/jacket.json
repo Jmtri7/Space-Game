@@ -6,63 +6,209 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed (hem up to shoulder), 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free open front edge back down to the hem. \"over\": [\"leg_near\"] matches the shirt/pants draw rank so the jacket shows over them.",
       "points": [
-        [-0.6, -13.5],
-        [-3.054, -16.604],
-        [-2.169, -24.999],
-        [-0.4, -25.0],
-        [-0.35, -20.0]
+        [
+          -2.254,
+          -19.043
+        ],
+        [
+          -1.604,
+          -19.924
+        ],
+        [
+          -1.515,
+          -20.293
+        ],
+        [
+          -1.806,
+          -21.151
+        ],
+        [
+          -2,
+          -21.708
+        ],
+        [
+          -2.075,
+          -22.208
+        ],
+        [
+          -2.272,
+          -22.267
+        ],
+        [
+          -2.539,
+          -22.617
+        ],
+        [
+          -2.672,
+          -22.976
+        ],
+        [
+          -2.61,
+          -23.341
+        ],
+        [
+          -2.347,
+          -23.563
+        ],
+        [
+          -2.115,
+          -23.851
+        ],
+        [
+          -2.18,
+          -24.543
+        ],
+        [
+          -2.078,
+          -24.971
+        ],
+        [
+          -0.917,
+          -25.681
+        ],
+        [
+          -0.832,
+          -19.037
+        ]
       ],
-      "fits": [
-        {"curve": "torso.side_left", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
-      ]
+      "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
       "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
       "points": [
-        [0.6, -13.5],
-        [3.186, -16.601],
-        [2.159, -24.998],
-        [0.4, -25.0],
-        [0.35, -20.0]
+        [
+          2.308,
+          -19.072
+        ],
+        [
+          1.801,
+          -19.958
+        ],
+        [
+          1.686,
+          -20.297
+        ],
+        [
+          1.846,
+          -21.185
+        ],
+        [
+          2.041,
+          -21.769
+        ],
+        [
+          2.044,
+          -22.284
+        ],
+        [
+          2.289,
+          -22.742
+        ],
+        [
+          2.42,
+          -23.2
+        ],
+        [
+          2.18,
+          -24.05
+        ],
+        [
+          2.158,
+          -25.041
+        ],
+        [
+          0.975,
+          -25.634
+        ],
+        [
+          0.373,
+          -19.014
+        ]
       ],
-      "fits": [
-        {"curve": "torso.side_right", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
-      ]
+      "fits": []
     },
     {
       "group": "arm_far",
       "material": "cloth",
       "note": "far cap sleeve. 0 fits arm_far.arm_far_top (the shoulder dome); 1-2 free cuff.",
       "points": [
-        [-1.81, -24.831],
-        [-3.15, -23.55],
-        [-2.15, -23.75]
+        [
+          -2.673,
+          -24.978
+        ],
+        [
+          -3.179,
+          -24.504
+        ],
+        [
+          -3.37,
+          -16.653
+        ],
+        [
+          -2.406,
+          -16.703
+        ],
+        [
+          -1.553,
+          -24.559
+        ],
+        [
+          -1.969,
+          -25.004
+        ],
+        [
+          -2.26,
+          -25.086
+        ]
       ],
-      "fits": [
-        {"curve": "arm_far.arm_far_top", "from": 0, "to": 0}
-      ]
+      "fits": []
     },
     {
       "group": "arm_near",
       "material": "cloth",
       "note": "near cap sleeve, mirror of the far one.",
       "points": [
-        [1.827, -24.901],
-        [3.15, -23.55],
-        [2.15, -23.75]
+        [
+          1.882,
+          -25.005
+        ],
+        [
+          2.352,
+          -25.09
+        ],
+        [
+          2.84,
+          -24.905
+        ],
+        [
+          3.179,
+          -24.504
+        ],
+        [
+          3.37,
+          -16.653
+        ],
+        [
+          2.406,
+          -16.703
+        ],
+        [
+          1.604,
+          -24.572
+        ]
       ],
-      "fits": [
-        {"curve": "arm_near.arm_near_top", "from": 0, "to": 0}
-      ]
+      "fits": []
     }
   ]
 }

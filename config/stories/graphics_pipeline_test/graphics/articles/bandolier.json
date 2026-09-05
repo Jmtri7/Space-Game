@@ -6,20 +6,61 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "single strap, near shoulder to far hip.",
       "points": [
-        [2.05, -24.75],
-        [2.55, -24.55],
-        [-1.35, -16.4],
-        [-1.85, -16.7]
+        [
+          0.941,
+          -25.577
+        ],
+        [
+          1.363,
+          -25.377
+        ],
+        [
+          -1.604,
+          -19.924
+        ],
+        [
+          -1.636,
+          -20.49
+        ]
       ],
       "fits": [],
       "details": [
-        {"group": "torso", "material": "metal", "note": "loop 1", "circle": [1.85, -22.4, 0.32]},
-        {"group": "torso", "material": "metal", "note": "loop 2", "circle": [0.9, -20.4, 0.32]},
-        {"group": "torso", "material": "metal", "note": "loop 3", "circle": [-0.05, -18.4, 0.32]}
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "loop 1",
+          "circle": [
+            -0.241,
+            -22.824,
+            0.32
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "loop 2",
+          "circle": [
+            -0.873,
+            -21.688,
+            0.32
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "loop 3",
+          "circle": [
+            -1.49,
+            -20.537,
+            0.32
+          ]
+        }
       ]
     }
   ]

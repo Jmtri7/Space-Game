@@ -6,33 +6,84 @@
   "regions": [
     {
       "group": "torso",
-      "under": ["torso"],
+      "under": [
+        "torso"
+      ],
       "material": "cloth",
       "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
       "points": [
-        [-2.6, -25.3], [2.6, -25.3], [3.0, -23.0], [3.0, -18.0],
-        [2.6, -16.0], [-2.6, -16.0], [-3.0, -18.0], [-3.0, -23.0]
+        [
+          -1.162,
+          -25.946
+        ],
+        [
+          2.115,
+          -25.898
+        ],
+        [
+          2.519,
+          -21.105
+        ],
+        [
+          -1.501,
+          -21.089
+        ]
       ],
       "fits": [],
-      "details": [
-        {"group": "torso", "material": "leather", "tone": "dark", "note": "bottom pouch",
-         "points": [[-2.2, -17.5], [2.2, -17.5], [2.0, -16.3], [-2.0, -16.3]]}
-      ]
+      "details": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
-      "note": "near-side shoulder strap, visible in front over the shirt.",
-      "points": [[1.85, -24.9], [2.35, -24.7], [1.6, -20.5], [1.1, -20.6]],
+      "note": "far-side shoulder strap, mirror of the near one.",
+      "points": [
+        [
+          -0.978,
+          -25.595
+        ],
+        [
+          -1.414,
+          -25.366
+        ],
+        [
+          -2.262,
+          -24.184
+        ],
+        [
+          -2.115,
+          -23.851
+        ]
+      ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "cloth",
-      "note": "far-side shoulder strap, mirror of the near one.",
-      "points": [[-1.85, -24.9], [-2.35, -24.7], [-1.6, -20.5], [-1.1, -20.6]],
+      "note": "near-side shoulder strap, visible in front over the shirt.",
+      "points": [
+        [
+          0.945,
+          -25.611
+        ],
+        [
+          1.363,
+          -25.377
+        ],
+        [
+          2.289,
+          -22.742
+        ],
+        [
+          2.044,
+          -22.284
+        ]
+      ],
       "fits": []
     }
   ]

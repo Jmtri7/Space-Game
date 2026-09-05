@@ -6,40 +6,116 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "lamp",
       "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
       "points": [
-        [-0.3, -18.5],
-        [-2.4, -18.8],
-        [-2.169, -24.999],
-        [-0.4, -25.0],
-        [-0.2, -20.5]
+        [
+          -0.709,
+          -19.886
+        ],
+        [
+          -1.604,
+          -19.924
+        ],
+        [
+          -2.829,
+          -23.203
+        ],
+        [
+          -1.758,
+          -25.268
+        ],
+        [
+          -1.166,
+          -25.502
+        ],
+        [
+          -0.739,
+          -23.459
+        ]
       ],
-      "fits": [
-        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
-      ]
+      "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "lamp",
       "note": "right panel, mirror of the left.",
       "points": [
-        [0.3, -18.5],
-        [2.4, -18.8],
-        [2.159, -24.998],
-        [0.4, -25.0],
-        [0.2, -20.5]
+        [
+          2.11,
+          -19.988
+        ],
+        [
+          1.667,
+          -25.351
+        ],
+        [
+          1.007,
+          -25.607
+        ],
+        [
+          -0.004,
+          -23.469
+        ],
+        [
+          0.068,
+          -19.906
+        ]
       ],
-      "fits": [
-        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
-      ],
+      "fits": [],
       "details": [
-        {"group": "torso", "material": "metal", "note": "reflective stripe, high",
-         "points": [[-2.3, -22.5], [2.3, -22.5], [2.3, -21.9], [-2.3, -21.9]]},
-        {"group": "torso", "material": "metal", "note": "reflective stripe, low",
-         "points": [[-2.35, -19.6], [2.35, -19.6], [2.35, -19.0], [-2.35, -19.0]]}
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "reflective stripe, high",
+          "points": [
+            [
+              -2.313,
+              -24.718
+            ],
+            [
+              1.996,
+              -24.757
+            ],
+            [
+              1.996,
+              -24.157
+            ],
+            [
+              -2.538,
+              -24.144
+            ]
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "reflective stripe, low",
+          "points": [
+            [
+              -2.442,
+              -21.778
+            ],
+            [
+              2.258,
+              -21.778
+            ],
+            [
+              2.258,
+              -21.178
+            ],
+            [
+              -2.284,
+              -21.178
+            ]
+          ]
+        }
       ]
     }
   ]

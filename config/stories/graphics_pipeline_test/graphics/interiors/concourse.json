@@ -1,18 +1,24 @@
 {
-  "identity": "The trade ring's public concourse: one wide hall with a docking bay off the east side. You enter from the west airlock, cross the hall past the central column, and pass through to the dock. A bench sits against the south wall.",
+  "identity": "The trade ring's public concourse: one continuous octagonal ring hall, walking the inside of the wheel rim, matching the station's own silhouette. A docking pod bulges off the west wall where you come aboard. A support column stands in the north arc; a bench sits against the south outer wall.",
   "tier": "interior",
   "palette": "ship_std",
-  "units": "absolute local units, 31 = player height, +y is south (screen-down). Lanes want >= 15 u clear.",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down). Ring band is ~106-115 u wide, well over the 2xPLAYER_W corridor minimum.",
   "rooms": [
-    { "id": "hall", "material": "hull", "points": [ [ 0, 0 ], [ 360, 0 ], [ 360, 200 ], [ 0, 200 ] ] },
-    { "id": "dock", "material": "hull_dk", "points": [ [ 360, 44 ], [ 520, 44 ], [ 520, 164 ], [ 360, 164 ] ] }
+    { "id": "n_ne", "material": "hull", "points": [ [ 350.0, 165.0 ], [ 350.0, 50.0 ], [ 562.1, 137.9 ], [ 480.8, 219.2 ] ] },
+    { "id": "ne_e", "material": "hull", "points": [ [ 480.8, 219.2 ], [ 562.1, 137.9 ], [ 650.0, 350.0 ], [ 535.0, 350.0 ] ] },
+    { "id": "e_se", "material": "hull", "points": [ [ 535.0, 350.0 ], [ 650.0, 350.0 ], [ 562.1, 562.1 ], [ 480.8, 480.8 ] ] },
+    { "id": "se_s", "material": "hull", "points": [ [ 480.8, 480.8 ], [ 562.1, 562.1 ], [ 350.0, 650.0 ], [ 350.0, 535.0 ] ] },
+    { "id": "s_sw", "material": "hull", "points": [ [ 350.0, 535.0 ], [ 350.0, 650.0 ], [ 137.9, 562.1 ], [ 219.2, 480.8 ] ] },
+    { "id": "sw_w", "material": "hull", "points": [ [ 219.2, 480.8 ], [ 137.9, 562.1 ], [ 50.0, 350.0 ], [ 165.0, 350.0 ] ] },
+    { "id": "w_nw", "material": "hull", "points": [ [ 165.0, 350.0 ], [ 50.0, 350.0 ], [ 137.9, 137.9 ], [ 219.2, 219.2 ] ] },
+    { "id": "nw_n", "material": "hull", "points": [ [ 219.2, 219.2 ], [ 137.9, 137.9 ], [ 350.0, 50.0 ], [ 350.0, 165.0 ] ] },
+    { "id": "dock", "material": "hull_dk", "points": [ [ -20, 310 ], [ 90, 310 ], [ 90, 390 ], [ -20, 390 ] ] }
   ],
   "portals": [
-    { "id": "airlock", "to": "outside", "points": [ [ -8, 78 ], [ 2, 78 ], [ 2, 126 ], [ -8, 126 ] ] },
-    { "id": "dock_mouth", "between": [ "hall", "dock" ], "points": [ [ 356, 78 ], [ 364, 78 ], [ 364, 126 ], [ 356, 126 ] ] }
+    { "id": "airlock", "to": "outside", "points": [ [ -27, 330 ], [ -17, 330 ], [ -17, 370 ], [ -27, 370 ] ] }
   ],
   "placements": [
-    { "decoration": "column", "at": [ 180, 100 ], "angle": 0, "note": "on the centre-line on purpose; hall is built around it" },
-    { "decoration": "bench", "at": [ 74, 192 ], "angle": 0, "note": "flush to the south wall, clear of every lane" }
+    { "decoration": "column", "at": [ 350, 107.5 ], "angle": 0, "note": "north arc, on the ring centre-line; blocks a lane on purpose" },
+    { "decoration": "bench", "at": [ 350, 615 ], "angle": 0, "note": "flush to the south outer wall, clear of every lane" }
   ]
 }

@@ -6,19 +6,71 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["head"],
+      "over": [
+        "head"
+      ],
       "material": "cloth",
       "note": "crown, same silhouette as cap/hair_short.",
       "points": [
-        [-2.256, -30.512], [-2.18, -29.05], [-1.86, -30], [-1.46, -30.63],
-        [0.86, -30.63], [1.4, -29.1], [1.48, -28.15], [1.747, -29.305],
-        [1.994, -30.244], [1.826, -30.899], [1.301, -31.123], [0.654, -32.031],
-        [-1.069, -32.031], [-1.957, -31.128]
+        [
+          -1.786,
+          -31.055
+        ],
+        [
+          -2.037,
+          -30.01
+        ],
+        [
+          0.721,
+          -29.983
+        ],
+        [
+          1.39,
+          -29.893
+        ],
+        [
+          1.305,
+          -31.173
+        ],
+        [
+          0.351,
+          -31.561
+        ],
+        [
+          -0.975,
+          -31.572
+        ]
       ],
       "fits": [],
       "details": [
-        {"group": "torso", "material": "leather", "tone": "dark", "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
-         "points": [[-2.2, -29.4], [-1.4, -29.0], [1.4, -29.0], [2.2, -29.4], [1.9, -29.6], [-1.9, -29.6]]}
+        {
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
+          "points": [
+            [
+              -2.743,
+              -29.807
+            ],
+            [
+              -2.235,
+              -29.386
+            ],
+            [
+              1.494,
+              -29.647
+            ],
+            [
+              1.472,
+              -29.861
+            ],
+            [
+              -2.09,
+              -29.937
+            ]
+          ]
+        }
       ]
     }
   ]

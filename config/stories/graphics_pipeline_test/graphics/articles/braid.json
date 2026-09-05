@@ -6,17 +6,54 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "metal",
       "note": "thin cord from the near shoulder down under the arm and back.",
       "points": [
-        [2.0, -24.7], [2.5, -24.6], [1.9, -22.0], [2.3, -20.2],
-        [1.9, -20.1], [1.5, -21.9], [1.6, -24.5]
+        [
+          1.093,
+          -25.551
+        ],
+        [
+          1.363,
+          -25.377
+        ],
+        [
+          1.206,
+          -22.94
+        ],
+        [
+          1.846,
+          -21.185
+        ],
+        [
+          1.844,
+          -20.38
+        ],
+        [
+          0.806,
+          -22.84
+        ],
+        [
+          0.82,
+          -25.35
+        ]
       ],
       "fits": [],
       "details": [
-        {"group": "torso", "material": "metal", "tone": "light", "note": "shoulder pin",
-         "circle": [2.2, -24.75, 0.3]}
+        {
+          "group": "torso",
+          "material": "metal",
+          "tone": "light",
+          "note": "shoulder pin",
+          "circle": [
+            1.372,
+            -25.612,
+            0.3
+          ]
+        }
       ]
     }
   ]

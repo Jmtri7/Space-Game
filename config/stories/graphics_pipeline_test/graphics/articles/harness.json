@@ -6,33 +6,67 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "strap, near shoulder to far hip.",
       "points": [
-        [2.05, -24.75],
-        [2.55, -24.55],
-        [-1.35, -16.4],
-        [-1.85, -16.7]
+        [
+          1.454,
+          -25.574
+        ],
+        [
+          1.863,
+          -25.332
+        ],
+        [
+          -1.604,
+          -19.924
+        ],
+        [
+          -1.729,
+          -20.458
+        ]
       ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "strap, far shoulder to near hip - mirror of the other.",
       "points": [
-        [-2.05, -24.75],
-        [-2.55, -24.55],
-        [1.35, -16.4],
-        [1.85, -16.7]
+        [
+          -1.414,
+          -25.366
+        ],
+        [
+          -1.938,
+          -25.216
+        ],
+        [
+          1.801,
+          -19.958
+        ],
+        [
+          1.876,
+          -20.442
+        ]
       ],
       "fits": [],
       "details": [
         {
-          "group": "torso", "material": "metal", "note": "chest ring where the straps cross",
-          "circle": [0, -21.2, 0.55]
+          "group": "torso",
+          "material": "metal",
+          "note": "chest ring where the straps cross",
+          "circle": [
+            -0.152,
+            -22.821,
+            0.55
+          ]
         }
       ]
     }
