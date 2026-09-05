@@ -1,0 +1,68 @@
+{
+  "identity": "A light open jacket worn unbuttoned over a top, hanging open down the front and reaching past the hip. Each front panel's shoulder and outer seam are the wearer's own shoulder-arc and side curves, so the seams sit right no matter the body; the open front edge and short cap sleeves are free-drawn.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed (hem up to shoulder), 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free open front edge back down to the hem. \"over\": [\"leg_near\"] matches the shirt/pants draw rank so the jacket shows over them.",
+      "points": [
+        [-0.6, -13.5],
+        [-3.054, -16.604],
+        [-2.169, -24.999],
+        [-0.4, -25.0],
+        [-0.35, -20.0]
+      ],
+      "fits": [
+        {"curve": "torso.side_left", "from": 1, "to": 1, "reverse": true},
+        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
+      ]
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
+      "points": [
+        [0.6, -13.5],
+        [3.186, -16.601],
+        [2.159, -24.998],
+        [0.4, -25.0],
+        [0.35, -20.0]
+      ],
+      "fits": [
+        {"curve": "torso.side_right", "from": 1, "to": 1, "reverse": true},
+        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
+      ]
+    },
+    {
+      "group": "arm_far",
+      "material": "cloth",
+      "note": "far cap sleeve. 0 fits arm_far.arm_far_top (the shoulder dome); 1-2 free cuff.",
+      "points": [
+        [-1.81, -24.831],
+        [-3.15, -23.55],
+        [-2.15, -23.75]
+      ],
+      "fits": [
+        {"curve": "arm_far.arm_far_top", "from": 0, "to": 0}
+      ]
+    },
+    {
+      "group": "arm_near",
+      "material": "cloth",
+      "note": "near cap sleeve, mirror of the far one.",
+      "points": [
+        [1.827, -24.901],
+        [3.15, -23.55],
+        [2.15, -23.75]
+      ],
+      "fits": [
+        {"curve": "arm_near.arm_near_top", "from": 0, "to": 0}
+      ]
+    }
+  ]
+}

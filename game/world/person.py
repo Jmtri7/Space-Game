@@ -38,6 +38,10 @@ class Person:
         # fig.ACC and draw()). So a new decorated outfit is still just a new
         # graphics.json entry, no drawing code needed.
         self.outfit = outfit or {}
+        # Articles worn in addition to the outfit's set (see equip_article) -
+        # pipeline outfits only. Composed on top of the set's own article
+        # list in story_assets._body_worn, keyed into its cache by this tuple,
+        # so equipping/unequipping just changes which cache entry is drawn.
 
         # Walk-cycle state (see WALK_* constants and _advance_walk). Every
         # Person animates the same way whether the player, a WanderRoutine
@@ -302,6 +306,28 @@ class Person:
             else:
                 proj = [to_screen(self.x + gx * f, self.y + gy) for gx, gy in pts]
             polygon(surface, col, proj)
+
+    def equip_article(self, article_name):
+        """Add one more pipeline-body article (docs/GRAPHICS_PIPELINE.md) on
+        top of this Person's outfit set - a belt, satchel, jacket, picked up
+        or worn for a scene without swapping the whole outfit/set. No-op for
+        a non-pipeline outfit (no "body" key) or an already-equipped article.
+        Idempotent, so a routine can call it every time it wants the article
+        worn without checking first."""
+        if not self.outfit.get("body"):
+            return
+        extra = list(self.outfit.get("extra_articles", ()))
+        if article_name not in extra:
+            extra.append(article_name)
+            self.outfit["extra_articles"] = extra
+
+    def unequip_article(self, article_name):
+        """Drop one article added by equip_article. No-op if it isn't worn
+        (including anything from the outfit's own base set - this only
+        removes from extra_articles, never the set itself)."""
+        extra = self.outfit.get("extra_articles")
+        if extra and article_name in extra:
+            self.outfit["extra_articles"] = [a for a in extra if a != article_name]
 
     def draw(self, surface):
         scale = get_scale()

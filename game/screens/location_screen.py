@@ -427,6 +427,11 @@ class LocationScreen(ScreenBase):
         # default_outfit like everyone else - lets an NPC config opt into a
         # different graphics.json outfit entry without any drawing-code changes.
         person = Person(cfg.get("x", 0), cfg.get("y", 0), name=cfg.get("name", "NPC"), outfit=get_graphics_asset(self.story, "outfits", cfg.get("outfit", self.default_outfit_id)))
+        # Optional list of extra pipeline articles worn on top of the outfit's
+        # own set (a belt, satchel, jacket) - see Person.equip_article. Lets
+        # an NPC config accessorize an existing outfit/set without a new one.
+        for article_name in cfg.get("equip", []):
+            person.equip_article(article_name)
         dialogue_tree = cfg.get("dialogue_tree")
         if dialogue_tree:
             person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"), conditional_roots=dialogue_tree.get("conditional_roots"))

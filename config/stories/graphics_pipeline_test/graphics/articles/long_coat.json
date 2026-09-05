@@ -1,0 +1,68 @@
+{
+  "identity": "A long open coat, hanging unbuttoned down to near the ankle. Same fitted shoulder/side seams and cap sleeves as jacket, just with the hem dropped to a duster length.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
+      "points": [
+        [-1.0, -3.0],
+        [-3.054, -16.604],
+        [-2.169, -24.999],
+        [-0.4, -25.0],
+        [-0.35, -20.0]
+      ],
+      "fits": [
+        {"curve": "torso.side_left", "from": 1, "to": 1, "reverse": true},
+        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
+      ]
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "right front panel, mirror of the left.",
+      "points": [
+        [1.0, -3.0],
+        [3.186, -16.601],
+        [2.159, -24.998],
+        [0.4, -25.0],
+        [0.35, -20.0]
+      ],
+      "fits": [
+        {"curve": "torso.side_right", "from": 1, "to": 1, "reverse": true},
+        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
+      ]
+    },
+    {
+      "group": "arm_far",
+      "material": "cloth",
+      "note": "far cap sleeve, same as jacket's.",
+      "points": [
+        [-1.81, -24.831],
+        [-3.15, -23.55],
+        [-2.15, -23.75]
+      ],
+      "fits": [
+        {"curve": "arm_far.arm_far_top", "from": 0, "to": 0}
+      ]
+    },
+    {
+      "group": "arm_near",
+      "material": "cloth",
+      "note": "near cap sleeve, mirror of the far one.",
+      "points": [
+        [1.827, -24.901],
+        [3.15, -23.55],
+        [2.15, -23.75]
+      ],
+      "fits": [
+        {"curve": "arm_near.arm_near_top", "from": 0, "to": 0}
+      ]
+    }
+  ]
+}

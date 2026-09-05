@@ -1,0 +1,25 @@
+{
+  "identity": "A loose tie-back scrub cap: the same silhouette as cap.json/hair_short scaled up a little for a poofier fit, plus a thin tie-band across the forehead.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["head"],
+      "material": "cloth",
+      "note": "poofier crown, hair_short's silhouette scaled 1.12x from head_crown.",
+      "points": [
+        [-2.491, -30.447], [-2.406, -28.81], [-2.047, -29.874], [-1.599, -30.58],
+        [0.999, -30.58], [1.604, -28.866], [1.694, -27.802], [1.993, -29.096],
+        [2.269, -30.147], [2.081, -30.881], [1.493, -31.132], [0.768, -32.149],
+        [-1.161, -32.149], [-2.156, -31.137]
+      ],
+      "fits": [],
+      "details": [
+        {"group": "torso", "material": "cloth", "tone": "dark", "note": "forehead tie-band",
+         "points": [[-2.0, -29.5], [-1.9, -29.9], [1.5, -29.9], [1.6, -29.5], [1.4, -29.2], [-1.4, -29.2]]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "identity": "A pair of cloth shoulder boards, one on each shoulder. Free-drawn around the shoulder_near/shoulder_far anchors.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "near shoulder board, on shoulder_near.",
+      "points": [[1.55, -24.6], [2.95, -24.7], [2.85, -25.35], [1.55, -25.3]],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "far shoulder board, mirror of the near one.",
+      "points": [[-1.55, -24.6], [-2.95, -24.7], [-2.85, -25.35], [-1.55, -25.3]],
+      "fits": []
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "identity": "A leather work belt like belt.json, hung with two tool pouches and a loop. Same waistline/low-waist fit, so it sits flush at the natural waist on any body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "leather",
+      "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge).",
+      "points": [
+        [-1.639, -19.876],
+        [-2.97, -17.295]
+      ],
+      "fits": [
+        {"curve": "torso.waistline", "from": 0, "to": 0},
+        {"curve": "torso.low_waist", "from": 1, "to": 1, "reverse": true}
+      ],
+      "details": [
+        {
+          "group": "torso", "material": "leather", "tone": "dark", "note": "hip pouch",
+          "points": [[0.7, -18.7], [1.7, -18.7], [1.85, -16.9], [0.55, -16.9]]
+        },
+        {
+          "group": "torso", "material": "leather", "tone": "dark", "note": "far hip pouch",
+          "points": [[-0.7, -18.7], [-1.7, -18.7], [-1.85, -16.9], [-0.55, -16.9]]
+        },
+        {
+          "group": "torso", "material": "metal", "note": "buckle",
+          "points": [[-0.35, -18.9], [0.35, -18.9], [0.35, -18.2], [-0.35, -18.2]]
+        }
+      ]
+    }
+  ]
+}

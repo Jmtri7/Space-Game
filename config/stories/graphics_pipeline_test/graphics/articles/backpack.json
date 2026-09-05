@@ -1,0 +1,39 @@
+{
+  "identity": "A soft-sided backpack worn on the back: the bag itself is drawn behind the torso so only its bulk peeks past the shoulders and sides, while the two shoulder straps show over the front. Free-drawn against the reference body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "under": ["torso"],
+      "material": "cloth",
+      "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
+      "points": [
+        [-2.6, -25.3], [2.6, -25.3], [3.0, -23.0], [3.0, -18.0],
+        [2.6, -16.0], [-2.6, -16.0], [-3.0, -18.0], [-3.0, -23.0]
+      ],
+      "fits": [],
+      "details": [
+        {"group": "torso", "material": "leather", "tone": "dark", "note": "bottom pouch",
+         "points": [[-2.2, -17.5], [2.2, -17.5], [2.0, -16.3], [-2.0, -16.3]]}
+      ]
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "near-side shoulder strap, visible in front over the shirt.",
+      "points": [[1.85, -24.9], [2.35, -24.7], [1.6, -20.5], [1.1, -20.6]],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "cloth",
+      "note": "far-side shoulder strap, mirror of the near one.",
+      "points": [[-1.85, -24.9], [-2.35, -24.7], [-1.6, -20.5], [-1.1, -20.6]],
+      "fits": []
+    }
+  ]
+}

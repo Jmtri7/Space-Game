@@ -1,0 +1,46 @@
+{
+  "identity": "A worn leather shoulder bag on a cross-body strap: the strap runs from the far shoulder down across the chest to rest against the near hip, where the bag itself hangs. Free-drawn against the reference body — it hangs clear of the skin rather than fitting it, so the same shape reads fine on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "leather",
+      "note": "cross-body strap, far shoulder to near hip. All free vertices.",
+      "points": [
+        [-2.35, -24.7],
+        [-1.85, -24.5],
+        [1.85, -16.3],
+        [1.35, -16.6]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "leather",
+      "note": "bag body, hangs at the near hip where the strap ends.",
+      "points": [
+        [0.8, -14.6],
+        [0.75, -16.9],
+        [1.0, -17.7],
+        [2.2, -17.7],
+        [2.45, -16.9],
+        [2.4, -14.6]
+      ],
+      "fits": [],
+      "details": [
+        {
+          "group": "torso", "material": "leather", "tone": "dark", "note": "flap",
+          "points": [[0.85, -14.6], [1.0, -15.6], [2.2, -15.6], [2.35, -14.6]]
+        },
+        {
+          "group": "torso", "material": "metal", "note": "clasp",
+          "points": [[1.42, -15.4], [1.78, -15.4], [1.78, -15.0], [1.42, -15.0]]
+        }
+      ]
+    }
+  ]
+}

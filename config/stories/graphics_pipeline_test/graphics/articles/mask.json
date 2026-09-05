@@ -1,0 +1,16 @@
+{
+  "identity": "A surgical mask over the nose and mouth, tied behind the ears. Free-drawn between the brow and chin, small enough to read the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["head"],
+      "material": "cloth",
+      "note": "covers nose to chin, between head.anchors.brow (-29.05) and chin (-26.15).",
+      "points": [[-1.35, -27.9], [-1.5, -27.0], [-1.0, -26.4], [0.0, -26.2], [1.0, -26.4], [1.5, -27.0], [1.35, -27.9], [0.0, -28.1]],
+      "fits": []
+    }
+  ]
+}

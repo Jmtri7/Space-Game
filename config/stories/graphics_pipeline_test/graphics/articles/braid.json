@@ -1,0 +1,23 @@
+{
+  "identity": "A decorative cord looped under the near arm and pinned at the shoulder - an aiguillette. Free-drawn, a thin single shape.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "metal",
+      "note": "thin cord from the near shoulder down under the arm and back.",
+      "points": [
+        [2.0, -24.7], [2.5, -24.6], [1.9, -22.0], [2.3, -20.2],
+        [1.9, -20.1], [1.5, -21.9], [1.6, -24.5]
+      ],
+      "fits": [],
+      "details": [
+        {"group": "torso", "material": "metal", "tone": "light", "note": "shoulder pin",
+         "circle": [2.2, -24.75, 0.3]}
+      ]
+    }
+  ]
+}

@@ -98,9 +98,11 @@ def attach_design(story, entry, kind="ships"):
 # --- Person bodies -------------------------------------------------------
 
 @functools.lru_cache(maxsize=None)
-def _body_worn(story, body_name, set_name, palette_name):
+def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
     """(body_design, composed_parts) for a pipeline outfit: the body with its
-    set's articles fitted and merged, ready for apply_walk / mirroring."""
+    set's articles plus any `extra_articles` (equipped at runtime - see
+    Person.equip_article) fitted and merged, ready for apply_walk / mirroring.
+    `extra_articles` must be a tuple (hashable) so this stays cacheable."""
     body = _load(story, "body", body_name + ".json")
     if body is None:
         return None, None
@@ -111,13 +113,16 @@ def _body_worn(story, body_name, set_name, palette_name):
         return _load(story, kind, nm + ".json")
 
     body_parts = expand_body(body, pal, mats, load=load_asset)
-    arts = []
+    names = []
     if set_name:
         sd = _load(story, "sets", set_name + ".json") or {}
-        for a in sd.get("articles", []):
-            ad = _load(story, "articles", a + ".json")
-            if ad:
-                arts.append(expand(ad, pal, mats, body=body))
+        names += sd.get("articles", [])
+    names += list(extra_articles)
+    arts = []
+    for a in names:
+        ad = _load(story, "articles", a + ".json")
+        if ad:
+            arts.append(expand(ad, pal, mats, body=body))
     worn = compose_worn(body, body_parts, *arts) if arts else body_parts
     return body, worn
 
@@ -130,8 +135,9 @@ def body_frame(story, outfit, walk_t=None):
     """A flat parts list for a pipeline-bodied Person, optionally deformed to
     walk-cycle fraction `walk_t` in [0, 1). Coords are in body units
     (PLAYER_H tall, feet at y=0, y negative up, facing screen-left)."""
-    body, worn = _body_worn(story, outfit.get("body"),
-                            outfit.get("set"), outfit.get("palette", ""))
+    body, worn = _body_worn(story, outfit.get("body"), outfit.get("set"),
+                            outfit.get("palette", ""),
+                            tuple(outfit.get("extra_articles", ())))
     if worn is None:
         return []
     if walk_t is None:

@@ -1,0 +1,33 @@
+{
+  "identity": "A soft hood, up: a bulk drape behind the head and shoulders, plus a front edge that falls low enough to shade the brow. Same under/over head split as hair, so the skull hides the back and only the shadowed front shows.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "under": ["head"],
+      "material": "cloth",
+      "note": "bulk of the hood, behind the head and draping past the shoulders.",
+      "points": [
+        [-2.6, -30.6], [-2.5, -29.0], [-2.9, -27.0], [-2.7, -24.5],
+        [2.7, -24.5], [2.9, -27.0], [2.5, -29.0], [2.6, -30.6],
+        [1.4, -31.7], [-1.4, -31.7]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": ["head"],
+      "material": "cloth",
+      "tone": "dark",
+      "note": "front edge, brim sits right at the brow (head.anchors.brow y=-29.05) without dropping onto the eyes.",
+      "points": [
+        [-2.1, -29.5], [-1.9, -30.3], [-1.1, -30.9], [0.0, -31.1],
+        [1.1, -30.9], [1.9, -30.3], [2.1, -29.5], [1.6, -29.6],
+        [0.0, -29.5], [-1.6, -29.6]
+      ],
+      "fits": []
+    }
+  ]
+}

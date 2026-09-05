@@ -446,6 +446,18 @@ and cached.
   faded in by `walk_intensity`. The body faces screen-left, so `facing == 1`
   mirrors x — same rule as the baked figure. The `default` story's baked
   `person_figure` path is untouched.
+- **Equipping an article at runtime.** `Person.equip_article(name)` /
+  `unequip_article(name)` add or drop one article on top of a pipeline
+  outfit's own set — a belt, satchel, or jacket worn without swapping the
+  whole set — by mutating `outfit["extra_articles"]`, a plain list on that
+  Person's own (already per-instance) outfit dict. `story_assets._body_worn`
+  takes `extra_articles` as a hashable tuple and appends it after the set's
+  own article list before composing, so it stays part of the same `lru_cache`
+  key as `(body, set, palette)` — equipping just changes which cache entry a
+  Person draws from, nothing is mutated in place. An NPC config's `"equip":
+  [...]` list (read in `LocationScreen._build_local_character`) calls
+  `equip_article` once per name at spawn, for wiring an accessory onto an
+  existing outfit/set without a new set file.
 
 ## Atlas
 
@@ -773,6 +785,26 @@ stays and still shows up here.
 `"shade": false` to draw flat, or explicit `"shade_dark"` / `"shade_light"`
 polygons (one each) used verbatim instead of the auto-shade. `expand()` honours
 them and rotates them with the region under `rest_splay`.
+
+**A true hole via a seamed ring (`articles/helmet.json`).** The renderer has no
+transparency for pipeline parts (`opacity` is an atlas-only convenience — the
+game's own `Person._draw_pipeline_body` draws every part fully opaque), so a
+"visor" can't be a tinted see-through pane over the real face. Instead, author
+the region as **one polygon that is already a ring**: an outer boundary (traced
+in full), a seam to one point on an inner boundary, the inner boundary traced
+in full but in the *opposite* rotational direction, then back to the same seam
+point. `points = outer + [inner[0]] + inner[1:][::-1] + [inner[0]]`. Nothing
+downstream needs to know this is special — it's still just one region's
+`points` — but the space *inside* the inner ring is a genuine gap in the
+polygon, not a covered patch, so whatever is drawn underneath (the real face)
+shows through untouched. Set `"shade": false` on a ring region — the crescent
+fitter assumes a simple silhouette and the seam confuses it. The same trick
+stacked one size smaller as a `detail` gives a visor bezel that reads as a rim
+around the opening without covering it. Sizing the outer boundary generously
+(real clearance past every hairstyle, not fit to the head) also solves the
+"hair pokes through" problem for free: the shell is opaque and drawn `"over":
+["head"]`, so anything under it - hair included - is simply hidden by
+geometry, no per-article suppression logic required.
 
 ## Faces and hair
 

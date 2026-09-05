@@ -1,0 +1,46 @@
+{
+  "identity": "A bright safety tabard, open at the sides, worn over a shirt with two reflective stripes. Same shoulder-arc and side-curve fit as vest, cropped a little shorter and left open wider at the sides.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "lamp",
+      "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
+      "points": [
+        [-0.3, -18.5],
+        [-2.4, -18.8],
+        [-2.169, -24.999],
+        [-0.4, -25.0],
+        [-0.2, -20.5]
+      ],
+      "fits": [
+        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
+      ]
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "lamp",
+      "note": "right panel, mirror of the left.",
+      "points": [
+        [0.3, -18.5],
+        [2.4, -18.8],
+        [2.159, -24.998],
+        [0.4, -25.0],
+        [0.2, -20.5]
+      ],
+      "fits": [
+        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
+      ],
+      "details": [
+        {"group": "torso", "material": "metal", "note": "reflective stripe, high",
+         "points": [[-2.3, -22.5], [2.3, -22.5], [2.3, -21.9], [-2.3, -21.9]]},
+        {"group": "torso", "material": "metal", "note": "reflective stripe, low",
+         "points": [[-2.35, -19.6], [2.35, -19.6], [2.35, -19.0], [-2.35, -19.0]]}
+      ]
+    }
+  ]
+}

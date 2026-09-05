@@ -1,0 +1,40 @@
+{
+  "identity": "A pair of load-bearing straps crossing the chest in an X, near shoulder to far hip and back, with a small ring where they cross. Free-drawn against the reference body — a loose fit, not a skin-tight one, so it reads the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "leather",
+      "note": "strap, near shoulder to far hip.",
+      "points": [
+        [2.05, -24.75],
+        [2.55, -24.55],
+        [-1.35, -16.4],
+        [-1.85, -16.7]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": ["leg_near"],
+      "material": "leather",
+      "note": "strap, far shoulder to near hip - mirror of the other.",
+      "points": [
+        [-2.05, -24.75],
+        [-2.55, -24.55],
+        [1.35, -16.4],
+        [1.85, -16.7]
+      ],
+      "fits": [],
+      "details": [
+        {
+          "group": "torso", "material": "metal", "note": "chest ring where the straps cross",
+          "circle": [0, -21.2, 0.55]
+        }
+      ]
+    }
+  ]
+}
