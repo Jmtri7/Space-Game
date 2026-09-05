@@ -25,6 +25,9 @@ xcopy /e /i /y config build\dist\SpaceGame\config >nul
 REM Design reference (HTML atlases under config\stories\*\atlases) is not
 REM runtime config - keep it out of the shipped build.
 for /d /r build\dist\SpaceGame\config %%d in (atlases) do rmdir /s /q "%%d" 2>nul
+REM The graphics-pipeline vertex editor and its dev server likewise - authoring
+REM tools, not runtime config.
+del /q build\dist\SpaceGame\config\editor.html build\dist\SpaceGame\config\serve_nocache.py build\dist\SpaceGame\config\open_editor.bat 2>nul
 
 echo.
 echo Build complete: build\dist\SpaceGame\SpaceGame.exe

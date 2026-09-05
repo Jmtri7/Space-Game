@@ -468,7 +468,7 @@ viewer — it holds no geometry and no copy of anything.
 
 ## Vertex editor
 
-[`docs/atlases/editor.html`](atlases/editor.html) is a standalone page for
+[`config/editor.html`](../config/editor.html) is a standalone page for
 dragging a design's vertices by hand. It renders exactly what `expand()` would —
 its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
 any handle; double-click an edge to insert a point; alt-click to delete. Each
@@ -479,47 +479,79 @@ pass always shows its own before/after. "Freeze shade → editable" replaces a
 region's computed crescent with an explicit `shade_dark` / `shade_light` point
 list you can then drag.
 
-Load a design three ways: `?file=<repo-relative path>` in the URL (needs the
-page served over http, not `file://` — see **serving it** below), file-drop
+Load a design three ways: `?file=<repo-relative path>` in the URL, file-drop
 onto the canvas, or paste into the Output box and hit "Load ← box". When
 loaded by `?file=`, the real `materials.json` and the design's palette are
-fetched too, so tones and colours match the game exactly.
+read too, so tones and colours match the game exactly.
 
-**Serving it.** Use `python docs/atlases/serve_nocache.py 8777` from the repo
-root, not plain `python -m http.server`. Both serve the same directory
-listing the "switch to" / "fit against" / "against" dropdowns rely on, but
-plain `http.server` sends only `Last-Modified` — no `Cache-Control` — so a
-browser can silently reuse a stale cached copy of `editor.html` itself (not
-just a design JSON) after the agent edits it, showing an old version of the
-tool with no explained cause. `serve_nocache.py` is the identical handler
-plus one header. If a page still looks stale after that (new markup/buttons
-missing), a hard refresh (Ctrl+Shift+R) forces a re-fetch either way.
+### Reading and writing repo files
 
-Opening `editor.html` straight from disk (`file://...`) does not work — every
-`?file=`/directory-listing/materials/palette lookup is a `fetch()` call, which
-browsers block against `file://`. There has to be a server. For a one-click
-launch without a terminal, double-click **`docs/atlases/open_editor.bat`**
-(Windows) — starts `serve_nocache.py` on port 8777 minimized in the
-background if nothing's listening there yet, then opens the editor (no
-`?file=`; use Load file / drag-drop, or bookmark a specific `?file=` URL)
-in the default browser. Safe to double-click again later — if a server's
-already up, the new one just fails to bind and exits; the browser still
-opens against the existing one.
+The editor reaches story JSON (designs, `materials.json`, palettes, the
+directory listings the dropdowns need) through a small **VFS layer**
+(`VFS.readJSON` / `readText` / `writeText` / `listDir`) with three backends,
+picked automatically:
+
+| backend | when | reads | writes (Saving, below) |
+|---|---|---|---|
+| **http** | the page is served over `http(s)://` | `fetch` | `PUT` to `serve_nocache.py`, which writes the file |
+| **fsapi** | from disk (`file://`) in Chrome / Edge | File System Access API | `createWritable()` straight to disk |
+| **filelist** | `file://` in a browser without that API (Firefox) | `<input webkitdirectory>` pick, read-only, re-pick each visit | — none, use download or run the server |
+
+**Two ways in:**
+
+- **`config/open_editor.bat`** (the normal path) — starts `serve_nocache.py`
+  on port 8777 minimized if nothing's there yet, opens
+  `http://127.0.0.1:8777/config/editor.html`. http backend; save works in
+  every browser. Safe to double-click again — a second server just fails to
+  bind and exits.
+- **`config/editor.html` straight from disk** — no server. fsapi backend in
+  Chrome/Edge (click **Open repo folder** once, pick the repo or its
+  `config/`; the handle is saved in IndexedDB and reconnects silently or in
+  one click next time), filelist in Firefox.
+
+Then: pick a story → pick a design → edit → **save** or download.
+
+Paths handed to the VFS are always repo-relative
+(`config/stories/<story>/graphics/...`). If the user grants `config/` rather
+than the repo root, `VFS.prefix` strips the leading `config/`; `vfsProbe()`
+detects which by looking for `config/stories/` vs `stories/`.
+
+**`serve_nocache.py`** is `http.server` plus two things: every response carries
+`Cache-Control: no-store` (plain `http.server` sends only `Last-Modified`, so a
+browser can silently serve a stale cached `editor.html` after an edit), and a
+`PUT` writes the request body back to the file — restricted to `.json` under
+`config/stories/`, existing files only, with an `Origin` check. Run it from the
+repo root: `python config/serve_nocache.py 8777`. If the page still looks stale
+(new buttons missing), Ctrl+Shift+R.
+
+**The story picker — the editor is not tied to one story.** The tool has no
+built-in story. A **story** dropdown at the top of the side panel discovers
+every `config/stories/<name>/graphics/` pipeline (it lists `config/stories/`,
+then keeps each entry that has a `graphics/materials.json`; `PIPELINE_STORIES`
+in the script is only a fallback for a backend that can't list a directory).
+Pick a story, then the
+**body / face / outfit** kind selector and the **design** dropdown beside it
+list that story's `graphics/body/*.json` (body and face) or
+`graphics/articles/*.json` (outfit). Picking one navigates through the normal
+`?file=` boot path — `?file=<base>/body/<b>` for body, `+ &edit=face` for face,
+`?file=<base>/articles/<a>&fitbody=<base>/body/<b>` for outfit (the body is the
+one last tailored against in that story, remembered per story, else the first
+alphabetically). So `GBASE` gets set and every dependent dropdown lights up.
+
+This panel shows **whether or not a design is loaded** — once one is, the story
+is derived from its path, and switching the dropdown re-scopes the design list
+so you can hop to another story's designs without retyping a URL. `?story=<name>`
+preselects a story on a bare load; the last pick is remembered per browser
+(`gpEditorStory`). This is the mechanism that makes a second pipeline story
+"just work" in the editor with no code change — it only needs a `graphics/`
+directory with a `materials.json`.
+
+A file loaded via **Load file / drag-drop** still has no repo path (the browser
+hands over only a bare filename), so use the story picker to jump to a real
+design instead — and drag-drop can't be saved back (see **Saving**).
+
 Coverage today is **body designs** (`sections`); other kinds (`regions`
 articles, `silhouette` ships) are being folded in.
-
-**Loading without a `?file=` URL.** Opening the bare editor (`open_editor.bat`,
-no query string), or picking/dragging a file in, gets you a design with no
-known repo path — the browser's File API only hands over a bare filename, not
-where it lives in the tree — so `GBASE` never gets set and every dropdown
-that depends on it (the mode switcher, mirror "against", "switch to"
-articles, "fit against") stays hidden even once something's loaded. A
-**start on** dropdown appears whenever that's the case, listing every real
-`body/*.json` by its actual repo path (`PIPELINE_STORIES` in the script names
-which story bases to check — currently just `graphics_pipeline_test`, the
-only one with a `graphics/` pipeline; extend that list if a second one grows
-one); picking one goes through the normal `?file=` boot path instead, and
-everything lights up. It hides itself the moment a real path is known.
 
 **Face mode** — `?file=<body>&edit=face`. Loads the body, pulls in its
 `head.face` slot files (`faces/<slot>_<name>.json`), inlines their `details` on
@@ -542,11 +574,32 @@ they call the same `reorderDetail` the Polygons panel's layer buttons do.
 Every merged
 detail carries a `_src` tag naming the file it came from — Copy/Download/the
 Output box all keep it (this is the one field `expand()` and a real committed
-design file never see; the agent strips it when it writes the split files
-back). On save the agent groups the edited details by `_src` and writes each
-group to the file it belongs in — mechanical, no guessing from `note` text.
-A `.face-export.json` download is that merged, `_src`-tagged view, not a
-design file to drop straight into `config/` — hand it to the agent instead.
+design file never see; it is stripped when the split files are written back).
+**save checked to repo** (see Saving) does that split mechanically — groups the
+edited details by `_src`, writes each group to the file it belongs in, `_src`
+removed. A `.face-export.json` download is the merged, `_src`-tagged view for
+handing to the agent, not a design file to drop straight into `config/`.
+
+**Curves panel** — plain body-edit mode only (hidden in face and tailor mode).
+Below **Selected section**, it lists the selected section's `curves` by name
+and point count, each with **rename** and **delete**. To add one, select
+exactly two of that section's own vertices (click one, shift-click the
+other) — a **span** row appears with a **go the long way around** checkbox
+(a polygon has two ways from one point to the other; the checkbox picks
+whichever the curve should trace, showing the vertex count for each) and a
+name field (autocompletes existing names). **save curve** copies that
+boundary run, in order, as the curve's own literal point list — a snapshot,
+not a live reference to the section's points, same as tailor mode's
+"generate N vertices between" trace. Reusing an existing name overwrites it,
+which is how you re-cut a curve after reshaping the body; anything fit to
+`section.curve` elsewhere (via the Fit panel in tailor mode, see below)
+picks up the new shape next time that file is loaded — including from this
+same browser's autosaved draft, so switching straight from a body edit to
+tailoring an outfit against it (or reloading tailor mode) already shows the
+recut curve without saving to disk first. Deleting a curve that some
+article's `fits` still names leaves that fit unable to resolve (`bodyCurve`
+returns `null` and the fit is silently skipped) — the panel doesn't check
+other files for references before deleting.
 
 **Tailor mode** — `?file=<article>&fitbody=<body>`. Loads the article (a
 `regions` design) and draws the named body underneath as a **locked,
@@ -723,11 +776,11 @@ When the user wants to reshape an existing asset — "let's redesign the femme
 body", "the skirt hem needs work", "fix the courier canopy" — the agent runs
 this loop rather than hand-editing coordinates:
 
-1. **Open it.** Start `python docs/atlases/serve_nocache.py 8777` at the repo
-   root (see **Serving it**, above — not plain `http.server`, which can leave
-   the user looking at a stale cached copy of the editor after a later
-   change), open the Browser pane at
-   `http://127.0.0.1:8777/docs/atlases/editor.html?file=<path to the design JSON>`.
+1. **Open it.** Start `python config/serve_nocache.py 8777` at the repo
+   root (see **Reading and writing repo files**, above — not plain
+   `http.server`, which can leave the user looking at a stale cached copy of
+   the editor), open the Browser pane at
+   `http://127.0.0.1:8777/config/editor.html?file=<path to the design JSON>`.
    For an article, the bare body is the reference; open the body too if the fit
    matters.
 2. **User edits** in the pane — drags vertices, toggles sections, freezes shade
@@ -736,11 +789,15 @@ this loop rather than hand-editing coordinates:
    the edited JSON out of the page (`#out` textarea), regenerates that asset's
    atlas plate through the real `expand()` (not the editor's JS port — this is
    where any drift shows), and shows the before/after render plus a JSON diff.
-4. **Confirm, then replace.** Only on an explicit yes does the agent write the
-   file over the old one. Update `identity` / notes and any dependent doc in the
-   same change (the two binding rules still apply).
+4. **Confirm, then replace.** On an explicit yes, either the user hits **save
+   checked to repo** or the agent writes the file. Update `identity` / notes
+   and any dependent doc in the same change (the two binding rules still apply).
 
-The agent stays in the loop for step 4 — the editor never writes to the repo.
+The editor *can* write now — **save** works over http (via `serve_nocache.py`)
+and from disk in Chrome/Edge. But step 3 is still the agent's: only the real
+`expand()` shows shading/fit drift, and `identity` + dependent docs don't
+update themselves. So the agent drives the preview and the doc updates; the
+write itself can be either hand.
 
 **Autosave drafts, and a sharp edge.** The editor autosaves the live edit to
 `localStorage` under `gpDraft:<loadedPath>` (plus `:face` or `:fit:<fitbody>`
@@ -761,14 +818,45 @@ genuine, non-trivial differences as real work — many keys will just be
 stale residue from earlier autosaves already superseded by a save, or a
 scratch tab's own leftovers.
 
-**Batch download.** The **Batch download** panel (bottom of the side panel,
-below Output) lists every `gpDraft:*` key in this browser at once — not just
-the design currently loaded — with a checkbox and an editable filename per
-row, defaulted from the draft's own path (`.face-export.json` for a face
-draft, the article's real name for a `fit` draft). **rescan** refreshes the
-list (e.g. after saving one design mid-session); **download checked** fires
-one `<a download>` per checked row, staggered 200ms apart so a browser
-doesn't throttle a burst of same-tick downloads. Two rows that would land on
+### Saving
+
+The **Save / download drafts** panel's **save checked to repo** button writes
+each checked draft's edits to its real file(s) — enabled on the **http**
+backend (via `serve_nocache.py`'s `PUT`) and the **fsapi** backend (straight to
+disk); disabled on **filelist** (Firefox from disk) with a hint to run
+`open_editor.bat` instead. It resolves each draft to its target file(s), shows
+a confirm listing every path it will overwrite, then writes:
+
+- `toRepoJSON()` — 2-space indent, **ASCII-only** (`\uXXXX` for anything ≥
+  0x80, matching Python's `json.dump` default, so an em-dash in `identity`
+  isn't rewritten every save), numbers to 3 dp, trailing newline.
+- **Never creates** a file. A drag-dropped design with no repo path, or a
+  renamed asset, has nothing to overwrite and is reported as "not found".
+- A draft whose files all saved cleanly is dropped from `localStorage` — the
+  file now matches disk.
+- Every checked row is written — the confirm's path list is the guard against a
+  stale draft you forgot to uncheck. `git diff` is the review; `git checkout --
+  <file>` is the undo.
+
+A **face** draft is split on save the way the agent otherwise does by hand:
+`head.details` regrouped by each detail's `_src`, the `body`-tagged ones stay
+on the body file (the key is *dropped* when that group is empty — a clean body
+carries no `head.details`), each `faces/<slot>_<name>` group merged back into
+that slot file (its other keys — `identity` etc. — preserved, only `details`
+replaced). `_src` stripped from everything written.
+
+The agent still owns the atlas-plate preview (drift only shows through the real
+`expand()`, not the editor's JS port) and the `identity` / dependent-doc
+updates — those don't happen on save.
+
+**Download.** The same panel (bottom of the side panel, below Output) lists
+every `gpDraft:*` key in this browser at once — not just the design currently
+loaded — with a checkbox and an editable filename per row, defaulted from the
+draft's own path (`.face-export.json` for a face draft, the article's real
+name for a `fit` draft). **rescan** refreshes the list (e.g. after saving one
+design mid-session); **download checked** fires one `<a download>` per checked
+row, staggered 200ms apart so a browser doesn't throttle a burst of same-tick
+downloads. Two rows that would land on
 the same filename are highlighted — most commonly the same article edited in
 two separate tailor-mode sessions against different bodies, which the panel
 auto-disambiguates (`hair_bun.vs-human_femme.json` /

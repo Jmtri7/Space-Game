@@ -62,6 +62,11 @@
 <body>
 <div id="side">
   <h1>Vertex editor</h1>
+  <div class="row" id="fsRow" style="display:none">
+    <button id="fsConnect">Open repo folder…</button>
+  </div>
+  <div class="hint" id="fsStatus" style="display:none"></div>
+  <input type="file" id="fsDirInput" webkitdirectory hidden>
   <div class="row">
     <button id="load">Load file</button>
     <button id="loadBox">Load ← box</button>
@@ -71,10 +76,18 @@
   <div class="hint">Drag a <code>body/*.json</code> onto the canvas, click Load file, or paste JSON into the Output box and hit "Load ← box". Kept in this browser between visits.</div>
   <div class="hint">A file picked this way has no known repo path, so the
     body/face/outfit switcher below (and every other dropdown that depends on
-    it) stays hidden — <b>jump straight to a design</b> instead, below, and
-    those all light up.</div>
+    it) stays hidden — pick a <b>story</b> below and jump straight to one of
+    its designs instead; those all light up.</div>
   <div class="row" id="startPickerRow" style="display:none">
-    start on <select id="startBodyPicker" style="flex:1"><option value="">— pick a body —</option></select>
+    story <select id="storyPicker" style="flex:1"></select>
+  </div>
+  <div class="row" id="startDesignRow" style="display:none">
+    <select id="startKind" style="width:74px">
+      <option value="body">body</option>
+      <option value="face">face</option>
+      <option value="outfit">outfit</option>
+    </select>
+    <select id="startDesign" style="flex:1"><option value="">— pick —</option></select>
   </div>
 
   <div class="hint" id="src"></div>
@@ -172,6 +185,11 @@
   <h2>Selected section</h2>
   <div id="secEdit"><div class="hint">none</div></div>
 
+  <div id="curvesPanelSec">
+    <h2>Curves</h2>
+    <div id="curvesPanel"><div class="hint">none</div></div>
+  </div>
+
   <h2>Output</h2>
   <div class="row">
     <button id="copy">Copy</button>
@@ -180,16 +198,20 @@
   </div>
   <textarea id="out" spellcheck="false"></textarea>
 
-  <h2>Batch download</h2>
+  <h2>Save / download drafts</h2>
   <div class="hint">Every autosaved draft in this browser, not just the design
-    loaded above - handy after redesigning several articles/bodies in one
-    sitting. Rename a row before downloading if two land on the same filename
-    (e.g. the same article fit against two different bodies). Reset (above)
-    only drops the one draft for whatever's currently loaded - use "clear
-    checked" here to actually shrink this list.</div>
+    loaded above - handy after editing several articles/bodies in one sitting.
+    <b>save checked to repo</b> overwrites each draft's real file on disk with
+    your edits (needs the repo folder opened read-write, above; Chrome/Edge
+    from disk). <b>download checked</b> is the fallback everywhere else - rename
+    a row first if two land on the same filename. Reset (above) only drops the
+    one draft for whatever's currently loaded - use "clear checked" here to
+    actually shrink this list.</div>
+  <div class="hint" id="saveHint" style="display:none"></div>
   <div class="row"><button id="scanDrafts">rescan</button></div>
   <div id="draftList"></div>
   <div class="row">
+    <button id="saveAllDrafts" disabled>save checked to repo</button>
     <button id="dlAllDrafts" disabled>download checked</button>
     <button id="clearDrafts" disabled>clear checked</button>
   </div>
@@ -205,6 +227,203 @@
 </div>
 
 <script>
+// ---- VFS: read repo files with or without a server -----------------------
+// The editor needs to read story JSON (designs, materials, palettes, and
+// directory listings for the dropdowns). Three ways, picked automatically:
+//   http     - served over http/https: fetch() as before (the agent workflow,
+//              config/serve_nocache.py). Ready with no user action.
+//   fsapi    - opened from disk (file://) in Chrome/Edge: the File System
+//              Access API. The user clicks "Open repo folder" once and picks
+//              the repo (or its config/ folder); the handle is remembered in
+//              IndexedDB, so later visits reconnect in one click (or silently
+//              if the browser kept the permission).
+//   filelist - file:// in a browser without that API (Firefox): a
+//              <input webkitdirectory> folder pick. Read-only, not persisted -
+//              re-pick each visit.
+// Every path passed in is repo-relative (e.g.
+// "config/stories/foo/graphics/body/x.json"). If the user picked config/
+// itself rather than the repo root, `VFS.prefix` strips the leading "config/".
+const VFS = {
+  mode: /^https?:$/.test(location.protocol) ? 'http' : null,
+  root: null,      // FileSystemDirectoryHandle (fsapi)
+  files: null,     // Map<relpath, File>          (filelist)
+  prefix: '',      // '' or 'config/' - stripped from repo-relative paths
+  get ready(){ return this.mode === 'http' || this.mode === 'fsapi' || this.mode === 'filelist'; },
+  get canWrite(){ return this.mode === 'fsapi' || this.mode === 'http'; },   // fsapi writes files directly; http PUTs them to serve_nocache.py
+  _adj(p){ p = String(p).replace(/^\/+/, ''); return (this.prefix && p.startsWith(this.prefix)) ? p.slice(this.prefix.length) : p; },
+  async _dirHandle(p){
+    let dir = this.root;
+    for(const seg of (p ? p.split('/') : [])) dir = await dir.getDirectoryHandle(seg);
+    return dir;
+  },
+  async readText(path){
+    const p = this._adj(path);
+    try{
+      if(this.mode === 'http'){ const r = await fetch('/' + p); return r.ok ? await r.text() : null; }
+      if(this.mode === 'fsapi'){
+        const parts = p.split('/');
+        const dir = await this._dirHandle(parts.slice(0, -1).join('/'));
+        const fh = await dir.getFileHandle(parts[parts.length - 1]);
+        return await (await fh.getFile()).text();
+      }
+      if(this.mode === 'filelist'){ const f = this.files.get(p); return f ? await f.text() : null; }
+    }catch(e){ return null; }
+    return null;
+  },
+  async readJSON(path){
+    const t = await this.readText(path);
+    if(t == null) return null;
+    try{ return JSON.parse(t); }catch(e){ return null; }
+  },
+  async writeText(path, text){   // overwrites an existing file (never creates one)
+    const p = this._adj(path);
+    if(this.mode === 'http'){
+      const r = await fetch('/' + p, { method: 'PUT', body: text, headers: { 'Content-Type': 'application/json' } });
+      if(!r.ok) throw new Error('server ' + r.status +
+        (r.status === 404 ? ' (no such file on disk)' : r.status === 403 ? ' (path rejected)' : ''));
+      return;
+    }
+    if(this.mode === 'fsapi'){
+      const parts = p.split('/');
+      const dir = await this._dirHandle(parts.slice(0, -1).join('/'));
+      const fh = await dir.getFileHandle(parts[parts.length - 1]);
+      const w = await fh.createWritable();
+      await w.write(text);
+      await w.close();
+      return;
+    }
+    throw new Error('this backend is read-only');
+  },
+  async listDir(path){   // -> { files:[names], dirs:[names] }
+    const p = this._adj(path).replace(/\/+$/, '');
+    try{
+      if(this.mode === 'http'){
+        const r = await fetch('/' + p + '/'); if(!r.ok) return { files: [], dirs: [] };
+        const html = await r.text(); const files = [], dirs = [];
+        for(const m of html.matchAll(/href="([^"?#]+)"/g)){
+          let name = decodeURIComponent(m[1]); const isDir = name.endsWith('/');
+          name = name.replace(/\/$/, '');
+          if(!name || name === '..' || name.includes('/')) continue;
+          (isDir ? dirs : files).push(name);
+        }
+        return { files, dirs };
+      }
+      if(this.mode === 'fsapi'){
+        const dir = await this._dirHandle(p); const files = [], dirs = [];
+        for await (const [name, h] of dir.entries()) (h.kind === 'directory' ? dirs : files).push(name);
+        return { files, dirs };
+      }
+      if(this.mode === 'filelist'){
+        const pre = p ? p + '/' : ''; const files = new Set(), dirs = new Set();
+        for(const k of this.files.keys()){
+          if(!k.startsWith(pre)) continue;
+          const rest = k.slice(pre.length), slash = rest.indexOf('/');
+          if(slash === -1) files.add(rest); else dirs.add(rest.slice(0, slash));
+        }
+        return { files: [...files], dirs: [...dirs] };
+      }
+    }catch(e){}
+    return { files: [], dirs: [] };
+  },
+};
+// tiny IndexedDB kv - only used to remember the picked directory handle
+function _idb(){ return new Promise((res, rej)=>{ const r = indexedDB.open('gpEditor', 1);
+  r.onupgradeneeded = ()=> r.result.createObjectStore('kv');
+  r.onsuccess = ()=> res(r.result); r.onerror = ()=> rej(r.error); }); }
+async function idbGet(k){ try{ const db = await _idb(); return await new Promise(res=>{
+  const t = db.transaction('kv').objectStore('kv').get(k); t.onsuccess = ()=> res(t.result); t.onerror = ()=> res(null); }); }
+  catch(e){ return null; } }
+async function idbSet(k, v){ try{ const db = await _idb(); await new Promise(res=>{
+  const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = ()=> res(); tx.onerror = ()=> res(); }); }
+  catch(e){} }
+
+let pendingRestoreHandle = null;   // a remembered handle awaiting a permission re-grant click
+function setFsStatus(msg, warn){
+  const el = document.getElementById('fsStatus');
+  el.textContent = msg; el.style.display = msg ? '' : 'none';
+  el.style.color = warn ? '#e0916b' : '#8a93a3';
+}
+function updateFsUI(){
+  const row = document.getElementById('fsRow'), btn = document.getElementById('fsConnect');
+  if(VFS.mode === 'http'){ row.style.display = 'none'; setFsStatus(''); return; }
+  row.style.display = '';
+  if(VFS.ready){ btn.textContent = 'Change repo folder…'; }
+  else if(pendingRestoreHandle){ btn.textContent = 'Reconnect repo folder'; }
+  else { btn.textContent = 'Open repo folder…'; }
+}
+// decide whether the picked folder is the repo root (config/stories/ under it)
+// or config/ itself (stories/ under it); leaves VFS.prefix set. true if valid.
+async function vfsProbe(){
+  for(const prefix of ['', 'config/']){
+    VFS.prefix = prefix;
+    const ls = await VFS.listDir('config/stories');
+    if(ls.dirs.length) return true;
+  }
+  VFS.prefix = '';
+  return false;
+}
+async function vfsConnectFSAPI(handle){
+  VFS.mode = 'fsapi'; VFS.root = handle;
+  if(!await vfsProbe()){
+    VFS.mode = null; VFS.root = null;
+    setFsStatus(`"${handle.name}" has no config/stories/ — pick the space-game repo folder (or its config/ folder).`, true);
+    return false;
+  }
+  await idbSet('root', handle);
+  setFsStatus('reading files from: ' + handle.name + (VFS.prefix ? '/  (config folder)' : '/'));
+  return true;
+}
+async function vfsPickFolder(){
+  if(window.showDirectoryPicker){
+    let h;
+    try{ h = await window.showDirectoryPicker({ id: 'gpRepo', mode: 'readwrite' }); }
+    catch(e){ return; }   // user dismissed the picker
+    if(await vfsConnectFSAPI(h)){ pendingRestoreHandle = null; afterVfsReady(); }
+    else updateFsUI();
+  } else {
+    document.getElementById('fsDirInput').click();
+  }
+}
+document.getElementById('fsConnect').onclick = async ()=>{
+  if(pendingRestoreHandle){
+    try{
+      const p = await pendingRestoreHandle.requestPermission({ mode: 'readwrite' });
+      if(p === 'granted' && await vfsConnectFSAPI(pendingRestoreHandle)){ pendingRestoreHandle = null; afterVfsReady(); return; }
+    }catch(e){}
+    pendingRestoreHandle = null;
+  }
+  vfsPickFolder();
+};
+document.getElementById('fsDirInput').onchange = async e=>{
+  const list = [...e.target.files]; if(!list.length) return;
+  const map = new Map();
+  for(const f of list){   // webkitRelativePath: "<pickedName>/a/b.json" - drop the first segment
+    const rel = f.webkitRelativePath.split('/').slice(1).join('/');
+    if(rel) map.set(rel, f);
+  }
+  VFS.mode = 'filelist'; VFS.files = map;
+  if(!await vfsProbe()){
+    VFS.mode = null; VFS.files = null;
+    setFsStatus('That folder has no config/stories/ — pick the repo folder or its config/ folder.', true);
+    updateFsUI(); return;
+  }
+  setFsStatus(`read ${map.size} files from ${list[0].webkitRelativePath.split('/')[0]}/  (re-pick next visit / after edits)`);
+  afterVfsReady();
+};
+async function vfsTryRestore(){
+  if(VFS.mode === 'http') return true;
+  if(!window.showDirectoryPicker) return false;   // filelist can't be persisted
+  const h = await idbGet('root');
+  if(!h) return false;
+  try{
+    if(await h.queryPermission({ mode: 'readwrite' }) === 'granted')
+      return await vfsConnectFSAPI(h);
+  }catch(e){ return false; }
+  pendingRestoreHandle = h;   // needs a user gesture to re-grant
+  setFsStatus('click "Reconnect repo folder" to allow reading ' + h.name + '/', false);
+  return false;
+}
+
 // ---- embedded materials + palette (small, rarely change) -------------------
 // Fallback materials + palette; when the page is opened with ?file= (served
 // over http) the real materials.json + the design's palette are fetched and
@@ -229,14 +448,10 @@ let PALETTE = { skin:"#c69b74", hair:"#3b2b21", eye:"#5a4633",
 let MATNAMES = Object.keys(MATERIALS.materials);
 async function loadMatPal(){
   if(!GBASE) return;
-  try{
-    const m = await fetch('/' + GBASE + '/materials.json');
-    if(m.ok){ MATERIALS = await m.json(); MATNAMES = Object.keys(MATERIALS.materials||{}); }
-  }catch(e){}
-  try{
-    const p = await fetch('/' + GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
-    if(p.ok) PALETTE = await p.json();
-  }catch(e){}
+  const m = await VFS.readJSON(GBASE + '/materials.json');
+  if(m){ MATERIALS = m; MATNAMES = Object.keys(MATERIALS.materials || {}); }
+  const p = await VFS.readJSON(GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
+  if(p) PALETTE = p;
 }
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
@@ -386,6 +601,7 @@ const FITBODY = new URLSearchParams(location.search).get('fitbody');   // tailor
 const TAILOR_MODE = !!FITBODY;
 if(!FACE_MODE) document.getElementById('pTargetRow').style.display = 'none';
 if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
+if(TAILOR_MODE || FACE_MODE) document.getElementById('curvesPanelSec').style.display = 'none';
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
 const bodyHidden = new Set();    // body section names whose fill is hidden (declutter/x-ray)
@@ -716,6 +932,7 @@ function render(){
   svg.innerHTML = g;
   maybeBuildPolyEdit();
   if(TAILOR_MODE) maybeBuildFitPanel();
+  if(!TAILOR_MODE && !FACE_MODE) maybeBuildCurvesPanel();
   renderMirror();
 }
 // ---- mirror preview: the counterpart body (masc<->femme), same view --------
@@ -736,13 +953,8 @@ let bodyDirNames = null;    // cached body/*.json directory listing - shared by 
 async function fetchBodyDirNames(){
   if(bodyDirNames) return bodyDirNames;
   if(!GBASE) return [];
-  try{
-    const r = await fetch('/' + GBASE + '/body/');
-    if(!r.ok) return [];
-    const html = await r.text();
-    bodyDirNames = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
-      .filter(n=>!n.startsWith('rig_')).sort();
-  }catch(e){ bodyDirNames = []; }
+  const { files } = await VFS.listDir(GBASE + '/body');
+  bodyDirNames = files.filter(n => n.endsWith('.json') && !n.startsWith('rig_')).sort();
   return bodyDirNames;
 }
 function counterpartPath(path){
@@ -758,12 +970,8 @@ async function loadFaceKitInto(body){
   const fm = head.face || {};
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
-    try{
-      const r = await fetch('/' + GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
-      if(!r.ok) continue;
-      const fj = await r.json();
-      (fj.details || []).forEach(d => head.details.push(d));
-    }catch(e){ /* face kit unavailable - head just renders bare */ }
+    const fj = await VFS.readJSON(GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
+    if(fj) (fj.details || []).forEach(d => head.details.push(d));
   }
 }
 // basePath: the body being edited directly, or (tailor mode) the body the
@@ -775,10 +983,8 @@ async function loadMirrorBody(basePath){
   const target = mirrorSourceOverride || counterpartPath(basePath);
   mirrorBody = null; mirrorPath = null;
   if(target){
-    try{
-      const r = await fetch('/' + target.replace(/^\/+/, ''));
-      if(r.ok){ mirrorBody = await r.json(); mirrorPath = target; await loadFaceKitInto(mirrorBody); }
-    }catch(e){ mirrorBody = null; }
+    const mb = await VFS.readJSON(target);
+    if(mb){ mirrorBody = mb; mirrorPath = target; await loadFaceKitInto(mirrorBody); }
   }
   document.getElementById('mirrorLabel').textContent = mirrorPath
     ? mirrorPath.split('/').pop().replace(/\.json$/,'') + (mirrorIsSelf() ? ' (live)' : '')
@@ -1042,6 +1248,93 @@ function buildSpanFitPanel(verts){
     sync(); buildFitPanel();
   };
 }
+// ---- curves panel: define/rename/delete a body section's own named curves -
+// Only meaningful while editing a body directly (hidden in TAILOR_MODE/
+// FACE_MODE, see above) - a curve is a literal copy of a run of the
+// section's own points, captured here, not a live reference back to them.
+// Reshaping the body doesn't move an existing curve; recapture it (same
+// name, overwrite) after a reshape to bring it back in line.
+let lastCurveSel = ' ';
+function maybeBuildCurvesPanel(){
+  const s = selSec + '|' + [...sel].sort().join(',');
+  if(s === lastCurveSel) return;
+  lastCurveSel = s;
+  buildCurvesPanel();
+}
+function buildCurvesPanel(){
+  const el = document.getElementById('curvesPanel'); if(!el) return;
+  if(!selSec){ el.innerHTML = '<div class="hint">select a section</div>'; return; }
+  const S = D.sections[selSec];
+  const names = Object.keys(S.curves||{});
+  const rows = names.length ? names.map(name => `
+    <div class="row"><b>${name}</b> (${S.curves[name].length} pts)
+      <button data-curve-rename="${name}">rename</button>
+      <button data-curve-del="${name}">delete</button></div>`).join('')
+    : '<div class="hint">no curves on this section yet</div>';
+
+  const verts = selectedRegionVertices().filter(v=>v.sc===selSec);
+  let captureHtml = `<div class="hint">select two of <b>${selSec}</b>'s own
+    vertices (not more) to capture a new curve, or overwrite an existing one,
+    from the boundary run between them.</div>`;
+  let short=null, long=null, lo=null, hi=null;
+  if(verts.length===2){
+    lo = Math.min(verts[0].i, verts[1].i); hi = Math.max(verts[0].i, verts[1].i);
+    const fwd = walkBoundary(S.points, lo, hi, 1), bwd = walkBoundary(S.points, lo, hi, -1);
+    short = fwd.length<=bwd.length ? fwd : bwd; long = short===fwd ? bwd : fwd;
+    captureHtml = `
+      <div class="row">span #${lo} → #${hi}</div>
+      <label><input type="checkbox" id="cLongWay"> go the long way around
+        (${short.length} vs ${long.length} points)</label>
+      <div class="row">name <input type="text" id="cName" list="cNames" style="flex:1"
+        placeholder="new or existing name"></div>
+      <datalist id="cNames">${names.map(n=>`<option value="${n}">`).join('')}</datalist>
+      <div class="row"><button id="cSave">save curve</button></div>
+      <div class="hint">copies this section's own boundary points between the
+        two selected vertices, in order, as the curve's polyline. Use an
+        existing name to overwrite it (e.g. after reshaping the body) —
+        anything fit to it elsewhere picks up the new shape next load.</div>`;
+  } else if(verts.length>2){
+    captureHtml = `<div class="hint">select exactly two of ${selSec}'s
+      vertices (not more) to capture a curve span.</div>`;
+  }
+  el.innerHTML = rows + '<hr>' + captureHtml;
+
+  names.forEach(name=>{
+    const rb = el.querySelector(`[data-curve-rename="${CSS.escape(name)}"]`);
+    const db = el.querySelector(`[data-curve-del="${CSS.escape(name)}"]`);
+    rb.onclick = ()=>{
+      const next = (prompt('rename curve', name)||'').trim();
+      if(!next || next===name) return;
+      if(S.curves[next]){ alert(`a curve named "${next}" already exists on this section`); return; }
+      pushHistory();
+      S.curves[next] = S.curves[name];
+      delete S.curves[name];
+      sync(); buildCurvesPanel();
+    };
+    db.onclick = ()=>{
+      if(!confirm(`delete curve "${name}"? any garment fits referencing "${selSec}.${name}" will stop resolving.`)) return;
+      pushHistory();
+      delete S.curves[name];
+      sync(); buildCurvesPanel();
+    };
+  });
+  if(short){
+    document.getElementById('cLongWay').onchange = e=>{
+      const path = e.target.checked ? long : short;
+      document.getElementById('cSave').textContent =
+        `save curve (${path.length} pts)`;
+    };
+    document.getElementById('cSave').onclick = ()=>{
+      const name = document.getElementById('cName').value.trim();
+      if(!name){ alert('name the curve first'); return; }
+      const path = document.getElementById('cLongWay').checked ? long : short;
+      pushHistory();
+      S.curves = S.curves || {};
+      S.curves[name] = path.map(k=>S.points[k].slice());
+      sync(); buildCurvesPanel();
+    };
+  }
+}
 function buildPolyEdit(){
   const el = document.getElementById('polyEdit'); if(!el) return;
   const groups = new Set();
@@ -1248,7 +1541,7 @@ function delSelPolys(){
     for(const i of idxs) D.regions.splice(i,1);
     relinkTailorSections();
   }
-  sel.clear(); buildSecList(); buildSecEdit(); sync();
+  sel.clear(); buildSecList(); buildSecEdit(); buildCurvesPanel(); sync();
 }
 
 // ---- reference image overlay (session-only, never saved with the design) ----
@@ -1572,7 +1865,7 @@ function buildSecList(){
     eyes[1].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, -1); };
     eyes[2].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, 1); };
     row.querySelector('.nm').onclick = ev=>{ ev.preventDefault(); selSec=name; shown.add(name); hidden.delete(name);
-      buildSecList(); buildSecEdit(); render(); };
+      buildSecList(); buildSecEdit(); buildCurvesPanel(); render(); };
     row.querySelector('input').onchange = ev=>{ ev.target.checked ? shown.add(name) : shown.delete(name); render(); };
     el.appendChild(row);
   });
@@ -1686,7 +1979,7 @@ function buildSecEdit(){
       if(dark[0]) S.shade_dark = dark[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
       if(lite[0]) S.shade_light = lite[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
     }
-    shown.add(selSec); sync(); buildSecEdit();
+    shown.add(selSec); sync(); buildSecEdit(); buildCurvesPanel();
   };
 }
 
@@ -1718,7 +2011,7 @@ function sync(){
   if(k && allFinite(D)){ try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){} }
   render();
 }
-function undo(){ if(history.length){ D = JSON.parse(history.pop()); if(TAILOR_MODE) relinkTailorSections(); sync(); buildSecList(); buildSecEdit(); } }
+function undo(){ if(history.length){ D = JSON.parse(history.pop()); if(TAILOR_MODE) relinkTailorSections(); sync(); buildSecList(); buildSecEdit(); buildCurvesPanel(); } }
 
 function relinkTailorSections(){
   // an article's `regions` array has no names to key handles/selection by -
@@ -1731,10 +2024,7 @@ function relinkTailorSections(){
   D.regions.forEach((r,i)=>{ D.sections['region'+i] = r; });
 }
 async function loadBodyForTailoring(){
-  try{
-    const r = await fetch('/' + FITBODY.replace(/^\/+/, ''));
-    bodyDesign = r.ok ? await r.json() : null;
-  }catch(e){ bodyDesign = null; }
+  bodyDesign = await VFS.readJSON(FITBODY);
   // an unsaved edit to the body itself (plain gpDraft:<FITBODY>) or to its
   // face kit (gpDraft:<FITBODY>:face, a full body+face snapshot) beats the
   // disk copy - whichever was touched more recently wins, so switching
@@ -1785,9 +2075,16 @@ function finishLoad(){
   try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
   if(FACE_MODE){ shown.clear(); shown.add('head'); selSec = 'head'; }
   if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
-  buildSecList(); buildSecEdit(); sync();
+  buildSecList(); buildSecEdit(); buildCurvesPanel(); sync();
   populateArticlePicker();
+  populateStartPicker();
   buildModeSwitch();
+  // remember which body an outfit was fit against, per story, so jumping
+  // back to "outfit" from the story picker reuses it
+  if(TAILOR_MODE && FITBODY){
+    const st = storyOfPath(FITBODY);
+    if(st) try{ localStorage.setItem('gpEditorFitBody:' + st, FITBODY.split('/').pop()); }catch(e){}
+  }
   populateBodyDirectPicker();
   const fit = () => { FACE_MODE ? fitHead() : fitView(); render(); };
   fit(); requestAnimationFrame(fit);   // re-fit once the svg has its real size
@@ -1801,12 +2098,8 @@ let modeArticleNames = null;
 async function fetchArticleNames(){
   if(modeArticleNames) return modeArticleNames;
   if(!GBASE) return [];
-  try{
-    const r = await fetch('/' + GBASE + '/articles/');
-    if(!r.ok) return [];
-    const html = await r.text();
-    modeArticleNames = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1])).sort();
-  }catch(e){ modeArticleNames = []; }
+  const { files } = await VFS.listDir(GBASE + '/articles');
+  modeArticleNames = files.filter(n => n.endsWith('.json')).sort();
   return modeArticleNames;
 }
 function currentBodyPath(){
@@ -1854,54 +2147,98 @@ document.getElementById('bodyDirectPicker').onchange = e=>{
   qs.set('file', GBASE + '/body/' + name);
   location.search = qs.toString();
 };
-// bootstrap picker: a file loaded via Load-file/drag-drop has no known repo
-// path (the browser only gives a bare filename), so GBASE never gets set and
-// every dropdown that depends on it (mode switcher, mirror "against",
-// "switch to" articles, ...) stays hidden - offer a list of real designs by
-// their repo path instead, so picking one goes through the normal ?file=
-// boot path and everything lights up. Only shown before anything is loaded.
-const PIPELINE_STORIES = ['config/stories/graphics_pipeline_test/graphics'];   // add another base here if a second story grows a graphics/ pipeline
-async function populateStartPicker(){
-  const row = document.getElementById('startPickerRow'), sel_ = document.getElementById('startBodyPicker');
-  if(loadedPath){ row.style.display = 'none'; return; }   // a real repo path is already known - the normal switcher covers it
-  for(const base of PIPELINE_STORIES){
-    try{
-      const r = await fetch('/' + base + '/body/');
-      if(!r.ok) continue;
-      const html = await r.text();
-      const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1]))
-        .filter(n=>!n.startsWith('rig_')).sort();
-      if(!names.length) continue;
-      const story = base.split('/')[2] || base;
-      sel_.innerHTML = `<option value="">— pick a body —</option>` +
-        names.map(n=>`<option value="${base}/body/${n}">${n} (${story})</option>`).join('');
-      row.style.display = '';
-      return;
-    }catch(e){ /* no server reachable, or this story has no pipeline dir - try the next */ }
+// story picker: the editor is not tied to any one story. It discovers every
+// `config/stories/<name>/graphics/` pipeline on disk and lets you point it at
+// one, then jump straight to that story's bodies, faces, or outfits - picking
+// one goes through the normal ?file= boot path so GBASE gets set and every
+// dependent dropdown (mode switcher, "switch to", "fit against", ...) lights
+// up. Shown whether or not a design is loaded, so you can hop between stories.
+// `?story=<name>` preselects one; the last pick is remembered per browser.
+const PIPELINE_STORIES = ['graphics_pipeline_test'];   // fallback if config/stories/ has no directory listing
+const STORY_LS = 'gpEditorStory';
+let _storyList = null;                                  // [{name, base}] once discovered
+function storyBase(name){ return 'config/stories/' + name + '/graphics'; }
+function storyOfPath(p){ const m = (p||'').match(/config\/stories\/([^/]+)\/graphics\//); return m ? m[1] : null; }
+async function discoverStories(){
+  if(_storyList) return _storyList;
+  let { dirs } = await VFS.listDir('config/stories');
+  if(!dirs.length) dirs = PIPELINE_STORIES.slice();
+  const out = [];
+  for(const n of dirs){
+    if(await VFS.readJSON(storyBase(n) + '/materials.json'))
+      out.push({ name: n, base: storyBase(n) });
   }
+  _storyList = out;
+  return out;
 }
-document.getElementById('startBodyPicker').onchange = e=>{
-  if(!e.target.value) return;
-  const qs = new URLSearchParams(); qs.set('file', e.target.value);
+async function listStoryDesigns(base, kind){
+  // kind: 'body' | 'face' (both list body/*.json) | 'outfit' (articles/*.json)
+  const dir = kind === 'outfit' ? 'articles' : 'body';
+  const { files } = await VFS.listDir(base + '/' + dir);
+  return files.filter(n => n.endsWith('.json') && !n.startsWith('rig_')).sort();
+}
+function currentStory(){
+  return storyOfPath(loadedPath)
+    || new URLSearchParams(location.search).get('story')
+    || (()=>{ try{ return localStorage.getItem(STORY_LS); }catch(e){ return null; } })();
+}
+async function refreshStartDesigns(){
+  const row = document.getElementById('startDesignRow'), sel_ = document.getElementById('startDesign');
+  const story = document.getElementById('storyPicker').value;
+  const kind  = document.getElementById('startKind').value;
+  if(!story){ row.style.display = 'none'; return; }
+  const names = await listStoryDesigns(storyBase(story), kind);
+  const label = kind === 'outfit' ? 'an article' : 'a body';
+  sel_.innerHTML = `<option value="">— pick ${label} —</option>` +
+    names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  row.style.display = names.length ? '' : 'none';
+}
+async function populateStartPicker(){
+  const row = document.getElementById('startPickerRow'), sel_ = document.getElementById('storyPicker');
+  const stories = await discoverStories();
+  if(!stories.length){ row.style.display = 'none'; document.getElementById('startDesignRow').style.display = 'none'; return; }
+  const want = currentStory();
+  const sel = stories.find(s=>s.name === want) ? want : stories[0].name;
+  sel_.innerHTML = stories.map(s=>`<option value="${s.name}" ${s.name===sel?'selected':''}>${s.name}</option>`).join('');
+  row.style.display = '';
+  try{ localStorage.setItem(STORY_LS, sel); }catch(e){}
+  await refreshStartDesigns();
+}
+document.getElementById('storyPicker').onchange = e=>{
+  try{ localStorage.setItem(STORY_LS, e.target.value); }catch(e2){}
+  refreshStartDesigns();
+};
+document.getElementById('startKind').onchange = refreshStartDesigns;
+document.getElementById('startDesign').onchange = async e=>{
+  const name = (e && e.target ? e.target.value : e) || ''; if(!name) return;
+  const story = document.getElementById('storyPicker').value;
+  const kind  = document.getElementById('startKind').value;
+  const base  = storyBase(story);
+  const qs = new URLSearchParams();
+  if(kind === 'outfit'){
+    const bodies = await listStoryDesigns(base, 'body');
+    let fb; try{ fb = localStorage.getItem('gpEditorFitBody:' + story); }catch(e2){}
+    if(!bodies.includes(fb)) fb = bodies[0];
+    if(!fb){ alert('no body/*.json in ' + base + '/body to fit against'); return; }
+    qs.set('file', base + '/articles/' + name);
+    qs.set('fitbody', base + '/body/' + fb);
+  } else {
+    qs.set('file', base + '/body/' + name);
+    if(kind === 'face') qs.set('edit', 'face');
+  }
   location.search = qs.toString();
 };
-// a dropdown of every articles/*.json next to this one - relies on the dev
-// server's directory-listing page (python -m http.server does this by
-// default); silently does nothing if that's not available.
+// a dropdown of every articles/*.json next to this one
 async function populateArticlePicker(){
   const row = document.getElementById('switcherRow'), sel_ = document.getElementById('articlePicker');
   if(!GBASE) return;
-  try{
-    const r = await fetch('/' + GBASE + '/articles/');
-    if(!r.ok) return;
-    const html = await r.text();
-    const names = [...html.matchAll(/href="([^"?#]+\.json)"/g)].map(m=>decodeURIComponent(m[1])).sort();
-    if(!names.length) return;
-    const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
-    sel_.innerHTML = `<option value="">— articles —</option>` +
-      names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
-    row.style.display = '';
-  }catch(e){ /* no directory listing available - dropdown just stays hidden */ }
+  const { files } = await VFS.listDir(GBASE + '/articles');
+  const names = files.filter(n => n.endsWith('.json')).sort();
+  if(!names.length) return;
+  const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
+  sel_.innerHTML = `<option value="">— articles —</option>` +
+    names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
+  row.style.display = '';
 }
 document.getElementById('articlePicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
@@ -1922,12 +2259,8 @@ async function mergeFaces(){
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
     const ref = 'faces/' + slot + '_' + fm[slot];
-    try{
-      const r = await fetch('/' + GBASE + '/' + ref + '.json');
-      if(!r.ok) continue;
-      const fj = await r.json();
-      (fj.details || []).forEach(d => { d._src = ref; head.details.push(d); });
-    }catch(e){}
+    const fj = await VFS.readJSON(GBASE + '/' + ref + '.json');
+    if(fj) (fj.details || []).forEach(d => { d._src = ref; head.details.push(d); });
   }
   D0 = JSON.parse(JSON.stringify(D));
 }
@@ -1995,6 +2328,48 @@ function roundForExport(o){                 // same as round(), but from a store
     JSON.stringify(o, (k,v)=> (isTailor && k==='sections') ? undefined : v),
     (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
 }
+const roundNums = o => JSON.parse(JSON.stringify(o), (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
+// serialize the way the repo's Python-written files are: 2-space indent and
+// ASCII-only - escape every char >= 0x80 to \uXXXX, matching json.dump's
+// ensure_ascii default, so a save doesn't rewrite every em-dash / accent.
+function toRepoJSON(obj){
+  const s = JSON.stringify(obj, null, 2);
+  let out = "";
+  for(let i = 0; i < s.length; i++){
+    const c = s.charCodeAt(i);
+    out += c < 128 ? s[i] : "\\u" + c.toString(16).padStart(4, "0");
+  }
+  return out + "\n";
+}
+// a draft -> the real repo file(s) it should be written to. body/fit drafts are
+// one file; a face draft is split back out: head.details regrouped by `_src`,
+// the body-tagged ones staying on the body, each `faces/<slot>_<name>` group
+// merged back into that slot file (its other keys - identity etc. - preserved).
+function draftToFiles(row){
+  const { info, obj } = row, D = obj.D;
+  if(info.mode !== 'face')
+    return [{ path: info.path, text: toRepoJSON(roundForExport(D)) }];
+  const gbase = info.path.replace(/\/body\/[^/]+\.json$/, '');
+  const body = JSON.parse(JSON.stringify(D));
+  const head = (body.sections || {}).head || {};
+  const groups = {};
+  (head.details || []).forEach(d => {
+    const src = d._src || 'body';
+    const c = { ...d }; delete c._src;
+    (groups[src] = groups[src] || []).push(c);
+  });
+  // a clean body carries no head.details at all (the face kit lives in the
+  // slot files) - only write the key back if there really are body-authored
+  // pieces, otherwise drop it rather than leaving a spurious "details": []
+  if(groups.body && groups.body.length) head.details = groups.body;
+  else delete head.details;
+  const out = [{ path: info.path, text: toRepoJSON(roundForExport(body)) }];
+  for(const src of Object.keys(groups)){
+    if(src === 'body') continue;
+    out.push({ path: gbase + '/' + src + '.json', faceDetails: groups[src] });
+  }
+  return out;
+}
 let draftRows = [];   // {key, info, obj:{t,D}, name}
 function scanDrafts(){
   const keys = Object.keys(localStorage).filter(k=>k.startsWith('gpDraft:'));
@@ -2023,7 +2398,10 @@ function renderDraftList(){
   const clearBtn = document.getElementById('clearDrafts');
   if(!draftRows.length){
     el.innerHTML = `<div class="hint">no drafts found in this browser</div>`;
-    dlBtn.disabled = true; clearBtn.disabled = true; return;
+    dlBtn.disabled = true; clearBtn.disabled = true;
+    document.getElementById('saveAllDrafts').disabled = true;
+    document.getElementById('saveHint').style.display = 'none';
+    return;
   }
   const counts = {}; draftRows.forEach(r=> counts[r.name] = (counts[r.name]||0)+1);
   el.innerHTML = draftRows.map((r,i)=>{
@@ -2045,6 +2423,15 @@ function renderDraftList(){
     draftRows[+e.target.dataset.i].name = e.target.value; renderDraftList();
   });
   dlBtn.disabled = false; clearBtn.disabled = false;
+  const saveBtn = document.getElementById('saveAllDrafts'), sh = document.getElementById('saveHint');
+  saveBtn.disabled = !VFS.canWrite;
+  if(VFS.canWrite){ sh.style.display = 'none'; }
+  else {
+    sh.style.display = '';
+    sh.textContent = VFS.mode === 'filelist'
+      ? 'this browser’s folder pick is read-only — open with open_editor.bat (works in any browser), or use Chrome/Edge to save from disk'
+      : 'open the repo folder (button at top) to enable saving';
+  }
 }
 document.getElementById('scanDrafts').onclick = scanDrafts;
 document.getElementById('clearDrafts').onclick = ()=>{
@@ -2075,6 +2462,43 @@ document.getElementById('dlAllDrafts').onclick = ()=>{
     }, i*200);   // staggered - some browsers throttle/prompt on a burst of same-tick downloads
   });
 };
+document.getElementById('saveAllDrafts').onclick = async ()=>{
+  if(!VFS.canWrite){ alert('Saving needs the repo folder opened read-write (Chrome/Edge, from disk).'); return; }
+  const chosen = [];
+  document.querySelectorAll('.dRowChk').forEach(chk=>{ if(chk.checked) chosen.push(draftRows[+chk.dataset.i]); });
+  if(!chosen.length) return;
+  // expand every chosen draft to its real target file(s) up front
+  const plan = [];   // { row, path, text | faceDetails }
+  for(const r of chosen) for(const f of draftToFiles(r)) plan.push({ row: r, ...f });
+  const paths = [...new Set(plan.map(p => p.path))];
+  if(!confirm(
+    `Overwrite ${paths.length} file${paths.length===1?'':'s'} in the repo with your edits?\n\n` +
+    paths.join('\n') +
+    `\n\nEvery checked row is included — cancel if any path above is a stale draft you didn't mean to keep.\n"git diff" shows exactly what changed; "git checkout -- <file>" undoes it.`)) return;
+  const failed = [];
+  for(const p of plan){
+    try{
+      let text = p.text;
+      if(p.faceDetails){   // merge the edited details back into the existing slot file
+        const orig = await VFS.readJSON(p.path);
+        if(!orig){ failed.push(p.path + ' — not found on disk'); continue; }
+        orig.details = p.faceDetails;
+        text = toRepoJSON(roundNums(orig));
+      }
+      await VFS.writeText(p.path, text);
+    }catch(e){ failed.push(p.path + ' — ' + (e.message || e)); }
+  }
+  // clear the drafts whose every target file saved cleanly - the file now
+  // matches disk, same as after a Reset-from-disk
+  const badPaths = new Set(failed.map(f => f.split(' — ')[0]));
+  for(const r of chosen){
+    const mine = draftToFiles(r).map(f => f.path);
+    if(!mine.some(pp => badPaths.has(pp))) localStorage.removeItem(r.key);
+  }
+  scanDrafts();
+  alert(`Saved ${plan.length - failed.length} of ${plan.length} file${plan.length===1?'':'s'}.` +
+    (failed.length ? `\n\nFailed:\n` + failed.join('\n') : '\n\nCheck "git diff".'));
+};
 scanDrafts();   // populate on page load too; "rescan" catches drafts saved after that
 ['tShade','tGhost','tHandles','tEdges','tSplay','tTicks','tMirrorBody'].forEach(id=>
   document.getElementById(id).onchange = render);
@@ -2096,46 +2520,69 @@ stage.addEventListener('drop', e=>{
 });
 window.addEventListener('resize', render);
 
-// boot: ?file=<repo-relative path> (needs the page served over http, not file://),
-// else the last edit from localStorage, else a message.
+// boot: ?file=<repo-relative path>, else the last edit from localStorage, else
+// a message. Reading any repo file needs VFS ready first - over http that's
+// immediate; from file:// it waits for (or prompts for) the folder grant.
 const _qFile = new URLSearchParams(location.search).get('file');
-if(_qFile){
-  const _modeDraftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
-  const _plainDraftKey = 'gpDraft:' + _qFile;
-  const _readDraft = k => {
-    try{
-      const raw = localStorage.getItem(k);
-      if(!raw) return null;
-      const d = JSON.parse(raw);
-      if(d && d.D && allFinite(d.D)) return d;
-      if(d && d.D) localStorage.removeItem(k);   // corrupt draft - drop it, use the disk copy
-    }catch(e){}
-    return null;
-  };
-  fetch('/' + _qFile.replace(/^\/+/, ''))
-    .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
-    .then(fresh => {
-      let obj = fresh, restored = null;
-      // the exact mode's own draft always wins when it exists (never lose an
-      // in-progress face-kit or outfit-fit edit); otherwise fall back to the
-      // plain body draft, so switching straight from editing the body to
-      // face/outfit mode shows the just-edited shape instead of a stale
-      // disk copy of the same file.
-      const draft = (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
-      if(draft){ obj = draft.D; restored = new Date(draft.t); }
-      loadDesign(obj, _qFile);
-      if(restored) document.getElementById('src').textContent +=
-        `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
-    })
-    .catch(err => { svg.innerHTML =
-      `<text x="20" y="40" fill="#e06b6b" font-size="14">Couldn't fetch ${_qFile} — ${err}</text>`;
-      populateStartPicker(); });
-} else {
-  const saved = localStorage.getItem('gpEditorBody');
-  if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
-  if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
-  populateStartPicker();
+const _readDraft = k => {
+  try{
+    const raw = localStorage.getItem(k);
+    if(!raw) return null;
+    const d = JSON.parse(raw);
+    if(d && d.D && allFinite(d.D)) return d;
+    if(d && d.D) localStorage.removeItem(k);   // corrupt draft - drop it, use the disk copy
+  }catch(e){}
+  return null;
+};
+let _booted = false;
+async function runBoot(){
+  if(_booted) return;
+  _booted = true;
+  if(_qFile){
+    const _modeDraftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
+    const _plainDraftKey = 'gpDraft:' + _qFile;
+    const fresh = await VFS.readJSON(_qFile);
+    if(!fresh){
+      svg.innerHTML = `<text x="20" y="40" fill="#e06b6b" font-size="14">Couldn't read ${_qFile}</text>`;
+      populateStartPicker();
+      return;
+    }
+    let obj = fresh, restored = null;
+    // the exact mode's own draft always wins when it exists (never lose an
+    // in-progress face-kit or outfit-fit edit); otherwise fall back to the
+    // plain body draft.
+    const draft = (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
+    if(draft){ obj = draft.D; restored = new Date(draft.t); }
+    loadDesign(obj, _qFile);
+    if(restored) document.getElementById('src').textContent +=
+      `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
+  } else {
+    const saved = localStorage.getItem('gpEditorBody');
+    if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
+    if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+    populateStartPicker();
+  }
 }
+// re-entered once the folder grant lands (from the connect / reconnect / pick
+// handlers). Runs the pending boot, or - if a design is already loaded -
+// refreshes the story picker now that directory listing works.
+function afterVfsReady(){
+  updateFsUI();
+  if(!_booted) runBoot();
+  else populateStartPicker();
+  if(typeof scanDrafts === 'function') scanDrafts();   // re-render now that VFS.canWrite may be true
+}
+async function boot(){
+  await vfsTryRestore();
+  updateFsUI();
+  if(VFS.ready){ afterVfsReady(); return; }
+  // file:// with no folder grant yet - nothing can be read. Prompt.
+  document.getElementById('src').textContent = _qFile
+    ? 'connect the repo folder (button, top left) to open ' + _qFile
+    : 'connect the repo folder (button, top left), then pick a story';
+  svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Open the repo folder to begin — button at the top left.</text>`;
+}
+boot();
 </script>
 </body>
 </html>

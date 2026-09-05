@@ -33,5 +33,5 @@ Small committed JSON design files → one shared expander
 (`game/graphics/expand.py`) → flat parts list, used identically by the game (at
 load) and by the atlas viewer (`docs/atlases/pipeline_atlas.py` →
 `pipeline-test.html`). There is a vertex editor at
-[`docs/atlases/editor.html`](atlases/editor.html). The `graphics_pipeline_test`
+[`config/editor.html`](../config/editor.html). The `graphics_pipeline_test`
 story runs on it; `default` does not.
