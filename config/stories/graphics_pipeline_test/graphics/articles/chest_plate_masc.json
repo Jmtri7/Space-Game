@@ -1,0 +1,60 @@
+{
+  "identity": "A solid front breastplate, closed edge to edge (no gap, unlike vest/jacket). Same shoulder-arc and side-curve fit as vest, just met at the centreline instead of left open.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "metal",
+      "note": "right half, mirror of the left, meeting it at x=0.",
+      "points": [
+        [
+          1.324,
+          -21.691
+        ],
+        [
+          2.257,
+          -22.223
+        ],
+        [
+          2.511,
+          -22.911
+        ],
+        [
+          1.24,
+          -23.824
+        ],
+        [
+          -2.115,
+          -23.851
+        ],
+        [
+          -2.899,
+          -23.067
+        ],
+        [
+          -2.561,
+          -22.145
+        ],
+        [
+          -2,
+          -21.708
+        ],
+        [
+          -1.712,
+          -20.665
+        ],
+        [
+          1.142,
+          -20.654
+        ]
+      ],
+      "fits": [],
+      "details": []
+    }
+  ]
+}

@@ -963,6 +963,17 @@ function counterpartPath(path){
   if(/_masc(\.json)$/.test(path)) return path.replace(/_masc(\.json)$/, '_femme$1');
   return null;
 }
+// masc / femme of a gender-suffixed path (…_masc.json / …_femme.json), else null
+function genderOf(path){
+  const m = (path||'').match(/_(masc|femme)\.json$/);
+  return m ? m[1] : null;
+}
+// an article belongs on a body of gender `g` when it carries no gender suffix
+// or its suffix matches. With no known body gender, everything belongs.
+function articleForGender(name, g){
+  const m = name.match(/_(masc|femme)\.json$/);
+  return !g || !m || m[1] === g;
+}
 async function loadFaceKitInto(body){
   const head = body.sections && body.sections.head; if(!head) return;
   head.details = head.details || [];
@@ -2058,6 +2069,16 @@ async function loadBodyForTailoring(){
 }
 function loadDesign(obj, path){
   D = obj; selSec=null; shown.clear(); hidden.clear();
+  // a regions article loaded on its own (no &fitbody=, so not tailor mode) has
+  // no editor view - bail with a hint instead of throwing on D.sections below.
+  if(!TAILOR_MODE && !FACE_MODE && !D.sections){
+    svg.innerHTML = `<text x="20" y="40" fill="#e06b6b" font-size="14">`
+      + `${(path||'this design').split('/').pop()} is an article - open it with a body to tailor against.</text>`;
+    loadedPath = path || loadedPath;
+    if(loadedPath) GBASE = loadedPath.replace(/\/(body|articles|faces|ships|stations|decorations)\/[^/]*$/, '');
+    loadMatPal().then(()=>{ populateStartPicker(); populateArticlePicker(); });
+    return;
+  }
   if(TAILOR_MODE) relinkTailorSections();
   else (D.draw_order||Object.keys(D.sections)).forEach(n=>shown.add(n));
   loadedPath = path || loadedPath;
@@ -2233,9 +2254,13 @@ async function populateArticlePicker(){
   const row = document.getElementById('switcherRow'), sel_ = document.getElementById('articlePicker');
   if(!GBASE) return;
   const { files } = await VFS.listDir(GBASE + '/articles');
-  const names = files.filter(n => n.endsWith('.json')).sort();
+  let names = files.filter(n => n.endsWith('.json')).sort();
   if(!names.length) return;
   const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
+  // in tailor mode, hide the articles that don't match the fit body's gender
+  // (keep the current selection visible even if it's the odd one out)
+  const g = genderOf(currentBodyPath());
+  if(g) names = names.filter(n => n === curName || articleForGender(n, g));
   sel_.innerHTML = `<option value="">— articles —</option>` +
     names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
@@ -2246,7 +2271,11 @@ document.getElementById('articlePicker').onchange = e=>{
   const qs = new URLSearchParams(location.search);
   qs.set('file', path);
   qs.delete('edit');                                   // face mode is for bodies, not articles
-  if(TAILOR_MODE) qs.set('fitbody', FITBODY); else qs.delete('fitbody');
+  // always tailor against a body: FITBODY in tailor mode, else the body being
+  // edited. A bare article (regions, no sections) has no working editor view
+  // and blanks the page, so only drop fitbody when there's genuinely no body.
+  const fb = TAILOR_MODE ? FITBODY : currentBodyPath();
+  if(fb) qs.set('fitbody', fb); else qs.delete('fitbody');
   location.search = qs.toString();
 };
 // pull the head's face slot files in and inline their details so the whole

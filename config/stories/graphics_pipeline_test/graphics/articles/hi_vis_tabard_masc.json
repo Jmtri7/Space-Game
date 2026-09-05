@@ -1,0 +1,122 @@
+{
+  "identity": "A bright safety tabard, open at the sides, worn over a shirt with two reflective stripes. Same shoulder-arc and side-curve fit as vest, cropped a little shorter and left open wider at the sides.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "lamp",
+      "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
+      "points": [
+        [
+          -0.709,
+          -19.886
+        ],
+        [
+          -1.604,
+          -19.924
+        ],
+        [
+          -2.829,
+          -23.203
+        ],
+        [
+          -1.758,
+          -25.268
+        ],
+        [
+          -1.166,
+          -25.502
+        ],
+        [
+          -0.739,
+          -23.459
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "lamp",
+      "note": "right panel, mirror of the left.",
+      "points": [
+        [
+          2.11,
+          -19.988
+        ],
+        [
+          1.667,
+          -25.351
+        ],
+        [
+          1.007,
+          -25.607
+        ],
+        [
+          -0.004,
+          -23.469
+        ],
+        [
+          0.068,
+          -19.906
+        ]
+      ],
+      "fits": [],
+      "details": [
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "reflective stripe, high",
+          "points": [
+            [
+              -2.313,
+              -24.718
+            ],
+            [
+              1.996,
+              -24.757
+            ],
+            [
+              1.996,
+              -24.157
+            ],
+            [
+              -2.538,
+              -24.144
+            ]
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "reflective stripe, low",
+          "points": [
+            [
+              -2.442,
+              -21.778
+            ],
+            [
+              2.258,
+              -21.778
+            ],
+            [
+              2.258,
+              -21.178
+            ],
+            [
+              -2.284,
+              -21.178
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

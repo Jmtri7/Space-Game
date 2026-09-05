@@ -1,0 +1,174 @@
+{
+  "identity": "Long. A wide sheet falls behind the body past the shoulders; a solid cap over the scalp and a panel down each side beside the face.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "under": [
+        "torso"
+      ],
+      "material": "hair",
+      "note": "back sheet - behind the whole body, only what clears the silhouette shows (beside the neck, past the shoulders).",
+      "points": [
+        [
+          0.887,
+          -25.223
+        ],
+        [
+          -1.107,
+          -25.164
+        ],
+        [
+          -1.826,
+          -25.895
+        ],
+        [
+          -2.187,
+          -26.65
+        ],
+        [
+          -2.291,
+          -27.552
+        ],
+        [
+          -2.336,
+          -28.671
+        ],
+        [
+          -2.298,
+          -29.829
+        ],
+        [
+          -1.657,
+          -30.665
+        ],
+        [
+          -0.66,
+          -31.191
+        ],
+        [
+          0.389,
+          -31.161
+        ],
+        [
+          1.072,
+          -30.635
+        ],
+        [
+          1.599,
+          -30.31
+        ],
+        [
+          1.75,
+          -29.06
+        ],
+        [
+          1.847,
+          -27.892
+        ],
+        [
+          1.921,
+          -26.608
+        ],
+        [
+          1.616,
+          -25.972
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": [
+        "head"
+      ],
+      "material": "hair",
+      "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
+      "points": [
+        [
+          -2.16,
+          -27.695
+        ],
+        [
+          -2.281,
+          -29.01
+        ],
+        [
+          -2.04,
+          -29.95
+        ],
+        [
+          -1.46,
+          -30.63
+        ],
+        [
+          -0.86,
+          -30.95
+        ],
+        [
+          -0.3,
+          -31.05
+        ],
+        [
+          0.26,
+          -30.95
+        ],
+        [
+          0.86,
+          -30.63
+        ],
+        [
+          1.44,
+          -29.95
+        ],
+        [
+          1.58,
+          -29.05
+        ],
+        [
+          1.48,
+          -28.15
+        ],
+        [
+          1.202,
+          -26.323
+        ],
+        [
+          0.98,
+          -27.2
+        ],
+        [
+          0.977,
+          -28.162
+        ],
+        [
+          1.08,
+          -29.297
+        ],
+        [
+          0.027,
+          -30.34
+        ],
+        [
+          -0.655,
+          -30.585
+        ],
+        [
+          -1.37,
+          -30.212
+        ],
+        [
+          -2.097,
+          -28.966
+        ],
+        [
+          -1.815,
+          -26.42
+        ]
+      ],
+      "fits": []
+    }
+  ]
+}

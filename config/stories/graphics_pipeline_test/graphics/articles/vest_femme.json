@@ -6,37 +6,65 @@
   "regions": [
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free narrow front edge back down to the hem.",
       "points": [
-        [-0.2, -17.0],
-        [-3.054, -16.604],
-        [-2.169, -24.999],
-        [-0.4, -25.0],
-        [-0.15, -20.0]
+        [
+          -0.2,
+          -17.0
+        ],
+        [
+          -3.054,
+          -16.604
+        ],
+        [
+          -2.169,
+          -24.999
+        ],
+        [
+          -0.4,
+          -25.0
+        ],
+        [
+          -0.15,
+          -20.0
+        ]
       ],
-      "fits": [
-        {"curve": "torso.side_left", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_left", "from": 2, "to": 2, "reverse": true}
-      ]
+      "fits": []
     },
     {
       "group": "torso",
-      "over": ["leg_near"],
+      "over": [
+        "leg_near"
+      ],
       "material": "leather",
       "note": "right front panel, mirror of the left.",
       "points": [
-        [0.2, -17.0],
-        [3.186, -16.601],
-        [2.159, -24.998],
-        [0.4, -25.0],
-        [0.15, -20.0]
+        [
+          0.2,
+          -17.0
+        ],
+        [
+          3.186,
+          -16.601
+        ],
+        [
+          2.159,
+          -24.998
+        ],
+        [
+          0.4,
+          -25.0
+        ],
+        [
+          0.15,
+          -20.0
+        ]
       ],
-      "fits": [
-        {"curve": "torso.side_right", "from": 1, "to": 1, "reverse": true},
-        {"curve": "torso.shoulder_arc_right", "from": 2, "to": 2}
-      ]
+      "fits": []
     }
   ]
 }

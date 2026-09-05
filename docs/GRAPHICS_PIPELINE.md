@@ -204,12 +204,22 @@ body, and never need re-fitting when proportions change.
 body-portable.** It renders correctly on the body it was traced against and
 literally unchanged — same fixed coordinates — on any other, so a garment two
 bodies share (via one outfit set, or two sets naming the same article) will
-look wrong on whichever body it wasn't traced for. `tank_top_femme.json` /
-`tank_top_masc.json` are separate files for exactly this reason: the femme
-one is a hand-traced redesign (`fits: []`), so masc gets its own
-curve-fitted file rather than sharing it. When a redesign trades fits for a
-full trace, check whether anything else still expects that file to fit both
-bodies before saving over the shared name.
+look wrong on whichever body it wasn't traced for.
+
+**Current state of the pipeline-test story: no curves, no fits.** Both bodies
+had their `curves` blocks cleared and every article's `fits` array is `[]` —
+every region is a plain free-vertex trace right now. The machinery above
+(`bodyCurve` / `_apply_fits` / the editor's Curves and Fit panels) is intact;
+the story just carries nothing for it to resolve until curves are re-cut and
+articles re-fitted per body.
+
+**Every article is split `<name>_masc.json` / `<name>_femme.json`** — one file
+per body, always, even when the two are currently byte-identical copies. The
+split is the standing convention so a per-body redesign never has to rename a
+shared file or hunt down its references. A set names the body-matched variant
+of each article; an NPC `equip` list names the variant matching that NPC's
+outfit body. When you tailor one variant, its counterpart is the file to check
+against the other body.
 
 ## Bodies
 
@@ -257,7 +267,9 @@ frame strip; the game will drive `t` from its own clock.
 
 Every garment and accessory is **one `articles/<id>.json`** — its own identity,
 silhouette, materials, details, and fitting declarations — and gets **its own
-atlas plate**, drawn on the bare reference body.
+atlas plate**, drawn on the bare reference body. Every article id ends `_masc`
+or `_femme` (see Fitting: the split is the standing convention, one file per
+body even when identical).
 
 A `sets/<id>.json` composes them:
 
@@ -637,10 +649,9 @@ selected vertices aren't both snapped onto the same body section, the panel
 just says so instead of guessing.
 
 This is separate from (and doesn't require understanding) the `fits: [{curve,
-from, to}]` mechanism a real garment file like `tank_top_masc.json` already uses —
-selecting a single vertex still shows the curve-name panel for inspecting or
-clearing an existing fit, since that's how the shipped data works and the
-purple/free colour coding still reflects it.
+from, to}]` mechanism — no article currently carries a fit, but selecting a
+single vertex still shows the curve-name panel for applying, inspecting, or
+clearing one, and the purple/free colour coding still reflects it.
 
 Every body vertex also renders as a small dot (**show body vertices**,
 on by default) — visible even where the garment covers the skin, since it
@@ -669,11 +680,17 @@ body the outfit is checked against instead of loading the body itself).
 
 **Switching articles without retyping the URL.** Once a design is loaded, a
 **switch to** dropdown appears listing every `articles/*.json` next to it —
-picking one navigates to that article, keeping the current `fitbody` (or
-dropping it if you weren't in tailor mode). It's populated by fetching the
+picking one navigates to that article, tailored against a body — `fitbody`
+in tailor mode, otherwise the body currently being edited — since a bare
+`regions` article has no editor view (it loads to a "open it with a body"
+hint, not a blank page). It's populated by fetching the
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
-hidden rather than showing something broken. In tailor mode a second
+hidden rather than showing something broken. In tailor mode the list is
+filtered to the fit body's gender — with a `_femme` body loaded it shows the
+`_femme` and unsuffixed articles only (and `_masc` vice-versa), so the
+`_masc`/`_femme` split doesn't double the dropdown; the currently-loaded
+article stays listed even if it's the mismatched one. In tailor mode a second
 **fit against** dropdown does the same for `body/*.json` — swaps which body
 the *same* article is checked against without retyping the URL.
 
@@ -688,9 +705,9 @@ this list is saved anywhere — it's a decluttering/preview aid, reset per page
 load; tailor mode only ever writes the outfit back, never the body.
 
 **A single-point fit, unfolded.** A garment vertex fitted to a curve stands
-in for the *whole* curve — that's normal (`shoes.json`'s one placeholder per
-foot is exactly this, doing real work), but it means there's nothing to
-hand-tune point by point. Selecting a single vertex shows an **unfold into N
+in for the *whole* curve — that's normal (a shoe with one placeholder per foot
+fitted to the foot-outline curve is exactly this), but it means there's nothing
+to hand-tune point by point. Selecting a single vertex shows an **unfold into N
 vertices** button next to the curve dropdown: pick a curve (or leave the one
 it's already fitted to) and unfold drops any fit on that vertex and replaces
 it with the curve's own points as plain, independently-draggable vertices —
@@ -953,7 +970,7 @@ mechanism on the **smallest asset that exercises it**.
 | **A — mechanics** ✅ | design JSON → `expand()` → specimen, end to end | one body renders on a plate |
 | **B — reference body** ✅ | proportions, sections, anchors, curves, draw order | `human_masc` / `human_femme` |
 | **C — material & shade** ✅ | auto-shade (tapered crescents) + palette tones | side-lit crescents, one continuous per region |
-| **D — fit** ✅ | `group` / `fits` against the body | `tank_top_masc` sides spliced from the masc torso curves |
+| **D — fit** ✅ | `group` / `fits` against the body | (historic — `tank_top_masc` sides were spliced from masc torso curves; curves and fits have since been cleared, see Fitting) |
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |
@@ -970,7 +987,8 @@ gates needed and no more, and is a bootable story (`story.json` + one system +
 
 - 2 bodies (`human_masc` / `human_femme`), 1 palette (`civilian`),
   `materials.json`, `rig_walk.json`
-- articles — tops, bottoms, footwear, hair — and sets composing them
+- articles — tops, bottoms, footwear, hair, outerwear, accessories — each split
+  `_masc` / `_femme` — and sets composing the body-matched variants
 - face kits (2 each of eyes / brows / nose / lips)
 - 1 ship (`courier`), 1 station (`trade_ring`)
 - 1 interior (`concourse`) with 2 decorations — `column` blocks a lane on

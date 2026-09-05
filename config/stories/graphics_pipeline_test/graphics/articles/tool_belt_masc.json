@@ -1,0 +1,108 @@
+{
+  "identity": "A leather work belt like belt.json, hung with two tool pouches and a loop. Same waistline/low-waist fit, so it sits flush at the natural waist on any body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "leather",
+      "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge).",
+      "points": [
+        [
+          -1.677,
+          -20.46
+        ],
+        [
+          1.806,
+          -20.472
+        ],
+        [
+          2.068,
+          -19.71
+        ],
+        [
+          -1.93,
+          -19.715
+        ]
+      ],
+      "fits": [],
+      "details": [
+        {
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "hip pouch",
+          "points": [
+            [
+              0.123,
+              -20.426
+            ],
+            [
+              0.536,
+              -20.426
+            ],
+            [
+              0.598,
+              -19.683
+            ],
+            [
+              0.061,
+              -19.683
+            ]
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "far hip pouch",
+          "points": [
+            [
+              -0.455,
+              -20.426
+            ],
+            [
+              -0.868,
+              -20.426
+            ],
+            [
+              -0.93,
+              -19.683
+            ],
+            [
+              -0.393,
+              -19.683
+            ]
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "buckle",
+          "points": [
+            [
+              -0.311,
+              -20.509
+            ],
+            [
+              -0.022,
+              -20.509
+            ],
+            [
+              -0.022,
+              -20.22
+            ],
+            [
+              -0.311,
+              -20.22
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

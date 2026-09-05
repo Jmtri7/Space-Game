@@ -1,0 +1,119 @@
+{
+  "identity": "A worn leather shoulder bag on a cross-body strap: the strap runs from the far shoulder down across the chest to rest against the near hip, where the bag itself hangs. Free-drawn against the reference body — it hangs clear of the skin rather than fitting it, so the same shape reads fine on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "leather",
+      "note": "cross-body strap, far shoulder to near hip. All free vertices.",
+      "points": [
+        [
+          -1.414,
+          -25.366
+        ],
+        [
+          -0.983,
+          -25.571
+        ],
+        [
+          2.118,
+          -21.049
+        ],
+        [
+          1.894,
+          -20.799
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "leather",
+      "note": "bag body, hangs at the near hip where the strap ends.",
+      "points": [
+        [
+          0.205,
+          -18.204
+        ],
+        [
+          0.155,
+          -20.504
+        ],
+        [
+          0.405,
+          -21.304
+        ],
+        [
+          1.605,
+          -21.304
+        ],
+        [
+          1.855,
+          -20.504
+        ],
+        [
+          1.805,
+          -18.204
+        ]
+      ],
+      "fits": [],
+      "details": [
+        {
+          "group": "torso",
+          "material": "leather",
+          "tone": "dark",
+          "note": "flap",
+          "points": [
+            [
+              0.255,
+              -18.204
+            ],
+            [
+              0.405,
+              -19.204
+            ],
+            [
+              1.605,
+              -19.204
+            ],
+            [
+              1.755,
+              -18.204
+            ]
+          ]
+        },
+        {
+          "group": "torso",
+          "material": "metal",
+          "note": "clasp",
+          "points": [
+            [
+              0.825,
+              -19.004
+            ],
+            [
+              1.185,
+              -19.004
+            ],
+            [
+              1.185,
+              -18.604
+            ],
+            [
+              0.825,
+              -18.604
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -33,20 +33,7 @@
           -20
         ]
       ],
-      "fits": [
-        {
-          "curve": "torso.side_left",
-          "from": 1,
-          "to": 1,
-          "reverse": true
-        },
-        {
-          "curve": "torso.shoulder_arc_left",
-          "from": 2,
-          "to": 2,
-          "reverse": true
-        }
-      ]
+      "fits": []
     },
     {
       "group": "torso",
@@ -77,19 +64,7 @@
           -20
         ]
       ],
-      "fits": [
-        {
-          "curve": "torso.side_right",
-          "from": 1,
-          "to": 1,
-          "reverse": true
-        },
-        {
-          "curve": "torso.shoulder_arc_right",
-          "from": 2,
-          "to": 2
-        }
-      ]
+      "fits": []
     },
     {
       "group": "arm_far",
@@ -109,13 +84,7 @@
           -23.75
         ]
       ],
-      "fits": [
-        {
-          "curve": "arm_far.arm_far_top",
-          "from": 0,
-          "to": 0
-        }
-      ]
+      "fits": []
     },
     {
       "group": "arm_near",
@@ -135,13 +104,7 @@
           -23.75
         ]
       ],
-      "fits": [
-        {
-          "curve": "arm_near.arm_near_top",
-          "from": 0,
-          "to": 0
-        }
-      ]
+      "fits": []
     }
   ]
 }

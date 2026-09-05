@@ -41,34 +41,7 @@
           -15.4
         ]
       ],
-      "fits": [
-        {
-          "curve": "torso.side_right",
-          "from": 1,
-          "to": 1,
-          "reverse": true
-        },
-        {
-          "curve": "torso.shoulder_arc_right",
-          "from": 2,
-          "to": 2
-        },
-        {
-          "curve": "torso.neck_hole",
-          "from": 3,
-          "to": 3
-        },
-        {
-          "curve": "torso.shoulder_arc_left",
-          "from": 4,
-          "to": 4
-        },
-        {
-          "curve": "torso.side_left",
-          "from": 5,
-          "to": 5
-        }
-      ]
+      "fits": []
     }
   ]
 }

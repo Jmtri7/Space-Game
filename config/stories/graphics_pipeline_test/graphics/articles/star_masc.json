@@ -1,0 +1,59 @@
+{
+  "identity": "A five-point star badge worn on the left breast - same placement and scale as badge.json, a different shape for a different office.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_femme",
+  "regions": [
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "metal",
+      "note": "five-point star on the left breast.",
+      "points": [
+        [
+          0.955,
+          -24.49
+        ],
+        [
+          1.075,
+          -24.09
+        ],
+        [
+          1.455,
+          -24.09
+        ],
+        [
+          1.155,
+          -23.84
+        ],
+        [
+          1.275,
+          -23.44
+        ],
+        [
+          0.955,
+          -23.69
+        ],
+        [
+          0.635,
+          -23.44
+        ],
+        [
+          0.755,
+          -23.84
+        ],
+        [
+          0.455,
+          -24.09
+        ],
+        [
+          0.835,
+          -24.09
+        ]
+      ],
+      "fits": []
+    }
+  ]
+}
