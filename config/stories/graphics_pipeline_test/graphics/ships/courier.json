@@ -7,7 +7,7 @@
   "units": "fractions of `size`; nose points up (-y).",
   "silhouette": [
     {
-      "group": "hull", "material": "hull", "flatten_px": 40,
+      "group": "hull", "color": "hull", "shade": "deep", "flatten_px": 40,
       "note": "delta hull, nose to swept tail.",
       "points": [
         [ 0.0, -1.15 ], [ 0.32, -0.55 ], [ 0.42, 0.1 ], [ 0.95, 0.75 ],
@@ -17,33 +17,33 @@
       ]
     },
     {
-      "group": "canopy", "material": "glass", "flatten_px": 60,
+      "group": "canopy", "color": "glass", "shade": "sheen", "flatten_px": 60,
       "note": "cockpit blister, forward.",
       "points": [ [ 0.0, -0.72 ], [ 0.16, -0.42 ], [ 0.14, 0.05 ], [ 0.0, 0.2 ], [ -0.14, 0.05 ], [ -0.16, -0.42 ] ]
     },
     {
-      "group": "engine_r", "material": "engine", "flatten_px": 50,
+      "group": "engine_r", "color": "engine", "shade": "deep", "flatten_px": 50,
       "note": "right engine pod.",
       "points": [ [ 0.42, 0.35 ], [ 0.62, 0.35 ], [ 0.66, 1.0 ], [ 0.46, 1.0 ] ]
     },
     {
-      "group": "engine_l", "material": "engine", "flatten_px": 50,
+      "group": "engine_l", "color": "engine", "shade": "deep", "flatten_px": 50,
       "note": "left engine pod.",
       "points": [ [ -0.42, 0.35 ], [ -0.62, 0.35 ], [ -0.66, 1.0 ], [ -0.46, 1.0 ] ]
     }
   ],
   "details": [
-    { "group": "hull", "material": "hull_dk", "role": "detail", "min_px": 55,
+    { "group": "hull", "color": "hull_dk", "shade": "matte", "role": "detail", "min_px": 55,
       "note": "spine panel line", "points": [ [ -0.06, -0.5 ], [ 0.06, -0.5 ], [ 0.06, 1.05 ], [ -0.06, 1.05 ] ] },
-    { "group": "hull", "material": "hull_dk", "role": "detail", "min_px": 70,
+    { "group": "hull", "color": "hull_dk", "shade": "matte", "role": "detail", "min_px": 70,
       "note": "wing root seam, right", "points": [ [ 0.34, 0.15 ], [ 0.42, 0.15 ], [ 0.9, 0.78 ], [ 0.82, 0.82 ] ] },
-    { "group": "hull", "material": "hull_dk", "role": "detail", "min_px": 70,
+    { "group": "hull", "color": "hull_dk", "shade": "matte", "role": "detail", "min_px": 70,
       "note": "wing root seam, left", "points": [ [ -0.34, 0.15 ], [ -0.42, 0.15 ], [ -0.9, 0.78 ], [ -0.82, 0.82 ] ] },
-    { "group": "hull", "material": "lamp", "role": "detail", "min_px": 90,
+    { "group": "hull", "color": "lamp", "shade": "glow", "role": "detail", "min_px": 90,
       "note": "forward nav light, at the nose tip", "circle": [ 0.0, -1.02, 0.045 ] },
-    { "group": "engine_r", "material": "thrust", "role": "detail", "min_px": 12,
+    { "group": "engine_r", "color": "thrust", "shade": "glow", "role": "detail", "min_px": 12,
       "note": "right thruster", "circle": [ 0.56, 1.02, 0.11 ] },
-    { "group": "engine_l", "material": "thrust", "role": "detail", "min_px": 12,
+    { "group": "engine_l", "color": "thrust", "shade": "glow", "role": "detail", "min_px": 12,
       "note": "left thruster", "circle": [ -0.56, 1.02, 0.11 ] }
   ]
 }

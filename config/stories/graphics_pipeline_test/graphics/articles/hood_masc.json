@@ -9,7 +9,7 @@
       "under": [
         "head"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "bulk of the hood, behind the head and draping past the shoulders.",
       "points": [
         [
@@ -48,7 +48,7 @@
       "over": [
         "head"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "tone": "dark",
       "note": "front edge, brim sits right at the brow (head.anchors.brow y=-29.05) without dropping onto the eyes.",
       "points": [

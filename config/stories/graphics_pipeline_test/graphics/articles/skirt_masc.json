@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "point 0 is a fit placeholder for torso.low_waist (spans left to right). Everything below is the free flared hem.",
       "points": [
         [

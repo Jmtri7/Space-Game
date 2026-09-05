@@ -1,5 +1,5 @@
 {
-  "identity": "Base material and scale definitions for the Graphics Pipeline Test story.",
+  "identity": "Shading profiles + scale constants for the Graphics Pipeline Test story. A design part carries a `color` (a palette key or literal hex) and a `shade` (one of these profile names); the two are independent.",
   "light": [-0.82, -0.57],
   "scale": {
     "PLAYER_H": 31.0,
@@ -11,24 +11,13 @@
     "CORRIDOR_W": 18.0,
     "STATION_H": 46.0
   },
-  "materials": {
-    "skin":    { "tone_dark": -26, "tone_light": 18 },
-    "hair":    { "tone_dark": -22, "tone_light": 24 },
-    "eye":     { "tone_dark": -12, "tone_light": 12 },
-    "sclera":  { "tone_dark": -10, "tone_light": 6 },
-    "iris":    { "tone_dark": -16, "tone_light": 16 },
-    "pupil":   { "tone_dark": 0, "tone_light": 0 },
-    "lip":     { "tone_dark": -16, "tone_light": 14 },
-    "cloth":   { "tone_dark": -30, "tone_light": 22 },
-    "denim":   { "tone_dark": -26, "tone_light": 18 },
-    "leather": { "tone_dark": -34, "tone_light": 16 },
-    "knit":    { "tone_dark": -24, "tone_light": 20 },
-    "metal":   { "tone_dark": -40, "tone_light": 48 },
-    "glass":   { "tone_dark": -20, "tone_light": 44 },
-    "hull":    { "tone_dark": -34, "tone_light": 30 },
-    "hull_dk": { "tone_dark": -22, "tone_light": 20 },
-    "engine":  { "tone_dark": -30, "tone_light": 26 },
-    "lamp":    { "tone_dark": 0, "tone_light": 0, "emissive": true },
-    "thrust":  { "tone_dark": 0, "tone_light": 0, "emissive": true }
+  "shading": {
+    "flat":  { "tone_dark": 0,   "tone_light": 0,  "note": "solid fill, no crescents" },
+    "glow":  { "tone_dark": 0,   "tone_light": 0,  "emissive": true, "note": "light source: flat + survives every LOD cull" },
+    "soft":  { "tone_dark": -14, "tone_light": 12, "note": "gentle low-contrast roundness - skin, faces" },
+    "matte": { "tone_dark": -24, "tone_light": 20, "note": "even mid-contrast, no hot highlight - most cloth" },
+    "deep":  { "tone_dark": -34, "tone_light": 24, "note": "strong core shadow, modest sheen - leather, coats, hull" },
+    "sheen": { "tone_dark": -20, "tone_light": 44, "note": "soft body, bright highlight strip - glass, satin, plastic" },
+    "metal": { "tone_dark": -40, "tone_light": 48, "note": "hard shadow and hard specular - bare metal" }
   }
 }

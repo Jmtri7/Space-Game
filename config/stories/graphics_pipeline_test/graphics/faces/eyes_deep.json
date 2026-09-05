@@ -2,7 +2,7 @@
   "identity": "deep eyes + brows",
   "details": [
     {
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "tone": "dark",
       "note": "near eye socket, deep-set",
       "points": [
@@ -43,7 +43,7 @@
       "role": "detail"
     },
     {
-      "material": "sclera",
+      "color": "sclera", "shade": "soft",
       "note": "near eye white",
       "points": [
         [
@@ -79,7 +79,7 @@
       "role": "detail"
     },
     {
-      "material": "iris",
+      "color": "iris", "shade": "soft",
       "note": "near iris",
       "circle": [
         0.43,
@@ -90,7 +90,7 @@
       "role": "detail"
     },
     {
-      "material": "pupil",
+      "color": "pupil", "shade": "flat",
       "note": "near pupil",
       "circle": [
         0.43,
@@ -101,7 +101,7 @@
       "role": "detail"
     },
     {
-      "material": "sclera",
+      "color": "sclera", "shade": "soft",
       "note": "far eye white",
       "points": [
         [
@@ -137,7 +137,7 @@
       "role": "detail"
     },
     {
-      "material": "iris",
+      "color": "iris", "shade": "soft",
       "note": "far iris",
       "circle": [
         -1.06,
@@ -149,7 +149,7 @@
       "role": "detail"
     },
     {
-      "material": "pupil",
+      "color": "pupil", "shade": "flat",
       "note": "far pupil",
       "circle": [
         -1.06,
@@ -161,7 +161,7 @@
       "role": "detail"
     },
     {
-      "material": "hair",
+      "color": "hair", "shade": "matte",
       "tone": "dark",
       "note": "near brow, heavy and level",
       "points": [
@@ -198,7 +198,7 @@
       "role": "detail"
     },
     {
-      "material": "hair",
+      "color": "hair", "shade": "matte",
       "tone": "dark",
       "note": "far brow",
       "points": [

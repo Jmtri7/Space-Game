@@ -2,7 +2,7 @@
   "identity": "straight nose",
   "details": [
     {
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "tone": "dark",
       "note": "nose bridge shadow, straight",
       "points": [
@@ -27,7 +27,7 @@
       "role": "detail"
     },
     {
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "tone": "dark",
       "note": "nose tip, broader",
       "points": [

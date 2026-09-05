@@ -1,0 +1,6 @@
+{
+  "identity": "Oxblood officer's coat, femme cut - the same long_coat_femme geometry as coat_charcoal_femme, recoloured deep red and given a waxed sheen. Counterpart of coat_oxblood_masc.",
+  "geometry": "long_coat_femme",
+  "colors": { "cloth": "#3a1f2e" },
+  "shade": "sheen"
+}

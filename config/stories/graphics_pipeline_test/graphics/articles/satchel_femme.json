@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "cross-body strap, far shoulder to near hip. All free vertices.",
       "points": [
         [
@@ -36,7 +36,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "bag body, hangs at the near hip where the strap ends.",
       "points": [
         [
@@ -68,7 +68,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "leather",
+          "color": "leather", "shade": "deep",
           "tone": "dark",
           "note": "flap",
           "points": [
@@ -92,7 +92,7 @@
         },
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "note": "clasp",
           "points": [
             [

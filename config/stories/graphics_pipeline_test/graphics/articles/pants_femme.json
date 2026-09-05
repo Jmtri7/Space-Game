@@ -6,7 +6,7 @@
   "regions": [
     {
       "group": "leg_far",
-      "material": "denim",
+      "color": "denim", "shade": "matte",
       "note": "far leg tube. 0 fits leg_far.leg_far_top (dome), 1 fits leg_far.leg_far_out (down the outside), 3 fits leg_far.inseam reversed (ankle->centre); 2 the ankle hem, 4 crosses the centre so it overlaps the near leg.",
       "points": [
         [
@@ -58,7 +58,7 @@
     },
     {
       "group": "leg_near",
-      "material": "denim",
+      "color": "denim", "shade": "matte",
       "note": "near leg tube.",
       "points": [
         [
@@ -113,7 +113,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "denim",
+      "color": "denim", "shade": "matte",
       "note": "hip panel / seat, drawn last. Its whole outline is the wearer's lower torso: 0 fits torso.low_waist across the top, 1 fits torso.lower_torso_right down the right side and underside to the crotch, 2 fits torso.lower_torso_left reversed back up the left. Sits flush with the body, never proud of it.",
       "points": [
         [

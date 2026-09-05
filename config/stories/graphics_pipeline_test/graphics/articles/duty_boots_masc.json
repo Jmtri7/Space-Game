@@ -6,7 +6,7 @@
   "regions": [
     {
       "group": "foot_near",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.3,
       "note": "near boot. Traces the wearer's own foot_outline (the sole/toe/heel corners are its exact points); the last two points raise the ankle-height corners to mid-shin for the shaft.",
       "points": [
@@ -51,7 +51,7 @@
     },
     {
       "group": "foot_far",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.3,
       "note": "far boot, mirror of the near one.",
       "points": [

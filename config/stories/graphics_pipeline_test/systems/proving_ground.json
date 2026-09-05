@@ -85,7 +85,13 @@
             "greeting": "Mind the load line. Everyone asks why the vest - so you can see me.", "dialogue_options": ["Leave"] },
           { "name": "Medic", "x": 40, "y": 340, "behavior": "wander", "outfit": "civilian_summer_masc",
             "equip": ["armband_masc", "badge_masc"],
-            "greeting": "Nobody's hurt yet. Let's keep it that way.", "dialogue_options": ["Leave"] }
+            "greeting": "Nobody's hurt yet. Let's keep it that way.", "dialogue_options": ["Leave"] },
+          { "name": "Deck Officer", "x": 30, "y": 328, "behavior": "wander", "outfit": "civilian_masc",
+            "equip": ["coat_charcoal_masc"],
+            "greeting": "Standard-issue watch coat. Same cut the whole deck wears.", "dialogue_options": ["Leave"] },
+          { "name": "Ring Marshal", "x": 62, "y": 366, "behavior": "wander", "outfit": "civilian_masc",
+            "equip": ["coat_oxblood_masc"],
+            "greeting": "Same coat as the Deck Officer's - just dyed oxblood and waxed to a shine. One shape, two items.", "dialogue_options": ["Leave"] }
         ]
       }
     }

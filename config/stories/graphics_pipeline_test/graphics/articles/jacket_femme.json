@@ -9,7 +9,8 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed (hem up to shoulder), 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free open front edge back down to the hem. \"over\": [\"leg_near\"] matches the shirt/pants draw rank so the jacket shows over them.",
       "points": [
         [
@@ -84,7 +85,8 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
       "points": [
         [
@@ -140,72 +142,74 @@
     },
     {
       "group": "arm_far",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "far cap sleeve. 0 fits arm_far.arm_far_top (the shoulder dome); 1-2 free cuff.",
       "points": [
         [
-          -2.673,
-          -24.978
+          -2.645,
+          -25.005
         ],
         [
-          -3.179,
-          -24.504
+          -3.175,
+          -24.558
         ],
         [
-          -3.37,
-          -16.653
+          -3.776,
+          -16.728
         ],
         [
-          -2.406,
-          -16.703
+          -2.811,
+          -16.727
         ],
         [
-          -1.553,
-          -24.559
+          -1.548,
+          -24.528
         ],
         [
-          -1.969,
-          -25.004
+          -1.94,
+          -24.994
         ],
         [
-          -2.26,
-          -25.086
+          -2.227,
+          -25.091
         ]
       ],
       "fits": []
     },
     {
       "group": "arm_near",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "near cap sleeve, mirror of the far one.",
       "points": [
         [
-          1.882,
-          -25.005
+          1.853,
+          -24.99
         ],
         [
-          2.352,
-          -25.09
+          2.318,
+          -25.1
         ],
         [
-          2.84,
-          -24.905
+          2.815,
+          -24.94
         ],
         [
-          3.179,
-          -24.504
+          3.175,
+          -24.558
         ],
         [
-          3.37,
-          -16.653
+          3.776,
+          -16.728
         ],
         [
-          2.406,
-          -16.703
+          2.811,
+          -16.727
         ],
         [
-          1.604,
-          -24.572
+          1.598,
+          -24.543
         ]
       ],
       "fits": []

@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "near shoulder board, on shoulder_near.",
       "points": [
         [
@@ -36,7 +36,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "far shoulder board, mirror of the near one.",
       "points": [
         [

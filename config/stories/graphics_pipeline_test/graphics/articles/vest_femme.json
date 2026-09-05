@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free narrow front edge back down to the hem.",
       "points": [
         [
@@ -40,7 +40,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "right front panel, mirror of the left.",
       "points": [
         [

@@ -4,16 +4,16 @@
   "palette": "ship_std",
   "units": "absolute local units (31 = player height), top-down, origin at the seat centre; +y is the wall side.",
   "silhouette": [
-    { "group": "seat", "material": "hull_dk", "points": [ [ -12.0, -4.0 ], [ 12.0, -4.0 ], [ 12.0, 4.0 ], [ -12.0, 4.0 ] ] }
+    { "group": "seat", "color": "hull_dk", "shade": "matte", "points": [ [ -12.0, -4.0 ], [ 12.0, -4.0 ], [ 12.0, 4.0 ], [ -12.0, 4.0 ] ] }
   ],
   "details": [
-    { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "front slat",
+    { "group": "seat", "color": "hull", "shade": "deep", "role": "detail", "min_px": 26, "note": "front slat",
       "points": [ [ -11.0, -3.2 ], [ 11.0, -3.2 ], [ 11.0, -0.8 ], [ -11.0, -0.8 ] ] },
-    { "group": "seat", "material": "hull", "role": "detail", "min_px": 26, "note": "back slat",
+    { "group": "seat", "color": "hull", "shade": "deep", "role": "detail", "min_px": 26, "note": "back slat",
       "points": [ [ -11.0, 0.8 ], [ 11.0, 0.8 ], [ 11.0, 3.2 ], [ -11.0, 3.2 ] ] },
-    { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "left skid",
+    { "group": "seat", "color": "metal", "shade": "metal", "role": "detail", "min_px": 60, "note": "left skid",
       "points": [ [ -11.4, -3.7 ], [ -9.4, -3.7 ], [ -9.4, 3.7 ], [ -11.4, 3.7 ] ] },
-    { "group": "seat", "material": "metal", "role": "detail", "min_px": 60, "note": "right skid",
+    { "group": "seat", "color": "metal", "shade": "metal", "role": "detail", "min_px": 60, "note": "right skid",
       "points": [ [ 9.4, -3.7 ], [ 11.4, -3.7 ], [ 11.4, 3.7 ], [ 9.4, 3.7 ] ] }
   ],
   "sit": [ [ -7.0, -0.5 ], [ 0.0, -0.5 ], [ 7.0, -0.5 ] ]

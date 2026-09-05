@@ -6,7 +6,7 @@
   "regions": [
     {
       "group": "leg_near",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.08,
       "note": "near knee pad, centred on leg_near.knee.",
       "points": [
@@ -39,7 +39,7 @@
     },
     {
       "group": "leg_far",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.08,
       "note": "far knee pad, mirror of the near one.",
       "points": [

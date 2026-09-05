@@ -1,71 +1,73 @@
 {
-  "identity": "Plain fabric work gloves, a pair, centred on each hand. Free-drawn against the reference body's grip anchor — small and loose enough that the same shape covers either body's hand.",
+  "identity": "Plain fabric work gloves, a pair, centred on each hand. Free-drawn against the reference body's grip anchor \u2014 small and loose enough that the same shape covers either body's hand.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
   "regions": [
     {
       "group": "hand_near",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "outset": 0.08,
       "note": "near glove, centred on hand_near.grip.",
       "points": [
         [
-          2.773,
-          -13.518
+          3.344,
+          -13.566
         ],
         [
-          3.462,
-          -13.754
+          4.02,
+          -13.837
         ],
         [
-          3.578,
-          -15.362
+          4.052,
+          -15.449
         ],
         [
-          3.37,
-          -16.453
+          3.787,
+          -16.528
         ],
         [
-          2.406,
-          -16.703
+          2.811,
+          -16.727
         ],
         [
-          2.366,
-          -14.598
+          2.881,
+          -14.623
         ]
       ],
       "fits": []
     },
     {
       "group": "hand_far",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "outset": 0.08,
       "note": "far glove, mirror of the near one.",
       "points": [
         [
-          -2.773,
-          -13.518
+          -3.344,
+          -13.566
         ],
         [
-          -3.462,
-          -13.754
+          -4.02,
+          -13.837
         ],
         [
-          -3.578,
-          -15.362
+          -4.052,
+          -15.449
         ],
         [
-          -3.37,
-          -16.453
+          -3.787,
+          -16.528
         ],
         [
-          -2.406,
-          -16.703
+          -2.811,
+          -16.727
         ],
         [
-          -2.366,
-          -14.598
+          -2.881,
+          -14.623
         ]
       ],
       "fits": []

@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "lamp",
+      "color": "lamp", "shade": "glow",
       "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
       "points": [
         [
@@ -44,7 +44,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "lamp",
+      "color": "lamp", "shade": "glow",
       "note": "right panel, mirror of the left.",
       "points": [
         [
@@ -72,7 +72,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "note": "reflective stripe, high",
           "points": [
             [
@@ -95,7 +95,7 @@
         },
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "note": "reflective stripe, low",
           "points": [
             [

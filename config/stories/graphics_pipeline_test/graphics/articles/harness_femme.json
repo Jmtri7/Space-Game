@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "strap, near shoulder to far hip.",
       "points": [
         [
@@ -36,7 +36,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "strap, far shoulder to near hip - mirror of the other.",
       "points": [
         [
@@ -60,7 +60,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "note": "chest ring where the straps cross",
           "circle": [
             -0.152,

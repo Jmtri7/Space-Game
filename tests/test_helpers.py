@@ -5350,5 +5350,153 @@ class TestAADraw(unittest.TestCase):
             mp.draw.circle.assert_called_once()
 
 
+class TestExpandShadingAndItems(unittest.TestCase):
+    """expand.py: colour and shading are decoupled - a part carries a `color`
+    and a `shade` profile name independently - plus the item-layer overrides
+    (docs/GRAPHICS_PIPELINE.md)."""
+
+    def _mats(self):
+        return {
+            "light": [-0.82, -0.57],
+            "shading": {
+                "flat": {"tone_dark": 0, "tone_light": 0},
+                "matte": {"tone_dark": -24, "tone_light": 20},
+                "deep": {"tone_dark": -34, "tone_light": 24},
+                "sheen": {"tone_dark": -20, "tone_light": 44},
+                "glow": {"tone_dark": 0, "tone_light": 0, "emissive": True},
+            },
+        }
+
+    def test_shade_profile_resolves_by_name(self):
+        from game.graphics.expand import shade_profile
+        m = self._mats()
+        self.assertEqual(shade_profile("deep", m)["tone_dark"], -34)
+        self.assertTrue(shade_profile("glow", m).get("emissive"))
+
+    def test_shade_profile_false_is_flat_and_missing_is_matte(self):
+        from game.graphics.expand import shade_profile
+        m = self._mats()
+        self.assertIsNone(shade_profile(False, m))
+        self.assertEqual(shade_profile(None, m), m["shading"]["matte"])
+        self.assertEqual(shade_profile("bogus", m), m["shading"]["matte"])
+
+    def test_shade_profile_passes_inline_dict_through(self):
+        from game.graphics.expand import shade_profile
+        inline = {"tone_dark": -5, "tone_light": 5}
+        self.assertEqual(shade_profile(inline, self._mats()), inline)
+
+    def test_resolve_color_only_shifts_dark_and_light(self):
+        from game.graphics.expand import resolve_color, shade_profile
+        m = self._mats()
+        pal = {"denim": "#4d5a6b"}
+        prof = shade_profile("deep", m)
+        mid = resolve_color("denim", "mid", pal, prof)
+        self.assertEqual(mid, [0x4d, 0x5a, 0x6b])
+        self.assertEqual(resolve_color("denim", "dark", pal, prof),
+                         [max(0, c - 34) for c in mid])
+
+    def _article(self):
+        return {"regions": [
+            {"group": "torso", "color": "denim", "shade": "matte",
+             "points": [[0, 0], [2, 0], [2, 3], [0, 3]],
+             "details": [{"color": "metal", "shade": "metal",
+                          "points": [[0, 0], [1, 0], [1, 1]]}]},
+        ]}
+
+    def test_item_color_override_keeps_each_part_shade(self):
+        from game.graphics.expand import expand
+        m = self._mats()
+        m["shading"]["metal"] = {"tone_dark": -40, "tone_light": 48}
+        pal = {"denim": "#404040", "plum": "#804060", "metal": "#c0c0c0"}
+        over = expand(self._article(), pal, m, body=None, color="plum")
+        fill = next(p for p in over if p["role"] == "fill")
+        detail = next(p for p in over if p["role"] == "detail")
+        self.assertEqual(fill["color"], [0x80, 0x40, 0x60])     # recoloured
+        self.assertEqual(detail["color"], [0x80, 0x40, 0x60])   # detail recoloured too
+        dark = next(p for p in over if p["role"] == "shade_dark")["color"]
+        self.assertEqual(dark, [max(0, c - 24) for c in [0x80, 0x40, 0x60]])  # still matte
+
+    def test_item_shade_override_keeps_each_part_colour(self):
+        from game.graphics.expand import expand
+        m = self._mats()
+        pal = {"denim": "#606060", "metal": "#c0c0c0"}
+        base = expand(self._article(), pal, m, body=None)
+        shiny = expand(self._article(), pal, m, body=None, shade="sheen")
+        self.assertEqual(next(p for p in shiny if p["role"] == "fill")["color"],
+                         next(p for p in base if p["role"] == "fill")["color"])
+        self.assertEqual(next(p for p in shiny if p["role"] == "shade_light")["color"],
+                         [min(255, c + 44) for c in [0x60, 0x60, 0x60]])
+
+    def test_item_colors_patch_overrides_palette(self):
+        from game.graphics.expand import expand
+        m = self._mats()
+        pal = {"denim": "#404040", "metal": "#c0c0c0"}
+        over = expand(self._article(), pal, m, body=None, colors={"denim": "#101828"})
+        self.assertEqual(next(p for p in over if p["role"] == "fill")["color"],
+                         [16, 24, 40])
+
+    def test_no_override_is_identical_to_plain_expand(self):
+        from game.graphics.expand import expand
+        m = self._mats()
+        m["shading"]["metal"] = {"tone_dark": -40, "tone_light": 48}
+        pal = {"denim": "#404040", "metal": "#c0c0c0"}
+        a = expand(self._article(), pal, m, body=None)
+        b = expand(self._article(), pal, m, body=None, color=None, shade=None, colors=None)
+        self.assertEqual(a, b)
+
+    def test_rest_splay_is_not_applied_to_articles(self):
+        """An arm-group region is authored in the body's rest pose already;
+        expand_article must NOT rotate it (that would double the splay)."""
+        from game.graphics.expand import expand
+        m = self._mats()
+        pal = {"denim": "#606060"}
+        body = {"rig": {"rest_splay": {"arm": 30}},
+                "pivots": {"arm_near": [0, 0], "arm_far": [0, 0]}}
+        art = {"outset": 0,
+               "regions": [{"group": "arm_near", "color": "denim", "shade": "flat",
+                            "points": [[1, 0], [2, 0], [2, 1], [1, 1]], "fits": []}]}
+        fill = next(p for p in expand(art, pal, m, body=body) if p["role"] == "fill")
+        self.assertEqual([[round(x, 3), round(y, 3)] for x, y in fill["points"]],
+                         [[1, 0], [2, 0], [2, 1], [1, 1]])
+
+
+class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
+    """The graphics_pipeline_test story is on the decoupled color/shade model:
+    materials.json carries only `shading` profiles, and every design part names
+    a `color` + a real `shade` (or `shade: false`)."""
+
+    def test_materials_json_has_shading_and_no_material_map(self):
+        m = utils.load_json("config/stories/graphics_pipeline_test/graphics/materials.json")
+        self.assertTrue(m.get("shading"))
+        self.assertNotIn("materials", m)
+
+    def test_every_part_names_a_known_shade_and_a_color(self):
+        import glob
+        import json
+        m = utils.load_json("config/stories/graphics_pipeline_test/graphics/materials.json")
+        profiles = set(m["shading"])
+        base = "config/stories/graphics_pipeline_test/graphics/"
+        bad = []
+
+        def walk(o, f):
+            if isinstance(o, list):
+                for v in o:
+                    walk(v, f)
+            elif isinstance(o, dict):
+                if "material" in o:
+                    bad.append(f"{f}: stray 'material' key")
+                sh = o.get("shade")
+                if sh not in (None, False) and sh not in profiles:
+                    bad.append(f"{f}: shade {sh!r} not a profile")
+                for v in o.values():
+                    walk(v, f)
+
+        for f in glob.glob(base + "**/*.json", recursive=True):
+            if f.endswith("materials.json"):
+                continue
+            walk(json.load(open(f, encoding="utf-8")), f)
+        self.assertEqual(bad, [])
+
+
 if __name__ == "__main__":
     unittest.main()

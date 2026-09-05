@@ -120,6 +120,17 @@ def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
     names += list(extra_articles)
     arts = []
     for a in names:
+        # a name may be an item (items/<a>.json - reuses an article's geometry
+        # with its own material/colour) or a bare article id.
+        it = _load(story, "items", a + ".json")
+        if it and it.get("geometry"):
+            ad = _load(story, "articles", it["geometry"] + ".json")
+            if ad:
+                arts.append(expand(ad, pal, mats, body=body,
+                                   color=it.get("color"),
+                                   shade=it.get("shade"),
+                                   colors=it.get("colors")))
+            continue
         ad = _load(story, "articles", a + ".json")
         if ad:
             arts.append(expand(ad, pal, mats, body=body))

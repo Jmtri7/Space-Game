@@ -9,7 +9,7 @@
       "over": [
         "head"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "crown, same silhouette as cap/hair_short.",
       "points": [
         [
@@ -45,7 +45,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "leather",
+          "color": "leather", "shade": "deep",
           "tone": "dark",
           "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
           "points": [

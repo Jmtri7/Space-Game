@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "metal",
+      "color": "metal", "shade": "metal",
       "note": "left plate.",
       "points": [
         [
@@ -36,7 +36,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "metal",
+      "color": "metal", "shade": "metal",
       "note": "centre plate, overlapping both side plates slightly.",
       "points": [
         [
@@ -63,7 +63,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "metal",
+      "color": "metal", "shade": "metal",
       "note": "right plate, mirror of the left.",
       "points": [
         [

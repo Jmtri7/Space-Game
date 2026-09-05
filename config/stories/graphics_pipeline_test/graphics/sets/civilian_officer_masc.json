@@ -1,0 +1,11 @@
+{
+  "identity": "Officer's turnout: the everyday knit tank and denim trousers under an oxblood watch coat (an item - long_coat geometry, recoloured and given a sheen), slip-on shoes, short hair.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "pants_masc",
+    "coat_oxblood_masc",
+    "shoes_masc",
+    "hair_short_masc"
+  ]
+}

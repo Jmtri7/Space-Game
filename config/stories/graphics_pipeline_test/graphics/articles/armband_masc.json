@@ -6,25 +6,26 @@
   "regions": [
     {
       "group": "arm_near",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "outset": 0.06,
       "note": "band midway between arm_near.shoulder and arm_near.elbow.",
       "points": [
         [
-          1.836,
-          -22.137
+          2.763,
+          -19.273
         ],
         [
-          3.304,
-          -22.144
+          4.376,
+          -19.057
         ],
         [
-          3.247,
-          -23.924
+          3.973,
+          -16.232
         ],
         [
-          1.67,
-          -23.851
+          2.912,
+          -16.308
         ]
       ],
       "fits": []

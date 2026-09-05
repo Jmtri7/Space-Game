@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "metal",
+      "color": "metal", "shade": "metal",
       "note": "shield-shaped badge on the left breast.",
       "points": [
         [

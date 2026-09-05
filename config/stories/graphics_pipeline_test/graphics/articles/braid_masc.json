@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "metal",
+      "color": "metal", "shade": "metal",
       "note": "thin cord from the near shoulder down under the arm and back.",
       "points": [
         [
@@ -45,7 +45,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "tone": "light",
           "note": "shoulder pin",
           "circle": [

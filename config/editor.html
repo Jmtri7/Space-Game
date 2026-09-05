@@ -108,7 +108,6 @@
   <label><input type="checkbox" id="tEdges" checked> insert points (edge click)</label>
   <label>insert <input type="number" id="insertCount" value="1" min="1" max="30" style="width:44px">
     point(s) at a time (dbl-click an edge, or select 2 + <b>I</b>) — evenly spaced between the two</label>
-  <label><input type="checkbox" id="tSplay"> apply rest_splay</label>
   <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
   <label><input type="checkbox" id="tSnap"> snap 0.05</label>
   <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
@@ -160,6 +159,22 @@
       just its snap-able vertices (keeps the part visible, less clutter).</div>
     <div id="bodyPartList"></div>
     <div id="fitPanel"><div class="hint">none selected</div></div>
+  </div>
+
+  <div id="lookPreviewSec" style="display:none">
+    <h2>Preview look</h2>
+    <div class="hint">See this shared geometry as a different <code>items/&lt;id&gt;.json</code>
+      would render it — colour and shading are independent. <b>Preview only:</b>
+      nothing here is written to the article file, which stays pure geometry +
+      its own default tags.</div>
+    <div class="row">color
+      <select id="lookMat" style="flex:1"><option value="">— as authored —</option></select>
+    </div>
+    <label><input type="checkbox" id="lookColOn"> or a literal colour
+      <input type="color" id="lookCol" value="#6b4a35"></label>
+    <div class="row">shade
+      <select id="lookShade" style="flex:1"><option value="">— as authored —</option></select>
+    </div>
   </div>
 
   <h2>Polygons</h2>
@@ -431,36 +446,69 @@ async function vfsTryRestore(){
 let MATERIALS = {
   light: [-0.82, -0.57],
   scale: { PLAYER_H: 31.0 },
-  materials: {
-    skin:{tone_dark:-26,tone_light:18}, hair:{tone_dark:-22,tone_light:24},
-    eye:{tone_dark:-12,tone_light:12}, sclera:{tone_dark:-10,tone_light:6},
-    iris:{tone_dark:-16,tone_light:16}, pupil:{tone_dark:0,tone_light:0},
-    lip:{tone_dark:-16,tone_light:14}, cloth:{tone_dark:-30,tone_light:22},
-    denim:{tone_dark:-26,tone_light:18}, leather:{tone_dark:-34,tone_light:16},
-    knit:{tone_dark:-24,tone_light:20}, metal:{tone_dark:-40,tone_light:48},
-    glass:{tone_dark:-20,tone_light:44}, lamp:{tone_dark:0,tone_light:0,emissive:true}
-  }
+  shading: {
+    flat:  {tone_dark:0,   tone_light:0},
+    glow:  {tone_dark:0,   tone_light:0, emissive:true},
+    soft:  {tone_dark:-14, tone_light:12},
+    matte: {tone_dark:-24, tone_light:20},
+    deep:  {tone_dark:-34, tone_light:24},
+    sheen: {tone_dark:-20, tone_light:44},
+    metal: {tone_dark:-40, tone_light:48}
+  },
+  matte_fallback: {tone_dark:-24, tone_light:20}
 };
 let PALETTE = { skin:"#c69b74", hair:"#3b2b21", eye:"#5a4633",
   sclera:"#efe8db", iris:"#6b4a2e", pupil:"#1a1109", lip:"#b07a63",
   cloth:"#8a8f98", denim:"#4d5a6b", leather:"#6b4a35", knit:"#9a8c6f",
   metal:"#9298a0", glass:"#bfe6dd", lamp:"#ffd98a" };
-let MATNAMES = Object.keys(MATERIALS.materials);
+// colour keys (palette) and shade-profile names - the two axes of a part's look
+const _palKeys = o => Object.keys(o).filter(k => k !== 'identity');
+let COLNAMES = _palKeys(PALETTE);
+let SHADENAMES = Object.keys(MATERIALS.shading);
 async function loadMatPal(){
   if(!GBASE) return;
   const m = await VFS.readJSON(GBASE + '/materials.json');
-  if(m){ MATERIALS = m; MATNAMES = Object.keys(MATERIALS.materials || {}); }
+  if(m){ MATERIALS = m; SHADENAMES = Object.keys(MATERIALS.shading || {}); }
   const p = await VFS.readJSON(GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
-  if(p) PALETTE = p;
+  if(p){ PALETTE = p; COLNAMES = _palKeys(PALETTE); }
 }
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
 // Keep in sync with expand.py (_crescent, shade_bands, resolve_color).
+// `color` and `shade` are independent: color is a palette key / #hex, shade
+// names a profile in materials.json's `shading` table.
 function hexToRgb(s){s=s.replace('#','');return [0,2,4].map(i=>parseInt(s.substr(i,2),16));}
 function clamp(c){return Math.max(0,Math.min(255,Math.round(c)));}
-function resolveColor(mat, tone){
-  let base = Array.isArray(mat) ? mat.slice() : (mat[0]==='#' ? hexToRgb(mat) : hexToRgb(PALETTE[mat]));
-  const spec = MATERIALS.materials[mat] || {};
+// Resolve a part's `shade` to a profile ({tone_dark, tone_light, emissive?}).
+// false -> null (flat); missing -> matte; unknown -> matte; inline dict -> itself.
+function shadeProfile(shade){
+  if(shade === false) return null;
+  if(shade && typeof shade === 'object') return shade;
+  const t = MATERIALS.shading || {};
+  return t[shade] || t.matte || MATERIALS.matte_fallback || {tone_dark:-24, tone_light:20};
+}
+// tolerate a pre-decouple design or autosaved draft: split `material` into
+// color + shade in place (same profile guesses the one-shot migration used).
+const _SHIM_PROF = { skin:'soft', hair:'matte', eye:'soft', sclera:'soft', iris:'soft',
+  pupil:'flat', lip:'soft', cloth:'matte', denim:'matte', leather:'deep', knit:'matte',
+  metal:'metal', glass:'sheen', hull:'deep', hull_dk:'matte', engine:'deep', lamp:'glow', thrust:'glow' };
+function shimLook(o){
+  if(Array.isArray(o)) o.forEach(shimLook);
+  else if(o && typeof o === 'object'){
+    if('material' in o){
+      const m = o.material; delete o.material; o.color = m;
+      if(!('shade' in o) && typeof m === 'string' && m[0] !== '#')
+        o.shade = _SHIM_PROF[m] || 'matte';
+    }
+    for(const v of Object.values(o)) shimLook(v);
+  }
+  return o;
+}
+function resolveColor(color, tone, prof){
+  if(color == null) return [255, 0, 255];   // missing colour -> loud magenta, not a crash
+  let base = Array.isArray(color) ? color.slice()
+           : (color[0]==='#' ? hexToRgb(color) : hexToRgb(PALETTE[color] || '#ff00ff'));
+  const spec = prof || {};
   const d = tone==='dark' ? (spec.tone_dark??-28) : tone==='light' ? (spec.tone_light??22) : 0;
   return base.map(v=>clamp(v+d));
 }
@@ -543,8 +591,7 @@ function crescent(region,ldir,maxFrac,capFrac,thresh){
   const poly=outer0.concat(innerC.slice().reverse());
   return poly.length>=3?[poly]:[];
 }
-function shadeBands(region,mat){
-  if(MATERIALS.materials[mat]?.emissive)return[[],[]];
+function shadeBands(region){   // callers gate on shadeProfile (null/emissive -> no bands)
   let[lx,ly]=MATERIALS.light;const L=Math.hypot(lx,ly)||1;lx/=L;ly/=L;
   return [crescent(region,[-lx,-ly],0.22,0.55,0.16), crescent(region,[lx,ly],0.09,0.45,0.2)];
 }
@@ -624,11 +671,17 @@ let refMoveMode = false; // when on, dragging the overlay moves it instead of ed
 function pushHistory(){ history.push(JSON.stringify(D)); if(history.length>60) history.shift(); }
 function snap(v){ return document.getElementById('tSnap').checked ? Math.round(v/0.05)*0.05 : v; }
 
+// group -> [pivot, degrees] from a BODY design's rig.rest_splay. `expand_body`
+// bakes exactly this into the body's own arm/hand sections at expand time, so a
+// reference body drawn underneath an outfit must apply it to match the game.
+// Article geometry already carries the splay baked into its stored points
+// (there is no toggle and no runtime rotation) - so this is only ever used on
+// the tailor-mode reference body, never on the article being edited.
 function restTransforms(design){
   design = design || D;
-  const out={};
-  const arm = design.rig?.rest_splay?.arm, piv = design.pivots||{};
-  if(arm && document.getElementById('tSplay').checked){
+  const out = {};
+  const arm = design.rig?.rest_splay?.arm, piv = design.pivots || {};
+  if(arm){
     out.arm_near = out.hand_near = [piv.arm_near, -arm];
     out.arm_far  = out.hand_far  = [piv.arm_far,  arm];
   }
@@ -661,22 +714,40 @@ function bodyDrawParts(body){
     const tr = xf[grp];
     const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
     const pts = sec.points.map(tf);
-    out.push({points: pts, fill: rgb(resolveColor(sec.material, sec.tone||'mid')), group: grp, sec: name});
-    if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
+    const prof = shadeProfile(sec.shade);
+    out.push({points: pts, fill: rgb(resolveColor(sec.color, sec.tone||'mid', prof)), group: grp, sec: name});
+    if(showShade && prof && !prof.emissive){
       let dark, lite;
       if(sec.shade_dark||sec.shade_light){
         dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
         lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
-      } else { [dark,lite] = shadeBands(pts, sec.material); }
-      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.material,'light')), group:grp, sec:name}));
-      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.material,'dark')), group:grp, sec:name}));
+      } else { [dark,lite] = shadeBands(pts); }
+      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.color,'light',prof)), group:grp, sec:name}));
+      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(sec.color,'dark',prof)), group:grp, sec:name}));
     }
     (sec.details||[]).forEach(d=>{ const pp = detailPoly(d); if(pp)
-      out.push({points: pp.map(tf), fill: rgb(resolveColor(d.material, d.tone||'mid')), group:grp, sec:name}); });
+      out.push({points: pp.map(tf), fill: rgb(resolveColor(d.color, d.tone||'mid', shadeProfile(d.shade))), group:grp, sec:name}); });
   }
   return out;
 }
+// tailor-mode "Preview look": a whole-article colour and/or shade swap, shown
+// in the preview only (never written to the article file - an items/<id>.json
+// is where a real item stores this). Mirrors expand_article's color/shade args.
+let previewLook = { color:'', shade:'', colOn:false, colHex:'#6b4a35' };
+try{ const s = JSON.parse(localStorage.getItem('gpPreviewLook')||'null'); if(s) previewLook = {...previewLook, ...s}; }catch(e){}
+function lookColor(part){
+  if(!TAILOR_MODE) return part.color;
+  if(previewLook.colOn) return previewLook.colHex;
+  return previewLook.color || part.color;
+}
+function lookProfile(part){
+  const sh = (TAILOR_MODE && previewLook.shade) ? previewLook.shade : part.shade;
+  return shadeProfile(sh);
+}
 function articleDrawParts(body){
+  // Article geometry is authored in the body's rest pose (rest_splay baked
+  // into the stored points), so it draws with NO transform - exactly the
+  // frame the game renders. `body` is only needed for `fits`/`outset`.
   body = body || bodyDesign;
   const out = [];
   const showShade = document.getElementById('tShade').checked;
@@ -686,18 +757,19 @@ function articleDrawParts(body){
     const dispPts = body
       ? outsetPts(applyFits(region.points, region.fits, body), region.outset ?? D.outset ?? 0.12)
       : region.points;
-    out.push({points: dispPts, fill: rgb(resolveColor(region.material, region.tone||'mid')), group:grp, over:region.over, under:region.under});
-    if(showShade && region.shade!==false && !MATERIALS.materials[region.material]?.emissive){
+    const col = lookColor(region), prof = lookProfile(region);
+    out.push({points: dispPts, fill: rgb(resolveColor(col, region.tone||'mid', prof)), group:grp, over:region.over, under:region.under});
+    if(showShade && prof && !prof.emissive){
       let dark, lite;
       if(region.shade_dark||region.shade_light){
         dark = region.shade_dark ? [region.shade_dark] : [];
         lite = region.shade_light ? [region.shade_light] : [];
-      } else { [dark,lite] = shadeBands(dispPts, region.material); }
-      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(region.material,'light')), group:grp, over:region.over, under:region.under}));
-      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(region.material,'dark')), group:grp, over:region.over, under:region.under}));
+      } else { [dark,lite] = shadeBands(dispPts); }
+      lite.forEach(p=>out.push({points:p, fill: rgb(resolveColor(col,'light',prof)), group:grp, over:region.over, under:region.under}));
+      dark.forEach(p=>out.push({points:p, fill: rgb(resolveColor(col,'dark',prof)), group:grp, over:region.over, under:region.under}));
     }
     (region.details||[]).forEach(d=>{ const pp = detailPoly(d); if(pp)
-      out.push({points: pp, fill: rgb(resolveColor(d.material, d.tone||'mid')), group:grp, over:region.over, under:region.under}); });
+      out.push({points: pp, fill: rgb(resolveColor(lookColor(d), d.tone||'mid', lookProfile(d))), group:grp, over:region.over, under:region.under}); });
   }
   return out;
 }
@@ -721,7 +793,7 @@ function composeWornJS(bodyDes, bodyParts, articleParts){
   keyed.sort((a,b)=>a[0]-b[0]);
   return keyed.map(([,p])=>p);
 }
-function bodyVertexList(){    // every body vertex in world space (rest_splay applied), for snap + display
+function bodyVertexList(){    // every body vertex in the game's rest pose (rest_splay applied), for snap + display
   if(!bodyDesign) return [];
   const xf = restTransforms(bodyDesign);
   const out = [];
@@ -819,7 +891,11 @@ document.getElementById('bodyPicker').onchange = e=>{
 function render(){
   if(!D){ svg.innerHTML=''; return; }
   HANDLES.length = 0;
-  const xf = restTransforms();
+  // No transform on the edited design: an article's points are already in the
+  // body's rest pose (splay baked in), and body-edit mode edits the stored
+  // neutral pose directly. The tailor-mode reference body applies rest_splay
+  // itself, in bodyDrawParts / bodyVertexList.
+  const xf = {};
   const order = D.draw_order || Object.keys(D.sections);
   let g = '';
   const ph = MATERIALS.scale.PLAYER_H;
@@ -859,18 +935,19 @@ function render(){
       const tr = xf[sec.group||name];
       const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
       const pts = sec.points.map(tf);
-      draw(pts, rgb(resolveColor(sec.material, sec.tone||'mid')));
-      if(showShade && sec.shade!==false && !MATERIALS.materials[sec.material]?.emissive){
+      const prof = shadeProfile(sec.shade);
+      draw(pts, rgb(resolveColor(sec.color, sec.tone||'mid', prof)));
+      if(showShade && prof && !prof.emissive){
         let dark, lite;
         if(sec.shade_dark||sec.shade_light){
           dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
           lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
-        } else { [dark,lite] = shadeBands(pts, sec.material); }
-        lite.forEach(p=>draw(p, rgb(resolveColor(sec.material,'light'))));
-        dark.forEach(p=>draw(p, rgb(resolveColor(sec.material,'dark'))));
+        } else { [dark,lite] = shadeBands(pts); }
+        lite.forEach(p=>draw(p, rgb(resolveColor(sec.color,'light',prof))));
+        dark.forEach(p=>draw(p, rgb(resolveColor(sec.color,'dark',prof))));
       }
       (sec.details||[]).forEach(d=>{ const pp = detailPoly(d);
-        if(pp) draw(pp.map(tf), rgb(resolveColor(d.material, d.tone||'mid'))); });
+        if(pp) draw(pp.map(tf), rgb(resolveColor(d.color, d.tone||'mid', shadeProfile(d.shade)))); });
     }
   }
 
@@ -891,7 +968,6 @@ function render(){
   if(document.getElementById('tHandles').checked){
     for(const name of shown){
       const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
-      const tr = xf[sec.group||name];
       if(!LOCK_POINTS){
         const fitClass = TAILOR_MODE ? (i => regionFitAt(sec, i) ? 'fitted' : '') : null;
         g += handleSet(sec.points, name, 'points', 'handle', fitClass);
@@ -986,7 +1062,7 @@ async function loadFaceKitInto(body){
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
     const fj = await VFS.readJSON(GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
-    if(fj) (fj.details || []).forEach(d => head.details.push(d));
+    if(fj) (shimLook(fj).details || []).forEach(d => head.details.push(d));
   }
 }
 // basePath: the body being edited directly, or (tailor mode) the body the
@@ -999,7 +1075,7 @@ async function loadMirrorBody(basePath){
   mirrorBody = null; mirrorPath = null;
   if(target){
     const mb = await VFS.readJSON(target);
-    if(mb){ mirrorBody = mb; mirrorPath = target; await loadFaceKitInto(mirrorBody); }
+    if(mb){ mirrorBody = shimLook(mb); mirrorPath = target; await loadFaceKitInto(mirrorBody); }
   }
   document.getElementById('mirrorLabel').textContent = mirrorPath
     ? mirrorPath.split('/').pop().replace(/\.json$/,'') + (mirrorIsSelf() ? ' (live)' : '')
@@ -1371,9 +1447,10 @@ function buildPolyEdit(){
   el.innerHTML = `
     <div class="row">name <input id="dNote" type="text" style="flex:1;background:#12141a;color:#d9dce2;border:1px solid #3a4150;
       border-radius:4px;padding:3px 5px" value="${(d.note||'').replace(/"/g,'&quot;')}" placeholder="unnamed"></div>
-    <div class="row">material <select id="dMat">${MATNAMES.map(m=>`<option ${m===d.material?'selected':''}>${m}</option>`).join('')}</select>
+    <div class="row">color <select id="dMat">${COLNAMES.map(m=>`<option ${m===d.color?'selected':''}>${m}</option>`).join('')}</select>
       <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
-        background:${rgb(resolveColor(d.material,d.tone||'mid'))}"></span></div>
+        background:${rgb(resolveColor(d.color,d.tone||'mid',shadeProfile(d.shade)))}"></span></div>
+    <div class="row">shade <select id="dShade"><option value="">(matte)</option>${SHADENAMES.map(s=>`<option ${s===d.shade?'selected':''}>${s}</option>`).join('')}<option value="false" ${d.shade===false?'selected':''}>false — flat</option></select></div>
     <div class="row">tone <select id="dTone">${['mid','dark','light'].map(t=>`<option ${t===(d.tone||'mid')?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="row">anim. group <input id="dGroup" type="text" style="flex:1;background:#12141a;color:#d9dce2;
       border:1px solid #3a4150;border-radius:4px;padding:3px 5px" value="${(d.group||'').replace(/"/g,'&quot;')}" placeholder="(section default)"></div>
@@ -1388,7 +1465,10 @@ function buildPolyEdit(){
     <div class="hint">${d.circle ? 'circle detail' : (d.points||[]).length+'-vertex polygon'} — layer ${di+1} of ${arr.length}
       (later = drawn on top, within this same file group)</div>`;
   document.getElementById('dNote').onchange = e=>{ pushHistory(); d.note=e.target.value; sync(); buildSecList(); };
-  document.getElementById('dMat').onchange = e=>{ pushHistory(); d.material=e.target.value; sync(); buildPolyEdit(); };
+  document.getElementById('dMat').onchange = e=>{ pushHistory(); d.color=e.target.value; sync(); buildPolyEdit(); };
+  document.getElementById('dShade').onchange = e=>{ pushHistory();
+    const v=e.target.value; if(v==='') delete d.shade; else d.shade = (v==='false') ? false : v;
+    sync(); buildPolyEdit(); };
   document.getElementById('dTone').onchange = e=>{ pushHistory(); d.tone=e.target.value; if(d.tone==='mid') delete d.tone; sync(); buildPolyEdit(); };
   document.getElementById('dGroup').onchange = e=>{ pushHistory();
     if(e.target.value) d.group=e.target.value; else delete d.group; sync(); buildPolyEdit(); };
@@ -1425,7 +1505,7 @@ function duplicateDetail(sc, di){
   const src = arr[di]; if(!src) return;
   pushHistory();
   const copy = JSON.parse(JSON.stringify(src));
-  const base = (copy.note || copy.material || 'piece').replace(/\s+\d+$/, '');
+  const base = (copy.note || copy.color || 'piece').replace(/\s+\d+$/, '');
   const used = new Set(arr.map(x=>x.note));
   let n = 2; while(used.has(base+' '+n)) n++;
   copy.note = base+' '+n;
@@ -1492,7 +1572,7 @@ function addPoly(){
   // shape against the mid-tone base instead of blending invisibly into it -
   // pick the material + tone in the fill panel once it's placed. Give it a
   // unique name so it's tellable apart in the Sections/Polygons list.
-  const poly = { material: FACE_MODE ? 'skin' : (host.material||'skin'), tone:'dark',
+  const poly = { color: FACE_MODE ? 'skin' : (host.color||'skin'), shade: host.shade ?? 'matte', tone:'dark',
     note: uniqueDetailName(host, 'polygon'),
     points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]] };
   if(FACE_MODE){
@@ -1514,7 +1594,7 @@ function addCircle(){
   // a round detail is authored as {circle:[cx,cy,r]} - expand() (and this
   // editor) turn it into an n-gon at render time (6-24 sides by size), the
   // same as the existing iris/pupil/catchlight pieces.
-  const circ = { material: FACE_MODE ? 'skin' : (host.material||'skin'), tone:'dark',
+  const circ = { color: FACE_MODE ? 'skin' : (host.color||'skin'), shade: host.shade ?? 'matte', tone:'dark',
     note: uniqueDetailName(host, 'circle'),
     circle: [view.x, view.y, r] };
   if(FACE_MODE){
@@ -1943,7 +2023,7 @@ function buildFaceList(el){
       row.innerHTML = `<button class="eye">${on?'●':'–'}</button>
         <button class="eye" title="earlier in draw order (further back)" ${di===0?'disabled':''}>↓</button>
         <button class="eye" title="later in draw order (further forward)" ${di===dets.length-1?'disabled':''}>↑</button>
-        <span class="nm">${(d.note||d.material)}${d.circle?' ○':''}</span>`;
+        <span class="nm">${(d.note||d.color)}${d.circle?' ○':''}</span>`;
       const eyes = row.querySelectorAll('.eye');
       eyes[0].onclick = ev=>{ ev.preventDefault();
         detPick.has('head:'+di) ? detPick.delete('head:'+di) : detPick.add('head:'+di);
@@ -1960,18 +2040,23 @@ function buildFaceList(el){
 }
 function buildSecEdit(){
   const el = document.getElementById('secEdit');
-  if(FACE_MODE){        // this panel edits a body SECTION's own base material
+  if(FACE_MODE){        // this panel edits a body SECTION's own base colour
     el.innerHTML = `<div class="hint">this is the head's own skin, not a face
       piece — use the <b>Polygons</b> fill panel above (select one whole piece)
-      to change an eye/brow/nose/lip's material instead.</div>`;
+      to change an eye/brow/nose/lip's colour instead.</div>`;
     return;
   }
   if(!selSec){ el.innerHTML='<div class="hint">none</div>'; return; }
   const S = D.sections[selSec];
   const freezeOk = !TAILOR_MODE || bodyDesign;   // needs the resolved shape, which needs the body
   el.innerHTML = `
-    <div class="row">material
-      <select id="mMat">${MATNAMES.map(m=>`<option ${m===S.material?'selected':''}>${m}</option>`).join('')}</select>
+    <div class="row">color
+      <select id="mMat">${COLNAMES.map(m=>`<option ${m===S.color?'selected':''}>${m}</option>`).join('')}</select>
+      <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
+        background:${rgb(resolveColor(S.color,S.tone||'mid',shadeProfile(S.shade)))}"></span>
+    </div>
+    <div class="row">shade
+      <select id="mShade"><option value="">(matte)</option>${SHADENAMES.map(s=>`<option ${s===S.shade?'selected':''}>${s}</option>`).join('')}<option value="false" ${S.shade===false?'selected':''}>false — flat</option></select>
     </div>
     <div class="row">tone
       <select id="mTone">${['mid','dark','light'].map(t=>`<option ${t===(S.tone||'mid')?'selected':''}>${t}</option>`).join('')}</select>
@@ -1980,9 +2065,14 @@ function buildSecEdit(){
       <button id="mFreeze" ${freezeOk?'':'disabled'}>${S.shade_dark?'recompute auto-shade':'freeze shade → editable'}</button>
     </div>
     <div class="hint">${S.points.length} vertices${S.shade_dark?' · manual shade':''}
-      ${TAILOR_MODE?' (vertex count includes fit placeholders)':''}</div>`;
-  document.getElementById('mMat').onchange = e=>{ pushHistory(); S.material=e.target.value; sync(); };
-  document.getElementById('mTone').onchange = e=>{ pushHistory(); S.tone=e.target.value; if(S.tone==='mid')delete S.tone; sync(); };
+      ${TAILOR_MODE?' (vertex count includes fit placeholders)':''}</div>
+    ${TAILOR_MODE ? drawRankHTML(S) : ''}`;
+  document.getElementById('mMat').onchange = e=>{ pushHistory(); S.color=e.target.value; sync(); buildSecEdit(); };
+  document.getElementById('mShade').onchange = e=>{ pushHistory();
+    const v=e.target.value; if(v==='') delete S.shade; else S.shade = (v==='false') ? false : v;
+    sync(); buildSecEdit(); };
+  document.getElementById('mTone').onchange = e=>{ pushHistory(); S.tone=e.target.value; if(S.tone==='mid')delete S.tone; sync(); buildSecEdit(); };
+  if(TAILOR_MODE) wireDrawRank(S);
   document.getElementById('mFreeze').onclick = ()=>{
     pushHistory();
     if(S.shade_dark){ delete S.shade_dark; delete S.shade_light; }
@@ -1990,11 +2080,86 @@ function buildSecEdit(){
       // tailor mode: shade the RESOLVED (fitted+outset) shape, never the raw
       // placeholder points, or the frozen crescent would be nonsense.
       const shapePts = TAILOR_MODE ? outsetPts(applyFits(S.points, S.fits, bodyDesign), S.outset ?? D.outset ?? 0.12) : S.points;
-      const [dark,lite] = shadeBands(shapePts, S.material);
+      const [dark,lite] = shadeBands(shapePts);
       if(dark[0]) S.shade_dark = dark[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
       if(lite[0]) S.shade_light = lite[0].map(p=>[+p[0].toFixed(3),+p[1].toFixed(3)]);
     }
     shown.add(selSec); sync(); buildSecEdit(); buildCurvesPanel();
+  };
+}
+
+// ---- tailor mode: a region's draw order vs. the body ----------------
+// `over` / `under` are the same lists the game's compose_worn reads: each
+// names body animation-groups and/or body section names. `under: [x]` draws
+// the region before the FIRST body part of x (behind it); `over: [x]` draws
+// it after the LAST part of x (in front of it). With neither, the region
+// draws with its own animation group. composeWornJS already honours these in
+// the preview - this panel just edits them.
+function bodyDrawKeys(){
+  const secs = bodyDesign?.sections || {};
+  const order = bodyDesign?.draw_order || Object.keys(secs);
+  const keys = [];
+  for(const name of order){
+    if(!secs[name]) continue;
+    if(!keys.includes(name)) keys.push(name);
+    const g = secs[name].group || name;
+    if(!keys.includes(g)) keys.push(g);
+  }
+  return keys;
+}
+// tailor mode: the "Preview look" panel (colour + shade swap, preview only)
+function initLookPanel(){
+  if(!TAILOR_MODE) return;
+  const sec = document.getElementById('lookPreviewSec'); sec.style.display = '';
+  const cm = document.getElementById('lookMat'), sh = document.getElementById('lookShade');
+  const co = document.getElementById('lookColOn'), cx = document.getElementById('lookCol');
+  cm.innerHTML = '<option value="">— as authored —</option>' +
+    COLNAMES.map(c=>`<option ${c===previewLook.color?'selected':''}>${c}</option>`).join('');
+  sh.innerHTML = '<option value="">— as authored —</option>' +
+    SHADENAMES.map(s=>`<option ${s===previewLook.shade?'selected':''}>${s}</option>`).join('');
+  co.checked = previewLook.colOn; cx.value = previewLook.colHex; cm.disabled = previewLook.colOn;
+  const save = ()=>{ try{ localStorage.setItem('gpPreviewLook', JSON.stringify(previewLook)); }catch(e){} };
+  cm.onchange = e=>{ previewLook.color = e.target.value; save(); render(); };
+  sh.onchange = e=>{ previewLook.shade = e.target.value; save(); render(); };
+  co.onchange = e=>{ previewLook.colOn = e.target.checked; cm.disabled = e.target.checked; save(); render(); };
+  cx.onchange = e=>{ previewLook.colHex = e.target.value; save(); render(); };
+}
+function drawRankHTML(S){
+  if(!bodyDesign) return '';
+  const keys = bodyDrawKeys();
+  const box = (id, sel_) => `<select id="${id}" multiple size="${Math.min(8, Math.max(3, keys.length))}"
+      style="width:100%">${keys.map(k=>`<option value="${k}" ${(sel_||[]).includes(k)?'selected':''}>${k}</option>`).join('')}</select>`;
+  return `
+    <h2 style="margin-top:14px">draw order vs. body</h2>
+    <div class="hint">ctrl/cmd-click to pick more than one, or none. <b>under</b> =
+      behind those body parts; <b>over</b> = in front of them; neither = with
+      this region's own animation group.</div>
+    <div class="row" style="align-items:flex-start;gap:10px">
+      <div style="flex:1">under<br>${box('mUnder', S.under)}</div>
+      <div style="flex:1">over<br>${box('mOver', S.over)}</div>
+    </div>
+    <div class="row"><button id="mRankAll" title="copy this region's over/under to every region in the article">apply to whole article</button></div>`;
+}
+function wireDrawRank(S){
+  const read = id => [...(document.getElementById(id)?.selectedOptions || [])].map(o=>o.value);
+  const commit = () => {
+    pushHistory();
+    const u = read('mUnder'), o = read('mOver');
+    u.length ? S.under = u : delete S.under;
+    o.length ? S.over  = o : delete S.over;
+    sync();
+  };
+  const u = document.getElementById('mUnder'), o = document.getElementById('mOver');
+  if(u) u.onchange = commit;
+  if(o) o.onchange = commit;
+  const all = document.getElementById('mRankAll');
+  if(all) all.onclick = ()=>{
+    pushHistory();
+    for(const r of (D.regions||[])){
+      S.under ? r.under = S.under.slice() : delete r.under;
+      S.over  ? r.over  = S.over.slice()  : delete r.over;
+    }
+    sync();
   };
 }
 
@@ -2057,6 +2222,7 @@ async function loadBodyForTailoring(){
   const draft = [plainDraft, faceDraft].filter(Boolean).sort((a,b)=>b.t-a.t)[0];
   if(draft) bodyDesign = draft.D;
   if(!bodyDesign){ alert("couldn't load the reference body: " + FITBODY); return; }
+  shimLook(bodyDesign);
   // the raw body file's head has no face details of its own (those live in
   // faces/<slot>_<name>.json, per docs/GRAPHICS_PIPELINE.md's face-mode
   // section) - pull them in so the backdrop shows eyes/nose/lips instead of a
@@ -2072,7 +2238,7 @@ async function loadBodyForTailoring(){
   loadMirrorBody(FITBODY);   // the same outfit, fit against the counterpart body
 }
 function loadDesign(obj, path){
-  D = obj; selSec=null; shown.clear(); hidden.clear();
+  D = shimLook(obj); selSec=null; shown.clear(); hidden.clear();
   // a regions article loaded on its own (no &fitbody=, so not tailor mode) has
   // no editor view - bail with a hint instead of throwing on D.sections below.
   if(!TAILOR_MODE && !FACE_MODE && !D.sections){
@@ -2100,7 +2266,7 @@ function finishLoad(){
   try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
   if(FACE_MODE){ shown.clear(); shown.add('head'); selSec = 'head'; }
   if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
-  buildSecList(); buildSecEdit(); buildCurvesPanel(); sync();
+  buildSecList(); buildSecEdit(); buildCurvesPanel(); initLookPanel(); sync();
   populateArticlePicker();
   populateStartPicker();
   buildModeSwitch();
@@ -2293,7 +2459,7 @@ async function mergeFaces(){
     if(!fm[slot]) continue;
     const ref = 'faces/' + slot + '_' + fm[slot];
     const fj = await VFS.readJSON(GBASE + '/' + ref + '.json');
-    if(fj) (fj.details || []).forEach(d => { d._src = ref; head.details.push(d); });
+    if(fj) (shimLook(fj).details || []).forEach(d => { d._src = ref; head.details.push(d); });
   }
   D0 = JSON.parse(JSON.stringify(D));
 }
@@ -2533,7 +2699,7 @@ document.getElementById('saveAllDrafts').onclick = async ()=>{
     (failed.length ? `\n\nFailed:\n` + failed.join('\n') : '\n\nCheck "git diff".'));
 };
 scanDrafts();   // populate on page load too; "rescan" catches drafts saved after that
-['tShade','tGhost','tHandles','tEdges','tSplay','tTicks','tMirrorBody'].forEach(id=>
+['tShade','tGhost','tHandles','tEdges','tTicks','tMirrorBody'].forEach(id=>
   document.getElementById(id).onchange = render);
 if(TAILOR_MODE) ['tBodyVerts','tSnapBody'].forEach(id=>
   document.getElementById(id).onchange = render);

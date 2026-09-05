@@ -6,7 +6,7 @@
   "regions": [
     {
       "group": "foot_near",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.32,
       "note": "the whole near-foot outline, outset so the shoe wraps it.",
       "points": [
@@ -47,7 +47,7 @@
     },
     {
       "group": "foot_far",
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "outset": 0.32,
       "note": "the whole far-foot outline.",
       "points": [

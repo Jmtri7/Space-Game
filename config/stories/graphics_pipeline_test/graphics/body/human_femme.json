@@ -49,7 +49,7 @@
   "sections": {
     "torso": {
       "group": "torso",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "note": "shorter torso over long legs. Short waist pinch; from the waist the hip widens on a gentle even slope to its widest point high on the pelvis, then a nearly straight underside runs from the outer hip/leg to the inner thigh. The chest carries a soft rounded bust: the silhouette swells at breast height and tucks under, and paired under-bust shadows plus a highlight give it volume.",
       "points": [
         [
@@ -270,7 +270,7 @@
     },
     "neck": {
       "group": "torso",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           0.82,
@@ -298,7 +298,7 @@
     },
     "head": {
       "group": "torso",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "note": "shifted -0.3 x toward the screen-left facing; features clustered a touch further over; sits 0.35 lower on the neck than a straight stack",
       "points": [
         [
@@ -404,7 +404,7 @@
     },
     "arm_far": {
       "group": "arm_far",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           -1.56,
@@ -468,7 +468,7 @@
     },
     "hand_far": {
       "group": "hand_far",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           -2,
@@ -508,7 +508,7 @@
     },
     "leg_far": {
       "group": "leg_far",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           -1,
@@ -572,7 +572,7 @@
     },
     "foot_far": {
       "group": "foot_far",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [
@@ -621,7 +621,7 @@
     },
     "arm_near": {
       "group": "arm_near",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           1.611,
@@ -685,7 +685,7 @@
     },
     "hand_near": {
       "group": "hand_near",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           2,
@@ -725,7 +725,7 @@
     },
     "leg_near": {
       "group": "leg_near",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "points": [
         [
           1,
@@ -789,7 +789,7 @@
     },
     "foot_near": {
       "group": "foot_near",
-      "material": "skin",
+      "color": "skin", "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [

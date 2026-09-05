@@ -28,16 +28,18 @@ tense and describes the system as it is; history lives in git.
 
 ```
 config/stories/<story>/graphics/
-├── materials.json          — material → base tone + how dark/mid/light derive
+├── materials.json          — shading profiles (dark/light deltas) + scale constants
 ├── palettes/
-│   └── <group>.json        — a palette: material → colour, for one culture or role
+│   └── <group>.json        — a palette: colour key → hex, for one culture or role
 ├── body/
 │   ├── <species>.json      — silhouette, sections, anchors, curves, pivots
 │   └── rig_<motion>.json   — per-group swing amplitude & phase for one animation
 ├── articles/
 │   └── <article>.json      — one garment or accessory, designed on its own
+├── items/
+│   └── <item>.json         — an article's geometry worn with its own colour/shade
 ├── sets/
-│   └── <set>.json          — an ordered list of article ids + palette
+│   └── <set>.json          — an ordered list of article/item ids + palette
 ├── ships/       <ship>.json
 ├── stations/    <station>.json
 ├── buildings/   <building>.json
@@ -70,13 +72,13 @@ one page for everything.
 {
   "identity": "A grown resin pod, asymmetric, tapering to one glass point.",
   "tier": "ship_far",                 // sets the vertex budget
-  "palette": "vherathi",              // which palette resolves this design's materials
+  "palette": "vherathi",              // which palette resolves this design's colours
   "silhouette": [
-    { "group": "hull",   "material": "resin", "points": [[...], ...] },
-    { "group": "canopy", "material": "glass", "points": [[...], ...] }
+    { "group": "hull",   "color": "resin", "shade": "deep",  "points": [[...], ...] },
+    { "group": "canopy", "color": "glass", "shade": "sheen", "points": [[...], ...] }
   ],
   "details": [
-    { "group": "canopy", "material": "light", "role": "detail",
+    { "group": "canopy", "color": "lamp", "shade": "glow", "role": "detail",
       "note": "single running light at the nose",
       "points": [[...], ...] }
   ],
@@ -89,11 +91,11 @@ one page for everything.
   prints it verbatim.
 - **`silhouette`** — the outer form, partitioned into **regions**. Each region
   is one polygon tagged with a `group` (a concept: `hull`, `canopy`, `spine`,
-  `port_nacelle`) and a `material`. Regions tile the silhouette; they do not
-  overlap.
+  `port_nacelle`), a `color`, and a `shade` profile. Regions tile the
+  silhouette; they do not overlap.
 - **`details`** — polygons layered over the regions: trim, insignia, lights,
-  panel seams. Each carries the `group` it belongs to, its own `material`, and
-  a short `note` the atlas shows.
+  panel seams. Each carries the `group` it belongs to, its own `color` /
+  `shade`, and a short `note` the atlas shows.
 - No shading polygons appear in the file. They are derived (see Auto-shade).
 
 ## The six stages
@@ -104,41 +106,59 @@ A design is authored — and read — in this order:
 |---|---|---|
 | 1 | **Identity** | `identity` — what makes this unique, tied to the culture theme |
 | 2 | **Silhouette** | one outer form, fewest vertices, every choice justified by (1) |
-| 3 | **Materials** | the silhouette split into `silhouette` regions, each `material`-tagged |
-| 4 | **Auto-shade** | *nothing* — `expand()` derives dark/mid/light per region |
+| 3 | **Colour + shade** | the silhouette split into regions, each tagged `color` + `shade` |
+| 4 | **Auto-shade** | *nothing* — `expand()` derives dark/mid/light per region from its `shade` profile |
 | 5 | **Details** | the `details` list: trim, designs, lights, grouped by region |
-| 6 | **Description** | `identity` + every detail's `note` name every material and detail |
+| 6 | **Description** | `identity` + every detail's `note` name every colour and detail |
 
-## Materials, palettes, tones
+## Colour, shade, palettes, tones
 
-`materials.json` names each material and how its three tones derive from a base:
+**Colour and shade are two independent axes of a part's look.** A silhouette
+region or detail carries:
+
+- **`color`** — a palette key (`"denim"`), a literal `"#rrggbb"`, or `[r,g,b]`.
+- **`shade`** — the name of a **shading profile** (how the surface catches the
+  global light), or `false` to draw flat with no crescents. Missing → `matte`.
+
+`materials.json` holds the profile table — each profile is a
+`tone_dark` / `tone_light` pair (plus `emissive` for light sources):
 
 ```jsonc
-{
-  "resin":  { "tone_dark": -34, "tone_light": +26 },
-  "glass":  { "tone_dark": -20, "tone_light": +40 },
-  "plate":  { "tone_dark": -30, "tone_light": +22 }
+// materials.json
+"shading": {
+  "flat":  { "tone_dark": 0,   "tone_light": 0 },
+  "glow":  { "tone_dark": 0,   "tone_light": 0, "emissive": true },
+  "soft":  { "tone_dark": -14, "tone_light": 12 },
+  "matte": { "tone_dark": -24, "tone_light": 20 },
+  "deep":  { "tone_dark": -34, "tone_light": 24 },
+  "sheen": { "tone_dark": -20, "tone_light": 44 },
+  "metal": { "tone_dark": -40, "tone_light": 48 }
 }
 ```
 
-A palette binds materials to colours for one culture or role:
+A palette binds colour keys to hex for one culture or role:
 
 ```jsonc
 // palettes/vherathi.json
-{ "resin": "#6b7f5a", "glass": "#9fe8d0", "light": "#ffd98a" }
+{ "hull": "#6b7f5a", "glass": "#9fe8d0", "lamp": "#ffd98a" }
 ```
 
-A design names one `palette`. `expand()` resolves each part's
-`material` + `tone` → rgb against it. A modder retints an entire culture by
-editing one palette file; a total conversion writes its own. Parts may also
-carry a literal `"#rrggbb"` for a one-off.
+A design names one `palette`. `expand()` resolves `color` + `tone` → rgb
+against it, and the `shade` profile supplies the dark/light deltas. So the same
+shape can be *purple + sheen* on one item and *purple + matte* on another — the
+two never have to move together. A modder retints an entire culture by editing
+one palette file; a total conversion writes its own.
+
+There is no `materials` map any more: `color` *is* the palette key. (`expand()`
+still honours a legacy `"material": name` and a `materials: {name: profile}`
+map if an unmigrated story carries them.)
 
 ## Auto-shade
 
 `expand()` replaces each silhouette region with up to three polygons along one
 global light vector (`materials.json` `light` key, default up-left):
 
-- **mid** — the region polygon, `material` at `tone_mid` (the base).
+- **mid** — the region polygon, `color` at the base (no delta).
 - **dark** — a crescent hugging the region's far edge, `tone_dark`, tapering
   to zero width at both ends. Never a constant-width inset (that reads as a
   seam ruled down the middle). Clipped to the far half of the region first, so
@@ -153,9 +173,12 @@ region** — it never bleeds past the silhouette — and a coarsely faceted regi
 still gets a smoothly curved shade. Vertex count per ribbon is bounded (~30–45)
 regardless of the region's own count.
 
-Details are not auto-shaded; they are drawn as authored, over the region.
+A region drawn with a `shade` profile whose deltas are `0` (or `shade: false`,
+or an `emissive` profile like `glow`) gets no crescents at all — one flat fill.
 
-Shininess is a later addition to this stage and changes nothing upstream.
+Details are not auto-shaded; they are drawn as authored, over the region. A
+detail's own `shade` profile only affects it when it is drawn at a non-`mid`
+`tone`.
 
 ## Fitting: anchors and curves
 
@@ -230,7 +253,7 @@ against the other body.
 {
   "identity": "...",
   "sections": {
-    "torso": { "group": "body", "material": "skin",
+    "torso": { "group": "body", "color": "skin", "shade": "soft",
                "points": [...], "anchors": {...}, "curves": {...} },
     "upper_arm_near": { "group": "arm_near", "pivot": [x, y], ... },
     ...
@@ -266,10 +289,11 @@ frame strip; the game will drive `t` from its own clock.
 ## Articles and sets
 
 Every garment and accessory is **one `articles/<id>.json`** — its own identity,
-silhouette, materials, details, and fitting declarations — and gets **its own
-atlas plate**, drawn on the bare reference body. Every article id ends `_masc`
-or `_femme` (see Fitting: the split is the standing convention, one file per
-body even when identical).
+silhouette, colours, shades, details, and fitting declarations — and gets **its
+own atlas plate**, drawn on the bare reference body. Every article id ends
+`_masc` or `_femme` (see Fitting: the split is the standing convention, one file
+per body even when identical). The article file carries a *default* look; an
+**item** (below) can wear the same geometry differently.
 
 A `sets/<id>.json` composes them:
 
@@ -292,6 +316,35 @@ draws immediately after the last body part of its own animation group. A
 leg sits over that leg; a `leg_far` one behind the torso. The renderer draws
 that composed list; it does no layering of its own.
 
+## Items
+
+An **`items/<id>.json`** is a thin object: an article's *geometry* worn with its
+own *look*. It is what a person actually owns — two people can carry the same
+jacket shape in different colours and finishes.
+
+```jsonc
+{
+  "identity": "Oxblood officer's coat — long_coat geometry, deep red, waxed sheen.",
+  "geometry": "long_coat_masc",       // required: the articles/<id> to take shape + details from
+  "color":  "leather",                // optional: retag every region + detail to this one colour
+  "shade":  "sheen",                  // optional: redraw every region + detail with this profile
+  "colors": { "cloth": "#3a1f2e" }    // optional: a {colour-key: "#rrggbb"} patch over the palette
+}
+```
+
+- `color`, `shade`, and `colors` are **independent** — set any combination.
+  None → the item renders exactly like its geometry file.
+- A `sets/<id>.json` `articles` list and an NPC `equip` list may name an **item
+  id or an article id** interchangeably; `story_assets._body_worn` tries
+  `items/<name>.json` first, else `articles/<name>.json`.
+- The geometry file is untouched — it still renders standalone on its own atlas
+  plate. Each item also gets its own plate.
+- Follows the `_masc` / `_femme` split like articles.
+
+`expand(article, palette, materials, body, color=, shade=, colors=)` applies the
+override; `colors` merges into the palette, `color` / `shade` retag every region
+and detail before the normal emit.
+
 ## Expansion
 
 `game/graphics/expand.py` is the one code path from design JSON to render
@@ -300,10 +353,18 @@ renderer already draws:
 
 1. resolve `fit:` curves against the body's current silhouette
 2. resolve `anchor:` to an animation group and offset
-3. auto-shade each region → mid / dark / light
-4. resolve `material` + `tone` → rgb via the palette
-5. emit parts, each tagged `group` and `role` (`fill` \| `shade_dark` \|
+3. apply any **item override** (`color` / `shade` / `colors`) — an article
+   worn as an `items/<id>.json` (see Items) is retagged here
+4. auto-shade each region from its `shade` profile → mid / dark / light
+5. resolve `color` + `tone` → rgb via the palette (+ any `colors` patch)
+6. emit parts, each tagged `group` and `role` (`fill` \| `shade_dark` \|
    `shade_light` \| `detail`)
+
+`rig.rest_splay` (the neutral arm pose the walk cycle swings from) is **not**
+applied at expand time. `expand_body` bakes it into the body's own arm/hand
+sections, and an `arm_near`/`arm_far` article region is authored with the same
+rotation already baked into its stored `points` — so the sleeve and the arm
+share one frame with no runtime rotation, in the game and the editor alike.
 
 The game calls `expand()` once per asset at load and caches the result. The
 atlas imports the same function. There is no bake step and no generated file.
@@ -417,7 +478,7 @@ player:
   for a declared blocker, magenta for clear, red for a fault.
 - A placement references a decoration by id; its hitbox comes from
   `collision/<decoration>.json`, translated and rotated to `at` / `angle`.
-- Rooms carry an `id` and a `material`; portals carry an `id` and either
+- Rooms carry an `id` and a `color`; portals carry an `id` and either
   `between: [room, room]` or `to: "<name>"` for an exterior airlock.
 - `sit` points on a bench become stand/sit targets for `DockRoutine` and idle
   NPCs.
@@ -453,7 +514,7 @@ and cached.
   are authored absolute to match.
 - **People.** An `outfits` entry names a pipeline body — `{body, set, palette}`.
   `Person.draw` detects this and renders through `story_assets.body_frame`: the
-  body + its set's articles composed via `compose_worn`, expanded once, then
+  body + its set's articles (or items — see Items) composed via `compose_worn`, expanded once, then
   deformed each frame by `apply_walk` at the Person's own walk-cycle phase and
   faded in by `walk_intensity`. The body faces screen-left, so `facing == 1`
   mirrors x — same rule as the baked figure. The `default` story's baked
@@ -615,11 +676,16 @@ other files for references before deleting.
 
 **Tailor mode** — `?file=<article>&fitbody=<body>`. Loads the article (a
 `regions` design) and draws the named body underneath as a **locked,
-read-only backdrop** (its own vertices never show handles). Each region's
-authored `points` render two ways: the **Fit** panel and handle colour show
-the raw, sparse authored array (fit placeholders included), while the drawn
-shape is always the real `_apply_fits` + `outset` result, so what you see is
-what the game draws. A handle is <span style="color:#b479ff">▪</span>
+read-only backdrop** (its own vertices never show handles). The backdrop body
+and its snap-dot vertices are drawn in the game's rest pose (`rest_splay`
+applied — the same frame `expand_body` produces), and the article's own
+`points` are already authored in that pose, so **what you drag is exactly
+where it lands in the game** — no toggle, no splay/un-splay frame to reconcile.
+Each region's authored `points` still render two ways: the **Fit** panel and
+handle colour show the raw, sparse authored array (fit placeholders included),
+while the drawn shape adds the `_apply_fits` + `outset` result — so a free
+vertex sits `outset` (~0.12u) proud of the filled edge it controls. A handle
+is <span style="color:#b479ff">▪</span>
 **fitted** (its position is spliced from a body curve at expand time —
 dragging it does nothing) or <span style="color:#ffcf6a">▪</span> **free**
 (an authored coordinate — drag it like normal). Select one fitted-or-free
@@ -780,7 +846,29 @@ group names — same field the real game's `compose_worn` reads) is honoured
 in the preview: a region tagged `"under": ["torso"]` draws behind the whole
 body, `"over": ["head"]` draws after it, exactly like hair's back-drape and
 front-cap regions are meant to. Without an explicit `over`/`under` a region
-draws with its own animation group, same as the game. The reference body's
+draws with its own animation group, same as the game.
+
+**Editing it.** Select a region (in the Sections list) and the **Selected
+section** panel shows a **draw order vs. body** pair of multi-selects — one
+`under`, one `over` — listing every body animation group and section name in
+draw order. Pick any combination (or none); the preview and `#out` update
+live. **apply to whole article** copies the selected region's `over`/`under`
+onto every region in the article, for the common case where the whole garment
+sits at one rank (hair, which splits its bulk `under` from its fringe `over`,
+is the exception — set those two per region).
+
+**Colour and shade.** Every fill panel (a region's **Selected section** panel,
+a detail's **Polygons** panel) has a **color** dropdown (palette keys) and a
+**shade** dropdown (the profile names from `materials.json`, plus `false — flat`).
+The two are independent — that is the whole point of the split.
+
+**Preview look** (tailor mode). A separate panel swaps the *whole article's*
+colour and/or shade in the preview only — it is how an `items/<id>.json` would
+render this shared geometry. Nothing here is written to the article file (it
+stays pure geometry + its own default tags); the choice is remembered per
+browser (`gpPreviewLook`).
+
+The reference body's
 head also gets its `faces/<slot>_<name>.json` kit pulled in for the preview
 (same mechanism as face mode) — the raw body file carries no inline face
 details, so without this the head would render bare no matter what. **Hide
@@ -889,10 +977,12 @@ it only drops the single draft for whatever design+mode is currently loaded
 (`draftKey()`), so every other body/article/face/fit draft in the browser
 stays and still shows up here.
 
-**Shade overrides.** A region (body section or ship silhouette entry) may carry
-`"shade": false` to draw flat, or explicit `"shade_dark"` / `"shade_light"`
-polygons (one each) used verbatim instead of the auto-shade. `expand()` honours
-them and rotates them with the region under `rest_splay`.
+**Shade overrides.** A region (body section, article region, or ship
+silhouette entry) may carry `"shade": false` to draw flat, or explicit
+`"shade_dark"` / `"shade_light"` polygons (one each) used verbatim instead of
+the auto-shade. For a body section `expand_body` rotates those override
+polygons with the section under `rest_splay`; an article authors them already
+in the rest pose, like its `points`.
 
 **A true hole via a seamed ring (`articles/helmet.json`).** The renderer has no
 transparency for pipeline parts (`opacity` is an atlas-only convenience — the
@@ -992,6 +1082,9 @@ gates needed and no more, and is a bootable story (`story.json` + one system +
   `materials.json`, `rig_walk.json`
 - articles — tops, bottoms, footwear, hair, outerwear, accessories — each split
   `_masc` / `_femme` — and sets composing the body-matched variants
+- items — `coat_charcoal` / `coat_oxblood` (`_masc` / `_femme`): the one
+  `long_coat` geometry worn two ways, proving the colour/shade split; the
+  `civilian_officer` sets wear the oxblood one
 - face kits (2 each of eyes / brows / nose / lips)
 - 1 ship (`courier`), 1 station (`trade_ring`)
 - 1 interior (`concourse`) with 2 decorations — `column` blocks a lane on
@@ -1004,7 +1097,7 @@ Grow the set now by the per-asset gates, not the build gates.
 1. Write the `identity`. If you cannot say what is unique in two sentences,
    the design is not ready.
 2. Draw the silhouette. Stay under the tier budget. Justify each vertex.
-3. Split it into `material` regions on concept lines (`group`).
+3. Split it into regions on concept lines (`group`); tag each `color` + `shade`.
 4. Run `expand()` and look at the auto-shade. Adjust region edges, not shading.
 5. Add `details`, each with a `group` and a `note`.
 6. For a body or article, declare `anchor:` / `fit:` — never raw coordinates

@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "folded band, open at the front. Free-drawn around torso.collar/neck_base.",
       "points": [
         [

@@ -41,6 +41,17 @@ def xbody(body):
     return expand(body, palette_for(body), load("materials.json"), load=load_asset)
 
 
+def worn_parts(name, pal, materials, body):
+    """A set-list entry -> expanded parts. `name` may be an item (items/<n>.json,
+    an article geometry + its own colour/shade) or a bare article id."""
+    it = load_asset("items", name)
+    if it and it.get("geometry"):
+        art = load("articles", it["geometry"] + ".json")
+        return expand(art, pal, materials, body=body, color=it.get("color"),
+                      shade=it.get("shade"), colors=it.get("colors"))
+    return expand(load("articles", name + ".json"), pal, materials, body=body)
+
+
 def svg_specimen(parts, vb=(-8, -34, 16, 36), px=440, ground=True, ticks=None):
     x0, y0, w, h = vb
     out = [f'<svg viewBox="{x0} {y0} {w} {h}" width="{px}" '
@@ -157,6 +168,39 @@ def article_plate(name):
     </section>"""
 
 
+def item_plate(name):
+    it = load("items", name + ".json")
+    geom = load("articles", it["geometry"] + ".json")
+    materials = load("materials.json")
+    pal = palette_for(geom)
+    ph = materials["scale"]["PLAYER_H"]
+    ticks = [-ph * k / 7 for k in range(8)]
+    bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body"))
+                    if n.endswith(".json") and not n.startswith("rig_"))
+    combined, dx = [], 0.0
+    for bn in bodies:
+        body = load("body", bn + ".json")
+        ap = expand(geom, pal, materials, body=body, color=it.get("color"),
+                    shade=it.get("shade"), colors=it.get("colors"))
+        combined += _shift(compose_worn(body, xbody(body), ap), dx)
+        dx += 12.0
+    svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=360, ticks=ticks)
+    look = ", ".join(filter(None, [
+        f"color {it['color']}" if it.get("color") else None,
+        f"shade {it['shade']}" if it.get("shade") else None,
+        "colours " + " ".join(f"{k}={v}" for k, v in it["colors"].items()) if it.get("colors") else None,
+    ]))
+    return f"""
+    <section class="plate">
+      <div class="spec">{svg}</div>
+      <div class="meta">
+        <h2>item: {name}</h2>
+        <p class="identity">{it['identity']}</p>
+        <p class="stat">geometry <code>{it['geometry']}</code> &middot; {look}</p>
+      </div>
+    </section>"""
+
+
 def face_plate():
     materials = load("materials.json")
     bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body")) if n.endswith(".json") and not n.startswith("rig_"))
@@ -211,13 +255,12 @@ def set_plate(name):
     ph = materials["scale"]["PLAYER_H"]
     ticks = [-ph * k / 7 for k in range(8)]
     bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body")) if n.endswith(".json") and not n.startswith("rig_"))
-    arts = [load("articles", a + ".json") for a in design["articles"]]
     pal = load("palettes", design["palette"] + ".json")
     combined, dx = [], 0.0
     for bn in bodies:
         body = load("body", bn + ".json")
         bp = xbody(body)
-        aps = [expand(a, pal, materials, body) for a in arts]
+        aps = [worn_parts(a, pal, materials, body) for a in design["articles"]]
         combined += _shift(compose_worn(body, bp, *aps), dx)
         dx += 12.0
     svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=360, ticks=ticks)
@@ -295,7 +338,7 @@ def interior_plate(name):
     for room in design["rooms"] + design["portals"]:
         col = resolve = mats  # noqa
         from game.graphics.expand import resolve_color
-        rgb = resolve_color(room.get("material", "hull"), 0, pal, mats)
+        rgb = resolve_color(room.get("color", "hull"), 0, pal)
         floor.append({"points": room["points"], "color": rgb})
 
     raster, lane_cells, report = check_placements(design, decos, cols)
@@ -347,12 +390,11 @@ def walk_plate(set_name="civilian_work_femme", frames=8):
     rig = load("body", "rig_walk.json")
     bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body")) if n.endswith(".json") and not n.startswith("rig_"))
     sd = load("sets", set_name + ".json")
-    arts = [load("articles", a + ".json") for a in sd["articles"]]
     pal = load("palettes", sd["palette"] + ".json")
     rows = []
     for bn in bodies:
         body = load("body", bn + ".json")
-        worn = compose_worn(body, xbody(body), *[expand(a, pal, materials, body) for a in arts])
+        worn = compose_worn(body, xbody(body), *[worn_parts(a, pal, materials, body) for a in sd["articles"]])
         combined, dx = [], 0.0
         for k in range(frames):
             combined += _shift(apply_walk(worn, body, rig, k / frames), dx)
@@ -389,6 +431,10 @@ def main():
     if os.path.isdir(adir):
         plates += "\n".join(article_plate(n[:-5]) for n in sorted(os.listdir(adir))
                             if n.endswith(".json") and not n.startswith("rig_"))
+    itdir = os.path.join(GDIR, "items")
+    if os.path.isdir(itdir):
+        plates += "\n".join(item_plate(n[:-5]) for n in sorted(os.listdir(itdir))
+                            if n.endswith(".json"))
     plates += "\n".join(
         body_plate(n[:-5]) for n in sorted(os.listdir(os.path.join(GDIR, "body")))
         if n.endswith(".json") and not n.startswith("rig_"))

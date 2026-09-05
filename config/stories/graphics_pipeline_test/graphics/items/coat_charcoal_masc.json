@@ -1,0 +1,6 @@
+{
+  "identity": "Charcoal watch coat - the standard long_coat cut in flat dark grey. Same geometry as coat_oxblood_masc; only the colour and shading differ.",
+  "geometry": "long_coat_masc",
+  "colors": { "cloth": "#2b2e33" },
+  "shade": "matte"
+}

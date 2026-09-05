@@ -1,0 +1,6 @@
+{
+  "identity": "Charcoal watch coat, femme cut - the standard long_coat_femme geometry in flat dark grey. Counterpart of coat_charcoal_masc.",
+  "geometry": "long_coat_femme",
+  "colors": { "cloth": "#2b2e33" },
+  "shade": "matte"
+}

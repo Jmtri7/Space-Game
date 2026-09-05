@@ -9,7 +9,7 @@
       "under": [
         "torso"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
       "points": [
         [
@@ -37,7 +37,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "far-side shoulder strap, mirror of the near one.",
       "points": [
         [
@@ -64,7 +64,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "near-side shoulder strap, visible in front over the shirt.",
       "points": [
         [

@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "leather",
+      "color": "leather", "shade": "deep",
       "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge). \"over\": [\"leg_near\"] puts it in the same late draw-rank as a shirt/pants hem so it shows over them, not just the bare torso.",
       "points": [
         [
@@ -33,7 +33,7 @@
       "details": [
         {
           "group": "torso",
-          "material": "metal",
+          "color": "metal", "shade": "metal",
           "note": "centre buckle",
           "points": [
             [

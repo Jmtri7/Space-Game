@@ -9,7 +9,7 @@
       "under": [
         "head"
       ],
-      "material": "hair",
+      "color": "hair", "shade": "matte",
       "note": "the knot, behind the head; only what clears the skull shows.",
       "points": [
         [
@@ -52,7 +52,7 @@
       "over": [
         "head"
       ],
-      "material": "hair",
+      "color": "hair", "shade": "matte",
       "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
       "points": [
         [

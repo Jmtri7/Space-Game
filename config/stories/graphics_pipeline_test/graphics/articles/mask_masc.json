@@ -9,7 +9,7 @@
       "over": [
         "head"
       ],
-      "material": "cloth",
+      "color": "cloth", "shade": "matte",
       "note": "covers nose to chin, between head.anchors.brow (-29.05) and chin (-26.15).",
       "points": [
         [

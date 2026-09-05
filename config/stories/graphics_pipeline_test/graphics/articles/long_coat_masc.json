@@ -9,7 +9,8 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
       "points": [
         [
@@ -40,7 +41,8 @@
       "over": [
         "leg_near"
       ],
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "right front panel, mirror of the left.",
       "points": [
         [
@@ -68,40 +70,42 @@
     },
     {
       "group": "arm_far",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "far cap sleeve, same as jacket's.",
       "points": [
         [
-          -1.81,
-          -24.831
+          -1.784,
+          -24.76
         ],
         [
-          -3.15,
-          -23.55
+          -3.189,
+          -23.551
         ],
         [
-          -2.15,
-          -23.75
+          -2.18,
+          -23.698
         ]
       ],
       "fits": []
     },
     {
       "group": "arm_near",
-      "material": "cloth",
+      "color": "cloth",
+      "shade": "matte",
       "note": "near cap sleeve, mirror of the far one.",
       "points": [
         [
-          1.827,
-          -24.901
+          1.797,
+          -24.831
         ],
         [
-          3.15,
-          -23.55
+          3.189,
+          -23.551
         ],
         [
-          2.15,
-          -23.75
+          2.18,
+          -23.698
         ]
       ],
       "fits": []

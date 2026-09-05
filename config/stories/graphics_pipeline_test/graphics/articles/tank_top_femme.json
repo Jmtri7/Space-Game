@@ -9,7 +9,7 @@
       "over": [
         "leg_near"
       ],
-      "material": "knit",
+      "color": "knit", "shade": "matte",
       "note": "shell. Points 1-5 are fit placeholders (side_right rev, shoulder_arc_right, neck_hole, shoulder_arc_left, side_left). Only the two hem points (0, 6) are free.",
       "points": [
         [

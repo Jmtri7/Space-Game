@@ -18,20 +18,38 @@ def _clamp(c):
     return max(0, min(255, int(round(c))))
 
 
-def resolve_color(material, tone, palette, materials):
-    """material name + tone ("mid"|"dark"|"light") -> [r,g,b] via the palette.
-    A literal "#rrggbb" passes straight through."""
-    if isinstance(material, (list, tuple)):
-        return [int(v) for v in material]
-    if material.startswith("#"):
-        base = _hex_to_rgb(material)
-    else:
-        base = _hex_to_rgb(palette[material])
-    spec = materials.get("materials", {}).get(material, {})
+_DEFAULT_SHADE = {"tone_dark": -28, "tone_light": 22}
+
+
+def shade_profile(shade, materials):
+    """Resolve a part's `shade` to a profile dict ({tone_dark, tone_light,
+    emissive?}). `color` and `shade` are independent: `shade` names one of the
+    profiles in `materials.json`'s `shading` table. `False` -> None (draw flat,
+    no crescents). Missing/None -> the `matte` profile if defined, else a mid
+    fallback. An inline `{tone_dark: ...}` dict passes straight through."""
+    if shade is False:
+        return None
+    if isinstance(shade, dict):
+        return shade
+    table = materials.get("shading", {})
+    if shade in table:
+        return table[shade]
+    return table.get("matte", _DEFAULT_SHADE)
+
+
+def resolve_color(color, tone, palette, shade=None):
+    """A colour (palette key | "#rrggbb" | [r,g,b]) + tone ("mid"|"dark"|
+    "light") -> [r,g,b]. `shade` is the profile dict (from shade_profile) and
+    is only consulted for the dark/light tones - "mid" is the base colour
+    untouched."""
+    if isinstance(color, (list, tuple)):
+        return [int(v) for v in color]
+    base = _hex_to_rgb(color if color.startswith("#") else palette[color])
+    prof = shade or {}
     if tone == "dark":
-        d = spec.get("tone_dark", -28)
+        d = prof.get("tone_dark", -28)
     elif tone == "light":
-        d = spec.get("tone_light", 22)
+        d = prof.get("tone_light", 22)
     else:
         d = 0
     return [_clamp(v + d) for v in base]
@@ -322,21 +340,21 @@ def shade_bands(region_pts, light, materials_spec):
 
 def _emit_region(parts, sec, group, palette, materials, sec_name=None, lod=None):
     """Emit a region's fill + its shading. `sec` is the section/silhouette
-    dict: `points`, `material`, optional `tone`, and shade overrides -
-    `"shade": false` to omit shading, or explicit `"shade_dark"` /
-    `"shade_light"` point lists (each a single polygon) authored by hand or
-    in the editor, used verbatim instead of the computed crescent. If `lod`
-    (the asset's on-screen size in px) is below the region's `flatten_px`,
-    the shading is dropped and it draws as one flat polygon."""
+    dict: `points`, a `color` (palette key | "#rrggbb" | [r,g,b]), a `shade`
+    (a profile name from `materials.json`'s `shading` table, or `false` to draw
+    flat), optional `tone`, and explicit `"shade_dark"` / `"shade_light"` point
+    lists (each a single polygon) used verbatim instead of the computed
+    crescent. If `lod` (on-screen px) is below `flatten_px`, the shading is
+    dropped and it draws as one flat polygon."""
     pts = sec["points"]
-    material = sec["material"]
-    spec = materials.get("materials", {}).get(material, {})
+    color = sec["color"]
+    prof = shade_profile(sec.get("shade"), materials)
     light = materials.get("light", [-0.55, -0.83])
     _sec = {"sec": sec_name} if sec_name else {}
     parts.append(dict(_sec, points=[list(p) for p in pts],
-                      color=resolve_color(material, sec.get("tone", "mid"), palette, materials),
+                      color=resolve_color(color, sec.get("tone", "mid"), palette, prof),
                       group=group, role="fill"))
-    if spec.get("emissive") or sec.get("shade") is False:
+    if prof is None or prof.get("emissive"):
         return
     if lod is not None and sec.get("flatten_px") and lod < sec["flatten_px"]:
         return
@@ -344,14 +362,14 @@ def _emit_region(parts, sec, group, palette, materials, sec_name=None, lod=None)
         dark = [sec["shade_dark"]] if sec.get("shade_dark") else []
         lite = [sec["shade_light"]] if sec.get("shade_light") else []
     else:
-        dark, lite = shade_bands(pts, light, spec)
+        dark, lite = shade_bands(pts, light, prof)
     for poly in lite:
         parts.append(dict(_sec, points=[list(p) for p in poly],
-                          color=resolve_color(material, "light", palette, materials),
+                          color=resolve_color(color, "light", palette, prof),
                           group=group, role="shade_light"))
     for poly in dark:
         parts.append(dict(_sec, points=[list(p) for p in poly],
-                          color=resolve_color(material, "dark", palette, materials),
+                          color=resolve_color(color, "dark", palette, prof),
                           group=group, role="shade_dark"))
 
 
@@ -366,8 +384,9 @@ def _emit_detail(parts, d, group_default, palette, materials, sec_name=None, lod
         pts = ngon(cx, cy, r, rot=rot)     # a small round detail -> polygon (principle 1)
     if not pts:
         return
+    prof = shade_profile(d.get("shade"), materials)
     p = {"points": [list(p) for p in pts],
-         "color": resolve_color(d["material"], d.get("tone", "mid"), palette, materials),
+         "color": resolve_color(d["color"], d.get("tone", "mid"), palette, prof),
          "group": d.get("group", group_default), "role": "detail",
          "note": d.get("note", "")}
     if sec_name:
@@ -469,26 +488,57 @@ def _outset(pts, d):
     return out if poly is pts else out[::-1]
 
 
-def expand_article(design, palette, materials, body):
+def expand_article(design, palette, materials, body,
+                   color=None, shade=None, colors=None):
     """One garment/accessory -> parts. Regions are authored in the reference
     body's coordinates; `fits` splice body edge curves into them, `group`
     assigns the animation group so the piece moves with that body part. Each
-    region is then `outset` a little so it clears the body edge."""
+    region is then `outset` a little so it clears the body edge.
+
+    `color` / `shade` / `colors` are the item-layer overrides (see
+    items/<id>.json) and are independent of each other:
+      `color`  - retag every region and detail to this one colour (palette key
+                 or "#rrggbb"), keeping each part's own `shade`.
+      `shade`  - redraw every region and detail with this one shading profile,
+                 keeping each part's own colour.
+      `colors` - a `{colour-key: "#rrggbb"}` patch layered over the palette.
+    With none of them, the article renders exactly as its own file specifies.
+
+    `rig.rest_splay` is NOT applied here - an arm/hand region is authored
+    directly in the body's rest pose (splay baked into its `points`), the same
+    frame `expand_body` produces, so the two line up with no runtime rotation.
+    """
     parts = []
     d_out = design.get("outset", 0.12)
+    if colors:
+        palette = {**palette, **colors}
+
+    def _look(part):
+        if color is not None:
+            part = dict(part, color=color)
+        if shade is not None:
+            part = dict(part, shade=shade)
+        return part
+
     for region in design.get("regions", []):
+        if color is not None or shade is not None:
+            region = dict(_look(region),
+                          details=[_look(d) for d in region.get("details", [])])
+        grp = region.get("group", "torso")
         rpts = _outset(_apply_fits(region["points"], region.get("fits", []), body),
                        region.get("outset", d_out))
         start = len(parts)
-        _emit_region(parts, dict(region, points=rpts),
-                     region.get("group", "torso"), palette, materials)
+        rgn = dict(region, points=rpts)
+        _emit_region(parts, rgn, grp, palette, materials)
         for d in region.get("details", []):
-            _emit_detail(parts, d, region.get("group", "torso"), palette, materials)
+            _emit_detail(parts, d, grp, palette, materials)
         for key in ("over", "under"):
             if region.get(key):
                 for p in parts[start:]:
                     p[key] = region[key]
     for d in design.get("details", []):
+        if color is not None or shade is not None:
+            d = _look(d)
         _emit_detail(parts, d, "torso", palette, materials)
     return parts
 
@@ -571,16 +621,20 @@ def compose_worn(body_design, body_parts, *article_parts):
     return [p for _, p in keyed]
 
 
-def expand(design, palette, materials, body=None, load=None, lod=None):
+def expand(design, palette, materials, body=None, load=None, lod=None,
+           color=None, shade=None, colors=None):
     """Dispatch on design shape. `body` (a body design) is required for an
     article - it declares `fits_body` and its regions carry `fits`. `load(kind,
     name)` resolves referenced sub-files (face slots). `lod` is the asset's
     on-screen size in px - regions below their `flatten_px` drop their shade,
-    details below their `min_px` are omitted."""
+    details below their `min_px` are omitted. `color` / `shade` / `colors` are
+    the item-layer look overrides and apply to an article only (see
+    expand_article)."""
     if "sections" in design:
         return expand_body(design, palette, materials, load)
     if "regions" in design:
-        return expand_article(design, palette, materials, body)
+        return expand_article(design, palette, materials, body,
+                              color=color, shade=shade, colors=colors)
     parts = []
     sil = design.get("silhouette", [])
     dets = design.get("details", [])

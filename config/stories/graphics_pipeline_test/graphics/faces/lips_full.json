@@ -2,7 +2,7 @@
   "identity": "full lips",
   "details": [
     {
-      "material": "lip",
+      "color": "lip", "shade": "soft",
       "note": "upper lip",
       "points": [
         [
@@ -66,7 +66,7 @@
       "role": "detail"
     },
     {
-      "material": "lip",
+      "color": "lip", "shade": "soft",
       "note": "lower lip",
       "points": [
         [
@@ -115,7 +115,7 @@
       "tone": "dark"
     },
     {
-      "material": "lip",
+      "color": "lip", "shade": "soft",
       "tone": "light",
       "note": "lip bottom light",
       "points": [
