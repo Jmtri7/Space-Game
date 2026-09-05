@@ -437,8 +437,8 @@ class Person:
             if (cand_x, cand_y) != (self.x, self.y) and can_move_to(cand_x, cand_y):
                 moved = math.hypot(cand_x - self.x, cand_y - self.y)
                 mvx, mvy = cand_x - self.x, cand_y - self.y
-                if abs(mvx) > abs(mvy):         # face the way we're walking when
-                    self.facing = 1 if mvx > 0 else -1   # it's mostly sideways; keep it when we stop
+                if abs(mvx) >= abs(mvy) and mvx:  # face the way we're walking when it's
+                    self.facing = 1 if mvx > 0 else -1   # at least as much sideways as vertical
                 self.x, self.y = cand_x, cand_y
                 self._advance_walk(moved)
                 return True

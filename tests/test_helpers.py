@@ -1223,6 +1223,20 @@ class TestPersonWalkCycle(unittest.TestCase):
         p.step_toward(50.0, 0.0, 4.0, lambda x, y: True)
         self.assertEqual(p.facing, 1)
 
+    def test_a_perfectly_diagonal_step_still_turns_to_face_it(self):
+        # Regression: facing required abs(mvx) > abs(mvy) - strictly
+        # sideways-dominant - so an exact 45-degree step (two arrow keys
+        # held at once, e.g. Up+Left, or a WanderRoutine target straight
+        # up-left/up-right) has mvx == mvy and never turned the figure at
+        # all, even though it's walking left/right just as much as up/down.
+        p = Person(0.0, 0.0)
+        p.facing = 1
+        p.step_toward(-50.0, 50.0, 4.0, lambda x, y: True)    # up-left, 45 degrees
+        self.assertEqual(p.facing, -1)
+        p.facing = -1
+        p.step_toward(50.0, -50.0, 4.0, lambda x, y: True)    # down-right, 45 degrees
+        self.assertEqual(p.facing, 1)
+
 
 class TestStationWindowsAndCulture(unittest.TestCase):
     """Stations resolve their palette from their culture (like ships/
