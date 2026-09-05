@@ -14,27 +14,33 @@
       "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
       "points": [
         [
-          -1,
-          -16.574
+          -0.999,
+          -8.255
         ],
         [
-          -3.054,
-          -16.604
+          -0.76,
+          -22.72
         ],
         [
-          -2.169,
-          -24.999
+          -8.704,
+          -22.303
         ],
         [
-          -0.4,
-          -25
+          -3.105,
+          -17.636
         ],
         [
-          -0.35,
-          -20
+          -4.106,
+          -8.314
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.far medium",
+          "from": 2,
+          "to": 2
+        }
+      ]
     },
     {
       "group": "torso",
@@ -46,27 +52,29 @@
       "note": "right front panel, mirror of the left.",
       "points": [
         [
-          0.369,
-          -16.658
+          4.631,
+          -8.119
         ],
         [
-          3.186,
-          -16.601
+          8.076,
+          -20.364
         ],
         [
-          2.159,
-          -24.998
+          -0.017,
+          -22.781
         ],
         [
-          0.4,
-          -25
-        ],
-        [
-          0.35,
-          -20
+          -0.015,
+          -8.156
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.near medium",
+          "from": 1,
+          "to": 1
+        }
+      ]
     },
     {
       "group": "arm_far",
@@ -75,19 +83,28 @@
       "note": "far cap sleeve, same as jacket's.",
       "points": [
         [
-          -1.791,
-          -24.813
+          -2.262,
+          -27.53
         ],
         [
-          -3.196,
-          -23.604
+          -2.039,
+          -16.12
         ],
         [
-          -2.187,
-          -23.751
+          -3.795,
+          -16.079
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "arm_far.sleeve long",
+          "from": 0,
+          "to": 0
+        }
+      ],
+      "over": [
+        "hand_far"
+      ]
     },
     {
       "group": "arm_near",
@@ -96,19 +113,28 @@
       "note": "near cap sleeve, mirror of the far one.",
       "points": [
         [
-          1.804,
-          -24.883
+          2.797,
+          -27.299
         ],
         [
-          3.196,
-          -23.604
+          2.015,
+          -16.248
         ],
         [
-          2.187,
-          -23.751
+          3.878,
+          -16.1
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "arm_near.sleeve long",
+          "from": 0,
+          "to": 0
+        }
+      ],
+      "over": [
+        "hand_near"
+      ]
     }
   ]
 }

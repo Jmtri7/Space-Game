@@ -14,23 +14,36 @@
       "note": "shell. Points 1-5 are fit placeholders (side_right rev, shoulder_arc_right, neck_hole, shoulder_arc_left, side_left). Only the two hem points (0, 6) are free.",
       "points": [
         [
-          1.442,
-          -25.894
+          -0.366,
+          -25.067
         ],
         [
-          2.845,
-          -19.381
+          4.436,
+          -23.317
         ],
         [
-          -0.376,
-          -19.059
+          2.7,
+          -16.9
+        ],
+        [
+          -2.7,
+          -16.9
+        ],
+        [
+          -6.073,
+          -22.829
         ]
       ],
       "fits": [
         {
           "curve": "torso.far short",
-          "from": 8,
-          "to": 8
+          "from": 4,
+          "to": 4
+        },
+        {
+          "curve": "torso.near short",
+          "from": 1,
+          "to": 1
         }
       ]
     }

@@ -458,14 +458,26 @@ def expand_body(design, palette, materials, load=None):
 
 def _curve(body, ref):
     """'<section>.<curve>' -> the named edge polyline from a body design, in
-    body coordinates. A curve is either a bare polyline or a
+    the body's REST POSE. A curve is either a bare polyline or a
     {"pts": [...], "ends": [...], "dir": ...} object - the editor writes the
     latter so it can re-trace the curve when the body is reshaped; only "pts"
-    is read here."""
+    is read here.
+
+    A curve is stored in the neutral authoring frame (it is a run of its
+    section's own `points`, which `expand_body` rotates by `rig.rest_splay`
+    before drawing). An article that fits to it is authored already in the
+    rest pose (splay baked into its `points`), so the spliced-in curve must be
+    carried into that same frame here - otherwise the fitted edge of a sleeve
+    or glove lands at the un-splayed arm position, offset from the drawn limb.
+    Torso/leg/foot curves have no rest transform and pass through unchanged."""
     sec, name = ref.split(".")
-    c = body["sections"][sec]["curves"][name]
-    pts = c["pts"] if isinstance(c, dict) else c
-    return [list(p) for p in pts]
+    section = body["sections"][sec]
+    c = section["curves"][name]
+    pts = [list(p) for p in (c["pts"] if isinstance(c, dict) else c)]
+    tr = _rest_transforms(body).get(section.get("group", sec))
+    if tr:
+        pts = [_rot_about(p, *tr) for p in pts]
+    return pts
 
 
 def _apply_fits(points, fits, body):

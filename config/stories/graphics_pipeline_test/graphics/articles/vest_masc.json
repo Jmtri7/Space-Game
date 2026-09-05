@@ -9,62 +9,60 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free narrow front edge back down to the hem.",
       "points": [
         [
-          -0.2,
-          -17.0
+          -0.732,
+          -18.961
         ],
         [
-          -3.054,
-          -16.604
+          -5.913,
+          -21.105
         ],
         [
-          -2.169,
-          -24.999
-        ],
-        [
-          -0.4,
-          -25.0
-        ],
-        [
-          -0.15,
-          -20.0
+          -0.725,
+          -24.725
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.far short",
+          "from": 1,
+          "to": 1
+        }
+      ]
     },
     {
       "group": "torso",
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "right front panel, mirror of the left.",
       "points": [
         [
-          0.2,
-          -17.0
+          0.322,
+          -24.77
         ],
         [
-          3.186,
-          -16.601
+          5.132,
+          -21.375
         ],
         [
-          2.159,
-          -24.998
-        ],
-        [
-          0.4,
-          -25.0
-        ],
-        [
-          0.15,
-          -20.0
+          0.471,
+          -18.946
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.near short",
+          "from": 1,
+          "to": 1
+        }
+      ]
     }
   ]
 }

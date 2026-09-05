@@ -201,6 +201,18 @@ vertex editor uses to re-trace `pts` when the body is reshaped — see the edito
 **Curves panel**. The editor writes the object form; hand-written designs may
 use either.
 
+`pts` is stored in the **neutral authoring frame**, like every other body
+coordinate — `expand_body` rotates a limb section by `rig.rest_splay` before
+drawing it. An article that fits to a curve is authored already in the rest
+pose (splay baked into its `points`), so `_curve` carries the curve into that
+same frame on the way out: it rotates `pts` by the rest transform of the
+curve's own section group (`arm_near` / `hand_near` / `arm_far` / `hand_far`;
+torso/leg/foot have none). Without this the fitted edge of a sleeve or glove
+lands on the un-splayed arm — offset from the drawn limb by the splay angle
+(~0.6 world units at the hand). The editor's `bodyCurve`, its "generate N
+vertices between" trace, and `findBodyVertexIndex` all apply the same rotation
+so tailor mode matches the game.
+
 An **article region or detail** declares one of:
 
 - `"group": "<animation group>"` — the piece rides that body part (`torso`,
@@ -237,12 +249,14 @@ literally unchanged — same fixed coordinates — on any other, so a garment tw
 bodies share (via one outfit set, or two sets naming the same article) will
 look wrong on whichever body it wasn't traced for.
 
-**Current state of the pipeline-test story: no curves, no fits.** Both bodies
-had their `curves` blocks cleared and every article's `fits` array is `[]` —
-every region is a plain free-vertex trace right now. The machinery above
-(`bodyCurve` / `_apply_fits` / the editor's Curves and Fit panels) is intact;
-the story just carries nothing for it to resolve until curves are re-cut and
-articles re-fitted per body.
+**Current state of the pipeline-test story: the masc side is being tailored,
+the femme side is not yet.** `body/human_masc.json` carries edge curves on the
+torso, both arms/hands, both legs, and both feet; `duty_boots_masc.json` fits
+each foot outline to `foot_{near,far}.shoe`, and other masc articles are being
+fitted region by region. `body/human_femme.json` still has no `curves` and its
+articles' `fits` arrays are `[]` — plain free-vertex traces — until the femme
+tailoring pass. The machinery (`bodyCurve` / `_apply_fits` / the editor's
+Curves and Fit panels) is exercised by the masc side.
 
 **Every article is split `<name>_masc.json` / `<name>_femme.json`** — one file
 per body, always, even when the two are currently byte-identical copies. The
@@ -663,7 +677,12 @@ handing to the agent, not a design file to drop straight into `config/`.
 
 **Curves panel** — plain body-edit mode only (hidden in face and tailor mode).
 Below **Selected section**, it lists the selected section's `curves` by name
-and point count, each with **rename** and **delete**. To add one, select
+and point count, each with **rename** and **delete**. **Click a curve's name**
+to highlight the boundary run it traces on the model — a pink polyline with a
+dot on every curve point, the two endpoints ringed white; click again (or
+switch section) to clear it. Read-only: it shows what the curve currently
+covers and whether the auto-recut traced the span you expect, and vertex
+handles stay grabbable underneath. To add one, select
 exactly two of that section's own vertices (click one, shift-click the
 other) — a **span** row appears with a **go the long way around** checkbox
 (a polygon has two ways from one point to the other; the checkbox picks
@@ -819,6 +838,13 @@ default 1. That's still not the only way to add vertices — "generate
 between" and "unfold" (above) both add many at once, tracing the body rather
 than interpolating a straight line.
 
+Every add/remove path — double-click insert, **I**, alt-click delete,
+Delete-key vertex delete — shifts the region's `fits` index spans by the same
+splice so a fitted vertex keeps pointing at the vertex it named (deleting a
+single-point fit's own vertex drops that fit). The **I** interpolation runs in
+polygon-traversal order regardless of which of the two handles was clicked
+first, so the inserted run never reverses.
+
 **Selecting a whole polygon.** Double-click any one of its handles (shift to
 add another polygon to the selection).
 
@@ -838,6 +864,23 @@ vertices (dbl-click its fill, not a detail on it) and delete: that drops the
 whole piece from `D.regions`, re-aliasing `region0`/`region1`/… to match. A
 body's own sections (torso, head, …) never delete this way — they're
 structurally required, unlike an outfit's freestanding regions.
+
+**Adding a region** *(tailor mode)*. The Polygons panel's **+ region** button
+pushes a new standalone region onto the article — a small placeholder quad at
+the view centre, its own `fits: []`, with `group` and any `over` / `under`
+copied from the currently-selected region (you usually add a piece at the same
+draw-order rank). It's selected and aliased as the next `regionN` straight
+away, so you can drag, fit, and reshade it like any other. **+ polygon** /
+**+ circle** by contrast add a *detail* to the selected region — it rides that
+region's group, carries no fit, and isn't auto-shaded.
+
+**Orphaned-fit warning** *(tailor mode)*. A `fits` entry whose `from` / `to`
+falls outside the region's `points` array (a hand-edit, or a vertex delete in
+an old editor build that didn't shift the spans) has no placeholder vertex —
+`_apply_fits` then splices the curve in at the wrong place and no handle
+shows, so the fitted edge is "invisible". The Fit panel flags each one in
+amber with **re-point to #\<last\>** (clamp it onto the last real vertex) and
+**remove fit**.
 
 **Comparing against the other body.** When the loaded design is a body (plain
 or `edit=face`) or an outfit fit against one (`?fitbody=`), a small **compare
@@ -867,6 +910,18 @@ In tailor mode the panel draws the *same outfit* fit against whichever body
 canvas uses, so a fit change is checked against the other body's proportions
 without leaving the page. It re-fetches whenever the loaded design, `fitbody`,
 or the "against" choice changes.
+
+**Walk animation preview.** The View section's **walk animation** checkbox
+loops the drawn figure through the gait, using the same math as the game — a
+hand-port of `expand.py`'s `apply_walk` (`applyWalkJS`) driven off the body's
+resolved `rig.walk` file (`loadWalkRig`, from `bodyDesign.rig.walk` in tailor
+mode or `D.rig.walk` when editing a body directly). It deforms the composed
+parts list each `requestAnimationFrame` tick at a fixed ~1.1 s stride period
+(preview pace only — the game advances the cycle by distance walked, not wall
+time). The **compare other body** panel animates in lockstep (same
+`applyWalkJS`, the mirror body's own pivots). Vertex handles stay in the rest
+pose while it runs, so turn it off to edit. The toggle is inert (and warns) if
+the body has no walk rig.
 
 **Draw order against the body.** A region's `over`/`under` (body section or
 group names — same field the real game's `compose_worn` reads) is honoured
@@ -1096,7 +1151,7 @@ mechanism on the **smallest asset that exercises it**.
 | **A — mechanics** ✅ | design JSON → `expand()` → specimen, end to end | one body renders on a plate |
 | **B — reference body** ✅ | proportions, sections, anchors, curves, draw order | `human_masc` / `human_femme` |
 | **C — material & shade** ✅ | auto-shade (tapered crescents) + palette tones | side-lit crescents, one continuous per region |
-| **D — fit** ✅ | `group` / `fits` against the body | (historic — `tank_top_masc` sides were spliced from masc torso curves; curves and fits have since been cleared, see Fitting) |
+| **D — fit** ✅ | `group` / `fits` against the body | masc body publishes torso/limb/foot curves; `duty_boots_masc` splices each foot outline from `foot_{near,far}.shoe` — see Fitting |
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |

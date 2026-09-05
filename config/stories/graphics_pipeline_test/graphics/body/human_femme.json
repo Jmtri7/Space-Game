@@ -49,7 +49,8 @@
   "sections": {
     "torso": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "shorter torso over long legs. Short waist pinch; from the waist the hip widens on a gentle even slope to its widest point high on the pelvis, then a nearly straight underside runs from the outer hip/leg to the inner thigh. The chest carries a soft rounded bust: the silhouette swells at breast height and tucks under, and paired under-bust shadows plus a highlight give it volume.",
       "points": [
         [
@@ -266,11 +267,148 @@
           -2.25,
           -24.9
         ]
+      },
+      "curves": {
+        "far medium": {
+          "pts": [
+            [
+              -1.414,
+              -25.366
+            ],
+            [
+              -2.078,
+              -24.971
+            ],
+            [
+              -2.18,
+              -24.543
+            ],
+            [
+              -2.115,
+              -23.851
+            ],
+            [
+              -2.347,
+              -23.563
+            ],
+            [
+              -2.61,
+              -23.341
+            ],
+            [
+              -2.672,
+              -22.976
+            ],
+            [
+              -2.539,
+              -22.617
+            ],
+            [
+              -2.272,
+              -22.267
+            ],
+            [
+              -2.075,
+              -22.208
+            ],
+            [
+              -2,
+              -21.708
+            ],
+            [
+              -1.806,
+              -21.151
+            ],
+            [
+              -1.515,
+              -20.293
+            ],
+            [
+              -1.604,
+              -19.924
+            ],
+            [
+              -2.254,
+              -19.043
+            ]
+          ],
+          "ends": [
+            [
+              -1.414,
+              -25.366
+            ],
+            [
+              -2.254,
+              -19.043
+            ]
+          ],
+          "dir": 1
+        },
+        "near medium": {
+          "pts": [
+            [
+              2.308,
+              -19.072
+            ],
+            [
+              1.801,
+              -19.958
+            ],
+            [
+              1.686,
+              -20.297
+            ],
+            [
+              1.846,
+              -21.185
+            ],
+            [
+              2.041,
+              -21.769
+            ],
+            [
+              2.044,
+              -22.284
+            ],
+            [
+              2.289,
+              -22.742
+            ],
+            [
+              2.42,
+              -23.2
+            ],
+            [
+              2.18,
+              -24.05
+            ],
+            [
+              2.158,
+              -25.041
+            ],
+            [
+              1.363,
+              -25.377
+            ]
+          ],
+          "ends": [
+            [
+              2.308,
+              -19.072
+            ],
+            [
+              1.363,
+              -25.377
+            ]
+          ],
+          "dir": 1
+        }
       }
     },
     "neck": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           0.82,
@@ -298,7 +436,8 @@
     },
     "head": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "shifted -0.3 x toward the screen-left facing; features clustered a touch further over; sits 0.35 lower on the neck than a straight stack",
       "points": [
         [
@@ -404,7 +543,8 @@
     },
     "arm_far": {
       "group": "arm_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -1.56,
@@ -431,24 +571,12 @@
           -20.4
         ],
         [
-          -2.96,
-          -16.6
+          -2.918,
+          -16.333
         ],
         [
-          -2.78,
-          -15
-        ],
-        [
-          -2.35,
-          -14.55
-        ],
-        [
-          -1.98,
-          -15.1
-        ],
-        [
-          -2,
-          -18.8
+          -2.028,
+          -16.647
         ]
       ],
       "anchors": {
@@ -464,11 +592,61 @@
           -2.5,
           -15.4
         ]
+      },
+      "curves": {
+        "sleeve long": {
+          "pts": [
+            [
+              -2.918,
+              -16.333
+            ],
+            [
+              -3.12,
+              -20.4
+            ],
+            [
+              -3.18,
+              -24.45
+            ],
+            [
+              -2.7,
+              -24.95
+            ],
+            [
+              -2.293,
+              -25.079
+            ],
+            [
+              -1.998,
+              -25.013
+            ],
+            [
+              -1.56,
+              -24.59
+            ],
+            [
+              -2.028,
+              -16.647
+            ]
+          ],
+          "ends": [
+            [
+              -2.918,
+              -16.333
+            ],
+            [
+              -2.028,
+              -16.647
+            ]
+          ],
+          "dir": -1
+        }
       }
     },
     "hand_far": {
       "group": "hand_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -2,
@@ -504,11 +682,57 @@
           -2.35,
           -13.6
         ]
+      },
+      "curves": {
+        "glove": {
+          "pts": [
+            [
+              -2,
+              -16.7
+            ],
+            [
+              -1.9,
+              -15.8
+            ],
+            [
+              -1.85,
+              -14.6
+            ],
+            [
+              -2.2,
+              -13.5
+            ],
+            [
+              -2.9,
+              -13.7
+            ],
+            [
+              -3.1,
+              -15.3
+            ],
+            [
+              -2.95,
+              -16.4
+            ]
+          ],
+          "ends": [
+            [
+              -2,
+              -16.7
+            ],
+            [
+              -2.95,
+              -16.4
+            ]
+          ],
+          "dir": -1
+        }
       }
     },
     "leg_far": {
       "group": "leg_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -1,
@@ -572,7 +796,8 @@
     },
     "foot_far": {
       "group": "foot_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [
@@ -621,7 +846,8 @@
     },
     "arm_near": {
       "group": "arm_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           1.611,
@@ -648,24 +874,12 @@
           -20.4
         ],
         [
-          2.96,
-          -16.6
+          2.918,
+          -16.29
         ],
         [
-          2.78,
-          -15
-        ],
-        [
-          2.35,
-          -14.55
-        ],
-        [
-          1.98,
-          -15.1
-        ],
-        [
-          2,
-          -18.8
+          2.014,
+          -16.605
         ]
       ],
       "anchors": {
@@ -681,11 +895,61 @@
           2.5,
           -15.4
         ]
+      },
+      "curves": {
+        "sleeve long": {
+          "pts": [
+            [
+              2.918,
+              -16.29
+            ],
+            [
+              3.12,
+              -20.4
+            ],
+            [
+              3.18,
+              -24.45
+            ],
+            [
+              2.863,
+              -24.868
+            ],
+            [
+              2.385,
+              -25.079
+            ],
+            [
+              1.911,
+              -25.018
+            ],
+            [
+              1.611,
+              -24.6
+            ],
+            [
+              2.014,
+              -16.605
+            ]
+          ],
+          "ends": [
+            [
+              2.918,
+              -16.29
+            ],
+            [
+              2.014,
+              -16.605
+            ]
+          ],
+          "dir": -1
+        }
       }
     },
     "hand_near": {
       "group": "hand_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           2,
@@ -721,11 +985,57 @@
           2.35,
           -13.6
         ]
+      },
+      "curves": {
+        "glove": {
+          "pts": [
+            [
+              2,
+              -16.7
+            ],
+            [
+              1.9,
+              -15.8
+            ],
+            [
+              1.85,
+              -14.6
+            ],
+            [
+              2.2,
+              -13.5
+            ],
+            [
+              2.9,
+              -13.7
+            ],
+            [
+              3.1,
+              -15.3
+            ],
+            [
+              2.95,
+              -16.4
+            ]
+          ],
+          "ends": [
+            [
+              2,
+              -16.7
+            ],
+            [
+              2.95,
+              -16.4
+            ]
+          ],
+          "dir": -1
+        }
       }
     },
     "leg_near": {
       "group": "leg_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           1,
@@ -789,7 +1099,8 @@
     },
     "foot_near": {
       "group": "foot_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [

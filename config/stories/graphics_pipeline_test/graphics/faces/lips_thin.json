@@ -2,7 +2,8 @@
   "identity": "thin lips",
   "details": [
     {
-      "color": "lip", "shade": "soft",
+      "color": "lip",
+      "shade": "soft",
       "note": "upper lip, thin",
       "points": [
         [
@@ -34,7 +35,8 @@
       "role": "detail"
     },
     {
-      "color": "lip", "shade": "soft",
+      "color": "lip",
+      "shade": "soft",
       "note": "lower lip",
       "points": [
         [

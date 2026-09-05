@@ -50,6 +50,10 @@
   .marquee { fill: #79b7ff22; stroke: #79b7ff; stroke-width: 1; stroke-dasharray: 4 3; pointer-events: none; }
   .gizmo { fill: #ffd24a; stroke: #1b1e24; stroke-width: 1; cursor: nwse-resize; }
   .edge { stroke: #ffcf6a55; stroke-width: 1; fill: none; pointer-events: stroke; cursor: copy; }
+  .curveview { padding: 3px 7px; font-size: 12px; }
+  .curveview.active { background: #b13a7a; border-color: #ff7dc4; color: #fff; }
+  .warn { color: #ffb454; background: #3a2a12; border: 1px solid #6b4a1e;
+          border-radius: 5px; padding: 6px 8px; font-size: 11px; margin: 6px 0; }
   #mirrorPanel { position: absolute; right: 10px; top: 10px; width: 210px; height: 270px;
                  background: #0d0f13d0; border: 1px solid #2a2e37; border-radius: 6px;
                  overflow: hidden; display: none; }
@@ -109,6 +113,7 @@
   <label>insert <input type="number" id="insertCount" value="1" min="1" max="30" style="width:44px">
     point(s) at a time (dbl-click an edge, or select 2 + <b>I</b>) — evenly spaced between the two</label>
   <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
+  <label><input type="checkbox" id="tWalk"> walk animation (preview the gait, like the game)</label>
   <label><input type="checkbox" id="tSnap"> snap 0.05</label>
   <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
   <label><input type="checkbox" id="tLasso"> lasso select (freehand)</label>
@@ -158,6 +163,7 @@
     <div class="hint">Body parts — eye = show/hide the part, dot = show/hide
       just its snap-able vertices (keeps the part visible, less clutter).</div>
     <div id="bodyPartList"></div>
+    <div id="fitOrphan"></div>
     <div id="fitPanel"><div class="hint">none selected</div></div>
   </div>
 
@@ -182,8 +188,14 @@
   <div class="row">
     <button id="pAdd">+ polygon</button>
     <button id="pAddC">+ circle</button>
+    <button id="pAddR" style="display:none" title="add a new outfit region (a standalone piece with its own group, fits and draw order)">+ region</button>
     <button id="pDel">− selected polygon(s)</button>
   </div>
+  <div class="hint" id="pAddRHint" style="display:none">a <b>region</b> is a
+    standalone garment piece (own group, fits, over/under, shade) — it copies
+    the selected region's group and draw-order rank if one is selected. A
+    <b>polygon</b>/<b>circle</b> is a detail on the selected region (rides its
+    group, no fit).</div>
   <div class="hint">dbl-click a handle = select its whole polygon (shift = add).
     2+ selected points show a scale handle at each corner; drag one, or use
     <b>[</b> <b>]</b> to scale and <b>,</b> <b>.</b> to rotate about the
@@ -604,11 +616,18 @@ function detailPoly(d){ return d.points ? d.points : d.circle ? ngon(d.circle[0]
 
 // ---- tailoring: article `regions` fit against a reference body (port of
 // expand.py's _curve / _apply_fits / _outset) ---------------------------
-function bodyCurve(body, ref){                    // "<section>.<curve>" -> body-space polyline
+function bodyCurve(body, ref){                    // "<section>.<curve>" -> polyline in the body's REST POSE
   const [sec, name] = ref.split('.');
-  const c = body.sections[sec]?.curves?.[name];
-  const pts = curvePts(c);
-  return pts.length ? pts.map(p=>p.slice()) : null;
+  const section = body.sections[sec];
+  const pts = curvePts(section?.curves?.[name]);
+  if(!pts.length) return null;
+  // A curve is stored in the neutral authoring frame; an article fitted to it
+  // is authored pre-splayed (rest_splay baked into its points). Carry the
+  // curve into the rest pose so a fitted sleeve/glove edge lands on the drawn
+  // limb, not the un-splayed one. Mirrors expand.py's _curve. (arm/hand only -
+  // torso/leg/foot sections have no rest transform.)
+  const tr = restTransforms(body)[section?.group || sec];
+  return pts.map(p => tr ? rotAbout(p, tr[0], tr[1]) : p.slice());
 }
 // A curve on disk is either a bare polyline (legacy) or
 // { pts, ends:[[x,y],[x,y]], dir } - `pts` is always the resolved polyline the
@@ -672,6 +691,32 @@ function curveOptions(){                          // ["torso.side_right", ...] a
 function regionFitAt(region, i){                  // the fits entry covering vertex i, if any
   return (region.fits||[]).find(f=>f.from<=i && i<=f.to) || null;
 }
+// Keep a region's `fits` index spans aligned when its raw `points` array is
+// spliced by a generic edit - dbl-click edge insert, the I key, alt-click
+// delete, Delete-key vertex delete. Without this, every fit whose `from`/`to`
+// sits at or past the splice point keeps its old index and silently refers to
+// the wrong vertex; applyFits() then splices the body curve in at the wrong
+// place and the polygon twists. `pos` is the splice index, `del` the count
+// removed there, `ins` the count inserted (only one of del/ins is ever > 0).
+function adjustFitsForSplice(sec, key, pos, del, ins){
+  if(key!=='points') return;
+  const region = D.sections && D.sections[sec];
+  if(!region || !Array.isArray(region.fits) || !region.fits.length) return;
+  region.fits = region.fits.filter(f=>{
+    if(ins){                                    // inserted `ins` verts at `pos`
+      if(f.from>=pos) f.from+=ins;
+      if(f.to  >=pos) f.to  +=ins;
+    } else {                                    // removed `del` verts from `pos`
+      const end = pos+del;
+      if(f.from>=pos && f.to<end) return false; // the whole fitted span is gone
+      if(f.from>=end)      f.from-=del;
+      else if(f.from>=pos) f.from=pos;          // start pulled into the gap
+      if(f.to>=end)        f.to-=del;
+      else if(f.to>=pos)   f.to=pos-1;          // end pulled into the gap
+    }
+    return f.to>=f.from;
+  });
+}
 
 // ---- state ---------------------------------------------------------------
 let D = null;            // the design object
@@ -684,11 +729,14 @@ const TAILOR_MODE = !!FITBODY;
 if(!FACE_MODE) document.getElementById('pTargetRow').style.display = 'none';
 if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
 if(TAILOR_MODE || FACE_MODE) document.getElementById('curvesPanelSec').style.display = 'none';
+if(TAILOR_MODE){ document.getElementById('pAddR').style.display = '';
+  document.getElementById('pAddRHint').style.display = ''; }
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
 const bodyHidden = new Set();    // body section names whose fill is hidden (declutter/x-ray)
 const bodyVertsOff = new Set();  // body section names whose snap-vertex dots are hidden
 let selSec = null;
+let curveHi = null;   // body-edit mode: "<section>|<curve>" whose points are highlighted on the canvas, or null
 const shown = new Set(); // section names with handles visible
 const hidden = new Set(); // section names not drawn
 const detPick = new Set(); // FACE_MODE: if non-empty, only these detail indices show handles ("head:3")
@@ -873,6 +921,59 @@ function composeWornJS(bodyDes, bodyParts, articleParts){
   keyed.sort((a,b)=>a[0]-b[0]);
   return keyed.map(([,p])=>p);
 }
+
+// ---- walk-cycle preview: hand-port of expand.py's apply_walk ------------
+// Deform a composed parts list into the walk pose at cycle fraction t (0..1).
+// Each moving group swings deg*sin(2pi(t+phase)) about its pivot; a group with
+// a `parent` inherits the parent's swing first; everything above the hips rides
+// a vertical bob at twice the stride rate. A garment shares its limb's group,
+// so it follows for free. `rig` is the body's rig.walk file (see rig_walk.json).
+let walkRig = null;                                  // resolved rig.walk for the current body, or null
+let walkT = 0;                                       // cycle fraction, advanced by the RAF loop
+let walkRAF = 0, walkT0 = 0;
+const WALK_PERIOD_MS = 1100;                         // one full stride cycle; preview pace only
+function walkPreviewOn(){ return !!(walkRig && document.getElementById('tWalk')?.checked); }
+async function loadWalkRig(){
+  walkRig = null;
+  const body = TAILOR_MODE ? bodyDesign : D;
+  const ref = body && body.rig && body.rig.walk;
+  if(!ref || !GBASE) return;
+  try{ walkRig = await VFS.readJSON(GBASE + '/body/' + ref + '.json'); }catch(e){ walkRig = null; }
+}
+function applyWalkJS(parts, body, rig, t){
+  if(!rig) return parts;
+  const piv = body.pivots || {}, sw = rig.swing || {};
+  const bob = ((rig.bob && rig.bob.amp) || 0) * Math.sin(2*Math.PI*2*t);
+  const chain = g => {                               // [[pivot, deg], ...] root-first
+    const cfg = sw[g];
+    if(!cfg) return [];
+    const ang = cfg.deg * Math.sin(2*Math.PI*(t + (cfg.phase||0)));
+    const step = [[ (piv[cfg.pivot||g]||[0,0]).slice(), ang ]];
+    return (cfg.parent ? chain(cfg.parent) : []).concat(step);
+  };
+  return parts.map(p=>{
+    if(!p.points) return p;
+    const g = p.group || 'torso';
+    const by = (g.startsWith('leg') || g.startsWith('foot')) ? 0 : bob;
+    let pts = p.points.map(q=>[q[0], q[1]+by]);
+    const c = chain(g).map(([pv,a])=>[[pv[0], pv[1]+by], a]);
+    for(let i=0;i<c.length;i++){
+      let pv = c[i][0];
+      for(let j=0;j<i;j++) pv = rotAbout(pv, c[j][0], c[j][1]);
+      pts = pts.map(q=>rotAbout(q, pv, c[i][1]));
+    }
+    return {...p, points: pts};
+  });
+}
+function walkTick(ts){
+  if(!walkPreviewOn()){ walkRAF = 0; walkT0 = 0; return; }
+  if(!walkT0) walkT0 = ts;
+  walkT = ((ts - walkT0) / WALK_PERIOD_MS) % 1;
+  render();
+  walkRAF = requestAnimationFrame(walkTick);
+}
+function startWalkLoop(){ if(!walkRAF && walkPreviewOn()) walkRAF = requestAnimationFrame(walkTick); }
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ walkRAF = 0; walkT0 = 0; startWalkLoop(); } });
 function bodyVertexList(){    // every body vertex in the game's rest pose (rest_splay applied), for snap + display
   if(!bodyDesign) return [];
   const xf = restTransforms(bodyDesign);
@@ -1007,29 +1108,39 @@ function render(){
     // region's `over`/`under` (body section or group names) exactly like the
     // real game's compose_worn - so e.g. hair's back regions correctly draw
     // *behind* the head instead of always on top of the whole body.
-    for(const part of composeWornJS(bodyDesign, bodyDrawParts(), articleDrawParts()))
+    let parts = composeWornJS(bodyDesign, bodyDrawParts(), articleDrawParts());
+    if(walkPreviewOn()) parts = applyWalkJS(parts, bodyDesign, walkRig, walkT);
+    for(const part of parts)
       draw(part.points, part.fill);   // points are world-space; draw() maps to screen itself
   } else {
     const showShade = document.getElementById('tShade').checked;
+    // walk preview needs the game's rest pose (rest_splay applied) and group
+    // tags; the plain editing view uses the neutral pose (xf = {}) untagged.
+    const walkOn = walkPreviewOn();
+    const bxf = walkOn ? restTransforms(D) : xf;
+    let bparts = [];
     for(const name of order){
       const sec = D.sections[name]; if(!sec || hidden.has(name)) continue;
-      const tr = xf[sec.group||name];
+      const grp = sec.group || name;
+      const tr = bxf[grp];
       const tf = p => tr ? rotAbout(p, tr[0], tr[1]) : p;
       const pts = sec.points.map(tf);
       const prof = shadeProfile(sec.shade);
-      draw(pts, rgb(resolveColor(sec.color, sec.tone||'mid', prof)));
+      bparts.push({points: pts, fill: rgb(resolveColor(sec.color, sec.tone||'mid', prof)), group: grp});
       if(showShade && prof && !prof.emissive){
         let dark, lite;
         if(sec.shade_dark||sec.shade_light){
           dark = sec.shade_dark ? [sec.shade_dark.map(tf)] : [];
           lite = sec.shade_light ? [sec.shade_light.map(tf)] : [];
         } else { [dark,lite] = shadeBands(pts); }
-        lite.forEach(p=>draw(p, rgb(resolveColor(sec.color,'light',prof))));
-        dark.forEach(p=>draw(p, rgb(resolveColor(sec.color,'dark',prof))));
+        lite.forEach(p=>bparts.push({points:p, fill: rgb(resolveColor(sec.color,'light',prof)), group: grp}));
+        dark.forEach(p=>bparts.push({points:p, fill: rgb(resolveColor(sec.color,'dark',prof)), group: grp}));
       }
       (sec.details||[]).forEach(d=>{ const pp = detailPoly(d);
-        if(pp) draw(pp.map(tf), rgb(resolveColor(d.color, d.tone||'mid', shadeProfile(d.shade)))); });
+        if(pp) bparts.push({points: pp.map(tf), fill: rgb(resolveColor(d.color, d.tone||'mid', shadeProfile(d.shade))), group: grp}); });
     }
+    if(walkOn) bparts = applyWalkJS(bparts, D, walkRig, walkT);
+    for(const part of bparts) draw(part.points, part.fill);
   }
 
   if(TAILOR_MODE) g += drawBodyVertices();   // on top of the cloth - visible even where a garment covers the skin
@@ -1043,6 +1154,24 @@ function render(){
     g += `<image id="refImgEl" href="${ref.href}" x="${tl[0]}" y="${tl[1]}" width="${br[0] - tl[0]}"
       height="${br[1] - tl[1]}" opacity="${ref.opacity}" preserveAspectRatio="none"
       style="pointer-events:${refMoveMode ? 'auto' : 'none'};cursor:${refMoveMode ? 'move' : 'default'}"/>`;
+  }
+
+  // curve highlight (body-edit mode): trace the boundary run a named curve
+  // covers - a thick pink polyline + a dot on every curve point, endpoints
+  // ringed white. Read-only; pointer-events off so vertex handles stay grabbable.
+  if(!TAILOR_MODE && !FACE_MODE && curveHi){
+    const [csec, cname] = curveHi.split('|');
+    const S = D.sections[csec];
+    const cpts = curvePts(S && S.curves && S.curves[cname]);
+    if(cpts.length && !hidden.has(csec)){
+      const scr = cpts.map(p => W2S(p[0], p[1]));
+      g += `<polyline points="${scr.map(s=>s[0]+','+s[1]).join(' ')}" fill="none"
+        stroke="#ff7dc4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+        opacity="0.9" style="pointer-events:none"/>`;
+      scr.forEach((s,i)=>{ const end = i===0 || i===scr.length-1;
+        g += `<circle cx="${s[0]}" cy="${s[1]}" r="${end?5:3.5}" fill="${end?'#fff':'#ff7dc4'}"
+          stroke="#ff7dc4" stroke-width="1.5" style="pointer-events:none"/>`; });
+    }
   }
 
   // handles
@@ -1092,7 +1221,7 @@ function render(){
   if(lasso && lasso.length>1) g += `<polyline class="marquee" points="${lasso.map(p=>p[0]+','+p[1]).join(' ')}"/>`;
   svg.innerHTML = g;
   maybeBuildPolyEdit();
-  if(TAILOR_MODE) maybeBuildFitPanel();
+  if(TAILOR_MODE){ maybeBuildFitPanel(); buildFitOrphanPanel(); }
   if(!TAILOR_MODE && !FACE_MODE) maybeBuildCurvesPanel();
   renderMirror();
 }
@@ -1212,9 +1341,10 @@ function renderMirror(){
     panel.style.display = 'none'; return;
   }
   panel.style.display = 'block';
-  const allParts = TAILOR_MODE
+  let allParts = TAILOR_MODE
     ? composeWornJS(body, bodyDrawParts(body), articleDrawParts(body))
     : bodyDrawParts(body);
+  if(walkPreviewOn()) allParts = applyWalkJS(allParts, body, walkRig, walkT);
   const parts = mirrorPart==='head' ? allParts.filter(p => p.sec==='head' || p.group==='head') : allParts;
   let scale, cx, cy;
   if(mirrorFrameMode==='match'){ scale = view.s; cx = view.x; cy = view.y; }
@@ -1245,6 +1375,50 @@ function maybeBuildFitPanel(){
   lastFitSel = s;
   buildFitPanel();
 }
+// A fit entry should always line up with a real placeholder vertex
+// (0 <= from <= to <= points.length-1). A vertex delete/insert with an old
+// editor build - or a hand-edit - can leave one pointing past the end of the
+// array: `_apply_fits` then splices the curve in at the wrong place (or just
+// appends it) and no handle is drawn, so the fitted edge is "invisible".
+// Surface those so they can be re-pointed or dropped.
+function orphanFits(){
+  const out = [];
+  for(const [sc, region] of Object.entries(D.sections || {})){
+    if(!Array.isArray(region.points) || !Array.isArray(region.fits)) continue;
+    const n = region.points.length;
+    region.fits.forEach((f, fi)=>{
+      if(f.from < 0 || f.to < 0 || f.from >= n || f.to >= n || f.to < f.from)
+        out.push({sc, region, fi, f, n});
+    });
+  }
+  return out;
+}
+function buildFitOrphanPanel(){
+  const el = document.getElementById('fitOrphan'); if(!el) return;
+  const orphans = TAILOR_MODE ? orphanFits() : [];
+  if(!orphans.length){ el.innerHTML = ''; return; }
+  el.innerHTML = orphans.map((o,k)=>`
+    <div class="warn">
+      <b>${o.sc.replace('region','region ')}</b> is fitted to <b>${o.f.curve}</b>
+      at ${o.f.from===o.f.to ? '#'+o.f.from : '#'+o.f.from+'–#'+o.f.to}, but the
+      region has only ${o.n} vertices (0–${o.n-1}). The placeholder is gone, so
+      nothing shows and the fitted edge lands in the wrong place.
+      <div class="row" style="margin-top:5px">
+        <button data-of-fix="${k}">re-point to #${o.n-1}</button>
+        <button data-of-del="${k}">remove fit</button>
+      </div>
+    </div>`).join('');
+  orphans.forEach((o,k)=>{
+    el.querySelector(`[data-of-fix="${k}"]`).onclick = ()=>{
+      pushHistory(); o.f.from = o.f.to = o.n - 1;
+      sync(); buildFitOrphanPanel(); buildFitPanel();
+    };
+    el.querySelector(`[data-of-del="${k}"]`).onclick = ()=>{
+      pushHistory(); o.region.fits.splice(o.fi, 1);
+      sync(); buildFitOrphanPanel(); buildFitPanel();
+    };
+  });
+}
 function unfitVertex(region, i){    // drop the fit at vertex i, parking it at the old curve's midpoint
   const was = regionFitAt(region, i);
   region.fits = (region.fits||[]).filter(f=>!(f.from<=i && i<=f.to));
@@ -1266,9 +1440,15 @@ function selectedRegionVertices(){   // [{sc, region, i}] - every selected plain
 }
 function findBodyVertexIndex(pt, eps){    // which body section+index a point sits exactly on, if any
   if(!bodyDesign) return null;
+  // `pt` is a garment coord that was snapped onto a body-vertex DOT, and the
+  // dots are drawn in the rest pose (bodyVertexList applies rest_splay). Match
+  // against that same frame, so an arm/hand vertex is recognised. Index order
+  // is unchanged by the rotation.
+  const xf = restTransforms(bodyDesign);
   for(const [sname, sec] of Object.entries(bodyDesign.sections||{})){
+    const tr = xf[sec.group || sname];
     for(let i=0;i<sec.points.length;i++){
-      const p = sec.points[i];
+      const p = tr ? rotAbout(sec.points[i], tr[0], tr[1]) : sec.points[i];
       if(Math.hypot(p[0]-pt[0], p[1]-pt[1]) < eps) return {sec: sname, i};
     }
   }
@@ -1391,7 +1571,12 @@ function buildSpanFitPanel(verts){
     el.innerHTML = `<div class="hint">both ends are snapped to the same body vertex — move one of them apart first.</div>`;
     return;
   }
-  const secPts = bodyDesign.sections[a.sec].points;
+  // trace in the body's REST POSE - the two ends were snapped onto splayed
+  // body-vertex dots, so the run between them must be splayed too (arm/hand
+  // only; no-op elsewhere). Same reasoning as bodyCurve / expand.py's _curve.
+  const _bsec = bodyDesign.sections[a.sec];
+  const _btr = restTransforms(bodyDesign)[_bsec.group || a.sec];
+  const secPts = _btr ? _bsec.points.map(p=>rotAbout(p, _btr[0], _btr[1])) : _bsec.points;
   const fwd = walkBoundary(secPts, a.i, b.i, 1);
   const bwd = walkBoundary(secPts, a.i, b.i, -1);
   const short = fwd.length<=bwd.length ? fwd : bwd, long = short===fwd ? bwd : fwd;
@@ -1438,13 +1623,20 @@ function buildCurvesPanel(){
   if(!selSec){ el.innerHTML = '<div class="hint">select a section</div>'; return; }
   const S = D.sections[selSec];
   const names = Object.keys(S.curves||{});
+  // drop a stale canvas highlight when the section changed or the curve is gone
+  if(curveHi){ const [hs,hn] = curveHi.split('|');
+    if(hs!==selSec || !names.includes(hn)) curveHi = null; }
   const isStatic = c => Array.isArray(c) || !c || !c.ends;
   const rows = names.length ? names.map(name => `
-    <div class="row"><b>${name}</b> (${curvePts(S.curves[name]).length} pts)${
-      isStatic(S.curves[name]) ? ' <span class="hint">static</span>' : ''}
+    <div class="row"><button class="curveview${curveHi===selSec+'|'+name?' active':''}"
+      data-curve-view="${name}">${name}</button>
+      <span class="hint">(${curvePts(S.curves[name]).length} pts)${
+      isStatic(S.curves[name]) ? ' &middot; static' : ''}</span>
       <button data-curve-rename="${name}">rename</button>
       <button data-curve-del="${name}">delete</button></div>`).join('')
     : '<div class="hint">no curves on this section yet</div>';
+  const viewHint = names.length
+    ? '<div class="hint">click a curve name to highlight its points on the model (pink line + dots, ends ringed white).</div>' : '';
   const recutHtml = `<div class="row"><button id="cRecutAll">re-cut curves from current body shape</button></div>
     <div class="hint">curves re-trace automatically whenever you move a body
       vertex (endpoints tracked by nearest vertex), so any outfit fitted to
@@ -1478,7 +1670,7 @@ function buildCurvesPanel(){
     captureHtml = `<div class="hint">select exactly two of ${selSec}'s
       vertices (not more) to capture a curve span.</div>`;
   }
-  el.innerHTML = recutHtml + rows + '<hr>' + captureHtml;
+  el.innerHTML = recutHtml + rows + viewHint + '<hr>' + captureHtml;
 
   document.getElementById('cRecutAll').onclick = ()=>{
     pushHistory();
@@ -1489,8 +1681,14 @@ function buildCurvesPanel(){
   };
 
   names.forEach(name=>{
+    const vb = el.querySelector(`[data-curve-view="${CSS.escape(name)}"]`);
     const rb = el.querySelector(`[data-curve-rename="${CSS.escape(name)}"]`);
     const db = el.querySelector(`[data-curve-del="${CSS.escape(name)}"]`);
+    if(vb) vb.onclick = ()=>{
+      const key = selSec+'|'+name;
+      curveHi = curveHi===key ? null : key;
+      buildCurvesPanel(); render();
+    };
     rb.onclick = ()=>{
       const next = (prompt('rename curve', name)||'').trim();
       if(!next || next===name) return;
@@ -1498,12 +1696,14 @@ function buildCurvesPanel(){
       pushHistory();
       S.curves[next] = S.curves[name];
       delete S.curves[name];
+      if(curveHi===selSec+'|'+name) curveHi = selSec+'|'+next;
       sync(); buildCurvesPanel();
     };
     db.onclick = ()=>{
       if(!confirm(`delete curve "${name}"? any garment fits referencing "${selSec}.${name}" will stop resolving.`)) return;
       pushHistory();
       delete S.curves[name];
+      if(curveHi===selSec+'|'+name) curveHi = null;
       sync(); buildCurvesPanel();
     };
   });
@@ -1711,6 +1911,33 @@ function addCircle(){
   if(FACE_MODE) detPick.clear();
   buildSecList(); sync();
 }
+// tailor mode: push a brand-new standalone region onto the article. Mirrors
+// delSelPolys' whole-region delete in reverse - a small placeholder quad at
+// the view centre, its own `fits: []`, group + draw-order rank copied from the
+// selected region if there is one (you usually add a piece at the same layer).
+function addRegion(){
+  if(!TAILOR_MODE){ alert('"+ region" is a tailor-mode action - open an article with a body'); return; }
+  pushHistory();
+  const r = newDetailRadius();
+  const src = selSec && D.sections[selSec];
+  const reg = {
+    group: (src && src.group) || 'torso',
+    color: (src && src.color) || 'skin',
+    shade: src ? (src.shade ?? 'matte') : 'matte',
+    note: 'new region',
+    points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]],
+    fits: [],
+  };
+  if(src && src.over) reg.over = src.over.slice();
+  if(src && src.under) reg.under = src.under.slice();
+  D.regions = D.regions || [];
+  D.regions.push(reg);
+  relinkTailorSections();
+  const nm = 'region' + (D.regions.length - 1);
+  selSec = nm;
+  sel.clear(); for(let k=0;k<4;k++) sel.add(nm+'|points|'+k);
+  buildSecList(); buildSecEdit(); sync();
+}
 function delSelPolys(){
   const byS = {};              // sc -> Set of detail/circle indices to remove
   const wholeRegions = new Set();   // TAILOR_MODE only: sc names whose own outline is entirely selected -> drop the whole region
@@ -1834,7 +2061,7 @@ svg.addEventListener('pointerdown', e=>{
     const sec=t.dataset.sec, key=t.dataset.key, i=+t.dataset.i, id=sec+'|'+key+'|'+i;
     if(e.altKey || e.button===2){                     // delete a single vertex
       const arr = getArr(sec, key);
-      if(arr && arr.length>3){ pushHistory(); arr.splice(i,1); sel.delete(id); sync(); }
+      if(arr && arr.length>3){ pushHistory(); arr.splice(i,1); adjustFitsForSplice(sec, key, i, 1, 0); sel.delete(id); sync(); }
       return;
     }
     if(e.shiftKey && !key.startsWith('circleR')){ sel.has(id)?sel.delete(id):sel.add(id); render(); return; }
@@ -1865,6 +2092,7 @@ svg.addEventListener('dblclick', e=>{
     for(let k=1; k<=count; k++){ const t2 = k/(count+1);
       newPts.push([a[0]+(b[0]-a[0])*t2, a[1]+(b[1]-a[1])*t2]); }
     arr.splice(i+1, 0, ...newPts);
+    adjustFitsForSplice(t.dataset.sec, t.dataset.key, i+1, 0, count);
     sel.clear(); for(let k=0;k<count;k++) sel.add(t.dataset.sec+'|'+t.dataset.key+'|'+(i+1+k));
     sync(); return;
   }
@@ -1962,16 +2190,17 @@ document.addEventListener('keydown', e=>{
   if((e.key==='Delete'||e.key==='Backspace') && sel.size){
     e.preventDefault();
     // if every selected vertex is a whole polygon's worth, delete the polygon(s); else just the vertices
-    const byArr = new Map();
+    const byArr = new Map();               // array -> { sec, key, idxs }
     for(const id of sel){ const [sc,ky,ii]=id.split('|'); if(ky.startsWith('circle')) continue;
       const a=getArr(sc,ky); if(!a) continue;
-      if(!byArr.has(a)) byArr.set(a,[]); byArr.get(a).push(+ii); }
+      if(!byArr.has(a)) byArr.set(a,{sec:sc, key:ky, idxs:[]}); byArr.get(a).idxs.push(+ii); }
     let full = byArr.size>0;
-    for(const [a,idxs] of byArr) if(idxs.length < a.length) full = false;
+    for(const [a,info] of byArr) if(info.idxs.length < a.length) full = false;
     const hasCircle = [...sel].some(id => id.split('|')[1].startsWith('circle'));
     if(hasCircle || (full && byArr.size)){ delSelPolys(); return; }
     pushHistory();
-    for(const [a,idxs] of byArr){ idxs.sort((x,y)=>y-x); for(const ix of idxs) if(a.length>3) a.splice(ix,1); }
+    for(const [a,info] of byArr){ info.idxs.sort((x,y)=>y-x);
+      for(const ix of info.idxs) if(a.length>3){ a.splice(ix,1); adjustFitsForSplice(info.sec, info.key, ix, 1, 0); } }
     sel.clear(); sync(); return;
   }
   if((e.key==='i'||e.key==='I') && sel.size===2){
@@ -1986,11 +2215,18 @@ document.addEventListener('keydown', e=>{
     if(insertAt===null){ alert('those two vertices are not adjacent on the polygon'); return; }
     pushHistory();
     const count = Math.max(1, +document.getElementById('insertCount')?.value || 1);
-    const pa = arr[a.i], pb = arr[b.i];
+    // interpolate along the polygon in traversal order (lo -> hi), independent
+    // of the order the two handles were selected in; for the wrap edge the run
+    // goes hi -> lo (past the last vertex, before wrapping to the first) - get
+    // this backwards and the inserted run reverses, twisting the polygon.
+    const wrap = insertAt === n;
+    const pa = wrap ? arr[hi] : arr[lo];
+    const pb = wrap ? arr[lo] : arr[hi];
     const newPts = [];
     for(let k=1; k<=count; k++){ const t = k/(count+1);
       newPts.push([pa[0]+(pb[0]-pa[0])*t, pa[1]+(pb[1]-pa[1])*t]); }
     arr.splice(insertAt, 0, ...newPts);
+    adjustFitsForSplice(a.sc, a.ky, insertAt, 0, count);
     sel.clear(); for(let k=0;k<count;k++) sel.add(a.sc+'|'+a.ky+'|'+(insertAt+k));
     sync(); return;
   }
@@ -2012,6 +2248,7 @@ document.addEventListener('keydown', e=>{
 document.addEventListener('keyup', e=>{ if(e.key===' ') spaceDown=false; });
 document.getElementById('pAdd').onclick = addPoly;
 document.getElementById('pAddC').onclick = addCircle;
+document.getElementById('pAddR').onclick = addRegion;
 document.getElementById('pDel').onclick = delSelPolys;
 document.getElementById('refLoad').onclick = ()=>document.getElementById('refFile').click();
 document.getElementById('refFile').onchange = e=>{ const f=e.target.files[0]; if(f) loadRefImage(f); e.target.value=''; };
@@ -2375,6 +2612,7 @@ function loadDesign(obj, path){
   loadMatPal()
     .then(()=> FACE_MODE ? mergeFaces() : TAILOR_MODE ? loadBodyForTailoring() : null)
     .then(()=>{ if(!FACE_MODE) D0 = JSON.parse(JSON.stringify(D)); finishLoad(); })
+    .then(()=> loadWalkRig())   // resolve rig.walk for the "walk animation" preview toggle
     .then(()=>{ if(!TAILOR_MODE) loadMirrorBody(loadedPath); });   // editing a body (or its face) directly
 }
 function finishLoad(){
@@ -2552,9 +2790,10 @@ async function populateArticlePicker(){
   let names = files.filter(n => n.endsWith('.json')).sort();
   if(!names.length) return;
   const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
-  // in tailor mode, hide the articles that don't match the fit body's gender
-  // (keep the current selection visible even if it's the odd one out)
-  const g = genderOf(currentBodyPath());
+  // hide the articles that don't match the gender in play - the fit body's in
+  // tailor mode, else the loaded article's own suffix (a bare masc article
+  // shouldn't offer femme ones to switch to). Current selection stays visible.
+  const g = genderOf(currentBodyPath()) || genderOf(loadedPath);
   if(g) names = names.filter(n => n === curName || articleForGender(n, g));
   sel_.innerHTML = `<option value="">— articles —</option>` +
     names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
@@ -2832,6 +3071,15 @@ document.getElementById('saveAllDrafts').onclick = async ()=>{
 scanDrafts();   // populate on page load too; "rescan" catches drafts saved after that
 ['tShade','tGhost','tHandles','tEdges','tTicks','tMirrorBody'].forEach(id=>
   document.getElementById(id).onchange = render);
+document.getElementById('tWalk').onchange = e=>{
+  if(e.target.checked && !walkRig){
+    e.target.checked = false;
+    alert('No walk rig for this body (its rig.walk is missing) — nothing to animate.');
+    return;
+  }
+  walkT0 = 0;
+  if(e.target.checked) startWalkLoop(); else render();
+};
 if(TAILOR_MODE) ['tBodyVerts','tSnapBody'].forEach(id=>
   document.getElementById(id).onchange = render);
 if(TAILOR_MODE) document.getElementById('tHideFace').onchange = e=>{

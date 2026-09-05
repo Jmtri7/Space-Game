@@ -14,25 +14,30 @@
       "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
       "points": [
         [
-          -1.096,
-          -18.635
+          -1.198,
+          -5.581
+        ],
+        [
+          -5.135,
+          -5.527
         ],
         [
           -6.697,
           -21.254
         ],
         [
-          -1.426,
-          -24.807
+          -0.837,
+          -19.235
         ]
       ],
       "fits": [
         {
           "curve": "torso.far short",
-          "from": 1,
-          "to": 1
+          "from": 2,
+          "to": 2
         }
-      ]
+      ],
+      "details": []
     },
     {
       "group": "torso",
@@ -44,16 +49,20 @@
       "note": "right front panel, mirror of the left.",
       "points": [
         [
-          0.177,
-          -24.592
+          0.922,
+          -19.177
         ],
         [
           7.117,
           -21.083
         ],
         [
-          0.879,
-          -19.031
+          5.96,
+          -5.677
+        ],
+        [
+          0.055,
+          -5.691
         ]
       ],
       "fits": [
