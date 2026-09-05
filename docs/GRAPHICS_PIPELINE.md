@@ -700,7 +700,10 @@ vertex dots — the dot toggle is implied off and greys out while the part is
 hidden); the dot on its own hides just the vertex dots, leaving the fill
 visible as a plain reference silhouette with nothing to accidentally snap
 onto. A pair of reorder arrows between them previews the reference body's own
-`draw_order` (same up/down arrows as the Sections list elsewhere). Nothing in
+`draw_order` (same up/down arrows as the Sections list elsewhere). Above the
+list, **show all** / **hide all** toggles every part at once (the label
+follows state — it reads **show all** only when every part is already
+hidden), beside **hide all verts**. Nothing in
 this list is saved anywhere — it's a decluttering/preview aid, reset per page
 load; tailor mode only ever writes the outfit back, never the body.
 

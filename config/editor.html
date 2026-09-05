@@ -756,9 +756,13 @@ function buildBodyPartList(){
   if(hideFace) hideFace.checked = bodyHidden.has('head');   // keep the shortcut in sync with the list below
   el.innerHTML = '';
   const bar = document.createElement('div'); bar.className = 'row';
-  bar.innerHTML = `<button id="bpAllShow">show all</button><button id="bpAllHideVerts">hide all verts</button>`;
+  const allHidden = Object.keys(bodyDesign.sections).every(n=>bodyHidden.has(n));
+  bar.innerHTML = `<button id="bpAllShow">${allHidden ? 'show all' : 'hide all'}</button><button id="bpAllHideVerts">hide all verts</button>`;
   el.appendChild(bar);
-  bar.querySelector('#bpAllShow').onclick = ()=>{ bodyHidden.clear(); bodyVertsOff.clear(); buildBodyPartList(); render(); };
+  bar.querySelector('#bpAllShow').onclick = ()=>{
+    if(allHidden){ bodyHidden.clear(); bodyVertsOff.clear(); }
+    else Object.keys(bodyDesign.sections).forEach(n=>bodyHidden.add(n));
+    buildBodyPartList(); render(); };
   bar.querySelector('#bpAllHideVerts').onclick = ()=>{
     Object.keys(bodyDesign.sections).forEach(n=>bodyVertsOff.add(n)); buildBodyPartList(); render(); };
   const hint = document.createElement('div'); hint.className = 'hint';
