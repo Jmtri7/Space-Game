@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the standard jacket geometry (jacket_masc geometry) recoloured #9498a0, sheen finish.",
+  "geometry": "jacket_masc",
+  "colors": {
+    "cloth": "#9498a0"
+  },
+  "shade": "sheen"
+}

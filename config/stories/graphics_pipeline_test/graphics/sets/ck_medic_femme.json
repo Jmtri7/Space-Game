@@ -1,0 +1,14 @@
+{
+  "identity": "Common Kit - Medic (femme cut). White med coat, pale boots, a mint helmet, a red cross badge, a red armband and a white med satchel.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "coat_white_femme",
+    "pants_white_femme",
+    "boots_pale_femme",
+    "helmet_mint_femme",
+    "badge_red_femme",
+    "armband_red_femme",
+    "satchel_white_femme"
+  ]
+}

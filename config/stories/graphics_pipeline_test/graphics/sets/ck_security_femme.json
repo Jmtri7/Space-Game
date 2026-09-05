@@ -1,0 +1,13 @@
+{
+  "identity": "Common Kit - Security (femme cut). Dark blue-grey uniform, black boots, a grey helmet with a cyan visor, a padded stab vest and a duty belt.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "jacket_secblue_femme",
+    "pants_secblue_femme",
+    "boots_black_femme",
+    "helmet_sec_femme",
+    "vest_femme",
+    "belt_femme"
+  ]
+}

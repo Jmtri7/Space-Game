@@ -1178,6 +1178,24 @@ gates needed and no more, and is a bootable story (`story.json` + one system +
 - 1 interior (`concourse`) with 2 decorations — `column` blocks a lane on
   purpose (`blocks_lane`), `bench` must not
 
+**The Common Kit outfit pack** — the 15 culture-neutral outfits from the
+retired `common-kit.html` atlas (space/flight suit, mechanic, dockworker,
+prospector, security, station command, marshal, medic, surgeon, researcher,
+civilian, smuggler, ranger, bounty hunter), rebuilt entirely from the articles
+above with no new geometry:
+
+- `items/<garment>_<colourway>_{masc,femme}.json` — a `colors` patch (+ `shade`)
+  over one base article per recoloured piece (`jacket_olive`, `coat_navy`,
+  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, …). Colours are read
+  off the old atlas's prose descriptions.
+- `sets/ck_<outfit>_{masc,femme}.json` — the article + item list per outfit per
+  body, `palette: "civilian"`.
+- `graphics.json` `outfits` `ck_<outfit>_{masc,femme}` and one concourse NPC per
+  outfit (alternating body) in `systems/proving_ground.json`.
+
+Fidelity is silhouette + colour, not every prop: pieces with no article yet
+(a drill, a baton, a holster, a trek bedroll, chest-pocket pens) are omitted.
+
 Grow the set now by the per-asset gates, not the build gates.
 
 ## Authoring checklist

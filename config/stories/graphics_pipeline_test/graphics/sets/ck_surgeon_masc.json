@@ -1,0 +1,14 @@
+{
+  "identity": "Common Kit - Surgeon (masc cut). Pale scrub suit with a coat skirt, pale boots, a tie-on surgical mask, a scrub cap and white surgical gloves.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "coat_scrub_masc",
+    "pants_scrub_masc",
+    "boots_pale_masc",
+    "mask_masc",
+    "scrub_cap_masc",
+    "gloves_white_masc",
+    "hair_short_masc"
+  ]
+}

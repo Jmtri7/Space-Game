@@ -1,0 +1,12 @@
+{
+  "identity": "Common Kit - Smuggler (masc cut). Dark green worn clothes and boots under a long coat, with a deep raised hood - the fringe, and it doesn't want to be read.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "jacket_smug_masc",
+    "pants_smug_masc",
+    "boots_black_masc",
+    "coat_smuggler_masc",
+    "hood_masc"
+  ]
+}

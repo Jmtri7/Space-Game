@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the upper-arm band (armband_femme geometry) recoloured #c23b32, matte finish.",
+  "geometry": "armband_femme",
+  "colors": {
+    "cloth": "#c23b32"
+  },
+  "shade": "matte"
+}

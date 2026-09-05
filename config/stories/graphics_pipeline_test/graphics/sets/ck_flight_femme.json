@@ -1,0 +1,12 @@
+{
+  "identity": "Common Kit - Flight Suit (femme cut). Slate flight suit, black boots, a light-grey flight helmet, and an X of dark webbing across the chest - the ejection harness.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "jacket_slate_femme",
+    "pants_slate_femme",
+    "boots_black_femme",
+    "helmet_flight_femme",
+    "harness_femme"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "identity": "Common Kit - Prospector (masc cut). Tan rock suit, dark boots, a pale-gold hard hat, a boxy life-support pack, a tool belt and work gloves.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "jacket_tan_masc",
+    "pants_tan_masc",
+    "boots_charcoal_masc",
+    "cap_gold_masc",
+    "backpack_masc",
+    "tool_belt_masc",
+    "gloves_masc",
+    "hair_short_masc"
+  ]
+}

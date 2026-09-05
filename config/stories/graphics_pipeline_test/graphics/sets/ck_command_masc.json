@@ -1,0 +1,16 @@
+{
+  "identity": "Common Kit - Station Command (masc cut). Navy tunic and trousers, near-black boots, a pale service cap, a white stand collar, dark epaulettes, a gold badge of office and a double-breasted grid of gold buttons.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "coat_navy_masc",
+    "pants_navy_masc",
+    "boots_black_masc",
+    "cap_pale_masc",
+    "collar_white_masc",
+    "epaulettes_dark_masc",
+    "badge_gold_masc",
+    "braid_masc",
+    "hair_short_masc"
+  ]
+}

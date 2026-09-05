@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the shoulder satchel (satchel_masc geometry) recoloured #e0e0e0, deep finish.",
+  "geometry": "satchel_masc",
+  "colors": {
+    "leather": "#e0e0e0"
+  },
+  "shade": "deep"
+}

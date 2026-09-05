@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the long_coat cut (long_coat_femme geometry) recoloured #3d4a2e, matte finish.",
+  "geometry": "long_coat_femme",
+  "colors": {
+    "cloth": "#3d4a2e"
+  },
+  "shade": "matte"
+}

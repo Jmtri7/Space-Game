@@ -1,0 +1,15 @@
+{
+  "identity": "Common Kit - Dockworker (femme cut). Blue-grey work suit, dark boots, an amber hard hat, a chest plate, a hi-vis orange tabard and heavy dark gloves.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "jacket_dock_femme",
+    "pants_dock_femme",
+    "boots_charcoal_femme",
+    "cap_amber_femme",
+    "chest_plate_femme",
+    "hi_vis_tabard_femme",
+    "gloves_dark_femme",
+    "hair_short_femme"
+  ]
+}

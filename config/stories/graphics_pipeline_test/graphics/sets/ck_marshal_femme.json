@@ -1,0 +1,14 @@
+{
+  "identity": "Common Kit - Marshal (femme cut). A long charcoal coat to mid-shin, black boots, a dark brimmed hat and a gold five-point marshal's star on the left breast.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "coat_charcoal_femme",
+    "pants_charcoal_femme",
+    "boots_black_femme",
+    "hat_femme",
+    "star_femme",
+    "belt_femme",
+    "hair_short_femme"
+  ]
+}

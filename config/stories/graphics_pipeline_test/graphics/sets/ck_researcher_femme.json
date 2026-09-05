@@ -1,0 +1,11 @@
+{
+  "identity": "Common Kit - Researcher (femme cut). Grey-blue lab coat over dark trousers and boots, bare head.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "coat_labblue_femme",
+    "pants_charcoal_femme",
+    "boots_charcoal_femme",
+    "hair_long_femme"
+  ]
+}

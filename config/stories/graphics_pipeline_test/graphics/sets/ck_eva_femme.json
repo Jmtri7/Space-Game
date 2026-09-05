@@ -1,0 +1,11 @@
+{
+  "identity": "Common Kit - Space Suit (femme cut). Sealed EVA suit: mid-grey hard shell over trousers, dark-grey boots, a plain domed pressure helmet with the regulation visor gap. The neutral suit the player starts in - no role detail.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "jacket_eva_femme",
+    "pants_eva_femme",
+    "boots_charcoal_femme",
+    "helmet_femme"
+  ]
+}

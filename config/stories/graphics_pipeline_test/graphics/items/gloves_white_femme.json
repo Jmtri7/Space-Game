@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the work glove (gloves_femme geometry) recoloured #e6e6e6, matte finish.",
+  "geometry": "gloves_femme",
+  "colors": {
+    "cloth": "#e6e6e6"
+  },
+  "shade": "matte"
+}

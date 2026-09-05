@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the long_coat cut (long_coat_masc geometry) recoloured #e6e6e6, soft finish.",
+  "geometry": "long_coat_masc",
+  "colors": {
+    "cloth": "#e6e6e6"
+  },
+  "shade": "soft"
+}

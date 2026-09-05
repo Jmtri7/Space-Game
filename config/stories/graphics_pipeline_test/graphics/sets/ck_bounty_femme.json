@@ -1,0 +1,14 @@
+{
+  "identity": "Common Kit - Bounty Hunter (femme cut). Near-black armour, black boots, a dark helmet with a red visor, a back pack, three stacked riveted chest-plate segments and a diagonal bandolier.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_femme",
+    "jacket_black_femme",
+    "pants_black_femme",
+    "boots_black_femme",
+    "helmet_bounty_femme",
+    "backpack_femme",
+    "plates_femme",
+    "bandolier_femme"
+  ]
+}
