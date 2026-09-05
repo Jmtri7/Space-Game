@@ -762,6 +762,12 @@ two separate tailor-mode sessions against different bodies, which the panel
 auto-disambiguates (`hair_bun.vs-human_femme.json` /
 `hair_bun.vs-human_masc.json`); a genuine same-name collision elsewhere is
 left for hand-renaming, with a confirm prompt before downloading anyway.
+**clear checked** permanently removes the checked rows' keys from
+`localStorage` (with a confirm prompt) and rescans — this is the only control
+that actually shrinks the list. The top **Reset** button does *not* do this:
+it only drops the single draft for whatever design+mode is currently loaded
+(`draftKey()`), so every other body/article/face/fit draft in the browser
+stays and still shows up here.
 
 **Shade overrides.** A region (body section or ship silhouette entry) may carry
 `"shade": false` to draw flat, or explicit `"shade_dark"` / `"shade_light"`

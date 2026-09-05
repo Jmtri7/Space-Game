@@ -184,10 +184,15 @@
   <div class="hint">Every autosaved draft in this browser, not just the design
     loaded above - handy after redesigning several articles/bodies in one
     sitting. Rename a row before downloading if two land on the same filename
-    (e.g. the same article fit against two different bodies).</div>
+    (e.g. the same article fit against two different bodies). Reset (above)
+    only drops the one draft for whatever's currently loaded - use "clear
+    checked" here to actually shrink this list.</div>
   <div class="row"><button id="scanDrafts">rescan</button></div>
   <div id="draftList"></div>
-  <div class="row"><button id="dlAllDrafts" disabled>download checked</button></div>
+  <div class="row">
+    <button id="dlAllDrafts" disabled>download checked</button>
+    <button id="clearDrafts" disabled>clear checked</button>
+  </div>
 </div>
 <div id="stage">
   <svg id="svg"></svg>
@@ -749,6 +754,7 @@ function counterpartPath(path){
 async function loadFaceKitInto(body){
   const head = body.sections && body.sections.head; if(!head) return;
   head.details = head.details || [];
+  if(head.details.some(d => d._src && d._src.startsWith('faces/'))) return;   // already merged (a restored face draft)
   const fm = head.face || {};
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
@@ -1729,12 +1735,31 @@ async function loadBodyForTailoring(){
     const r = await fetch('/' + FITBODY.replace(/^\/+/, ''));
     bodyDesign = r.ok ? await r.json() : null;
   }catch(e){ bodyDesign = null; }
+  // an unsaved edit to the body itself (plain gpDraft:<FITBODY>) or to its
+  // face kit (gpDraft:<FITBODY>:face, a full body+face snapshot) beats the
+  // disk copy - whichever was touched more recently wins, so switching
+  // straight from editing the body, or its face, to tailoring an outfit
+  // against it shows the just-edited state, not a stale fetch.
+  const readDraft = k => {
+    try{
+      const raw = localStorage.getItem(k); if(!raw) return null;
+      const d = JSON.parse(raw);
+      return (d && d.D && allFinite(d.D)) ? d : null;
+    }catch(e){ return null; }
+  };
+  const plainDraft = readDraft('gpDraft:' + FITBODY);
+  const faceDraft = readDraft('gpDraft:' + FITBODY + ':face');
+  const draft = [plainDraft, faceDraft].filter(Boolean).sort((a,b)=>b.t-a.t)[0];
+  if(draft) bodyDesign = draft.D;
   if(!bodyDesign){ alert("couldn't load the reference body: " + FITBODY); return; }
   // the raw body file's head has no face details of its own (those live in
   // faces/<slot>_<name>.json, per docs/GRAPHICS_PIPELINE.md's face-mode
   // section) - pull them in so the backdrop shows eyes/nose/lips instead of a
   // bare head. bodyDesign is read-only here (tailor mode never saves it), so
-  // there's no need to tag/undo this later.
+  // there's no need to tag/undo this later. Skipped when bodyDesign already
+  // came from a face draft - its head.details are already the merged kit
+  // (same "is a restored draft already merged" check mergeFaces uses) -
+  // loading it again would duplicate every piece.
   await loadFaceKitInto(bodyDesign);
   bodyHidden.clear(); bodyVertsOff.clear();
   buildBodyPartList();
@@ -1995,9 +2020,10 @@ function scanDrafts(){
 function renderDraftList(){
   const el = document.getElementById('draftList');
   const dlBtn = document.getElementById('dlAllDrafts');
+  const clearBtn = document.getElementById('clearDrafts');
   if(!draftRows.length){
     el.innerHTML = `<div class="hint">no drafts found in this browser</div>`;
-    dlBtn.disabled = true; return;
+    dlBtn.disabled = true; clearBtn.disabled = true; return;
   }
   const counts = {}; draftRows.forEach(r=> counts[r.name] = (counts[r.name]||0)+1);
   el.innerHTML = draftRows.map((r,i)=>{
@@ -2018,9 +2044,22 @@ function renderDraftList(){
   el.querySelectorAll('.dRowName').forEach(inp => inp.onchange = e=>{
     draftRows[+e.target.dataset.i].name = e.target.value; renderDraftList();
   });
-  dlBtn.disabled = false;
+  dlBtn.disabled = false; clearBtn.disabled = false;
 }
 document.getElementById('scanDrafts').onclick = scanDrafts;
+document.getElementById('clearDrafts').onclick = ()=>{
+  const chosen = [];
+  document.querySelectorAll('.dRowChk').forEach(chk=>{ if(chk.checked) chosen.push(draftRows[+chk.dataset.i]); });
+  if(!chosen.length) return;
+  // this is the actual list-clearing action the Reset button doesn't do -
+  // Reset only ever drops the one draft for the design currently loaded
+  // (draftKey()), leaving every other body/article/face/fit draft in this
+  // browser untouched, so the batch list barely shrinks. This deletes
+  // exactly the checked keys from localStorage, permanently.
+  if(!confirm(`Permanently delete ${chosen.length} draft${chosen.length===1?'':'s'} from this browser? This can't be undone - download anything you still want first.`)) return;
+  chosen.forEach(r=> localStorage.removeItem(r.key));
+  scanDrafts();
+};
 document.getElementById('dlAllDrafts').onclick = ()=>{
   const chosen = [];
   document.querySelectorAll('.dRowChk').forEach(chk=>{ if(chk.checked) chosen.push(draftRows[+chk.dataset.i]); });
@@ -2061,18 +2100,29 @@ window.addEventListener('resize', render);
 // else the last edit from localStorage, else a message.
 const _qFile = new URLSearchParams(location.search).get('file');
 if(_qFile){
-  const _draftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
+  const _modeDraftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
+  const _plainDraftKey = 'gpDraft:' + _qFile;
+  const _readDraft = k => {
+    try{
+      const raw = localStorage.getItem(k);
+      if(!raw) return null;
+      const d = JSON.parse(raw);
+      if(d && d.D && allFinite(d.D)) return d;
+      if(d && d.D) localStorage.removeItem(k);   // corrupt draft - drop it, use the disk copy
+    }catch(e){}
+    return null;
+  };
   fetch('/' + _qFile.replace(/^\/+/, ''))
     .then(r => r.ok ? r.json() : Promise.reject('HTTP ' + r.status))
     .then(fresh => {
       let obj = fresh, restored = null;
-      try{
-        const raw = localStorage.getItem(_draftKey);
-        if(raw){ const d = JSON.parse(raw);
-          if(d && d.D && allFinite(d.D)){ obj = d.D; restored = new Date(d.t); }
-          else if(d && d.D){ localStorage.removeItem(_draftKey); }   // corrupt draft - drop it, use the disk copy
-        }
-      }catch(e){}
+      // the exact mode's own draft always wins when it exists (never lose an
+      // in-progress face-kit or outfit-fit edit); otherwise fall back to the
+      // plain body draft, so switching straight from editing the body to
+      // face/outfit mode shows the just-edited shape instead of a stale
+      // disk copy of the same file.
+      const draft = (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
+      if(draft){ obj = draft.D; restored = new Date(draft.t); }
       loadDesign(obj, _qFile);
       if(restored) document.getElementById('src').textContent +=
         `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
