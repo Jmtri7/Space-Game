@@ -1,0 +1,10 @@
+{
+  "identity": "Everyday civilian: knit tank, denim trousers, slip-on shoes, hair pulled back to a bun. Masc-fitted equivalent of civilian_work_femme, hair swapped for variety.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "pants_masc",
+    "shoes_masc",
+    "hair_bun"
+  ]
+}

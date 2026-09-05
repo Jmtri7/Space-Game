@@ -342,7 +342,7 @@ def interior_plate(name):
     </section>"""
 
 
-def walk_plate(set_name="civilian_work", frames=8):
+def walk_plate(set_name="civilian_work_femme", frames=8):
     materials = load("materials.json")
     rig = load("body", "rig_walk.json")
     bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body")) if n.endswith(".json") and not n.startswith("rig_"))

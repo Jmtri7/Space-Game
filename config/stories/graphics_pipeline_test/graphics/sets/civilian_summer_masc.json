@@ -1,0 +1,10 @@
+{
+  "identity": "Warm-weather civilian: knit tank, flared skirt, slip-on shoes. Masc-fitted equivalent of civilian_summer_femme.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top_masc",
+    "skirt",
+    "shoes_masc",
+    "hair_short"
+  ]
+}

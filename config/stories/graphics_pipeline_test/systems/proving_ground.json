@@ -34,7 +34,11 @@
         ],
         "npcs": [
           { "name": "Deckhand", "x": 250, "y": 70, "behavior": "wander", "outfit": "civilian_masc",
-            "greeting": "Pipeline's holding together so far.", "dialogue_options": ["Leave"] }
+            "greeting": "Pipeline's holding together so far.", "dialogue_options": ["Leave"] },
+          { "name": "Dockworker", "x": 120, "y": 150, "behavior": "wander", "outfit": "civilian_femme_swept",
+            "greeting": "Warm enough in here you'd almost forget we're in vacuum.", "dialogue_options": ["Leave"] },
+          { "name": "Rigger", "x": 300, "y": 150, "behavior": "wander", "outfit": "civilian_masc_bun",
+            "greeting": "New feet, new shoes, same old ring.", "dialogue_options": ["Leave"] }
         ]
       }
     }

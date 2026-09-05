@@ -37,7 +37,11 @@
   },
   "moons": {},
   "outfits": {
-    "civilian_femme": { "body": "human_femme", "set": "civilian_work", "palette": "civilian" },
-    "civilian_masc": { "body": "human_masc", "set": "civilian_work_masc", "palette": "civilian" }
+    "civilian_femme": { "body": "human_femme", "set": "civilian_work_femme", "palette": "civilian" },
+    "civilian_masc": { "body": "human_masc", "set": "civilian_work_masc", "palette": "civilian" },
+    "civilian_summer_femme": { "body": "human_femme", "set": "civilian_summer_femme", "palette": "civilian" },
+    "civilian_summer_masc": { "body": "human_masc", "set": "civilian_summer_masc", "palette": "civilian" },
+    "civilian_masc_bun": { "body": "human_masc", "set": "civilian_work_masc_bun", "palette": "civilian" },
+    "civilian_femme_swept": { "body": "human_femme", "set": "civilian_work_femme_swept", "palette": "civilian" }
   }
 }

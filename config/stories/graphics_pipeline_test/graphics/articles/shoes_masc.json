@@ -1,0 +1,90 @@
+{
+  "identity": "Low leather slip-on shoes, a pair. Each shoe is the wearer's own foot outline, taken a little larger, so it always encloses the foot with no heel or toe poking out.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_masc",
+  "regions": [
+    {
+      "group": "foot_near",
+      "material": "leather",
+      "outset": 0.32,
+      "note": "the whole near-foot outline, outset so the shoe wraps it.",
+      "points": [
+        [
+          1.974,
+          -1.741
+        ],
+        [
+          2.141,
+          -1.02
+        ],
+        [
+          2.058,
+          -0.5
+        ],
+        [
+          1.428,
+          -0.485
+        ],
+        [
+          -0.5,
+          -0.1
+        ],
+        [
+          -0.636,
+          -0.522
+        ],
+        [
+          -0.086,
+          -0.76
+        ],
+        [
+          1.005,
+          -1.748
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "foot_far",
+      "material": "leather",
+      "outset": 0.32,
+      "note": "the whole far-foot outline.",
+      "points": [
+        [
+          -2.978,
+          -0.768
+        ],
+        [
+          -3.522,
+          -0.508
+        ],
+        [
+          -3.4,
+          -0.1
+        ],
+        [
+          -1.494,
+          -0.457
+        ],
+        [
+          -0.992,
+          -0.45
+        ],
+        [
+          -0.835,
+          -1.016
+        ],
+        [
+          -0.97,
+          -1.732
+        ],
+        [
+          -1.97,
+          -1.735
+        ]
+      ],
+      "fits": []
+    }
+  ]
+}

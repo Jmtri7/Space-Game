@@ -1,0 +1,175 @@
+{
+  "identity": "Plain denim trousers, an alternative to the skirt. A hip panel plus a fitted tube down each leg to the ankle. Each tube's top is the leg's own dome, so it swings with the leg exactly as the bare leg does; the hip panel is drawn last and reaches wide enough to stay over the tube tops through the whole stride.",
+  "tier": "person",
+  "palette": "civilian",
+  "fits_body": "human_masc",
+  "regions": [
+    {
+      "group": "leg_far",
+      "material": "denim",
+      "note": "far leg tube. 0 fits leg_far.leg_far_top (dome), 1 fits leg_far.leg_far_out (down the outside), 3 fits leg_far.inseam reversed (ankle->centre); 2 the ankle hem, 4 crosses the centre so it overlaps the near leg.",
+      "points": [
+        [
+          -2.75,
+          -15.85
+        ],
+        [
+          -2.95,
+          -15.5
+        ],
+        [
+          -2.6,
+          -10.4
+        ],
+        [
+          -2.35,
+          -8.2
+        ],
+        [
+          -2.45,
+          -5.6
+        ],
+        [
+          -2,
+          -1.7
+        ],
+        [
+          -0.95,
+          -1.7
+        ],
+        [
+          -0.6,
+          -5.6
+        ],
+        [
+          -0.68,
+          -8.2
+        ],
+        [
+          -0.55,
+          -10.4
+        ],
+        [
+          -0.211,
+          -15.232
+        ],
+        [
+          -1,
+          -15.95
+        ],
+        [
+          -2.1,
+          -16.05
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "leg_near",
+      "material": "denim",
+      "note": "near leg tube.",
+      "points": [
+        [
+          2.1,
+          -16.05
+        ],
+        [
+          2.75,
+          -15.85
+        ],
+        [
+          2.95,
+          -15.5
+        ],
+        [
+          2.6,
+          -10.4
+        ],
+        [
+          2.35,
+          -8.2
+        ],
+        [
+          2.45,
+          -5.6
+        ],
+        [
+          2,
+          -1.7
+        ],
+        [
+          0.95,
+          -1.7
+        ],
+        [
+          0.6,
+          -5.6
+        ],
+        [
+          0.68,
+          -8.2
+        ],
+        [
+          0.55,
+          -10.4
+        ],
+        [
+          0.295,
+          -15.19
+        ],
+        [
+          1,
+          -15.95
+        ]
+      ],
+      "fits": []
+    },
+    {
+      "group": "torso",
+      "over": [
+        "leg_near"
+      ],
+      "material": "denim",
+      "note": "hip panel / seat, drawn last. Its whole outline is the wearer's lower torso: 0 fits torso.low_waist across the top, 1 fits torso.lower_torso_right down the right side and underside to the crotch, 2 fits torso.lower_torso_left reversed back up the left. Sits flush with the body, never proud of it.",
+      "points": [
+        [
+          -2.85,
+          -15.8
+        ],
+        [
+          -2.5,
+          -14.9
+        ],
+        [
+          -1.7,
+          -14.55
+        ],
+        [
+          0,
+          -14.5
+        ],
+        [
+          1.7,
+          -14.55
+        ],
+        [
+          2.5,
+          -14.9
+        ],
+        [
+          2.85,
+          -15.8
+        ],
+        [
+          2.7,
+          -16.9
+        ],
+        [
+          -2.7,
+          -16.9
+        ]
+      ],
+      "fits": []
+    }
+  ]
+}
