@@ -3,6 +3,7 @@
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
+  "hides_hair": true,
   "regions": [
     {
       "group": "torso",
@@ -146,7 +147,8 @@
       "details": [
         {
           "group": "torso",
-          "color": "glass", "shade": "sheen",
+          "color": "glass",
+          "shade": "sheen",
           "note": "visor bezel - same seamed-ring trick, one size smaller, so the true see-through opening is a little tighter than the shell's own hole",
           "points": [
             [

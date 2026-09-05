@@ -338,6 +338,22 @@ draws immediately after the last body part of its own animation group. A
 leg sits over that leg; a `leg_far` one behind the torso. The renderer draws
 that composed list; it does no layering of its own.
 
+A region's `over` / `under` lists (see Fitting) name body groups and sections —
+**and `"hair"`**, which resolves against any earlier article part tagged
+`sec == "hair"`. As it places each article part, `compose_worn` registers that
+part's own `sec` as a layer target, so a later article can name it. `hair` is
+the one tag anything sets today: `story_assets._body_worn` marks every part of a
+hairstyle (an article whose id starts `hair_`, or one with `"slot": "hair"`)
+and composes the hair **before** all other articles, so a headgear region can
+sit behind the head (`under: ["head"]`), between head and hair
+(`under: ["hair"]`), or over the hair (`over: ["hair"]`) regardless of the order
+the set lists the pieces in.
+
+**`hides_hair`.** A headgear article may carry top-level `"hides_hair": true`
+(a raised hood, a sealed helmet). If any worn article declares it,
+`_body_worn` drops every hairstyle from the outfit — no geometry to clip
+through the shell, one less thing to expand.
+
 ## Items
 
 An **`items/<id>.json`** is a thin object: an article's *geometry* worn with its
@@ -933,11 +949,27 @@ draws with its own animation group, same as the game.
 **Editing it.** Select a region (in the Sections list) and the **Selected
 section** panel shows a **draw order vs. body** pair of multi-selects — one
 `under`, one `over` — listing every body animation group and section name in
-draw order. Pick any combination (or none); the preview and `#out` update
-live. **apply to whole article** copies the selected region's `over`/`under`
+draw order, plus **`hair`** at the end. Pick any combination (or none); the
+preview and `#out` update live. `under: ["head"]` sits the region behind the
+skull, `under: ["hair"]` between head and hair, `over: ["hair"]` over the hair
+— all resolved against the hairstyle chosen in **preview hair** (below).
+**apply to whole article** copies the selected region's `over`/`under`
 onto every region in the article, for the common case where the whole garment
 sits at one rank (hair, which splits its bulk `under` from its fringe `over`,
 is the exception — set those two per region).
+
+**Preview hair** (tailor mode, Fit panel). A dropdown of every
+`articles/hair_*.json` matching the fit body's gender, plus *— no hair —*. The
+pick draws that hairstyle on the reference body under the garment being
+tailored (reference only, never written), so a hat / hood / helmet fit and
+its `over`/`under: ["hair"]` layering can be judged against real hair. The
+choice is remembered per story (`gpEditorHair:<story>`); it defaults to
+`hair_short_<gender>`. Hidden when the loaded design is itself a hairstyle.
+
+**This headgear hides hair** (tailor mode, Fit panel). A checkbox that writes
+top-level `"hides_hair": true` onto the article (`_body_worn` then drops every
+hairstyle from any outfit wearing it — see Faces and hair). With it checked the
+preview hides the reference hair too, matching the game.
 
 **Colour and shade.** Every fill panel (a region's **Selected section** panel,
 a detail's **Polygons** panel) has a **color** dropdown (palette keys) and a
@@ -1115,7 +1147,10 @@ body.
 silhouette shows; the framing bits — a thin band along `head.hairline`,
 sideburns, a fringe, side panels — set `"over": ["head"]` and draw in front of
 the face. Group `torso` so it rides the head. `compose_worn`'s `"over"` /
-`"under"` accept body **section** names, not just animation groups.
+`"under"` accept body **section** names, not just animation groups — plus
+`"hair"` (see Draw order), so a hat/hood/helmet region can be layered behind
+the head, between head and hair, or over the hair. A headgear article that
+should cover hair entirely carries `"hides_hair": true` instead.
 
 Per-character variation is a **palette override**: skin / hair / eye / lip
 colours are palette keys, so a story or an NPC roster can swap them without

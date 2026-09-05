@@ -608,8 +608,13 @@ def compose_worn(body_design, body_parts, *article_parts):
       "under": ["<group-or-section>", ...] - draw before the FIRST such part
                (the bulk of a hairstyle uses ["head"] so the skull hides its
                back and only the volume beyond the silhouette shows).
-    Both accept animation-group names and body-section names. Groups/sections
-    the body doesn't have sort to the top."""
+    Both accept animation-group names and body-section names, plus "hair" for
+    any earlier article whose parts are tagged `sec == "hair"` (see
+    story_assets._body_worn) - so a hat region can sit behind the head
+    (`under: ["head"]`), between head and hair (`under: ["hair"]`), or over the
+    hair (`over: ["hair"]`). Groups/sections the body doesn't have sort to the
+    top. An article part's own `sec` is registered as it is placed, so a later
+    article list can layer against an earlier one; pass the hair list first."""
     order = body_design.get("draw_order", list(body_design.get("sections", {})))
     groups = {}
     for name in order:
@@ -634,6 +639,10 @@ def compose_worn(body_design, body_parts, *article_parts):
                 g = p.get("group", "torso")
                 rank = last.get(g, n + groups.get(g, 999)) + 0.5
             keyed.append((rank, p))
+            s = p.get("sec")            # a tagged article part (hair) is now a
+            if s is not None:           # target later lists can name in over/under
+                last[s] = rank
+                first.setdefault(s, rank)
     keyed.sort(key=lambda t: t[0])
     return [p for _, p in keyed]
 

@@ -118,22 +118,45 @@ def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
         sd = _load(story, "sets", set_name + ".json") or {}
         names += sd.get("articles", [])
     names += list(extra_articles)
-    arts = []
+
+    # resolve each name to (geometry design, item overrides); an id may be an
+    # item (items/<id>.json - a shared geometry with its own colour/shade) or a
+    # bare article id.
+    resolved = []
     for a in names:
-        # a name may be an item (items/<a>.json - reuses an article's geometry
-        # with its own material/colour) or a bare article id.
         it = _load(story, "items", a + ".json")
         if it and it.get("geometry"):
             ad = _load(story, "articles", it["geometry"] + ".json")
-            if ad:
-                arts.append(expand(ad, pal, mats, body=body,
-                                   color=it.get("color"),
-                                   shade=it.get("shade"),
-                                   colors=it.get("colors")))
-            continue
-        ad = _load(story, "articles", a + ".json")
+            kw = dict(color=it.get("color"), shade=it.get("shade"),
+                      colors=it.get("colors"))
+            geom_id = it["geometry"]
+        else:
+            ad, kw, geom_id = _load(story, "articles", a + ".json"), {}, a
         if ad:
-            arts.append(expand(ad, pal, mats, body=body))
+            resolved.append((ad, kw, geom_id))
+
+    def _is_hair(ad, gid):
+        return ad.get("slot") == "hair" or gid.startswith("hair_")
+
+    # a headgear article may declare `"hides_hair": true` - a raised hood, a
+    # sealed helmet - which drops every hairstyle from the outfit.
+    hide_hair = any(ad.get("hides_hair") for ad, _, _ in resolved)
+
+    hair_parts, other_parts = [], []
+    for ad, kw, gid in resolved:
+        if _is_hair(ad, gid):
+            if hide_hair:
+                continue
+            hp = expand(ad, pal, mats, body=body, **kw)
+            for p in hp:
+                p["sec"] = "hair"    # so a later article can name it in over/under
+            hair_parts.append(hp)
+        else:
+            other_parts.append(expand(ad, pal, mats, body=body, **kw))
+
+    # hair is composed first so a headgear region can layer against "hair"
+    # regardless of the order the set lists them in.
+    arts = hair_parts + other_parts
     worn = compose_worn(body, body_parts, *arts) if arts else body_parts
     return body, worn
 
