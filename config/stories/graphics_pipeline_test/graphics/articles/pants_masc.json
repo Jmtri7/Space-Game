@@ -6,7 +6,8 @@
   "regions": [
     {
       "group": "leg_far",
-      "color": "denim", "shade": "matte",
+      "color": "denim",
+      "shade": "matte",
       "note": "far leg tube. 0 fits leg_far.leg_far_top (dome), 1 fits leg_far.leg_far_out (down the outside), 3 fits leg_far.inseam reversed (ankle->centre); 2 the ankle hem, 4 crosses the centre so it overlaps the near leg.",
       "points": [
         [
@@ -66,7 +67,8 @@
     },
     {
       "group": "leg_near",
-      "color": "denim", "shade": "matte",
+      "color": "denim",
+      "shade": "matte",
       "note": "near leg tube.",
       "points": [
         [
@@ -129,36 +131,13 @@
       "over": [
         "leg_near"
       ],
-      "color": "denim", "shade": "matte",
+      "color": "denim",
+      "shade": "matte",
       "note": "hip panel / seat, drawn last. Its whole outline is the wearer's lower torso: 0 fits torso.low_waist across the top, 1 fits torso.lower_torso_right down the right side and underside to the crotch, 2 fits torso.lower_torso_left reversed back up the left. Sits flush with the body, never proud of it.",
       "points": [
         [
-          -2.85,
-          -15.8
-        ],
-        [
-          -2.5,
-          -14.9
-        ],
-        [
-          -1.7,
-          -14.55
-        ],
-        [
-          0,
-          -14.5
-        ],
-        [
-          1.7,
-          -14.55
-        ],
-        [
-          2.5,
-          -14.9
-        ],
-        [
-          2.85,
-          -15.8
+          -0.039,
+          -14.149
         ],
         [
           2.7,
@@ -169,7 +148,13 @@
           -16.9
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.bottom",
+          "from": 0,
+          "to": 0
+        }
+      ]
     }
   ]
 }

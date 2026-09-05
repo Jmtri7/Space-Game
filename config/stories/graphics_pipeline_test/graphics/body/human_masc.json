@@ -49,7 +49,8 @@
   "sections": {
     "torso": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "shorter torso over long legs. Broad shoulders taper to a firm waist; the underside sweeps in one convex curve from the hip's outer edge to the crotch.",
       "points": [
         [
@@ -89,16 +90,16 @@
           -14.55
         ],
         [
-          0,
+          -0.251,
           -14.5
         ],
         [
-          -1.7,
-          -14.55
+          -1.011,
+          -15.454
         ],
         [
-          -2.5,
-          -14.9
+          -1.829,
+          -15.741
         ],
         [
           -2.85,
@@ -170,11 +171,65 @@
           -3.4,
           -24.9
         ]
+      },
+      "curves": {
+        "bottom": {
+          "pts": [
+            [
+              2.7,
+              -16.9
+            ],
+            [
+              2.85,
+              -15.8
+            ],
+            [
+              2.5,
+              -14.9
+            ],
+            [
+              1.7,
+              -14.55
+            ],
+            [
+              -0.251,
+              -14.5
+            ],
+            [
+              -1.011,
+              -15.454
+            ],
+            [
+              -1.829,
+              -15.741
+            ],
+            [
+              -2.85,
+              -15.8
+            ],
+            [
+              -2.7,
+              -16.9
+            ]
+          ],
+          "ends": [
+            [
+              2.7,
+              -16.9
+            ],
+            [
+              -2.7,
+              -16.9
+            ]
+          ],
+          "dir": 1
+        }
       }
     },
     "neck": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           1.05,
@@ -202,7 +257,8 @@
     },
     "head": {
       "group": "torso",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "shifted -0.3 x toward the screen-left facing; features clustered a touch further over; sits 0.35 lower on the neck than a straight stack",
       "points": [
         [
@@ -304,7 +360,8 @@
     },
     "arm_far": {
       "group": "arm_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -2.57,
@@ -360,7 +417,8 @@
     },
     "hand_far": {
       "group": "hand_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -2.479,
@@ -400,7 +458,8 @@
     },
     "leg_far": {
       "group": "leg_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           -1,
@@ -472,7 +531,8 @@
     },
     "foot_far": {
       "group": "foot_far",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [
@@ -521,7 +581,8 @@
     },
     "arm_near": {
       "group": "arm_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           2.561,
@@ -577,7 +638,8 @@
     },
     "hand_near": {
       "group": "hand_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           2.465,
@@ -617,7 +679,8 @@
     },
     "leg_near": {
       "group": "leg_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "points": [
         [
           1,
@@ -689,7 +752,8 @@
     },
     "foot_near": {
       "group": "foot_near",
-      "color": "skin", "shade": "soft",
+      "color": "skin",
+      "shade": "soft",
       "note": "bare foot; top edge dips concave in front of the ankle",
       "points": [
         [
