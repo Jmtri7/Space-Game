@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the standard trousers (pants_masc geometry) recoloured #56606b, matte finish.",
-  "geometry": "pants_masc",
-  "colors": {
-    "denim": "#56606b"
-  },
-  "shade": "matte"
-}

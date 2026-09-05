@@ -1181,20 +1181,24 @@ gates needed and no more, and is a bootable story (`story.json` + one system +
 **The Common Kit outfit pack** — the 15 culture-neutral outfits from the
 retired `common-kit.html` atlas (space/flight suit, mechanic, dockworker,
 prospector, security, station command, marshal, medic, surgeon, researcher,
-civilian, smuggler, ranger, bounty hunter), rebuilt entirely from the articles
-above with no new geometry:
+civilian, smuggler, ranger, bounty hunter), rebuilt from the articles above:
 
 - `items/<garment>_<colourway>_{masc,femme}.json` — a `colors` patch (+ `shade`)
-  over one base article per recoloured piece (`jacket_olive`, `coat_navy`,
-  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, …). Colours are read
-  off the old atlas's prose descriptions.
+  over one base article per recoloured piece (`jacket_navy`, `coat_navy`,
+  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, `hood_black`,
+  `backpack_brown`, `bandolier_black`, `star_gold`, `braid_gold`, …). Colours
+  are read off the old atlas's prose descriptions.
+- a few small **decal articles** carry geometry the recolours can't:
+  `comms_box` (dark box + red indicator beside the helmet — flight suit),
+  `med_cross` (breast cross — medic), `armband_medcross` (red band + white
+  cross — medic), `pen_array` (red/cyan/gold breast-pocket pens — researcher).
 - `sets/ck_<outfit>_{masc,femme}.json` — the article + item list per outfit per
   body, `palette: "civilian"`.
 - `graphics.json` `outfits` `ck_<outfit>_{masc,femme}` and one concourse NPC per
   outfit (alternating body) in `systems/proving_ground.json`.
 
 Fidelity is silhouette + colour, not every prop: pieces with no article yet
-(a drill, a baton, a holster, a trek bedroll, chest-pocket pens) are omitted.
+(a drill, a baton, a holster, a trek bedroll) are omitted.
 
 Grow the set now by the per-asset gates, not the build gates.
 

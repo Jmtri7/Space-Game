@@ -1,8 +1,9 @@
 {
-  "identity": "Common Kit colourway: the sealed pressure helmet (helmet_masc geometry) recoloured #c8ccd0, sheen finish.",
+  "identity": "Common Kit colourway: the flight helmet (helmet_masc geometry) - light-grey shell, smoke-tinted visor.",
   "geometry": "helmet_masc",
   "colors": {
-    "metal": "#c8ccd0"
+    "metal": "#c8ccd0",
+    "glass": "#39404a"
   },
   "shade": "sheen"
 }

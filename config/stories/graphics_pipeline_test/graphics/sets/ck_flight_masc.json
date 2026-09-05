@@ -1,12 +1,14 @@
 {
-  "identity": "Common Kit - Flight Suit (masc cut). Slate flight suit, black boots, a light-grey flight helmet, and an X of dark webbing across the chest - the ejection harness.",
+  "identity": "Common Kit - Flight Suit (masc cut). Navy flight suit, black boots, a light-grey flight helmet with a smoke visor and a red-lit comms box, and an X of dark webbing across the chest - the ejection harness.",
   "palette": "civilian",
   "articles": [
     "tank_top_masc",
-    "jacket_slate_masc",
-    "pants_slate_masc",
+    "jacket_navy_masc",
+    "pants_navy_masc",
     "boots_black_masc",
     "helmet_flight_masc",
-    "harness_masc"
+    "harness_masc",
+    "comms_box_masc",
+    "comms_box_masc"
   ]
 }
