@@ -6,7 +6,8 @@
   "regions": [
     {
       "group": "foot_near",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.32,
       "note": "the whole near-foot outline, outset so the shoe wraps it.",
       "points": [
@@ -15,76 +16,49 @@
           -1.741
         ],
         [
-          2.141,
-          -1.02
-        ],
-        [
-          2.058,
-          -0.5
-        ],
-        [
-          1.428,
-          -0.485
-        ],
-        [
           -0.5,
           -0.1
-        ],
-        [
-          -0.636,
-          -0.522
-        ],
-        [
-          -0.086,
-          -0.76
         ],
         [
           1.005,
           -1.748
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "foot_near.shoe",
+          "from": 1,
+          "to": 1
+        }
+      ]
     },
     {
       "group": "foot_far",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.32,
       "note": "the whole far-foot outline.",
       "points": [
-        [
-          -2.978,
-          -0.768
-        ],
-        [
-          -3.522,
-          -0.508
-        ],
         [
           -3.4,
           -0.1
         ],
         [
-          -1.494,
-          -0.457
-        ],
-        [
-          -0.992,
-          -0.45
-        ],
-        [
-          -0.835,
-          -1.016
-        ],
-        [
-          -0.97,
-          -1.732
+          -0.798,
+          -1.976
         ],
         [
           -1.97,
           -1.735
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "foot_far.shoe",
+          "from": 0,
+          "to": 0
+        }
+      ]
     }
   ]
 }

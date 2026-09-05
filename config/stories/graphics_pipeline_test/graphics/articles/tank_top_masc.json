@@ -9,39 +9,30 @@
       "over": [
         "leg_near"
       ],
-      "color": "knit", "shade": "matte",
+      "color": "knit",
+      "shade": "matte",
       "note": "shell. Points 1-5 are fit placeholders (side_right rev, shoulder_arc_right, neck_hole, shoulder_arc_left, side_left). Only the two hem points (0, 6) are free.",
       "points": [
         [
-          0.4,
-          -15.4
+          1.442,
+          -25.894
         ],
         [
-          3.0,
-          -16.6
+          2.845,
+          -19.381
         ],
         [
-          2.0,
-          -25.3
-        ],
-        [
-          0.6,
-          -24.8
-        ],
-        [
-          -2.0,
-          -25.3
-        ],
-        [
-          -3.0,
-          -16.6
-        ],
-        [
-          -0.4,
-          -15.4
+          -0.376,
+          -19.059
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.far short",
+          "from": 8,
+          "to": 8
+        }
+      ]
     }
   ]
 }

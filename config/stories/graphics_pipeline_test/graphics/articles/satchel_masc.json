@@ -1,5 +1,5 @@
 {
-  "identity": "A worn leather shoulder bag on a cross-body strap: the strap runs from the far shoulder down across the chest to rest against the near hip, where the bag itself hangs. Free-drawn against the reference body — it hangs clear of the skin rather than fitting it, so the same shape reads fine on either body.",
+  "identity": "A worn leather shoulder bag on a cross-body strap: the strap runs from the far shoulder down across the chest to rest against the near hip, where the bag itself hangs. Free-drawn against the reference body \u2014 it hangs clear of the skin rather than fitting it, so the same shape reads fine on either body.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
@@ -9,24 +9,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "cross-body strap, far shoulder to near hip. All free vertices.",
       "points": [
         [
-          -1.414,
-          -25.366
+          -1.95,
+          -25.634
         ],
         [
-          -0.983,
-          -25.571
+          -1.519,
+          -25.839
         ],
         [
-          2.118,
-          -21.049
+          2.838,
+          -18.226
         ],
         [
-          1.894,
-          -20.799
+          2.614,
+          -17.976
         ]
       ],
       "fits": []
@@ -36,80 +37,83 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "bag body, hangs at the near hip where the strap ends.",
       "points": [
         [
-          0.205,
-          -18.204
+          0.784,
+          -18.006
         ],
         [
-          0.155,
-          -20.504
+          0.734,
+          -20.306
         ],
         [
-          0.405,
-          -21.304
+          0.984,
+          -21.106
         ],
         [
-          1.605,
-          -21.304
+          2.184,
+          -21.106
         ],
         [
-          1.855,
-          -20.504
+          2.434,
+          -20.306
         ],
         [
-          1.805,
-          -18.204
+          2.384,
+          -18.006
         ]
       ],
       "fits": [],
       "details": [
         {
           "group": "torso",
-          "color": "leather", "shade": "deep",
+          "color": "leather",
+          "shade": "deep",
           "tone": "dark",
           "note": "flap",
           "points": [
             [
-              0.255,
-              -18.204
+              0.834,
+              -18.006
             ],
             [
-              0.405,
-              -19.204
+              0.984,
+              -19.006
             ],
             [
-              1.605,
-              -19.204
+              2.184,
+              -19.006
             ],
             [
-              1.755,
-              -18.204
+              2.334,
+              -18.006
             ]
           ]
         },
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "clasp",
           "points": [
             [
-              0.825,
-              -19.004
+              1.404,
+              -18.806
             ],
             [
-              1.185,
-              -19.004
+              1.764,
+              -18.806
             ],
             [
-              1.185,
-              -18.604
+              1.764,
+              -18.406
             ],
             [
-              0.825,
-              -18.604
+              1.404,
+              -18.406
             ]
           ]
         }

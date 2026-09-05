@@ -6,93 +6,59 @@
   "regions": [
     {
       "group": "foot_near",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.3,
       "note": "near boot. Traces the wearer's own foot_outline (the sole/toe/heel corners are its exact points); the last two points raise the ankle-height corners to mid-shin for the shaft.",
       "points": [
         [
-          1.938,
-          -0.677
-        ],
-        [
-          1.715,
-          -0.425
-        ],
-        [
           1.35,
           -0.42
-        ],
-        [
-          -0.25,
-          -0.1
-        ],
-        [
-          -0.365,
-          -0.385
-        ],
-        [
-          0.05,
-          -0.605
-        ],
-        [
-          0.9,
-          -1.6
         ],
         [
           0.681,
           -4.365
         ],
         [
-          2.286,
-          -4.235
+          2.319,
+          -4.343
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "foot_near.shoe",
+          "from": 0,
+          "to": 0
+        }
+      ]
     },
     {
       "group": "foot_far",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.3,
       "note": "far boot, mirror of the near one.",
       "points": [
         [
-          -0.705,
-          -4.332
+          -2.288,
+          -4.213
         ],
         [
-          -2.217,
-          -4.365
-        ],
-        [
-          -1.8,
-          -1.6
-        ],
-        [
-          -2.655,
-          -0.605
-        ],
-        [
-          -3.035,
-          -0.4
-        ],
-        [
-          -2.95,
-          -0.1
+          -0.548,
+          -4.289
         ],
         [
           -1.38,
           -0.49
-        ],
-        [
-          -0.997,
-          -0.513
-        ],
-        [
-          -0.815,
-          -0.81
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "foot_far.shoe",
+          "from": 2,
+          "to": 2
+        }
+      ]
     }
   ]
 }

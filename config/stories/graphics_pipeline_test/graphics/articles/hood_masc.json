@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "under": [
-        "head"
-      ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "bulk of the hood, behind the head and draping past the shoulders.",
       "points": [
         [
@@ -17,20 +15,20 @@
           -28.338
         ],
         [
-          -2.673,
-          -24.978
+          -2.232,
+          -25.299
         ],
         [
-          2.84,
-          -24.905
+          2.225,
+          -25.6
         ],
         [
-          2.775,
-          -28.45
+          2.12,
+          -27.915
         ],
         [
           2.208,
-          -30.571
+          -30.584
         ],
         [
           0.035,
@@ -41,14 +39,15 @@
           -30.822
         ]
       ],
-      "fits": []
+      "fits": [],
+      "under": [
+        "neck"
+      ]
     },
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "tone": "dark",
       "note": "front edge, brim sits right at the brow (head.anchors.brow y=-29.05) without dropping onto the eyes.",
       "points": [
@@ -81,12 +80,12 @@
           -30.505
         ],
         [
-          2.166,
-          -29.749
+          3.276,
+          -25.403
         ],
         [
-          1.3,
-          -28.15
+          0.645,
+          -25.369
         ],
         [
           1.4,
@@ -94,14 +93,32 @@
         ],
         [
           0.652,
-          -29.725
+          -29.712
         ],
         [
           -0.739,
           -29.709
+        ],
+        [
+          -1.868,
+          -29.468
+        ],
+        [
+          -1.883,
+          -25.315
+        ],
+        [
+          -2.513,
+          -25.268
         ]
       ],
-      "fits": []
+      "fits": [],
+      "under": [
+        "head"
+      ],
+      "over": [
+        "head"
+      ]
     }
   ]
 }

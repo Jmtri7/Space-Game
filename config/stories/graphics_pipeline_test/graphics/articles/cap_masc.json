@@ -9,7 +9,8 @@
       "over": [
         "head"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "solid cap over the scalp, same silhouette as hair_short.",
       "points": [
         [
@@ -17,8 +18,8 @@
           -30.411
         ],
         [
-          1.413,
-          -29.774
+          1.471,
+          -29.849
         ],
         [
           1.231,

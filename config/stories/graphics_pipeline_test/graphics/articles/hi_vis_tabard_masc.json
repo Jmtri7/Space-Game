@@ -7,115 +7,117 @@
     {
       "group": "torso",
       "over": [
-        "leg_near"
+        "arm_far"
       ],
-      "color": "lamp", "shade": "glow",
+      "color": "lamp",
+      "shade": "glow",
       "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
       "points": [
         [
           -0.709,
-          -19.886
+          -19.007
         ],
         [
-          -1.604,
-          -19.924
+          -4.283,
+          -22.359
         ],
         [
-          -2.829,
-          -23.203
-        ],
-        [
-          -1.758,
-          -25.268
-        ],
-        [
-          -1.166,
-          -25.502
-        ],
-        [
-          -0.739,
-          -23.459
+          -0.634,
+          -25.081
         ]
       ],
-      "fits": []
+      "fits": [
+        {
+          "curve": "torso.far short",
+          "from": 1,
+          "to": 1
+        }
+      ],
+      "under": [
+        "arm_near"
+      ]
     },
     {
       "group": "torso",
       "over": [
-        "leg_near"
+        "arm_far"
       ],
-      "color": "lamp", "shade": "glow",
+      "color": "lamp",
+      "shade": "glow",
       "note": "right panel, mirror of the left.",
       "points": [
         [
-          2.11,
-          -19.988
+          4.251,
+          -22.315
         ],
         [
-          1.667,
-          -25.351
+          -0.268,
+          -19.035
         ],
         [
-          1.007,
-          -25.607
-        ],
-        [
-          -0.004,
-          -23.469
-        ],
-        [
-          0.068,
-          -19.906
+          -0.229,
+          -25.104
         ]
       ],
-      "fits": [],
+      "fits": [
+        {
+          "curve": "torso.near short",
+          "from": 0,
+          "to": 0
+        }
+      ],
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "reflective stripe, high",
           "points": [
             [
-              -2.313,
-              -24.718
+              -3.712,
+              -23.616
             ],
             [
-              1.996,
-              -24.757
+              3.63,
+              -23.532
             ],
             [
-              1.996,
-              -24.157
+              3.531,
+              -23.154
             ],
             [
-              -2.538,
-              -24.144
+              -3.602,
+              -23.228
             ]
           ]
         },
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "reflective stripe, low",
           "points": [
             [
-              -2.442,
-              -21.778
+              -3.048,
+              -21.332
             ],
             [
-              2.258,
-              -21.778
+              3.05,
+              -21.493
             ],
             [
-              2.258,
-              -21.178
+              2.877,
+              -20.856
             ],
             [
-              -2.284,
-              -21.178
+              -3.002,
+              -20.93
             ]
           ]
         }
+      ],
+      "under": [
+        "arm_near"
       ]
     }
   ]

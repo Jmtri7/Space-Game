@@ -9,24 +9,29 @@
       "under": [
         "torso"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
       "points": [
         [
-          -1.162,
-          -25.946
+          -1.871,
+          -26.188
         ],
         [
-          2.115,
-          -25.898
+          2.26,
+          -26.156
         ],
         [
-          2.519,
-          -21.105
+          3.565,
+          -25.37
         ],
         [
-          -1.501,
-          -21.089
+          3.969,
+          -17.964
+        ],
+        [
+          -1.839,
+          -17.916
         ]
       ],
       "fits": [],
@@ -37,24 +42,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "far-side shoulder strap, mirror of the near one.",
       "points": [
         [
-          -0.978,
-          -25.595
+          -1.288,
+          -25.836
         ],
         [
-          -1.414,
-          -25.366
+          -1.635,
+          -25.665
         ],
         [
-          -2.262,
-          -24.184
+          -3.282,
+          -22.59
         ],
         [
-          -2.115,
-          -23.851
+          -3.204,
+          -22.269
         ]
       ],
       "fits": []
@@ -64,24 +70,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "near-side shoulder strap, visible in front over the shirt.",
       "points": [
         [
-          0.945,
-          -25.611
+          1.174,
+          -25.886
         ],
         [
-          1.363,
-          -25.377
+          1.466,
+          -25.801
         ],
         [
-          2.289,
-          -22.742
+          3.206,
+          -22.295
         ],
         [
-          2.044,
-          -22.284
+          3.179,
+          -21.837
         ]
       ],
       "fits": []

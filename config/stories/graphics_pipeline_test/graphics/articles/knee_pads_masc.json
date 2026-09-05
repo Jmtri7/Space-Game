@@ -6,40 +6,42 @@
   "regions": [
     {
       "group": "leg_near",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.08,
       "note": "near knee pad, centred on leg_near.knee.",
       "points": [
         [
-          0.52,
-          -7.182
+          0.332,
+          -7.22
         ],
         [
-          2.28,
-          -7.182
+          2.092,
+          -7.22
         ],
         [
-          2.415,
-          -8.4
+          2.227,
+          -8.438
         ],
         [
-          2.28,
-          -9.618
+          2.092,
+          -9.656
         ],
         [
-          0.52,
-          -9.618
+          0.332,
+          -9.656
         ],
         [
-          0.385,
-          -8.4
+          0.197,
+          -8.438
         ]
       ],
       "fits": []
     },
     {
       "group": "leg_far",
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "outset": 0.08,
       "note": "far knee pad, mirror of the near one.",
       "points": [

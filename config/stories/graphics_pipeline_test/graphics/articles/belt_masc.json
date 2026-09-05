@@ -1,5 +1,5 @@
 {
-  "identity": "A plain leather waist belt with a small metal buckle. Top and bottom edges are the wearer's own waistline and low-waist curves, so it sits flush at the natural waist on any body — no free vertices except the buckle.",
+  "identity": "A plain leather waist belt with a small metal buckle. Top and bottom edges are the wearer's own waistline and low-waist curves, so it sits flush at the natural waist on any body \u2014 no free vertices except the buckle.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
@@ -9,48 +9,50 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge). \"over\": [\"leg_near\"] puts it in the same late draw-rank as a shirt/pants hem so it shows over them, not just the bare torso.",
       "points": [
         [
-          -1.678,
-          -20.447
+          -2.615,
+          -19.748
         ],
         [
-          1.822,
-          -20.351
-        ],
-        [
-          2.037,
+          2.55,
           -19.623
         ],
         [
-          -1.892,
-          -19.714
+          2.469,
+          -18.974
+        ],
+        [
+          -2.432,
+          -19.116
         ]
       ],
       "fits": [],
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "centre buckle",
           "points": [
             [
-              -0.413,
-              -20.395
+              -0.507,
+              -19.761
             ],
             [
-              0.241,
-              -20.386
+              0.147,
+              -19.752
             ],
             [
-              0.241,
-              -19.686
+              0.147,
+              -19.052
             ],
             [
-              -0.459,
-              -19.686
+              -0.553,
+              -19.052
             ]
           ]
         }

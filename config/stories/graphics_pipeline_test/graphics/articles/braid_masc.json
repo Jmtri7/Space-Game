@@ -9,48 +9,50 @@
       "over": [
         "leg_near"
       ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "thin cord from the near shoulder down under the arm and back.",
       "points": [
         [
-          1.093,
-          -25.551
+          1.636,
+          -25.917
+        ],
+        [
+          1.906,
+          -25.743
+        ],
+        [
+          1.678,
+          -22.291
+        ],
+        [
+          2.625,
+          -19.935
+        ],
+        [
+          2.552,
+          -19.236
+        ],
+        [
+          1.278,
+          -22.191
         ],
         [
           1.363,
-          -25.377
-        ],
-        [
-          1.206,
-          -22.94
-        ],
-        [
-          1.846,
-          -21.185
-        ],
-        [
-          1.844,
-          -20.38
-        ],
-        [
-          0.806,
-          -22.84
-        ],
-        [
-          0.82,
-          -25.35
+          -25.716
         ]
       ],
       "fits": [],
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "tone": "light",
           "note": "shoulder pin",
           "circle": [
-            1.372,
-            -25.612,
+            1.915,
+            -25.978,
             0.3
           ]
         }

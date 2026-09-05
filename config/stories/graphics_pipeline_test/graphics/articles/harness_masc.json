@@ -1,5 +1,5 @@
 {
-  "identity": "A pair of load-bearing straps crossing the chest in an X, near shoulder to far hip and back, with a small ring where they cross. Free-drawn against the reference body — a loose fit, not a skin-tight one, so it reads the same on either body.",
+  "identity": "A pair of load-bearing straps crossing the chest in an X, near shoulder to far hip and back, with a small ring where they cross. Free-drawn against the reference body \u2014 a loose fit, not a skin-tight one, so it reads the same on either body.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
@@ -9,24 +9,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "strap, near shoulder to far hip.",
       "points": [
         [
-          1.454,
-          -25.574
+          2.684,
+          -25.377
         ],
         [
-          1.863,
-          -25.332
+          3.167,
+          -25.16
         ],
         [
-          -1.604,
-          -19.924
+          -2.465,
+          -18.989
         ],
         [
-          -1.729,
-          -20.458
+          -2.566,
+          -19.388
         ]
       ],
       "fits": []
@@ -36,35 +37,37 @@
       "over": [
         "leg_near"
       ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "strap, far shoulder to near hip - mirror of the other.",
       "points": [
         [
-          -1.414,
-          -25.366
+          -3.062,
+          -25.194
         ],
         [
-          -1.938,
-          -25.216
+          -3.34,
+          -25.056
         ],
         [
-          1.801,
-          -19.958
+          2.465,
+          -19.011
         ],
         [
-          1.876,
-          -20.442
+          2.479,
+          -19.359
         ]
       ],
       "fits": [],
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "chest ring where the straps cross",
           "circle": [
-            -0.152,
-            -22.821,
+            -0.103,
+            -21.874,
             0.55
           ]
         }

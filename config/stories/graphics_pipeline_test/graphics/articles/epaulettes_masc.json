@@ -9,24 +9,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "near shoulder board, on shoulder_near.",
       "points": [
         [
-          1.55,
-          -24.6
+          0.991,
+          -24.543
         ],
         [
-          2.95,
-          -24.7
+          2.391,
+          -24.643
         ],
         [
-          2.85,
-          -25.35
+          2.291,
+          -25.293
         ],
         [
-          1.55,
-          -25.3
+          0.991,
+          -25.243
         ]
       ],
       "fits": []
@@ -36,24 +37,25 @@
       "over": [
         "leg_near"
       ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "far shoulder board, mirror of the near one.",
       "points": [
         [
-          -1.55,
-          -24.6
+          -1.12,
+          -24.535
         ],
         [
-          -2.95,
-          -24.7
+          -2.52,
+          -24.635
         ],
         [
-          -2.85,
-          -25.35
+          -2.42,
+          -25.285
         ],
         [
-          -1.414,
-          -25.366
+          -0.984,
+          -25.301
         ]
       ],
       "fits": []
