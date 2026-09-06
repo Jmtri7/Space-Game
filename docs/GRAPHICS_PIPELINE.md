@@ -828,15 +828,14 @@ which body is loaded outright, staying in the same mode; in tailor mode it
 swaps `fitbody=` — which body the *same* outfit is checked against — leaving
 `file=` on the article.
 
-**Switching articles without retyping the URL.** Once a design is loaded, a
-**switch to** dropdown appears listing every `articles/*.json` next to it —
-picking one navigates to that article, tailored against a body — `fitbody`
-in tailor mode, otherwise the body currently being edited — since a bare
-`regions` article has no editor view (it loads to a "open it with a body"
-hint, not a blank page). It's populated by fetching the
+**Switching articles without retyping the URL.** In tailor mode a **switch
+to** dropdown lists every `articles/*.json` next to the loaded one — picking
+one navigates to that article, fit against the same `fitbody`. It's hidden in
+plain / face mode (no article in play to switch away from — use the edit
+**outfit** button to get into tailoring first). It's populated by fetching the
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
-hidden rather than showing something broken. In tailor mode the list is
+hidden rather than showing something broken. The list is
 filtered to the fit body's gender — with a `_femme` body loaded it shows the
 `_femme` and unsuffixed articles only (and `_masc` vice-versa), so the
 `_masc`/`_femme` split doesn't double the dropdown; the currently-loaded

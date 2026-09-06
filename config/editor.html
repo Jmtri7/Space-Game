@@ -2948,10 +2948,12 @@ document.getElementById('startDesign').onchange = async e=>{
   }
   location.search = qs.toString();
 };
-// a dropdown of every articles/*.json next to this one
+// a dropdown of every articles/*.json next to this one - tailor mode only
+// (in body / face mode there's no article in play to switch away from; use
+// the edit "outfit" button to get into tailoring first)
 async function populateArticlePicker(){
   const row = document.getElementById('switcherRow'), sel_ = document.getElementById('articlePicker');
-  if(!GBASE) return;
+  if(!GBASE || !TAILOR_MODE){ row.style.display = 'none'; return; }
   const { files } = await VFS.listDir(GBASE + '/articles');
   let names = files.filter(n => n.endsWith('.json')).sort();
   if(!names.length) return;
