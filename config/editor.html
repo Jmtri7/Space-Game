@@ -2865,7 +2865,9 @@ document.getElementById('bodyDirectPicker').onchange = e=>{
 // one, then jump straight to that story's bodies, faces, or outfits - picking
 // one goes through the normal ?file= boot path so GBASE gets set and every
 // dependent dropdown (mode switcher, "switch to", body switcher, ...) lights
-// up. Shown whether or not a design is loaded, so you can hop between stories.
+// up. The story dropdown is always shown; the design dropdown beside it only
+// when it's not a no-op - nothing loaded yet, or the story picker points at a
+// story other than the loaded design's (a genuine cross-story hop).
 // `?story=<name>` preselects one; the last pick is remembered per browser.
 const PIPELINE_STORIES = ['graphics_pipeline_test'];   // fallback if config/stories/ has no directory listing
 const STORY_LS = 'gpEditorStory';
@@ -2899,7 +2901,12 @@ async function refreshStartDesigns(){
   const row = document.getElementById('startDesignRow'), sel_ = document.getElementById('startDesign');
   const story = document.getElementById('storyPicker').value;
   const kind  = document.getElementById('startKind').value;
-  if(!story){ row.style.display = 'none'; return; }
+  // this row only exists to reach a design that isn't already open - before
+  // anything's loaded, or to hop to a *different* story. Once a design from the
+  // selected story is loaded, the edit / body / switch-to controls below cover
+  // every move within it, so hide the duplicate.
+  const elsewhere = !loadedPath || story !== storyOfPath(loadedPath);
+  if(!story || !elsewhere){ row.style.display = 'none'; return; }
   const names = await listStoryDesigns(storyBase(story), kind);
   const label = kind === 'outfit' ? 'an article' : 'a body';
   sel_.innerHTML = `<option value="">— pick ${label} —</option>` +

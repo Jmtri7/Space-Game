@@ -669,11 +669,14 @@ list that story's `graphics/body/*.json` (body and face) or
 one last tailored against in that story, remembered per story, else the first
 alphabetically). So `GBASE` gets set and every dependent dropdown lights up.
 
-This panel shows **whether or not a design is loaded** — once one is, the story
-is derived from its path, and switching the dropdown re-scopes the design list
-so you can hop to another story's designs without retyping a URL. `?story=<name>`
-preselects a story on a bare load; the last pick is remembered per browser
-(`gpEditorStory`). This is the mechanism that makes a second pipeline story
+The **story** dropdown is always shown; once a design is loaded the story is
+derived from its path. The **design** dropdown beside it only appears when it
+isn't a no-op — nothing loaded yet, or the story dropdown points at a story
+*other* than the loaded design's (switch it there and the design list
+re-scopes so you can hop to another story without retyping a URL; within the
+current story the edit / body / switch-to controls below cover every move).
+`?story=<name>` preselects a story on a bare load; the last pick is remembered
+per browser (`gpEditorStory`). This is the mechanism that makes a second pipeline story
 "just work" in the editor with no code change — it only needs a `graphics/`
 directory with a `materials.json`.
 
