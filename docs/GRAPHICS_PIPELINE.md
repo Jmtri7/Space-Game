@@ -608,10 +608,11 @@ pass always shows its own before/after. "Freeze shade → editable" replaces a
 region's computed crescent with an explicit `shade_dark` / `shade_light` point
 list you can then drag.
 
-Load a design three ways: `?file=<repo-relative path>` in the URL, file-drop
-onto the canvas, or paste into the Output box and hit "Load ← box". When
-loaded by `?file=`, the real `materials.json` and the design's palette are
-read too, so tones and colours match the game exactly.
+Load a design by pointing the **story** and design dropdowns at it (or with
+`?file=<repo-relative path>` in the URL directly). Either way the real
+`materials.json` and the design's palette are read too, so tones and colours
+match the game exactly. An image can still be dropped onto the canvas as a
+tracing overlay — that's the only file-drop the editor takes now.
 
 ### Reading and writing repo files
 
@@ -658,7 +659,8 @@ built-in story. A **story** dropdown at the top of the side panel discovers
 every `config/stories/<name>/graphics/` pipeline (it lists `config/stories/`,
 then keeps each entry that has a `graphics/materials.json`; `PIPELINE_STORIES`
 in the script is only a fallback for a backend that can't list a directory).
-Pick a story, then the
+This is the only way a design gets loaded (there is no hand-load / paste
+route — see below). Pick a story, then the
 **body / face / outfit** kind selector and the **design** dropdown beside it
 list that story's `graphics/body/*.json` (body and face) or
 `graphics/articles/*.json` (outfit). Picking one navigates through the normal
@@ -675,9 +677,9 @@ preselects a story on a bare load; the last pick is remembered per browser
 "just work" in the editor with no code change — it only needs a `graphics/`
 directory with a `materials.json`.
 
-A file loaded via **Load file / drag-drop** still has no repo path (the browser
-hands over only a bare filename), so use the story picker to jump to a real
-design instead — and drag-drop can't be saved back (see **Saving**).
+There is no hand-load route (a dropped file or pasted JSON carried no repo
+path, so nothing downstream — palette, save, the switchers — could work); the
+story picker is how every design comes in.
 
 Coverage today is **body designs** (`sections`); other kinds (`regions`
 articles, `silhouette` ships) are being folded in.
@@ -817,11 +819,11 @@ reset your setup. `sessionStorage` lives exactly as long as the tab: close it
 and the memory is gone; a second tab starts fresh. Face-mode piece isolation
 isn't persisted (its `detPick` indices shift when details reorder).
 
-Right below it, a **body** dropdown (plain or face mode only — a
-`body/*.json` directory listing) switches which body is loaded outright,
-staying in the same mode. Tailor mode doesn't show this row; its own **fit
-against** dropdown in the Fit panel is the equivalent there (switches which
-body the outfit is checked against instead of loading the body itself).
+Right below it, a **body** dropdown (a `body/*.json` directory listing) is the
+single body switcher for all three views: in plain or face mode it switches
+which body is loaded outright, staying in the same mode; in tailor mode it
+swaps `fitbody=` — which body the *same* outfit is checked against — leaving
+`file=` on the article.
 
 **Switching articles without retyping the URL.** Once a design is loaded, a
 **switch to** dropdown appears listing every `articles/*.json` next to it —
@@ -835,9 +837,9 @@ hidden rather than showing something broken. In tailor mode the list is
 filtered to the fit body's gender — with a `_femme` body loaded it shows the
 `_femme` and unsuffixed articles only (and `_masc` vice-versa), so the
 `_masc`/`_femme` split doesn't double the dropdown; the currently-loaded
-article stays listed even if it's the mismatched one. In tailor mode a second
-**fit against** dropdown does the same for `body/*.json` — swaps which body
-the *same* article is checked against without retyping the URL.
+article stays listed even if it's the mismatched one. (Switching which body
+the article is fit against is the **body** dropdown near the top of the panel,
+above — the same one used to switch bodies in plain/face mode.)
 
 **Hiding body parts.** In tailor mode, the Fit panel lists every body
 section with two toggles: the eye hides the part entirely (fill *and* its
@@ -934,7 +936,7 @@ shape it independently of the main edit:
   edited itself (labelled `(live)`) — the panel then tracks the in-memory
   edit, not a stale disk fetch, acting as a second, independently framed
   camera on the same model. The dropdown (a `body/*.json` directory listing,
-  same trick as the tailor mode "fit against" picker) also lists `auto —
+  same directory-listing trick as the **body** switcher) also lists `auto —
   counterpart`, the body found by swapping `_masc`/`_femme` in the loaded (or
   `fitbody`) filename, and every other body on disk. Whichever you pick
   sticks for the rest of the page's session (the default only applies fresh

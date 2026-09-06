@@ -72,16 +72,10 @@
   <div class="hint" id="fsStatus" style="display:none"></div>
   <input type="file" id="fsDirInput" webkitdirectory hidden>
   <div class="row">
-    <button id="load">Load file</button>
-    <button id="loadBox">Load ← box</button>
     <button id="reset">Reset</button>
   </div>
-  <input type="file" id="file" accept=".json" hidden>
-  <div class="hint">Drag a <code>body/*.json</code> onto the canvas, click Load file, or paste JSON into the Output box and hit "Load ← box". Kept in this browser between visits.</div>
-  <div class="hint">A file picked this way has no known repo path, so the
-    body/face/outfit switcher below (and every other dropdown that depends on
-    it) stays hidden — pick a <b>story</b> below and jump straight to one of
-    its designs instead; those all light up.</div>
+  <div class="hint">Pick a <b>story</b> then one of its designs to begin. The
+    edit stays in this browser between visits.</div>
   <div class="row" id="startPickerRow" style="display:none">
     story <select id="storyPicker" style="flex:1"></select>
   </div>
@@ -152,7 +146,6 @@
       aren't both snapped to free several at once. (A vertex a real garment
       file already fits to a named curve shows <b class="handle-legend-fit">●</b>
       purple and won't drag until you clear that — select just it to do so.)</div>
-    <div class="row" id="bodyPickerRow" style="display:none">fit against <select id="bodyPicker" style="flex:1"></select></div>
     <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
     <div id="previewArtRow" style="display:none">
       <div class="hint">Preview other articles on this figure &mdash; reference-only,
@@ -255,7 +248,7 @@
 <div id="stage">
   <svg id="svg"></svg>
   <div id="hud"></div>
-  <div id="drop">drop body JSON, or an image for the reference overlay</div>
+  <div id="drop">drop an image for the reference overlay</div>
   <div id="mirrorPanel">
     <div id="mirrorLabel"></div>
     <svg id="mirrorSvg"></svg>
@@ -1103,23 +1096,6 @@ function moveBodyPartOrder(name, delta){
   order.splice(i,1); order.splice(j,0,name);
   buildBodyPartList(); render();
 }
-// a dropdown of every body/*.json to switch which body this same article is
-// fit against - keeps `file=` (the article), only swaps `fitbody=`.
-async function populateBodyPicker(){
-  const row = document.getElementById('bodyPickerRow'), sel_ = document.getElementById('bodyPicker');
-  if(!GBASE) return;
-  const names = await fetchBodyDirNames(); if(!names.length) return;
-  const curName = FITBODY.split('/').pop();
-  sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
-  row.style.display = '';
-}
-document.getElementById('bodyPicker').onchange = e=>{
-  const name = e.target.value; if(!name) return;
-  const qs = new URLSearchParams(location.search);
-  qs.set('fitbody', GBASE + '/body/' + name);
-  location.search = qs.toString();
-};
-
 // --- tailor mode: "preview hair" - a reference hairstyle drawn under the
 // headgear being tailored so a hat / hood / helmet fit can be judged (and
 // layered) against real hair. Reference-only, never written. The dropdown is
@@ -1470,7 +1446,7 @@ function mirrorLiveBody(){
 }
 // a dropdown of every body/*.json to compare against, overriding the auto
 // masc/femme counterpart - fetched once per GBASE and cached, same
-// directory-listing trick as populateBodyPicker/populateArticlePicker.
+// directory-listing trick as populateBodyDirectPicker/populateArticlePicker.
 async function populateMirrorSourcePicker(){
   const sel_ = document.getElementById('mirrorSrcSel'); if(!sel_ || !GBASE) return;
   const names = await fetchBodyDirNames(); if(!names.length) return;
@@ -2764,7 +2740,6 @@ async function loadBodyForTailoring(){
   bodyHidden.clear(); bodyVertsOff.clear();
   restoreVis();   // bring back this tab's hidden body parts / vert dots for this fit body
   buildBodyPartList();
-  populateBodyPicker();
   loadMirrorBody(FITBODY);   // the same outfit, fit against the counterpart body
 }
 function loadDesign(obj, path){
@@ -2796,7 +2771,6 @@ function loadDesign(obj, path){
     .then(()=>{ if(!TAILOR_MODE) loadMirrorBody(loadedPath); });   // editing a body (or its face) directly
 }
 function finishLoad(){
-  try{ localStorage.setItem('gpEditorBody', JSON.stringify(D)); }catch(e){}
   if(FACE_MODE){ shown.clear(); shown.add('head'); selSec = 'head'; }
   if(TAILOR_MODE){ Object.keys(D.sections).forEach(n=>shown.add(n)); selSec = Object.keys(D.sections)[0] || null; }
   restoreVis();   // this tab's remembered section eye / handle toggles (body-edit mode)
@@ -2868,30 +2842,29 @@ function buildModeSwitch(){
     const qs = new URLSearchParams(); qs.set('file', GBASE + '/articles/' + pick); qs.set('fitbody', bodyPath); go(qs);
   };
 }
-// switches which body/*.json is loaded, staying in the same mode (plain or
-// face). Tailor mode already has its own "fit against" picker in the Fit
-// panel for the analogous job (which body the outfit is checked against),
-// so this row only appears when editing a body directly.
+// the single body switcher, shown in all three views: it swaps which body is
+// loaded in plain/face mode, and which body the outfit is fit against in
+// tailor mode (keeping `file=` on the article, only swapping `fitbody=`).
 async function populateBodyDirectPicker(){
   const row = document.getElementById('bodySwitcherRow'), sel_ = document.getElementById('bodyDirectPicker');
-  if(TAILOR_MODE || !GBASE){ row.style.display = 'none'; return; }
+  if(!GBASE){ row.style.display = 'none'; return; }
   const names = await fetchBodyDirNames();
   if(!names.length){ row.style.display = 'none'; return; }
-  const curName = loadedPath ? loadedPath.split('/').pop() : null;
+  const curName = (TAILOR_MODE ? FITBODY : (loadedPath || '')).split('/').pop() || null;
   sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
 }
 document.getElementById('bodyDirectPicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
   const qs = new URLSearchParams(location.search);
-  qs.set('file', GBASE + '/body/' + name);
+  qs.set(TAILOR_MODE ? 'fitbody' : 'file', GBASE + '/body/' + name);
   location.search = qs.toString();
 };
 // story picker: the editor is not tied to any one story. It discovers every
 // `config/stories/<name>/graphics/` pipeline on disk and lets you point it at
 // one, then jump straight to that story's bodies, faces, or outfits - picking
 // one goes through the normal ?file= boot path so GBASE gets set and every
-// dependent dropdown (mode switcher, "switch to", "fit against", ...) lights
+// dependent dropdown (mode switcher, "switch to", body switcher, ...) lights
 // up. Shown whether or not a design is loaded, so you can hop between stories.
 // `?story=<name>` preselects one; the last pick is remembered per browser.
 const PIPELINE_STORIES = ['graphics_pipeline_test'];   // fallback if config/stories/ has no directory listing
@@ -3031,18 +3004,8 @@ function fitView(){
   view.s = Math.min(r.width/(mxx-mnx+6), r.height/(mxy-mny+6));
 }
 
-document.getElementById('load').onclick = ()=>document.getElementById('file').click();
-document.getElementById('file').onchange = e=>{
-  const f=e.target.files[0]; if(!f)return;
-  // JSON loaded in by hand is treated as unsaved work from the start
-  f.text().then(t=>{ loadDesign(JSON.parse(t)); dirty = true; populateStartPicker(); });
-};
-document.getElementById('loadBox').onclick = ()=>{
-  try{ loadDesign(JSON.parse(document.getElementById('out').value)); dirty = true; populateStartPicker(); }
-  catch(e){ alert('Bad JSON: '+e.message); }
-};
 document.getElementById('reset').onclick = ()=>{
-  try{ localStorage.removeItem('gpEditorBody'); const k=draftKey(); if(k) localStorage.removeItem(k); }catch(e){}
+  try{ const k=draftKey(); if(k) localStorage.removeItem(k); }catch(e){}
   location.reload();
 };
 document.getElementById('copy').onclick = ()=>navigator.clipboard.writeText(document.getElementById('out').value);
@@ -3280,7 +3243,6 @@ stage.addEventListener('drop', e=>{
   e.preventDefault(); document.getElementById('drop').style.display='none';
   const f=e.dataTransfer.files[0]; if(!f) return;
   if(f.type.startsWith('image/')) loadRefImage(f);
-  else f.text().then(t=>{ loadDesign(JSON.parse(t)); populateStartPicker(); });
 });
 window.addEventListener('resize', render);
 
@@ -3322,9 +3284,7 @@ async function runBoot(){
     if(restored) document.getElementById('src').textContent +=
       `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
   } else {
-    const saved = localStorage.getItem('gpEditorBody');
-    if(saved){ try{ loadDesign(JSON.parse(saved)); }catch(e){} }
-    if(!D){ svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Load a body JSON to begin.</text>`; }
+    svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Pick a story and one of its designs to begin.</text>`;
     populateStartPicker();
   }
 }
