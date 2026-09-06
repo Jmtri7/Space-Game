@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "single strap, near shoulder to far hip.",
       "points": [
         [
@@ -33,7 +31,8 @@
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "loop 1",
           "circle": [
             -0.241,
@@ -43,7 +42,8 @@
         },
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "loop 2",
           "circle": [
             -0.873,
@@ -53,7 +53,8 @@
         },
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "loop 3",
           "circle": [
             -1.49,

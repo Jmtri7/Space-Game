@@ -1,5 +1,5 @@
 {
-  "identity": "Common Kit - Medic (femme cut). White med coat, pale boots, a mint helmet, a red cross badge, a red armband and a white med satchel.",
+  "identity": "Common Kit - Medic (femme cut). White med coat, pale boots, a mint helmet, a red cross badge, a red armband and a red med satchel.",
   "palette": "civilian",
   "articles": [
     "tank_top_femme",
@@ -9,6 +9,6 @@
     "helmet_mint_femme",
     "med_cross_femme",
     "armband_medcross_femme",
-    "satchel_white_femme"
+    "satchel_red_femme"
   ]
 }

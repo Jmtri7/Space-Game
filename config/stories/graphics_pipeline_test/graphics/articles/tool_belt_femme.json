@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge).",
       "points": [
         [
@@ -33,7 +31,8 @@
       "details": [
         {
           "group": "torso",
-          "color": "leather", "shade": "deep",
+          "color": "leather",
+          "shade": "deep",
           "tone": "dark",
           "note": "hip pouch",
           "points": [
@@ -57,7 +56,8 @@
         },
         {
           "group": "torso",
-          "color": "leather", "shade": "deep",
+          "color": "leather",
+          "shade": "deep",
           "tone": "dark",
           "note": "far hip pouch",
           "points": [
@@ -81,7 +81,8 @@
         },
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "buckle",
           "points": [
             [

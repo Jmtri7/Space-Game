@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "leather",
       "shade": "deep",
       "note": "single strap, near shoulder to far hip.",

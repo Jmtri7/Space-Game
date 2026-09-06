@@ -1,5 +1,5 @@
 {
-  "identity": "Common Kit - Dockworker (masc cut). Blue-grey work suit, dark boots, an amber hard hat, a chest plate, a hi-vis orange tabard and heavy dark gloves.",
+  "identity": "Common Kit - Dockworker (masc cut). Blue-grey work suit, dark boots, an amber hard hat, a chest plate, an amber tabard matching the hard hat and heavy dark gloves.",
   "palette": "civilian",
   "articles": [
     "tank_top_masc",
@@ -8,7 +8,7 @@
     "boots_charcoal_masc",
     "cap_amber_masc",
     "chest_plate_masc",
-    "hi_vis_tabard_masc",
+    "hi_vis_tabard_amber_masc",
     "gloves_dark_masc",
     "hair_short_masc"
   ]

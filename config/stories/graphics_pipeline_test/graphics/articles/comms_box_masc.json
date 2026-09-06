@@ -6,28 +6,25 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
       "color": "#26282c",
       "shade": "deep",
       "note": "box body, against the helmet shell just aft of the ear.",
       "points": [
         [
-          2.32,
-          -29.15
+          1.083,
+          -29.522
         ],
         [
-          3.18,
-          -28.95
+          1.619,
+          -29.397
         ],
         [
-          3.24,
-          -27.35
+          1.656,
+          -28.399
         ],
         [
-          2.36,
-          -27.2
+          1.108,
+          -28.306
         ]
       ],
       "fits": [],
@@ -38,9 +35,9 @@
           "shade": "flat",
           "note": "red status indicator",
           "circle": [
-            2.78,
-            -28.05,
-            0.3
+            1.37,
+            -28.836,
+            0.187
           ]
         }
       ]

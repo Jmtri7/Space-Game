@@ -389,6 +389,8 @@ def _emit_detail(parts, d, group_default, palette, materials, sec_name=None, lod
          "color": resolve_color(d["color"], d.get("tone", "mid"), palette, prof),
          "group": d.get("group", group_default), "role": "detail",
          "note": d.get("note", "")}
+    if d.get("layer"):
+        p["layer"] = d["layer"]
     if sec_name:
         p["sec"] = sec_name
     parts.append(p)
@@ -549,10 +551,9 @@ def expand_article(design, palette, materials, body,
         _emit_region(parts, rgn, grp, palette, materials)
         for d in region.get("details", []):
             _emit_detail(parts, d, grp, palette, materials)
-        for key in ("over", "under"):
-            if region.get(key):
-                for p in parts[start:]:
-                    p[key] = region[key]
+        if region.get("layer"):                       # draw-layer override (see compose_worn)
+            for p in parts[start:]:
+                p.setdefault("layer", region["layer"])   # a detail's own `layer` still wins
     for d in design.get("details", []):
         if color is not None or shade is not None:
             d = _look(d)
@@ -600,51 +601,43 @@ def apply_walk(parts, body_design, rig_walk, t):
 
 def compose_worn(body_design, body_parts, *article_parts):
     """Merge a body's parts with the parts of the articles worn over it into
-    one back-to-front list. By default an article part draws right after the
-    last body part of its own animation group - a trouser leg (group
-    `leg_near`) sits over that leg. A region may override placement:
-      "over":  ["<group-or-section>", ...] - draw after the LAST such part
-               (a skirt uses ["leg_near"]; a fringe uses ["head"]).
-      "under": ["<group-or-section>", ...] - draw before the FIRST such part
-               (the bulk of a hairstyle uses ["head"] so the skull hides its
-               back and only the volume beyond the silhouette shows).
-    Both accept animation-group names and body-section names, plus "hair" for
-    any earlier article whose parts are tagged `sec == "hair"` (see
-    story_assets._body_worn) - so a hat region can sit behind the head
-    (`under: ["head"]`), between head and hair (`under: ["hair"]`), or over the
-    hair (`over: ["hair"]`). Groups/sections the body doesn't have sort to the
-    top. An article part's own `sec` is registered as it is placed, so a later
-    article list can layer against an earlier one; pass the hair list first."""
-    order = body_design.get("draw_order", list(body_design.get("sections", {})))
-    groups = {}
-    for name in order:
-        g = body_design["sections"][name].get("group", name)
-        groups.setdefault(g, len(groups))
-    keyed = [(i, p) for i, p in enumerate(body_parts)]
-    last, first = {}, {}
-    for i, p in keyed:
-        for k in (p.get("group", "torso"), p.get("sec")):
-            if k is None:
-                continue
-            last[k] = i
-            first.setdefault(k, i)
-    n = len(body_parts)
-    for lst in article_parts:
+    one back-to-front list.
+
+    Draw order is a flat stack of named LAYERS the body publishes in
+    `draw_layers` (back-to-front), e.g. ``back, arm_far, ..., torso, neck,
+    hair_back, head, hair, leg_near, ..., hand_near, front``. Every part sits on
+    exactly one layer:
+      * a body part -> the layer named by its section (`torso`, `head`, ...)
+      * an article region -> its ``"layer"`` if set, else its animation
+        ``group`` (so an untagged near sleeve rides the `arm_near` layer).
+    Parts sort by layer; within one layer the body draws first, then the
+    articles in the order given (a coat listed after a shirt draws on top). A
+    part whose layer name is unknown sorts to the front.
+
+    `group` now only drives animation (which limb the part swings with) - it is
+    the fallback layer, nothing more. Bodies without `draw_layers` fall back to
+    their `draw_order` section list."""
+    layers = body_design.get("draw_layers")
+    if not layers:
+        order = body_design.get("draw_order", list(body_design.get("sections", {})))
+        layers = list(dict.fromkeys(order))
+    lidx = {name: i for i, name in enumerate(layers)}
+    top = len(layers)
+
+    def layer_of(p):
+        name = p.get("layer") or p.get("sec") or p.get("group") or "torso"
+        if name in lidx:
+            return lidx[name]
+        return lidx.get(p.get("group"), top)
+
+    keyed = []
+    for p in body_parts:
+        keyed.append((layer_of(p), 0, len(keyed), p))
+    for li, lst in enumerate(article_parts, start=1):
         for p in lst:
-            if p.get("under"):
-                rank = min((first.get(k, 0) for k in p["under"]), default=0) - 0.5
-            elif p.get("over"):
-                rank = max((last.get(k, n + groups.get(k, 999)) for k in p["over"]), default=n) + 0.5
-            else:
-                g = p.get("group", "torso")
-                rank = last.get(g, n + groups.get(g, 999)) + 0.5
-            keyed.append((rank, p))
-            s = p.get("sec")            # a tagged article part (hair) is now a
-            if s is not None:           # target later lists can name in over/under
-                last[s] = rank
-                first.setdefault(s, rank)
-    keyed.sort(key=lambda t: t[0])
-    return [p for _, p in keyed]
+            keyed.append((layer_of(p), li, len(keyed), p))
+    keyed.sort(key=lambda t: (t[0], t[1], t[2]))
+    return [t[3] for t in keyed]
 
 
 def expand(design, palette, materials, body=None, load=None, lod=None,

@@ -6,68 +6,67 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "crown, same silhouette as cap/hair_short.",
       "points": [
         [
-          -1.786,
-          -31.055
+          -2.329,
+          -31.079
         ],
         [
-          -2.037,
-          -30.01
+          -2.402,
+          -30.002
         ],
         [
-          0.721,
-          -29.983
+          1.44,
+          -29.95
         ],
         [
-          1.39,
-          -29.893
+          1.95,
+          -29.512
         ],
         [
-          1.305,
-          -31.173
+          2.01,
+          -31.011
         ],
         [
-          0.351,
-          -31.561
+          1.008,
+          -32.129
         ],
         [
-          -0.975,
-          -31.572
+          -1.089,
+          -32.196
         ]
       ],
       "fits": [],
       "details": [
         {
           "group": "torso",
-          "color": "leather", "shade": "deep",
+          "color": "leather",
+          "shade": "deep",
           "tone": "dark",
           "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
           "points": [
             [
-              -2.743,
-              -29.807
+              -2.419,
+              -29.645
             ],
             [
-              -2.235,
-              -29.386
+              1.544,
+              -29.645
             ],
             [
-              1.494,
-              -29.647
+              2.029,
+              -29.452
             ],
             [
-              1.472,
-              -29.861
+              1.44,
+              -29.95
             ],
             [
-              -2.09,
-              -29.937
+              -2.414,
+              -29.896
             ]
           ]
         }

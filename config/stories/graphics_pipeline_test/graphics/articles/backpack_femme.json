@@ -6,32 +6,41 @@
   "regions": [
     {
       "group": "torso",
-      "under": [
-        "torso"
-      ],
       "color": "cloth",
       "shade": "matte",
-      "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
+      "note": "bag body",
       "points": [
         [
           -1.162,
           -25.946
         ],
         [
-          1.532,
+          2.74,
           -25.929
         ],
         [
-          2.307,
-          -25.498
+          4.133,
+          -24.578
         ],
         [
-          2.519,
-          -21.105
+          3.598,
+          -20.012
         ],
         [
-          -1.501,
-          -21.089
+          1.782,
+          -18.81
+        ],
+        [
+          -0.998,
+          -18.817
+        ],
+        [
+          -1.736,
+          -19.326
+        ],
+        [
+          -1.842,
+          -25.56
         ]
       ],
       "fits": [],
@@ -39,12 +48,9 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
-      "note": "far-side shoulder strap, mirror of the near one.",
+      "note": "far strap",
       "points": [
         [
           -0.947,
@@ -55,24 +61,21 @@
           -25.386
         ],
         [
-          -2.18,
-          -24.245
+          -2.36,
+          -24.203
         ],
         [
-          -2.207,
-          -23.943
+          -2.415,
+          -23.901
         ]
       ],
       "fits": []
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
-      "note": "near-side shoulder strap, visible in front over the shirt.",
+      "note": "near strap",
       "points": [
         [
           0.945,

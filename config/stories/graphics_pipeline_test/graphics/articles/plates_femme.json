@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "left plate.",
       "points": [
         [
@@ -33,10 +31,8 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "centre plate, overlapping both side plates slightly.",
       "points": [
         [
@@ -60,10 +56,8 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "right plate, mirror of the left.",
       "points": [
         [

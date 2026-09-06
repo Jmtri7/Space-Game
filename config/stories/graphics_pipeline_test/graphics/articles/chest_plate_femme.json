@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "right half, mirror of the left, meeting it at x=0.",
       "points": [
         [

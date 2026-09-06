@@ -1,15 +1,13 @@
 {
-  "identity": "A soft folded collar sitting at the base of the neck, worn open over a shirt. Free-drawn against the reference body's neck_base/collar anchors — small enough to read the same on either body.",
+  "identity": "A soft folded collar sitting at the base of the neck, worn open over a shirt. Free-drawn against the reference body's neck_base/collar anchors \u2014 small enough to read the same on either body.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "cloth", "shade": "matte",
+      "color": "cloth",
+      "shade": "matte",
       "note": "folded band, open at the front. Free-drawn around torso.collar/neck_base.",
       "points": [
         [

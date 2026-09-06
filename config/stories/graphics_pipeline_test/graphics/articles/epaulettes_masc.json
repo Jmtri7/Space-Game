@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "near shoulder board, on shoulder_near.",
@@ -34,9 +31,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "far shoulder board, mirror of the near one.",

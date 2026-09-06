@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "under": [
-        "torso"
-      ],
-      "color": "hair", "shade": "matte",
+      "color": "hair",
+      "shade": "matte",
       "note": "back sheet - behind the whole body, only what clears the silhouette shows (beside the neck, past the shoulders).",
       "points": [
         [
@@ -81,10 +79,8 @@
     },
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
-      "color": "hair", "shade": "matte",
+      "color": "hair",
+      "shade": "matte",
       "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
       "points": [
         [

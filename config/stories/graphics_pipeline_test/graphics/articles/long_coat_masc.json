@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
@@ -41,9 +38,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "right front panel, mirror of the left.",
@@ -80,7 +74,7 @@
       "note": "far cap sleeve, same as jacket's.",
       "points": [
         [
-          -3.702,
+          -3.673,
           -17.569
         ],
         [

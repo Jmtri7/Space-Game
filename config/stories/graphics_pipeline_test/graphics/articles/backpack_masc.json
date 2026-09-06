@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "under": [
-        "torso"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
@@ -39,9 +36,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "far-side shoulder strap, mirror of the near one.",
@@ -67,9 +61,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "near-side shoulder strap, visible in front over the shirt.",

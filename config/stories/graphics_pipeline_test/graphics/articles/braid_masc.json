@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "metal",
       "shade": "metal",
       "note": "thin cord from the near shoulder down under the arm and back.",

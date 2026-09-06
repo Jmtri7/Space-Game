@@ -6,10 +6,8 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "metal", "shade": "metal",
+      "color": "metal",
+      "shade": "metal",
       "note": "five-point star on the left breast.",
       "points": [
         [

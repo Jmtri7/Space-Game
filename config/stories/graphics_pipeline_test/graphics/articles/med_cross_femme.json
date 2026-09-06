@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "#c0392b",
       "shade": "matte",
       "note": "equal-armed cross, centred on the left breast.",

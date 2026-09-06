@@ -7,9 +7,6 @@
   "regions": [
     {
       "group": "torso",
-      "under": [
-        "arm_far"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "bulk of the hood, behind the head and draping past the shoulders.",
@@ -39,9 +36,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
       "color": "cloth",
       "shade": "matte",
       "tone": "dark",

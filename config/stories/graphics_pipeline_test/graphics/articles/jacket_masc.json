@@ -33,9 +33,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "hand_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
@@ -58,6 +55,33 @@
           "curve": "torso.near short",
           "from": 1,
           "to": 1
+        }
+      ]
+    },
+    {
+      "group": "arm_near",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "near cap sleeve, mirror of the far one.",
+      "points": [
+        [
+          3.49,
+          -26.409
+        ],
+        [
+          2.477,
+          -16.108
+        ],
+        [
+          4.406,
+          -15.925
+        ]
+      ],
+      "fits": [
+        {
+          "curve": "arm_near.sleeve long",
+          "from": 0,
+          "to": 0
         }
       ]
     },
@@ -86,39 +110,6 @@
           "from": 0,
           "to": 0
         }
-      ],
-      "over": [
-        "hand_far"
-      ]
-    },
-    {
-      "group": "arm_near",
-      "color": "cloth",
-      "shade": "matte",
-      "note": "near cap sleeve, mirror of the far one.",
-      "points": [
-        [
-          3.49,
-          -26.409
-        ],
-        [
-          2.477,
-          -16.108
-        ],
-        [
-          4.406,
-          -15.925
-        ]
-      ],
-      "fits": [
-        {
-          "curve": "arm_near.sleeve long",
-          "from": 0,
-          "to": 0
-        }
-      ],
-      "over": [
-        "hand_near"
       ]
     }
   ]

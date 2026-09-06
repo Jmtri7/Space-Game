@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "arm_far"
-      ],
       "color": "lamp",
       "shade": "glow",
       "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
@@ -32,16 +29,10 @@
           "from": 1,
           "to": 1
         }
-      ],
-      "under": [
-        "arm_near"
       ]
     },
     {
       "group": "torso",
-      "over": [
-        "arm_far"
-      ],
       "color": "lamp",
       "shade": "glow",
       "note": "right panel, mirror of the left.",
@@ -115,9 +106,6 @@
             ]
           ]
         }
-      ],
-      "under": [
-        "arm_near"
       ]
     }
   ]

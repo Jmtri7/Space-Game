@@ -29,9 +29,6 @@
           "from": 0,
           "to": 0
         }
-      ],
-      "under": [
-        "torso"
       ]
     },
     {
@@ -63,9 +60,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "denim",
       "shade": "matte",
       "note": "hip panel / seat, drawn last. Its whole outline is the wearer's lower torso: 0 fits torso.low_waist across the top, 1 fits torso.lower_torso_right down the right side and underside to the crotch, 2 fits torso.lower_torso_left reversed back up the left. Sits flush with the body, never proud of it.",

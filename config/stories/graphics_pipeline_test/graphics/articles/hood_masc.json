@@ -39,10 +39,7 @@
           -30.718
         ]
       ],
-      "fits": [],
-      "under": [
-        "torso"
-      ]
+      "fits": []
     },
     {
       "group": "torso",
@@ -112,10 +109,7 @@
           -25.268
         ]
       ],
-      "fits": [],
-      "over": [
-        "head"
-      ]
+      "fits": []
     }
   ],
   "hides_hair": true

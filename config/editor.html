@@ -154,6 +154,11 @@
       purple and won't drag until you clear that — select just it to do so.)</div>
     <div class="row" id="bodyPickerRow" style="display:none">fit against <select id="bodyPicker" style="flex:1"></select></div>
     <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
+    <div id="previewArtRow" style="display:none">
+      <div class="hint">Preview other articles on this figure &mdash; reference-only,
+        not editable. Tick to show, untick to hide.</div>
+      <div id="previewArtList"></div>
+    </div>
     <label id="hidesHairRow" style="display:none"><input type="checkbox" id="tHidesHair"> this headgear hides hair (writes <code>hides_hair</code> to the article — a raised hood, a sealed helmet)</label>
     <label><input type="checkbox" id="tHideFace"> hide face (useful while fitting hair)</label>
     <label><input type="checkbox" id="tBodyVerts" checked> show body vertices</label>
@@ -194,8 +199,10 @@
     <button id="pDel">− selected polygon(s)</button>
   </div>
   <div class="hint" id="pAddRHint" style="display:none">a <b>region</b> is a
-    standalone garment piece (own group, fits, over/under, shade) — it copies
-    the selected region's group and draw-order rank if one is selected. A
+    standalone garment piece (own group, draw layer, fits, shade) — it copies
+    the selected region's group / layer if one is selected; set its name,
+    <b>anim. group</b> and <b>draw layer</b> in the Selected&nbsp;section panel
+    below. A
     <b>polygon</b>/<b>circle</b> is a detail on the selected region (rides its
     group, no fit).</div>
   <div class="hint">dbl-click a handle = select its whole polygon (shift = add).
@@ -735,6 +742,7 @@ if(TAILOR_MODE){ document.getElementById('pAddR').style.display = '';
   document.getElementById('pAddRHint').style.display = ''; }
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
+let previewArticles = [];    // TAILOR_MODE: [{name, design}] other articles drawn on the figure, reference-only
 let previewHair = null;      // TAILOR_MODE: the hairstyle design chosen in "preview hair", reference-only
 let previewHairName = '';    // its articles/<name>.json stem, or '' for none
 const bodyHidden = new Set();    // body section names whose fill is hidden (declutter/x-ray)
@@ -829,10 +837,9 @@ function S2W(sx,sy){ const r=svg.getBoundingClientRect();
 
 function polyStr(pts){ return pts.map(p=>{const s=W2S(p[0],p[1]);return s[0].toFixed(1)+','+s[1].toFixed(1);}).join(' '); }
 
-// ---- tailor mode: body + article parts, tagged and interleaved exactly like
-// the real game's compose_worn, so `over`/`under` (e.g. hair drawing behind
-// the head) previews correctly instead of the article always sitting on top
-// of the whole body. ----------------------------------------------------
+// ---- tailor mode: body + article parts, interleaved by the draw-layer stack
+// exactly like the real game's compose_worn, so a region on the `hair_back`
+// layer previews behind the head instead of on top of the whole body. ----
 function bodyDrawParts(body){
   body = body || bodyDesign;
   if(!body) return [];
@@ -876,7 +883,7 @@ function lookProfile(part){
   const sh = (TAILOR_MODE && previewLook.shade) ? previewLook.shade : part.shade;
   return shadeProfile(sh);
 }
-// one region -> its fill / shade / detail parts, tagged with group + over/under
+// one region -> its fill / shade / detail parts, tagged with group + draw layer
 // (+ an optional `sec` marker). `look` applies the tailor-mode "Preview look"
 // swap - on for the edited article, off for a reference-only hair preview.
 function emitRegionParts(out, region, opts){
@@ -888,7 +895,7 @@ function emitRegionParts(out, region, opts){
     : region.points;
   const col = look ? lookColor(region) : region.color;
   const prof = look ? lookProfile(region) : shadeProfile(region.shade);
-  const tag = p => { p.group = grp; p.over = region.over; p.under = region.under;
+  const tag = p => { p.group = grp; if(region.layer) p.layer = region.layer;
     if(tagSec) p.sec = tagSec; return p; };
   out.push(tag({points: dispPts, fill: rgb(resolveColor(col, region.tone||'mid', prof))}));
   if(showShade && prof && !prof.emissive){
@@ -911,9 +918,10 @@ function articleDrawParts(body){
   // frame the game renders. `body` is only needed for `fits`/`outset`.
   body = body || bodyDesign;
   const out = [];
+  const tagSec = D.slot || (loadedPath||'').split('/').pop().replace(/\.json$/,'') || 'self';
   for(const name of Object.keys(D.sections)){
     if(hidden.has(name)) continue;
-    emitRegionParts(out, D.sections[name], {body, look:true, dOutset:D.outset});
+    emitRegionParts(out, D.sections[name], {body, look:true, tagSec, dOutset:D.outset});
   }
   return out;
 }
@@ -929,26 +937,40 @@ function hairDrawParts(body){
     emitRegionParts(out, region, {body, look:false, tagSec:'hair', dOutset:previewHair.outset});
   return out;
 }
+// "preview other articles" (tailor mode): sibling articles ticked for reference,
+// drawn on the figure alongside the one being edited, composed by the same
+// layer stack the game uses (see composeWornJS). Hair is excluded (the "preview
+// hair" dropdown owns that). Reference-only: nothing here is written.
+function previewArticleParts(body){
+  body = body || bodyDesign;
+  const out = [];
+  for(const pa of previewArticles)
+    for(const region of (pa.design.regions || []))
+      emitRegionParts(out, region, {body, look:false, dOutset: pa.design.outset});
+  return out;
+}
+// mirror of expand.py compose_worn: a flat stack of named layers the body
+// publishes in `draw_layers` (back-to-front). Every part sits on one layer -
+// a body part by its section name, an article region by its `layer` else its
+// animation `group`. Sort by layer; within a layer the body draws first, then
+// each article list in order (later list = on top). Unknown layer -> front.
 function composeWornJS(bodyDes, bodyParts, ...lists){
-  const order = bodyDes.draw_order || Object.keys(bodyDes.sections||{});
-  const groups = {};
-  order.forEach(name=>{ const g = bodyDes.sections[name].group || name; if(!(g in groups)) groups[g] = Object.keys(groups).length; });
-  const keyed = bodyParts.map((p,i)=>[i,p]);
-  const last = {}, first = {};
-  bodyParts.forEach((p,i)=>{
-    for(const k of [p.group, p.sec]){ if(k==null) continue; last[k]=i; if(!(k in first)) first[k]=i; }
-  });
-  const n = bodyParts.length;
-  for(const articleParts of lists) for(const p of articleParts){
-    let rank;
-    if(p.under && p.under.length) rank = Math.min(...p.under.map(k => k in first ? first[k] : 0)) - 0.5;
-    else if(p.over && p.over.length) rank = Math.max(...p.over.map(k => k in last ? last[k] : n + (groups[k] ?? 999))) + 0.5;
-    else { const g = p.group || 'torso'; rank = (g in last ? last[g] : n + (groups[g] ?? 999)) + 0.5; }
-    keyed.push([rank, p]);
-    if(p.sec != null){ last[p.sec] = rank; if(!(p.sec in first)) first[p.sec] = rank; }   // a tagged article part (hair) becomes a layer target
+  let layers = bodyDes.draw_layers;
+  if(!layers || !layers.length){
+    const order = bodyDes.draw_order || Object.keys(bodyDes.sections||{});
+    layers = [...new Set(order)];
   }
-  keyed.sort((a,b)=>a[0]-b[0]);
-  return keyed.map(([,p])=>p);
+  const lidx = {}; layers.forEach((nm,i)=> lidx[nm] = i);
+  const top = layers.length;
+  const layerOf = p => {
+    const nm = p.layer || p.sec || p.group || 'torso';
+    return nm in lidx ? lidx[nm] : (p.group in lidx ? lidx[p.group] : top);
+  };
+  const keyed = [];
+  bodyParts.forEach(p => keyed.push([layerOf(p), 0, keyed.length, p]));
+  lists.forEach((lst, li) => (lst||[]).forEach(p => keyed.push([layerOf(p), li+1, keyed.length, p])));
+  keyed.sort((a,b) => a[0]-b[0] || a[1]-b[1] || a[2]-b[2]);
+  return keyed.map(t => t[3]);
 }
 
 // ---- walk-cycle preview: hand-port of expand.py's apply_walk ------------
@@ -1150,6 +1172,68 @@ document.getElementById('tHidesHair').onchange = e=>{
   sync(); render();
 };
 
+// --- tailor mode: "preview other articles" - tick any sibling articles/*.json
+// to draw them on the figure as reference, composed by the same draw-layer
+// stack as the game (each region on its `layer`, else its group). Within a
+// layer the edited article draws last. Nothing is written; the tick list is
+// remembered per story. Hair is excluded - the "preview hair" dropdown owns it.
+let PREVIEW_CANDIDATES = [];   // sibling article stems that can be previewed
+let PREVIEW_SELF_NAME = '';    // the edited article's stem (never in the list)
+function savePreviewPick(){
+  const st = storyOfPath(FITBODY); if(!st) return;
+  const names = previewArticles.map(p => p.name);
+  try{ localStorage.setItem('gpEditorPreviewArt:' + st, JSON.stringify(names)); }catch(e){}
+}
+async function populatePreviewArticles(){
+  const row = document.getElementById('previewArtRow');
+  if(!TAILOR_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
+  let names = [];
+  try{
+    const { files } = await VFS.listDir(GBASE + '/articles');
+    names = (files||[]).filter(n => /\.json$/.test(n) && !/^hair_/.test(n))
+                       .map(n => n.replace(/\.json$/,'')).sort();
+  }catch(e){}
+  const g = genderOf(FITBODY);
+  if(g) names = names.filter(n => articleForGender(n + '.json', g));
+  PREVIEW_SELF_NAME = (loadedPath||'').split('/').pop().replace(/\.json$/,'');
+  PREVIEW_CANDIDATES = names.filter(n => n !== PREVIEW_SELF_NAME);
+  if(!PREVIEW_CANDIDATES.length){ row.style.display = 'none'; return; }
+  const st = storyOfPath(FITBODY);
+  let saved = [];
+  try{ saved = JSON.parse(localStorage.getItem('gpEditorPreviewArt:' + st) || '[]'); }catch(e){}
+  const want = (Array.isArray(saved) ? saved : []).filter(n => PREVIEW_CANDIDATES.includes(n));
+  row.style.display = '';
+  await loadPreviewArticles(want);
+  buildPreviewArticleList();
+}
+async function loadPreviewArticles(names){
+  const have = Object.fromEntries(previewArticles.map(p => [p.name, p]));
+  const out = [];
+  for(const n of names){
+    if(have[n]){ out.push(have[n]); continue; }
+    try{
+      const j = await VFS.readJSON(GBASE + '/articles/' + n + '.json');
+      if(j && j.regions) out.push({ name:n, design: shimLook(j) });
+    }catch(e){}
+  }
+  previewArticles = out;
+  if(typeof buildSecEdit === 'function') buildSecEdit();
+  if(typeof render === 'function') render();
+}
+function buildPreviewArticleList(){
+  const list = document.getElementById('previewArtList'); if(!list) return;
+  const on = new Set(previewArticles.map(p => p.name));
+  list.innerHTML = PREVIEW_CANDIDATES.map(n =>
+    `<label><input type="checkbox" class="paChk" value="${n}" ${on.has(n)?'checked':''}> ${n}</label>`).join('') +
+    `<div class="hint">Reference-only — each draws in its own defined order, the
+      edited article on top. Nothing here is saved.</div>`;
+  list.querySelectorAll('.paChk').forEach(cb => cb.onchange = async () => {
+    const names = [...list.querySelectorAll('.paChk:checked')].map(c => c.value);
+    await loadPreviewArticles(names);
+    savePreviewPick();
+  });
+}
+
 function render(){
   if(!D){ svg.innerHTML=''; return; }
   saveVis();   // persist any hide/show change for the life of this tab (deduped inside)
@@ -1185,11 +1269,10 @@ function render(){
   }
 
   if(TAILOR_MODE && bodyDesign){
-    // interleave the body's own parts with the article's, honouring each
-    // region's `over`/`under` (body section or group names) exactly like the
-    // real game's compose_worn - so e.g. hair's back regions correctly draw
-    // *behind* the head instead of always on top of the whole body.
-    let parts = composeWornJS(bodyDesign, bodyDrawParts(), hairDrawParts(), articleDrawParts());
+    // interleave the body's own parts with the article's by the draw-layer
+    // stack, exactly like the real game's compose_worn - so e.g. a region on
+    // the `hair_back` layer draws *behind* the head, not on top of the body.
+    let parts = composeWornJS(bodyDesign, bodyDrawParts(), hairDrawParts(), previewArticleParts(), articleDrawParts());
     if(walkPreviewOn()) parts = applyWalkJS(parts, bodyDesign, walkRig, walkT);
     for(const part of parts)
       draw(part.points, part.fill);   // points are world-space; draw() maps to screen itself
@@ -1423,7 +1506,7 @@ function renderMirror(){
   }
   panel.style.display = 'block';
   let allParts = TAILOR_MODE
-    ? composeWornJS(body, bodyDrawParts(body), hairDrawParts(body), articleDrawParts(body))
+    ? composeWornJS(body, bodyDrawParts(body), hairDrawParts(body), previewArticleParts(body), articleDrawParts(body))
     : bodyDrawParts(body);
   if(walkPreviewOn()) allParts = applyWalkJS(allParts, body, walkRig, walkT);
   const parts = mirrorPart==='head' ? allParts.filter(p => p.sec==='head' || p.sec==='hair' || p.group==='head') : allParts;
@@ -2009,8 +2092,7 @@ function addRegion(){
     points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]],
     fits: [],
   };
-  if(src && src.over) reg.over = src.over.slice();
-  if(src && src.under) reg.under = src.under.slice();
+  if(src && src.layer) reg.layer = src.layer;
   D.regions = D.regions || [];
   D.regions.push(reg);
   relinkTailorSections();
@@ -2370,10 +2452,14 @@ function buildSecList(){
   bar.querySelector('#allHide').onclick = ()=>{ order.forEach(n=>hidden.add(n)); buildSecList(); render(); };
   order.forEach((name,oi)=>{
     const row = document.createElement('label');
+    // tailor mode: show the region's own `note` (its editable name); fall back
+    // to the region<i> alias when it has none
+    const S = D.sections[name];
+    const label = (TAILOR_MODE && S && S.note) ? S.note : name;
     row.innerHTML = `<button class="eye" title="show / hide this part">${hidden.has(name)?'–':'●'}</button>
       <button class="eye" title="earlier in draw order (further back)" ${oi===0?'disabled':''}>↓</button>
       <button class="eye" title="later in draw order (further forward)" ${oi===order.length-1?'disabled':''}>↑</button>
-      <span class="nm ${name===selSec?'sel':''}">${name}</span>
+      <span class="nm ${name===selSec?'sel':''}" title="${name}">${label}</span>
       <input type="checkbox" title="show vertex handles" ${shown.has(name)?'checked':''}>`;
     const eyes = row.querySelectorAll('.eye');
     eyes[0].onclick = ev=>{ ev.preventDefault();
@@ -2470,7 +2556,22 @@ function buildSecEdit(){
   if(!selSec){ el.innerHTML='<div class="hint">none</div>'; return; }
   const S = D.sections[selSec];
   const freezeOk = !TAILOR_MODE || bodyDesign;   // needs the resolved shape, which needs the body
-  el.innerHTML = `
+  // tailor mode: a region carries a free `note` (its name in the list) and a
+  // `group` (which body part it animates with, and its default draw layer).
+  // Body-edit mode has neither here - a section's name is its key.
+  const grpSel = () => {
+    const gs = bodyGroups(); const cur = S.group || 'torso';
+    if(!gs.includes(cur)) gs.push(cur);
+    return gs.map(g=>`<option ${g===cur?'selected':''}>${g}</option>`).join('');
+  };
+  const regionHead = TAILOR_MODE ? `
+    <div class="row">name <input id="mNote" type="text" style="flex:1;background:#12141a;color:#d9dce2;
+      border:1px solid #3a4150;border-radius:4px;padding:3px 5px"
+      value="${(S.note||'').replace(/"/g,'&quot;')}" placeholder="unnamed region"></div>
+    <div class="row">anim. group <select id="mGroup" style="flex:1">${grpSel()}</select></div>
+    <div class="hint">group = the body part it moves with, and its default draw
+      layer if none is set below.</div>` : '';
+  el.innerHTML = regionHead + `
     <div class="row">color
       <select id="mMat">${COLNAMES.map(m=>`<option ${m===S.color?'selected':''}>${m}</option>`).join('')}</select>
       <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
@@ -2493,6 +2594,13 @@ function buildSecEdit(){
     const v=e.target.value; if(v==='') delete S.shade; else S.shade = (v==='false') ? false : v;
     sync(); buildSecEdit(); };
   document.getElementById('mTone').onchange = e=>{ pushHistory(); S.tone=e.target.value; if(S.tone==='mid')delete S.tone; sync(); buildSecEdit(); };
+  if(TAILOR_MODE){
+    document.getElementById('mNote').onchange = e=>{ pushHistory();
+      const v = e.target.value.trim(); if(v) S.note = v; else delete S.note;
+      sync(); buildSecList(); };
+    document.getElementById('mGroup').onchange = e=>{ pushHistory();
+      S.group = e.target.value; sync(); render(); };   // no panel rebuild - don't drop an unblurred name edit
+  }
   if(TAILOR_MODE) wireDrawRank(S);
   document.getElementById('mFreeze').onclick = ()=>{
     pushHistory();
@@ -2509,29 +2617,29 @@ function buildSecEdit(){
   };
 }
 
-// ---- tailor mode: a region's draw order vs. the body ----------------
-// `over` / `under` are the same lists the game's compose_worn reads: each
-// names body animation-groups and/or body section names. `under: [x]` draws
-// the region before the FIRST body part of x (behind it); `over: [x]` draws
-// it after the LAST part of x (in front of it). With neither, the region
-// draws with its own animation group. composeWornJS already honours these in
-// the preview - this panel just edits them.
-function bodyDrawKeys(){
+// ---- tailor mode: a region's draw layer --------------------------------
+// A region sits on one named layer the body publishes in `draw_layers`
+// (back-to-front). `composeWornJS` sorts every part by its layer; a region
+// with no `layer` follows its animation `group`. This panel picks the layer.
+// the body's distinct animation groups, in draw order - the choices for a
+// region's `anim. group` (which limb it rides, and its default draw layer).
+function bodyGroups(){
   const secs = bodyDesign?.sections || {};
   const order = bodyDesign?.draw_order || Object.keys(secs);
-  const keys = [];
+  const out = [];
   for(const name of order){
     if(!secs[name]) continue;
-    if(!keys.includes(name)) keys.push(name);
     const g = secs[name].group || name;
-    if(!keys.includes(g)) keys.push(g);
+    if(!out.includes(g)) out.push(g);
   }
-  // "hair" is a valid over/under target too: a headgear region can sit behind
-  // the head (under:["head"]), between head and hair (under:["hair"]), or over
-  // the hair (over:["hair"]). Resolved in compose_worn against the outfit's
-  // hairstyle - previewed here via the "preview hair" dropdown.
-  keys.push('hair');
-  return keys;
+  return out.length ? out : ['torso'];
+}
+// the body's draw-layer stack (back-to-front); falls back to its section list
+function bodyLayers(){
+  const l = bodyDesign?.draw_layers;
+  if(l && l.length) return l;
+  const order = bodyDesign?.draw_order || Object.keys(bodyDesign?.sections || {});
+  return [...new Set(order)];
 }
 // tailor mode: the "Preview look" panel (colour + shade swap, preview only)
 function initLookPanel(){
@@ -2552,41 +2660,27 @@ function initLookPanel(){
 }
 function drawRankHTML(S){
   if(!bodyDesign) return '';
-  const keys = bodyDrawKeys();
-  const box = (id, sel_) => `<select id="${id}" multiple size="${Math.min(8, Math.max(3, keys.length))}"
-      style="width:100%">${keys.map(k=>`<option value="${k}" ${(sel_||[]).includes(k)?'selected':''}>${k}</option>`).join('')}</select>`;
+  const layers = bodyLayers().slice().reverse();   // list front-to-back
+  const cur = S.layer || '';
   return `
-    <h2 style="margin-top:14px">draw order vs. body</h2>
-    <div class="hint">ctrl/cmd-click to pick more than one, or none. <b>under</b> =
-      behind those body parts; <b>over</b> = in front of them; neither = with
-      this region's own animation group.</div>
-    <div class="row" style="align-items:flex-start;gap:10px">
-      <div style="flex:1">under<br>${box('mUnder', S.under)}</div>
-      <div style="flex:1">over<br>${box('mOver', S.over)}</div>
-    </div>
-    <div class="row"><button id="mRankAll" title="copy this region's over/under to every region in the article">apply to whole article</button></div>`;
+    <h2 style="margin-top:14px">draw layer</h2>
+    <div class="hint">which shelf this region sits on — top of the list draws in
+      front. Blank = follow its <b>anim. group</b> (<code>${S.group || 'torso'}</code>).</div>
+    <div class="row"><select id="mLayer" style="flex:1">
+      <option value="">— follow anim. group —</option>
+      ${layers.map(l=>`<option ${l===cur?'selected':''}>${l}</option>`).join('')}
+    </select></div>
+    <div class="row"><button id="mLayerAll" title="give every region in this article this layer">apply layer to whole article</button></div>`;
 }
 function wireDrawRank(S){
-  const read = id => [...(document.getElementById(id)?.selectedOptions || [])].map(o=>o.value);
-  const commit = () => {
-    pushHistory();
-    const u = read('mUnder'), o = read('mOver');
-    u.length ? S.under = u : delete S.under;
-    o.length ? S.over  = o : delete S.over;
-    sync();
-  };
-  const u = document.getElementById('mUnder'), o = document.getElementById('mOver');
-  if(u) u.onchange = commit;
-  if(o) o.onchange = commit;
-  const all = document.getElementById('mRankAll');
-  if(all) all.onclick = ()=>{
-    pushHistory();
-    for(const r of (D.regions||[])){
-      S.under ? r.under = S.under.slice() : delete r.under;
-      S.over  ? r.over  = S.over.slice()  : delete r.over;
-    }
-    sync();
-  };
+  const sel = document.getElementById('mLayer');
+  if(sel) sel.onchange = e => { pushHistory();
+    e.target.value ? S.layer = e.target.value : delete S.layer;
+    sync(); };
+  const all = document.getElementById('mLayerAll');
+  if(all) all.onclick = ()=>{ pushHistory();
+    for(const r of (D.regions||[])) S.layer ? r.layer = S.layer : delete r.layer;
+    sync(); };
 }
 
 // ---- io ------------------------------------------------------------
@@ -2714,6 +2808,7 @@ function finishLoad(){
     document.getElementById('hidesHairRow').style.display = '';
     document.getElementById('tHidesHair').checked = !!D.hides_hair;
     populateHairPicker().then(loadPreviewHair);
+    populatePreviewArticles();
   }
   // remember which body an outfit was fit against, per story, so jumping
   // back to "outfit" from the story picker reuses it

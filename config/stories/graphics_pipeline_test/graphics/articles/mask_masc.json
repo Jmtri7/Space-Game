@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "head"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "covers nose to chin, between head.anchors.brow (-29.05) and chin (-26.15).",

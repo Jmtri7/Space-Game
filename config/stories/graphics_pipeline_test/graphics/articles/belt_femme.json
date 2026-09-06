@@ -1,15 +1,13 @@
 {
-  "identity": "A plain leather waist belt with a small metal buckle. Top and bottom edges are the wearer's own waistline and low-waist curves, so it sits flush at the natural waist on any body — no free vertices except the buckle.",
+  "identity": "A plain leather waist belt with a small metal buckle. Top and bottom edges are the wearer's own waistline and low-waist curves, so it sits flush at the natural waist on any body \u2014 no free vertices except the buckle.",
   "tier": "person",
   "palette": "civilian",
   "fits_body": "human_femme",
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
-      "color": "leather", "shade": "deep",
+      "color": "leather",
+      "shade": "deep",
       "note": "band. 0 fits torso.waistline (left to right, top edge); 1 fits torso.low_waist reversed (right to left, bottom edge). \"over\": [\"leg_near\"] puts it in the same late draw-rank as a shirt/pants hem so it shows over them, not just the bare torso.",
       "points": [
         [
@@ -33,7 +31,8 @@
       "details": [
         {
           "group": "torso",
-          "color": "metal", "shade": "metal",
+          "color": "metal",
+          "shade": "metal",
           "note": "centre buckle",
           "points": [
             [

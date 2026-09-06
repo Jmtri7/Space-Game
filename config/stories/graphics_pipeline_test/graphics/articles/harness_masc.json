@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "leather",
       "shade": "deep",
       "note": "strap, near shoulder to far hip.",
@@ -34,9 +31,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "leather",
       "shade": "deep",
       "note": "strap, far shoulder to near hip - mirror of the other.",

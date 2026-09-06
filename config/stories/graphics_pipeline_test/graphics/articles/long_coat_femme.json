@@ -6,12 +6,9 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
-      "note": "left front panel, hem near the ankle. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed, 3-4 free open front edge.",
+      "note": "left front panel",
       "points": [
         [
           -0.999,
@@ -44,12 +41,9 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
-      "note": "right front panel, mirror of the left.",
+      "note": "right front panel",
       "points": [
         [
           4.631,
@@ -80,7 +74,7 @@
       "group": "arm_far",
       "color": "cloth",
       "shade": "matte",
-      "note": "far cap sleeve, same as jacket's.",
+      "note": "far sleeve",
       "points": [
         [
           -2.262,
@@ -101,16 +95,13 @@
           "from": 0,
           "to": 0
         }
-      ],
-      "over": [
-        "hand_far"
       ]
     },
     {
       "group": "arm_near",
       "color": "cloth",
       "shade": "matte",
-      "note": "near cap sleeve, mirror of the far one.",
+      "note": "near sleeve",
       "points": [
         [
           2.797,
@@ -131,9 +122,6 @@
           "from": 0,
           "to": 0
         }
-      ],
-      "over": [
-        "hand_near"
       ]
     }
   ]

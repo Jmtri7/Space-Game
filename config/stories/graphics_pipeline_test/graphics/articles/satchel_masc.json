@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "leather",
       "shade": "deep",
       "note": "cross-body strap, far shoulder to near hip. All free vertices.",
@@ -34,9 +31,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "leather",
       "shade": "deep",
       "note": "bag body, hangs at the near hip where the strap ends.",

@@ -6,9 +6,6 @@
   "regions": [
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed (hem up to shoulder), 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free open front edge back down to the hem. \"over\": [\"leg_near\"] matches the shirt/pants draw rank so the jacket shows over them.",
@@ -36,9 +33,6 @@
     },
     {
       "group": "torso",
-      "over": [
-        "leg_near"
-      ],
       "color": "cloth",
       "shade": "matte",
       "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
@@ -89,9 +83,6 @@
           "from": 0,
           "to": 0
         }
-      ],
-      "over": [
-        "hand_far"
       ]
     },
     {
