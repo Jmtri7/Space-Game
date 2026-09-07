@@ -689,13 +689,15 @@ then keeps each entry that has a `graphics/materials.json`; `PIPELINE_STORIES`
 in the script is only a fallback for a backend that can't list a directory).
 This is the only way a design gets loaded (there is no hand-load / paste
 route — see below). Pick a story, then the
-**body / face / outfit** kind selector and the **design** dropdown beside it
+**body / face / tailor** kind selector and the **design** dropdown beside it
 list that story's `graphics/body/*.json` (body and face) or
-`graphics/articles/*.json` (outfit). Picking one navigates through the normal
+`graphics/articles/*.json` (tailor). Picking one navigates through the normal
 `?file=` boot path — `?file=<base>/body/<b>` for body, `+ &edit=face` for face,
-`?file=<base>/articles/<a>&fitbody=<base>/body/<b>` for outfit (the body is the
+`?file=<base>/articles/<a>&fitbody=<base>/body/<b>` for tailor (the body is the
 one last tailored against in that story, remembered per story, else the first
 alphabetically). So `GBASE` gets set and every dependent dropdown lights up.
+(The `tailor` option's value is still `outfit` in the markup — pre-dating the
+separate outfit mode; only its label changed.)
 
 The **story** dropdown is always shown; once a design is loaded the story is
 derived from its path. The **design** dropdown beside it only appears when it
@@ -828,16 +830,29 @@ is a one-time alignment, not a live fit: the vertex becomes a normal authored
 coordinate that happens to match the body right now, and won't follow if the
 body is reshaped later (use the Fit panel's curve dropdown for that instead).
 
-**Switching body / face / outfit without retyping the URL.** Once a body
-(plain, `edit=face`, or an outfit fit against one) is loaded, an **edit: body
-/ face / outfit** button row appears near the top of the side panel,
-highlighting whichever you're in. **body** and **face** both jump to
-`?file=<body>` (with/without `&edit=face`); **outfit** jumps to the article
-you last tailored in this tab (per story, remembered in `sessionStorage` as
-`gpLastArticle:<story>`), or the alphabetically-first `articles/*.json` fit
-against that same body (`fitbody=`) if you haven't tailored one yet — from
-there use the **switch to** dropdown below to pick a different one, or the mode
-row again to hop back to the body or its face. Hidden when the loaded design
+**Outfit mode** — `?file=<body>&edit=outfit`. Loads a body on its own to
+preview whole outfits — no article is edited or saved. It reuses the tailor-mode
+compose/render path (the same `compose_worn` layer stack the game uses, the
+compare-body panel, the walk preview) with an empty synthetic article standing
+in for the edited one, so `FITBODY` points at the body itself. The side panel
+drops every editing section (Polygons, Sections, Output, Fit, Reference image,
+Preview look — hidden by `body.outfit-mode` CSS) and shows only **View** and the
+**Outfit** section: the **preview hair** dropdown and the **preview articles**
+checkbox list (both also available while tailoring — they now live in their own
+**Outfit** section, not under **Fit**). Ticks are remembered per story
+(`gpEditorPreviewArt:<story>`, `gpEditorHair:<story>`). Nothing here writes a
+file; there is no draft for outfit mode.
+
+**Switching body / face / tailor / outfit without retyping the URL.** Once a
+body (plain, `edit=face`, `edit=outfit`, or an article fit against one) is
+loaded, an **edit: body / face / tailor / outfit** button row appears near the
+top of the side panel, highlighting whichever you're in. **body** and **face**
+both jump to `?file=<body>` (with/without `&edit=face`); **tailor** jumps to the
+article you last tailored in this tab (per story, remembered in `sessionStorage`
+as `gpLastArticle:<story>`), or the alphabetically-first `articles/*.json` fit
+against that same body (`fitbody=`) if you haven't tailored one yet — from there
+use the **switch to** dropdown below to pick a different one; **outfit** jumps to
+`?file=<body>&edit=outfit` (outfit mode, below). Hidden when the loaded design
 isn't a body-rooted one (a bare, unfit article, e.g.).
 
 **Hide/show state is remembered per tab.** Which body sections you've hidden
@@ -1004,7 +1019,7 @@ whole article** stamps it onto every region. A hairstyle splits across shelves
 (`hair_back` for the bulk, `hair` for the fringe) — that's two regions with
 different layers, not one region with two tags.
 
-**Preview hair** (tailor mode, Fit panel). A dropdown of every
+**Preview hair** (Outfit section — tailor and outfit mode). A dropdown of every
 `articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on
 the reference body under the garment being tailored (reference only, never
 written), so a hat / hood / helmet fit and its `hair` / `hair_back` layering
@@ -1012,7 +1027,7 @@ can be judged against real hair — its `geometry` cut is the fit body's. The
 choice is remembered per story (`gpEditorHair:<story>`); it defaults to
 `hair_short`. Hidden when the loaded design is itself a hairstyle.
 
-**Preview other articles** (tailor mode, Fit panel). A checkbox list of every
+**Preview other articles** (Outfit section — tailor and outfit mode). A checkbox list of every
 sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those),
 minus the one being edited. Ticked articles are
 drawn on the figure as reference — fitted and outset against the same body, and

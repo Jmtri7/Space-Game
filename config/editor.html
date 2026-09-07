@@ -19,6 +19,14 @@
            border-radius: 5px; padding: 5px 9px; cursor: pointer; }
   button:hover { background: #333a47; }
   button.on { background: #3f5a70; border-color: #5a7f9a; }
+  /* outfit mode: a body loaded only to preview articles worn together - hide
+     every editing panel, leave the View toggles and the Outfit picker. */
+  body.outfit-mode #refImgSec,
+  body.outfit-mode #fitPanelSec,
+  body.outfit-mode #lookPreviewSec,
+  body.outfit-mode #polyPanelSec,
+  body.outfit-mode #secPanelSec,
+  body.outfit-mode #outPanelSec { display: none; }
   label { display: flex; align-items: center; gap: 6px; margin: 3px 0; cursor: pointer; }
   .row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
   select, input[type=number] { font: inherit; background: #12141a; color: #d9dce2;
@@ -83,7 +91,7 @@
     <select id="startKind" style="width:74px">
       <option value="body">body</option>
       <option value="face">face</option>
-      <option value="outfit">outfit</option>
+      <option value="outfit">tailor</option>
     </select>
     <select id="startDesign" style="flex:1"><option value="">— pick —</option></select>
   </div>
@@ -127,15 +135,29 @@
     selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
     arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
 
-  <h2>Reference image</h2>
-  <div class="row">
-    <button id="refLoad">load image…</button>
-    <button id="refRemove">remove</button>
+  <div id="refImgSec">
+    <h2>Reference image</h2>
+    <div class="row">
+      <button id="refLoad">load image…</button>
+      <button id="refRemove">remove</button>
+    </div>
+    <input type="file" id="refFile" accept="image/*" hidden>
+    <div id="refPanel"></div>
+    <div class="hint">A tracing aid only — never saved with the design, and it
+      resets if you reload the page.</div>
   </div>
-  <input type="file" id="refFile" accept="image/*" hidden>
-  <div id="refPanel"></div>
-  <div class="hint">A tracing aid only — never saved with the design, and it
-    resets if you reload the page.</div>
+
+  <div id="outfitSec" style="display:none">
+    <h2>Outfit</h2>
+    <div class="hint">Preview articles worn together on this body — pick a
+      hairstyle and tick any articles to layer them on the figure, composed by
+      the same draw order the game uses. Reference-only: nothing here is saved.</div>
+    <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
+    <div id="previewArtRow" style="display:none">
+      <div class="hint">Tick to show a sibling article, untick to hide it.</div>
+      <div id="previewArtList"></div>
+    </div>
+  </div>
 
   <div id="fitPanelSec">
     <h2>Fit</h2>
@@ -146,12 +168,6 @@
       aren't both snapped to free several at once. (A vertex a real garment
       file already fits to a named curve shows <b class="handle-legend-fit">●</b>
       purple and won't drag until you clear that — select just it to do so.)</div>
-    <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
-    <div id="previewArtRow" style="display:none">
-      <div class="hint">Preview other articles on this figure &mdash; reference-only,
-        not editable. Tick to show, untick to hide.</div>
-      <div id="previewArtList"></div>
-    </div>
     <label id="hidesHairRow" style="display:none"><input type="checkbox" id="tHidesHair"> this headgear hides hair (writes <code>hides_hair</code> to the article — a raised hood, a sealed helmet)</label>
     <label><input type="checkbox" id="tHideFace"> hide face (useful while fitting hair)</label>
     <label><input type="checkbox" id="tBodyVerts" checked> show body vertices</label>
@@ -183,6 +199,7 @@
     </div>
   </div>
 
+  <div id="polyPanelSec">
   <h2>Polygons</h2>
   <div class="row" id="pTargetRow">attach new pieces to <select id="pTarget" style="flex:1"></select></div>
   <div class="row">
@@ -206,7 +223,9 @@
     crowded edge where dbl-clicking the line itself is hard to aim (that still
     works too, once you isolate the piece in the list below to declutter it).</div>
   <div id="polyEdit"><div class="hint">select one whole polygon to edit its fill</div></div>
+  </div>
 
+  <div id="secPanelSec">
   <h2>Sections</h2>
   <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
   <div id="secList"></div>
@@ -218,7 +237,9 @@
     <h2>Curves</h2>
     <div id="curvesPanel"><div class="hint">none</div></div>
   </div>
+  </div>
 
+  <div id="outPanelSec">
   <h2>Output</h2>
   <div class="row">
     <button id="copy">Copy</button>
@@ -226,6 +247,7 @@
     <button id="undo">Undo (Z)</button>
   </div>
   <textarea id="out" spellcheck="false"></textarea>
+  </div>
 
   <h2>Save / download drafts</h2>
   <div class="hint">Every autosaved draft in this browser, not just the design
@@ -725,9 +747,16 @@ let D = null;            // the design object
 let D0 = null;           // the on-disk original, for the ghost overlay
 let loadedPath = null;   // repo-relative path this was fetched from (?file=)
 let GBASE = '';          // .../graphics  (for fetching sibling face slot files)
-const FACE_MODE = new URLSearchParams(location.search).get('edit') === 'face';
-const FITBODY = new URLSearchParams(location.search).get('fitbody');   // tailor mode: an article + the body it's fit against
-const TAILOR_MODE = !!FITBODY;
+const _EDIT_PARAM = new URLSearchParams(location.search).get('edit');
+const FACE_MODE = _EDIT_PARAM === 'face';
+// "outfit" mode: a body loaded on its own to preview articles worn together.
+// Nothing is edited or saved - it reuses the tailor-mode compose/render path
+// with an empty synthetic article, and FITBODY points at the body itself.
+const OUTFIT_MODE = _EDIT_PARAM === 'outfit';
+const _FITBODY_PARAM = new URLSearchParams(location.search).get('fitbody');
+const FITBODY = _FITBODY_PARAM
+  || (OUTFIT_MODE ? new URLSearchParams(location.search).get('file') : null);
+const TAILOR_MODE = !!_FITBODY_PARAM;   // tailor mode: an article + the body it's fit against
 if(!FACE_MODE) document.getElementById('pTargetRow').style.display = 'none';
 if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
 if(TAILOR_MODE || FACE_MODE) document.getElementById('curvesPanelSec').style.display = 'none';
@@ -764,7 +793,7 @@ let savedJSON = null;
 function ssGet(k){ try{ return JSON.parse(sessionStorage.getItem(k)); }catch(e){ return null; } }
 function ssSet(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 function visKey(){
-  if(!loadedPath || FACE_MODE) return null;
+  if(!loadedPath || FACE_MODE || OUTFIT_MODE) return null;
   return TAILOR_MODE ? 'gpVis:tailor:' + FITBODY : 'gpVis:body:' + loadedPath;
 }
 let _lastVisJSON = '';
@@ -1048,7 +1077,7 @@ function nearestBodyVertex(x, y, maxWorldDist){
 }
 let snapTarget = null;   // the body vertex the current drag is about to snap to, if any (for the highlight)
 function drawBodyVertices(){
-  if(!bodyDesign || !document.getElementById('tBodyVerts')?.checked) return '';
+  if(OUTFIT_MODE || !bodyDesign || !document.getElementById('tBodyVerts')?.checked) return '';
   let g = '';
   for(const p of bodyVertexList()){ const c = W2S(p[0], p[1]);
     const isTarget = snapTarget && snapTarget[0]===p[0] && snapTarget[1]===p[1];
@@ -1110,7 +1139,7 @@ function moveBodyPartOrder(name, delta){
 // filtered to the fit body's gender and the pick is remembered per story.
 async function populateHairPicker(){
   const row = document.getElementById('hairPickerRow'), sel_ = document.getElementById('hairPicker');
-  if(!TAILOR_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -1168,7 +1197,7 @@ function savePreviewPick(){
 }
 async function populatePreviewArticles(){
   const row = document.getElementById('previewArtRow');
-  if(!TAILOR_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -1248,7 +1277,7 @@ function render(){
     }
   }
 
-  if(TAILOR_MODE && bodyDesign){
+  if((TAILOR_MODE || OUTFIT_MODE) && bodyDesign){
     // interleave the body's own parts with the article's by the draw-layer
     // stack, exactly like the real game's compose_worn - so e.g. a region on
     // the `hair_back` layer draws *behind* the head, not on top of the body.
@@ -1481,7 +1510,7 @@ function renderMirror(){
     panel.style.display = 'none'; return;
   }
   panel.style.display = 'block';
-  let allParts = TAILOR_MODE
+  let allParts = (TAILOR_MODE || OUTFIT_MODE)
     ? composeWornJS(body, bodyDrawParts(body), hairDrawParts(body), previewArticleParts(body), articleDrawParts(body))
     : bodyDrawParts(body);
   if(walkPreviewOn()) allParts = applyWalkJS(allParts, body, walkRig, walkT);
@@ -2689,12 +2718,12 @@ function allFinite(o){
   if(o && typeof o === 'object') return Object.values(o).every(allFinite);
   return true;
 }
-function draftKey(){ return loadedPath ? 'gpDraft:' + loadedPath + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '') : null; }
+function draftKey(){ return (loadedPath && !OUTFIT_MODE) ? 'gpDraft:' + loadedPath + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '') : null; }
 function sync(){
   // reshaping a body drags its section vertices; keep every named curve (and
   // so every article fitted to one) re-traced against the new shape, live -
   // this is what lands in #out and the autosaved draft that tailor mode reads.
-  if(!TAILOR_MODE && !FACE_MODE && D && D.sections)
+  if(!TAILOR_MODE && !FACE_MODE && !OUTFIT_MODE && D && D.sections)
     for(const nm of Object.keys(D.sections)) recutCurves(nm);
   const rd = JSON.stringify(round(D), null, 2);
   document.getElementById('out').value = rd;
@@ -2796,6 +2825,25 @@ async function loadBodyForTailoring(){
   loadMirrorBody(FITBODY);   // the same outfit, fit against the counterpart body
 }
 function loadDesign(obj, path){
+  if(OUTFIT_MODE){
+    // the loaded file IS the body; there is no article to edit. Synthesize an
+    // empty one so every tailor-mode path (compose_worn, the mirror body, the
+    // hair / preview-article lists) works unchanged, and load the body itself
+    // as the backdrop via loadBodyForTailoring (it reads FITBODY = this file).
+    D = { sections:{}, regions:[], draw_order:[] };
+    D0 = null; selSec = null; dirty = false; savedJSON = null;
+    shown.clear(); hidden.clear();
+    loadedPath = path || loadedPath;
+    if(loadedPath) GBASE = loadedPath.replace(/\/(body|articles|faces|ships|stations|decorations)\/[^/]*$/, '');
+    document.body.classList.add('outfit-mode');
+    document.getElementById('src').textContent = loadedPath
+      ? 'outfit preview  ' + loadedPath : 'outfit preview';
+    loadMatPal()
+      .then(loadBodyForTailoring)
+      .then(finishLoad)
+      .then(loadWalkRig);
+    return;
+  }
   D = shimLook(obj); selSec=null; shown.clear(); hidden.clear();
   if(TAILOR_MODE && Array.isArray(D.regions)) hoistVariant(D, activeVariant());
   dirty = false; savedJSON = null;   // new design - re-baseline; sync() latches dirty on the first real edit
@@ -2835,6 +2883,9 @@ function finishLoad(){
   if(TAILOR_MODE){
     document.getElementById('hidesHairRow').style.display = '';
     document.getElementById('tHidesHair').checked = !!D.hides_hair;
+  }
+  if(TAILOR_MODE || OUTFIT_MODE){
+    document.getElementById('outfitSec').style.display = '';
     populateHairPicker().then(loadPreviewHair);
     populatePreviewArticles();
   }
@@ -2868,17 +2919,20 @@ async function fetchArticleNames(){
   return modeArticleNames;
 }
 function currentBodyPath(){
-  return TAILOR_MODE ? FITBODY : (loadedPath && /\/body\/[^/]+\.json$/.test(loadedPath) ? loadedPath : null);
+  return (TAILOR_MODE || OUTFIT_MODE) ? FITBODY
+       : (loadedPath && /\/body\/[^/]+\.json$/.test(loadedPath) ? loadedPath : null);
 }
 function buildModeSwitch(){
   const el = document.getElementById('modeSwitchRow'); if(!el) return;
   const bodyPath = currentBodyPath();
   el.style.display = bodyPath ? '' : 'none';
   if(!bodyPath) return;
+  const plain = !FACE_MODE && !TAILOR_MODE && !OUTFIT_MODE;
   el.innerHTML = `
-    edit <button id="modeBody" class="${!FACE_MODE && !TAILOR_MODE?'on':''}">body</button>
+    edit <button id="modeBody" class="${plain?'on':''}">body</button>
     <button id="modeFace" class="${FACE_MODE?'on':''}">face</button>
-    <button id="modeOutfit" class="${TAILOR_MODE?'on':''}" title="jumps to the ${TAILOR_MODE ? 'current' : 'last-edited (this tab), else first'} article fit against this body">outfit</button>`;
+    <button id="modeTailor" class="${TAILOR_MODE?'on':''}" title="jumps to the ${TAILOR_MODE ? 'current' : 'last-edited (this tab), else first'} article fit against this body">tailor</button>
+    <button id="modeOutfit" class="${OUTFIT_MODE?'on':''}" title="preview articles worn together on this body">outfit</button>`;
   const go = qs => { location.search = qs.toString(); };
   document.getElementById('modeBody').onclick = ()=>{
     const qs = new URLSearchParams(); qs.set('file', bodyPath); go(qs);
@@ -2886,7 +2940,11 @@ function buildModeSwitch(){
   document.getElementById('modeFace').onclick = ()=>{
     const qs = new URLSearchParams(); qs.set('file', bodyPath); qs.set('edit', 'face'); go(qs);
   };
-  document.getElementById('modeOutfit').onclick = async ()=>{
+  document.getElementById('modeOutfit').onclick = ()=>{
+    if(OUTFIT_MODE) return;   // already here
+    const qs = new URLSearchParams(); qs.set('file', bodyPath); qs.set('edit', 'outfit'); go(qs);
+  };
+  document.getElementById('modeTailor').onclick = async ()=>{
     if(TAILOR_MODE) return;   // already here
     const names = await fetchArticleNames();
     if(!names.length){ alert('no articles/*.json found in ' + GBASE + '/articles to switch to'); return; }
@@ -3054,7 +3112,10 @@ function fitHead(){
 function resnapshot(){ D0 = JSON.parse(JSON.stringify(D)); render(); }
 function fitView(){
   let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
-  for(const s of Object.values(D.sections)) for(const p of s.points){
+  // outfit mode's synthetic article has no geometry - frame the body instead.
+  const secs = (OUTFIT_MODE && bodyDesign && !Object.keys(D.sections).length)
+    ? Object.values(bodyDesign.sections) : Object.values(D.sections);
+  for(const s of secs) for(const p of s.points){
     mnx=Math.min(mnx,p[0]);mny=Math.min(mny,p[1]);mxx=Math.max(mxx,p[0]);mxy=Math.max(mxy,p[1]);
   }
   view.x=(mnx+mxx)/2; view.y=(mny+mxy)/2;
@@ -3355,8 +3416,10 @@ async function runBoot(){
     let obj = fresh, restored = null;
     // the exact mode's own draft always wins when it exists (never lose an
     // in-progress face-kit or outfit-fit edit); otherwise fall back to the
-    // plain body draft.
-    const draft = (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
+    // plain body draft. Outfit mode edits nothing, so it never restores a draft
+    // here - loadBodyForTailoring still picks up an unsaved body/face draft.
+    const draft = OUTFIT_MODE ? null
+      : (_modeDraftKey !== _plainDraftKey && _readDraft(_modeDraftKey)) || _readDraft(_plainDraftKey);
     if(draft){ obj = draft.D; restored = new Date(draft.t); }
     loadDesign(obj, _qFile);
     if(restored) dirty = true;   // a restored draft is unsaved work - keep persisting it
