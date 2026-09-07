@@ -6,7 +6,7 @@
     {
       "color": "hair",
       "shade": "matte",
-      "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
+      "note": "crown",
       "geometry": {
         "masc": {
           "points": [

@@ -8,7 +8,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "bulk of the hood, behind the head and draping past the shoulders.",
+      "note": "hood",
       "geometry": {
         "masc": {
           "points": [
@@ -75,7 +75,7 @@
       "color": "cloth",
       "shade": "matte",
       "tone": "dark",
-      "note": "front edge, brim sits right at the brow (head.anchors.brow y=-29.05) without dropping onto the eyes.",
+      "note": "brim",
       "geometry": {
         "masc": {
           "points": [

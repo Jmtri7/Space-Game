@@ -7,7 +7,7 @@
       "group": "leg_near",
       "color": "leather",
       "shade": "deep",
-      "note": "near knee pad, centred on leg_near.knee.",
+      "note": "near pad",
       "outset": 0.08,
       "geometry": {
         "masc": {
@@ -74,7 +74,7 @@
       "group": "leg_far",
       "color": "leather",
       "shade": "deep",
-      "note": "far knee pad, mirror of the near one.",
+      "note": "far pad",
       "outset": 0.08,
       "geometry": {
         "masc": {

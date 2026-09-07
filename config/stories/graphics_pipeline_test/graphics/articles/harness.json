@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "leather",
       "shade": "deep",
-      "note": "strap, near shoulder to far hip.",
+      "note": "near strap",
       "geometry": {
         "masc": {
           "points": [
@@ -57,7 +57,7 @@
       "group": "torso",
       "color": "leather",
       "shade": "deep",
-      "note": "strap, far shoulder to near hip - mirror of the other.",
+      "note": "far strap",
       "geometry": {
         "masc": {
           "points": [

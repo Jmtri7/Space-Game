@@ -7,7 +7,7 @@
       "group": "foot_near",
       "color": "leather",
       "shade": "deep",
-      "note": "near boot. Traces the wearer's own foot_outline (the sole/toe/heel corners are its exact points); the last two points raise the ankle-height corners to mid-shin for the shaft.",
+      "note": "near boot",
       "outset": 0.3,
       "geometry": {
         "masc": {
@@ -80,7 +80,7 @@
       "group": "foot_far",
       "color": "leather",
       "shade": "deep",
-      "note": "far boot, mirror of the near one.",
+      "note": "far boot",
       "outset": 0.3,
       "geometry": {
         "masc": {

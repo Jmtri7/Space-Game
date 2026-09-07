@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "metal",
       "shade": "metal",
-      "note": "right half, mirror of the left, meeting it at x=0.",
+      "note": "plate",
       "geometry": {
         "masc": {
           "points": [

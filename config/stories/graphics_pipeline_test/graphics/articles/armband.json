@@ -7,7 +7,7 @@
       "group": "arm_near",
       "color": "cloth",
       "shade": "matte",
-      "note": "band midway between arm_near.shoulder and arm_near.elbow.",
+      "note": "band",
       "outset": 0.06,
       "geometry": {
         "masc": {

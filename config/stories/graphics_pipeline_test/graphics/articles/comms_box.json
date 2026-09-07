@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "#26282c",
       "shade": "deep",
-      "note": "box body, against the helmet shell just aft of the ear.",
+      "note": "box",
       "geometry": {
         "masc": {
           "points": [

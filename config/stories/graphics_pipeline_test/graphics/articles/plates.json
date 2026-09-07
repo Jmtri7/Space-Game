@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "metal",
       "shade": "metal",
-      "note": "left plate.",
+      "note": "left plate",
       "geometry": {
         "masc": {
           "points": [
@@ -57,7 +57,7 @@
       "group": "torso",
       "color": "metal",
       "shade": "metal",
-      "note": "centre plate, overlapping both side plates slightly.",
+      "note": "centre plate",
       "geometry": {
         "masc": {
           "points": [
@@ -107,7 +107,7 @@
       "group": "torso",
       "color": "metal",
       "shade": "metal",
-      "note": "right plate, mirror of the left.",
+      "note": "right plate",
       "geometry": {
         "masc": {
           "points": [

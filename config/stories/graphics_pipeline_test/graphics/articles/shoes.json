@@ -7,7 +7,7 @@
       "group": "foot_near",
       "color": "leather",
       "shade": "deep",
-      "note": "the whole near-foot outline, outset so the shoe wraps it.",
+      "note": "near shoe",
       "outset": 0.32,
       "geometry": {
         "masc": {
@@ -76,7 +76,7 @@
       "group": "foot_far",
       "color": "leather",
       "shade": "deep",
-      "note": "the whole far-foot outline.",
+      "note": "far shoe",
       "outset": 0.32,
       "geometry": {
         "masc": {

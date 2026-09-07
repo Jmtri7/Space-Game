@@ -543,6 +543,17 @@ function drawOrderTags(){
 }
 async function saveDrawOrder(){
   if(!GBASE || !VFS.canWrite) return false;
+  // body sections are mandatory anchors - never let a bad in-memory state drop
+  // one from the file. Any missing section is re-appended before the tail tag.
+  const bd = (TAILOR_MODE || OUTFIT_MODE) ? bodyDesign : null;
+  const secOrder = bd ? (bd.draw_order || Object.keys(bd.sections || {})) : [];
+  for(const s of secOrder){
+    if(!drawOrder.includes(s)){
+      const i = drawOrder.indexOf('front');
+      drawOrder.splice(i < 0 ? drawOrder.length : i, 0, s);
+    }
+  }
+  if(secOrder.length && drawOrder.length < secOrder.length) return false;  // corrupt - refuse
   const body = { identity: drawOrderIdentity || 'Worn-figure draw order for this story.', order: drawOrder };
   try{ await VFS.writeText(GBASE + '/draw_order.json', toRepoJSON(body)); return true; }
   catch(e){ return false; }

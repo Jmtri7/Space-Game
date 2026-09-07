@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "lamp",
       "shade": "glow",
-      "note": "left panel, open wide at the sides (no fit to torso.side_left - this hangs loose off the shoulder rather than hugging the ribs).",
+      "note": "left panel",
       "geometry": {
         "masc": {
           "points": [
@@ -67,7 +67,7 @@
       "group": "torso",
       "color": "lamp",
       "shade": "glow",
-      "note": "right panel, mirror of the left.",
+      "note": "right panel",
       "geometry": {
         "masc": {
           "points": [

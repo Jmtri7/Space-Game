@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "leather",
       "shade": "deep",
-      "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed, 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free narrow front edge back down to the hem.",
+      "note": "left panel",
       "geometry": {
         "masc": {
           "points": [
@@ -63,7 +63,7 @@
       "group": "torso",
       "color": "leather",
       "shade": "deep",
-      "note": "right front panel, mirror of the left.",
+      "note": "right panel",
       "geometry": {
         "masc": {
           "points": [

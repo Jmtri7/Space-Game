@@ -7,7 +7,7 @@
       "group": "hand_near",
       "color": "cloth",
       "shade": "matte",
-      "note": "near glove, centred on hand_near.grip.",
+      "note": "near glove",
       "outset": 0.08,
       "geometry": {
         "masc": {
@@ -62,7 +62,7 @@
       "group": "hand_far",
       "color": "cloth",
       "shade": "matte",
-      "note": "far glove, mirror of the near one.",
+      "note": "far glove",
       "outset": 0.08,
       "geometry": {
         "masc": {

@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "near shoulder board, on shoulder_near.",
+      "note": "near board",
       "geometry": {
         "masc": {
           "points": [
@@ -57,7 +57,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "far shoulder board, mirror of the near one.",
+      "note": "far board",
       "geometry": {
         "masc": {
           "points": [

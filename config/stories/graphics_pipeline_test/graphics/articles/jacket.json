@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "left front panel. 0 free hem, 1 fits torso.side_left reversed (hem up to shoulder), 2 fits torso.shoulder_arc_left reversed (shoulder to collar), 3-4 free open front edge back down to the hem. \"over\": [\"leg_near\"] matches the shirt/pants draw rank so the jacket shows over them.",
+      "note": "left panel",
       "geometry": {
         "masc": {
           "points": [
@@ -61,7 +61,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "right front panel, mirror of the left. 0 free hem, 1 fits torso.side_right reversed, 2 fits torso.shoulder_arc_right, 3-4 free open front edge.",
+      "note": "right panel",
       "geometry": {
         "masc": {
           "points": [
@@ -115,7 +115,7 @@
       "group": "arm_near",
       "color": "cloth",
       "shade": "matte",
-      "note": "near cap sleeve, mirror of the far one.",
+      "note": "near sleeve",
       "geometry": {
         "masc": {
           "points": [
@@ -169,7 +169,7 @@
       "group": "arm_far",
       "color": "cloth",
       "shade": "matte",
-      "note": "far cap sleeve. 0 fits arm_far.arm_far_top (the shoulder dome); 1-2 free cuff.",
+      "note": "far sleeve",
       "geometry": {
         "masc": {
           "points": [

@@ -7,7 +7,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "bag body, drawn behind the torso so it peeks past the shoulders/sides and above the waist.",
+      "note": "bag",
       "geometry": {
         "masc": {
           "points": [
@@ -73,13 +73,14 @@
           "fits": [],
           "details": []
         }
-      }
+      },
+      "layer": "back"
     },
     {
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "far-side shoulder strap, mirror of the near one.",
+      "note": "far strap",
       "geometry": {
         "masc": {
           "points": [
@@ -129,7 +130,7 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "near-side shoulder strap, visible in front over the shirt.",
+      "note": "near strap",
       "geometry": {
         "masc": {
           "points": [
