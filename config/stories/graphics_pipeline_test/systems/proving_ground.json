@@ -17,6 +17,7 @@
       "concourse": {
         "label": "Concourse",
         "culture": "orbital_std",
+        "space_backdrop": true,
         "portals": [
           { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
         ],

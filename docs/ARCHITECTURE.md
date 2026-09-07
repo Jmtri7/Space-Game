@@ -815,8 +815,13 @@ point-in-any-polygon test (concave-safe). `plan_path()` routes a walking body
 that area with a grid A* + string-pull (`IndoorPathfinder` / `NavGrid`, one
 cached raster per interior, `can_move_to` as its oracle). `decorations` are
 cosmetic floor/wall decals (`normalize_decoration`) with **no collision**;
-each culture's `interior_decoration` generator (`edge_veins` / `seam_rivets`)
-stamps a pack onto every room automatically. `structures` that name a
+each culture's `interior_decoration` generator (`edge_veins` room-edge veins /
+`seam_rivets` edge ticks / `deck_grid` a spacing-`spacing` line grid clipped to
+each room by `_clip_segment_convex`) stamps a pack onto every room
+automatically. An interior config with `"space_backdrop": true` fills with the
+Space View's black + a `StarField` (own `star_seed` / `star_density`) instead of
+the flat wall colour, so the lit floor polygons read as decks open to the void
+(the concourse in `graphics_pipeline_test`). `structures` that name a
 `building_type` are solid: anything with a `footprint` block (spires, halls,
 and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
 `*_seat_pod`, `*_crate`, `*_barrel`) contributes a ground-level collision box

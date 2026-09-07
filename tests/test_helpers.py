@@ -45,7 +45,7 @@ from game.ui.ui_theme import (
     side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin,
     message_alert_state, MESSAGE_ALERT_FRAMES, MESSAGE_ALERT_BLINKS, MESSAGE_ALERT_BLINK_FRAMES,
 )
-from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
+from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon, _clip_segment_convex, _grid_segments
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.character import Character
@@ -814,6 +814,41 @@ class TestPointInPolygon(unittest.TestCase):
     def test_point_on_an_edge_counts_as_inside(self):
         poly = [(0, 0), (100, 0), (100, 100), (0, 100)]
         self.assertTrue(point_in_polygon(100, 50, poly))   # exactly on the right edge
+
+
+class TestDeckGridDecoration(unittest.TestCase):
+    """_clip_segment_convex / _grid_segments - the geometry behind the
+    'deck_grid' culture floor decoration."""
+
+    SQUARE = [(0, 0), (100, 0), (100, 100), (0, 100)]
+
+    def test_clip_keeps_the_span_inside_the_polygon(self):
+        a, b = _clip_segment_convex((50, -20), (50, 130), self.SQUARE)
+        self.assertAlmostEqual(a[1], 0)
+        self.assertAlmostEqual(b[1], 100)
+        self.assertEqual((a[0], b[0]), (50, 50))
+
+    def test_clip_returns_none_for_a_segment_that_misses(self):
+        self.assertIsNone(_clip_segment_convex((200, -20), (200, 130), self.SQUARE))
+
+    def test_clip_respects_a_diagonal_trapezoid_edge(self):
+        # concourse-style wedge: the left edge slopes in toward the top
+        wedge = [(0, 100), (100, 100), (70, 0), (30, 0)]
+        clip = _clip_segment_convex((20, -5), (20, 105), wedge)
+        self.assertIsNotNone(clip)
+        (ax, ay), (bx, by) = clip
+        # entry is on the sloped edge, above the floor line, not at y=0
+        self.assertGreater(min(ay, by), 0)
+        self.assertAlmostEqual(max(ay, by), 100)
+
+    def test_grid_segments_all_lie_within_the_room(self):
+        wedge = [(0, 100), (100, 100), (70, 0), (30, 0)]
+        segs = _grid_segments(wedge, 15)
+        self.assertGreater(len(segs), 4)
+        for (ax, ay), (bx, by) in segs:
+            for x, y in ((ax, ay), (bx, by)):
+                self.assertTrue(point_in_polygon(x, y, wedge),
+                                f"grid endpoint ({x:.1f},{y:.1f}) outside the room")
 
 
 class TestIndoorPathfinder(unittest.TestCase):

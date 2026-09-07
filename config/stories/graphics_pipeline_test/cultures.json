@@ -7,6 +7,12 @@
     "thrust_color": [255, 178, 87],
     "wall_color": [44, 48, 55],
     "floor_color": [92, 100, 109],
-    "wall_trim_color": [120, 130, 140]
+    "wall_trim_color": [120, 130, 140],
+    "interior_decoration": {
+      "generator": "deck_grid",
+      "spacing": 38,
+      "color": [74, 81, 90],
+      "width": 1
+    }
   }
 }

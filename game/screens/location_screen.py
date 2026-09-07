@@ -3,7 +3,7 @@ import pygame
 import math
 import game.aa_draw as aa
 import game.constants as constants
-from game.constants import GAME_WIDTH, GAME_HEIGHT, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
+from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, set_camera_zoom, set_camera_zoom_limits, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
 import game.utils as utils
 from game.perf_metrics import metrics as perf
@@ -17,6 +17,7 @@ from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, 
 from game.world.player_character import PlayerCharacter
 from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
+from game.world.starfield import StarField
 
 
 # Frames an interior message banner stays lit after a message arrives (see
@@ -194,6 +195,59 @@ def _edge_ticks(poly, spacing, length):
     return ticks
 
 
+def _clip_segment_convex(p1, p2, poly):
+    """Clip segment p1->p2 to convex `poly` (Cyrus-Beck). Returns (a, b) inside
+    the polygon or None. Winding-agnostic - each edge's inward normal is the
+    one pointing toward the centroid. A concave polygon keeps only its first
+    inside span, which is fine for a decorative grid."""
+    cx, cy = _polygon_centroid(poly)
+    dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+    t0, t1 = 0.0, 1.0
+    n = len(poly)
+    for i in range(n):
+        ax, ay = poly[i]
+        bx, by = poly[(i + 1) % n]
+        nx, ny = -(by - ay), (bx - ax)
+        mx, my = (ax + bx) / 2, (ay + by) / 2
+        if nx * (cx - mx) + ny * (cy - my) < 0:
+            nx, ny = -nx, -ny
+        num = nx * (p1[0] - ax) + ny * (p1[1] - ay)
+        den = nx * dx + ny * dy
+        if abs(den) < 1e-9:
+            if num < 0:
+                return None
+            continue
+        t = -num / den
+        if den > 0:
+            t0 = max(t0, t)
+        else:
+            t1 = min(t1, t)
+        if t0 > t1:
+            return None
+    return (p1[0] + t0 * dx, p1[1] + t0 * dy), (p1[0] + t1 * dx, p1[1] + t1 * dy)
+
+
+def _grid_segments(poly, spacing):
+    """Axis-aligned lines every `spacing` world units across `poly`'s bounds,
+    each clipped to the room polygon - the geometry behind the "deck_grid"
+    culture decoration."""
+    minx, miny, maxx, maxy = _polygon_bounds(poly)
+    segs = []
+    x = math.ceil(minx / spacing) * spacing
+    while x < maxx:
+        clip = _clip_segment_convex((x, miny - 1), (x, maxy + 1), poly)
+        if clip:
+            segs.append([clip[0], clip[1]])
+        x += spacing
+    y = math.ceil(miny / spacing) * spacing
+    while y < maxy:
+        clip = _clip_segment_convex((minx - 1, y), (maxx + 1, y), poly)
+        if clip:
+            segs.append([clip[0], clip[1]])
+        y += spacing
+    return segs
+
+
 # Fallback loan size when story.json defines no "loan" block. Bumped way up
 # from the old "shuttle's cost" amount so a single loan covers any ship/
 # outfit combo without grinding for credits first - revisit before treating
@@ -355,6 +409,16 @@ class LocationScreen(ScreenBase):
                 margin = self.config.get("wall_margin", 60)
                 self.rooms = [normalize_room({"rect": [margin, margin, world_width - 2 * margin, world_height - 2 * margin]})]
             self.decorations = self._build_culture_decorations(culture) + self.decorations
+
+        # Opt-in: render the interior over the space starfield instead of a
+        # flat wall fill - a station concourse open to the void, its lit decks
+        # floating against the same background as the Space View. Floor
+        # polygons paint over the stars, so only the gaps between rooms show
+        # through.
+        self.star_field = StarField(
+            seed=self.config.get("star_seed", 0),
+            stars_per_chunk_range=tuple(self.config.get("star_density", (55, 95))),
+        ) if self.config.get("space_backdrop") else None
 
         # Load structures (buildings, craters, rocks, etc.)
         self.structures = self.config.get("structures", [])
@@ -928,6 +992,11 @@ class LocationScreen(ScreenBase):
             for room in self.rooms:
                 for segment in _edge_ticks(room["polygon"], spacing, tick):
                     out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
+        elif generator == "deck_grid":
+            spacing, color, width = spec.get("spacing", 44), spec.get("color", [0, 0, 0]), spec.get("width", 1)
+            for room in self.rooms:
+                for segment in _grid_segments(room["polygon"], spacing):
+                    out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
         return out
 
     def draw(self, surface, draw_hud=True):
@@ -945,7 +1014,12 @@ class LocationScreen(ScreenBase):
         set_camera_angle(0)
         set_camera_zoom_limits(self.camera_zoom_min, self.camera_zoom_max)
         set_camera_zoom(self.camera_zoom)
-        surface.fill(self.bg_color)
+        if self.star_field is not None:
+            surface.fill(BLACK)
+            with perf.span("render.starfield"):
+                self.star_field.draw(surface)
+        else:
+            surface.fill(self.bg_color)
         scale = get_scale()
 
         with perf.span("render.location_floor"):

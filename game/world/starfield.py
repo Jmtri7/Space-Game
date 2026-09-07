@@ -16,8 +16,9 @@ class StarField:
     always shows the same stars without ever pre-generating (or wrapping) a
     fixed-size field. New chunks are generated lazily as the camera approaches
     them; chunks far behind the camera are dropped to bound memory."""
-    def __init__(self, seed=0):
+    def __init__(self, seed=0, stars_per_chunk_range=STARS_PER_CHUNK_RANGE):
         self.seed = seed
+        self.stars_per_chunk_range = stars_per_chunk_range
         self.chunks = {}  # (chunk_x, chunk_y) -> list of (x, y, brightness)
 
     def _chunk_seed(self, cx, cy):
@@ -27,7 +28,7 @@ class StarField:
 
     def _generate_chunk(self, cx, cy):
         rng = random.Random(self._chunk_seed(cx, cy))
-        count = rng.randint(*STARS_PER_CHUNK_RANGE)
+        count = rng.randint(*self.stars_per_chunk_range)
         stars = []
         for _ in range(count):
             x = cx * CHUNK_SIZE + rng.uniform(0, CHUNK_SIZE)
