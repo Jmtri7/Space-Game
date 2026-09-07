@@ -134,10 +134,10 @@
 
     <h2 style="margin-top:16px">Draw order</h2>
     <div class="hint">The whole story's back-to-front stack: body parts
-      interleaved with garment <b>tags</b>. Reorder anything with its arrows
-      (this is the only place body-part order can be changed); a region tagged
-      with a name draws at that slot. Edits go to a draft (shown in
-      <b>Save / download drafts</b>) and reach
+      interleaved with garment <b>tags</b>. Reorder anything by its arrows or by
+      dragging the row (this is the only place body-part order can be changed);
+      a region tagged with a name draws at that slot. Edits go to a draft (shown
+      in <b>Save / download drafts</b>) and reach
       <code>graphics/draw_order.json</code> on <b>save checked to repo</b>.</div>
     <div id="tagOrderPanel"></div>
     <div class="row"><button id="tagOrderAdd">+ tag</button></div>
@@ -1160,39 +1160,20 @@ function buildBodyPartList(){
     buildBodyPartList(); render(); };
   bar.querySelector('#bpAllHideVerts').onclick = ()=>{
     Object.keys(bodyDesign.sections).forEach(n=>bodyVertsOff.add(n)); buildBodyPartList(); render(); };
-  const hint = document.createElement('div'); hint.className = 'hint';
-  hint.textContent = 'the reorder arrows preview this reference body\'s own draw_order - it\'s never saved (tailor mode only writes the outfit).';
-  el.appendChild(hint);
   const order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
-  order.forEach((name,oi)=>{
+  order.forEach((name)=>{
     const row = document.createElement('label');
     const vertsShown = !bodyVertsOff.has(name) && !bodyHidden.has(name);
     row.innerHTML = `<button class="eye" title="show/hide this body part">${bodyHidden.has(name)?'–':'●'}</button>
-      <button class="eye" title="earlier in draw order (further back)" ${oi===0?'disabled':''}>↓</button>
-      <button class="eye" title="later in draw order (further forward)" ${oi===order.length-1?'disabled':''}>↑</button>
       <span class="nm">${name}</span>
       <button class="eye" title="show/hide its snap vertices" ${bodyHidden.has(name)?'disabled':''}>${vertsShown?'•':'–'}</button>`;
     const eyes = row.querySelectorAll('.eye');
     eyes[0].onclick = ev=>{ ev.preventDefault();
       bodyHidden.has(name) ? bodyHidden.delete(name) : bodyHidden.add(name); buildBodyPartList(); render(); };
-    eyes[1].onclick = ev=>{ ev.preventDefault(); moveBodyPartOrder(name, -1); };
-    eyes[2].onclick = ev=>{ ev.preventDefault(); moveBodyPartOrder(name, 1); };
-    eyes[3].onclick = ev=>{ ev.preventDefault();
+    eyes[1].onclick = ev=>{ ev.preventDefault();
       bodyVertsOff.has(name) ? bodyVertsOff.delete(name) : bodyVertsOff.add(name); buildBodyPartList(); render(); };
     el.appendChild(row);
   });
-}
-// reorders the reference body's own draw_order - a live preview knob only:
-// bodyDesign is read-only in tailor mode (never written back), unlike
-// moveSectionOrder's D.draw_order / D.regions, which do get saved.
-function moveBodyPartOrder(name, delta){
-  bodyDesign.draw_order = bodyDesign.draw_order || Object.keys(bodyDesign.sections);
-  const order = bodyDesign.draw_order;
-  const i = order.indexOf(name); if(i<0) return;
-  const j = Math.max(0, Math.min(order.length-1, i+delta));
-  if(j===i) return;
-  order.splice(i,1); order.splice(j,0,name);
-  buildBodyPartList(); render();
 }
 // --- tailor mode: "preview hair" - a reference hairstyle drawn under the
 // headgear being tailored so a hat / hood / helmet fit can be judged (and
@@ -1327,14 +1308,16 @@ function buildTagOrderPanel(){
   }
   el.innerHTML = drawOrder.map((nm, i) => {
     const isSec = secs.has(nm);
+    const rowStyle = `gap:4px;align-items:center;margin:2px 0;cursor:grab${isSec?';opacity:.65':''}`;
     const up = `<button class="toArr" data-mv="${i}:${i-1}" ${i===0?'disabled':''} title="move up (further back)">↑</button>`;
     const dn = `<button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1?'disabled':''} title="move down (further front)">↓</button>`;
-    if(isSec) return `<div class="row" style="gap:4px;align-items:center;margin:2px 0;opacity:.65">
-        ${up}${dn}<span style="flex:1">${nm}</span>
+    const grip = `<span class="hint" style="margin:0;cursor:grab" title="drag to reorder">⠿</span>`;
+    if(isSec) return `<div class="row toRow" draggable="true" data-i="${i}" data-sec="1" style="${rowStyle}">
+        ${grip}${up}${dn}<span style="flex:1">${nm}</span>
         <span class="hint" style="margin:0">body</span></div>`;
     const used = tagUsageCount(nm);
-    return `<div class="row" style="gap:4px;align-items:center;margin:2px 0">
-        ${up}${dn}<b style="flex:1">${nm}</b>
+    return `<div class="row toRow" draggable="true" data-i="${i}" style="${rowStyle}">
+        ${grip}${up}${dn}<b style="flex:1">${nm}</b>
         <span class="hint" style="margin:0">${used ? used + ' region' + (used>1?'s':'') : 'unused'}</span>
         <button class="toDel" data-tag="${nm.replace(/"/g,'&quot;')}" title="remove this tag from the order">×</button>
       </div>`;
@@ -1351,6 +1334,33 @@ function buildTagOrderPanel(){
     if(tagUsageCount(t) && !confirm(`"${t}" is still used by a region. Remove it from the order anyway? (those regions fall back to their anim. group)`)) return;
     drawOrder = drawOrder.filter(n => n !== t);
     commit();
+  });
+  // drag-and-drop reorder (same effect as the arrows, faster over a distance)
+  let dragI = null;
+  const clearMarks = () => el.querySelectorAll('.toRow').forEach(r => {
+    r.style.borderTop = ''; r.style.borderBottom = ''; r.style.opacity = r.dataset.sec ? '.65' : '';
+  });
+  el.querySelectorAll('.toRow').forEach(row => {
+    row.ondragstart = e => { dragI = +row.dataset.i; e.dataTransfer.effectAllowed = 'move'; row.style.opacity = '.35'; };
+    row.ondragend = () => { dragI = null; clearMarks(); };
+    row.ondragover = e => {
+      if(dragI === null) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      const r = row.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+      clearMarks();
+      row.style[after ? 'borderBottom' : 'borderTop'] = '2px solid #5a7f9a';
+    };
+    row.ondrop = e => {
+      e.preventDefault();
+      if(dragI === null) return;
+      const r = row.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+      let to = +row.dataset.i + (after ? 1 : 0);
+      const item = drawOrder.splice(dragI, 1)[0];
+      if(dragI < to) to--;
+      drawOrder.splice(Math.max(0, Math.min(drawOrder.length, to)), 0, item);
+      dragI = null;
+      commit();
+    };
   });
 }
 document.getElementById('tagOrderAdd').onclick = () => {
@@ -2535,26 +2545,17 @@ document.getElementById('refRemove').onclick = ()=>{ ref=null; refMoveMode=false
 buildRefPanel();
 
 // ---- side panel -----------------------------------------------------
+// tailor mode only: reorder a region within its article (regions draw in
+// array order, so this breaks a same-slot tie in the draw stack). A body's
+// part order lives in the story draw_order - edited in the Outfit section.
 function moveSectionOrder(name, delta){
-  if(TAILOR_MODE){
-    // an article has no `draw_order` field - regions draw in array order, so
-    // reorder D.regions itself and rebuild the region0/region1/... aliases.
-    const i = +name.replace('region','');
-    const j = Math.max(0, Math.min(D.regions.length-1, i+delta));
-    if(j===i) return;
-    pushHistory();
-    const [item] = D.regions.splice(i,1); D.regions.splice(j,0,item);
-    relinkTailorSections(); sel.clear();
-    buildSecList(); sync();
-    return;
-  }
-  D.draw_order = D.draw_order || Object.keys(D.sections);   // make it a real, persisted array
-  const order = D.draw_order;
-  const i = order.indexOf(name); if(i<0) return;
-  const j = Math.max(0, Math.min(order.length-1, i+delta));
+  if(!TAILOR_MODE) return;
+  const i = +name.replace('region','');
+  const j = Math.max(0, Math.min(D.regions.length-1, i+delta));
   if(j===i) return;
   pushHistory();
-  order.splice(i,1); order.splice(j,0,name);
+  const [item] = D.regions.splice(i,1); D.regions.splice(j,0,item);
+  relinkTailorSections(); sel.clear();
   buildSecList(); sync();
 }
 function buildSecList(){
@@ -2587,9 +2588,15 @@ function buildSecList(){
     // to the region<i> alias when it has none
     const S = D.sections[name];
     const label = (TAILOR_MODE && S && S.note) ? S.note : name;
+    // reorder arrows only in tailor mode (they move a region within its
+    // article). A body's part order is the story draw order - reorder that in
+    // the Outfit section, not here.
+    const arrows = TAILOR_MODE
+      ? `<button class="eye" title="earlier in the article (further back on a tie)" ${oi===0?'disabled':''}>↓</button>
+         <button class="eye" title="later in the article (further forward on a tie)" ${oi===order.length-1?'disabled':''}>↑</button>`
+      : '';
     row.innerHTML = `<button class="eye" title="show / hide this part">${hidden.has(name)?'–':'●'}</button>
-      <button class="eye" title="earlier in draw order (further back)" ${oi===0?'disabled':''}>↓</button>
-      <button class="eye" title="later in draw order (further forward)" ${oi===order.length-1?'disabled':''}>↑</button>
+      ${arrows}
       <span class="nm ${name===selSec?'sel':''}" title="${name}">${label}</span>
       <input type="checkbox" title="show vertex handles" ${shown.has(name)?'checked':''}>`;
     const eyes = row.querySelectorAll('.eye');
@@ -2597,8 +2604,10 @@ function buildSecList(){
       if(hidden.has(name)) hidden.delete(name);
       else { hidden.add(name); shown.delete(name); }   // hide the vertices with it
       buildSecList(); render(); };
-    eyes[1].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, -1); };
-    eyes[2].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, 1); };
+    if(TAILOR_MODE){
+      eyes[1].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, -1); };
+      eyes[2].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, 1); };
+    }
     row.querySelector('.nm').onclick = ev=>{ ev.preventDefault(); selSec=name; shown.add(name); hidden.delete(name);
       buildSecList(); buildSecEdit(); buildCurvesPanel(); render(); };
     row.querySelector('input').onchange = ev=>{ ev.target.checked ? shown.add(name) : shown.delete(name); render(); };

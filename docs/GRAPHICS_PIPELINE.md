@@ -913,8 +913,8 @@ section with two toggles: the eye hides the part entirely (fill *and* its
 vertex dots — the dot toggle is implied off and greys out while the part is
 hidden); the dot on its own hides just the vertex dots, leaving the fill
 visible as a plain reference silhouette with nothing to accidentally snap
-onto. A pair of reorder arrows between them previews the reference body's own
-`draw_order` (same up/down arrows as the Sections list elsewhere). Above the
+onto. (No reorder here — body-part draw order is only editable in the Outfit
+section.) Above the
 list, **show all** / **hide all** toggles every part at once (the label
 follows state — it reads **show all** only when every part is already
 hidden), beside **hide all verts**. This list is a decluttering/preview aid —
@@ -983,7 +983,8 @@ dropdown (which limb the region swings with, and its default draw-stack slot),
 and a **draw order** **tag** field (a text input with a datalist of the story's
 existing tags). Blank = stack at the anim. group. Type an existing tag to move
 the region to that slot; type a new name and it's appended to the story order
-(saved) so you can then place it in the **Outfit** section's Draw order editor.
+(in its draft) so you can then position it in the **Outfit** section's Draw
+order editor.
 **all** stamps the tag onto every region. A pre-existing `"layer"` / `"back"` is
 read as a tag and rewritten to `"tag"` on the next edit.
 
@@ -1040,9 +1041,10 @@ the body has no walk rig.
 
 **Draw order editor** (Outfit section — outfit mode). The whole story
 `draw_order.json` list, rendered top-to-bottom = back-to-front. Every row —
-body section (dim, labelled *body*) or **tag** — has **↑ / ↓** that move it one
-step through the list; this is the **only** place the body-part draw order can
-be reordered (the tailor-mode tag field only assigns a region's tag). A tag row
+body section (dim, labelled *body*) or **tag** — can be reordered by its
+**↑ / ↓** buttons (one step) or by **dragging the row** (a blue line marks
+where it will land). This is the **only** place the body-part draw order can be
+reordered (the tailor-mode tag field only assigns a region's tag). A tag row
 also shows how many loaded regions use it and an **×** to drop it (regions then
 fall back to their group). **+ tag** adds a new one before `front`. The figure
 re-renders on every change.
