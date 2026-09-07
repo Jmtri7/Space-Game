@@ -8,6 +8,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "near strap",
+      "tag": "harness",
       "geometry": {
         "masc": {
           "points": [
@@ -58,6 +59,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "far strap",
+      "tag": "harness",
       "geometry": {
         "masc": {
           "points": [

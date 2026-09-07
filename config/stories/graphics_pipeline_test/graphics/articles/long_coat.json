@@ -8,6 +8,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "left panel",
+      "tag": "long coat",
       "geometry": {
         "masc": {
           "points": [
@@ -75,6 +76,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "right panel",
+      "tag": "long coat",
       "geometry": {
         "masc": {
           "points": [
@@ -137,6 +139,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "far sleeve",
+      "tag": "far sleeve",
       "geometry": {
         "masc": {
           "points": [
@@ -191,6 +194,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "near sleeve",
+      "tag": "near sleeve",
       "geometry": {
         "masc": {
           "points": [

@@ -8,6 +8,7 @@
       "color": "denim",
       "shade": "matte",
       "note": "far leg",
+      "tag": "pants",
       "geometry": {
         "masc": {
           "points": [
@@ -88,6 +89,7 @@
       "color": "denim",
       "shade": "matte",
       "note": "near leg",
+      "tag": "pants",
       "geometry": {
         "masc": {
           "points": [
@@ -168,6 +170,7 @@
       "color": "denim",
       "shade": "matte",
       "note": "hip panel",
+      "tag": "pants",
       "geometry": {
         "masc": {
           "points": [

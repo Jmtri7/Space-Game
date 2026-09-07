@@ -8,6 +8,7 @@
       "color": "metal",
       "shade": "metal",
       "note": "star",
+      "tag": "badge",
       "geometry": {
         "masc": {
           "points": [

@@ -9,6 +9,7 @@
       "shade": "matte",
       "note": "near glove",
       "outset": 0.08,
+      "tag": "near glove",
       "geometry": {
         "masc": {
           "points": [
@@ -64,6 +65,7 @@
       "shade": "matte",
       "note": "far glove",
       "outset": 0.08,
+      "tag": "far glove",
       "geometry": {
         "masc": {
           "points": [

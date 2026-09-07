@@ -9,6 +9,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "hood",
+      "tag": "hood back",
       "geometry": {
         "masc": {
           "points": [
@@ -76,6 +77,7 @@
       "shade": "matte",
       "tone": "dark",
       "note": "brim",
+      "tag": "hood front",
       "geometry": {
         "masc": {
           "points": [

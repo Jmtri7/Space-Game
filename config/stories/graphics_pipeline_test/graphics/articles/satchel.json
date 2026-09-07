@@ -8,6 +8,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "strap",
+      "tag": "satchel strap",
       "geometry": {
         "masc": {
           "points": [
@@ -58,6 +59,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "bag",
+      "tag": "hip accessory",
       "geometry": {
         "masc": {
           "points": [

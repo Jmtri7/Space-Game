@@ -8,6 +8,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "skirt",
+      "tag": "skirt",
       "geometry": {
         "masc": {
           "points": [

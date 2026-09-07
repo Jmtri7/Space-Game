@@ -9,6 +9,7 @@
       "shade": "deep",
       "note": "near pad",
       "outset": 0.08,
+      "tag": "knee pads",
       "geometry": {
         "masc": {
           "points": [
@@ -76,6 +77,7 @@
       "shade": "deep",
       "note": "far pad",
       "outset": 0.08,
+      "tag": "knee pads",
       "geometry": {
         "masc": {
           "points": [

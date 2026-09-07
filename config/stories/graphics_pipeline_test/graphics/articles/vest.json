@@ -8,6 +8,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "left panel",
+      "tag": "vest",
       "geometry": {
         "masc": {
           "points": [
@@ -64,6 +65,7 @@
       "color": "leather",
       "shade": "deep",
       "note": "right panel",
+      "tag": "vest",
       "geometry": {
         "masc": {
           "points": [

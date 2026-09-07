@@ -7,6 +7,8 @@
       "color": "hair",
       "shade": "matte",
       "note": "crown",
+      "tag": "hair bangs",
+      "group": "head",
       "geometry": {
         "masc": {
           "points": [
@@ -130,9 +132,7 @@
           ],
           "fits": []
         }
-      },
-      "tag": "hair",
-      "group": "head"
+      }
     }
   ]
 }

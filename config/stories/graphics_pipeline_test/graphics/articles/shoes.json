@@ -9,6 +9,7 @@
       "shade": "deep",
       "note": "near shoe",
       "outset": 0.32,
+      "tag": "near shoe",
       "geometry": {
         "masc": {
           "points": [
@@ -78,6 +79,7 @@
       "shade": "deep",
       "note": "far shoe",
       "outset": 0.32,
+      "tag": "far shoe",
       "geometry": {
         "masc": {
           "points": [

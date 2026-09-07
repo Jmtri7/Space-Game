@@ -7,7 +7,8 @@
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
-      "note": "crown",
+      "note": "hat",
+      "tag": "hat",
       "geometry": {
         "masc": {
           "points": [

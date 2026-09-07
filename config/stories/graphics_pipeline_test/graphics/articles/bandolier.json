@@ -7,7 +7,8 @@
       "group": "torso",
       "color": "leather",
       "shade": "deep",
-      "note": "strap",
+      "note": "bandolier",
+      "tag": "bandolier",
       "geometry": {
         "masc": {
           "points": [

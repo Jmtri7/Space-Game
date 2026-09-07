@@ -8,6 +8,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "bag",
+      "tag": "backpack bag",
       "geometry": {
         "masc": {
           "points": [
@@ -73,14 +74,14 @@
           "fits": [],
           "details": []
         }
-      },
-      "layer": "back"
+      }
     },
     {
       "group": "torso",
       "color": "cloth",
       "shade": "matte",
       "note": "far strap",
+      "tag": "backpack strap",
       "geometry": {
         "masc": {
           "points": [
@@ -131,6 +132,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "near strap",
+      "tag": "backpack strap",
       "geometry": {
         "masc": {
           "points": [

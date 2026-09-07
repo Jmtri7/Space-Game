@@ -7,7 +7,8 @@
       "group": "torso",
       "color": "metal",
       "shade": "metal",
-      "note": "cord",
+      "note": "braid band",
+      "tag": "braid",
       "geometry": {
         "masc": {
           "points": [

@@ -8,6 +8,7 @@
       "color": "metal",
       "shade": "metal",
       "note": "left plate",
+      "tag": "chest plate",
       "geometry": {
         "masc": {
           "points": [
@@ -47,56 +48,6 @@
             [
               -2.2,
               -21.1
-            ]
-          ],
-          "fits": []
-        }
-      }
-    },
-    {
-      "group": "torso",
-      "color": "metal",
-      "shade": "metal",
-      "note": "centre plate",
-      "geometry": {
-        "masc": {
-          "points": [
-            [
-              -1.1,
-              -24
-            ],
-            [
-              1.1,
-              -24
-            ],
-            [
-              1.05,
-              -20.9
-            ],
-            [
-              -1.05,
-              -20.9
-            ]
-          ],
-          "fits": []
-        },
-        "femme": {
-          "points": [
-            [
-              -1.1,
-              -24
-            ],
-            [
-              1.1,
-              -24
-            ],
-            [
-              1.05,
-              -20.9
-            ],
-            [
-              -1.05,
-              -20.9
             ]
           ],
           "fits": []
@@ -108,6 +59,7 @@
       "color": "metal",
       "shade": "metal",
       "note": "right plate",
+      "tag": "chest plate",
       "geometry": {
         "masc": {
           "points": [
@@ -126,6 +78,57 @@
             [
               0.95,
               -21.3
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.1,
+              -24
+            ],
+            [
+              1.1,
+              -24
+            ],
+            [
+              1.05,
+              -20.9
+            ],
+            [
+              -1.05,
+              -20.9
+            ]
+          ],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "centre plate",
+      "tag": "chest plate",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.1,
+              -24
+            ],
+            [
+              1.1,
+              -24
+            ],
+            [
+              1.05,
+              -20.9
+            ],
+            [
+              -1.05,
+              -20.9
             ]
           ],
           "fits": []

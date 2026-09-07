@@ -7,6 +7,8 @@
       "color": "hair",
       "shade": "matte",
       "note": "knot",
+      "tag": "hair back",
+      "group": "head",
       "geometry": {
         "masc": {
           "points": [
@@ -82,14 +84,14 @@
           ],
           "fits": []
         }
-      },
-      "tag": "hair_back",
-      "group": "head"
+      }
     },
     {
       "color": "hair",
       "shade": "matte",
       "note": "crown",
+      "tag": "hair bangs",
+      "group": "head",
       "geometry": {
         "masc": {
           "points": [
@@ -365,9 +367,7 @@
           ],
           "fits": []
         }
-      },
-      "tag": "hair",
-      "group": "head"
+      }
     }
   ]
 }

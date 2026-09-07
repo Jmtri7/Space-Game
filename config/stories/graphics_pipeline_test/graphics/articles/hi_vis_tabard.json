@@ -8,6 +8,7 @@
       "color": "lamp",
       "shade": "glow",
       "note": "left panel",
+      "tag": "work vest",
       "geometry": {
         "masc": {
           "points": [
@@ -68,6 +69,7 @@
       "color": "lamp",
       "shade": "glow",
       "note": "right panel",
+      "tag": "work vest",
       "geometry": {
         "masc": {
           "points": [

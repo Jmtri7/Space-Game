@@ -8,6 +8,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "near board",
+      "tag": "badge",
       "geometry": {
         "masc": {
           "points": [
@@ -58,6 +59,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "far board",
+      "tag": "badge",
       "geometry": {
         "masc": {
           "points": [

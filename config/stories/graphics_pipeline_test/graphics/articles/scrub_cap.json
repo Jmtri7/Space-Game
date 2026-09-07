@@ -9,6 +9,7 @@
       "color": "cloth",
       "shade": "matte",
       "note": "crown",
+      "tag": "hat",
       "geometry": {
         "masc": {
           "points": [
