@@ -1168,22 +1168,5 @@
     "foot_near",
     "arm_near",
     "hand_near"
-  ],
-  "draw_layers": [
-    "back",
-    "arm_far",
-    "hand_far",
-    "leg_far",
-    "foot_far",
-    "torso",
-    "neck",
-    "hair_back",
-    "head",
-    "hair",
-    "leg_near",
-    "foot_near",
-    "arm_near",
-    "hand_near",
-    "front"
   ]
 }

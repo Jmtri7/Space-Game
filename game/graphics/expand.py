@@ -389,8 +389,8 @@ def _emit_detail(parts, d, group_default, palette, materials, sec_name=None, lod
          "color": resolve_color(d["color"], d.get("tone", "mid"), palette, prof),
          "group": d.get("group", group_default), "role": "detail",
          "note": d.get("note", "")}
-    if d.get("layer"):
-        p["layer"] = d["layer"]
+    if d.get("back"):
+        p["back"] = True
     if sec_name:
         p["sec"] = sec_name
     parts.append(p)
@@ -521,9 +521,12 @@ def expand_article(design, palette, materials, body,
     A region's body-specific geometry (`points`, `fits`, `details`,
     `shade_dark`, `shade_light`) lives under `geometry.<variant>` - one entry
     per body cut (`masc` / `femme`); the shared fields (`group`, `color`,
-    `shade`, `note`, `layer`, `outset`) sit on the region itself. `body`'s
+    `shade`, `note`, `back`, `outset`) sit on the region itself. `body`'s
     top-level `"variant"` selects the entry. A pre-merge region with `points`
     straight on it still works (no `geometry` key -> used as-is).
+
+    `"back": true` draws the region behind its animation-group body part
+    instead of in front of it (see compose_worn).
 
     `color` / `shade` / `colors` are the item-layer overrides (see
     items/<id>.json) and are independent of each other:
@@ -568,9 +571,12 @@ def expand_article(design, palette, materials, body,
         _emit_region(parts, rgn, grp, palette, materials)
         for d in region.get("details", []):
             _emit_detail(parts, d, grp, palette, materials)
-        if region.get("layer"):                       # draw-layer override (see compose_worn)
+        # `"back": true` draws behind the group (see compose_worn). `layer:
+        # "back"` is the pre-front/back name for the same thing - still honoured
+        # so an un-resaved design keeps working; the editor rewrites it to `back`.
+        if region.get("back") or region.get("layer") == "back":
             for p in parts[start:]:
-                p.setdefault("layer", region["layer"])   # a detail's own `layer` still wins
+                p.setdefault("back", True)                # a detail's own `back` still wins
     for d in design.get("details", []):
         if color is not None or shade is not None:
             d = _look(d)
@@ -620,41 +626,48 @@ def compose_worn(body_design, body_parts, *article_parts):
     """Merge a body's parts with the parts of the articles worn over it into
     one back-to-front list.
 
-    Draw order is a flat stack of named LAYERS the body publishes in
-    `draw_layers` (back-to-front), e.g. ``back, arm_far, ..., torso, neck,
-    hair_back, head, hair, leg_near, ..., hand_near, front``. Every part sits on
-    exactly one layer:
-      * a body part -> the layer named by its section (`torso`, `head`, ...)
-      * an article region -> its ``"layer"`` if set, else its animation
-        ``group`` (so an untagged near sleeve rides the `arm_near` layer).
-    Parts sort by layer; within one layer the body draws first, then the
-    articles in the order given (a coat listed after a shirt draws on top). A
-    part whose layer name is unknown sorts to the front.
+    Every part belongs to one **animation group** - the body part it moves
+    with. The body publishes those groups back-to-front in `draw_order`
+    (``arm_far, ..., torso, neck, head, leg_near, ..., hand_near``); a body
+    part's group is its section, an article region's is its ``"group"``.
 
-    `group` now only drives animation (which limb the part swings with) - it is
-    the fallback layer, nothing more. Bodies without `draw_layers` fall back to
-    their `draw_order` section list."""
-    layers = body_design.get("draw_layers")
-    if not layers:
-        order = body_design.get("draw_order", list(body_design.get("sections", {})))
-        layers = list(dict.fromkeys(order))
-    lidx = {name: i for i, name in enumerate(layers)}
-    top = len(layers)
+    Within a group the stack is::
 
-    def layer_of(p):
-        name = p.get("layer") or p.get("sec") or p.get("group") or "torso"
-        if name in lidx:
-            return lidx[name]
-        return lidx.get(p.get("group"), top)
+        [ back regions ]  <  [ the body part ]  <  [ front regions ]
+
+    A region is *front* by default (draws over that body part); ``"back": true``
+    puts it behind. **Outfit priority** is the position of the article in the
+    worn list - each successive ``*article_parts`` list outranks the ones
+    before it (a coat listed after a shirt is higher priority). Front regions
+    stack in priority order (higher on top); back regions stack in *reverse*
+    priority (higher further back), so a jacket worn over a coat sits outside it
+    on both sides:  jacket-back, coat-back, torso, coat-front, jacket-front.
+
+    A part whose group is not in `draw_order` sorts to the very front. Bodies
+    with no `draw_order` fall back to their section order."""
+    order = body_design.get("draw_order") or list(body_design.get("sections", {}))
+    gidx = {name: i for i, name in enumerate(order)}
+    end = len(order)
+
+    def grank(p):
+        g = p.get("group")
+        if g in gidx:
+            return gidx[g]
+        s = p.get("sec")                       # body parts carry their section name
+        return gidx.get(s, end)
 
     keyed = []
-    for p in body_parts:
-        keyed.append((layer_of(p), 0, len(keyed), p))
-    for li, lst in enumerate(article_parts, start=1):
+    for p in body_parts:                       # the bare body: phase 1, no priority
+        keyed.append(((grank(p), 1, 0, len(keyed)), p))
+    for prio, lst in enumerate(article_parts, start=1):
         for p in lst:
-            keyed.append((layer_of(p), li, len(keyed), p))
-    keyed.sort(key=lambda t: (t[0], t[1], t[2]))
-    return [t[3] for t in keyed]
+            back = bool(p.get("back"))
+            # back -> phase 0 (before the body part), reverse priority
+            # front -> phase 2 (after it), forward priority
+            keyed.append(((grank(p), 0 if back else 2,
+                           -prio if back else prio, len(keyed)), p))
+    keyed.sort(key=lambda t: t[0])
+    return [p for _, p in keyed]
 
 
 def expand(design, palette, materials, body=None, load=None, lod=None,

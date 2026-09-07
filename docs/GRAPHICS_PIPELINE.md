@@ -216,10 +216,10 @@ so tailor mode matches the game.
 An **article region or detail** declares one of:
 
 - `"group": "<animation group>"` — the piece rides that body part (`torso`,
-  `head`, `neck`, `arm_near`…) and moves with it. Default `torso`. Also its
-  fallback draw layer.
-- `"layer": "<layer name>"` — which shelf of the body's `draw_layers` stack it
-  draws on (see Draw order). Optional; omit to draw with `group`.
+  `head`, `neck`, `arm_near`…), moves with it, and stacks at its place in the
+  draw order. Default `torso`.
+- `"back": true` — draw behind the group's body part instead of in front of it
+  (see Draw order). Optional; omit for front.
 - `"fits": [{ "curve": "<section>.<curve>", "from": i, "to": j, "reverse": … }]`
   — replaces polygon vertices `i…j` with the body's named edge curve, spliced
   in verbatim. The garment's edge is then the body's own silhouette; reshape
@@ -266,7 +266,7 @@ span alone.
 
 An article is **one `articles/<name>.json`** (no `_masc` / `_femme` suffix).
 The shared half of each region — `group`, `color`, `shade`, `tone`, `note`,
-`layer`, `outset` — is written once on the region. The body-specific half
+`back`, `outset` — is written once on the region. The body-specific half
 lives under a **`geometry` map**, one entry per body cut:
 
 ```jsonc
@@ -369,39 +369,38 @@ The set gets a combined plate: all its articles expanded onto one model, in
 list order. A set adds no geometry of its own — only the article list and the
 palette.
 
-**Draw order — the layer stack.** The body publishes an ordered list of named
-**layers** in `draw_layers`, back-to-front:
+**Draw order — animation group + front/back.** Every part belongs to one
+**animation group** — the body part it moves with. The body lists its groups
+back-to-front in `draw_order`:
 
 ```
-back · arm_far · hand_far · leg_far · foot_far ·
-torso · neck · hair_back · head · hair ·
-leg_near · foot_near · arm_near · hand_near · front
+arm_far · hand_far · leg_far · foot_far ·
+torso · neck · head ·
+leg_near · foot_near · arm_near · hand_near
 ```
 
-`compose_worn(body, body_parts, *article_parts)` puts every part on exactly one
-layer and sorts:
+`compose_worn(body, body_parts, *article_parts)` places every part by three
+things:
 
-- a **body part** → the layer named by its section (`torso`, `head`, `arm_near`…)
-- an **article region** → its `"layer"` if set, otherwise its animation `group`
-  (so an untagged near sleeve rides the `arm_near` layer, an untagged torso
-  panel the `torso` layer)
+1. **its group's position** in that list (a body part's group is its section, an
+   article region's is its `"group"`);
+2. **front or back** within the group — a region is *front* by default (draws
+   over that body part); `"back": true` puts it behind. The stack per group is
+   `[back regions] < [the body part] < [front regions]`;
+3. **outfit priority** — each successive `*article_parts` list outranks the ones
+   before it (the set's article list order; `extra_articles` last). Front
+   regions stack in priority order (higher on top); back regions stack in
+   *reverse* (higher further back). So a jacket worn over a coat sits outside it
+   both ways: `jacket-back, coat-back, torso, coat-front, jacket-front`.
 
-Within one layer the body draws first, then each article list in the order given
-— so at the `torso` layer a coat listed after a shirt draws on top of it, and
-`extra_articles` (equipped at runtime) compose after the set's. A part whose
-layer name the body doesn't publish sorts to the front.
+That's the whole model. No `over` / `under`, no named layers, no `draw_layers`.
+Near/far isn't a special rule — the near groups just sit after the torso in the
+list, the far ones before it. The bulk of a hairstyle is a `head`-group region
+with `"back": true` (the skull occludes it), its fringe a front `head` region; a
+backpack body is a `"back"` torso region.
 
-That's the whole model. There is no `over` / `under` — a region picks a shelf.
-`back`, `hair_back`, `hair` and `front` are article-only shelves (no body part
-sits on them): the bulk of a hairstyle goes on `hair_back` (the skull occludes
-it), its fringe on `hair`, a backpack body on `back`, a chest rig on `front`.
-Near/far isn't a special rule — the near layers simply sit after the torso in
-the list, the far ones before it.
-
-`group` now drives **only** animation — which limb a region swings with — and
-serves as the fallback layer. A shoulder strap that should ride the torso but
-draw at chest height is `"group": "torso"` (moves with the chest) plus
-`"layer": "torso"` (or just nothing, since that's the group's default).
+`group` drives **both** animation (which limb a region swings with) and where it
+sits in the stack. `"back"` is the only other knob.
 
 **`hides_hair`.** A headgear article may carry top-level `"hides_hair": true`
 (a raised hood, a sealed helmet). If any worn article declares it,
@@ -852,8 +851,8 @@ body is reshaped later (use the Fit panel's curve dropdown for that instead).
 
 **Outfit mode** — `?file=<body>&edit=outfit`. Loads a body on its own to
 preview whole outfits — no article is edited or saved. It reuses the tailor-mode
-compose/render path (the same `compose_worn` layer stack the game uses, the
-compare-body panel, the walk preview) with an empty synthetic article standing
+compose/render path (the same `compose_worn` group + front/back stack the game
+uses, the compare-body panel, the walk preview) with an empty synthetic article standing
 in for the edited one, so `FITBODY` points at the body itself. The side panel
 drops every editing section (Polygons, Sections, Output, Fit, Reference image,
 Preview look — hidden by `body.outfit-mode` CSS) and shows the **Outfit**
@@ -967,20 +966,21 @@ structurally required, unlike an outfit's freestanding regions.
 
 **Adding a region** *(tailor mode)*. The Polygons panel's **+ region** button
 pushes a new standalone region onto the article — a small placeholder quad at
-the view centre, its own `fits: []`, with `group` and any `layer` copied from
+the view centre, its own `fits: []`, with `group` and front/back copied from
 the currently-selected region. It's selected and aliased as the next `regionN`
 straight away, so you can drag, fit, and reshade it like any other. **+ polygon**
 / **+ circle** by contrast add a *detail* to the selected region — it rides that
 region's group, carries no fit, and isn't auto-shaded.
 
-**Name, group and layer** *(tailor mode)*. The **Selected section** panel's top
-rows are a **name** field (writes the region's `note` — this is what the
+**Name, group and draw order** *(tailor mode)*. The **Selected section** panel's
+top rows are a **name** field (writes the region's `note` — this is what the
 Sections list shows; hover a row for its `regionN` alias), an **anim. group**
-dropdown (which limb the region swings with), and a **draw layer** dropdown of
-the body's layer stack, listed front-to-back. Blank layer = follow the anim.
-group. A region may use any group and any layer; there's no one-per-group rule.
-**apply layer to whole article** stamps the selected region's layer onto every
-region.
+dropdown (which limb the region swings with, and where it sits in the stack),
+and a **draw order** row with **front** / **back** buttons — front draws the
+region over its group's body part, back behind it (writes `"back": true`).
+**apply to whole article** stamps the choice onto every region. A pre-existing
+`"layer": "back"` still reads as *back* and is rewritten to `"back"` on the next
+edit.
 
 **Orphaned-fit warning** *(tailor mode)*. A `fits` entry whose `from` / `to`
 falls outside the region's `points` array (a hand-edit, or a vertex delete in
@@ -1033,13 +1033,13 @@ time). The **compare other body** panel animates in lockstep (same
 pose while it runs, so turn it off to edit. The toggle is inert (and warns) if
 the body has no walk rig.
 
-**Draw layer.** Select a region and the **Selected section** panel's **draw
-layer** dropdown is the whole draw-order story — one shelf from the body's
-`draw_layers` stack (see Draw order), listed front-to-back. Blank = follow the
-region's anim. group. The preview and `#out` update live; **apply layer to
-whole article** stamps it onto every region. A hairstyle splits across shelves
-(`hair_back` for the bulk, `hair` for the fringe) — that's two regions with
-different layers, not one region with two tags.
+**Draw order (front / back).** Select a region and the **Selected section**
+panel's **draw order** row has **front** and **back** buttons — the whole
+draw-order story for that region (see Draw order). Front draws it over its
+anim-group body part, back behind it; **apply to whole article** stamps the
+choice onto every region. The preview and `#out` update live. A hairstyle
+splits: the bulk is a back `head` region (skull hides it), the fringe a front
+`head` region.
 
 **Preview hair** (Outfit section — outfit mode only). A dropdown of every
 `articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on
@@ -1050,11 +1050,13 @@ choice is remembered per story (`gpEditorHair:<story>`); it defaults to
 
 **Preview other articles** — the tick list `gpEditorPreviewArt:<story>` (a name
 array, hairstyles excluded). Ticked articles are drawn on the figure — fitted
-and outset against the body, composed by the same draw-layer stack as the game
-(each region on its `layer`, else its group). Nothing here is ever written.
+and outset against the body, composed by the same animation-group + front/back
+stack as the game. Nothing here is ever written.
 
 - The **checkbox list** that adds and removes ticks lives in the **Outfit**
-  section and shows only in **outfit** mode.
+  section and shows only in **outfit** mode. Each worn row has **↑ / ↓** arrows
+  that set its **outfit priority** — top of the list draws first (under), bottom
+  last (over) — the same axis a set's `articles` order controls at runtime.
 - The ticked articles are **drawn in tailor mode too** (minus the one currently
   being tailored) — reference for fitting a new piece into an existing look.
 - Opening any article for tailoring auto-adds it to the list, so a set builds up
@@ -1242,15 +1244,13 @@ lips: <name>}` — and `load("faces", "<slot>_<name>")` supplies each slot's
 `nose_soft`, `nose_straight`, `lips_full`, `lips_thin`, …) without editing the
 body.
 
-**Hair is an article**, mostly drawn **behind** the head. Its bulk regions sit
-on the `hair_back` layer so the skull hides the back and only the volume past
-the silhouette shows; the framing bits — a thin band along `head.hairline`,
-sideburns, a fringe, side panels — sit on the `hair` layer and draw in front of
-the face. Group `torso` so it rides the head (`layer` and `group` are
-independent — see Draw order). A hat/hood/helmet region picks a layer the same
-way: `hair_back` to sit behind the head, `hair` for between the head and hair,
-`front` for over everything. A headgear article that should cover hair entirely
-carries `"hides_hair": true` instead.
+**Hair is an article** on the `head` group, mostly drawn **behind** the head.
+Its bulk regions carry `"back": true` so the skull hides the back and only the
+volume past the silhouette shows; the framing bits — a thin band along
+`head.hairline`, sideburns, a fringe, side panels — are front `head` regions and
+draw over the face. A hat/hood/helmet region is `group: "head"` too: front to
+sit over the hair, `"back": true` to tuck behind the head. A headgear article
+that should cover hair entirely carries `"hides_hair": true` instead.
 
 Per-character variation is a **palette override**: skin / hair / eye / lip
 colours are palette keys, so a story or an NPC roster can swap them without

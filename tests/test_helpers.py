@@ -5486,6 +5486,62 @@ class TestCurveFormats(unittest.TestCase):
         self.assertEqual(out, [[0, 0], [9, 9], [8, 8], [2, 2]])
 
 
+class TestComposeWorn(unittest.TestCase):
+    """compose_worn stacks every part by (animation group in the body's
+    draw_order, front/back within the group, outfit priority = worn-list
+    position). See docs/GRAPHICS_PIPELINE.md "Draw order"."""
+
+    BODY = {"draw_order": ["arm_far", "torso", "arm_near"]}
+
+    def _part(self, group, tag, back=False):
+        p = {"group": group, "tag": tag}
+        if back:
+            p["back"] = True
+        return p
+
+    def _body_parts(self):
+        return [self._part(g, "body") for g in ("arm_far", "torso", "arm_near")]
+
+    def test_front_regions_stack_in_worn_order_within_each_group(self):
+        from game.graphics.expand import compose_worn
+        coat = [self._part("arm_far", "coat"), self._part("torso", "coat")]
+        jacket = [self._part("arm_far", "jkt"), self._part("torso", "jkt")]
+        out = compose_worn(self.BODY, self._body_parts(), coat, jacket)
+        self.assertEqual([(p["group"], p["tag"]) for p in out], [
+            ("arm_far", "body"), ("arm_far", "coat"), ("arm_far", "jkt"),
+            ("torso", "body"), ("torso", "coat"), ("torso", "jkt"),
+            ("arm_near", "body"),
+        ])
+
+    def test_back_region_draws_behind_its_group_in_reverse_priority(self):
+        from game.graphics.expand import compose_worn
+        coat = [self._part("torso", "coat", back=True)]
+        jacket = [self._part("torso", "jkt", back=True)]
+        out = [(p["group"], p["tag"]) for p in
+               compose_worn(self.BODY, self._body_parts(), coat, jacket)]
+        # jacket (higher priority) sits further back than the coat
+        self.assertEqual(out, [
+            ("arm_far", "body"),
+            ("torso", "jkt"), ("torso", "coat"), ("torso", "body"),
+            ("arm_near", "body"),
+        ])
+
+    def test_legacy_layer_back_is_honoured_by_expand_article(self):
+        from game.graphics.expand import expand_article
+        mats = {"light": [-0.8, -0.5], "shading": {"flat": {"tone_dark": 0, "tone_light": 0}}}
+        art = {"outset": 0, "regions": [
+            {"group": "torso", "color": "c", "shade": "flat", "layer": "back",
+             "points": [[0, 0], [1, 0], [1, 1]]}]}
+        parts = expand_article(art, {"c": "#808080"}, mats, body=None)
+        self.assertTrue(all(p.get("back") for p in parts))
+
+    def test_unknown_group_sorts_to_the_front(self):
+        from game.graphics.expand import compose_worn
+        art = [{"group": "cape", "tag": "cape"}]
+        out = [p["tag"] for p in compose_worn(self.BODY, self._body_parts(), art)]
+        self.assertEqual(out[-1], "cape")
+
+
 class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
     """The graphics_pipeline_test story is on the decoupled color/shade model:
     materials.json carries only `shading` profiles, and every design part names

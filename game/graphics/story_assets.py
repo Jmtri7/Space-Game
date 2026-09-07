@@ -142,8 +142,9 @@ def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
     # sealed helmet - which drops every hairstyle from the outfit.
     hide_hair = any(ad.get("hides_hair") for ad, _, _ in resolved)
 
-    # Every article draws by the layer stack (see compose_worn); the set's list
-    # order only breaks ties within a layer (later article on top).
+    # compose_worn stacks each article by its regions' animation group + front/
+    # back; the set's list order is the outfit priority (later article = higher,
+    # drawn over the earlier one within a group).
     arts = [expand(ad, pal, mats, body=body, **kw)
             for ad, kw, gid in resolved
             if not (_is_hair(ad, gid) and hide_hair)]

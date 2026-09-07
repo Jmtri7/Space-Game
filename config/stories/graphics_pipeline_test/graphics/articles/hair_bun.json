@@ -4,7 +4,7 @@
   "palette": "civilian",
   "regions": [
     {
-      "group": "torso",
+      "group": "head",
       "color": "hair",
       "shade": "matte",
       "note": "the knot, behind the head; only what clears the skull shows.",
@@ -83,10 +83,11 @@
           ],
           "fits": []
         }
-      }
+      },
+      "back": true
     },
     {
-      "group": "torso",
+      "group": "head",
       "color": "hair",
       "shade": "matte",
       "note": "solid cap over the scalp; point 0 fits head.hairline (above the brow), the rest is the free hair volume.",
