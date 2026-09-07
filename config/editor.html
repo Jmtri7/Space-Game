@@ -912,12 +912,20 @@ function articleDrawParts(body){
   body = body || bodyDesign;
   const out = [];
   const tagSec = D.slot || (loadedPath||'').split('/').pop().replace(/\.json$/,'') || 'self';
+  // the main canvas draws the hoisted (active) cut; the mirror, showing a
+  // different body, draws that body's own cut from region.geometry.
+  const mv = genderOf(mirrorPathFor(body));
+  const useOther = mv && mv !== activeVariant();
   for(const name of Object.keys(D.sections)){
     if(hidden.has(name)) continue;
-    emitRegionParts(out, D.sections[name], {body, look:true, tagSec, dOutset:D.outset});
+    let region = D.sections[name];
+    if(useOther && region.geometry && region.geometry[mv])
+      region = {...region, ...region.geometry[mv]};
+    emitRegionParts(out, region, {body, look:true, tagSec, dOutset:D.outset});
   }
   return out;
 }
+function mirrorPathFor(body){ return body && body === mirrorBody ? mirrorPath : FITBODY; }
 // the reference hairstyle picked in the "preview hair" dropdown (tailor mode),
 // tagged `sec:'hair'` so the edited headgear can layer against it. Dropped when
 // the edited article declares hides_hair.
@@ -1108,8 +1116,6 @@ async function populateHairPicker(){
     const { files } = await VFS.listDir(GBASE + '/articles');
     names = (files||[]).filter(n => /^hair_.*\.json$/.test(n)).map(n => n.replace(/\.json$/,'')).sort();
   }catch(e){}
-  const g = genderOf(FITBODY);
-  if(g) names = names.filter(n => articleForGender(n + '.json', g));
   // no point previewing a hairstyle over the hairstyle you're editing
   const editingHair = /\/articles\/hair_/.test(loadedPath || '');
   if(editingHair || !names.length){
@@ -1130,7 +1136,7 @@ async function loadPreviewHair(){
   if(previewHairName && GBASE){
     try{
       const hj = await VFS.readJSON(GBASE + '/articles/' + previewHairName + '.json');
-      if(hj && hj.regions) previewHair = shimLook(hj);
+      if(hj && hj.regions) previewHair = hoistVariant(shimLook(hj), activeVariant());
     }catch(e){ previewHair = null; }
   }
   if(typeof render === 'function') render();
@@ -1169,8 +1175,6 @@ async function populatePreviewArticles(){
     names = (files||[]).filter(n => /\.json$/.test(n) && !/^hair_/.test(n))
                        .map(n => n.replace(/\.json$/,'')).sort();
   }catch(e){}
-  const g = genderOf(FITBODY);
-  if(g) names = names.filter(n => articleForGender(n + '.json', g));
   PREVIEW_SELF_NAME = (loadedPath||'').split('/').pop().replace(/\.json$/,'');
   PREVIEW_CANDIDATES = names.filter(n => n !== PREVIEW_SELF_NAME);
   if(!PREVIEW_CANDIDATES.length){ row.style.display = 'none'; return; }
@@ -1189,7 +1193,7 @@ async function loadPreviewArticles(names){
     if(have[n]){ out.push(have[n]); continue; }
     try{
       const j = await VFS.readJSON(GBASE + '/articles/' + n + '.json');
-      if(j && j.regions) out.push({ name:n, design: shimLook(j) });
+      if(j && j.regions) out.push({ name:n, design: hoistVariant(shimLook(j), activeVariant()) });
     }catch(e){}
   }
   previewArticles = out;
@@ -1393,16 +1397,12 @@ function counterpartPath(path){
   if(/_masc(\.json)$/.test(path)) return path.replace(/_masc(\.json)$/, '_femme$1');
   return null;
 }
-// masc / femme of a gender-suffixed path (…_masc.json / …_femme.json), else null
+// masc / femme of a gender-suffixed body path (…_masc.json / …_femme.json),
+// else null. Bodies keep the suffix; articles/items/sets no longer do - the
+// fit body's gender is what picks a merged article's geometry cut.
 function genderOf(path){
   const m = (path||'').match(/_(masc|femme)\.json$/);
   return m ? m[1] : null;
-}
-// an article belongs on a body of gender `g` when it carries no gender suffix
-// or its suffix matches. With no known body gender, everything belongs.
-function articleForGender(name, g){
-  const m = name.match(/_(masc|femme)\.json$/);
-  return !g || !m || m[1] === g;
 }
 async function loadFaceKitInto(body){
   const head = body.sections && body.sections.head; if(!head) return;
@@ -2673,11 +2673,16 @@ function wireDrawRank(S){
 // belongs in without guessing from `note` text. The agent strips `_src`
 // itself when it writes the real per-file JSON - it is never meant to reach
 // a committed design file.
-function round(o){ return JSON.parse(
-  // `sections` on an article is a display-only alias for `regions` (see
-  // relinkTailorSections) - never let it leak into the saved/copied JSON.
-  JSON.stringify(o, (k,v)=> (TAILOR_MODE && k==='sections') ? undefined : v),
-  (k,v)=> typeof v==='number' ? +v.toFixed(3) : v); }
+function round(o){
+  // `sections` is a display-only alias for `regions` (see relinkTailorSections)
+  // and `__variant` an editor marker - neither reaches the saved/copied JSON.
+  // In tailor mode the edited cut is folded back into regions[].geometry first.
+  const src = (TAILOR_MODE && Array.isArray(o.regions) && o.regions.some(r=>r.geometry))
+    ? reconstituteGeometry(o) : o;
+  return JSON.parse(
+    JSON.stringify(src, (k,v)=> (TAILOR_MODE && (k==='sections'||k==='__variant')) ? undefined : v),
+    (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
+}
 function allFinite(o){
   if(typeof o === 'number') return Number.isFinite(o);
   if(Array.isArray(o)) return o.every(allFinite);
@@ -2715,6 +2720,47 @@ function relinkTailorSections(){
   D.sections = {};
   D.regions.forEach((r,i)=>{ D.sections['region'+i] = r; });
 }
+
+// A merged article file keeps each region's body-specific geometry under
+// `geometry: { masc:{...}, femme:{...} }`; the editor works on one cut at a
+// time. `activeVariant()` is the cut in play (the fit body's), `VARIANT_KEYS`
+// the fields that live per-cut.
+const VARIANT_KEYS = ['points', 'fits', 'details', 'shade_dark', 'shade_light'];
+function activeVariant(){ return genderOf(FITBODY) || 'masc'; }
+
+// lift the active cut's geometry onto each region so every vertex/fit/detail
+// path (which all read region.points / .fits / .details) works untouched.
+// region.geometry rides along in D for reconstituteGeometry() to write back.
+// Idempotent: a restored draft is already hoisted (has .points) - skip it.
+function hoistVariant(design, variant){
+  design.__variant = variant;
+  for(const r of (design.regions || [])){
+    if(!r.geometry || r.points !== undefined) continue;
+    const g = r.geometry[variant] || r.geometry.masc || r.geometry.femme || {};
+    for(const k of VARIANT_KEYS){
+      if(k in g) r[k] = JSON.parse(JSON.stringify(g[k]));
+      else delete r[k];
+    }
+  }
+  return design;
+}
+// inverse: a deep clone in on-disk shape - the edited cut folded back into
+// geometry[variant], the other cut untouched, the sections alias and
+// __variant dropped. A region with no geometry (pre-merge, or freshly added)
+// gets one, seeding the absent cut from the edited one.
+function reconstituteGeometry(design){
+  const v = design.__variant || 'masc', other = v === 'masc' ? 'femme' : 'masc';
+  const out = JSON.parse(JSON.stringify(design,
+    (k, val) => (k === 'sections' || k === '__variant') ? undefined : val));
+  for(const r of (out.regions || [])){
+    const g = r.geometry ? {...r.geometry} : {};
+    g[v] = {};
+    for(const k of VARIANT_KEYS) if(k in r){ g[v][k] = r[k]; delete r[k]; }
+    if(!g[other]) g[other] = JSON.parse(JSON.stringify(g[v]));
+    delete r.geometry; r.geometry = g;   // re-add so it serialises last
+  }
+  return out;
+}
 async function loadBodyForTailoring(){
   bodyDesign = await VFS.readJSON(FITBODY);
   // an unsaved edit to the body itself (plain gpDraft:<FITBODY>) or to its
@@ -2751,6 +2797,7 @@ async function loadBodyForTailoring(){
 }
 function loadDesign(obj, path){
   D = shimLook(obj); selSec=null; shown.clear(); hidden.clear();
+  if(TAILOR_MODE && Array.isArray(D.regions)) hoistVariant(D, activeVariant());
   dirty = false; savedJSON = null;   // new design - re-baseline; sync() latches dirty on the first real edit
   _lastVisJSON = ''; _visReady = false;   // re-persist hide/show under whatever key this design resolves to, after restore
   // a regions article loaded on its own (no &fitbody=, so not tailor mode) has
@@ -2965,11 +3012,6 @@ async function populateArticlePicker(){
   let names = files.filter(n => n.endsWith('.json')).sort();
   if(!names.length) return;
   const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
-  // hide the articles that don't match the gender in play - the fit body's in
-  // tailor mode, else the loaded article's own suffix (a bare masc article
-  // shouldn't offer femme ones to switch to). Current selection stays visible.
-  const g = genderOf(currentBodyPath()) || genderOf(loadedPath);
-  if(g) names = names.filter(n => n === curName || articleForGender(n, g));
   sel_.innerHTML = `<option value="">— articles —</option>` +
     names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
@@ -3053,8 +3095,9 @@ function defaultDraftFilename(info){
 }
 function roundForExport(o){                 // same as round(), but from a stored draft rather than the live D/TAILOR_MODE
   const isTailor = Array.isArray(o.regions);
+  const src = (isTailor && o.regions.some(r=>r.geometry)) ? reconstituteGeometry(o) : o;
   return JSON.parse(
-    JSON.stringify(o, (k,v)=> (isTailor && k==='sections') ? undefined : v),
+    JSON.stringify(src, (k,v)=> (isTailor && (k==='sections'||k==='__variant')) ? undefined : v),
     (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
 }
 const roundNums = o => JSON.parse(JSON.stringify(o), (k,v)=> typeof v==='number' ? +v.toFixed(3) : v);
@@ -3213,6 +3256,26 @@ document.getElementById('saveAllDrafts').onclick = async ()=>{
         if(!orig){ failed.push(p.path + ' — not found on disk'); continue; }
         orig.details = p.faceDetails;
         text = toRepoJSON(roundNums(orig));
+      } else if(p.row.info.mode === 'fit'){
+        // a merged article holds both body cuts; this draft edited one. If the
+        // region list is structurally unchanged, take the untouched cut from
+        // disk - so saving the masc draft and the femme draft in either order
+        // never lets one's stale copy of the other clobber real edits. (After a
+        // reorder/add/delete the draft's own per-region geometry moved with the
+        // regions and is already right, so leave it.)
+        const orig = await VFS.readJSON(p.path);
+        const mine = JSON.parse(p.text);
+        const sameShape = orig && Array.isArray(orig.regions) && Array.isArray(mine.regions)
+          && orig.regions.length === mine.regions.length
+          && orig.regions.every((r,i)=> r.group === mine.regions[i].group);
+        if(sameShape && orig.regions.some(r=>r.geometry)){
+          const other = genderOf(p.row.info.fitbody) === 'femme' ? 'masc' : 'femme';
+          mine.regions.forEach((r,i)=>{
+            const dg = orig.regions[i].geometry;
+            if(r.geometry && dg && dg[other]) r.geometry[other] = dg[other];
+          });
+          text = toRepoJSON(mine);
+        }
       }
       await VFS.writeText(p.path, text);
     }catch(e){ failed.push(p.path + ' — ' + (e.message || e)); }

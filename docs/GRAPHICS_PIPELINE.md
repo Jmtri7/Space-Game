@@ -862,13 +862,11 @@ plain / face mode (no article in play to switch away from — use the edit
 **outfit** button to get into tailoring first). It's populated by fetching the
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
-hidden rather than showing something broken. The list is
-filtered to the fit body's gender — with a `_femme` body loaded it shows the
-`_femme` and unsuffixed articles only (and `_masc` vice-versa), so the
-`_masc`/`_femme` split doesn't double the dropdown; the currently-loaded
-article stays listed even if it's the mismatched one. (Switching which body
-the article is fit against is the **body** dropdown near the top of the panel,
-above — the same one used to switch bodies in plain/face mode.)
+hidden rather than showing something broken. Every article is one file now, so
+the list isn't gender-filtered. (Switching which body the article is fit
+against is the **body** dropdown near the top of the panel — it swaps
+`fitbody=`, and the reload lifts that body's `geometry` cut; an unsaved edit
+to the other cut stays safe in its own `:fit:<body>` draft.)
 
 **Hiding body parts.** In tailor mode, the Fit panel lists every body
 section with two toggles: the eye hides the part entirely (fill *and* its
@@ -967,9 +965,11 @@ shape it independently of the main edit:
   camera on the same model. The dropdown (a `body/*.json` directory listing,
   same directory-listing trick as the **body** switcher) also lists `auto —
   counterpart`, the body found by swapping `_masc`/`_femme` in the loaded (or
-  `fitbody`) filename, and every other body on disk. Whichever you pick
-  sticks for the rest of the page's session (the default only applies fresh
-  on load); empty/hidden if the loaded design isn't a body-rooted one.
+  `fitbody`) filename, and every other body on disk. When the panel shows a
+  body of the other cut, it draws that cut's own `geometry` from the article,
+  not the edited cut fitted across. Whichever you pick sticks for the rest of
+  the page's session (the default only applies fresh on load); empty/hidden if
+  the loaded design isn't a body-rooted one.
 - **frame** — `fit panel` (default) auto-fits whatever's drawn into the small
   panel, independent of the main canvas's own zoom; `match main view` reuses
   the main canvas's exact pan/zoom instead, so the two are pixel-comparable
@@ -1005,16 +1005,16 @@ whole article** stamps it onto every region. A hairstyle splits across shelves
 different layers, not one region with two tags.
 
 **Preview hair** (tailor mode, Fit panel). A dropdown of every
-`articles/hair_*.json` matching the fit body's gender, plus *— no hair —*. The
-pick draws that hairstyle on the reference body under the garment being
-tailored (reference only, never written), so a hat / hood / helmet fit and its
-`hair` / `hair_back` layering can be judged against real hair. The
+`articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on
+the reference body under the garment being tailored (reference only, never
+written), so a hat / hood / helmet fit and its `hair` / `hair_back` layering
+can be judged against real hair — its `geometry` cut is the fit body's. The
 choice is remembered per story (`gpEditorHair:<story>`); it defaults to
-`hair_short_<gender>`. Hidden when the loaded design is itself a hairstyle.
+`hair_short`. Hidden when the loaded design is itself a hairstyle.
 
 **Preview other articles** (tailor mode, Fit panel). A checkbox list of every
-sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those)
-matching the fit body's gender, minus the one being edited. Ticked articles are
+sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those),
+minus the one being edited. Ticked articles are
 drawn on the figure as reference — fitted and outset against the same body, and
 composed by the same draw-layer stack as the game (each region on its `layer`,
 else its group). Within a layer the article being edited draws last. Nothing
@@ -1058,8 +1058,10 @@ this loop rather than hand-editing coordinates:
    `http.server`, which can leave the user looking at a stale cached copy of
    the editor), open the Browser pane at
    `http://127.0.0.1:8777/config/editor.html?file=<path to the design JSON>`.
-   For an article, the bare body is the reference; open the body too if the fit
-   matters.
+   An article opens only in tailor mode — add
+   `&fitbody=<...>/body/human_masc.json` (or `_femme`); that body's `variant`
+   picks which `geometry` cut you edit. Switch the **body** dropdown to work
+   the other cut of the same file.
 2. **User edits** in the pane — drags vertices, toggles sections, freezes shade
    where auto is wrong.
 3. **Preview before writing.** When the user says they're done, the agent reads
@@ -1140,11 +1142,14 @@ name for a `fit` draft). **rescan** refreshes the list (e.g. after saving one
 design mid-session); **download checked** fires one `<a download>` per checked
 row, staggered 200ms apart so a browser doesn't throttle a burst of same-tick
 downloads. Two rows that would land on
-the same filename are highlighted — most commonly the same article edited in
-two separate tailor-mode sessions against different bodies, which the panel
-auto-disambiguates (`hair_bun.vs-human_femme.json` /
-`hair_bun.vs-human_masc.json`); a genuine same-name collision elsewhere is
-left for hand-renaming, with a confirm prompt before downloading anyway.
+the same filename are highlighted — most commonly one merged article edited
+against both bodies (a `:fit:<masc>` draft and a `:fit:<femme>` draft), whose
+**download** names disambiguate (`jacket.vs-human_masc.json` /
+`jacket.vs-human_femme.json`) while **save checked to repo** writes both to the
+one `jacket.json`, each folding its cut into `geometry` and taking the other
+cut from disk so save order doesn't matter; a genuine same-name collision
+elsewhere is left for hand-renaming, with a confirm prompt before downloading
+anyway.
 **clear checked** permanently removes the checked rows' keys from
 `localStorage` (with a confirm prompt) and rescans — this is the only control
 that actually shrinks the list. The top **Reset** button does *not* do this:
