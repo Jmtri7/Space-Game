@@ -43,8 +43,8 @@ config/stories/<story>/graphics/
 │   └── <set>.json          — an ordered list of article/item ids + palette
 ├── ships/       <ship>.json
 ├── stations/    <station>.json
-├── buildings/   <building>.json
-├── decorations/ <decoration>.json
+├── buildings/   <building>.json      — an elevation facade (view: elevation)
+├── decorations/ <decoration>.json    — furniture: top-down, or view: elevation
 ├── collision/   <id>.json         — hitboxes, one file per asset, loaded on their own
 └── interiors/   <interior>.json   — floor plan: rooms, portals, decoration + building placements
 ```
@@ -599,6 +599,10 @@ player:
 | `person` | ~1× player | body section | as needed; face kit exempt |
 | `decoration` | 0.3–2× player | furniture, props | ~16 |
 
+The `graphics_pipeline_test` settlement's buildings are deliberately **~2–3×
+player tall** (below the `building` row's 4× nominal) — it's a low prefab
+outpost, not a city block. Each design's `scale_note` states its real size.
+
 ## In the game
 
 The engine draws a pipeline asset through the **same `parts` list** the atlas
@@ -617,6 +621,14 @@ and cached.
   passes `unit=size`); stations and decorations are scaled to absolute units
   (`LandingSite.draw` / `draw_parts` use `unit=1`), and their `local_points`
   are authored absolute to match.
+- **Elevation billboards.** A `buildings/` or `decorations/` design with
+  `"view": "elevation"` is authored feet-at-`y=0`, up = `-y`, centre-line
+  `x=0` — the same figure space as a person. `draw_parts` at `unit=1` then
+  draws it as an upright billboard rising from its floor anchor, and
+  `_structure_depth` / `_building_footprint` read the real geometry so it
+  sorts and collides by where it meets the floor (`max` local y ≈ 0), like a
+  person's feet. No per-structure rotation. A plain top-down decoration (no
+  `view`) still draws flat on the floor plane.
 - **People.** An `outfits` entry names a pipeline body — `{body, set, palette}`.
   `Person.draw` detects this and renders through `story_assets.body_frame`: the
   body + its set's articles (or items — see Items) composed via `compose_worn`, expanded once, then
@@ -650,11 +662,12 @@ the repo root, writes four cross-linked pages next to itself:
 - **`pipeline-bodies.html`** ("Human Bodies") — the body variants at one scale,
   the face kit, the hair grid, the walk cycle.
 - **`pipeline-structures.html`** ("Civilian Structures") — the ship, the
-  station, the station interior (floor plan + lane check), the surface
-  settlement (`interiors/*.json` with a `structures` list — plaza + placed
-  `buildings/`), each building (plan + footprint + a synthesised elevation
-  beside the player figure), and each `decorations/` piece (plan + footprint;
-  a `height` piece also gets an elevation, using `elev` layer hints).
+  station, the station interior (floor plan + lane check, with the culture's
+  `deck_grid` pattern drawn on it), the surface settlement (`interiors/*.json`
+  with a `structures` list — the plaza with every building and decoration
+  placed as an upright billboard, as the game draws it), each building and
+  decoration as its authored **elevation** beside the player figure, plus its
+  top-down collision footprint.
 - **`pipeline-articles.html`** ("Civilian Articles") — every `articles/*.json`
   rendered once in its authored colour, as a card grid. No sets, no recolours.
 - **`pipeline-outfits.html`** ("Civilian Outfits") — every `sets/*.json`

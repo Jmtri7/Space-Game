@@ -79,32 +79,28 @@
       "at": [
         320,
         172
-      ],
-      "angle": 0
+      ]
     },
     {
       "building": "housing_block",
       "at": [
         168,
         300
-      ],
-      "angle": 0
+      ]
     },
     {
       "building": "housing_block",
       "at": [
         472,
         300
-      ],
-      "angle": 0
+      ]
     },
     {
       "building": "admin_office",
       "at": [
         320,
         428
-      ],
-      "angle": 0
+      ]
     }
   ],
   "placements": [
@@ -113,72 +109,63 @@
       "at": [
         220,
         250
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "planter",
       "at": [
         420,
         250
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "planter",
       "at": [
         320,
         320
-      ],
-      "angle": 90
+      ]
     },
     {
       "decoration": "lamp_post",
       "at": [
         150,
         150
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "lamp_post",
       "at": [
         490,
         150
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "lamp_post",
       "at": [
         150,
         440
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "lamp_post",
       "at": [
         490,
         440
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "crates",
       "at": [
         430,
         420
-      ],
-      "angle": 0
+      ]
     },
     {
       "decoration": "crates",
       "at": [
         200,
         400
-      ],
-      "angle": 20
+      ]
     }
   ]
 }

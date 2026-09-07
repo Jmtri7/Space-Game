@@ -1,20 +1,134 @@
 {
-  "identity": "A public bench seen top-down: two end skids and a slatted seat, about 1.4 m long. A person sits along its length. Sits against a wall and never blocks a lane.",
+  "identity": "A public bench from the side: two end legs, a seat plank at sitting height, a low slatted back. About 1.4 m long. Sits against a wall and never blocks a lane.",
   "tier": "decoration",
   "palette": "ship_std",
-  "units": "absolute local units (31 = player height), top-down, origin at the seat centre; +y is the wall side.",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "seat at ~0.26x PLAYER_H (SIT_H), ~0.8x wide",
   "silhouette": [
-    { "group": "seat", "color": "hull_dk", "shade": "matte", "points": [ [ -12.0, -4.0 ], [ 12.0, -4.0 ], [ 12.0, 4.0 ], [ -12.0, 4.0 ] ] }
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "near leg",
+      "points": [
+        [
+          -11.5,
+          -8.2
+        ],
+        [
+          -8.5,
+          -8.2
+        ],
+        [
+          -8.5,
+          0
+        ],
+        [
+          -11.5,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far leg",
+      "points": [
+        [
+          8.5,
+          -8.2
+        ],
+        [
+          11.5,
+          -8.2
+        ],
+        [
+          11.5,
+          0
+        ],
+        [
+          8.5,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "seat",
+      "points": [
+        [
+          -12,
+          -9.4
+        ],
+        [
+          12,
+          -9.4
+        ],
+        [
+          12,
+          -7.4
+        ],
+        [
+          -12,
+          -7.4
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "backrest",
+      "points": [
+        [
+          -12,
+          -15.5
+        ],
+        [
+          12,
+          -15.5
+        ],
+        [
+          12,
+          -13
+        ],
+        [
+          -12,
+          -13
+        ]
+      ]
+    }
   ],
   "details": [
-    { "group": "seat", "color": "hull", "shade": "deep", "role": "detail", "min_px": 26, "note": "front slat",
-      "points": [ [ -11.0, -3.2 ], [ 11.0, -3.2 ], [ 11.0, -0.8 ], [ -11.0, -0.8 ] ] },
-    { "group": "seat", "color": "hull", "shade": "deep", "role": "detail", "min_px": 26, "note": "back slat",
-      "points": [ [ -11.0, 0.8 ], [ 11.0, 0.8 ], [ 11.0, 3.2 ], [ -11.0, 3.2 ] ] },
-    { "group": "seat", "color": "metal", "shade": "metal", "role": "detail", "min_px": 60, "note": "left skid",
-      "points": [ [ -11.4, -3.7 ], [ -9.4, -3.7 ], [ -9.4, 3.7 ], [ -11.4, 3.7 ] ] },
-    { "group": "seat", "color": "metal", "shade": "metal", "role": "detail", "min_px": 60, "note": "right skid",
-      "points": [ [ 9.4, -3.7 ], [ 11.4, -3.7 ], [ 11.4, 3.7 ], [ 9.4, 3.7 ] ] }
-  ],
-  "sit": [ [ -7.0, -0.5 ], [ 0.0, -0.5 ], [ 7.0, -0.5 ] ]
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "role": "detail",
+      "note": "back slat",
+      "points": [
+        [
+          -12,
+          -13
+        ],
+        [
+          12,
+          -13
+        ],
+        [
+          12,
+          -11
+        ],
+        [
+          -12,
+          -11
+        ]
+      ],
+      "min_px": 24
+    }
+  ]
 }

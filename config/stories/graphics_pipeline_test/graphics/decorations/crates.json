@@ -1,92 +1,138 @@
 {
-  "identity": "A stack of civilian cargo: two shipping crates and a drum, about 1.2 m across. Edge clutter - place it against a wall, clear of lanes.",
+  "identity": "A stack of civilian cargo from the side: two shipping crates on the ground with a third crate stacked on the left one. About 1.2 m across. Edge clutter - place it against a wall.",
   "tier": "decoration",
   "palette": "ship_std",
-  "units": "absolute local units (31 = player height), top-down, origin at the stack centre.",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~0.7x PLAYER_H tall, ~0.9x wide",
   "silhouette": [
     {
-      "group": "cargo",
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "crate A",
+      "points": [
+        [
+          -14,
+          -13
+        ],
+        [
+          -2,
+          -13
+        ],
+        [
+          -2,
+          0
+        ],
+        [
+          -14,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "note": "crate B",
+      "points": [
+        [
+          3,
+          -17
+        ],
+        [
+          14,
+          -17
+        ],
+        [
+          14,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
       "color": "hull_dk",
       "shade": "matte",
+      "note": "crate C",
       "points": [
         [
           -13,
-          -9
+          -22
         ],
         [
-          13,
-          -9
+          -3,
+          -22
         ],
         [
-          13,
-          9
+          -3,
+          -13
         ],
         [
           -13,
-          9
+          -13
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "cargo",
-      "color": "hull",
+      "group": "body",
+      "color": "hull_dk",
       "shade": "deep",
-      "note": "crate 1",
+      "role": "detail",
+      "note": "strap A",
       "points": [
         [
-          -12,
+          -14,
           -8
         ],
         [
-          0,
+          -2,
           -8
         ],
         [
-          0,
-          4
+          -2,
+          -6.5
         ],
         [
-          -12,
-          4
+          -14,
+          -6.5
         ]
-      ]
+      ],
+      "min_px": 22,
+      "tone": "dark"
     },
     {
-      "group": "cargo",
-      "color": "metal",
+      "group": "body",
+      "color": "hull_dk",
       "shade": "deep",
-      "note": "crate 2",
+      "role": "detail",
+      "note": "strap B",
       "points": [
         [
-          1,
-          -6
+          3,
+          -11
         ],
         [
-          11,
-          -6
+          14,
+          -11
         ],
         [
-          11,
-          8
+          14,
+          -9.5
         ],
         [
-          1,
-          8
+          3,
+          -9.5
         ]
-      ]
-    },
-    {
-      "group": "cargo",
-      "color": "engine",
-      "shade": "metal",
-      "note": "drum",
-      "circle": [
-        -6,
-        6,
-        3.2
-      ]
+      ],
+      "min_px": 22,
+      "tone": "dark"
     }
   ]
 }

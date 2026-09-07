@@ -1,117 +1,210 @@
 {
-  "identity": "A settlement admin office: a compact port-authority bureau with a stepped-out entry porch, a lit sign board on the roof and a short comms mast. About 3 m tall.",
+  "identity": "A settlement admin office from the front: a compact port-authority bureau, a single entry under a lit sign board, two windows, and a short comms mast on the roof.",
   "tier": "building",
   "palette": "ship_std",
-  "height": 38,
-  "units": "absolute local units (31 = player height), top-down, origin at the footprint centre; +y is south (screen-down).",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
   "silhouette": [
     {
-      "group": "office",
+      "group": "body",
       "color": "hull_dk",
       "shade": "matte",
+      "note": "wall",
       "points": [
         [
-          -30,
-          -26
+          -25,
+          0
         ],
         [
-          30,
-          -26
+          25,
+          0
         ],
         [
-          30,
-          26
+          25,
+          -55
         ],
         [
-          -30,
-          26
+          18,
+          -62
+        ],
+        [
+          -18,
+          -62
+        ],
+        [
+          -25,
+          -55
+        ]
+      ],
+      "flatten_px": 55
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -25,
+          -55
+        ],
+        [
+          25,
+          -55
+        ],
+        [
+          18,
+          -62
+        ],
+        [
+          -18,
+          -62
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "mast",
+      "points": [
+        [
+          -1.4,
+          -84
+        ],
+        [
+          1.4,
+          -84
+        ],
+        [
+          1.4,
+          -60
+        ],
+        [
+          -1.4,
+          -60
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "office",
-      "color": "hull",
-      "shade": "deep",
-      "note": "roof",
-      "points": [
-        [
-          -26,
-          -22
-        ],
-        [
-          26,
-          -22
-        ],
-        [
-          26,
-          22
-        ],
-        [
-          -26,
-          22
-        ]
-      ]
-    },
-    {
-      "group": "office",
-      "color": "hull_dk",
+      "group": "body",
+      "color": "engine",
       "shade": "matte",
-      "note": "porch",
+      "role": "detail",
+      "note": "door",
       "points": [
         [
-          -11,
-          22
+          -7,
+          -22
         ],
         [
-          11,
-          22
+          7,
+          -22
         ],
         [
-          11,
-          32
+          7,
+          0
         ],
         [
-          -11,
-          32
+          -7,
+          0
         ]
-      ]
+      ],
+      "min_px": 8
     },
     {
-      "group": "office",
+      "group": "body",
       "color": "lamp",
       "shade": "glow",
+      "role": "detail",
       "note": "sign",
       "points": [
         [
-          -12,
-          -6
+          -13,
+          -34
         ],
         [
-          12,
-          -6
+          13,
+          -34
         ],
         [
-          12,
-          4
+          13,
+          -25
         ],
         [
-          -12,
-          4
+          -13,
+          -25
         ]
-      ]
+      ],
+      "min_px": 12
     },
     {
-      "group": "office",
-      "color": "metal",
-      "shade": "metal",
-      "note": "mast",
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window L",
+      "points": [
+        [
+          -19,
+          -20
+        ],
+        [
+          -11,
+          -20
+        ],
+        [
+          -11,
+          -8
+        ],
+        [
+          -19,
+          -8
+        ]
+      ],
+      "min_px": 14
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window R",
+      "points": [
+        [
+          11,
+          -20
+        ],
+        [
+          19,
+          -20
+        ],
+        [
+          19,
+          -8
+        ],
+        [
+          11,
+          -8
+        ]
+      ],
+      "min_px": 14
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "mast lamp",
       "circle": [
-        20,
-        -18,
-        2.4
-      ]
+        0,
+        -84,
+        1.8
+      ],
+      "min_px": 8
     }
   ]
 }

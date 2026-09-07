@@ -1,154 +1,223 @@
 {
-  "identity": "A market hall: an open-fronted civilian trading shed, a deep roof over a row of stalls with the south side left open under an amber canopy strip. About 3.5 m to the eaves.",
+  "identity": "A market hall from the front: a low civilian trading shed with the whole front left open under a deep roof, a lit amber fascia, framing posts and a row of stalls set back inside.",
   "tier": "building",
   "palette": "ship_std",
-  "height": 44,
-  "units": "absolute local units (31 = player height), top-down, origin at the footprint centre; +y is south (screen-down).",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
   "silhouette": [
     {
-      "group": "hall",
+      "group": "body",
       "color": "hull_dk",
       "shade": "matte",
+      "note": "wall",
       "points": [
         [
-          -60,
-          -38
+          -56,
+          0
         ],
         [
-          60,
-          -38
+          56,
+          0
         ],
         [
-          60,
-          38
+          56,
+          -42
         ],
         [
-          -60,
-          38
+          48,
+          -50
+        ],
+        [
+          -48,
+          -50
+        ],
+        [
+          -56,
+          -42
         ]
-      ]
-    }
-  ],
-  "details": [
+      ],
+      "flatten_px": 60
+    },
     {
-      "group": "hall",
+      "group": "body",
       "color": "hull",
       "shade": "deep",
       "note": "roof",
       "points": [
         [
           -56,
-          -34
+          -42
         ],
         [
           56,
-          -34
+          -42
         ],
         [
-          56,
-          18
+          48,
+          -50
         ],
         [
-          -56,
-          18
+          -48,
+          -50
         ]
       ]
     },
     {
-      "group": "hall",
-      "color": "lamp",
+      "group": "body",
+      "color": "engine",
       "shade": "matte",
-      "note": "canopy",
+      "note": "opening",
       "points": [
         [
-          -56,
-          18
+          -46,
+          -34
         ],
         [
-          56,
-          18
+          46,
+          -34
         ],
         [
-          56,
-          32
+          46,
+          0
         ],
         [
-          -56,
-          32
+          -46,
+          0
         ]
       ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "fascia",
+      "points": [
+        [
+          -52,
+          -40
+        ],
+        [
+          52,
+          -40
+        ],
+        [
+          52,
+          -34
+        ],
+        [
+          -52,
+          -34
+        ]
+      ],
+      "min_px": 18
     },
     {
-      "group": "hall",
+      "group": "body",
       "color": "metal",
       "shade": "metal",
+      "role": "detail",
+      "note": "near post",
+      "points": [
+        [
+          -48,
+          -34
+        ],
+        [
+          -44,
+          -34
+        ],
+        [
+          -44,
+          0
+        ],
+        [
+          -48,
+          0
+        ]
+      ],
+      "min_px": 16
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "note": "far post",
+      "points": [
+        [
+          44,
+          -34
+        ],
+        [
+          48,
+          -34
+        ],
+        [
+          48,
+          0
+        ],
+        [
+          44,
+          0
+        ]
+      ],
+      "min_px": 16
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "role": "detail",
+      "note": "stall 0",
+      "points": [
+        [
+          -42,
+          -20
+        ],
+        [
+          -8,
+          -20
+        ],
+        [
+          -8,
+          0
+        ],
+        [
+          -42,
+          0
+        ]
+      ],
+      "min_px": 24
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "role": "detail",
       "note": "stall 1",
       "points": [
         [
-          -50,
-          -30
+          8,
+          -20
         ],
         [
-          -20,
-          -30
+          42,
+          -20
         ],
         [
-          -20,
-          -6
+          42,
+          0
         ],
         [
-          -50,
-          -6
+          8,
+          0
         ]
-      ]
-    },
-    {
-      "group": "hall",
-      "color": "metal",
-      "shade": "metal",
-      "note": "stall 2",
-      "points": [
-        [
-          -14,
-          -30
-        ],
-        [
-          14,
-          -30
-        ],
-        [
-          14,
-          -6
-        ],
-        [
-          -14,
-          -6
-        ]
-      ]
-    },
-    {
-      "group": "hall",
-      "color": "metal",
-      "shade": "metal",
-      "note": "stall 3",
-      "points": [
-        [
-          20,
-          -30
-        ],
-        [
-          50,
-          -30
-        ],
-        [
-          50,
-          -6
-        ],
-        [
-          20,
-          -6
-        ]
-      ]
+      ],
+      "min_px": 24
     }
   ]
 }

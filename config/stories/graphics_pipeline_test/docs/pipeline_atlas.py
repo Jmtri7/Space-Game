@@ -519,129 +519,72 @@ def interior_plate(name):
     </section>"""
 
 
-def _standing_elevation(kind, name, height):
-    """A synthesised side view of a standing top-down piece. A `silhouette`
-    layer becomes the full-height wall; a layer's `"elev"` hint overrides -
-    `"base"` a short block at the floor, `"shaft"` a full-height post,
-    `"head"` a block near the top. An un-hinted `details` layer is a
-    top-down-only feature and is skipped. The footprint is a foreshortened
-    ellipse the piece sits in."""
-    import math
-    from game.graphics.expand import resolve_color, shade_profile
-    design = load(kind, name + ".json")
-    mats = load("materials.json")
-    pal = load("palettes", design["palette"] + ".json")
-    coll = load_asset("collision", name)
-    out = []
-    if coll and coll.get("footprint"):
-        fx = [p[0] for p in coll["footprint"]]
-        hw = (max(fx) - min(fx)) / 2
-        out.append({"points": [[hw * math.cos(t), -hw * 0.28 * math.sin(t)]
-                               for t in (k * math.pi / 12 for k in range(24))],
-                    "color": [230, 90, 200], "opacity": 0.4})
-    base_h = max(3.0, height * 0.1)
-    layers = [(s, "fill") for s in design.get("silhouette", [])] \
-        + [(d, "detail") for d in design.get("details", [])]
-    for layer, role in layers:
-        hint = layer.get("elev")
-        if hint == "base":
-            y0, y1 = 0.0, -base_h
-        elif hint == "shaft":
-            y0, y1 = 0.0, -height
-        elif hint == "head":
-            y0, y1 = -height, -height * 0.78
-        elif role == "fill" and hint is None:
-            y0, y1 = 0.0, -height           # the silhouette is the wall
-        else:
-            continue                        # un-hinted top-down detail
-        pts = layer.get("points") or (
-            [[layer["circle"][0] - layer["circle"][2], 0],
-             [layer["circle"][0] + layer["circle"][2], 0]] if layer.get("circle") else None)
-        if not pts:
-            continue
-        xs = [q[0] for q in pts]
-        w = max(xs) - min(xs)
-        rgb = resolve_color(layer["color"], layer.get("tone", "mid"), pal,
-                            shade_profile(layer.get("shade"), mats))
-        out.append({"points": [[-w / 2, y0], [w / 2, y0], [w / 2, y1], [-w / 2, y1]],
-                    "color": rgb})
-    return out
+def _footprint_spec(coll, px=120):
+    """A small top-down plan of a collision footprint - a grey fill with the
+    magenta hitbox over it."""
+    if not (coll and coll.get("footprint")):
+        return ""
+    fp = coll["footprint"]
+    xs, ys = [p[0] for p in fp], [p[1] for p in fp]
+    r = max(max(xs) - min(xs), max(ys) - min(ys), 6) * 0.72
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    svg = svg_specimen([{"points": fp, "color": [118, 124, 132]},
+                        {"points": fp, "color": [230, 90, 200], "opacity": 0.32}],
+                       vb=(cx - r, cy - r, 2 * r, 2 * r), px=px, ground=False)
+    return f'<div class="spec">{svg}</div>'
+
+
+def _elevation_spec(design, parts, px, fig_scale=1.0):
+    """The design drawn as its authored elevation (feet at y=0, up = -y),
+    beside the player figure for scale."""
+    xs = [q[0] for p in parts if "points" in p for q in p["points"]]
+    ys = [q[1] for p in parts if "points" in p for q in p["points"]]
+    fig = _shift(xbody(load("body", "human_femme.json")), min(xs) - 9)
+    allx = [q[0] for p in fig for q in p["points"]] + xs
+    h = max(-min(ys), 31.0) + 4
+    vb = (min(allx) - 3, -h - 2, (max(allx) - min(allx)) + 6, h + 5)
+    return svg_specimen(fig + parts, vb=vb, px=px, ground=True)
 
 
 def decoration_plate(name):
-    """One piece of interior furniture (decorations/<name>.json). Top-down plan
-    with the footprint overlaid (magenta); a `height` piece also gets a
-    synthesised orthographic elevation, footprint at its base."""
+    """One decoration (decorations/<name>.json), authored as an elevation: its
+    side view beside the player figure, and its top-down collision footprint."""
     design = load("decorations", name + ".json")
-    mats = load("materials.json")
     pal = load("palettes", design["palette"] + ".json")
-    parts = expand(design, pal, mats)
+    parts = expand(design, pal, load("materials.json"))
     coll = load_asset("collision", name)
-    hb = ([{"points": coll["footprint"], "color": [230, 90, 200], "opacity": 0.32}]
-          if coll and coll.get("footprint") else [])
-    pts = [q for p in parts if "points" in p for q in p["points"]] \
-        + (coll["footprint"] if coll and coll.get("footprint") else [])
-    xs, ys = [q[0] for q in pts], [q[1] for q in pts]
-    r = max(max(xs) - min(xs), max(ys) - min(ys), 12) * 0.62
-    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-    plan = svg_specimen(parts + hb, vb=(cx - r, cy - r, 2 * r, 2 * r), px=240, ground=False)
-
-    specs = []
-    if design.get("height"):
-        elev = _standing_elevation("decorations", name, design["height"])
-        exs = [q[0] for p in elev for q in p["points"]]
-        eys = [q[1] for p in elev for q in p["points"]]
-        pad = (max(exs) - min(exs)) * 0.35
-        evb = (min(exs) - pad, min(eys) - 3, (max(exs) - min(exs)) + 2 * pad, (max(eys) - min(eys)) + 6)
-        specs.append(svg_specimen(elev, vb=evb, px=180, ground=True))
-    specs.append(plan)
-
     lane = " &middot; blocks lanes" if coll and coll.get("blocks_lane") else ""
     return f"""
     <section class="plate">
-      {"".join(f'<div class="spec">{s}</div>' for s in specs)}
+      <div class="spec">{_elevation_spec(design, parts, 240)}</div>
+      {_footprint_spec(coll)}
       <div class="meta">
         <h2>decoration: {name}</h2>
         <p class="identity">{design['identity']}</p>
-        <p class="stat">{"elevation (synthesised) &middot; " if design.get("height") else ""}top-down plan &middot; footprint overlay (magenta){lane}</p>
+        <p class="stat">{design.get('scale_note', '')}</p>
+        <p class="stat">elevation (as authored) beside the figure &middot;
+          top-down footprint (magenta){lane}</p>
       </div>
     </section>"""
 
 
 def building_plate(name):
-    """One settlement building (buildings/<name>.json): top-down plan with its
-    footprint, a synthesised orthographic elevation, and that elevation beside
-    the player figure for scale."""
+    """One settlement building (buildings/<name>.json), authored as an
+    elevation: its facade beside the player figure, and its footprint."""
     design = load("buildings", name + ".json")
-    mats = load("materials.json")
     pal = load("palettes", design["palette"] + ".json")
-    parts = expand(design, pal, mats)
+    parts = expand(design, pal, load("materials.json"))
     coll = load_asset("collision", name)
-    hb = ([{"points": coll["footprint"], "color": [230, 90, 200], "opacity": 0.3}]
-          if coll and coll.get("footprint") else [])
-    pts = [q for p in parts if "points" in p for q in p["points"]] \
-        + (coll["footprint"] if coll and coll.get("footprint") else [])
-    xs, ys = [q[0] for q in pts], [q[1] for q in pts]
-    r = max(max(xs) - min(xs), max(ys) - min(ys)) * 0.62
-    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-    plan = svg_specimen(parts + hb, vb=(cx - r, cy - r, 2 * r, 2 * r), px=260, ground=False)
-
-    elev = _standing_elevation("buildings", name, design["height"])
-    exs = [q[0] for p in elev for q in p["points"]]
-    ew = max(exs) - min(exs)
-    fig = _shift(xbody(load("body", "human_femme.json")), min(exs) - 10)
-    fexs = [q[0] for p in fig for q in p["points"]] + exs
-    evb = (min(fexs) - 6, -design["height"] - 4, max(fexs) - min(fexs) + 12, design["height"] + 8)
-    elevsvg = svg_specimen(elev + fig, vb=evb, px=300, ground=True)
     return f"""
     <section class="plate">
-      <div class="spec">{plan}</div>
-      <div class="spec">{elevsvg}</div>
+      <div class="spec">{_elevation_spec(design, parts, 320)}</div>
+      {_footprint_spec(coll, px=150)}
       <div class="meta">
         <h2>building: {name}</h2>
         <p class="identity">{design['identity']}</p>
-        <p class="stat">top-down plan + footprint (magenta) &middot; elevation
-          (synthesised, {design['height']} u) beside the player figure</p>
+        <p class="stat">{design.get('scale_note', '')}</p>
+        <p class="stat">facade (as authored) beside the player figure &middot;
+          top-down footprint (magenta)</p>
       </div>
     </section>"""
 
@@ -655,34 +598,33 @@ def settlement_plate(name):
     mats = load("materials.json")
     pal = load("palettes", design["palette"] + ".json")
 
-    base = []
     floor = [{"points": r["points"],
               "color": resolve_color(r.get("color", "hull"), "mid", pal)}
              for r in design["rooms"]]
     portals = [{"points": p["points"], "color": [86, 116, 150], "opacity": 0.55}
                for p in design.get("portals", [])]
 
+    # every structure and decoration, placed as an upright billboard rising from
+    # its floor anchor (elevation designs: base at `at`, up = -y) - exactly how
+    # LocationScreen draws it. Sorted south-first so nearer things draw on top.
+    placed = [("buildings", s["building"], s) for s in design.get("structures", [])] \
+        + [("decorations", p["decoration"], p) for p in design.get("placements", [])]
+    placed.sort(key=lambda t: t[2]["at"][1])
     body, hitboxes = [], []
-    for st in design.get("structures", []):
-        d = load("buildings", st["building"] + ".json")
+    for kind, ident, spec in placed:
+        d = load(kind, ident + ".json")
         body += _place(expand(d, load("palettes", d["palette"] + ".json"), mats),
-                       st["at"], st.get("angle", 0))
-        c = load_asset("collision", st["building"])
+                       spec["at"], spec.get("angle", 0))
+        c = load_asset("collision", ident)
         if c and c.get("footprint"):
-            hitboxes.append(dict(_place([{"points": c["footprint"]}], st["at"], st.get("angle", 0))[0],
-                                 color=[230, 90, 200], opacity=0.26))
-    for pl in design.get("placements", []):
-        d = load("decorations", pl["decoration"] + ".json")
-        body += _place(expand(d, load("palettes", d["palette"] + ".json"), mats),
-                       pl["at"], pl.get("angle", 0))
-        c = load_asset("collision", pl["decoration"])
-        if c and c.get("footprint"):
-            hitboxes.append(dict(_place([{"points": c["footprint"]}], pl["at"], pl.get("angle", 0))[0],
+            hitboxes.append(dict(_place([{"points": c["footprint"]}], spec["at"], spec.get("angle", 0))[0],
                                  color=[230, 90, 200], opacity=0.26))
 
-    xs = [x for r in design["rooms"] for x, y in r["points"]]
-    ys = [y for r in design["rooms"] for x, y in r["points"]]
-    pad = 34
+    xs = [x for r in design["rooms"] for x, y in r["points"]] \
+        + [q[0] for p in body for q in p["points"]]
+    ys = [y for r in design["rooms"] for x, y in r["points"]] \
+        + [q[1] for p in body for q in p["points"]]
+    pad = 24
     vb = (min(xs) - pad, min(ys) - pad, max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad)
     regolith = [{"points": [[vb[0], vb[1]], [vb[0] + vb[2], vb[1]],
                             [vb[0] + vb[2], vb[1] + vb[3]], [vb[0], vb[1] + vb[3]]],

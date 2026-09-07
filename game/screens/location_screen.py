@@ -1331,6 +1331,10 @@ class LocationScreen(ScreenBase):
         building_type_id = structure.get("building_type")
         if building_type_id:
             building_type = get_building_type(self.story, building_type_id)
+            if building_type.get("parts"):
+                # sort by where the real geometry meets the floor (max local y):
+                # ~0 for an elevation billboard, ~+depth for a top-down piece.
+                return structure["y"] + _silhouette_local_bounds(building_type)[3]
             if building_type.get("shape", "rect") == "rect":
                 return structure["y"] + building_type.get("height", 100)
             return structure["y"]  # circle: center; polygon: ground-level anchor

@@ -1,95 +1,137 @@
 {
-  "identity": "A structural support column, octagonal in plan with a wider base ring, about 0.7 m across. It stands on the concourse centre-line on purpose: the hall is built around it and traffic parts around it.",
+  "identity": "A concourse structural column, seen from the side: a wide plinth, a plain round shaft, a flared capital. About 1.5x player tall; the concourse is laid out around it so it may stand on the centre-line.",
   "tier": "decoration",
   "palette": "ship_std",
-  "height": 46,
-  "units": "absolute local units (31 = player height), top-down, origin at the column axis.",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~1.5x PLAYER_H tall, ~0.13x wide",
   "silhouette": [
     {
-      "group": "shaft",
+      "group": "body",
       "color": "hull_dk",
-      "shade": false,
-      "note": "base ring; flat - a crescent on a small top-down octagon reads as a broken ring",
+      "shade": "matte",
+      "note": "plinth",
       "points": [
         [
-          0.0,
-          -6.0
+          -4.2,
+          -5
         ],
         [
-          4.24,
-          -4.24
+          4.2,
+          -5
         ],
         [
-          6.0,
-          0.0
+          4.2,
+          0
         ],
         [
-          4.24,
-          4.24
-        ],
-        [
-          0.0,
-          6.0
-        ],
-        [
-          -4.24,
-          4.24
-        ],
-        [
-          -6.0,
-          0.0
-        ],
-        [
-          -4.24,
-          -4.24
+          -4.2,
+          0
         ]
-      ],
-      "elev": "base"
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "shaft",
+      "points": [
+        [
+          -2.4,
+          -42
+        ],
+        [
+          2.4,
+          -42
+        ],
+        [
+          2.4,
+          -5
+        ],
+        [
+          -2.4,
+          -5
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "capital",
+      "points": [
+        [
+          -4.2,
+          -46
+        ],
+        [
+          4.2,
+          -46
+        ],
+        [
+          4.2,
+          -42
+        ],
+        [
+          -4.2,
+          -42
+        ]
+      ]
     }
   ],
   "details": [
     {
-      "group": "shaft",
-      "color": "hull",
+      "group": "body",
+      "color": "hull_dk",
       "shade": "deep",
       "role": "detail",
-      "min_px": 20,
-      "note": "shaft",
+      "note": "flute",
       "points": [
         [
-          0.0,
-          -4.2
+          -0.7,
+          -41
         ],
         [
-          2.97,
-          -2.97
+          0.7,
+          -41
         ],
         [
-          4.2,
-          0.0
+          0.7,
+          -6
         ],
         [
-          2.97,
-          2.97
-        ],
-        [
-          0.0,
-          4.2
-        ],
-        [
-          -2.97,
-          2.97
-        ],
-        [
-          -4.2,
-          0.0
-        ],
-        [
-          -2.97,
-          -2.97
+          -0.7,
+          -6
         ]
       ],
-      "elev": "shaft"
+      "min_px": 26,
+      "tone": "dark"
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "note": "collar",
+      "points": [
+        [
+          -2.9,
+          -6.5
+        ],
+        [
+          2.9,
+          -6.5
+        ],
+        [
+          2.9,
+          -5
+        ],
+        [
+          -2.9,
+          -5
+        ]
+      ],
+      "min_px": 34
     }
   ]
 }
