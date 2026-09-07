@@ -98,7 +98,7 @@
 
   <div class="hint" id="src"></div>
   <div class="row" id="modeSwitchRow" style="display:none">
-    edit <button id="modeBody">body</button><button id="modeFace">face</button><button id="modeOutfit">outfit</button>
+    edit <button id="modeBody">body</button><button id="modeFace">face</button><button id="modeTailor">tailor</button><button id="modeOutfit">outfit</button>
   </div>
   <div class="row" id="bodySwitcherRow" style="display:none">
     body <select id="bodyDirectPicker" style="flex:1"></select>
@@ -106,34 +106,6 @@
   <div class="row" id="switcherRow" style="display:none">
     switch to <select id="articlePicker" style="flex:1"><option value="">— articles —</option></select>
   </div>
-
-  <h2>View</h2>
-  <label><input type="checkbox" id="tShade" checked> shading</label>
-  <label><input type="checkbox" id="tGhost" checked> original ghost</label>
-  <label><input type="checkbox" id="tHandles" checked> vertex handles</label>
-  <label><input type="checkbox" id="tEdges" checked> insert points (edge click)</label>
-  <label>insert <input type="number" id="insertCount" value="1" min="1" max="30" style="width:44px">
-    point(s) at a time (dbl-click an edge, or select 2 + <b>I</b>) — evenly spaced between the two</label>
-  <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
-  <label><input type="checkbox" id="tWalk"> walk animation (preview the gait, like the game)</label>
-  <label><input type="checkbox" id="tSnap"> snap 0.05</label>
-  <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
-  <label><input type="checkbox" id="tLasso"> lasso select (freehand)</label>
-  <label><input type="checkbox" id="tMirrorBody" checked> compare other body (masc/femme)</label>
-  <div class="row">against <select id="mirrorSrcSel" style="flex:1"><option value="">auto — counterpart</option></select></div>
-  <div class="row">
-    frame <select id="mirrorFrameSel">
-      <option value="fit">fit panel</option>
-      <option value="match">match main view</option>
-    </select>
-    show <select id="mirrorPartSel">
-      <option value="body">whole body</option>
-      <option value="head">head only</option>
-    </select>
-  </div>
-  <div class="hint">drag empty space = box-select · <b>shift</b> = add · click+drag a
-    selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
-    arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
 
   <div id="refImgSec">
     <h2>Reference image</h2>
@@ -237,6 +209,36 @@
     <h2>Curves</h2>
     <div id="curvesPanel"><div class="hint">none</div></div>
   </div>
+  </div>
+
+  <div id="viewSec">
+  <h2>View</h2>
+  <label><input type="checkbox" id="tShade" checked> shading</label>
+  <label><input type="checkbox" id="tGhost" checked> original ghost</label>
+  <label><input type="checkbox" id="tHandles" checked> vertex handles</label>
+  <label><input type="checkbox" id="tEdges" checked> insert points (edge click)</label>
+  <label>insert <input type="number" id="insertCount" value="1" min="1" max="30" style="width:44px">
+    point(s) at a time (dbl-click an edge, or select 2 + <b>I</b>) — evenly spaced between the two</label>
+  <label><input type="checkbox" id="tTicks" checked> head-ticks</label>
+  <label><input type="checkbox" id="tWalk"> walk animation (preview the gait, like the game)</label>
+  <label><input type="checkbox" id="tSnap"> snap 0.05</label>
+  <label><input type="checkbox" id="tMirror"> mirror edits L/R</label>
+  <label><input type="checkbox" id="tLasso"> lasso select (freehand)</label>
+  <label><input type="checkbox" id="tMirrorBody" checked> compare other body (masc/femme)</label>
+  <div class="row">against <select id="mirrorSrcSel" style="flex:1"><option value="">auto — counterpart</option></select></div>
+  <div class="row">
+    frame <select id="mirrorFrameSel">
+      <option value="fit">fit panel</option>
+      <option value="match">match main view</option>
+    </select>
+    show <select id="mirrorPartSel">
+      <option value="body">whole body</option>
+      <option value="head">head only</option>
+    </select>
+  </div>
+  <div class="hint">drag empty space = box-select · <b>shift</b> = add · click+drag a
+    selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
+    arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
   </div>
 
   <div id="outPanelSec">
@@ -1139,7 +1141,7 @@ function moveBodyPartOrder(name, delta){
 // filtered to the fit body's gender and the pick is remembered per story.
 async function populateHairPicker(){
   const row = document.getElementById('hairPickerRow'), sel_ = document.getElementById('hairPicker');
-  if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if(!OUTFIT_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -1197,7 +1199,7 @@ function savePreviewPick(){
 }
 async function populatePreviewArticles(){
   const row = document.getElementById('previewArtRow');
-  if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if(!OUTFIT_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -2884,7 +2886,7 @@ function finishLoad(){
     document.getElementById('hidesHairRow').style.display = '';
     document.getElementById('tHidesHair').checked = !!D.hides_hair;
   }
-  if(TAILOR_MODE || OUTFIT_MODE){
+  if(OUTFIT_MODE){
     document.getElementById('outfitSec').style.display = '';
     populateHairPicker().then(loadPreviewHair);
     populatePreviewArticles();
@@ -3074,8 +3076,26 @@ async function populateArticlePicker(){
     names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
 }
+// tailor mode: moving on to another article keeps the one you were just
+// tailoring ticked in the outfit-mode preview list, so a look builds up piece
+// by piece as you work through a set. Hair is skipped (the preview-hair
+// dropdown owns it).
+function rememberTailoredForPreview(){
+  if(!TAILOR_MODE || !loadedPath || !loadedPath.includes('/articles/')) return;
+  const stem = loadedPath.split('/').pop().replace(/\.json$/, '');
+  if(/^hair_/.test(stem)) return;
+  const st = storyOfPath(FITBODY) || storyOfPath(loadedPath); if(!st) return;
+  const key = 'gpEditorPreviewArt:' + st;
+  let list; try{ list = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){}
+  if(!Array.isArray(list)) list = [];
+  if(!list.includes(stem)){
+    list.push(stem);
+    try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){}
+  }
+}
 document.getElementById('articlePicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
+  rememberTailoredForPreview();
   const path = GBASE + '/articles/' + name;
   const qs = new URLSearchParams(location.search);
   qs.set('file', path);

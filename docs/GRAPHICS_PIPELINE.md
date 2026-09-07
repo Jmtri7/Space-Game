@@ -216,7 +216,8 @@ so tailor mode matches the game.
 An **article region or detail** declares one of:
 
 - `"group": "<animation group>"` — the piece rides that body part (`torso`,
-  `arm_near`…) and moves with it. Default `torso`. Also its fallback draw layer.
+  `head`, `neck`, `arm_near`…) and moves with it. Default `torso`. Also its
+  fallback draw layer.
 - `"layer": "<layer name>"` — which shelf of the body's `draw_layers` stack it
   draws on (see Draw order). Optional; omit to draw with `group`.
 - `"fits": [{ "curve": "<section>.<curve>", "from": i, "to": j, "reverse": … }]`
@@ -329,9 +330,21 @@ opposite each other; each arm counter to the leg on its side; feet pivot on the
 ankle and lag their leg; hands pivot on the arm so the limb swings as one unit.
 `apply_walk(parts, body_design, rig_walk, t)` takes a composed parts list and
 returns it deformed into the pose at cycle fraction `t` — it rotates each part
-about its group's pivot and bobs everything above the hips. Because a garment
-shares its limb's group, it swings with the limb for free. The atlas renders a
-frame strip; the game will drive `t` from its own clock.
+about its group's pivot and bobs everything above the hips. A group with no
+`rig_walk.swing` entry just rides the bob (that is `torso`, `neck`, `head`
+today). Because a garment shares its limb's group, it swings with the limb for
+free. The atlas renders a frame strip; the game will drive `t` from its own
+clock.
+
+**Every body section is its own animation group.** `human_masc` / `human_femme`
+define `torso`, `neck`, `head`, and near/far `arm` · `hand` · `leg` · `foot` —
+each limb group with a matching `pivots` entry, and `neck` / `head` too (base of
+the neck, base of the skull). So a hat or hood can ride `group: "head"`, a collar
+or necklace `group: "neck"`, and they move with that part for free. `torso` is
+the default when a region names no group. `neck` and `head` carry no walk swing
+yet — they exist so articles can attach to them; add `rig_walk.swing` entries
+(and regroup the face-slot details + hairstyles off `torso`/`face` onto `head`)
+when the head should actually move in the gait.
 
 ## Articles and sets
 
@@ -624,7 +637,14 @@ viewer — it holds no geometry and no copy of anything.
 [`config/editor.html`](../config/editor.html) is a standalone page for
 dragging a design's vertices by hand. It renders exactly what `expand()` would —
 its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
-any handle; double-click an edge to insert a point; alt-click to delete. Each
+any handle; double-click an edge to insert a point; alt-click to delete.
+
+Side-panel order: story / design pickers, the mode + body + article switchers,
+then the mode-specific editing panels (Polygons, Sections, Selected section,
+Curves in body-edit mode; Fit in tailor mode; Outfit in outfit mode), then the
+generic **View** toggles, then Output and the drafts panel.
+
+Each
 section has an eye toggle to hide/show it (isolate a limb, or drop the far side
 to work on the near one) and a checkbox for its handles; hiding a section takes
 its handles with it. Two buttons above the list, **Show / Hide All Sections**
@@ -836,10 +856,10 @@ compose/render path (the same `compose_worn` layer stack the game uses, the
 compare-body panel, the walk preview) with an empty synthetic article standing
 in for the edited one, so `FITBODY` points at the body itself. The side panel
 drops every editing section (Polygons, Sections, Output, Fit, Reference image,
-Preview look — hidden by `body.outfit-mode` CSS) and shows only **View** and the
-**Outfit** section: the **preview hair** dropdown and the **preview articles**
-checkbox list (both also available while tailoring — they now live in their own
-**Outfit** section, not under **Fit**). Ticks are remembered per story
+Preview look — hidden by `body.outfit-mode` CSS) and shows the **Outfit**
+section plus **View**. The **Outfit** section — the **preview hair** dropdown
+and the **preview articles** checkbox list — shows *only* in this mode (it is
+not part of tailoring). Ticks are remembered per story
 (`gpEditorPreviewArt:<story>`, `gpEditorHair:<story>`). Nothing here writes a
 file; there is no draft for outfit mode.
 
@@ -874,7 +894,10 @@ swaps `fitbody=` — which body the *same* outfit is checked against — leaving
 to** dropdown lists every `articles/*.json` next to the loaded one — picking
 one navigates to that article, fit against the same `fitbody`. It's hidden in
 plain / face mode (no article in play to switch away from — use the edit
-**outfit** button to get into tailoring first). It's populated by fetching the
+**tailor** button to get into tailoring first). The article you are leaving is
+added to the outfit-mode preview list (`gpEditorPreviewArt:<story>`, hair
+excluded) as you switch away, so working through a set piece by piece builds up
+the look you then see in **outfit** mode. It's populated by fetching the
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
 hidden rather than showing something broken. Every article is one file now, so
@@ -1019,22 +1042,19 @@ whole article** stamps it onto every region. A hairstyle splits across shelves
 (`hair_back` for the bulk, `hair` for the fringe) — that's two regions with
 different layers, not one region with two tags.
 
-**Preview hair** (Outfit section — tailor and outfit mode). A dropdown of every
+**Preview hair** (Outfit section — outfit mode only). A dropdown of every
 `articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on
-the reference body under the garment being tailored (reference only, never
-written), so a hat / hood / helmet fit and its `hair` / `hair_back` layering
-can be judged against real hair — its `geometry` cut is the fit body's. The
+the body (reference only, never written), so headgear layering against real
+hair can be judged — its `geometry` cut is the previewed body's. The
 choice is remembered per story (`gpEditorHair:<story>`); it defaults to
 `hair_short`. Hidden when the loaded design is itself a hairstyle.
 
-**Preview other articles** (Outfit section — tailor and outfit mode). A checkbox list of every
-sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those),
-minus the one being edited. Ticked articles are
-drawn on the figure as reference — fitted and outset against the same body, and
-composed by the same draw-layer stack as the game (each region on its `layer`,
-else its group). Within a layer the article being edited draws last. Nothing
-here is written; the tick list is remembered per story
-(`gpEditorPreviewArt:<story>`, a name array).
+**Preview other articles** (Outfit section — outfit mode only). A checkbox list of every
+sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those).
+Ticked articles are drawn on the figure — fitted and outset against the
+previewed body, composed by the same draw-layer stack as the game (each region
+on its `layer`, else its group). Nothing here is written; the tick list is
+remembered per story (`gpEditorPreviewArt:<story>`, a name array).
 
 **This headgear hides hair** (tailor mode, Fit panel). A checkbox that writes
 top-level `"hides_hair": true` onto the article (`_body_worn` then drops every

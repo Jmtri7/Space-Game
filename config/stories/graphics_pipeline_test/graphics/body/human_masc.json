@@ -44,6 +44,14 @@
     "foot_far": [
       -1.45,
       -1.8
+    ],
+    "neck": [
+      0,
+      -25.3
+    ],
+    "head": [
+      0,
+      -26.7
     ]
   },
   "sections": {
@@ -297,7 +305,7 @@
       }
     },
     "neck": {
-      "group": "torso",
+      "group": "neck",
       "color": "skin",
       "shade": "soft",
       "points": [
@@ -326,7 +334,7 @@
       }
     },
     "head": {
-      "group": "torso",
+      "group": "head",
       "color": "skin",
       "shade": "soft",
       "note": "shifted -0.3 x toward the screen-left facing; features clustered a touch further over; sits 0.35 lower on the neck than a straight stack",
