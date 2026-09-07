@@ -107,7 +107,9 @@
   </div>
   <div class="row" id="switcherRow" style="display:none">
     switch to <select id="articlePicker" style="flex:1"><option value="">— articles —</option></select>
+    <button id="newArticle" title="create a new empty article fit against this body">+ new</button>
   </div>
+  <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
 
   <div id="refImgSec">
     <h2>Reference image</h2>
@@ -126,7 +128,6 @@
     <div class="hint">Preview articles worn together on this body — pick a
       hairstyle and tick any articles to layer them on the figure, composed by
       the same draw order the game uses. Reference-only: nothing here is saved.</div>
-    <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
     <div id="previewArtRow" style="display:none">
       <div class="hint">Tick to show a sibling article, untick to hide it.</div>
       <div id="previewArtList"></div>
@@ -342,7 +343,7 @@ const VFS = {
     if(t == null) return null;
     try{ return JSON.parse(t); }catch(e){ return null; }
   },
-  async writeText(path, text){   // overwrites an existing file (never creates one)
+  async writeText(path, text, create){   // overwrites an existing file; with create=true also makes a new one (parent dir must exist)
     const p = this._adj(path);
     if(this.mode === 'http'){
       const r = await fetch('/' + p, { method: 'PUT', body: text, headers: { 'Content-Type': 'application/json' } });
@@ -353,7 +354,7 @@ const VFS = {
     if(this.mode === 'fsapi'){
       const parts = p.split('/');
       const dir = await this._dirHandle(parts.slice(0, -1).join('/'));
-      const fh = await dir.getFileHandle(parts[parts.length - 1]);
+      const fh = await dir.getFileHandle(parts[parts.length - 1], { create: !!create });
       const w = await fh.createWritable();
       await w.write(text);
       await w.close();
@@ -1231,13 +1232,14 @@ function buildBodyPartList(){
     el.appendChild(row);
   });
 }
-// --- tailor mode: "preview hair" - a reference hairstyle drawn under the
-// headgear being tailored so a hat / hood / helmet fit can be judged (and
-// layered) against real hair. Reference-only, never written. The dropdown is
-// filtered to the fit body's gender and the pick is remembered per story.
+// --- "preview hair" (tailor + outfit mode) - a reference hairstyle drawn under
+// the headgear being tailored / under the outfit so a hat / hood / helmet fit
+// can be judged (and layered) against real hair. Reference-only, never written.
+// The pick is remembered per story (`gpEditorHair:<story>`), so the hairstyle
+// chosen in outfit mode carries into tailor mode and back.
 async function populateHairPicker(){
   const row = document.getElementById('hairPickerRow'), sel_ = document.getElementById('hairPicker');
-  if(!OUTFIT_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if((!OUTFIT_MODE && !TAILOR_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -3106,9 +3108,9 @@ function finishLoad(){
     }
     if(added) stashDrawOrder();
   }
+  if(TAILOR_MODE || OUTFIT_MODE) populateHairPicker().then(loadPreviewHair);
   if(OUTFIT_MODE){
     document.getElementById('outfitSec').style.display = '';
-    populateHairPicker().then(loadPreviewHair);
     buildTagOrderPanel();
     // show every tag any article uses, not just the loaded ones
     reconcileDrawOrderTags().then(buildTagOrderPanel);
@@ -3318,6 +3320,35 @@ function rememberTailoredForPreview(){
     try{ localStorage.setItem(key, JSON.stringify(list)); }catch(e){}
   }
 }
+// tailor mode: spin up a brand-new articles/<name>.json next to the current one
+// and jump straight into tailoring it against the same body. The stub is one
+// placeholder region (a small quad at chest height, its own empty `fits:`) in
+// plain points form - reconstituteGeometry() grows the masc/femme `geometry`
+// split on the first save.
+document.getElementById('newArticle').onclick = async ()=>{
+  if(!TAILOR_MODE || !GBASE || !FITBODY) return;
+  if(!VFS.canWrite){ alert('Creating a file needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  let name = (prompt('New article name (lower-case, digits, underscores - no .json):') || '').trim().replace(/\.json$/,'');
+  if(!name) return;
+  if(!/^[a-z0-9_]+$/.test(name)){ alert('Use lower-case letters, digits and underscores only.'); return; }
+  const path = GBASE + '/articles/' + name + '.json';
+  if(await VFS.readJSON(path)){ alert(name + '.json already exists - pick another name.'); return; }
+  const src = selSec && D && D.sections && D.sections[selSec];
+  const stub = {
+    identity: 'TODO: describe ' + name,
+    tier: 'person',
+    palette: 'civilian',
+    regions: [{
+      group: (src && src.group) || 'torso',
+      color: 'cloth', shade: 'matte', note: 'new region',
+      points: [[-3,-20],[3,-20],[3,-14],[-3,-14]], fits: [],
+    }],
+  };
+  try{ await VFS.writeText(path, toRepoJSON(stub), true); }
+  catch(e){ alert('Could not create the file: ' + (e.message || e)); return; }
+  const qs = new URLSearchParams(); qs.set('file', path); qs.set('fitbody', FITBODY);
+  location.search = qs.toString();
+};
 document.getElementById('articlePicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
   const path = GBASE + '/articles/' + name;

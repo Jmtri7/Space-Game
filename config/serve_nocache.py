@@ -5,8 +5,9 @@
    only `Last-Modified`, which lets a browser silently reuse a stale cached
    copy of `editor.html` (or a design JSON) after the file is edited.
 
-2. A `PUT` writes the request body back to that file on disk, so the editor's
-   "save checked to repo" works in any browser when served (Firefox included),
+2. A `PUT` writes the request body to that path on disk (creating the file if
+   its parent directory already exists), so the editor's "save checked to
+   repo" and "new article" work in any browser when served (Firefox included),
    not just the Chrome/Edge File System Access API path used when the editor
    is opened straight from disk.
 
@@ -58,8 +59,8 @@ class EditorHandler(http.server.SimpleHTTPRequestHandler):
         ):
             self.send_error(403, "only .json files under %s" % ", ".join(WRITABLE_ROOTS))
             return
-        if not os.path.isfile(target):
-            self.send_error(404, "not an existing file")
+        if not os.path.isfile(target) and not os.path.isdir(os.path.dirname(target)):
+            self.send_error(404, "no such file or parent directory")
             return
 
         try:

@@ -861,8 +861,8 @@ compare-body panel, the walk preview) with an empty synthetic article standing
 in for the edited one, so `FITBODY` points at the body itself. The side panel
 drops every editing section (Polygons, Sections, Output, Fit, Reference image,
 Preview look — hidden by `body.outfit-mode` CSS) and shows the **Outfit**
-section plus **View**. The **Outfit** section holds the **preview hair**
-dropdown, the **preview articles** checkbox list (both outfit-mode only), and
+section plus **View**. The **Outfit** section holds the **preview articles**
+checkbox list (outfit-mode only) and
 the **Draw order** editor (see below) — the one place the story's
 `draw_order.json` is edited. The ticked articles are still drawn while tailoring
 (see **Preview other articles**). Picks are remembered per story
@@ -905,7 +905,18 @@ plain / face mode (no article in play to switch away from — use the edit
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
 hidden rather than showing something broken. Every article is one file now, so
-the list isn't gender-filtered. (Switching which body the article is fit
+the list isn't gender-filtered.
+
+Beside the dropdown a **+ new** button creates a brand-new
+`articles/<name>.json` (prompts for the name — lower-case letters, digits,
+underscores) and jumps straight into tailoring it against the current
+`fitbody`. The stub is one placeholder region — a small quad at chest height
+with its own empty `fits:` — plus `identity` / `tier` / `palette` you fill in;
+the masc/femme `geometry` split is grown on the first save. Needs the repo
+opened read-write (Chrome/Edge from disk, or `config/serve_nocache.py`, whose
+`PUT` now creates a file when its parent directory exists).
+
+(Switching which body the article is fit
 against is the **body** dropdown near the top of the panel — it swaps
 `fitbody=`, and the reload lifts that body's `geometry` cut; an unsaved edit
 to the other cut stays safe in its own `:fit:<body>` draft.)
@@ -1060,12 +1071,15 @@ show as a row in **Save / download drafts** and only reach the real
 `draw_order.json` on **save checked to repo**. On load, a draw-order draft wins
 over the on-disk file (same as an article draft).
 
-**Preview hair** (Outfit section — outfit mode only). A dropdown of every
-`articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on
+**Preview hair** (tailor + outfit mode). A dropdown of every
+`articles/hair_*.json`, plus *— no hair —*, sitting just under the **switch
+to** row. The pick draws that hairstyle on
 the body (reference only, never written), so headgear layering against real
 hair can be judged — its `geometry` cut is the previewed body's. The
-choice is remembered per story (`gpEditorHair:<story>`); it defaults to
-`hair_short`. Hidden when the loaded design is itself a hairstyle.
+choice is remembered per story (`gpEditorHair:<story>`) — so the hairstyle
+picked in outfit mode carries into tailor mode and back — and defaults to
+`hair_short`. Hidden when the loaded design is itself a hairstyle, or when the
+tailored headgear declares `hides_hair` the hair is dropped from the compose.
 
 **Preview other articles** — the tick list `gpEditorPreviewArt:<story>` (a name
 array, hairstyles excluded). Ticked articles are drawn on the figure — fitted
