@@ -1047,7 +1047,10 @@ where it will land). This is the **only** place the body-part draw order can be
 reordered (the tailor-mode tag field only assigns a region's tag). A tag row
 also shows how many loaded regions use it and an **×** to drop it (regions then
 fall back to their group). **+ tag** adds a new one before `front`. The figure
-re-renders on every change.
+re-renders on every change. On open, the panel scans every `articles/*.json` and
+pulls in any tag a region references that the list is missing (so a tag assigned
+in another session still shows up, and no region silently dangles to the front);
+tailor mode does the same for the loaded article's own tags.
 Edits go to a draft (`gpDraft:<gbase>/draw_order.json`), like an article — they
 show as a row in **Save / download drafts** and only reach the real
 `draw_order.json` on **save checked to repo**. On load, a draw-order draft wins

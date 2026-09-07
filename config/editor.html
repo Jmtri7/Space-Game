@@ -569,6 +569,42 @@ function stashDrawOrder(){
   try{ localStorage.setItem(k, JSON.stringify({ t: Date.now(), D: payload })); }catch(e){}
   if(typeof scanDrafts === 'function') scanDrafts();
 }
+// every `tag` any article region declares, across the whole story - so the
+// Draw order panel can list a tag even when the article that uses it isn't
+// loaded (assigned in another session, say). Cached; re-read on demand.
+let _allRegionTags = null;
+async function allRegionTags(refresh){
+  if(_allRegionTags && !refresh) return _allRegionTags;
+  const tags = new Set();
+  if(GBASE) try{
+    const { files } = await VFS.listDir(GBASE + '/articles');
+    for(const f of (files || []).filter(n => /\.json$/.test(n))){
+      const j = await VFS.readJSON(GBASE + '/articles/' + f);
+      for(const r of ((j && j.regions) || [])){
+        const t = r.tag || r.layer;
+        if(t) tags.add(t);
+      }
+    }
+  }catch(e){}
+  _allRegionTags = tags;
+  return tags;
+}
+// pull any tag an article references but the list is missing into `drawOrder`
+// (just before `front`), so the panel shows it and the region stops dangling
+// to the very front. Stashes if it changed anything.
+async function reconcileDrawOrderTags(){
+  if(!drawOrder.length) return;
+  const secs = bodySectionNames();
+  let added = false;
+  for(const t of await allRegionTags()){
+    if(!drawOrder.includes(t) && !secs.has(t)){
+      const i = drawOrder.indexOf('front');
+      drawOrder.splice(i < 0 ? drawOrder.length : i, 0, t);
+      added = true;
+    }
+  }
+  if(added) stashDrawOrder();
+}
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
 // Keep in sync with expand.py (_crescent, shade_bands, resolve_color).
@@ -3022,11 +3058,24 @@ function finishLoad(){
     document.getElementById('hidesHairRow').style.display = '';
     document.getElementById('tHidesHair').checked = !!D.hides_hair;
     rememberTailoredForPreview();   // opening an article puts it in the outfit look
+    // a tag this article's regions already carry must be in the story list
+    let added = false;
+    for(const r of (D.regions || [])){
+      const t = r.tag || r.layer;
+      if(t && !drawOrder.includes(t) && !bodySectionNames().has(t)){
+        const i = drawOrder.indexOf('front');
+        drawOrder.splice(i < 0 ? drawOrder.length : i, 0, t);
+        added = true;
+      }
+    }
+    if(added) stashDrawOrder();
   }
   if(OUTFIT_MODE){
     document.getElementById('outfitSec').style.display = '';
     populateHairPicker().then(loadPreviewHair);
     buildTagOrderPanel();
+    // show every tag any article uses, not just the loaded ones
+    reconcileDrawOrderTags().then(buildTagOrderPanel);
   }
   // the ticked sibling articles are drawn in BOTH modes (so a helmet fit shows
   // against the rest of the look); the show/hide checkbox list is outfit-only.
