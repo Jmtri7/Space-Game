@@ -743,8 +743,7 @@ point keeps every curve it lies on in line, and any outfit fitted to
 `section.curve` (via the Fit panel in tailor mode, see below) follows on the
 next load — including from this same browser's autosaved draft, so switching
 straight from a body edit to tailoring an outfit against it (or reloading tailor
-mode) already shows the re-cut curve without saving to disk. A **re-cut curves
-from current body shape** button forces the pass and reports the count. A curve
+mode) already shows the re-cut curve without saving to disk. A curve
 saved before this carries no `ends` and shows as **static** — re-capture it once
 (same name) to switch it over. Deleting a curve that some
 article's `fits` still names leaves that fit unable to resolve (`bodyCurve`

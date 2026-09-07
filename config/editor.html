@@ -1777,12 +1777,10 @@ function buildCurvesPanel(){
     : '<div class="hint">no curves on this section yet</div>';
   const viewHint = names.length
     ? '<div class="hint">click a curve name to highlight its points on the model (pink line + dots, ends ringed white).</div>' : '';
-  const recutHtml = `<div class="row"><button id="cRecutAll">re-cut curves from current body shape</button></div>
-    <div class="hint">curves re-trace automatically whenever you move a body
-      vertex (endpoints tracked by nearest vertex), so any outfit fitted to
-      <b>${selSec}.&lt;curve&gt;</b> follows too. This button just forces a pass
-      and reports the count. A <i>static</i> curve predates this - re-capture it
-      once (same name) to switch it over.</div>`;
+  const recutHtml = `<div class="hint">curves re-trace automatically whenever you
+      move a body vertex (endpoints tracked by nearest vertex), so any outfit
+      fitted to <b>${selSec}.&lt;curve&gt;</b> follows too. A <i>static</i> curve
+      predates this - re-capture it once (same name) to switch it over.</div>`;
 
   const verts = selectedRegionVertices().filter(v=>v.sc===selSec);
   let captureHtml = `<div class="hint">select two of <b>${selSec}</b>'s own
@@ -1811,14 +1809,6 @@ function buildCurvesPanel(){
       vertices (not more) to capture a curve span.</div>`;
   }
   el.innerHTML = recutHtml + rows + viewHint + '<hr>' + captureHtml;
-
-  document.getElementById('cRecutAll').onclick = ()=>{
-    pushHistory();
-    let n=0; for(const nm of Object.keys(D.sections||{})) n += recutCurves(nm);
-    sync(); buildCurvesPanel();
-    alert(n ? `re-cut ${n} curve${n===1?'':'s'} from the current body shape`
-            : 'nothing to re-cut - no curves carry endpoints yet (re-capture a static one)');
-  };
 
   names.forEach(name=>{
     const vb = el.querySelector(`[data-curve-view="${CSS.escape(name)}"]`);
