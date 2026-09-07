@@ -6,7 +6,10 @@ its identity text. Run from repo root:
 
     python config/stories/graphics_pipeline_test/docs/pipeline_atlas.py
 
-writes pipeline-test.html next to this script.
+Writes three pages next to this script, cross-linked at the top:
+  pipeline-figure.html   - the body, its face kit, hair, the walk rig
+  pipeline-station.html   - the ship, the station, the interior + its furniture
+  pipeline-outfits.html  - every set, article and colourway item
 """
 import json
 import os
@@ -103,19 +106,48 @@ def body_plate(name):
 
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8">
-<title>Graphics Pipeline Test</title><style>
+<title>{title}</title><style>
 body{{background:#15171c;color:#c9ccd2;font:14px/1.5 system-ui,sans-serif;margin:0;padding:32px}}
 h1{{font-size:20px}} .banner{{color:#8a94a6;margin-bottom:24px}}
+.nav{{margin:0 0 20px}} .nav a{{color:#8ab4f8;text-decoration:none}} .nav a:hover{{text-decoration:underline}}
 .plate{{display:flex;gap:24px;align-items:flex-start;border-top:1px solid #2a2e37;padding:24px 0}}
 .spec{{flex:0 0 auto}} .meta{{max-width:520px}} h2{{font-size:16px;margin:0 0 6px}}
 .identity{{color:#e7e9ee}} .stat{{color:#8a94a6;font-size:12px;margin:4px 0}}
 svg{{border:1px solid #2a2e37}}
 </style></head><body>
-<h1>Graphics Pipeline Test</h1>
+<h1>{title}</h1>
+<p class="nav">{nav}</p>
 <p class="banner">Rendered by <code>game.graphics.expand</code> - the same code the
 game runs. Nothing here is wired into a playable story yet.</p>
 {body}
 </body></html>"""
+
+ATLASES = [
+    ("pipeline-figure.html", "Pipeline — Figure"),
+    ("pipeline-station.html", "Pipeline — Ship & Station"),
+    ("pipeline-outfits.html", "Pipeline — Outfits"),
+]
+
+
+def _nav(current):
+    return "atlases: " + " &nbsp;&middot;&nbsp; ".join(
+        f"<b>{t}</b>" if f == current else f'<a href="{f}">{t}</a>'
+        for f, t in ATLASES)
+
+
+def _names(sub, keep=lambda n: True):
+    d = os.path.join(GDIR, sub)
+    if not os.path.isdir(d):
+        return []
+    return sorted(n[:-5] for n in os.listdir(d)
+                  if n.endswith(".json") and not n.startswith("rig_") and keep(n))
+
+
+def _write(fname, title, plates):
+    out = os.path.join(_HERE, fname)
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(PAGE.format(title=title, nav=_nav(fname), body=plates))
+    print("wrote", out)
 
 
 def compare_plate():
@@ -393,6 +425,35 @@ def interior_plate(name):
     </section>"""
 
 
+def decoration_plate(name):
+    """One piece of interior furniture (decorations/<name>.json) - a top-down
+    silhouette in absolute local units, beside its footprint overlay."""
+    design = load("decorations", name + ".json")
+    mats = load("materials.json")
+    pal = load("palettes", design["palette"] + ".json")
+    parts = expand(design, pal, mats)
+    coll = load_asset("collision", name)
+    hb = ([{"points": coll["footprint"], "color": [230, 90, 200], "opacity": 0.32}]
+          if coll and coll.get("footprint") else [])
+    pts = [q for p in parts if "points" in p for q in p["points"]] \
+        + (coll["footprint"] if coll and coll.get("footprint") else [])
+    xs, ys = [q[0] for q in pts], [q[1] for q in pts]
+    r = max(max(xs) - min(xs), max(ys) - min(ys), 12) * 0.62
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    vb = (cx - r, cy - r, 2 * r, 2 * r)
+    return f"""
+    <section class="plate">
+      <div class="spec">{svg_specimen(parts, vb=vb, px=240, ground=False)}</div>
+      <div class="spec">{svg_specimen(parts + hb, vb=vb, px=240, ground=False)}</div>
+      <div class="meta">
+        <h2>decoration: {name}</h2>
+        <p class="identity">{design['identity']}</p>
+        <p class="stat">top-down &middot; {design.get('units', '')}</p>
+        <p class="stat">silhouette &middot; footprint overlay (magenta)</p>
+      </div>
+    </section>"""
+
+
 def walk_plate(set_name="civilian_work_femme", frames=8):
     materials = load("materials.json")
     rig = load("body", "rig_walk.json")
@@ -421,35 +482,26 @@ def walk_plate(set_name="civilian_work_femme", frames=8):
 
 
 def main():
-    plates = compare_plate() + face_plate() + hair_plate() + walk_plate()
-    idir = os.path.join(GDIR, "interiors")
-    if os.path.isdir(idir):
-        plates += "\n".join(interior_plate(n[:-5]) for n in sorted(os.listdir(idir))
-                            if n.endswith(".json"))
-    for kind in ("ships", "stations"):
-        d = os.path.join(GDIR, kind)
-        if os.path.isdir(d):
-            plates += "\n".join(craft_plate(kind, n[:-5]) for n in sorted(os.listdir(d))
-                                if n.endswith(".json"))
-    sdir = os.path.join(GDIR, "sets")
-    if os.path.isdir(sdir):
-        plates += "\n".join(set_plate(n[:-5]) for n in sorted(os.listdir(sdir))
-                            if n.endswith(".json") and not n.startswith("rig_"))
-    adir = os.path.join(GDIR, "articles")
-    if os.path.isdir(adir):
-        plates += "\n".join(article_plate(n[:-5]) for n in sorted(os.listdir(adir))
-                            if n.endswith(".json") and not n.startswith("rig_"))
-    itdir = os.path.join(GDIR, "items")
-    if os.path.isdir(itdir):
-        plates += "\n".join(item_plate(n[:-5]) for n in sorted(os.listdir(itdir))
-                            if n.endswith(".json"))
-    plates += "\n".join(
-        body_plate(n[:-5]) for n in sorted(os.listdir(os.path.join(GDIR, "body")))
-        if n.endswith(".json") and not n.startswith("rig_"))
-    out = os.path.join(_HERE, "pipeline-test.html")
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(PAGE.format(body=plates))
-    print("wrote", out)
+    is_hair = lambda n: n.startswith("hair_")
+
+    # 1. Figure - the body, its face kit, hair, the walk rig.
+    figure = compare_plate() + face_plate() + hair_plate() + walk_plate()
+    figure += "\n".join(article_plate(n) for n in _names("articles", is_hair))
+    figure += "\n".join(body_plate(n) for n in _names("body"))
+    _write("pipeline-figure.html", "Pipeline — Figure", figure)
+
+    # 2. Ship & Station - the vessel, the structure, the interior + its furniture.
+    station = "\n".join(craft_plate("ships", n) for n in _names("ships"))
+    station += "\n".join(craft_plate("stations", n) for n in _names("stations"))
+    station += "\n".join(interior_plate(n) for n in _names("interiors"))
+    station += "\n".join(decoration_plate(n) for n in _names("decorations"))
+    _write("pipeline-station.html", "Pipeline — Ship & Station", station)
+
+    # 3. Outfits - every set, every garment article, every colourway item.
+    outfits = "\n".join(set_plate(n) for n in _names("sets"))
+    outfits += "\n".join(article_plate(n) for n in _names("articles", lambda n: not is_hair(n)))
+    outfits += "\n".join(item_plate(n) for n in _names("items"))
+    _write("pipeline-outfits.html", "Pipeline — Outfits", outfits)
 
 
 if __name__ == "__main__":

@@ -644,6 +644,18 @@ A design atlas is a generated page: one plate per asset, the specimen drawn by
 notes, and a spec block naming the design file's real keys. The atlas is a
 viewer — it holds no geometry and no copy of anything.
 
+`config/stories/graphics_pipeline_test/docs/pipeline_atlas.py`, run by hand from
+the repo root, writes three cross-linked pages next to itself:
+
+- **`pipeline-figure.html`** — the body variants at one scale, the face kit, the
+  hair grid, the walk cycle, each hairstyle, each body.
+- **`pipeline-station.html`** — the ship, the station, the interior floor plan +
+  lane check, and each `decorations/` furniture piece with its footprint.
+- **`pipeline-outfits.html`** — every `sets/` outfit, every garment `articles/`
+  plate (hair excluded — it's on the figure page), every colourway `items/`.
+
+Nothing regenerates them automatically; re-run the script after an asset change.
+
 ## Vertex editor
 
 [`config/editor.html`](../config/editor.html) is a standalone page for

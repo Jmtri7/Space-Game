@@ -31,7 +31,9 @@ Theln Drift).
 New work uses the design-JSON pipeline: **[GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md)**.
 Small committed JSON design files → one shared expander
 (`game/graphics/expand.py`) → flat parts list, used identically by the game (at
-load) and by the atlas viewer (`docs/atlases/pipeline_atlas.py` →
-`pipeline-test.html`). There is a vertex editor at
+load) and by the atlas viewer
+(`config/stories/graphics_pipeline_test/docs/pipeline_atlas.py`, run by hand →
+`pipeline-figure.html` / `pipeline-station.html` / `pipeline-outfits.html`
+next to it). There is a vertex editor at
 [`config/editor.html`](../config/editor.html). The `graphics_pipeline_test`
 story runs on it; `default` does not.
