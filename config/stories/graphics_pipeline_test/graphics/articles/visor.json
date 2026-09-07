@@ -4,7 +4,7 @@
   "palette": "civilian",
   "regions": [
     {
-      "group": "arm_near",
+      "group": "head",
       "color": "metal",
       "shade": "metal",
       "note": "visor",
