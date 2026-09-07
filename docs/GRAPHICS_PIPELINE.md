@@ -602,7 +602,11 @@ dragging a design's vertices by hand. It renders exactly what `expand()` would �
 its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
 any handle; double-click an edge to insert a point; alt-click to delete. Each
 section has an eye toggle to hide/show it (isolate a limb, or drop the far side
-to work on the near one) and a checkbox for its handles. The **original ghost**
+to work on the near one) and a checkbox for its handles; hiding a section takes
+its handles with it. Two buttons above the list, **Show / Hide All Sections**
+and **Show / Hide All Vertices**, each flip everything at once — hide all if
+all are currently shown, otherwise show all (vertices only ever track the
+still-visible sections). The **original ghost**
 (dashed blue) is the on-disk shape, drawn behind the live edit so a redesign
 pass always shows its own before/after. "Freeze shade → editable" replaces a
 region's computed crescent with an explicit `shade_dark` / `shade_light` point

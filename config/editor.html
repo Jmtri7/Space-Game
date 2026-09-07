@@ -2422,10 +2422,25 @@ function buildSecList(){
   if(FACE_MODE){ buildFaceList(el); return; }
   const order = D.draw_order || Object.keys(D.sections);
   const bar = document.createElement('div'); bar.className='row';
-  bar.innerHTML = `<button id="allShow">show all</button><button id="allHide">hide all</button>`;
+  bar.innerHTML = `<button id="secToggle">Show / Hide All Sections</button>`
+    + `<button id="vertToggle">Show / Hide All Vertices</button>`;
   el.appendChild(bar);
-  bar.querySelector('#allShow').onclick = ()=>{ hidden.clear(); buildSecList(); render(); };
-  bar.querySelector('#allHide').onclick = ()=>{ order.forEach(n=>hidden.add(n)); buildSecList(); render(); };
+  // one toggle each: if everything's already shown, hide it all, else show it
+  // all. Hiding a section takes its vertex handles with it (a hidden section
+  // has nothing to point at), so "all vertices" only ever tracks visible ones.
+  const allSecShown = order.every(n => !hidden.has(n));
+  const visible = order.filter(n => !hidden.has(n));
+  const allVertsShown = visible.length > 0 && visible.every(n => shown.has(n));
+  bar.querySelector('#secToggle').onclick = ()=>{
+    if(allSecShown) order.forEach(n=>{ hidden.add(n); shown.delete(n); });
+    else hidden.clear();
+    buildSecList(); render();
+  };
+  bar.querySelector('#vertToggle').onclick = ()=>{
+    if(allVertsShown) visible.forEach(n=>shown.delete(n));
+    else visible.forEach(n=>shown.add(n));
+    buildSecList(); render();
+  };
   order.forEach((name,oi)=>{
     const row = document.createElement('label');
     // tailor mode: show the region's own `note` (its editable name); fall back
@@ -2439,7 +2454,9 @@ function buildSecList(){
       <input type="checkbox" title="show vertex handles" ${shown.has(name)?'checked':''}>`;
     const eyes = row.querySelectorAll('.eye');
     eyes[0].onclick = ev=>{ ev.preventDefault();
-      hidden.has(name) ? hidden.delete(name) : hidden.add(name); buildSecList(); render(); };
+      if(hidden.has(name)) hidden.delete(name);
+      else { hidden.add(name); shown.delete(name); }   // hide the vertices with it
+      buildSecList(); render(); };
     eyes[1].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, -1); };
     eyes[2].onclick = ev=>{ ev.preventDefault(); moveSectionOrder(name, 1); };
     row.querySelector('.nm').onclick = ev=>{ ev.preventDefault(); selSec=name; shown.add(name); hidden.delete(name);
