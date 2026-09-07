@@ -78,31 +78,31 @@
       "building": "market_hall",
       "at": [
         320,
-        175
+        172
       ],
       "angle": 0
     },
     {
       "building": "housing_block",
       "at": [
-        175,
+        168,
         300
       ],
-      "angle": 90
+      "angle": 0
     },
     {
       "building": "housing_block",
       "at": [
-        465,
+        472,
         300
       ],
-      "angle": 90
+      "angle": 0
     },
     {
       "building": "admin_office",
       "at": [
         320,
-        430
+        428
       ],
       "angle": 0
     }

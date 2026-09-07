@@ -2,17 +2,79 @@
   "orbital_std": {
     "name": "Standard Orbital",
     "description": "Plain grey station build - pressed panel walls, a lit core, warm dock lamps. The baseline the pipeline test dresses everything in.",
-    "metal_color": [154, 164, 173],
-    "glass_color": [127, 216, 200],
-    "thrust_color": [255, 178, 87],
-    "wall_color": [44, 48, 55],
-    "floor_color": [92, 100, 109],
-    "wall_trim_color": [120, 130, 140],
+    "metal_color": [
+      154,
+      164,
+      173
+    ],
+    "glass_color": [
+      127,
+      216,
+      200
+    ],
+    "thrust_color": [
+      255,
+      178,
+      87
+    ],
+    "wall_color": [
+      44,
+      48,
+      55
+    ],
+    "floor_color": [
+      92,
+      100,
+      109
+    ],
+    "wall_trim_color": [
+      120,
+      130,
+      140
+    ],
     "interior_decoration": {
       "generator": "deck_grid",
       "spacing": 38,
-      "color": [74, 81, 90],
+      "color": [
+        74,
+        81,
+        90
+      ],
       "width": 1
     }
+  },
+  "regolith_std": {
+    "name": "Regolith Standard",
+    "description": "A civilian surface settlement: the same grey prefab modules as the orbital yards, dropped on packed regolith with a paved plaza deck.",
+    "metal_color": [
+      154,
+      164,
+      173
+    ],
+    "glass_color": [
+      127,
+      216,
+      200
+    ],
+    "thrust_color": [
+      255,
+      178,
+      87
+    ],
+    "wall_color": [
+      92,
+      87,
+      78
+    ],
+    "floor_color": [
+      96,
+      104,
+      113
+    ],
+    "wall_trim_color": [
+      120,
+      130,
+      140
+    ]
   }
 }

@@ -2,20 +2,20 @@
   "identity": "Housing Block footprint: the outer wall line, solid to walkers.",
   "footprint": [
     [
-      -50,
-      -32
+      -32,
+      -48
     ],
     [
-      50,
-      -32
+      32,
+      -48
     ],
     [
-      50,
-      32
+      32,
+      48
     ],
     [
-      -50,
-      32
+      -32,
+      48
     ]
   ]
 }

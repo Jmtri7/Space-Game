@@ -4,13 +4,79 @@
     "description": "A slatted public bench. Furniture: a low collision footprint, placed clear of every traffic lane.",
     "design": "decorations/bench",
     "culture": "orbital_std",
-    "footprint": { "width": 24, "depth": 9 }
+    "footprint": {
+      "width": 24,
+      "depth": 9
+    }
   },
   "pipeline_column": {
     "name": "Support Column",
     "description": "An octagonal structural column. The concourse is laid out around it, so it is allowed to stand on the centre-line.",
     "design": "decorations/column",
     "culture": "orbital_std",
-    "footprint": { "width": 13, "depth": 13 }
+    "footprint": {
+      "width": 13,
+      "depth": 13
+    }
+  },
+  "housing_block": {
+    "name": "Housing Block",
+    "description": "Housing Block - civilian surface settlement. See buildings/housing_block.json.",
+    "design": "buildings/housing_block",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 66,
+      "depth": 98
+    }
+  },
+  "market_hall": {
+    "name": "Market Hall",
+    "description": "Market Hall - civilian surface settlement. See buildings/market_hall.json.",
+    "design": "buildings/market_hall",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 126,
+      "depth": 76
+    }
+  },
+  "admin_office": {
+    "name": "Admin Office",
+    "description": "Admin Office - civilian surface settlement. See buildings/admin_office.json.",
+    "design": "buildings/admin_office",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 64,
+      "depth": 70
+    }
+  },
+  "planter": {
+    "name": "Planter",
+    "description": "Planter - civilian surface settlement. See decorations/planter.json.",
+    "design": "decorations/planter",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 26,
+      "depth": 16
+    }
+  },
+  "lamp_post": {
+    "name": "Lamp Post",
+    "description": "Lamp Post - civilian surface settlement. See decorations/lamp_post.json.",
+    "design": "decorations/lamp_post",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 6,
+      "depth": 6
+    }
+  },
+  "crates": {
+    "name": "Crates",
+    "description": "Crates - civilian surface settlement. See decorations/crates.json.",
+    "design": "decorations/crates",
+    "culture": "regolith_std",
+    "footprint": {
+      "width": 28,
+      "depth": 20
+    }
   }
 }
