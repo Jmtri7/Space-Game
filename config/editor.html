@@ -1313,11 +1313,15 @@ async function loadPreviewArticles(names){
 function buildPreviewArticleList(){
   const list = document.getElementById('previewArtList'); if(!list) return;
   const worn = new Set(previewArticles.map(p => p.name));
+  const allOn = PREVIEW_CANDIDATES.length && PREVIEW_CANDIDATES.every(n => worn.has(n));
   list.innerHTML =
+    `<div class="row"><button id="paAll">${allOn ? 'hide all' : 'show all'}</button></div>` +
     `<div class="hint">Ticked = worn. Draw order is set by each region's tag
       (below), not this list.</div>` +
     PREVIEW_CANDIDATES.map(n =>
       `<label><input type="checkbox" class="paChk" value="${n}" ${worn.has(n)?'checked':''}> ${n}</label>`).join('');
+  const setAll = async names => { await loadPreviewArticles(names); savePreviewPick(); buildPreviewArticleList(); };
+  list.querySelector('#paAll').onclick = () => setAll(allOn ? [] : PREVIEW_CANDIDATES.slice());
   list.querySelectorAll('.paChk').forEach(cb => cb.onchange = async () => {
     const names = [...list.querySelectorAll('.paChk:checked')].map(c => c.value);
     await loadPreviewArticles(names);
@@ -2864,9 +2868,18 @@ function wireDrawRank(S){
     }
     sync(); buildSecEdit();
   };
-  if(inp) inp.onchange = e => apply(e.target.value.trim(), false);
+  if(inp){
+    inp.onchange = e => apply(e.target.value.trim(), false);
+    inp.onkeydown = e => { if(e.key === 'Enter'){ e.preventDefault(); apply(inp.value.trim(), false); } };
+  }
   const a = document.getElementById('mTagAll');
-  if(a) a.onclick = () => apply(regionTag(S), true);
+  if(a){
+    // don't let the button steal focus - the input's blur would fire `change`
+    // (rebuilding this panel) before the click lands, so "all" would run on a
+    // stale, empty tag. Keep focus, then apply the input's live value.
+    a.onmousedown = e => e.preventDefault();
+    a.onclick = () => apply((inp && inp.value.trim()) || '', true);
+  }
 }
 
 // ---- io ------------------------------------------------------------

@@ -985,8 +985,10 @@ existing tags). Blank = stack at the anim. group. Type an existing tag to move
 the region to that slot; type a new name and it's appended to the story order
 (in its draft) so you can then position it in the **Outfit** section's Draw
 order editor.
-**all** stamps the tag onto every region. A pre-existing `"layer"` / `"back"` is
-read as a tag and rewritten to `"tag"` on the next edit.
+**all** stamps whatever's in the field onto every region of the article (it
+reads the field live, so you can type a tag and hit **all** without tabbing out
+first; Enter applies it to the selected region). A pre-existing `"layer"` /
+`"back"` is read as a tag and rewritten to `"tag"` on the next edit.
 
 **Orphaned-fit warning** *(tailor mode)*. A `fits` entry whose `from` / `to`
 falls outside the region's `points` array (a hand-edit, or a vertex delete in
@@ -1069,8 +1071,8 @@ and outset against the body, composed by the story draw order like the game.
 Nothing here is ever written.
 
 - The **checkbox list** that adds and removes ticks lives in the **Outfit**
-  section and shows only in **outfit** mode. Draw order is each region's tag,
-  not the tick order.
+  section and shows only in **outfit** mode, with a **show all** / **hide all**
+  button above it. Draw order is each region's tag, not the tick order.
 - The ticked articles are **drawn in tailor mode too** (minus the one currently
   being tailored) — reference for fitting a new piece into an existing look.
 - Opening any article for tailoring auto-adds it to the list, so a set builds up
