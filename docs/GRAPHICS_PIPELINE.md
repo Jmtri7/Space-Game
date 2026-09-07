@@ -623,12 +623,19 @@ and cached.
   are authored absolute to match.
 - **Elevation billboards.** A `buildings/` or `decorations/` design with
   `"view": "elevation"` is authored feet-at-`y=0`, up = `-y`, centre-line
-  `x=0` — the same figure space as a person. `draw_parts` at `unit=1` then
-  draws it as an upright billboard rising from its floor anchor, and
-  `_structure_depth` / `_building_footprint` read the real geometry so it
-  sorts and collides by where it meets the floor (`max` local y ≈ 0), like a
-  person's feet. No per-structure rotation. A plain top-down decoration (no
-  `view`) still draws flat on the floor plane.
+  `x=0` — the same figure space as a person. `attach_design` copies the flag
+  onto the catalogue entry; `draw_parts` at `unit=1` draws it as an upright
+  billboard rising from its floor anchor. `_structure_depth` sorts it by its
+  floor line (`max` local y ≈ 0), like a person's feet. `_building_footprint`
+  puts its collision box's **front edge exactly on that base line** (no front
+  lip) and the box extends *behind* it by `footprint.depth`. No per-structure
+  rotation. A plain top-down decoration (no `view`) still draws flat.
+
+  The `footprint` for an elevation asset is derived from its own geometry:
+  `width` = the silhouette's span where it meets the floor (roof overhangs
+  excluded), `depth` ≈ `0.6 × min(width, height)` (a rough guess at how far
+  the real 3D object reaches back), never wider than `width`. `collision/`
+  and the `building_types.json` entry both carry it.
 - **People.** An `outfits` entry names a pipeline body — `{body, set, palette}`.
   `Person.draw` detects this and renders through `story_assets.body_frame`: the
   body + its set's articles (or items — see Items) composed via `compose_worn`, expanded once, then

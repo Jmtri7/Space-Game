@@ -1,37 +1,21 @@
 {
-  "identity": "Admin Office footprint: the outer wall line, solid to walkers.",
+  "identity": "Admin Office footprint (derived from the elevation): 50 wide, 30.0 deep, front edge on the base line.",
   "footprint": [
     [
-      -31,
-      -27
+      -25.0,
+      -30.0
     ],
     [
-      31,
-      -27
+      25.0,
+      -30.0
     ],
     [
-      31,
-      27
+      25.0,
+      0.0
     ],
     [
-      12,
-      27
-    ],
-    [
-      12,
-      34
-    ],
-    [
-      -12,
-      34
-    ],
-    [
-      -12,
-      27
-    ],
-    [
-      -31,
-      27
+      -25.0,
+      0.0
     ]
   ]
 }

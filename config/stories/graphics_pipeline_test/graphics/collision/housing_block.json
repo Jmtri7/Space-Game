@@ -1,21 +1,21 @@
 {
-  "identity": "Housing Block footprint: the outer wall line, solid to walkers.",
+  "identity": "Housing Block footprint (derived from the elevation): 76 wide, 45.6 deep, front edge on the base line.",
   "footprint": [
     [
-      -32,
-      -48
+      -38.0,
+      -45.6
     ],
     [
-      32,
-      -48
+      38.0,
+      -45.6
     ],
     [
-      32,
-      48
+      38.0,
+      0.0
     ],
     [
-      -32,
-      48
+      -38.0,
+      0.0
     ]
   ]
 }

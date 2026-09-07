@@ -1,21 +1,21 @@
 {
-  "identity": "Planter footprint: the rim, solid to walkers.",
+  "identity": "Planter footprint (derived from the elevation): 26 wide, 9.0 deep, front edge on the base line.",
   "footprint": [
     [
-      -12.5,
-      -7.5
+      -13.0,
+      -9.0
     ],
     [
-      12.5,
-      -7.5
+      13.0,
+      -9.0
     ],
     [
-      12.5,
-      7.5
+      13.0,
+      0.0
     ],
     [
-      -12.5,
-      7.5
+      -13.0,
+      0.0
     ]
   ]
 }

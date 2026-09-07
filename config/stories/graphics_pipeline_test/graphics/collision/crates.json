@@ -1,21 +1,21 @@
 {
-  "identity": "Crate-stack footprint: the outer box plus a small margin.",
+  "identity": "Crates footprint (derived from the elevation): 28 wide, 13.2 deep, front edge on the base line.",
   "footprint": [
     [
-      -14,
-      -10
+      -14.0,
+      -13.2
     ],
     [
-      14,
-      -10
+      14.0,
+      -13.2
     ],
     [
-      14,
-      10
+      14.0,
+      0.0
     ],
     [
-      -14,
-      10
+      -14.0,
+      0.0
     ]
   ]
 }

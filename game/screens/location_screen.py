@@ -1321,7 +1321,10 @@ class LocationScreen(ScreenBase):
         min_x, _, max_x, max_y = _silhouette_local_bounds(building_type)
         base_cx = sx + (min_x + max_x) / 2
         base_y = sy + max_y
-        return (base_cx - fw / 2, base_y - fd, fw, fd + self.FOOTPRINT_FRONT_LIP)
+        # An elevation billboard's base line IS its floor contact - the box
+        # ends there, no front lip (there's no drawn front face to clip into).
+        lip = 0 if building_type.get("view") == "elevation" else self.FOOTPRINT_FRONT_LIP
+        return (base_cx - fw / 2, base_y - fd, fw, fd + lip)
 
     def _structure_depth(self, structure):
         """Y-sort key for a structure: the ground-level depth a walking

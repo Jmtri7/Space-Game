@@ -1,5 +1,22 @@
 {
-  "identity": "Column footprint: the base ring. `blocks_lane` is true - the concourse layout routes traffic around it on purpose, so the build-time lane check does not fault it.",
+  "identity": "Column footprint (derived from the elevation): 8.4 wide, 5.0 deep, front edge on the base line.",
   "blocks_lane": true,
-  "footprint": [ [ 0.0, -6.3 ], [ 4.45, -4.45 ], [ 6.3, 0.0 ], [ 4.45, 4.45 ], [ 0.0, 6.3 ], [ -4.45, 4.45 ], [ -6.3, 0.0 ], [ -4.45, -4.45 ] ]
+  "footprint": [
+    [
+      -4.2,
+      -5.0
+    ],
+    [
+      4.2,
+      -5.0
+    ],
+    [
+      4.2,
+      0.0
+    ],
+    [
+      -4.2,
+      0.0
+    ]
+  ]
 }

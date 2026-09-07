@@ -85,6 +85,13 @@ def _expand_decoration(story, ref, palette_name, lod):
             for p in parts]
 
 
+@functools.lru_cache(maxsize=None)
+def _design_view(story, ref):
+    """A design's `"view"` ("elevation" for an upright billboard, else None)."""
+    kind, name = ref.split("/", 1)
+    return (_load(story, kind, name + ".json") or {}).get("view")
+
+
 def attach_design(story, entry, kind="ships"):
     """If `entry` carries a `"design"` ref, expand it and attach `"parts"`.
     `kind` is the graphics.json category: "space_stations" parts are scaled
@@ -97,6 +104,9 @@ def attach_design(story, entry, kind="ships"):
     pal = entry.get("design_palette")
     if kind == "decorations":
         entry["parts"] = list(_expand_decoration(story, ref, pal, lod))
+        view = _design_view(story, ref)
+        if view:
+            entry["view"] = view          # "elevation" -> LocationScreen billboards it
     else:
         entry["parts"] = list(_expand_craft(story, ref, pal, lod, kind == "space_stations"))
     return entry
