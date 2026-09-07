@@ -484,10 +484,10 @@ def walk_plate(set_name="civilian_work_femme", frames=8):
 def main():
     is_hair = lambda n: n.startswith("hair_")
 
-    # 1. Figure - the body, its face kit, hair, the walk rig.
+    # 1. Figure - the body variants at one scale, the face kit, the hair grid,
+    # the walk cycle. (compare_plate / hair_plate already cover every body and
+    # every hairstyle, so no per-body / per-hair plates repeat them.)
     figure = compare_plate() + face_plate() + hair_plate() + walk_plate()
-    figure += "\n".join(article_plate(n) for n in _names("articles", is_hair))
-    figure += "\n".join(body_plate(n) for n in _names("body"))
     _write("pipeline-figure.html", "Pipeline — Figure", figure)
 
     # 2. Ship & Station - the vessel, the structure, the interior + its furniture.
