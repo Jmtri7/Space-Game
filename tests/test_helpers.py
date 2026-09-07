@@ -5427,11 +5427,34 @@ class TestExpandShadingAndItems(unittest.TestCase):
         self.assertEqual(next(p for p in shiny if p["role"] == "shade_light")["color"],
                          [min(255, c + 44) for c in [0x60, 0x60, 0x60]])
 
-    def test_item_colors_patch_overrides_palette(self):
+    def test_item_parts_override_by_note_not_palette_key(self):
         from game.graphics.expand import expand
         m = self._mats()
         pal = {"denim": "#404040", "metal": "#c0c0c0"}
-        over = expand(self._article(), pal, m, body=None, colors={"denim": "#101828"})
+        art = {"regions": [
+            {"group": "torso", "note": "shell", "color": "denim", "shade": "matte",
+             "points": [[0, 0], [2, 0], [2, 3], [0, 3]],
+             "details": [{"note": "trim", "color": "denim", "shade": "matte",
+                          "points": [[0, 0], [1, 0], [1, 1]]}]},
+        ]}
+        # override targets the region by its note - independent of the "denim"
+        # key both parts author; the detail (also "denim") is untouched.
+        over = expand(art, pal, m, body=None, parts={"shell": {"color": "#101828"}})
+        self.assertEqual(next(p for p in over if p["role"] == "fill")["color"],
+                         [16, 24, 40])
+        self.assertEqual(next(p for p in over if p["role"] == "detail")["color"],
+                         [0x40, 0x40, 0x40])
+
+    def test_parts_override_wins_over_article_wide_color(self):
+        from game.graphics.expand import expand
+        m = self._mats()
+        pal = {"denim": "#404040", "metal": "#c0c0c0", "plum": "#804060"}
+        art = {"regions": [
+            {"group": "torso", "note": "shell", "color": "denim", "shade": "matte",
+             "points": [[0, 0], [2, 0], [2, 3], [0, 3]]},
+        ]}
+        over = expand(art, pal, m, body=None, color="plum",
+                      parts={"shell": {"color": "#101828"}})
         self.assertEqual(next(p for p in over if p["role"] == "fill")["color"],
                          [16, 24, 40])
 
@@ -5441,7 +5464,7 @@ class TestExpandShadingAndItems(unittest.TestCase):
         m["shading"]["metal"] = {"tone_dark": -40, "tone_light": 48}
         pal = {"denim": "#404040", "metal": "#c0c0c0"}
         a = expand(self._article(), pal, m, body=None)
-        b = expand(self._article(), pal, m, body=None, color=None, shade=None, colors=None)
+        b = expand(self._article(), pal, m, body=None, color=None, shade=None, parts=None)
         self.assertEqual(a, b)
 
     def test_rest_splay_is_not_applied_to_articles(self):
@@ -5587,6 +5610,50 @@ class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
                 continue
             walk(json.load(open(f, encoding="utf-8")), f)
         self.assertEqual(bad, [])
+
+    def test_no_item_uses_the_retired_colors_key(self):
+        import glob
+        import json
+        bad = []
+        for f in glob.glob("config/stories/graphics_pipeline_test/graphics/items/*.json"):
+            if "colors" in json.load(open(f, encoding="utf-8")):
+                bad.append(f)
+        self.assertEqual(bad, [], "items now use `color` + `parts`, not `colors`")
+
+    def test_every_item_parts_note_exists_in_its_geometry(self):
+        import glob
+        import json
+        base = "config/stories/graphics_pipeline_test/graphics/"
+        bad = []
+        for f in glob.glob(base + "items/*.json"):
+            it = json.load(open(f, encoding="utf-8"))
+            if not it.get("parts"):
+                continue
+            art = json.load(open(base + "articles/" + it["geometry"] + ".json", encoding="utf-8"))
+            notes = set()
+            for r in art.get("regions", []):
+                notes.add(r.get("note"))
+                for d in r.get("details", []):
+                    notes.add(d.get("note"))
+                for cut in (r.get("geometry") or {}).values():
+                    for d in cut.get("details", []):
+                        notes.add(d.get("note"))
+            missing = [n for n in it["parts"] if n not in notes]
+            if missing:
+                bad.append(f"{f}: parts note(s) not in {it['geometry']}: {missing}")
+        self.assertEqual(bad, [])
+
+    def test_every_common_kit_set_resolves_and_expands(self):
+        import glob
+        import json
+        from game.graphics import story_assets
+        base = "config/stories/graphics_pipeline_test/graphics/"
+        for f in sorted(glob.glob(base + "sets/ck_*.json")):
+            name = f.split("/")[-1][:-5]
+            for body in ("human_masc", "human_femme"):
+                _, worn = story_assets._body_worn(
+                    "graphics_pipeline_test", body, name, "civilian")
+                self.assertTrue(worn, f"{name} on {body} expanded to nothing")
 
 
 if __name__ == "__main__":

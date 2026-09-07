@@ -1,9 +1,11 @@
 {
   "identity": "Common Kit colourway: the flight helmet (helmet geometry) - light-grey shell, smoke-tinted visor.",
   "geometry": "helmet",
-  "colors": {
-    "metal": "#c8ccd0",
-    "glass": "#39404a"
+  "color": "#c8ccd0",
+  "parts": {
+    "visor bezel": {
+      "color": "#39404a"
+    }
   },
   "shade": "sheen"
 }

@@ -512,7 +512,7 @@ def _outset(pts, d):
 
 
 def expand_article(design, palette, materials, body,
-                   color=None, shade=None, colors=None):
+                   color=None, shade=None, parts=None):
     """One garment/accessory -> parts. Regions are authored in the reference
     body's coordinates; `fits` splice body edge curves into them, `group`
     assigns the animation group so the piece moves with that body part. Each
@@ -528,29 +528,41 @@ def expand_article(design, palette, materials, body,
     `"tag": "<name>"` places the region at that slot in the story draw order
     (see compose_worn) instead of at its animation group.
 
-    `color` / `shade` / `colors` are the item-layer overrides (see
+    `color` / `shade` / `parts` are the item-layer overrides (see
     items/<id>.json) and are independent of each other:
       `color`  - retag every region and detail to this one colour (palette key
                  or "#rrggbb"), keeping each part's own `shade`.
       `shade`  - redraw every region and detail with this one shading profile,
                  keeping each part's own colour.
-      `colors` - a `{colour-key: "#rrggbb"}` patch layered over the palette.
+      `parts`  - `{"<region/detail note>": {color?, shade?, tone?}}` - override
+                 those fields on the region (or detail) whose `note` matches,
+                 by identity, so it survives a change to the part's authored
+                 `color`. A per-part entry wins over the article-wide `color` /
+                 `shade` above; every matching note is hit (near/far pairs).
     With none of them, the article renders exactly as its own file specifies.
 
     `rig.rest_splay` is NOT applied here - an arm/hand region is authored
     directly in the body's rest pose (splay baked into its `points`), the same
     frame `expand_body` produces, so the two line up with no runtime rotation.
     """
-    parts = []
+    out = []
     d_out = design.get("outset", 0.12)
-    if colors:
-        palette = {**palette, **colors}
+    parts_map = parts or {}
+    has_look = color is not None or shade is not None or bool(parts_map)
 
     def _look(part):
+        note = part.get("note")
+        ov = parts_map.get(note) if note is not None else None
+        if color is None and shade is None and not ov:
+            return part
+        part = dict(part)
         if color is not None:
-            part = dict(part, color=color)
+            part["color"] = color
         if shade is not None:
-            part = dict(part, shade=shade)
+            part["shade"] = shade
+        for k in ("color", "shade", "tone"):
+            if ov and k in ov:
+                part[k] = ov[k]
         return part
 
     variant = (body or {}).get("variant") or "masc"
@@ -560,29 +572,29 @@ def expand_article(design, palette, materials, body,
             g = geom.get(variant) or geom.get("masc") or geom.get("femme") or {}
             region = {k: v for k, v in region.items() if k != "geometry"}
             region.update(g)
-        if color is not None or shade is not None:
+        if has_look:
             region = dict(_look(region),
                           details=[_look(d) for d in region.get("details", [])])
         grp = region.get("group", "torso")
         rpts = _outset(_apply_fits(region["points"], region.get("fits", []), body),
                        region.get("outset", d_out))
-        start = len(parts)
+        start = len(out)
         rgn = dict(region, points=rpts)
-        _emit_region(parts, rgn, grp, palette, materials)
+        _emit_region(out, rgn, grp, palette, materials)
         for d in region.get("details", []):
-            _emit_detail(parts, d, grp, palette, materials)
+            _emit_detail(out, d, grp, palette, materials)
         # a region's `tag` names its draw-order slot; see compose_worn.
         # `layer` and `back: true` are earlier spellings, still honoured.
         rtag = region.get("tag") or region.get("layer") \
             or ("back" if region.get("back") else None)
         if rtag:
-            for p in parts[start:]:
+            for p in out[start:]:
                 p.setdefault("tag", rtag)
     for d in design.get("details", []):
-        if color is not None or shade is not None:
+        if has_look:
             d = _look(d)
-        _emit_detail(parts, d, "torso", palette, materials)
-    return parts
+        _emit_detail(out, d, "torso", palette, materials)
+    return out
 
 
 def apply_walk(parts, body_design, rig_walk, t):
@@ -667,32 +679,32 @@ def compose_worn(body_design, body_parts, *article_parts, order=None):
 
 
 def expand(design, palette, materials, body=None, load=None, lod=None,
-           color=None, shade=None, colors=None):
+           color=None, shade=None, parts=None):
     """Dispatch on design shape. `body` (a body design) is required for an
     article - its regions carry `fits` against that body's curves, and its
     `"variant"` picks each region's `geometry` entry. `load(kind,
     name)` resolves referenced sub-files (face slots). `lod` is the asset's
     on-screen size in px - regions below their `flatten_px` drop their shade,
-    details below their `min_px` are omitted. `color` / `shade` / `colors` are
+    details below their `min_px` are omitted. `color` / `shade` / `parts` are
     the item-layer look overrides and apply to an article only (see
     expand_article)."""
     if "sections" in design:
         return expand_body(design, palette, materials, load)
     if "regions" in design:
         return expand_article(design, palette, materials, body,
-                              color=color, shade=shade, colors=colors)
-    parts = []
+                              color=color, shade=shade, parts=parts)
+    out = []
     sil = design.get("silhouette", [])
     dets = design.get("details", [])
     seen = set()
     for region in sil:
         g = region.get("group", "hull")
-        _emit_region(parts, region, g, palette, materials, lod=lod)
+        _emit_region(out, region, g, palette, materials, lod=lod)
         for d in dets:                       # a detail draws right after its own region
             if d.get("group", "hull") == g:
-                _emit_detail(parts, d, g, palette, materials, lod=lod)
+                _emit_detail(out, d, g, palette, materials, lod=lod)
         seen.add(g)
     for d in dets:                           # details with no matching region go on top
         if d.get("group", "hull") not in seen:
-            _emit_detail(parts, d, "hull", palette, materials, lod=lod)
-    return parts
+            _emit_detail(out, d, "hull", palette, materials, lod=lod)
+    return out

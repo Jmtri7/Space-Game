@@ -1,9 +1,11 @@
 {
   "identity": "Common Kit colourway: the sealed pressure helmet (helmet geometry) recoloured #4a525c / #6fe0e0, sheen finish.",
   "geometry": "helmet",
-  "colors": {
-    "metal": "#4a525c",
-    "glass": "#6fe0e0"
+  "color": "#4a525c",
+  "parts": {
+    "visor bezel": {
+      "color": "#6fe0e0"
+    }
   },
   "shade": "sheen"
 }

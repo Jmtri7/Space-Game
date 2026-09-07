@@ -1,8 +1,6 @@
 {
   "identity": "Common Kit colourway: the soft cap (cap geometry) recoloured #d9902a, matte finish.",
   "geometry": "cap",
-  "colors": {
-    "cloth": "#d9902a"
-  },
+  "color": "#d9902a",
   "shade": "matte"
 }

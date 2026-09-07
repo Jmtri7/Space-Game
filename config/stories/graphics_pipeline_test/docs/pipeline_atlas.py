@@ -55,7 +55,7 @@ def worn_parts(name, pal, materials, body):
     if it and it.get("geometry"):
         art = load("articles", it["geometry"] + ".json")
         return expand(art, pal, materials, body=body, color=it.get("color"),
-                      shade=it.get("shade"), colors=it.get("colors"))
+                      shade=it.get("shade"), parts=it.get("parts"))
     return expand(load("articles", name + ".json"), pal, materials, body=body)
 
 
@@ -188,14 +188,15 @@ def item_plate(name):
     for bn in bodies:
         body = load("body", bn + ".json")
         ap = expand(geom, pal, materials, body=body, color=it.get("color"),
-                    shade=it.get("shade"), colors=it.get("colors"))
+                    shade=it.get("shade"), parts=it.get("parts"))
         combined += _shift(compose_worn(body, xbody(body), ap, order=DRAW_ORDER), dx)
         dx += 12.0
     svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=360, ticks=ticks)
     look = ", ".join(filter(None, [
         f"color {it['color']}" if it.get("color") else None,
         f"shade {it['shade']}" if it.get("shade") else None,
-        "colours " + " ".join(f"{k}={v}" for k, v in it["colors"].items()) if it.get("colors") else None,
+        "parts " + " ".join(f"{k}={v.get('color', v.get('shade', '?'))}"
+                             for k, v in it["parts"].items()) if it.get("parts") else None,
     ]))
     return f"""
     <section class="plate">

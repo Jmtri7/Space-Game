@@ -135,7 +135,7 @@ def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
         if it and it.get("geometry"):
             ad = _load(story, "articles", it["geometry"] + ".json")
             kw = dict(color=it.get("color"), shade=it.get("shade"),
-                      colors=it.get("colors"))
+                      parts=it.get("parts"))
             geom_id = it["geometry"]
         else:
             ad, kw, geom_id = _load(story, "articles", a + ".json"), {}, a

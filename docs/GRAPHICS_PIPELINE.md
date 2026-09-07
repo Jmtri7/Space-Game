@@ -420,14 +420,24 @@ jacket shape in different colours and finishes.
 {
   "identity": "Oxblood officer's coat — long_coat geometry, deep red, waxed sheen.",
   "geometry": "long_coat",            // required: the articles/<id> to take shape + details from
-  "color":  "leather",                // optional: retag every region + detail to this one colour
+  "color":  "#3a1f2e",                // optional: retag every region + detail to this one colour
   "shade":  "sheen",                  // optional: redraw every region + detail with this profile
-  "colors": { "cloth": "#3a1f2e" }    // optional: a {colour-key: "#rrggbb"} patch over the palette
+  "parts": {                          // optional: override one region/detail by its `note`
+    "visor bezel": { "color": "#6fe0e0" }
+  }
 }
 ```
 
-- `color`, `shade`, and `colors` are **independent** — set any combination.
+- `color`, `shade`, and `parts` are **independent** — set any combination.
   None → the item renders exactly like its geometry file.
+- **`parts`** keys are region (or detail) `note` strings. Each value overrides
+  that part's `color` / `shade` / `tone` **by identity** — it keeps working when
+  the region's authored `color` key changes, and it can recolour one region
+  without touching another that shares the same key. Every part whose `note`
+  matches is hit (so a `near`/`far` pair with the same note both change). A
+  `parts` entry wins over the article-wide `color` / `shade`.
+  *(This replaces the old `colors` `{palette-key: hex}` patch, which broke
+  silently whenever a region's authored colour key was edited.)*
 - A `sets/<id>.json` `articles` list and an NPC `equip` list may name an **item
   id or an article id** interchangeably; `story_assets._body_worn` tries
   `items/<name>.json` first, else `articles/<name>.json`.
@@ -436,9 +446,9 @@ jacket shape in different colours and finishes.
 - One file per item (`items/<id>.json`, no suffix); the worn body's `"variant"`
   picks the geometry cut, same as a bare article.
 
-`expand(article, palette, materials, body, color=, shade=, colors=)` applies the
-override; `colors` merges into the palette, `color` / `shade` retag every region
-and detail before the normal emit.
+`expand(article, palette, materials, body, color=, shade=, parts=)` applies the
+override: `color` / `shade` retag every region and detail, then a `parts` entry
+overrides its named region/detail on top, before the normal emit.
 
 ## Expansion
 
@@ -448,10 +458,10 @@ renderer already draws:
 
 1. resolve `fit:` curves against the body's current silhouette
 2. resolve `anchor:` to an animation group and offset
-3. apply any **item override** (`color` / `shade` / `colors`) — an article
+3. apply any **item override** (`color` / `shade` / `parts`) — an article
    worn as an `items/<id>.json` (see Items) is retagged here
 4. auto-shade each region from its `shade` profile → mid / dark / light
-5. resolve `color` + `tone` → rgb via the palette (+ any `colors` patch)
+5. resolve `color` + `tone` → rgb via the palette
 6. emit parts, each tagged `group` and `role` (`fill` \| `shade_dark` \|
    `shade_light` \| `detail`)
 
@@ -1371,11 +1381,12 @@ retired `common-kit.html` atlas (space/flight suit, mechanic, dockworker,
 prospector, security, station command, marshal, medic, surgeon, researcher,
 civilian, smuggler, ranger, bounty hunter), rebuilt from the articles above:
 
-- `items/<garment>_<colourway>_{masc,femme}.json` — a `colors` patch (+ `shade`)
-  over one base article per recoloured piece (`jacket_navy`, `coat_navy`,
-  `boots_black`, `helmet_sec`, `cap_amber`, `collar_white`, `hood_field`,
-  `backpack_brown`, `bandolier_black`, `star_gold`, `braid_gold`, …). Colours
-  are read off the old atlas's prose descriptions.
+- `items/<garment>_<colourway>.json` — a `color` (+ `shade`, and `parts` where
+  one piece is two-tone like a helmet shell + visor bezel) over one base article
+  per recoloured piece (`jacket_navy`, `coat_navy`, `boots_black`, `helmet_sec`,
+  `cap_amber`, `collar_white`, `hood_field`, `backpack_brown`, `bandolier_black`,
+  `star_gold`, `braid_gold`, …). Colours are read off the old atlas's prose
+  descriptions.
 - a few small **decal articles** carry geometry the recolours can't:
   `comms_box` (dark box + red indicator beside the helmet — flight suit),
   `med_cross` (breast cross — medic), `armband_medcross` (red band + white

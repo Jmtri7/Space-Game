@@ -1,8 +1,6 @@
 {
   "identity": "Common Kit colourway: the shoulder boards (epaulettes geometry) recoloured #d8b24a, metal finish - Station Command's gold boards.",
   "geometry": "epaulettes",
-  "colors": {
-    "cloth": "#d8b24a"
-  },
+  "color": "#d8b24a",
   "shade": "metal"
 }
