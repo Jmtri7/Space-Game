@@ -864,8 +864,8 @@ the **Draw order** editor (see below) — the one place the story's
 `draw_order.json` is edited. The ticked articles are still drawn while tailoring
 (see **Preview other articles**). Picks are remembered per story
 (`gpEditorPreviewArt:<story>`, `gpEditorHair:<story>`). The preview itself
-writes no file; the Draw order editor writes `draw_order.json`. There is no draft for
-outfit mode.
+writes nothing; the Draw order editor keeps a draft (see below). Outfit mode has
+no draft of its own (there's no edited article).
 
 **Switching body / face / tailor / outfit without retyping the URL.** Once a
 body (plain, `edit=face`, `edit=outfit`, or an article fit against one) is
@@ -1042,8 +1042,11 @@ the body has no walk rig.
 are dim fixed anchors (index + name); each **tag** row has **↑ / ↓** (move it
 one step through the list, past anchors and other tags), a count of how many
 loaded regions use it, and **×** (drop it — regions fall back to their group).
-**+ tag** adds a new one before `front`. Every change writes `draw_order.json`
-straight back (needs the repo folder open read-write; read-only otherwise).
+**+ tag** adds a new one before `front`. The figure re-renders on every change.
+Edits go to a draft (`gpDraft:<gbase>/draw_order.json`), like an article — they
+show as a row in **Save / download drafts** and only reach the real
+`draw_order.json` on **save checked to repo**. On load, a draw-order draft wins
+over the on-disk file (same as an article draft).
 
 **Preview hair** (Outfit section — outfit mode only). A dropdown of every
 `articles/hair_*.json`, plus *— no hair —*. The pick draws that hairstyle on

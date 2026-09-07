@@ -135,8 +135,9 @@
     <h2 style="margin-top:16px">Draw order</h2>
     <div class="hint">The whole story's back-to-front stack: body parts (fixed)
       interleaved with garment <b>tags</b>. Move a tag with its arrows; a region
-      tagged with that name draws at that slot. Saved to
-      <code>graphics/draw_order.json</code>.</div>
+      tagged with that name draws at that slot. Edits go to a draft (shown in
+      <b>Save / download drafts</b>) and reach
+      <code>graphics/draw_order.json</code> on <b>save checked to repo</b>.</div>
     <div id="tagOrderPanel"></div>
     <div class="row"><button id="tagOrderAdd">+ tag</button></div>
   </div>
@@ -524,14 +525,25 @@ async function loadMatPal(){
 // The story's worn-figure draw order: one list mixing body section names
 // (fixed anchors) with garment tag strings. A region's `tag` names a slot
 // here; regions with no tag sit at their animation `group`. Edited in the
-// Outfit section, saved back to graphics/draw_order.json.
+// Outfit section. Edits go into a draft (gpDraft:<gbase>/draw_order.json),
+// same as an article - they show in "Save / download drafts" and only reach
+// graphics/draw_order.json on "save checked to repo".
 let drawOrder = [];
 let drawOrderIdentity = '';
+function drawOrderDraftKey(){ return GBASE ? 'gpDraft:' + GBASE + '/draw_order.json' : null; }
 async function loadDrawOrder(){
-  if(!GBASE){ drawOrder = []; return; }
+  drawOrder = []; drawOrderIdentity = '';
+  if(!GBASE) return;
   const j = await VFS.readJSON(GBASE + '/draw_order.json');
-  drawOrder = (j && Array.isArray(j.order)) ? j.order.slice() : [];
-  drawOrderIdentity = (j && j.identity) || '';
+  if(j && Array.isArray(j.order)){ drawOrder = j.order.slice(); drawOrderIdentity = j.identity || ''; }
+  // an unsaved draft of the draw order wins over the on-disk copy
+  try{
+    const d = JSON.parse(localStorage.getItem(drawOrderDraftKey()) || 'null');
+    if(d && d.D && Array.isArray(d.D.order)){
+      drawOrder = d.D.order.slice();
+      drawOrderIdentity = d.D.identity || drawOrderIdentity;
+    }
+  }catch(e){}
 }
 function bodySectionNames(){
   return new Set(Object.keys((TAILOR_MODE || OUTFIT_MODE ? bodyDesign : D)?.sections || {}));
@@ -541,22 +553,20 @@ function drawOrderTags(){
   const secs = bodySectionNames();
   return drawOrder.filter(n => !secs.has(n));
 }
-async function saveDrawOrder(){
-  if(!GBASE || !VFS.canWrite) return false;
-  // body sections are mandatory anchors - never let a bad in-memory state drop
-  // one from the file. Any missing section is re-appended before the tail tag.
+// persist a draw-order edit to its draft (not straight to disk) and refresh
+// the drafts panel. Body sections are mandatory anchors - re-add any that a
+// bad in-memory state dropped.
+function stashDrawOrder(){
+  const k = drawOrderDraftKey(); if(!k) return;
   const bd = (TAILOR_MODE || OUTFIT_MODE) ? bodyDesign : null;
   const secOrder = bd ? (bd.draw_order || Object.keys(bd.sections || {})) : [];
-  for(const s of secOrder){
-    if(!drawOrder.includes(s)){
-      const i = drawOrder.indexOf('front');
-      drawOrder.splice(i < 0 ? drawOrder.length : i, 0, s);
-    }
+  for(const s of secOrder) if(!drawOrder.includes(s)){
+    const i = drawOrder.indexOf('front');
+    drawOrder.splice(i < 0 ? drawOrder.length : i, 0, s);
   }
-  if(secOrder.length && drawOrder.length < secOrder.length) return false;  // corrupt - refuse
-  const body = { identity: drawOrderIdentity || 'Worn-figure draw order for this story.', order: drawOrder };
-  try{ await VFS.writeText(GBASE + '/draw_order.json', toRepoJSON(body)); return true; }
-  catch(e){ return false; }
+  const payload = { identity: drawOrderIdentity || 'Worn-figure draw order for this story.', order: drawOrder };
+  try{ localStorage.setItem(k, JSON.stringify({ t: Date.now(), D: payload })); }catch(e){}
+  if(typeof scanDrafts === 'function') scanDrafts();
 }
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
@@ -1297,8 +1307,8 @@ function buildPreviewArticleList(){
   });
 }
 // the story draw-order list, rendered for reordering. Body sections are fixed
-// anchors; only tags carry move / rename / delete controls. Every change is
-// written straight back to graphics/draw_order.json.
+// anchors; only tags carry move / delete controls. Every change goes into the
+// draw-order draft (shows in Save / download drafts).
 function tagUsageCount(name){
   let n = 0;
   const scan = regs => (regs||[]).forEach(r => { if((r.tag||r.layer) === name) n++; });
@@ -1310,48 +1320,45 @@ function tagUsageCount(name){
 function buildTagOrderPanel(){
   const el = document.getElementById('tagOrderPanel'); if(!el) return;
   const secs = bodySectionNames();
-  const ro = !VFS.canWrite;
   if(!drawOrder.length){
-    el.innerHTML = `<div class="hint">no <code>draw_order.json</code> for this story yet — regions fall back to their anim. group.</div>`;
+    el.innerHTML = `<div class="hint">no <code>draw_order.json</code> for this story yet — regions fall back to their anim. group. Tag a region to start one.</div>`;
     return;
   }
-  el.innerHTML = (ro ? `<div class="hint">read-only — open the repo folder read-write to edit.</div>` : '')
-    + drawOrder.map((nm, i) => {
+  el.innerHTML = drawOrder.map((nm, i) => {
     const isSec = secs.has(nm);
     if(isSec) return `<div class="row" style="gap:6px;opacity:.5;margin:2px 0">
         <span style="width:52px;font:11px ui-monospace,monospace">${i}</span>
         <span style="flex:1">${nm}</span><span class="hint" style="margin:0">body</span></div>`;
     const used = tagUsageCount(nm);
     return `<div class="row" style="gap:4px;align-items:center;margin:2px 0">
-        <button class="toArr" data-mv="${i}:${i-1}" ${i===0||ro?'disabled':''} title="move up (further back)">↑</button>
-        <button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1||ro?'disabled':''} title="move down (further front)">↓</button>
+        <button class="toArr" data-mv="${i}:${i-1}" ${i===0?'disabled':''} title="move up (further back)">↑</button>
+        <button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1?'disabled':''} title="move down (further front)">↓</button>
         <b style="flex:1">${nm}</b>
         <span class="hint" style="margin:0">${used ? used + ' region' + (used>1?'s':'') : 'unused'}</span>
-        <button class="toDel" data-tag="${nm.replace(/"/g,'&quot;')}" ${ro?'disabled':''} title="remove this tag from the order">×</button>
+        <button class="toDel" data-tag="${nm.replace(/"/g,'&quot;')}" title="remove this tag from the order">×</button>
       </div>`;
   }).join('');
-  const commit = async () => { await saveDrawOrder(); buildTagOrderPanel(); render(); };
-  el.querySelectorAll('.toArr').forEach(b => b.onclick = async () => {
+  const commit = () => { stashDrawOrder(); buildTagOrderPanel(); render(); };
+  el.querySelectorAll('.toArr').forEach(b => b.onclick = () => {
     const [from, to] = b.dataset.mv.split(':').map(Number);
     if(to < 0 || to >= drawOrder.length) return;
     drawOrder.splice(to, 0, drawOrder.splice(from, 1)[0]);
-    await commit();
+    commit();
   });
-  el.querySelectorAll('.toDel').forEach(b => b.onclick = async () => {
+  el.querySelectorAll('.toDel').forEach(b => b.onclick = () => {
     const t = b.dataset.tag;
     if(tagUsageCount(t) && !confirm(`"${t}" is still used by a region. Remove it from the order anyway? (those regions fall back to their anim. group)`)) return;
     drawOrder = drawOrder.filter(n => n !== t);
-    await commit();
+    commit();
   });
 }
-document.getElementById('tagOrderAdd').onclick = async () => {
-  if(!VFS.canWrite){ alert('Editing the draw order needs the repo folder opened read-write.'); return; }
+document.getElementById('tagOrderAdd').onclick = () => {
   const t = (prompt('New tag name:') || '').trim();
   if(!t || drawOrder.includes(t)) return;
   if(bodySectionNames().has(t)){ alert('that name is a body section — pick another'); return; }
   const i = drawOrder.indexOf('front');
   drawOrder.splice(i < 0 ? drawOrder.length : i, 0, t);
-  await saveDrawOrder(); buildTagOrderPanel(); render();
+  stashDrawOrder(); buildTagOrderPanel(); render();
 };
 
 function render(){
@@ -2796,17 +2803,17 @@ function drawRankHTML(S){
 }
 function wireDrawRank(S){
   const inp = document.getElementById('mTag');
-  const apply = async (v, all) => {
+  const apply = (v, all) => {
     pushHistory();
     (all ? (D.regions || []) : [S]).forEach(r => {
       delete r.layer; delete r.back;
       if(v) r.tag = v; else delete r.tag;
     });
-    // a brand-new tag joins the story order so it can be positioned
+    // a brand-new tag joins the story order (its draft) so it can be positioned
     if(v && !drawOrder.includes(v)){
       const i = drawOrder.indexOf('front');
       drawOrder.splice(i < 0 ? drawOrder.length : i, 0, v);
-      await saveDrawOrder();
+      stashDrawOrder();
       if(typeof buildTagOrderPanel === 'function') buildTagOrderPanel();
     }
     sync(); buildSecEdit();
