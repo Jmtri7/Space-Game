@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the breast badge (badge_femme geometry) recoloured #d8b24a, metal finish.",
-  "geometry": "badge_femme",
-  "colors": {
-    "metal": "#d8b24a"
-  },
-  "shade": "metal"
-}

@@ -1,0 +1,113 @@
+{
+  "identity": "A soft folded collar sitting at the base of the neck, worn open over a shirt. Free-drawn against the reference body's neck_base/collar anchors \u2014 small enough to read the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "folded band, open at the front. Free-drawn around torso.collar/neck_base.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.372,
+              -25.291
+            ],
+            [
+              -1.379,
+              -26.34
+            ],
+            [
+              -0.606,
+              -25.898
+            ],
+            [
+              0.497,
+              -25.898
+            ],
+            [
+              1.269,
+              -26.34
+            ],
+            [
+              2.262,
+              -25.291
+            ],
+            [
+              1.6,
+              -24.795
+            ],
+            [
+              0.828,
+              -25.236
+            ],
+            [
+              -0.055,
+              -25.016
+            ],
+            [
+              -0.937,
+              -25.236
+            ],
+            [
+              -1.71,
+              -24.795
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.1,
+              -24.95
+            ],
+            [
+              -1.2,
+              -25.9
+            ],
+            [
+              -0.5,
+              -25.5
+            ],
+            [
+              0.5,
+              -25.5
+            ],
+            [
+              1.2,
+              -25.9
+            ],
+            [
+              2.1,
+              -24.95
+            ],
+            [
+              1.5,
+              -24.5
+            ],
+            [
+              0.8,
+              -24.9
+            ],
+            [
+              0,
+              -24.7
+            ],
+            [
+              -0.8,
+              -24.9
+            ],
+            [
+              -1.5,
+              -24.5
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

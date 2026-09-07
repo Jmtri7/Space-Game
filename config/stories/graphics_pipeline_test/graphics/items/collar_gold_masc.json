@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the stand collar (collar_masc geometry) recoloured #d8b24a, metal finish - Station Command's gold collar.",
-  "geometry": "collar_masc",
-  "colors": {
-    "cloth": "#d8b24a"
-  },
-  "shade": "metal"
-}

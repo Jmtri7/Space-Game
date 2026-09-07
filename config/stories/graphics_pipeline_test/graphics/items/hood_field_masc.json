@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the raised hood (hood_masc geometry) recoloured #3d4a2e, matte finish - matches coat_field.",
-  "geometry": "hood_masc",
-  "colors": {
-    "cloth": "#3d4a2e"
-  },
-  "shade": "matte"
-}

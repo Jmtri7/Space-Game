@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the standard jacket geometry (jacket_femme geometry) recoloured #3c4552, matte finish.",
-  "geometry": "jacket_femme",
-  "colors": {
-    "cloth": "#3c4552"
-  },
-  "shade": "matte"
-}

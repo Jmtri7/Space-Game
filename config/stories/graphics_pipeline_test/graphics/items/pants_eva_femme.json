@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the standard trousers (pants_femme geometry) recoloured #9498a0, sheen finish.",
-  "geometry": "pants_femme",
-  "colors": {
-    "denim": "#9498a0"
-  },
-  "shade": "sheen"
-}

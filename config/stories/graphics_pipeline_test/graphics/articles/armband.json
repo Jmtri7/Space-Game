@@ -1,0 +1,58 @@
+{
+  "identity": "A thin cloth armband on the near upper arm, between the shoulder and elbow. A single free-drawn ring.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "band midway between arm_near.shoulder and arm_near.elbow.",
+      "outset": 0.06,
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              2.508,
+              -23.887
+            ],
+            [
+              4.524,
+              -23.832
+            ],
+            [
+              4.536,
+              -22.281
+            ],
+            [
+              2.577,
+              -22.263
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.957,
+              -22.124
+            ],
+            [
+              3.423,
+              -22.208
+            ],
+            [
+              3.273,
+              -23.982
+            ],
+            [
+              1.702,
+              -23.827
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

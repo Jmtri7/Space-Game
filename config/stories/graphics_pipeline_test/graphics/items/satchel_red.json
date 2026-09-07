@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the shoulder satchel (satchel geometry) recoloured #b0201f, deep finish - the medic's red field bag.",
+  "geometry": "satchel",
+  "colors": {
+    "leather": "#b0201f"
+  },
+  "shade": "deep"
+}

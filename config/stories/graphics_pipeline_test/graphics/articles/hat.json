@@ -1,0 +1,135 @@
+{
+  "identity": "A stiff peaked cap: the same snug dome as cap.json, plus a flat brim detail projecting over the brow.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "crown, same silhouette as cap/hair_short.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.329,
+              -31.079
+            ],
+            [
+              -2.402,
+              -30.002
+            ],
+            [
+              1.44,
+              -29.95
+            ],
+            [
+              1.95,
+              -29.512
+            ],
+            [
+              2.01,
+              -31.011
+            ],
+            [
+              1.008,
+              -32.129
+            ],
+            [
+              -1.089,
+              -32.196
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
+              "points": [
+                [
+                  -2.419,
+                  -29.645
+                ],
+                [
+                  1.544,
+                  -29.645
+                ],
+                [
+                  2.029,
+                  -29.452
+                ],
+                [
+                  1.44,
+                  -29.95
+                ],
+                [
+                  -2.414,
+                  -29.896
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -2.89,
+              -30.621
+            ],
+            [
+              -2.327,
+              -30.081
+            ],
+            [
+              2.047,
+              -29.968
+            ],
+            [
+              2.598,
+              -30.598
+            ],
+            [
+              1.337,
+              -32.005
+            ],
+            [
+              -1.394,
+              -32.108
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "flat brim, kept at/above brow height (head.anchors.brow y=-29.05) so it doesn't drop onto the eyes",
+              "points": [
+                [
+                  -2.347,
+                  -29.742
+                ],
+                [
+                  1.982,
+                  -29.597
+                ],
+                [
+                  2.214,
+                  -30.009
+                ],
+                [
+                  -2.458,
+                  -30.152
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

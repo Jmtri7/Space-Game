@@ -251,22 +251,45 @@ literally unchanged — same fixed coordinates — on any other, so a garment tw
 bodies share (via one outfit set, or two sets naming the same article) will
 look wrong on whichever body it wasn't traced for.
 
-**Current state of the pipeline-test story: the masc side is being tailored,
-the femme side is not yet.** `body/human_masc.json` carries edge curves on the
-torso, both arms/hands, both legs, and both feet; `duty_boots_masc.json` fits
-each foot outline to `foot_{near,far}.shoe`, and other masc articles are being
-fitted region by region. `body/human_femme.json` still has no `curves` and its
-articles' `fits` arrays are `[]` — plain free-vertex traces — until the femme
-tailoring pass. The machinery (`bodyCurve` / `_apply_fits` / the editor's
-Curves and Fit panels) is exercised by the masc side.
+**Current state of the pipeline-test story: the masc side is further along
+than the femme side.** `body/human_masc.json` carries edge curves on the
+torso, both arms/hands, both legs, and both feet; `body/human_femme.json`
+carries them on the torso and both arms/hands. `duty_boots` fits each foot
+outline to `foot_{near,far}.shoe` on the masc body; other articles are being
+fitted region by region, the masc variant leading. A region whose `fits`
+can't resolve on a given body (curve absent) falls back to its free-vertex
+trace for that body — `_curve` returns `None` and `_apply_fits` leaves the
+span alone.
 
-**Every article is split `<name>_masc.json` / `<name>_femme.json`** — one file
-per body, always, even when the two are currently byte-identical copies. The
-split is the standing convention so a per-body redesign never has to rename a
-shared file or hunt down its references. A set names the body-matched variant
-of each article; an NPC `equip` list names the variant matching that NPC's
-outfit body. When you tailor one variant, its counterpart is the file to check
-against the other body.
+### One file per article, both body cuts inside it
+
+An article is **one `articles/<name>.json`** (no `_masc` / `_femme` suffix).
+The shared half of each region — `group`, `color`, `shade`, `tone`, `note`,
+`layer`, `outset` — is written once on the region. The body-specific half
+lives under a **`geometry` map**, one entry per body cut:
+
+```jsonc
+{ "identity": "...", "tier": "person", "palette": "civilian",
+  "regions": [
+    { "group": "torso", "color": "cloth", "shade": "matte", "note": "left panel",
+      "geometry": {
+        "masc":  { "points": [...], "fits": [{ "curve": "torso.side_left", "from": 1, "to": 1 }] },
+        "femme": { "points": [...], "fits": [...] } } } ] }
+```
+
+`geometry.<variant>` holds `points`, `fits`, and — when the region has them —
+`details`, `shade_dark`, `shade_light` (detail and frozen-crescent
+coordinates are body-specific too). `expand()` picks the entry named by the
+worn body's top-level `"variant"` (`masc` / `femme`); a pre-merge region with
+`points` straight on it still works. There is no `fits_body` key any more —
+the `geometry` keys carry it.
+
+**Items and sets follow suit.** `items/<name>.json` names its geometry
+unsuffixed (`"geometry": "long_coat"`). `sets/<name>.json` lists bare article
+ids and is one file per outfit — unless the two cuts genuinely pick different
+articles (`civilian_work`: short hair vs long hair), in which case it stays
+`_masc` / `_femme`. `graphics.json` `outfits.<id>.set` points at whichever
+exists; the outfit's `body` selects the variant everywhere downstream.
 
 ## Bodies
 
@@ -314,10 +337,10 @@ frame strip; the game will drive `t` from its own clock.
 
 Every garment and accessory is **one `articles/<id>.json`** — its own identity,
 silhouette, colours, shades, details, and fitting declarations — and gets **its
-own atlas plate**, drawn on the bare reference body. Every article id ends
-`_masc` or `_femme` (see Fitting: the split is the standing convention, one file
-per body even when identical). The article file carries a *default* look; an
-**item** (below) can wear the same geometry differently.
+own atlas plate**, drawn on the bare reference body (both cuts, side by side).
+Its regions carry a per-cut `geometry` map (see *One file per article* under
+Fitting). The article file carries a *default* look; an **item** (below) can
+wear the same geometry differently.
 
 A `sets/<id>.json` composes them:
 
@@ -381,7 +404,7 @@ jacket shape in different colours and finishes.
 ```jsonc
 {
   "identity": "Oxblood officer's coat — long_coat geometry, deep red, waxed sheen.",
-  "geometry": "long_coat_masc",       // required: the articles/<id> to take shape + details from
+  "geometry": "long_coat",            // required: the articles/<id> to take shape + details from
   "color":  "leather",                // optional: retag every region + detail to this one colour
   "shade":  "sheen",                  // optional: redraw every region + detail with this profile
   "colors": { "cloth": "#3a1f2e" }    // optional: a {colour-key: "#rrggbb"} patch over the palette
@@ -395,7 +418,8 @@ jacket shape in different colours and finishes.
   `items/<name>.json` first, else `articles/<name>.json`.
 - The geometry file is untouched — it still renders standalone on its own atlas
   plate. Each item also gets its own plate.
-- Follows the `_masc` / `_femme` split like articles.
+- One file per item (`items/<id>.json`, no suffix); the worn body's `"variant"`
+  picks the geometry cut, same as a bare article.
 
 `expand(article, palette, materials, body, color=, shade=, colors=)` applies the
 override; `colors` merges into the palette, `color` / `shade` retag every region
@@ -1217,7 +1241,7 @@ mechanism on the **smallest asset that exercises it**.
 | **A — mechanics** ✅ | design JSON → `expand()` → specimen, end to end | one body renders on a plate |
 | **B — reference body** ✅ | proportions, sections, anchors, curves, draw order | `human_masc` / `human_femme` |
 | **C — material & shade** ✅ | auto-shade (tapered crescents) + palette tones | side-lit crescents, one continuous per region |
-| **D — fit** ✅ | `group` / `fits` against the body | masc body publishes torso/limb/foot curves; `duty_boots_masc` splices each foot outline from `foot_{near,far}.shoe` — see Fitting |
+| **D — fit** ✅ | `group` / `fits` against the body | masc body publishes torso/limb/foot curves; `duty_boots` splices each foot outline from `foot_{near,far}.shoe` on the masc cut — see Fitting |
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |
@@ -1234,11 +1258,11 @@ gates needed and no more, and is a bootable story (`story.json` + one system +
 
 - 2 bodies (`human_masc` / `human_femme`), 1 palette (`civilian`),
   `materials.json`, `rig_walk.json`
-- articles — tops, bottoms, footwear, hair, outerwear, accessories — each split
-  `_masc` / `_femme` — and sets composing the body-matched variants
-- items — `coat_charcoal` / `coat_oxblood` (`_masc` / `_femme`): the one
-  `long_coat` geometry worn two ways, proving the colour/shade split; the
-  `civilian_officer` sets wear the oxblood one
+- articles — tops, bottoms, footwear, hair, outerwear, accessories — one file
+  each, both body cuts under `regions[].geometry` — and sets composing them
+- items — `coat_charcoal` / `coat_oxblood`: the one `long_coat` geometry worn
+  two ways, proving the colour/shade split; the `civilian_officer` set wears
+  the oxblood one
 - face kits (2 each of eyes / brows / nose / lips)
 - 1 ship (`courier`), 1 station (`trade_ring`)
 - 1 interior (`concourse`) with 2 decorations — `column` blocks a lane on

@@ -1,0 +1,89 @@
+{
+  "identity": "A short flared skirt in plain cloth. Sits on the low-waist line \u2014 that edge is the wearer's own \u2014 and flares out to a hem at mid-thigh. No leg openings, so it drapes over any lower body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "point 0 is a fit placeholder for torso.low_waist (spans left to right). Everything below is the free flared hem.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.7,
+              -16.9
+            ],
+            [
+              -3.177,
+              -15.865
+            ],
+            [
+              -4.825,
+              -9.699
+            ],
+            [
+              -1.431,
+              -8.95
+            ],
+            [
+              1.537,
+              -8.894
+            ],
+            [
+              4.819,
+              -9.855
+            ],
+            [
+              3.242,
+              -15.8
+            ],
+            [
+              2.7,
+              -16.9
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -3.088,
+              -16.963
+            ],
+            [
+              -3.238,
+              -16.083
+            ],
+            [
+              -3.993,
+              -13.517
+            ],
+            [
+              -1.208,
+              -12.984
+            ],
+            [
+              1.227,
+              -12.962
+            ],
+            [
+              3.958,
+              -13.087
+            ],
+            [
+              3.322,
+              -15.831
+            ],
+            [
+              3.225,
+              -16.963
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

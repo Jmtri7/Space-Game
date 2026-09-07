@@ -1,0 +1,107 @@
+{
+  "identity": "A pair of cloth shoulder boards, one on each shoulder. Free-drawn around the shoulder_near/shoulder_far anchors.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "near shoulder board, on shoulder_near.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              0.991,
+              -24.543
+            ],
+            [
+              2.391,
+              -24.643
+            ],
+            [
+              2.291,
+              -25.293
+            ],
+            [
+              0.991,
+              -25.243
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              0.221,
+              -24.707
+            ],
+            [
+              1.621,
+              -24.807
+            ],
+            [
+              1.521,
+              -25.457
+            ],
+            [
+              0.221,
+              -25.407
+            ]
+          ],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "far shoulder board, mirror of the near one.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.12,
+              -24.535
+            ],
+            [
+              -2.52,
+              -24.635
+            ],
+            [
+              -2.42,
+              -25.285
+            ],
+            [
+              -0.984,
+              -25.301
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -0.886,
+              -24.614
+            ],
+            [
+              -1.957,
+              -24.707
+            ],
+            [
+              -1.857,
+              -25.357
+            ],
+            [
+              -0.75,
+              -25.38
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

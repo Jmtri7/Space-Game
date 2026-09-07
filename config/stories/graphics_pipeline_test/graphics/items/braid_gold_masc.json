@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the double-breasted button grid (braid_masc geometry) recoloured #d8b24a, metal finish.",
-  "geometry": "braid_masc",
-  "colors": {
-    "metal": "#d8b24a"
-  },
-  "shade": "metal"
-}

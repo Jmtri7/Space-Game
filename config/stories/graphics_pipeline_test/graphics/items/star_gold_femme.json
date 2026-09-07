@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the marshal's five-point star (star_femme geometry) recoloured #d8b24a, metal finish.",
-  "geometry": "star_femme",
-  "colors": {
-    "metal": "#d8b24a"
-  },
-  "shade": "metal"
-}

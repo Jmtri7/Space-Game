@@ -518,6 +518,13 @@ def expand_article(design, palette, materials, body,
     assigns the animation group so the piece moves with that body part. Each
     region is then `outset` a little so it clears the body edge.
 
+    A region's body-specific geometry (`points`, `fits`, `details`,
+    `shade_dark`, `shade_light`) lives under `geometry.<variant>` - one entry
+    per body cut (`masc` / `femme`); the shared fields (`group`, `color`,
+    `shade`, `note`, `layer`, `outset`) sit on the region itself. `body`'s
+    top-level `"variant"` selects the entry. A pre-merge region with `points`
+    straight on it still works (no `geometry` key -> used as-is).
+
     `color` / `shade` / `colors` are the item-layer overrides (see
     items/<id>.json) and are independent of each other:
       `color`  - retag every region and detail to this one colour (palette key
@@ -543,7 +550,13 @@ def expand_article(design, palette, materials, body,
             part = dict(part, shade=shade)
         return part
 
+    variant = (body or {}).get("variant") or "masc"
     for region in design.get("regions", []):
+        geom = region.get("geometry")
+        if geom:                                       # merged article: pick this body's variant
+            g = geom.get(variant) or geom.get("masc") or geom.get("femme") or {}
+            region = {k: v for k, v in region.items() if k != "geometry"}
+            region.update(g)
         if color is not None or shade is not None:
             region = dict(_look(region),
                           details=[_look(d) for d in region.get("details", [])])
@@ -647,7 +660,8 @@ def compose_worn(body_design, body_parts, *article_parts):
 def expand(design, palette, materials, body=None, load=None, lod=None,
            color=None, shade=None, colors=None):
     """Dispatch on design shape. `body` (a body design) is required for an
-    article - it declares `fits_body` and its regions carry `fits`. `load(kind,
+    article - its regions carry `fits` against that body's curves, and its
+    `"variant"` picks each region's `geometry` entry. `load(kind,
     name)` resolves referenced sub-files (face slots). `lod` is the asset's
     on-screen size in px - regions below their `flatten_px` drop their shade,
     details below their `min_px` are omitted. `color` / `shade` / `colors` are

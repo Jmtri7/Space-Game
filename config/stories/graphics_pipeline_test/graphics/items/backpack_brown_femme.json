@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the soft-sided backpack (backpack_femme geometry) recoloured #5a4029, matte finish.",
-  "geometry": "backpack_femme",
-  "colors": {
-    "cloth": "#5a4029"
-  },
-  "shade": "matte"
-}

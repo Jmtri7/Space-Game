@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the safety tabard (hi_vis_tabard_femme geometry) recoloured #d9902a, matte finish - matches the dockworker's amber hard hat. Reflective stripes keep their metal look.",
-  "geometry": "hi_vis_tabard_femme",
-  "colors": {
-    "lamp": "#d9902a"
-  },
-  "shade": "matte"
-}

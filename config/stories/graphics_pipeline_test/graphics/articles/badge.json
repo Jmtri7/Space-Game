@@ -1,0 +1,65 @@
+{
+  "identity": "A small metal badge of office, worn on the left breast. A single free-drawn shape, tiny enough to sit fine on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "shield-shaped badge on the left breast.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              1.013,
+              -23.972
+            ],
+            [
+              1.513,
+              -23.972
+            ],
+            [
+              1.563,
+              -23.372
+            ],
+            [
+              1.263,
+              -22.872
+            ],
+            [
+              0.963,
+              -23.372
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              0.488,
+              -24.197
+            ],
+            [
+              0.988,
+              -24.197
+            ],
+            [
+              1.038,
+              -23.597
+            ],
+            [
+              0.738,
+              -23.097
+            ],
+            [
+              0.438,
+              -23.597
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

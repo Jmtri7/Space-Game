@@ -1,9 +1,0 @@
-{
-  "identity": "Common Kit colourway: the sealed pressure helmet (helmet_femme geometry) recoloured #b9e8d8 / #cdeee2, sheen finish.",
-  "geometry": "helmet_femme",
-  "colors": {
-    "metal": "#b9e8d8",
-    "glass": "#cdeee2"
-  },
-  "shade": "sheen"
-}

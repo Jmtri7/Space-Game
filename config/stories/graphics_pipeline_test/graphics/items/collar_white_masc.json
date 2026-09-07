@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the stand collar (collar_masc geometry) recoloured #eef0f2, matte finish.",
-  "geometry": "collar_masc",
-  "colors": {
-    "cloth": "#eef0f2"
-  },
-  "shade": "matte"
-}

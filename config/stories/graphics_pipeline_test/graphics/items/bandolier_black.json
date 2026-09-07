@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the ammo bandolier (strap only - loops stay metal) (bandolier geometry) recoloured #161719, deep finish.",
+  "geometry": "bandolier",
+  "colors": {
+    "leather": "#161719"
+  },
+  "shade": "deep"
+}

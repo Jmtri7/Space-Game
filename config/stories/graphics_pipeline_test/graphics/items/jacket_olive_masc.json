@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the standard jacket geometry (jacket_masc geometry) recoloured #6a6a3c, matte finish.",
-  "geometry": "jacket_masc",
-  "colors": {
-    "cloth": "#6a6a3c"
-  },
-  "shade": "matte"
-}

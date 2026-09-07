@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the shoulder boards (epaulettes_femme geometry) recoloured #23252b, matte finish.",
-  "geometry": "epaulettes_femme",
-  "colors": {
-    "cloth": "#23252b"
-  },
-  "shade": "matte"
-}

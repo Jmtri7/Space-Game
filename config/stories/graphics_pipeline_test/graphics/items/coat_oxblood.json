@@ -1,0 +1,8 @@
+{
+  "identity": "Oxblood officer's coat - the same long_coat geometry as coat_charcoal, recoloured deep red and given a waxed sheen. Demonstrates that colour and shading are per-item, not baked into the shape.",
+  "geometry": "long_coat",
+  "colors": {
+    "cloth": "#3a1f2e"
+  },
+  "shade": "sheen"
+}

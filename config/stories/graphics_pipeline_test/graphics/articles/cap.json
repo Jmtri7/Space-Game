@@ -1,0 +1,121 @@
+{
+  "identity": "A soft fabric cap, snug over the scalp. Shares hair_short's proven head-fitting silhouette (same coverage, so it sits right without re-deriving head geometry) in cloth instead of hair.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "solid cap over the scalp, same silhouette as hair_short.",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.508,
+              -29.684
+            ],
+            [
+              2.016,
+              -29.659
+            ],
+            [
+              1.983,
+              -30.314
+            ],
+            [
+              1.834,
+              -31.006
+            ],
+            [
+              1.52,
+              -31.615
+            ],
+            [
+              0.98,
+              -32.054
+            ],
+            [
+              0.21,
+              -32.314
+            ],
+            [
+              -0.766,
+              -32.294
+            ],
+            [
+              -1.379,
+              -32.01
+            ],
+            [
+              -1.915,
+              -31.602
+            ],
+            [
+              -2.289,
+              -30.934
+            ],
+            [
+              -2.482,
+              -30.317
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.32,
+              -29.435
+            ],
+            [
+              -1.326,
+              -29.872
+            ],
+            [
+              0.471,
+              -29.89
+            ],
+            [
+              1.848,
+              -29.344
+            ],
+            [
+              2.13,
+              -29.998
+            ],
+            [
+              2.147,
+              -30.895
+            ],
+            [
+              1.808,
+              -31.665
+            ],
+            [
+              0.955,
+              -32.36
+            ],
+            [
+              -0.291,
+              -32.53
+            ],
+            [
+              -1.543,
+              -32.201
+            ],
+            [
+              -2.172,
+              -31.517
+            ],
+            [
+              -2.493,
+              -30.483
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

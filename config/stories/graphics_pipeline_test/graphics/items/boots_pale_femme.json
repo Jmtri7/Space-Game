@@ -1,8 +1,0 @@
-{
-  "identity": "Common Kit colourway: the duty boot (duty_boots_femme geometry) recoloured #d3d7d1, deep finish.",
-  "geometry": "duty_boots_femme",
-  "colors": {
-    "leather": "#d3d7d1"
-  },
-  "shade": "deep"
-}

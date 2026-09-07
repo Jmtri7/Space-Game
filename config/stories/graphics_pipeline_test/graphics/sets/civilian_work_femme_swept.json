@@ -1,10 +1,10 @@
 {
-  "identity": "Everyday civilian: knit tank, denim trousers, slip-on shoes, hair swept back. Femme variant of civilian_work_masc's silhouette, hair swapped for variety.",
+  "identity": "Everyday civilian: knit tank, denim trousers, slip-on shoes, hair swept back. Femme variant of civilian_work's silhouette, hair swapped for variety.",
   "palette": "civilian",
   "articles": [
-    "tank_top_femme",
-    "pants_femme",
-    "shoes_femme",
-    "hair_swept_femme"
+    "tank_top",
+    "pants",
+    "shoes",
+    "hair_swept"
   ]
 }

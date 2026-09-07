@@ -1,10 +1,10 @@
 {
-  "identity": "Everyday civilian: knit tank, denim trousers, slip-on shoes, long hair. Femme variant \u2014 see civilian_work_masc for the masc-fitted equivalent.",
+  "identity": "Everyday civilian, femme cut: knit tank, denim trousers, slip-on shoes, long hair. The masc cut (civilian_work_masc) picks short hair instead, which is why this outfit stays split.",
   "palette": "civilian",
   "articles": [
-    "tank_top_femme",
-    "pants_femme",
-    "shoes_femme",
-    "hair_long_femme"
+    "tank_top",
+    "pants",
+    "shoes",
+    "hair_long"
   ]
 }

@@ -1,9 +1,0 @@
-{
-  "identity": "Common Kit colourway: the stiff peaked cap (hat_masc geometry) recoloured black, matte finish - the marshal's hat.",
-  "geometry": "hat_masc",
-  "colors": {
-    "cloth": "#161616",
-    "leather": "#0f0f0f"
-  },
-  "shade": "matte"
-}

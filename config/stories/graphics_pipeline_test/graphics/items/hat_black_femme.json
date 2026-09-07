@@ -1,9 +1,0 @@
-{
-  "identity": "Common Kit colourway: the stiff peaked cap (hat_femme geometry) recoloured black, matte finish - the marshal's hat.",
-  "geometry": "hat_femme",
-  "colors": {
-    "cloth": "#161616",
-    "leather": "#0f0f0f"
-  },
-  "shade": "matte"
-}
