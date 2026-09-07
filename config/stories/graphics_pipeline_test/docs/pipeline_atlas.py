@@ -80,12 +80,19 @@ def svg_specimen(parts, vb=(-8, -34, 16, 36), px=440, ground=True, ticks=None):
         out.append(f'<rect x="{x0}" y="{t - 0.03:.2f}" width="0.6" height="0.06" fill="#3a4656"/>')
     for p in parts:
         pts = p.get("points")
-        if not pts or len(pts) < 3:
+        if not pts:
             continue
         c = p["color"]
         d = " ".join(f"{x:.3f},{y:.3f}" for x, y in pts)
-        op = f' fill-opacity="{p["opacity"]}"' if p.get("opacity") is not None else ""
-        out.append(f'<polygon points="{d}" fill="rgb({c[0]},{c[1]},{c[2]})"{op}/>')
+        op = p.get("opacity")
+        if len(pts) == 2:                       # a stroked line (deck grid, seams)
+            w = p.get("width", 0.4)
+            oa = f' stroke-opacity="{op}"' if op is not None else ""
+            out.append(f'<polyline points="{d}" fill="none" '
+                       f'stroke="rgb({c[0]},{c[1]},{c[2]})" stroke-width="{w}"{oa}/>')
+        elif len(pts) >= 3:
+            oa = f' fill-opacity="{op}"' if op is not None else ""
+            out.append(f'<polygon points="{d}" fill="rgb({c[0]},{c[1]},{c[2]})"{oa}/>')
     out.append("</svg>")
     return "".join(out)
 
@@ -431,12 +438,26 @@ def interior_plate(name):
              for d in {pl["decoration"] for pl in design["placements"]}}
     cols = {d: load("collision", d + ".json") for d in decos}
 
+    from game.graphics.expand import resolve_color
     floor = []
     for room in design["rooms"] + design["portals"]:
-        col = resolve = mats  # noqa
-        from game.graphics.expand import resolve_color
         rgb = resolve_color(room.get("color", "hull"), 0, pal)
         floor.append({"points": room["points"], "color": rgb})
+
+    # the in-game deck_grid floor pattern (culture interior_decoration), drawn
+    # on the plan so the plate shows the real floor, not the bare navmesh.
+    grid = []
+    try:
+        from game.graphics.deck_grid import grid_segments
+        dg = next((c["interior_decoration"] for c in load_story("cultures.json").values()
+                   if c.get("interior_decoration", {}).get("generator") == "deck_grid"), None)
+        if dg:
+            gc = dg.get("color", [0, 0, 0])
+            for room in design["rooms"]:
+                for a, b in grid_segments(room["points"], dg.get("spacing", 44)):
+                    grid.append({"points": [a, b], "color": gc, "width": dg.get("width", 1) * 0.6})
+    except FileNotFoundError:
+        pass
 
     raster, lane_cells, report = check_placements(design, decos, cols)
     lane_dots = []
@@ -459,8 +480,8 @@ def interior_plate(name):
     ys = [y for room in design["rooms"] for x, y in room["points"]]
     pad = 10
     vb = (min(xs) - pad, min(ys) - pad, max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad)
-    plan = svg_specimen(floor + deco_parts, vb=vb, px=520, ground=False)
-    lanes = svg_specimen(floor + lane_dots + deco_parts + hitboxes, vb=vb, px=520, ground=False)
+    plan = svg_specimen(floor + grid + deco_parts, vb=vb, px=520, ground=False)
+    lanes = svg_specimen(floor + grid + lane_dots + deco_parts + hitboxes, vb=vb, px=520, ground=False)
 
     rows = "".join(
         f"<li>{r['decoration']} at {r['at']}: "
@@ -477,10 +498,10 @@ def interior_plate(name):
         dg = next((c["interior_decoration"] for c in cultures.values()
                    if c.get("interior_decoration", {}).get("generator") == "deck_grid"), None)
         if dg:
-            finish = (f"<p class='stat'>in-game the floor carries a "
-                      f"<code>deck_grid</code> panel pattern every {dg.get('spacing', 44)} u "
-                      f"(culture <code>interior_decoration</code>), rendered over the Space View "
-                      f"starfield where the interior config sets <code>space_backdrop</code>.</p>")
+            finish = (f"<p class='stat'>floor pattern: the culture's "
+                      f"<code>deck_grid</code> panel lines every {dg.get('spacing', 44)} u "
+                      f"(shown), over the Space View starfield where the interior "
+                      f"config sets <code>space_backdrop</code>.</p>")
     except FileNotFoundError:
         pass
     return f"""

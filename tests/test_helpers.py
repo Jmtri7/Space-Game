@@ -45,7 +45,8 @@ from game.ui.ui_theme import (
     side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin,
     message_alert_state, MESSAGE_ALERT_FRAMES, MESSAGE_ALERT_BLINKS, MESSAGE_ALERT_BLINK_FRAMES,
 )
-from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon, _clip_segment_convex, _grid_segments
+from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
+from game.graphics.deck_grid import clip_segment_convex as _clip_segment_convex, grid_segments as _grid_segments
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.character import Character
