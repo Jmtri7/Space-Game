@@ -1,0 +1,154 @@
+{
+  "identity": "A market hall: an open-fronted civilian trading shed, a deep roof over a row of stalls with the south side left open under an amber canopy strip. About 3.5 m to the eaves.",
+  "tier": "building",
+  "palette": "ship_std",
+  "height": 44,
+  "units": "absolute local units (31 = player height), top-down, origin at the footprint centre; +y is south (screen-down).",
+  "silhouette": [
+    {
+      "group": "hall",
+      "color": "hull_dk",
+      "shade": "matte",
+      "points": [
+        [
+          -60,
+          -38
+        ],
+        [
+          60,
+          -38
+        ],
+        [
+          60,
+          38
+        ],
+        [
+          -60,
+          38
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "hall",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -56,
+          -34
+        ],
+        [
+          56,
+          -34
+        ],
+        [
+          56,
+          18
+        ],
+        [
+          -56,
+          18
+        ]
+      ]
+    },
+    {
+      "group": "hall",
+      "color": "lamp",
+      "shade": "matte",
+      "note": "canopy",
+      "points": [
+        [
+          -56,
+          18
+        ],
+        [
+          56,
+          18
+        ],
+        [
+          56,
+          32
+        ],
+        [
+          -56,
+          32
+        ]
+      ]
+    },
+    {
+      "group": "hall",
+      "color": "metal",
+      "shade": "metal",
+      "note": "stall 1",
+      "points": [
+        [
+          -50,
+          -30
+        ],
+        [
+          -20,
+          -30
+        ],
+        [
+          -20,
+          -6
+        ],
+        [
+          -50,
+          -6
+        ]
+      ]
+    },
+    {
+      "group": "hall",
+      "color": "metal",
+      "shade": "metal",
+      "note": "stall 2",
+      "points": [
+        [
+          -14,
+          -30
+        ],
+        [
+          14,
+          -30
+        ],
+        [
+          14,
+          -6
+        ],
+        [
+          -14,
+          -6
+        ]
+      ]
+    },
+    {
+      "group": "hall",
+      "color": "metal",
+      "shade": "metal",
+      "note": "stall 3",
+      "points": [
+        [
+          20,
+          -30
+        ],
+        [
+          50,
+          -30
+        ],
+        [
+          50,
+          -6
+        ],
+        [
+          20,
+          -6
+        ]
+      ]
+    }
+  ]
+}

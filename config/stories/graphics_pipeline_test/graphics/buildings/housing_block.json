@@ -1,0 +1,154 @@
+{
+  "identity": "A civilian housing block: a bolted prefab residential module, two rows of capsule units under one roof, about 3 m tall. Seen from above - the long roof, its vent stacks, and the entry on the south face.",
+  "tier": "building",
+  "palette": "ship_std",
+  "height": 40,
+  "units": "absolute local units (31 = player height), top-down, origin at the footprint centre; +y is south (screen-down).",
+  "silhouette": [
+    {
+      "group": "block",
+      "color": "hull_dk",
+      "shade": "matte",
+      "points": [
+        [
+          -48,
+          -30
+        ],
+        [
+          48,
+          -30
+        ],
+        [
+          48,
+          30
+        ],
+        [
+          -48,
+          30
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "block",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -45,
+          -27
+        ],
+        [
+          45,
+          -27
+        ],
+        [
+          45,
+          27
+        ],
+        [
+          -45,
+          27
+        ]
+      ]
+    },
+    {
+      "group": "block",
+      "color": "metal",
+      "shade": "metal",
+      "note": "vent 1",
+      "points": [
+        [
+          -34,
+          -20
+        ],
+        [
+          -22,
+          -20
+        ],
+        [
+          -22,
+          -8
+        ],
+        [
+          -34,
+          -8
+        ]
+      ]
+    },
+    {
+      "group": "block",
+      "color": "metal",
+      "shade": "metal",
+      "note": "vent 2",
+      "points": [
+        [
+          -6,
+          -20
+        ],
+        [
+          6,
+          -20
+        ],
+        [
+          6,
+          -8
+        ],
+        [
+          -6,
+          -8
+        ]
+      ]
+    },
+    {
+      "group": "block",
+      "color": "metal",
+      "shade": "metal",
+      "note": "vent 3",
+      "points": [
+        [
+          22,
+          -20
+        ],
+        [
+          34,
+          -20
+        ],
+        [
+          34,
+          -8
+        ],
+        [
+          22,
+          -8
+        ]
+      ]
+    },
+    {
+      "group": "block",
+      "color": "engine",
+      "shade": "matte",
+      "note": "entry",
+      "points": [
+        [
+          -7,
+          24
+        ],
+        [
+          7,
+          24
+        ],
+        [
+          7,
+          30
+        ],
+        [
+          -7,
+          30
+        ]
+      ]
+    }
+  ]
+}

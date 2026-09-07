@@ -46,7 +46,7 @@ config/stories/<story>/graphics/
 ├── buildings/   <building>.json
 ├── decorations/ <decoration>.json
 ├── collision/   <id>.json         — hitboxes, one file per asset, loaded on their own
-└── interiors/   <interior>.json   — floor plan: rooms, portals, decoration placements
+└── interiors/   <interior>.json   — floor plan: rooms, portals, decoration + building placements
 ```
 
 Each file is small and reads as a single design. The loader globs a directory;
@@ -650,9 +650,11 @@ the repo root, writes four cross-linked pages next to itself:
 - **`pipeline-bodies.html`** ("Human Bodies") — the body variants at one scale,
   the face kit, the hair grid, the walk cycle.
 - **`pipeline-structures.html`** ("Civilian Structures") — the ship, the
-  station, the interior floor plan + lane check, and each `decorations/` piece
-  (top-down plan with its footprint; a `height` piece also gets a synthesised
-  orthographic elevation).
+  station, the station interior (floor plan + lane check), the surface
+  settlement (`interiors/*.json` with a `structures` list — plaza + placed
+  `buildings/`), each building (plan + footprint + a synthesised elevation
+  beside the player figure), and each `decorations/` piece (plan + footprint;
+  a `height` piece also gets an elevation, using `elev` layer hints).
 - **`pipeline-articles.html`** ("Civilian Articles") — every `articles/*.json`
   rendered once in its authored colour, as a card grid. No sets, no recolours.
 - **`pipeline-outfits.html`** ("Civilian Outfits") — every `sets/*.json`

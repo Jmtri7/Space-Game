@@ -1,0 +1,135 @@
+{
+  "identity": "A standing area light, about 3.2 m tall - a slim pole on a small base with a lit head. Placed at plaza corners and along paths.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "height": 34,
+  "units": "absolute local units (31 = player height), top-down, origin at the pole axis.",
+  "silhouette": [
+    {
+      "group": "post",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "base",
+      "points": [
+        [
+          0,
+          -2.6
+        ],
+        [
+          1.84,
+          -1.84
+        ],
+        [
+          2.6,
+          0
+        ],
+        [
+          1.84,
+          1.84
+        ],
+        [
+          0,
+          2.6
+        ],
+        [
+          -1.84,
+          1.84
+        ],
+        [
+          -2.6,
+          0
+        ],
+        [
+          -1.84,
+          -1.84
+        ]
+      ],
+      "elev": "base"
+    }
+  ],
+  "details": [
+    {
+      "group": "post",
+      "color": "metal",
+      "shade": "metal",
+      "note": "post",
+      "points": [
+        [
+          0,
+          -1
+        ],
+        [
+          0.71,
+          -0.71
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0.71,
+          0.71
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -0.71,
+          0.71
+        ],
+        [
+          -1,
+          0
+        ],
+        [
+          -0.71,
+          -0.71
+        ]
+      ],
+      "elev": "shaft"
+    },
+    {
+      "group": "post",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "lamp head",
+      "elev": "head",
+      "min_px": 8,
+      "points": [
+        [
+          0,
+          -1.8
+        ],
+        [
+          1.27,
+          -1.27
+        ],
+        [
+          1.8,
+          0
+        ],
+        [
+          1.27,
+          1.27
+        ],
+        [
+          0,
+          1.8
+        ],
+        [
+          -1.27,
+          1.27
+        ],
+        [
+          -1.8,
+          0
+        ],
+        [
+          -1.27,
+          -1.27
+        ]
+      ]
+    }
+  ]
+}

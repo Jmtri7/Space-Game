@@ -1,0 +1,21 @@
+{
+  "identity": "Crate-stack footprint: the outer box plus a small margin.",
+  "footprint": [
+    [
+      -14,
+      -10
+    ],
+    [
+      14,
+      -10
+    ],
+    [
+      14,
+      10
+    ],
+    [
+      -14,
+      10
+    ]
+  ]
+}

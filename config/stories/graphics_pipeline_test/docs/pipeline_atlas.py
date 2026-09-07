@@ -498,13 +498,16 @@ def interior_plate(name):
     </section>"""
 
 
-def _standing_elevation(name, height):
-    """A synthesised side view of a radially-symmetric standing piece (a
-    column): each expanded layer drawn as a vertical bar at its own width -
-    `fill` layers short at the floor, `detail` layers the full height - with
-    the footprint as a foreshortened ellipse it sits in."""
+def _standing_elevation(kind, name, height):
+    """A synthesised side view of a standing top-down piece. A `silhouette`
+    layer becomes the full-height wall; a layer's `"elev"` hint overrides -
+    `"base"` a short block at the floor, `"shaft"` a full-height post,
+    `"head"` a block near the top. An un-hinted `details` layer is a
+    top-down-only feature and is skipped. The footprint is a foreshortened
+    ellipse the piece sits in."""
     import math
-    design = load("decorations", name + ".json")
+    from game.graphics.expand import resolve_color, shade_profile
+    design = load(kind, name + ".json")
     mats = load("materials.json")
     pal = load("palettes", design["palette"] + ".json")
     coll = load_asset("collision", name)
@@ -516,13 +519,31 @@ def _standing_elevation(name, height):
                                for t in (k * math.pi / 12 for k in range(24))],
                     "color": [230, 90, 200], "opacity": 0.4})
     base_h = max(3.0, height * 0.1)
-    for p in expand(design, pal, mats):
-        if "points" not in p:
+    layers = [(s, "fill") for s in design.get("silhouette", [])] \
+        + [(d, "detail") for d in design.get("details", [])]
+    for layer, role in layers:
+        hint = layer.get("elev")
+        if hint == "base":
+            y0, y1 = 0.0, -base_h
+        elif hint == "shaft":
+            y0, y1 = 0.0, -height
+        elif hint == "head":
+            y0, y1 = -height, -height * 0.78
+        elif role == "fill" and hint is None:
+            y0, y1 = 0.0, -height           # the silhouette is the wall
+        else:
+            continue                        # un-hinted top-down detail
+        pts = layer.get("points") or (
+            [[layer["circle"][0] - layer["circle"][2], 0],
+             [layer["circle"][0] + layer["circle"][2], 0]] if layer.get("circle") else None)
+        if not pts:
             continue
-        xs = [q[0] for q in p["points"]]
+        xs = [q[0] for q in pts]
         w = max(xs) - min(xs)
-        top = -(height if p.get("role") == "detail" else base_h)
-        out.append(dict(p, points=[[-w / 2, 0.0], [w / 2, 0.0], [w / 2, top], [-w / 2, top]]))
+        rgb = resolve_color(layer["color"], layer.get("tone", "mid"), pal,
+                            shade_profile(layer.get("shade"), mats))
+        out.append({"points": [[-w / 2, y0], [w / 2, y0], [w / 2, y1], [-w / 2, y1]],
+                    "color": rgb})
     return out
 
 
@@ -546,7 +567,7 @@ def decoration_plate(name):
 
     specs = []
     if design.get("height"):
-        elev = _standing_elevation(name, design["height"])
+        elev = _standing_elevation("decorations", name, design["height"])
         exs = [q[0] for p in elev for q in p["points"]]
         eys = [q[1] for p in elev for q in p["points"]]
         pad = (max(exs) - min(exs)) * 0.35
@@ -562,6 +583,100 @@ def decoration_plate(name):
         <h2>decoration: {name}</h2>
         <p class="identity">{design['identity']}</p>
         <p class="stat">{"elevation (synthesised) &middot; " if design.get("height") else ""}top-down plan &middot; footprint overlay (magenta){lane}</p>
+      </div>
+    </section>"""
+
+
+def building_plate(name):
+    """One settlement building (buildings/<name>.json): top-down plan with its
+    footprint, a synthesised orthographic elevation, and that elevation beside
+    the player figure for scale."""
+    design = load("buildings", name + ".json")
+    mats = load("materials.json")
+    pal = load("palettes", design["palette"] + ".json")
+    parts = expand(design, pal, mats)
+    coll = load_asset("collision", name)
+    hb = ([{"points": coll["footprint"], "color": [230, 90, 200], "opacity": 0.3}]
+          if coll and coll.get("footprint") else [])
+    pts = [q for p in parts if "points" in p for q in p["points"]] \
+        + (coll["footprint"] if coll and coll.get("footprint") else [])
+    xs, ys = [q[0] for q in pts], [q[1] for q in pts]
+    r = max(max(xs) - min(xs), max(ys) - min(ys)) * 0.62
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    plan = svg_specimen(parts + hb, vb=(cx - r, cy - r, 2 * r, 2 * r), px=260, ground=False)
+
+    elev = _standing_elevation("buildings", name, design["height"])
+    exs = [q[0] for p in elev for q in p["points"]]
+    ew = max(exs) - min(exs)
+    fig = _shift(xbody(load("body", "human_femme.json")), min(exs) - 10)
+    fexs = [q[0] for p in fig for q in p["points"]] + exs
+    evb = (min(fexs) - 6, -design["height"] - 4, max(fexs) - min(fexs) + 12, design["height"] + 8)
+    elevsvg = svg_specimen(elev + fig, vb=evb, px=300, ground=True)
+    return f"""
+    <section class="plate">
+      <div class="spec">{plan}</div>
+      <div class="spec">{elevsvg}</div>
+      <div class="meta">
+        <h2>building: {name}</h2>
+        <p class="identity">{design['identity']}</p>
+        <p class="stat">top-down plan + footprint (magenta) &middot; elevation
+          (synthesised, {design['height']} u) beside the player figure</p>
+      </div>
+    </section>"""
+
+
+def settlement_plate(name):
+    """A surface-settlement floor plan (interiors/<name>.json with `structures`):
+    the paved rooms, the buildings and decorations placed on them, then the
+    same view with every footprint overlaid."""
+    from game.graphics.expand import resolve_color
+    design = load("interiors", name + ".json")
+    mats = load("materials.json")
+    pal = load("palettes", design["palette"] + ".json")
+
+    base = []
+    floor = [{"points": r["points"],
+              "color": resolve_color(r.get("color", "hull"), "mid", pal)}
+             for r in design["rooms"]]
+    portals = [{"points": p["points"], "color": [86, 116, 150], "opacity": 0.55}
+               for p in design.get("portals", [])]
+
+    body, hitboxes = [], []
+    for st in design.get("structures", []):
+        d = load("buildings", st["building"] + ".json")
+        body += _place(expand(d, load("palettes", d["palette"] + ".json"), mats),
+                       st["at"], st.get("angle", 0))
+        c = load_asset("collision", st["building"])
+        if c and c.get("footprint"):
+            hitboxes.append(dict(_place([{"points": c["footprint"]}], st["at"], st.get("angle", 0))[0],
+                                 color=[230, 90, 200], opacity=0.26))
+    for pl in design.get("placements", []):
+        d = load("decorations", pl["decoration"] + ".json")
+        body += _place(expand(d, load("palettes", d["palette"] + ".json"), mats),
+                       pl["at"], pl.get("angle", 0))
+        c = load_asset("collision", pl["decoration"])
+        if c and c.get("footprint"):
+            hitboxes.append(dict(_place([{"points": c["footprint"]}], pl["at"], pl.get("angle", 0))[0],
+                                 color=[230, 90, 200], opacity=0.26))
+
+    xs = [x for r in design["rooms"] for x, y in r["points"]]
+    ys = [y for r in design["rooms"] for x, y in r["points"]]
+    pad = 34
+    vb = (min(xs) - pad, min(ys) - pad, max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad)
+    regolith = [{"points": [[vb[0], vb[1]], [vb[0] + vb[2], vb[1]],
+                            [vb[0] + vb[2], vb[1] + vb[3]], [vb[0], vb[1] + vb[3]]],
+                 "color": [138, 129, 117]}]
+    plan = svg_specimen(regolith + floor + portals + body, vb=vb, px=560, ground=False)
+    over = svg_specimen(regolith + floor + portals + body + hitboxes, vb=vb, px=560, ground=False)
+    return f"""
+    <section class="plate">
+      <div class="spec">{plan}</div>
+      <div class="spec">{over}</div>
+      <div class="meta">
+        <h2>settlement: {name}</h2>
+        <p class="identity">{design['identity']}</p>
+        <p class="stat">paved plaza on regolith &middot; blue = the landing-pad
+          portal &middot; second view overlays every footprint (magenta)</p>
       </div>
     </section>"""
 
@@ -600,11 +715,14 @@ def main():
     bodies = compare_plate() + face_plate() + hair_plate() + walk_plate()
     _write("pipeline-bodies.html", "Human Bodies", bodies)
 
-    # 2. Civilian Structures - the ship, the station, the interior + its
-    # furniture, plus any settlement plan / buildings.
+    # 2. Civilian Structures - the ship, the station, the station interior, the
+    # surface settlement + its buildings, and every furniture decoration.
     struct = "\n".join(craft_plate("ships", n) for n in _names("ships"))
     struct += "\n".join(craft_plate("stations", n) for n in _names("stations"))
-    struct += "\n".join(interior_plate(n) for n in _names("interiors"))
+    for n in _names("interiors"):
+        design = load("interiors", n + ".json")
+        struct += settlement_plate(n) if design.get("structures") else interior_plate(n)
+    struct += "\n".join(building_plate(n) for n in _names("buildings"))
     struct += "\n".join(decoration_plate(n) for n in _names("decorations"))
     _write("pipeline-structures.html", "Civilian Structures", struct)
 

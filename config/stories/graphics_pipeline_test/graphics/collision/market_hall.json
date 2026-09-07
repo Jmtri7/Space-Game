@@ -1,0 +1,21 @@
+{
+  "identity": "Market Hall footprint: the outer wall line, solid to walkers.",
+  "footprint": [
+    [
+      -62,
+      -40
+    ],
+    [
+      62,
+      -40
+    ],
+    [
+      62,
+      34
+    ],
+    [
+      -62,
+      34
+    ]
+  ]
+}

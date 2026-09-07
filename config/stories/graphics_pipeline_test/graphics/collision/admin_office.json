@@ -1,0 +1,37 @@
+{
+  "identity": "Admin Office footprint: the outer wall line, solid to walkers.",
+  "footprint": [
+    [
+      -31,
+      -27
+    ],
+    [
+      31,
+      -27
+    ],
+    [
+      31,
+      27
+    ],
+    [
+      12,
+      27
+    ],
+    [
+      12,
+      34
+    ],
+    [
+      -12,
+      34
+    ],
+    [
+      -12,
+      27
+    ],
+    [
+      -31,
+      27
+    ]
+  ]
+}

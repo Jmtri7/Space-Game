@@ -1,0 +1,117 @@
+{
+  "identity": "A settlement admin office: a compact port-authority bureau with a stepped-out entry porch, a lit sign board on the roof and a short comms mast. About 3 m tall.",
+  "tier": "building",
+  "palette": "ship_std",
+  "height": 38,
+  "units": "absolute local units (31 = player height), top-down, origin at the footprint centre; +y is south (screen-down).",
+  "silhouette": [
+    {
+      "group": "office",
+      "color": "hull_dk",
+      "shade": "matte",
+      "points": [
+        [
+          -30,
+          -26
+        ],
+        [
+          30,
+          -26
+        ],
+        [
+          30,
+          26
+        ],
+        [
+          -30,
+          26
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "office",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -26,
+          -22
+        ],
+        [
+          26,
+          -22
+        ],
+        [
+          26,
+          22
+        ],
+        [
+          -26,
+          22
+        ]
+      ]
+    },
+    {
+      "group": "office",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "porch",
+      "points": [
+        [
+          -11,
+          22
+        ],
+        [
+          11,
+          22
+        ],
+        [
+          11,
+          32
+        ],
+        [
+          -11,
+          32
+        ]
+      ]
+    },
+    {
+      "group": "office",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "sign",
+      "points": [
+        [
+          -12,
+          -6
+        ],
+        [
+          12,
+          -6
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          -12,
+          4
+        ]
+      ]
+    },
+    {
+      "group": "office",
+      "color": "metal",
+      "shade": "metal",
+      "note": "mast",
+      "circle": [
+        20,
+        -18,
+        2.4
+      ]
+    }
+  ]
+}

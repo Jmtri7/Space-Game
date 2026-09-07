@@ -5,11 +5,91 @@
   "height": 46,
   "units": "absolute local units (31 = player height), top-down, origin at the column axis.",
   "silhouette": [
-    { "group": "shaft", "color": "hull_dk", "shade": false, "note": "base ring; flat - a crescent on a small top-down octagon reads as a broken ring",
-      "points": [ [ 0.0, -6.0 ], [ 4.24, -4.24 ], [ 6.0, 0.0 ], [ 4.24, 4.24 ], [ 0.0, 6.0 ], [ -4.24, 4.24 ], [ -6.0, 0.0 ], [ -4.24, -4.24 ] ] }
+    {
+      "group": "shaft",
+      "color": "hull_dk",
+      "shade": false,
+      "note": "base ring; flat - a crescent on a small top-down octagon reads as a broken ring",
+      "points": [
+        [
+          0.0,
+          -6.0
+        ],
+        [
+          4.24,
+          -4.24
+        ],
+        [
+          6.0,
+          0.0
+        ],
+        [
+          4.24,
+          4.24
+        ],
+        [
+          0.0,
+          6.0
+        ],
+        [
+          -4.24,
+          4.24
+        ],
+        [
+          -6.0,
+          0.0
+        ],
+        [
+          -4.24,
+          -4.24
+        ]
+      ],
+      "elev": "base"
+    }
   ],
   "details": [
-    { "group": "shaft", "color": "hull", "shade": "deep", "role": "detail", "min_px": 20, "note": "shaft",
-      "points": [ [ 0.0, -4.2 ], [ 2.97, -2.97 ], [ 4.2, 0.0 ], [ 2.97, 2.97 ], [ 0.0, 4.2 ], [ -2.97, 2.97 ], [ -4.2, 0.0 ], [ -2.97, -2.97 ] ] }
+    {
+      "group": "shaft",
+      "color": "hull",
+      "shade": "deep",
+      "role": "detail",
+      "min_px": 20,
+      "note": "shaft",
+      "points": [
+        [
+          0.0,
+          -4.2
+        ],
+        [
+          2.97,
+          -2.97
+        ],
+        [
+          4.2,
+          0.0
+        ],
+        [
+          2.97,
+          2.97
+        ],
+        [
+          0.0,
+          4.2
+        ],
+        [
+          -2.97,
+          2.97
+        ],
+        [
+          -4.2,
+          0.0
+        ],
+        [
+          -2.97,
+          -2.97
+        ]
+      ],
+      "elev": "shaft"
+    }
   ]
 }

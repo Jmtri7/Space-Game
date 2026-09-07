@@ -1,0 +1,184 @@
+{
+  "identity": "A small civilian surface settlement: a paved central plaza with a market hall on the north side, two housing blocks east and west, an admin office by the landing pad on the south, and a scatter of planters, lamp posts and cargo. Regolith outside the paving.",
+  "tier": "interior",
+  "palette": "ship_std",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down).",
+  "rooms": [
+    {
+      "id": "plaza",
+      "color": "hull_dk",
+      "points": [
+        [
+          120,
+          120
+        ],
+        [
+          520,
+          120
+        ],
+        [
+          520,
+          470
+        ],
+        [
+          120,
+          470
+        ]
+      ]
+    },
+    {
+      "id": "pad_approach",
+      "color": "hull",
+      "points": [
+        [
+          260,
+          470
+        ],
+        [
+          380,
+          470
+        ],
+        [
+          380,
+          560
+        ],
+        [
+          260,
+          560
+        ]
+      ]
+    }
+  ],
+  "portals": [
+    {
+      "id": "landing_pad",
+      "to": "outside",
+      "points": [
+        [
+          300,
+          556
+        ],
+        [
+          340,
+          556
+        ],
+        [
+          340,
+          576
+        ],
+        [
+          300,
+          576
+        ]
+      ]
+    }
+  ],
+  "structures": [
+    {
+      "building": "market_hall",
+      "at": [
+        320,
+        175
+      ],
+      "angle": 0
+    },
+    {
+      "building": "housing_block",
+      "at": [
+        175,
+        300
+      ],
+      "angle": 90
+    },
+    {
+      "building": "housing_block",
+      "at": [
+        465,
+        300
+      ],
+      "angle": 90
+    },
+    {
+      "building": "admin_office",
+      "at": [
+        320,
+        430
+      ],
+      "angle": 0
+    }
+  ],
+  "placements": [
+    {
+      "decoration": "planter",
+      "at": [
+        220,
+        250
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "planter",
+      "at": [
+        420,
+        250
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "planter",
+      "at": [
+        320,
+        320
+      ],
+      "angle": 90
+    },
+    {
+      "decoration": "lamp_post",
+      "at": [
+        150,
+        150
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "lamp_post",
+      "at": [
+        490,
+        150
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "lamp_post",
+      "at": [
+        150,
+        440
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "lamp_post",
+      "at": [
+        490,
+        440
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "crates",
+      "at": [
+        430,
+        420
+      ],
+      "angle": 0
+    },
+    {
+      "decoration": "crates",
+      "at": [
+        200,
+        400
+      ],
+      "angle": 20
+    }
+  ]
+}

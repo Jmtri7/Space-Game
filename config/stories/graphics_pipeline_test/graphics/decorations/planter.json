@@ -1,0 +1,57 @@
+{
+  "identity": "A raised planter bed, about 0.8 m across - a dark rim around a block of low greenery. Softens a plaza edge; solid to walkers.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "units": "absolute local units (31 = player height), top-down, origin at the centre.",
+  "silhouette": [
+    {
+      "group": "bed",
+      "color": "hull_dk",
+      "shade": "deep",
+      "points": [
+        [
+          -12,
+          -7
+        ],
+        [
+          12,
+          -7
+        ],
+        [
+          12,
+          7
+        ],
+        [
+          -12,
+          7
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "bed",
+      "color": "leaf",
+      "shade": "soft",
+      "note": "greenery",
+      "points": [
+        [
+          -10,
+          -5
+        ],
+        [
+          10,
+          -5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          -10,
+          5
+        ]
+      ]
+    }
+  ]
+}

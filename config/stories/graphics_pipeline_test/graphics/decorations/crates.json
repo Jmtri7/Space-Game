@@ -1,0 +1,92 @@
+{
+  "identity": "A stack of civilian cargo: two shipping crates and a drum, about 1.2 m across. Edge clutter - place it against a wall, clear of lanes.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "units": "absolute local units (31 = player height), top-down, origin at the stack centre.",
+  "silhouette": [
+    {
+      "group": "cargo",
+      "color": "hull_dk",
+      "shade": "matte",
+      "points": [
+        [
+          -13,
+          -9
+        ],
+        [
+          13,
+          -9
+        ],
+        [
+          13,
+          9
+        ],
+        [
+          -13,
+          9
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "cargo",
+      "color": "hull",
+      "shade": "deep",
+      "note": "crate 1",
+      "points": [
+        [
+          -12,
+          -8
+        ],
+        [
+          0,
+          -8
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          -12,
+          4
+        ]
+      ]
+    },
+    {
+      "group": "cargo",
+      "color": "metal",
+      "shade": "deep",
+      "note": "crate 2",
+      "points": [
+        [
+          1,
+          -6
+        ],
+        [
+          11,
+          -6
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "group": "cargo",
+      "color": "engine",
+      "shade": "metal",
+      "note": "drum",
+      "circle": [
+        -6,
+        6,
+        3.2
+      ]
+    }
+  ]
+}

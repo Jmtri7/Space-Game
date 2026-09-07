@@ -1,0 +1,21 @@
+{
+  "identity": "Planter footprint: the rim, solid to walkers.",
+  "footprint": [
+    [
+      -12.5,
+      -7.5
+    ],
+    [
+      12.5,
+      -7.5
+    ],
+    [
+      12.5,
+      7.5
+    ],
+    [
+      -12.5,
+      7.5
+    ]
+  ]
+}
