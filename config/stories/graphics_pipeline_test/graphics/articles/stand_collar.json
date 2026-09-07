@@ -1,5 +1,5 @@
 {
-  "identity": "A stiff stand collar: a plain trapezoid band rising from the chest to the base of the neck, wider at the bottom. Free-drawn, reads the same on either body.",
+  "identity": "A stiff stand collar: a trapezoid band rising from the chest to the base of the neck, flaring wider at the top. Free-drawn, reads the same on either body.",
   "tier": "person",
   "palette": "civilian",
   "regions": [
@@ -13,20 +13,20 @@
         "masc": {
           "points": [
             [
-              -1.78,
+              -1.45,
+              -24.92
+            ],
+            [
+              1.45,
               -24.92
             ],
             [
               1.78,
-              -24.92
+              -26.42
             ],
             [
-              1.06,
-              -26.34
-            ],
-            [
-              -1.06,
-              -26.34
+              -1.78,
+              -26.42
             ]
           ],
           "fits": []
@@ -34,20 +34,20 @@
         "femme": {
           "points": [
             [
-              -1.78,
+              -1.45,
+              -24.92
+            ],
+            [
+              1.45,
               -24.92
             ],
             [
               1.78,
-              -24.92
+              -26.42
             ],
             [
-              1.06,
-              -26.34
-            ],
-            [
-              -1.06,
-              -26.34
+              -1.78,
+              -26.42
             ]
           ],
           "fits": []

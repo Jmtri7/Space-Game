@@ -1393,12 +1393,15 @@ civilian, smuggler, ranger, bounty hunter), rebuilt from the articles above:
   cross — medic), `pen_array` (red/cyan/gold breast-pocket pens — researcher),
   `visor` (a slim eye band — recoloured `items/visor_ice` light blue for
   security + researcher, `items/visor_red` for the bounty hunter),
-  `peaked_cap` (a military wheel cap — `band` + a `crown` that flares wider than
-  the band + a dark forward `peak`; `items/peaked_cap_command` is Station
-  Command's navy officer cap), `stand_collar` (a trapezoid collar band —
+  `garrison_cap` (a soft creased side cap, pointed front and back, `curtain`
+  seam, no peak; `items/garrison_cap_command` is Station Command's navy one),
+  `stand_collar` (a trapezoid collar band that flares wider at the top —
   `items/stand_collar_white` is Station Command's), `buttons` (eight octagon
   buttons in two columns — `items/buttons_gold` is Station Command's
-  double-breasted grid).
+  double-breasted grid), `long_coat_closed` (the `long_coat` cut with the two
+  front panels meeting on the midline and a `centre placket` seam — worn navy
+  by Station Command via `items/coat_command`, charcoal by the Marshal via
+  `items/coat_marshal`).
 - `sets/ck_<outfit>_{masc,femme}.json` — the article + item list per outfit per
   body, `palette: "civilian"`.
 - `graphics.json` `outfits` `ck_<outfit>_{masc,femme}` and one concourse NPC per

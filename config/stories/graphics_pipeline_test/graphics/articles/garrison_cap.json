@@ -1,0 +1,168 @@
+{
+  "identity": "A soft garrison (side) cap - a creased fore-and-aft wedge that sits low on the head, pointed front and back, with a folded curtain seam along the lower edge. No peak.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "cap",
+      "tag": "hat",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.95,
+              -30.42
+            ],
+            [
+              -2.68,
+              -31.22
+            ],
+            [
+              -1.55,
+              -31.98
+            ],
+            [
+              -0.1,
+              -32.38
+            ],
+            [
+              1.45,
+              -32.18
+            ],
+            [
+              2.48,
+              -31.48
+            ],
+            [
+              2.82,
+              -30.66
+            ],
+            [
+              2.18,
+              -30.16
+            ],
+            [
+              0.35,
+              -30.02
+            ],
+            [
+              -1.45,
+              -30.12
+            ],
+            [
+              -2.48,
+              -30.32
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "cloth",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "curtain",
+              "points": [
+                [
+                  -2.6,
+                  -30.6
+                ],
+                [
+                  2.42,
+                  -30.48
+                ],
+                [
+                  2.36,
+                  -30.92
+                ],
+                [
+                  -2.6,
+                  -31.05
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -2.95,
+              -30.42
+            ],
+            [
+              -2.68,
+              -31.22
+            ],
+            [
+              -1.55,
+              -31.98
+            ],
+            [
+              -0.1,
+              -32.38
+            ],
+            [
+              1.45,
+              -32.18
+            ],
+            [
+              2.48,
+              -31.48
+            ],
+            [
+              2.82,
+              -30.66
+            ],
+            [
+              2.18,
+              -30.16
+            ],
+            [
+              0.35,
+              -30.02
+            ],
+            [
+              -1.45,
+              -30.12
+            ],
+            [
+              -2.48,
+              -30.32
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "cloth",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "curtain",
+              "points": [
+                [
+                  -2.6,
+                  -30.6
+                ],
+                [
+                  2.42,
+                  -30.48
+                ],
+                [
+                  2.36,
+                  -30.92
+                ],
+                [
+                  -2.6,
+                  -31.05
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
