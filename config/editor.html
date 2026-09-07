@@ -131,6 +131,14 @@
       <div class="hint">Tick to show a sibling article, untick to hide it.</div>
       <div id="previewArtList"></div>
     </div>
+
+    <h2 style="margin-top:16px">Draw order</h2>
+    <div class="hint">The whole story's back-to-front stack: body parts (fixed)
+      interleaved with garment <b>tags</b>. Move a tag with its arrows; a region
+      tagged with that name draws at that slot. Saved to
+      <code>graphics/draw_order.json</code>.</div>
+    <div id="tagOrderPanel"></div>
+    <div class="row"><button id="tagOrderAdd">+ tag</button></div>
   </div>
 
   <div id="fitPanelSec">
@@ -183,9 +191,9 @@
     <button id="pDel">− selected polygon(s)</button>
   </div>
   <div class="hint" id="pAddRHint" style="display:none">a <b>region</b> is a
-    standalone garment piece (own group, front/back, fits, shade) — it copies
-    the selected region's group and front/back if one is selected; set its
-    name, <b>anim. group</b> and <b>draw order</b> in the Selected&nbsp;section
+    standalone garment piece (own group, tag, fits, shade) — it copies
+    the selected region's group and tag if one is selected; set its
+    name, <b>anim. group</b> and <b>draw order</b> tag in the Selected&nbsp;section
     panel below. A
     <b>polygon</b>/<b>circle</b> is a detail on the selected region (rides its
     group, no fit).</div>
@@ -511,6 +519,33 @@ async function loadMatPal(){
   if(m){ MATERIALS = m; SHADENAMES = Object.keys(MATERIALS.shading || {}); }
   const p = await VFS.readJSON(GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
   if(p){ PALETTE = p; COLNAMES = _palKeys(PALETTE); }
+  await loadDrawOrder();
+}
+// The story's worn-figure draw order: one list mixing body section names
+// (fixed anchors) with garment tag strings. A region's `tag` names a slot
+// here; regions with no tag sit at their animation `group`. Edited in the
+// Outfit section, saved back to graphics/draw_order.json.
+let drawOrder = [];
+let drawOrderIdentity = '';
+async function loadDrawOrder(){
+  if(!GBASE){ drawOrder = []; return; }
+  const j = await VFS.readJSON(GBASE + '/draw_order.json');
+  drawOrder = (j && Array.isArray(j.order)) ? j.order.slice() : [];
+  drawOrderIdentity = (j && j.identity) || '';
+}
+function bodySectionNames(){
+  return new Set(Object.keys((TAILOR_MODE || OUTFIT_MODE ? bodyDesign : D)?.sections || {}));
+}
+// tags = draw-order entries that aren't a body section
+function drawOrderTags(){
+  const secs = bodySectionNames();
+  return drawOrder.filter(n => !secs.has(n));
+}
+async function saveDrawOrder(){
+  if(!GBASE || !VFS.canWrite) return false;
+  const body = { identity: drawOrderIdentity || 'Worn-figure draw order for this story.', order: drawOrder };
+  try{ await VFS.writeText(GBASE + '/draw_order.json', toRepoJSON(body)); return true; }
+  catch(e){ return false; }
 }
 
 // ---- colour + shading: hand-port of game/graphics/expand.py ---------------
@@ -863,9 +898,9 @@ function S2W(sx,sy){ const r=svg.getBoundingClientRect();
 
 function polyStr(pts){ return pts.map(p=>{const s=W2S(p[0],p[1]);return s[0].toFixed(1)+','+s[1].toFixed(1);}).join(' '); }
 
-// ---- tailor mode: body + article parts, interleaved by animation group +
-// front/back exactly like the real game's compose_worn, so a `back` hair region
-// previews behind the head instead of on top of the whole body. ----
+// ---- tailor mode: body + article parts, interleaved by the story draw order
+// (body sections + garment tags) exactly like the real game's compose_worn, so
+// a `hair_back`-tagged region previews behind the head, not over the body. ----
 function bodyDrawParts(body){
   body = body || bodyDesign;
   if(!body) return [];
@@ -921,8 +956,8 @@ function emitRegionParts(out, region, opts){
     : region.points;
   const col = look ? lookColor(region) : region.color;
   const prof = look ? lookProfile(region) : shadeProfile(region.shade);
-  const back = region.back || region.layer === 'back';
-  const tag = p => { p.group = grp; if(back) p.back = true;
+  const rtag = region.tag || region.layer || (region.back ? 'back' : null);  // earlier spellings
+  const tag = p => { p.group = grp; if(rtag) p.tag = rtag;
     if(tagSec) p.sec = tagSec; return p; };
   out.push(tag({points: dispPts, fill: rgb(resolveColor(col, region.tone||'mid', prof))}));
   if(showShade && prof && !prof.emissive){
@@ -973,8 +1008,8 @@ function hairDrawParts(body){
   return out;
 }
 // "preview other articles": one parts list per ticked sibling article, in
-// preview-list order = outfit priority (last = highest, drawn on top). Kept as
-// separate lists so composeWornJS can rank them by priority. Reference-only.
+// preview-list order. Kept as separate lists so composeWornJS breaks a
+// same-slot tie by that order (last on top), like a set's article list.
 function previewArticleLists(body){
   body = body || bodyDesign;
   return previewArticles.map(pa => {
@@ -984,22 +1019,25 @@ function previewArticleLists(body){
     return out;
   });
 }
-// mirror of expand.py compose_worn. Every part belongs to one animation group;
-// the body lists them back-to-front in `draw_order`. Within a group: back
-// regions (reverse priority) < the body part < front regions (forward
-// priority). Each `lists` arg is one article; later arg = higher priority.
+// mirror of expand.py compose_worn. Every worn part is placed by its slot in
+// the story `drawOrder` list (body section names + garment tags): a body part
+// by its section, an article region by its `tag` (else legacy `layer`, else its
+// animation `group`). Body part first within a slot, then articles in `lists`
+// order (later list on top). Unknown name -> the very front.
 function composeWornJS(bodyDes, bodyParts, ...lists){
-  const order = (bodyDes.draw_order && bodyDes.draw_order.length)
-    ? bodyDes.draw_order : Object.keys(bodyDes.sections||{});
-  const gidx = {}; order.forEach((nm,i)=> gidx[nm] = i);
+  const order = (drawOrder && drawOrder.length) ? drawOrder
+    : (bodyDes.draw_order && bodyDes.draw_order.length ? bodyDes.draw_order
+       : Object.keys(bodyDes.sections||{}));
+  const oidx = {}; order.forEach((nm,i)=> oidx[nm] = i);
   const end = order.length;
-  const grank = p => (p.group in gidx) ? gidx[p.group]
-                    : (p.sec in gidx) ? gidx[p.sec] : end;
+  const at = nm => (nm in oidx) ? oidx[nm] : end;
+  const rank = (p, isBody) => isBody
+    ? (p.sec in oidx ? oidx[p.sec] : at(p.group))
+    : at(p.tag || p.layer || p.group);
   const keyed = [];
-  bodyParts.forEach(p => keyed.push([grank(p), 1, 0, keyed.length, p]));
-  lists.forEach((lst, i) => { const prio = i + 1;
-    (lst||[]).forEach(p => keyed.push(
-      [grank(p), p.back ? 0 : 2, p.back ? -prio : prio, keyed.length, p])); });
+  bodyParts.forEach(p => keyed.push([rank(p,true), 0, 0, keyed.length, p]));
+  lists.forEach((lst, i) => (lst||[]).forEach(p =>
+    keyed.push([rank(p,false), 1, i+1, keyed.length, p])));
   keyed.sort((a,b) => a[0]-b[0] || a[1]-b[1] || a[2]-b[2] || a[3]-b[3]);
   return keyed.map(t => t[4]);
 }
@@ -1169,6 +1207,7 @@ async function loadPreviewHair(){
       if(hj && hj.regions) previewHair = hoistVariant(shimLook(hj), activeVariant());
     }catch(e){ previewHair = null; }
   }
+  if(OUTFIT_MODE && typeof buildTagOrderPanel === 'function') buildTagOrderPanel();
   if(typeof render === 'function') render();
 }
 document.getElementById('hairPicker').onchange = e=>{
@@ -1185,9 +1224,8 @@ document.getElementById('tHidesHair').onchange = e=>{
 };
 
 // --- outfit mode: "preview other articles" - tick any sibling articles/*.json
-// to draw them on the figure, composed by the same animation-group + front/back
-// stack as the game. The list order is the outfit priority (arrows change it).
-// Nothing is written; the tick list is
+// to draw them on the figure, composed by the story draw order (each region at
+// its `tag`'s slot, else its group) like the game. Nothing is written; the tick list is
 // remembered per story. Hair is excluded - the "preview hair" dropdown owns it.
 let PREVIEW_CANDIDATES = [];   // sibling article stems that can be previewed
 let PREVIEW_SELF_NAME = '';    // the edited article's stem (never in the list)
@@ -1230,40 +1268,80 @@ async function loadPreviewArticles(names){
   }
   previewArticles = out;
   if(typeof buildSecEdit === 'function') buildSecEdit();
+  if(OUTFIT_MODE && typeof buildTagOrderPanel === 'function') buildTagOrderPanel();
   if(typeof render === 'function') render();
 }
 function buildPreviewArticleList(){
   const list = document.getElementById('previewArtList'); if(!list) return;
-  const worn = previewArticles.map(p => p.name);           // ordered = outfit priority
-  const off = PREVIEW_CANDIDATES.filter(n => !worn.includes(n));
-  const rerender = async names => {
-    await loadPreviewArticles(names); savePreviewPick(); buildPreviewArticleList();
-  };
+  const worn = new Set(previewArticles.map(p => p.name));
   list.innerHTML =
-    `<div class="hint">Ticked = worn. Order is outfit priority — top draws
-      first (under), bottom draws last (over). The arrows change it.</div>` +
-    worn.map((n,i) => `
-      <div class="row" style="gap:4px;align-items:center">
-        <button class="paArr" data-mv="${i}:${i-1}" ${i===0?'disabled':''} title="lower priority">↑</button>
-        <button class="paArr" data-mv="${i}:${i+1}" ${i===worn.length-1?'disabled':''} title="higher priority">↓</button>
-        <label style="flex:1;margin:0"><input type="checkbox" class="paChk" value="${n}" checked> ${n}</label>
-      </div>`).join('') +
-    (off.length ? `<div class="hint" style="margin-top:6px">not worn:</div>` +
-      off.map(n => `<label><input type="checkbox" class="paChk" value="${n}"> ${n}</label>`).join('') : '');
-  list.querySelectorAll('.paChk').forEach(cb => cb.onchange = () => {
-    let names = previewArticles.map(p => p.name);
-    if(cb.checked){ if(!names.includes(cb.value)) names.push(cb.value); }
-    else names = names.filter(n => n !== cb.value);
-    rerender(names);
-  });
-  list.querySelectorAll('.paArr').forEach(b => b.onclick = () => {
-    const [from, to] = b.dataset.mv.split(':').map(Number);
-    if(to < 0 || to >= worn.length) return;
-    const names = worn.slice();
-    names.splice(to, 0, names.splice(from, 1)[0]);
-    rerender(names);
+    `<div class="hint">Ticked = worn. Draw order is set by each region's tag
+      (below), not this list.</div>` +
+    PREVIEW_CANDIDATES.map(n =>
+      `<label><input type="checkbox" class="paChk" value="${n}" ${worn.has(n)?'checked':''}> ${n}</label>`).join('');
+  list.querySelectorAll('.paChk').forEach(cb => cb.onchange = async () => {
+    const names = [...list.querySelectorAll('.paChk:checked')].map(c => c.value);
+    await loadPreviewArticles(names);
+    savePreviewPick();
   });
 }
+// the story draw-order list, rendered for reordering. Body sections are fixed
+// anchors; only tags carry move / rename / delete controls. Every change is
+// written straight back to graphics/draw_order.json.
+function tagUsageCount(name){
+  let n = 0;
+  const scan = regs => (regs||[]).forEach(r => { if((r.tag||r.layer) === name) n++; });
+  if(TAILOR_MODE && D) scan(D.regions);
+  previewArticles.forEach(pa => scan(pa.design.regions));
+  if(previewHair) scan(previewHair.regions);
+  return n;
+}
+function buildTagOrderPanel(){
+  const el = document.getElementById('tagOrderPanel'); if(!el) return;
+  const secs = bodySectionNames();
+  const ro = !VFS.canWrite;
+  if(!drawOrder.length){
+    el.innerHTML = `<div class="hint">no <code>draw_order.json</code> for this story yet — regions fall back to their anim. group.</div>`;
+    return;
+  }
+  el.innerHTML = (ro ? `<div class="hint">read-only — open the repo folder read-write to edit.</div>` : '')
+    + drawOrder.map((nm, i) => {
+    const isSec = secs.has(nm);
+    if(isSec) return `<div class="row" style="gap:6px;opacity:.5;margin:2px 0">
+        <span style="width:52px;font:11px ui-monospace,monospace">${i}</span>
+        <span style="flex:1">${nm}</span><span class="hint" style="margin:0">body</span></div>`;
+    const used = tagUsageCount(nm);
+    return `<div class="row" style="gap:4px;align-items:center;margin:2px 0">
+        <button class="toArr" data-mv="${i}:${i-1}" ${i===0||ro?'disabled':''} title="move up (further back)">↑</button>
+        <button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1||ro?'disabled':''} title="move down (further front)">↓</button>
+        <b style="flex:1">${nm}</b>
+        <span class="hint" style="margin:0">${used ? used + ' region' + (used>1?'s':'') : 'unused'}</span>
+        <button class="toDel" data-tag="${nm.replace(/"/g,'&quot;')}" ${ro?'disabled':''} title="remove this tag from the order">×</button>
+      </div>`;
+  }).join('');
+  const commit = async () => { await saveDrawOrder(); buildTagOrderPanel(); render(); };
+  el.querySelectorAll('.toArr').forEach(b => b.onclick = async () => {
+    const [from, to] = b.dataset.mv.split(':').map(Number);
+    if(to < 0 || to >= drawOrder.length) return;
+    drawOrder.splice(to, 0, drawOrder.splice(from, 1)[0]);
+    await commit();
+  });
+  el.querySelectorAll('.toDel').forEach(b => b.onclick = async () => {
+    const t = b.dataset.tag;
+    if(tagUsageCount(t) && !confirm(`"${t}" is still used by a region. Remove it from the order anyway? (those regions fall back to their anim. group)`)) return;
+    drawOrder = drawOrder.filter(n => n !== t);
+    await commit();
+  });
+}
+document.getElementById('tagOrderAdd').onclick = async () => {
+  if(!VFS.canWrite){ alert('Editing the draw order needs the repo folder opened read-write.'); return; }
+  const t = (prompt('New tag name:') || '').trim();
+  if(!t || drawOrder.includes(t)) return;
+  if(bodySectionNames().has(t)){ alert('that name is a body section — pick another'); return; }
+  const i = drawOrder.indexOf('front');
+  drawOrder.splice(i < 0 ? drawOrder.length : i, 0, t);
+  await saveDrawOrder(); buildTagOrderPanel(); render();
+};
 
 function render(){
   if(!D){ svg.innerHTML=''; return; }
@@ -1300,9 +1378,9 @@ function render(){
   }
 
   if((TAILOR_MODE || OUTFIT_MODE) && bodyDesign){
-    // interleave the body's own parts with the articles' by animation group +
-    // front/back, exactly like the real game's compose_worn - so e.g. a `back`
-    // hair region draws *behind* the head, not on top of the body.
+    // interleave the body's own parts with the articles' by the story draw
+    // order, exactly like the real game's compose_worn - so e.g. a
+    // `hair_back`-tagged region draws *behind* the head, not on top of the body.
     let parts = composeWornJS(bodyDesign, bodyDrawParts(), hairDrawParts(),
       ...previewArticleLists(), articleDrawParts());
     if(walkPreviewOn()) parts = applyWalkJS(parts, bodyDesign, walkRig, walkT);
@@ -2111,7 +2189,7 @@ function addRegion(){
     points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]],
     fits: [],
   };
-  if(src && (src.back || src.layer === 'back')) reg.back = true;
+  if(src && (src.tag || src.layer)) reg.tag = src.tag || src.layer;
   D.regions = D.regions || [];
   D.regions.push(reg);
   relinkTailorSections();
@@ -2605,8 +2683,8 @@ function buildSecEdit(){
       border:1px solid #3a4150;border-radius:4px;padding:3px 5px"
       value="${(S.note||'').replace(/"/g,'&quot;')}" placeholder="unnamed region"></div>
     <div class="row">anim. group <select id="mGroup" style="flex:1">${grpSel()}</select></div>
-    <div class="hint">group = the body part it moves with (and where it sits in
-      the draw stack — see <b>draw order</b> below).</div>` : '';
+    <div class="hint">group = the body part it moves with in the walk cycle
+      (also its default place in the draw stack — override with a tag below).</div>` : '';
   el.innerHTML = regionHead + `
     <div class="row">color
       <select id="mMat">${COLNAMES.map(m=>`<option ${m===S.color?'selected':''}>${m}</option>`).join('')}</select>
@@ -2684,34 +2762,47 @@ function initLookPanel(){
   co.onchange = e=>{ previewLook.colOn = e.target.checked; cm.disabled = e.target.checked; save(); render(); };
   cx.onchange = e=>{ previewLook.colHex = e.target.value; save(); render(); };
 }
-// tailor mode: a region draws in FRONT of its anim-group body part (default)
-// or BEHIND it (`"back": true`). Outfit priority (the worn order) stacks front
-// regions high-on-top, back regions high-further-back. See composeWornJS.
-function isRegionBack(S){ return !!(S && (S.back || S.layer === 'back')); }
+// tailor mode: a region draws at its `tag`'s slot in the story draw order
+// (Outfit section), or - with no tag - at its animation `group`. Type a new
+// name to create a tag; it's appended to the order (before `front`) and saved.
+function regionTag(S){ return (S && (S.tag || S.layer || (S.back ? 'back' : ''))) || ''; }
 function drawRankHTML(S){
-  const back = isRegionBack(S);
+  const cur = regionTag(S);
+  const opts = drawOrderTags().map(t =>
+    `<option value="${t.replace(/"/g,'&quot;')}"></option>`).join('');
   return `
     <h2 style="margin-top:14px">draw order</h2>
-    <div class="hint">where this region sits relative to its <b>anim. group</b>
-      (<code>${S.group || 'torso'}</code>): <b>front</b> draws over that body
-      part, <b>back</b> behind it. Between two articles the later (higher
-      priority) one wins — over at the front, further back at the back.</div>
-    <div class="row">
-      <button id="mFront" class="${back?'':'on'}">front</button>
-      <button id="mBack" class="${back?'on':''}">back</button>
-      <button id="mBackAll" title="set front/back for every region in this article">apply to whole article</button>
+    <div class="hint">blank = draw at this region's <b>anim. group</b>
+      (<code>${S.group || 'torso'}</code>). Or give it a <b>tag</b> and place
+      that tag in the stack in the <b>Outfit</b> section (outfit mode).</div>
+    <datalist id="mTagList">${opts}</datalist>
+    <div class="row">tag
+      <input id="mTag" list="mTagList" value="${cur.replace(/"/g,'&quot;')}"
+        placeholder="— anim. group —" style="flex:1;background:#12141a;color:#d9dce2;
+        border:1px solid #3a4150;border-radius:4px;padding:3px 5px">
+      <button id="mTagAll" title="give every region in this article this tag">all</button>
     </div>`;
 }
 function wireDrawRank(S){
-  const put = (r, v) => { if(v) r.back = true; else delete r.back; delete r.layer; };
-  const set = (v, all) => { pushHistory();
-    (all ? (D.regions || []) : [S]).forEach(r => put(r, v));
-    sync(); buildSecEdit(); };
-  const f = document.getElementById('mFront'), b = document.getElementById('mBack'),
-        a = document.getElementById('mBackAll');
-  if(f) f.onclick = () => set(false, false);
-  if(b) b.onclick = () => set(true, false);
-  if(a) a.onclick = () => set(isRegionBack(S), true);
+  const inp = document.getElementById('mTag');
+  const apply = async (v, all) => {
+    pushHistory();
+    (all ? (D.regions || []) : [S]).forEach(r => {
+      delete r.layer; delete r.back;
+      if(v) r.tag = v; else delete r.tag;
+    });
+    // a brand-new tag joins the story order so it can be positioned
+    if(v && !drawOrder.includes(v)){
+      const i = drawOrder.indexOf('front');
+      drawOrder.splice(i < 0 ? drawOrder.length : i, 0, v);
+      await saveDrawOrder();
+      if(typeof buildTagOrderPanel === 'function') buildTagOrderPanel();
+    }
+    sync(); buildSecEdit();
+  };
+  if(inp) inp.onchange = e => apply(e.target.value.trim(), false);
+  const a = document.getElementById('mTagAll');
+  if(a) a.onclick = () => apply(regionTag(S), true);
 }
 
 // ---- io ------------------------------------------------------------
@@ -2907,6 +2998,7 @@ function finishLoad(){
   if(OUTFIT_MODE){
     document.getElementById('outfitSec').style.display = '';
     populateHairPicker().then(loadPreviewHair);
+    buildTagOrderPanel();
   }
   // the ticked sibling articles are drawn in BOTH modes (so a helmet fit shows
   // against the rest of the look); the show/hide checkbox list is outfit-only.

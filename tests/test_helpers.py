@@ -5487,59 +5487,68 @@ class TestCurveFormats(unittest.TestCase):
 
 
 class TestComposeWorn(unittest.TestCase):
-    """compose_worn stacks every part by (animation group in the body's
-    draw_order, front/back within the group, outfit priority = worn-list
-    position). See docs/GRAPHICS_PIPELINE.md "Draw order"."""
+    """compose_worn stacks every part by its position in the story draw order -
+    body section names interleaved with garment tag strings. A region with no
+    tag sits at its animation group. See docs/GRAPHICS_PIPELINE.md "Draw order"."""
 
-    BODY = {"draw_order": ["arm_far", "torso", "arm_near"]}
-
-    def _part(self, group, tag, back=False):
-        p = {"group": group, "tag": tag}
-        if back:
-            p["back"] = True
-        return p
+    ORDER = ["back", "arm_far", "torso", "torso_front", "arm_near", "front"]
 
     def _body_parts(self):
-        return [self._part(g, "body") for g in ("arm_far", "torso", "arm_near")]
+        return [{"sec": s, "tag_": "body"} for s in ("arm_far", "torso", "arm_near")]
 
-    def test_front_regions_stack_in_worn_order_within_each_group(self):
+    @staticmethod
+    def _r(group=None, tag=None, layer=None, name="?"):
+        p = {"tag_": name}
+        if group: p["group"] = group
+        if tag: p["tag"] = tag
+        if layer: p["layer"] = layer
+        return p
+
+    def test_untagged_region_sits_at_its_group_over_the_body_part(self):
         from game.graphics.expand import compose_worn
-        coat = [self._part("arm_far", "coat"), self._part("torso", "coat")]
-        jacket = [self._part("arm_far", "jkt"), self._part("torso", "jkt")]
-        out = compose_worn(self.BODY, self._body_parts(), coat, jacket)
-        self.assertEqual([(p["group"], p["tag"]) for p in out], [
-            ("arm_far", "body"), ("arm_far", "coat"), ("arm_far", "jkt"),
-            ("torso", "body"), ("torso", "coat"), ("torso", "jkt"),
-            ("arm_near", "body"),
-        ])
+        shirt = [self._r(group="torso", name="shirt")]
+        out = [p["tag_"] for p in
+               compose_worn({}, self._body_parts(), shirt, order=self.ORDER)]
+        self.assertEqual(out, ["body", "body", "shirt", "body"])  # after torso body part
 
-    def test_back_region_draws_behind_its_group_in_reverse_priority(self):
+    def test_tag_places_region_at_that_slot(self):
         from game.graphics.expand import compose_worn
-        coat = [self._part("torso", "coat", back=True)]
-        jacket = [self._part("torso", "jkt", back=True)]
-        out = [(p["group"], p["tag"]) for p in
-               compose_worn(self.BODY, self._body_parts(), coat, jacket)]
-        # jacket (higher priority) sits further back than the coat
-        self.assertEqual(out, [
-            ("arm_far", "body"),
-            ("torso", "jkt"), ("torso", "coat"), ("torso", "body"),
-            ("arm_near", "body"),
-        ])
+        pack = [self._r(group="torso", tag="back", name="pack")]      # tag before arm_far
+        rig = [self._r(group="torso", tag="torso_front", name="rig")]  # tag after torso
+        out = [p["tag_"] for p in
+               compose_worn({}, self._body_parts(), pack, rig, order=self.ORDER)]
+        self.assertEqual(out, ["pack", "body", "body", "rig", "body"])
 
-    def test_legacy_layer_back_is_honoured_by_expand_article(self):
+    def test_worn_order_breaks_ties_within_a_slot(self):
+        from game.graphics.expand import compose_worn
+        coat = [self._r(group="torso", name="coat")]
+        jacket = [self._r(group="torso", name="jkt")]
+        out = [p["tag_"] for p in
+               compose_worn({}, self._body_parts(), coat, jacket, order=self.ORDER)]
+        self.assertEqual(out[2:4], ["coat", "jkt"])   # jacket listed later -> on top
+
+    def test_legacy_layer_reads_as_a_tag(self):
+        from game.graphics.expand import compose_worn
+        bag = [self._r(group="torso", layer="back", name="bag")]
+        out = [p["tag_"] for p in
+               compose_worn({}, self._body_parts(), bag, order=self.ORDER)]
+        self.assertEqual(out[0], "bag")               # slot "back" is first
+
+    def test_name_not_in_the_order_sorts_to_the_front(self):
+        from game.graphics.expand import compose_worn
+        cape = [self._r(group="cape", tag="cape_tag", name="cape")]
+        out = [p["tag_"] for p in
+               compose_worn({}, self._body_parts(), cape, order=self.ORDER)]
+        self.assertEqual(out[-1], "cape")
+
+    def test_expand_article_propagates_tag_and_legacy_layer(self):
         from game.graphics.expand import expand_article
         mats = {"light": [-0.8, -0.5], "shading": {"flat": {"tone_dark": 0, "tone_light": 0}}}
         art = {"outset": 0, "regions": [
             {"group": "torso", "color": "c", "shade": "flat", "layer": "back",
              "points": [[0, 0], [1, 0], [1, 1]]}]}
         parts = expand_article(art, {"c": "#808080"}, mats, body=None)
-        self.assertTrue(all(p.get("back") for p in parts))
-
-    def test_unknown_group_sorts_to_the_front(self):
-        from game.graphics.expand import compose_worn
-        art = [{"group": "cape", "tag": "cape"}]
-        out = [p["tag"] for p in compose_worn(self.BODY, self._body_parts(), art)]
-        self.assertEqual(out[-1], "cape")
+        self.assertTrue(all(p.get("tag") == "back" for p in parts))
 
 
 class TestPipelineStoryMaterialsMigrated(unittest.TestCase):

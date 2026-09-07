@@ -1,0 +1,20 @@
+{
+  "identity": "Worn-figure draw order for this story. A single ordered list, back-to-front, mixing the body's section names (fixed anchors) with author-defined garment tag strings. compose_worn and the vertex editor stack every worn part by its position here; an article region with no `tag` sits at its animation group. Edit it in the vertex editor's Outfit section.",
+  "order": [
+    "back",
+    "arm_far",
+    "hand_far",
+    "leg_far",
+    "foot_far",
+    "torso",
+    "neck",
+    "hair_back",
+    "head",
+    "hair",
+    "leg_near",
+    "foot_near",
+    "arm_near",
+    "hand_near",
+    "front"
+  ]
+}

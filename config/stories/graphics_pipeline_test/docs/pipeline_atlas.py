@@ -37,6 +37,12 @@ def load_asset(kind, name):
         return None
 
 
+try:
+    DRAW_ORDER = load("draw_order.json").get("order")   # story worn-figure stack
+except FileNotFoundError:
+    DRAW_ORDER = None
+
+
 def xbody(body):
     """expand a body, resolving its face slots."""
     return expand(body, palette_for(body), load("materials.json"), load=load_asset)
@@ -153,7 +159,7 @@ def article_plate(name):
         body = load("body", bn + ".json")
         bp = xbody(body)
         ap = expand(design, palette_for(design), materials, body)
-        combined += _shift(compose_worn(body, bp, ap), dx)
+        combined += _shift(compose_worn(body, bp, ap, order=DRAW_ORDER), dx)
         dx += 12.0
     nvert = sum(len(p.get("points", [])) for p in expand(design, palette_for(design), materials,
                                                          load("body", bodies[0] + ".json")))
@@ -183,7 +189,7 @@ def item_plate(name):
         body = load("body", bn + ".json")
         ap = expand(geom, pal, materials, body=body, color=it.get("color"),
                     shade=it.get("shade"), colors=it.get("colors"))
-        combined += _shift(compose_worn(body, xbody(body), ap), dx)
+        combined += _shift(compose_worn(body, xbody(body), ap, order=DRAW_ORDER), dx)
         dx += 12.0
     svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=360, ticks=ticks)
     look = ", ".join(filter(None, [
@@ -235,7 +241,7 @@ def hair_plate():
             parts = list(bp)
             if label != "(bare)":
                 art = load("articles", label + ".json")
-                parts = compose_worn(body, bp, expand(art, palette_for(art), materials, body))
+                parts = compose_worn(body, bp, expand(art, palette_for(art), materials, body), order=DRAW_ORDER)
             combined += _shift(parts, dx)
             dx += 5.6
         svg = svg_specimen(combined, vb=(-3.4, -33.0, 5.6 * (len(hairs) + 1) + 1.2, 9.0),
@@ -262,7 +268,7 @@ def set_plate(name):
         body = load("body", bn + ".json")
         bp = xbody(body)
         aps = [worn_parts(a, pal, materials, body) for a in design["articles"]]
-        combined += _shift(compose_worn(body, bp, *aps), dx)
+        combined += _shift(compose_worn(body, bp, *aps, order=DRAW_ORDER), dx)
         dx += 12.0
     svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=360, ticks=ticks)
     return f"""
@@ -395,7 +401,7 @@ def walk_plate(set_name="civilian_work_femme", frames=8):
     rows = []
     for bn in bodies:
         body = load("body", bn + ".json")
-        worn = compose_worn(body, xbody(body), *[worn_parts(a, pal, materials, body) for a in sd["articles"]])
+        worn = compose_worn(body, xbody(body), *[worn_parts(a, pal, materials, body) for a in sd["articles"]], order=DRAW_ORDER)
         combined, dx = [], 0.0
         for k in range(frames):
             combined += _shift(apply_walk(worn, body, rig, k / frames), dx)

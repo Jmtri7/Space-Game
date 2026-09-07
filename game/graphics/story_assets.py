@@ -39,6 +39,13 @@ def _materials(story):
     return _load(story, "materials.json") or {}
 
 
+def _draw_order(story):
+    """The story's worn-figure draw order (`graphics/draw_order.json`'s
+    `order`): body section names interleaved with garment tags. None if the
+    story hasn't got one - compose_worn then falls back to the body's sections."""
+    return (_load(story, "draw_order.json") or {}).get("order")
+
+
 def _palette(story, name):
     return _load(story, "palettes", name + ".json") or {}
 
@@ -142,13 +149,14 @@ def _body_worn(story, body_name, set_name, palette_name, extra_articles=()):
     # sealed helmet - which drops every hairstyle from the outfit.
     hide_hair = any(ad.get("hides_hair") for ad, _, _ in resolved)
 
-    # compose_worn stacks each article by its regions' animation group + front/
-    # back; the set's list order is the outfit priority (later article = higher,
-    # drawn over the earlier one within a group).
+    # compose_worn stacks every part by the story's draw order (body sections +
+    # garment tags); a region with no tag sits at its animation group. Within a
+    # slot the set's article list order breaks ties (later article on top).
     arts = [expand(ad, pal, mats, body=body, **kw)
             for ad, kw, gid in resolved
             if not (_is_hair(ad, gid) and hide_hair)]
-    worn = compose_worn(body, body_parts, *arts) if arts else body_parts
+    worn = (compose_worn(body, body_parts, *arts, order=_draw_order(story))
+            if arts else body_parts)
     return body, worn
 
 
