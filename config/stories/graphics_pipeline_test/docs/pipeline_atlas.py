@@ -114,6 +114,11 @@ h1{{font-size:20px}} .banner{{color:#8a94a6;margin-bottom:24px}}
 .spec{{flex:0 0 auto}} .meta{{max-width:520px}} h2{{font-size:16px;margin:0 0 6px}}
 .identity{{color:#e7e9ee}} .stat{{color:#8a94a6;font-size:12px;margin:4px 0}}
 svg{{border:1px solid #2a2e37}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:8px}}
+.card{{border:1px solid #2a2e37;border-radius:6px;padding:14px;background:#191b21}}
+.card svg{{width:100%;height:auto;display:block}}
+.card h2{{margin:12px 0 4px}}
+.card .identity{{font-size:12px;color:#c9ccd2;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}}
 </style></head><body>
 <h1>{title}</h1>
 <p class="nav">{nav}</p>
@@ -205,6 +210,27 @@ def article_plate(name):
         <p class="stat">{" &middot; ".join(bodies)} &middot; {nvert} article vertices</p>
       </div>
     </section>"""
+
+
+def article_card(name):
+    """A compact grid card: the article on both bodies in its authored colour,
+    its name and identity. No overrides, no stat block."""
+    design = load("articles", name + ".json")
+    materials = load("materials.json")
+    bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body"))
+                    if n.endswith(".json") and not n.startswith("rig_"))
+    combined, dx = [], 0.0
+    for bn in bodies:
+        body = load("body", bn + ".json")
+        ap = expand(design, palette_for(design), materials, body)
+        combined += _shift(compose_worn(body, xbody(body), ap, order=DRAW_ORDER), dx)
+        dx += 12.0
+    svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=300)
+    return f"""
+    <div class="card">{svg}
+      <h2>{name}</h2>
+      <p class="identity">{design['identity']}</p>
+    </div>"""
 
 
 def item_plate(name):
@@ -497,11 +523,11 @@ def main():
     station += "\n".join(decoration_plate(n) for n in _names("decorations"))
     _write("pipeline-station.html", "Pipeline — Ship & Station", station)
 
-    # 3. Outfits - every set, every garment article, every colourway item.
-    outfits = "\n".join(set_plate(n) for n in _names("sets"))
-    outfits += "\n".join(article_plate(n) for n in _names("articles", lambda n: not is_hair(n)))
-    outfits += "\n".join(item_plate(n) for n in _names("items"))
-    _write("pipeline-outfits.html", "Pipeline — Outfits", outfits)
+    # 3. Outfits - every base article in its authored colour, in a grid. No
+    # assembled sets, no colourway items.
+    cards = "".join(article_card(n) for n in _names("articles"))
+    _write("pipeline-outfits.html", "Pipeline — Outfits",
+           f'<div class="grid">{cards}</div>')
 
 
 if __name__ == "__main__":
