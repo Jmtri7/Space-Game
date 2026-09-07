@@ -4,15 +4,16 @@ A viewer: it holds no geometry. It loads design JSON, runs the shared
 game.graphics.expand, and writes each specimen as inline SVG polygons beside
 its identity text. Run from repo root:
 
-    python docs/atlases/pipeline_atlas.py
+    python config/stories/graphics_pipeline_test/docs/pipeline_atlas.py
 
-writes docs/atlases/pipeline-test.html
+writes pipeline-test.html next to this script.
 """
 import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(_HERE))))
 sys.path.insert(0, ROOT)
 from game.graphics.expand import expand, compose_worn, apply_walk  # noqa: E402
 
@@ -438,7 +439,7 @@ def main():
     plates += "\n".join(
         body_plate(n[:-5]) for n in sorted(os.listdir(os.path.join(GDIR, "body")))
         if n.endswith(".json") and not n.startswith("rig_"))
-    out = os.path.join(ROOT, "docs", "atlases", "pipeline-test.html")
+    out = os.path.join(_HERE, "pipeline-test.html")
     with open(out, "w", encoding="utf-8") as f:
         f.write(PAGE.format(body=plates))
     print("wrote", out)

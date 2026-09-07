@@ -473,8 +473,10 @@ def _curve(body, ref):
     or glove lands at the un-splayed arm position, offset from the drawn limb.
     Torso/leg/foot curves have no rest transform and pass through unchanged."""
     sec, name = ref.split(".")
-    section = body["sections"][sec]
-    c = section["curves"][name]
+    section = body.get("sections", {}).get(sec)
+    c = (section or {}).get("curves", {}).get(name)
+    if c is None:                       # curve not on this body - fit is skipped
+        return None
     pts = [list(p) for p in (c["pts"] if isinstance(c, dict) else c)]
     tr = _rest_transforms(body).get(section.get("group", sec))
     if tr:
@@ -490,6 +492,8 @@ def _apply_fits(points, fits, body):
     pts = [list(p) for p in points]
     for f in sorted(fits, key=lambda f: f["from"], reverse=True):
         seg = _curve(body, f["curve"])
+        if seg is None:                 # curve absent on this body - leave the span as authored
+            continue
         if f.get("reverse"):
             seg = seg[::-1]
         pts[f["from"]:f["to"] + 1] = seg
