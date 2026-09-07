@@ -167,22 +167,6 @@
     <div id="fitPanel"><div class="hint">none selected</div></div>
   </div>
 
-  <div id="lookPreviewSec" style="display:none">
-    <h2>Preview look</h2>
-    <div class="hint">See this shared geometry as a different <code>items/&lt;id&gt;.json</code>
-      would render it — colour and shading are independent. <b>Preview only:</b>
-      nothing here is written to the article file, which stays pure geometry +
-      its own default tags.</div>
-    <div class="row">color
-      <select id="lookMat" style="flex:1"><option value="">— as authored —</option></select>
-    </div>
-    <label><input type="checkbox" id="lookColOn"> or a literal colour
-      <input type="color" id="lookCol" value="#6b4a35"></label>
-    <div class="row">shade
-      <select id="lookShade" style="flex:1"><option value="">— as authored —</option></select>
-    </div>
-  </div>
-
   <div id="polyPanelSec">
   <h2>Polygons</h2>
   <div class="row" id="pTargetRow">attach new pieces to <select id="pTarget" style="flex:1"></select></div>
@@ -216,6 +200,24 @@
 
   <h2>Selected section</h2>
   <div id="secEdit"><div class="hint">none</div></div>
+
+  <div id="lookPreviewSec" style="display:none">
+    <h2>Preview look</h2>
+    <div class="hint">See this shared geometry as a different <code>items/&lt;id&gt;.json</code>
+      would render it — colour and shading are independent. <b>Preview only:</b>
+      nothing here is written to the article file, which stays pure geometry +
+      its own default tags.</div>
+    <div class="row">color
+      <select id="lookMat" style="flex:1"><option value="">— as authored —</option></select>
+      <span id="lookSw" style="display:inline-block;width:16px;height:16px;border-radius:3px;
+        vertical-align:middle;border:1px solid #3a4150"></span>
+    </div>
+    <label><input type="checkbox" id="lookColOn"> or a literal colour
+      <input type="color" id="lookCol" value="#6b4a35"></label>
+    <div class="row">shade
+      <select id="lookShade" style="flex:1"><option value="">— as authored —</option></select>
+    </div>
+  </div>
 
   <div id="curvesPanelSec">
     <h2>Curves</h2>
@@ -646,6 +648,20 @@ function resolveColor(color, tone, prof){
   return base.map(v=>clamp(v+d));
 }
 function rgb(c){return `rgb(${c[0]},${c[1]},${c[2]})`;}
+// <option>s for the palette colour dropdowns, each tinted with its own swatch so
+// the colour is visible before you pick it. Chromium/Firefox honour a background
+// on <option>; elsewhere it degrades to plain text. `blank` adds a leading
+// no-selection row (used by Preview look's "— as authored —").
+function colorOptions(selected, blank){
+  const tint = k => {
+    const c = resolveColor(k, 'mid', null);
+    const lum = c[0]*0.299 + c[1]*0.587 + c[2]*0.114;
+    return `style="background-color:${rgb(c)};color:${lum > 140 ? '#111' : '#eee'}"`;
+  };
+  const head = blank != null ? `<option value="" ${!selected ? 'selected' : ''}>${blank}</option>` : '';
+  return head + COLNAMES.map(k =>
+    `<option ${tint(k)} ${k === selected ? 'selected' : ''}>${k}</option>`).join('');
+}
 function signedArea(p){let s=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];s+=a[0]*b[1]-b[0]*a[1];}return s/2;}
 function vnorms(p){const m=p.length,o=[];for(let i=0;i<m;i++){const p0=p[(i-1+m)%m],p1=p[i],p2=p[(i+1)%m];let nx=0,ny=0;
   for(const[a,b]of[[p0,p1],[p1,p2]]){nx+=b[1]-a[1];ny-=b[0]-a[0];}const n=Math.hypot(nx,ny)||1;o.push([nx/n,ny/n]);}return o;}
@@ -858,7 +874,11 @@ if(!FACE_MODE) document.getElementById('pTargetRow').style.display = 'none';
 if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
 if(TAILOR_MODE || FACE_MODE) document.getElementById('curvesPanelSec').style.display = 'none';
 if(TAILOR_MODE){ document.getElementById('pAddR').style.display = '';
-  document.getElementById('pAddRHint').style.display = ''; }
+  document.getElementById('pAddRHint').style.display = '';
+  // tailor mode: the Polygons panel edits details on the selected region, so
+  // sit it right under Preview look (below Selected section) rather than at its
+  // default spot above the Sections list. Body/face modes keep the default order.
+  document.getElementById('lookPreviewSec').after(document.getElementById('polyPanelSec')); }
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
 let previewArticles = [];    // TAILOR_MODE: [{name, design}] other articles drawn on the figure, reference-only
@@ -2080,7 +2100,7 @@ function buildPolyEdit(){
   el.innerHTML = `
     <div class="row">name <input id="dNote" type="text" style="flex:1;background:#12141a;color:#d9dce2;border:1px solid #3a4150;
       border-radius:4px;padding:3px 5px" value="${(d.note||'').replace(/"/g,'&quot;')}" placeholder="unnamed"></div>
-    <div class="row">color <select id="dMat">${COLNAMES.map(m=>`<option ${m===d.color?'selected':''}>${m}</option>`).join('')}</select>
+    <div class="row">color <select id="dMat">${colorOptions(d.color)}</select>
       <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
         background:${rgb(resolveColor(d.color,d.tone||'mid',shadeProfile(d.shade)))}"></span></div>
     <div class="row">shade <select id="dShade"><option value="">(matte)</option>${SHADENAMES.map(s=>`<option ${s===d.shade?'selected':''}>${s}</option>`).join('')}<option value="false" ${d.shade===false?'selected':''}>false — flat</option></select></div>
@@ -2755,7 +2775,7 @@ function buildSecEdit(){
       (also its default place in the draw stack — override with a tag below).</div>` : '';
   el.innerHTML = regionHead + `
     <div class="row">color
-      <select id="mMat">${COLNAMES.map(m=>`<option ${m===S.color?'selected':''}>${m}</option>`).join('')}</select>
+      <select id="mMat">${colorOptions(S.color)}</select>
       <span style="display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle;border:1px solid #3a4150;
         background:${rgb(resolveColor(S.color,S.tone||'mid',shadeProfile(S.shade)))}"></span>
     </div>
@@ -2819,16 +2839,19 @@ function initLookPanel(){
   const sec = document.getElementById('lookPreviewSec'); sec.style.display = '';
   const cm = document.getElementById('lookMat'), sh = document.getElementById('lookShade');
   const co = document.getElementById('lookColOn'), cx = document.getElementById('lookCol');
-  cm.innerHTML = '<option value="">— as authored —</option>' +
-    COLNAMES.map(c=>`<option ${c===previewLook.color?'selected':''}>${c}</option>`).join('');
+  const sw = document.getElementById('lookSw');
+  cm.innerHTML = colorOptions(previewLook.color, '— as authored —');
   sh.innerHTML = '<option value="">— as authored —</option>' +
     SHADENAMES.map(s=>`<option ${s===previewLook.shade?'selected':''}>${s}</option>`).join('');
   co.checked = previewLook.colOn; cx.value = previewLook.colHex; cm.disabled = previewLook.colOn;
+  const swatch = ()=>{ const k = previewLook.colOn ? previewLook.colHex : previewLook.color;
+    sw.style.background = k ? rgb(resolveColor(k, 'mid', null)) : 'transparent'; };
+  swatch();
   const save = ()=>{ try{ localStorage.setItem('gpPreviewLook', JSON.stringify(previewLook)); }catch(e){} };
-  cm.onchange = e=>{ previewLook.color = e.target.value; save(); render(); };
+  cm.onchange = e=>{ previewLook.color = e.target.value; swatch(); save(); render(); };
   sh.onchange = e=>{ previewLook.shade = e.target.value; save(); render(); };
-  co.onchange = e=>{ previewLook.colOn = e.target.checked; cm.disabled = e.target.checked; save(); render(); };
-  cx.onchange = e=>{ previewLook.colHex = e.target.value; save(); render(); };
+  co.onchange = e=>{ previewLook.colOn = e.target.checked; cm.disabled = e.target.checked; swatch(); save(); render(); };
+  cx.onchange = e=>{ previewLook.colHex = e.target.value; swatch(); save(); render(); };
 }
 // tailor mode: a region draws at its `tag`'s slot in the story draw order
 // (Outfit section), or - with no tag - at its animation `group`. Type a new

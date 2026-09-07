@@ -644,7 +644,9 @@ any handle; double-click an edge to insert a point; alt-click to delete.
 Side-panel order: story / design pickers, the mode + body + article switchers,
 then the mode-specific editing panels (Polygons, Sections, Selected section,
 Curves in body-edit mode; Fit in tailor mode; Outfit in outfit mode), then the
-generic **View** toggles, then Output and the drafts panel.
+generic **View** toggles, then Output and the drafts panel. In tailor mode the
+order shifts: Sections and Selected section come first, then Preview look, then
+Polygons (it edits details on the selected region, so it reads better below it).
 
 Each
 section has an eye toggle to hide/show it (isolate a limb, or drop the far side
@@ -1085,12 +1087,15 @@ top-level `"hides_hair": true` onto the article being tailored — at runtime
 and hair).
 
 **Colour and shade.** Every fill panel (a region's **Selected section** panel,
-a detail's **Polygons** panel) has a **color** dropdown (palette keys) and a
-**shade** dropdown (the profile names from `materials.json`, plus `false — flat`).
-The two are independent — that is the whole point of the split.
+a detail's **Polygons** panel, tailor mode's **Preview look**) has a **color**
+dropdown (palette keys) and a **shade** dropdown (the profile names from
+`materials.json`, plus `false — flat`). The two are independent — that is the
+whole point of the split. Each option in the colour dropdown is tinted with the
+swatch it names (Chromium/Firefox), and a swatch of the current pick sits beside
+the dropdown, so you can eyeball a colour before choosing it.
 
-**Preview look** (tailor mode). A separate panel swaps the *whole article's*
-colour and/or shade in the preview only — it is how an `items/<id>.json` would
+**Preview look** (tailor mode). A panel directly below **Selected section** that
+swaps the *whole article's* colour and/or shade in the preview only — it is how an `items/<id>.json` would
 render this shared geometry. Nothing here is written to the article file (it
 stays pure geometry + its own default tags); the choice is remembered per
 browser (`gpPreviewLook`).
