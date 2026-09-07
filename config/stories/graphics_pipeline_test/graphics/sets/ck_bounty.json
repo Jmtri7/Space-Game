@@ -1,5 +1,5 @@
 {
-  "identity": "Common Kit - Bounty Hunter. Near-black armour, black boots, a dark helmet with a red visor, a back pack, three stacked riveted chest-plate segments and a diagonal bandolier.",
+  "identity": "Common Kit - Bounty Hunter. Near-black armour, black boots, a dark helmet with a red visor, a red face visor, a back pack, three stacked riveted chest-plate segments and a diagonal bandolier.",
   "palette": "civilian",
   "articles": [
     "tank_top",
@@ -7,6 +7,7 @@
     "pants_black",
     "boots_black",
     "helmet_bounty",
+    "visor_red",
     "backpack_brown",
     "plates",
     "bandolier_black"

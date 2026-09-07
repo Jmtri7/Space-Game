@@ -1,0 +1,8 @@
+{
+  "identity": "Common Kit colourway: the visor geometry recoloured #8fbfe0, sheen finish - the light-blue visor worn by Security and Researcher kits.",
+  "geometry": "visor",
+  "colors": {
+    "metal": "#8fbfe0"
+  },
+  "shade": "sheen"
+}

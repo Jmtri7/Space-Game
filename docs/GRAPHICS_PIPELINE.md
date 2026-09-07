@@ -1367,7 +1367,9 @@ civilian, smuggler, ranger, bounty hunter), rebuilt from the articles above:
 - a few small **decal articles** carry geometry the recolours can't:
   `comms_box` (dark box + red indicator beside the helmet — flight suit),
   `med_cross` (breast cross — medic), `armband_medcross` (red band + white
-  cross — medic), `pen_array` (red/cyan/gold breast-pocket pens — researcher).
+  cross — medic), `pen_array` (red/cyan/gold breast-pocket pens — researcher),
+  `visor` (a slim eye band — recoloured `items/visor_ice` light blue for
+  security + researcher, `items/visor_red` for the bounty hunter).
 - `sets/ck_<outfit>_{masc,femme}.json` — the article + item list per outfit per
   body, `palette: "civilian"`.
 - `graphics.json` `outfits` `ck_<outfit>_{masc,femme}` and one concourse NPC per

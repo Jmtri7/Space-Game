@@ -1,0 +1,41 @@
+{
+  "identity": "A slim visor band across the eyes - a single flat panel, worn on its own (no helmet) or read as a tinted lens. Recoloured per kit via items/visor_*.json.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "metal",
+      "shade": "metal",
+      "note": "visor",
+      "points": [
+        [
+          -2.084,
+          -29.402
+        ],
+        [
+          0.945,
+          -29.58
+        ],
+        [
+          1.019,
+          -28.231
+        ],
+        [
+          -0.42,
+          -28.441
+        ],
+        [
+          -0.953,
+          -28.426
+        ],
+        [
+          -2.109,
+          -28.145
+        ]
+      ],
+      "fits": [],
+      "tag": "visor"
+    }
+  ]
+}
