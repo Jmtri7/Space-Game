@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "sclera",
       "shade": "matte",
       "note": "mask",
       "tag": "mouth cover",

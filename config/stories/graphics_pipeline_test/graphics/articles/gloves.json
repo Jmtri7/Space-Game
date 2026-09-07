@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "hand_near",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "near glove",
       "outset": 0.08,
@@ -61,7 +61,7 @@
     },
     {
       "group": "hand_far",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "far glove",
       "outset": 0.08,

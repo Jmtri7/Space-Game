@@ -24,7 +24,6 @@
     "braid band",
     "head",
     "hair bangs",
-    "collar",
     "hood front",
     "long coat",
     "jacket",
@@ -46,8 +45,10 @@
     "armband",
     "visor",
     "mouth cover",
+    "collar",
     "hat",
     "helmet",
-    "head accessory"
+    "head accessory",
+    "epaulette"
   ]
 }

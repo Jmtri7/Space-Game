@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "left panel",
       "tag": "long coat",
@@ -73,7 +73,7 @@
     },
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "right panel",
       "tag": "long coat",
@@ -136,7 +136,7 @@
     },
     {
       "group": "arm_far",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "far sleeve",
       "tag": "far sleeve",
@@ -191,7 +191,7 @@
     },
     {
       "group": "arm_near",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "near sleeve",
       "tag": "near sleeve",

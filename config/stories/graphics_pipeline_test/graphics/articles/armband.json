@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "arm_near",
-      "color": "cloth",
+      "color": "sclera",
       "shade": "matte",
       "note": "band",
       "outset": 0.06,

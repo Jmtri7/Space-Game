@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "torso",
-      "color": "metal",
+      "color": "lamp",
       "shade": "metal",
       "note": "badge",
       "tag": "badge",

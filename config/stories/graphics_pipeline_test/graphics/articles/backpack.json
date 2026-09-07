@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "bag",
       "tag": "backpack bag",
@@ -78,7 +78,7 @@
     },
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "far strap",
       "tag": "backpack strap",
@@ -129,7 +129,7 @@
     },
     {
       "group": "torso",
-      "color": "cloth",
+      "color": "leather",
       "shade": "matte",
       "note": "near strap",
       "tag": "backpack strap",
