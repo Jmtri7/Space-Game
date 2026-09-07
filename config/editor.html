@@ -1322,10 +1322,19 @@ async function loadPreviewArticles(names){
   const out = [];
   for(const n of names){
     if(have[n]){ out.push(have[n]); continue; }
+    const path = GBASE + '/articles/' + n + '.json';
+    let src = null;
+    // an unsaved tailor-mode edit to this article, fit against this same body,
+    // beats the on-disk copy - so a piece just re-fitted in tailor mode shows
+    // its new shape the moment you switch to outfit mode (or tick it while
+    // tailoring another piece), not a stale fetch. Same idea as
+    // loadBodyForTailoring's body/face-draft preference.
     try{
-      const j = await VFS.readJSON(GBASE + '/articles/' + n + '.json');
-      if(j && j.regions) out.push({ name:n, design: hoistVariant(shimLook(j), activeVariant()) });
+      const raw = localStorage.getItem('gpDraft:' + path + ':fit:' + FITBODY);
+      if(raw){ const d = JSON.parse(raw); if(d && d.D && d.D.regions && allFinite(d.D)) src = d.D; }
     }catch(e){}
+    if(!src){ try{ src = await VFS.readJSON(path); }catch(e){} }
+    if(src && src.regions) out.push({ name:n, design: hoistVariant(shimLook(src), activeVariant()) });
   }
   previewArticles = out;
   if(typeof buildSecEdit === 'function') buildSecEdit();

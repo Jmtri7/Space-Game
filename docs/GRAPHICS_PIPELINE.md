@@ -1094,6 +1094,11 @@ Nothing here is ever written.
 - Opening any article for tailoring auto-adds it to the list, so a set builds up
   piece by piece and every fitted garment is there when you switch to outfit
   mode.
+- Each ticked article is loaded from its **unsaved tailor draft** for the current
+  body (`gpDraft:<path>:fit:<fitbody>`) when one exists, else from disk — so a
+  piece you just re-fitted in tailor mode shows its new shape the moment you
+  switch to outfit mode (or tick it while tailoring another piece), without a
+  save-to-repo first.
 
 **This headgear hides hair** (tailor mode, Fit panel). A checkbox that writes
 top-level `"hides_hair": true` onto the article being tailored — at runtime
