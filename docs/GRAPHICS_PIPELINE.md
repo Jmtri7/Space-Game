@@ -1011,6 +1011,18 @@ shows, so the fitted edge is "invisible". The Fit panel flags each one in
 amber with **re-point to #\<last\>** (clamp it onto the last real vertex) and
 **remove fit**.
 
+**Copy a cut to the other body** *(tailor mode, Fit panel)*. A merged article
+carries a `masc` and a `femme` cut under `regions[].geometry`. The
+**copy this cut → `<other body>`** button writes the cut you're editing now
+over the other body's cut on disk (every region's `points` / `fits` / `details`
+/ shade polys), and saves the current cut in the same write — so you get a
+same-shape starting point to re-fit by hand: click it, then switch the **body**
+dropdown to the other body and drag. Shown only when the fit body is one of a
+`<name>_masc.json` / `<name>_femme.json` pair and the sibling file exists; needs
+the repo open read-write. If an unsaved draft for the other body already exists
+it offers to discard it (else that draft would still shadow the fresh copy on
+the next load).
+
 **Comparing against the other body.** When the loaded design is a body (plain
 or `edit=face`) or an outfit fit against one (`?fitbody=`), a small **compare
 other body** panel appears in the corner, read-only, rendered by the same

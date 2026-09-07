@@ -146,6 +146,13 @@
 
   <div id="fitPanelSec">
     <h2>Fit</h2>
+    <div class="row" id="copyCutRow" style="display:none">
+      <button id="copyCutToOther">copy cut to other body</button>
+    </div>
+    <div class="hint" id="copyCutHint" style="display:none">Overwrites this
+      article's geometry for the <b>other</b> body on disk with a copy of the cut
+      you're editing now (also saves the current cut). Then switch the <b>body</b>
+      dropdown above to re-fit the copy by hand.</div>
     <div class="hint">Every garment vertex is a plain free point you can drag
       and snap onto the body (below). <b>To fill in an edge:</b> snap two
       vertices onto the body, select both, and generate the body's own
@@ -3011,6 +3018,63 @@ function reconstituteGeometry(design){
   }
   return out;
 }
+// tailor mode: the merged article carries a masc + a femme cut. This writes the
+// cut you're editing now over the OTHER body's cut on disk (and saves the
+// current cut), giving you a same-shape copy to re-fit by hand after switching
+// the body dropdown. Bodies must be the `<name>_masc.json` / `<name>_femme.json`
+// pair; hidden otherwise.
+const _OTHER_BODY = (() => {
+  const cur = genderOf(FITBODY);
+  if(!TAILOR_MODE || !cur) return null;
+  const other = cur === 'masc' ? 'femme' : 'masc';
+  return { variant: other, path: FITBODY.replace(/_(masc|femme)\.json$/, '_' + other + '.json') };
+})();
+async function initCopyCutButton(){
+  const row = document.getElementById('copyCutRow'), hint = document.getElementById('copyCutHint');
+  const btn = document.getElementById('copyCutToOther');
+  if(!row || !_OTHER_BODY || !loadedPath || !loadedPath.includes('/articles/')
+     || !await VFS.readJSON(_OTHER_BODY.path)){
+    if(row) row.style.display = 'none'; return;
+  }
+  const otherName = _OTHER_BODY.path.split('/').pop().replace(/\.json$/, '');
+  btn.textContent = 'copy this cut → ' + otherName;
+  btn.title = "replace this article's " + _OTHER_BODY.variant + " geometry on disk with a copy "
+            + "of the cut you're editing, to re-fit by hand";
+  row.style.display = ''; hint.style.display = '';
+  btn.onclick = async () => {
+    if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+    const v = D.__variant || activeVariant(), other = _OTHER_BODY.variant;
+    const selfName = loadedPath.split('/').pop().replace(/\.json$/, '');
+    if(!confirm('Overwrite ' + selfName + "'s " + other + ' cut with a copy of the '
+      + v + ' cut you\'re editing now, and save the ' + v + ' cut, to '
+      + loadedPath + ' ?\n\nThe ' + other + " copy starts identical - re-fit it by hand after switching the body dropdown to " + otherName + '.')) return;
+    const otherDraft = 'gpDraft:' + loadedPath + ':fit:' + _OTHER_BODY.path;
+    let dropOtherDraft = false;
+    if(localStorage.getItem(otherDraft)){
+      if(!confirm('You have unsaved ' + other + ' edits to this article in a draft. '
+        + 'That draft would still shadow the copy on next load.\n\nOK = discard the '
+        + other + ' draft and use the fresh copy.  Cancel = keep the draft (the copy still writes to disk).')) {
+        dropOtherDraft = false;
+      } else dropOtherDraft = true;
+    }
+    // on-disk shape: current cut folded into geometry[v], numbers rounded
+    const out = JSON.parse(JSON.stringify(reconstituteGeometry(D),
+      (k, val) => typeof val === 'number' ? +val.toFixed(3) : val));
+    for(const r of (out.regions || [])){
+      r.geometry = r.geometry || {};
+      r.geometry[other] = JSON.parse(JSON.stringify(r.geometry[v] || {}));
+    }
+    try{ await VFS.writeText(loadedPath, toRepoJSON(out)); }
+    catch(e){ alert('Could not write the file: ' + (e.message || e)); return; }
+    if(dropOtherDraft) try{ localStorage.removeItem(otherDraft); }catch(e){}
+    // the current cut now matches disk - re-baseline like a save-to-repo
+    try{ const k = draftKey(); if(k) localStorage.removeItem(k); }catch(e){}
+    dirty = false; savedJSON = JSON.stringify(round(D), null, 2);
+    if(typeof scanDrafts === 'function') scanDrafts();
+    alert('Wrote ' + loadedPath + '.\n\nSwitch the body dropdown to ' + otherName
+      + ' to re-fit the copy.');
+  };
+}
 async function loadBodyForTailoring(){
   bodyDesign = await VFS.readJSON(FITBODY);
   // an unsaved edit to the body itself (plain gpDraft:<FITBODY>) or to its
@@ -3140,6 +3204,7 @@ function finishLoad(){
     if(st) ssSet('gpLastArticle:' + st, loadedPath.split('/').pop());
   }
   populateBodyDirectPicker();
+  if(TAILOR_MODE) initCopyCutButton();
   const fit = () => { FACE_MODE ? fitHead() : fitView(); render(); };
   fit(); requestAnimationFrame(fit);   // re-fit once the svg has its real size
 }
