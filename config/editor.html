@@ -133,9 +133,10 @@
     </div>
 
     <h2 style="margin-top:16px">Draw order</h2>
-    <div class="hint">The whole story's back-to-front stack: body parts (fixed)
-      interleaved with garment <b>tags</b>. Move a tag with its arrows; a region
-      tagged with that name draws at that slot. Edits go to a draft (shown in
+    <div class="hint">The whole story's back-to-front stack: body parts
+      interleaved with garment <b>tags</b>. Reorder anything with its arrows
+      (this is the only place body-part order can be changed); a region tagged
+      with a name draws at that slot. Edits go to a draft (shown in
       <b>Save / download drafts</b>) and reach
       <code>graphics/draw_order.json</code> on <b>save checked to repo</b>.</div>
     <div id="tagOrderPanel"></div>
@@ -1326,14 +1327,14 @@ function buildTagOrderPanel(){
   }
   el.innerHTML = drawOrder.map((nm, i) => {
     const isSec = secs.has(nm);
-    if(isSec) return `<div class="row" style="gap:6px;opacity:.5;margin:2px 0">
-        <span style="width:52px;font:11px ui-monospace,monospace">${i}</span>
-        <span style="flex:1">${nm}</span><span class="hint" style="margin:0">body</span></div>`;
+    const up = `<button class="toArr" data-mv="${i}:${i-1}" ${i===0?'disabled':''} title="move up (further back)">↑</button>`;
+    const dn = `<button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1?'disabled':''} title="move down (further front)">↓</button>`;
+    if(isSec) return `<div class="row" style="gap:4px;align-items:center;margin:2px 0;opacity:.65">
+        ${up}${dn}<span style="flex:1">${nm}</span>
+        <span class="hint" style="margin:0">body</span></div>`;
     const used = tagUsageCount(nm);
     return `<div class="row" style="gap:4px;align-items:center;margin:2px 0">
-        <button class="toArr" data-mv="${i}:${i-1}" ${i===0?'disabled':''} title="move up (further back)">↑</button>
-        <button class="toArr" data-mv="${i}:${i+1}" ${i===drawOrder.length-1?'disabled':''} title="move down (further front)">↓</button>
-        <b style="flex:1">${nm}</b>
+        ${up}${dn}<b style="flex:1">${nm}</b>
         <span class="hint" style="margin:0">${used ? used + ' region' + (used>1?'s':'') : 'unused'}</span>
         <button class="toDel" data-tag="${nm.replace(/"/g,'&quot;')}" title="remove this tag from the order">×</button>
       </div>`;

@@ -372,7 +372,8 @@ palette.
 
 **Draw order — one list of body parts and tags.** The story publishes a single
 back-to-front list in `graphics/draw_order.json` (`order`): the body's section
-names — fixed anchors — interleaved with author-defined **tag** strings.
+names interleaved with author-defined **tag** strings. Both are reorderable, but
+only in the vertex editor's Outfit section.
 
 ```jsonc
 { "order": [
@@ -1038,11 +1039,13 @@ pose while it runs, so turn it off to edit. The toggle is inert (and warns) if
 the body has no walk rig.
 
 **Draw order editor** (Outfit section — outfit mode). The whole story
-`draw_order.json` list, rendered top-to-bottom = back-to-front. Body sections
-are dim fixed anchors (index + name); each **tag** row has **↑ / ↓** (move it
-one step through the list, past anchors and other tags), a count of how many
-loaded regions use it, and **×** (drop it — regions fall back to their group).
-**+ tag** adds a new one before `front`. The figure re-renders on every change.
+`draw_order.json` list, rendered top-to-bottom = back-to-front. Every row —
+body section (dim, labelled *body*) or **tag** — has **↑ / ↓** that move it one
+step through the list; this is the **only** place the body-part draw order can
+be reordered (the tailor-mode tag field only assigns a region's tag). A tag row
+also shows how many loaded regions use it and an **×** to drop it (regions then
+fall back to their group). **+ tag** adds a new one before `front`. The figure
+re-renders on every change.
 Edits go to a draft (`gpDraft:<gbase>/draw_order.json`), like an article — they
 show as a row in **Save / download drafts** and only reach the real
 `draw_order.json` on **save checked to repo**. On load, a draw-order draft wins
