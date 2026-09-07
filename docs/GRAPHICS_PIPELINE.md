@@ -645,14 +645,18 @@ notes, and a spec block naming the design file's real keys. The atlas is a
 viewer — it holds no geometry and no copy of anything.
 
 `config/stories/graphics_pipeline_test/docs/pipeline_atlas.py`, run by hand from
-the repo root, writes three cross-linked pages next to itself:
+the repo root, writes four cross-linked pages next to itself:
 
-- **`pipeline-figure.html`** — the body variants at one scale, the face kit, the
-  hair grid, the walk cycle, each hairstyle, each body.
-- **`pipeline-station.html`** — the ship, the station, the interior floor plan +
-  lane check, and each `decorations/` furniture piece with its footprint.
-- **`pipeline-outfits.html`** — every `sets/` outfit, every garment `articles/`
-  plate (hair excluded — it's on the figure page), every colourway `items/`.
+- **`pipeline-bodies.html`** ("Human Bodies") — the body variants at one scale,
+  the face kit, the hair grid, the walk cycle.
+- **`pipeline-structures.html`** ("Civilian Structures") — the ship, the
+  station, the interior floor plan + lane check, and each `decorations/` piece
+  (top-down plan with its footprint; a `height` piece also gets a synthesised
+  orthographic elevation).
+- **`pipeline-articles.html`** ("Civilian Articles") — every `articles/*.json`
+  rendered once in its authored colour, as a card grid. No sets, no recolours.
+- **`pipeline-outfits.html`** ("Civilian Outfits") — every `sets/*.json`
+  assembled outfit, as a card grid.
 
 Nothing regenerates them automatically; re-run the script after an asset change.
 

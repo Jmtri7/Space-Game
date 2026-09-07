@@ -6,10 +6,11 @@ its identity text. Run from repo root:
 
     python config/stories/graphics_pipeline_test/docs/pipeline_atlas.py
 
-Writes three pages next to this script, cross-linked at the top:
-  pipeline-figure.html   - the body, its face kit, hair, the walk rig
-  pipeline-station.html   - the ship, the station, the interior + its furniture
-  pipeline-outfits.html  - every set, article and colourway item
+Writes four pages next to this script, cross-linked at the top:
+  pipeline-bodies.html      - the body variants, face kit, hair, walk rig
+  pipeline-structures.html  - the ship, station, interior + its furniture
+  pipeline-articles.html    - every base article in its authored colour (grid)
+  pipeline-outfits.html     - every assembled set (grid)
 """
 import json
 import os
@@ -134,9 +135,10 @@ game runs. Nothing here is wired into a playable story yet.</p>
 </body></html>"""
 
 ATLASES = [
-    ("pipeline-figure.html", "Pipeline — Figure"),
-    ("pipeline-station.html", "Pipeline — Ship & Station"),
-    ("pipeline-outfits.html", "Pipeline — Outfits"),
+    ("pipeline-bodies.html", "Human Bodies"),
+    ("pipeline-structures.html", "Civilian Structures"),
+    ("pipeline-articles.html", "Civilian Articles"),
+    ("pipeline-outfits.html", "Civilian Outfits"),
 ]
 
 
@@ -343,6 +345,29 @@ def set_plate(name):
       <p class="identity">{design['identity']}</p>
       <p class="stat">{" + ".join(design['articles'])}</p></div>
     </section>"""
+
+
+def set_card(name):
+    """A compact grid card: the assembled outfit on both bodies, its name, its
+    article/item list."""
+    design = load("sets", name + ".json")
+    materials = load("materials.json")
+    pal = load("palettes", design["palette"] + ".json")
+    bodies = sorted(n[:-5] for n in os.listdir(os.path.join(GDIR, "body"))
+                    if n.endswith(".json") and not n.startswith("rig_"))
+    combined, dx = [], 0.0
+    for bn in bodies:
+        body = load("body", bn + ".json")
+        aps = [worn_parts(a, pal, materials, body) for a in design["articles"]]
+        combined += _shift(compose_worn(body, xbody(body), *aps, order=DRAW_ORDER), dx)
+        dx += 12.0
+    svg = svg_specimen(combined, vb=(-7, -34, 12 * len(bodies) + 2, 36), px=300)
+    return f"""
+    <div class="card">{svg}
+      <h2>{name}</h2>
+      <p class="identity">{design['identity']}</p>
+      <p class="stat">{" + ".join(design['articles'])}</p>
+    </div>"""
 
 
 def _craft_parts(design, lod):
@@ -569,26 +594,29 @@ def walk_plate(set_name="civilian_work_femme", frames=8):
 
 
 def main():
-    is_hair = lambda n: n.startswith("hair_")
+    # 1. Human Bodies - the body variants at one scale, the face kit, the hair
+    # grid, the walk cycle. (compare_plate / hair_plate already cover every body
+    # and every hairstyle, so no per-body / per-hair plates repeat them.)
+    bodies = compare_plate() + face_plate() + hair_plate() + walk_plate()
+    _write("pipeline-bodies.html", "Human Bodies", bodies)
 
-    # 1. Figure - the body variants at one scale, the face kit, the hair grid,
-    # the walk cycle. (compare_plate / hair_plate already cover every body and
-    # every hairstyle, so no per-body / per-hair plates repeat them.)
-    figure = compare_plate() + face_plate() + hair_plate() + walk_plate()
-    _write("pipeline-figure.html", "Pipeline — Figure", figure)
+    # 2. Civilian Structures - the ship, the station, the interior + its
+    # furniture, plus any settlement plan / buildings.
+    struct = "\n".join(craft_plate("ships", n) for n in _names("ships"))
+    struct += "\n".join(craft_plate("stations", n) for n in _names("stations"))
+    struct += "\n".join(interior_plate(n) for n in _names("interiors"))
+    struct += "\n".join(decoration_plate(n) for n in _names("decorations"))
+    _write("pipeline-structures.html", "Civilian Structures", struct)
 
-    # 2. Ship & Station - the vessel, the structure, the interior + its furniture.
-    station = "\n".join(craft_plate("ships", n) for n in _names("ships"))
-    station += "\n".join(craft_plate("stations", n) for n in _names("stations"))
-    station += "\n".join(interior_plate(n) for n in _names("interiors"))
-    station += "\n".join(decoration_plate(n) for n in _names("decorations"))
-    _write("pipeline-station.html", "Pipeline — Ship & Station", station)
+    # 3. Civilian Articles - every base article in its authored colour, gridded.
+    _write("pipeline-articles.html", "Civilian Articles",
+           '<div class="grid">'
+           + "".join(article_card(n) for n in _names("articles")) + "</div>")
 
-    # 3. Outfits - every base article in its authored colour, in a grid. No
-    # assembled sets, no colourway items.
-    cards = "".join(article_card(n) for n in _names("articles"))
-    _write("pipeline-outfits.html", "Pipeline — Outfits",
-           f'<div class="grid">{cards}</div>')
+    # 4. Civilian Outfits - every assembled set, gridded.
+    _write("pipeline-outfits.html", "Civilian Outfits",
+           '<div class="grid">'
+           + "".join(set_card(n) for n in _names("sets")) + "</div>")
 
 
 if __name__ == "__main__":
