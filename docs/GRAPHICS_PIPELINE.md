@@ -858,10 +858,12 @@ in for the edited one, so `FITBODY` points at the body itself. The side panel
 drops every editing section (Polygons, Sections, Output, Fit, Reference image,
 Preview look — hidden by `body.outfit-mode` CSS) and shows the **Outfit**
 section plus **View**. The **Outfit** section — the **preview hair** dropdown
-and the **preview articles** checkbox list — shows *only* in this mode (it is
-not part of tailoring). Ticks are remembered per story
-(`gpEditorPreviewArt:<story>`, `gpEditorHair:<story>`). Nothing here writes a
-file; there is no draft for outfit mode.
+and the **preview articles** checkbox list — is where you *change* the look;
+those controls appear only here. The ticked articles are still drawn while
+tailoring (see **Preview other articles**); the hair pick is outfit-mode only.
+Picks are remembered per story (`gpEditorPreviewArt:<story>`,
+`gpEditorHair:<story>`). Nothing here writes a file; there is no draft for
+outfit mode.
 
 **Switching body / face / tailor / outfit without retyping the URL.** Once a
 body (plain, `edit=face`, `edit=outfit`, or an article fit against one) is
@@ -894,10 +896,7 @@ swaps `fitbody=` — which body the *same* outfit is checked against — leaving
 to** dropdown lists every `articles/*.json` next to the loaded one — picking
 one navigates to that article, fit against the same `fitbody`. It's hidden in
 plain / face mode (no article in play to switch away from — use the edit
-**tailor** button to get into tailoring first). The article you are leaving is
-added to the outfit-mode preview list (`gpEditorPreviewArt:<story>`, hair
-excluded) as you switch away, so working through a set piece by piece builds up
-the look you then see in **outfit** mode. It's populated by fetching the
+**tailor** button to get into tailoring first). It's populated by fetching the
 directory listing `python -m http.server` serves for a folder with no
 `index.html`; on a server that doesn't do that, the dropdown just stays
 hidden rather than showing something broken. Every article is one file now, so
@@ -1049,17 +1048,23 @@ hair can be judged — its `geometry` cut is the previewed body's. The
 choice is remembered per story (`gpEditorHair:<story>`); it defaults to
 `hair_short`. Hidden when the loaded design is itself a hairstyle.
 
-**Preview other articles** (Outfit section — outfit mode only). A checkbox list of every
-sibling `articles/*.json` (hairstyles excluded — *preview hair* owns those).
-Ticked articles are drawn on the figure — fitted and outset against the
-previewed body, composed by the same draw-layer stack as the game (each region
-on its `layer`, else its group). Nothing here is written; the tick list is
-remembered per story (`gpEditorPreviewArt:<story>`, a name array).
+**Preview other articles** — the tick list `gpEditorPreviewArt:<story>` (a name
+array, hairstyles excluded). Ticked articles are drawn on the figure — fitted
+and outset against the body, composed by the same draw-layer stack as the game
+(each region on its `layer`, else its group). Nothing here is ever written.
+
+- The **checkbox list** that adds and removes ticks lives in the **Outfit**
+  section and shows only in **outfit** mode.
+- The ticked articles are **drawn in tailor mode too** (minus the one currently
+  being tailored) — reference for fitting a new piece into an existing look.
+- Opening any article for tailoring auto-adds it to the list, so a set builds up
+  piece by piece and every fitted garment is there when you switch to outfit
+  mode.
 
 **This headgear hides hair** (tailor mode, Fit panel). A checkbox that writes
-top-level `"hides_hair": true` onto the article (`_body_worn` then drops every
-hairstyle from any outfit wearing it — see Faces and hair). With it checked the
-preview hides the reference hair too, matching the game.
+top-level `"hides_hair": true` onto the article being tailored — at runtime
+`_body_worn` then drops every hairstyle from any outfit wearing it (see Faces
+and hair).
 
 **Colour and shade.** Every fill panel (a region's **Selected section** panel,
 a detail's **Polygons** panel) has a **color** dropdown (palette keys) and a

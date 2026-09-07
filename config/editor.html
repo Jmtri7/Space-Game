@@ -1198,8 +1198,10 @@ function savePreviewPick(){
   try{ localStorage.setItem('gpEditorPreviewArt:' + st, JSON.stringify(names)); }catch(e){}
 }
 async function populatePreviewArticles(){
+  // the checkbox list is outfit-mode only; the ticked articles themselves are
+  // drawn in tailor mode too (reference for fitting a piece into the look).
   const row = document.getElementById('previewArtRow');
-  if(!OUTFIT_MODE || !GBASE){ if(row) row.style.display = 'none'; return; }
+  if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
     const { files } = await VFS.listDir(GBASE + '/articles');
@@ -1208,14 +1210,14 @@ async function populatePreviewArticles(){
   }catch(e){}
   PREVIEW_SELF_NAME = (loadedPath||'').split('/').pop().replace(/\.json$/,'');
   PREVIEW_CANDIDATES = names.filter(n => n !== PREVIEW_SELF_NAME);
-  if(!PREVIEW_CANDIDATES.length){ row.style.display = 'none'; return; }
+  if(!PREVIEW_CANDIDATES.length){ row.style.display = 'none'; previewArticles = []; return; }
   const st = storyOfPath(FITBODY);
   let saved = [];
   try{ saved = JSON.parse(localStorage.getItem('gpEditorPreviewArt:' + st) || '[]'); }catch(e){}
   const want = (Array.isArray(saved) ? saved : []).filter(n => PREVIEW_CANDIDATES.includes(n));
-  row.style.display = '';
+  row.style.display = OUTFIT_MODE ? '' : 'none';
   await loadPreviewArticles(want);
-  buildPreviewArticleList();
+  if(OUTFIT_MODE) buildPreviewArticleList();
 }
 async function loadPreviewArticles(names){
   const have = Object.fromEntries(previewArticles.map(p => [p.name, p]));
@@ -2885,12 +2887,15 @@ function finishLoad(){
   if(TAILOR_MODE){
     document.getElementById('hidesHairRow').style.display = '';
     document.getElementById('tHidesHair').checked = !!D.hides_hair;
+    rememberTailoredForPreview();   // opening an article puts it in the outfit look
   }
   if(OUTFIT_MODE){
     document.getElementById('outfitSec').style.display = '';
     populateHairPicker().then(loadPreviewHair);
-    populatePreviewArticles();
   }
+  // the ticked sibling articles are drawn in BOTH modes (so a helmet fit shows
+  // against the rest of the look); the show/hide checkbox list is outfit-only.
+  if(TAILOR_MODE || OUTFIT_MODE) populatePreviewArticles();
   // remember which body an outfit was fit against, per story, so jumping
   // back to "outfit" from the story picker reuses it
   if(TAILOR_MODE && FITBODY){
@@ -3076,10 +3081,10 @@ async function populateArticlePicker(){
     names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
 }
-// tailor mode: moving on to another article keeps the one you were just
-// tailoring ticked in the outfit-mode preview list, so a look builds up piece
-// by piece as you work through a set. Hair is skipped (the preview-hair
-// dropdown owns it).
+// tailor mode: opening an article for tailoring adds it to the outfit-mode
+// preview list, so a look builds up piece by piece as you work through a set
+// and every fitted piece is there when you switch to outfit mode. Hair is
+// skipped (the preview-hair dropdown owns it).
 function rememberTailoredForPreview(){
   if(!TAILOR_MODE || !loadedPath || !loadedPath.includes('/articles/')) return;
   const stem = loadedPath.split('/').pop().replace(/\.json$/, '');
@@ -3095,7 +3100,6 @@ function rememberTailoredForPreview(){
 }
 document.getElementById('articlePicker').onchange = e=>{
   const name = e.target.value; if(!name) return;
-  rememberTailoredForPreview();
   const path = GBASE + '/articles/' + name;
   const qs = new URLSearchParams(location.search);
   qs.set('file', path);
