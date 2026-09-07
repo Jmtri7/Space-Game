@@ -2,6 +2,7 @@
   "identity": "A structural support column, octagonal in plan with a wider base ring, about 0.7 m across. It stands on the concourse centre-line on purpose: the hall is built around it and traffic parts around it.",
   "tier": "decoration",
   "palette": "ship_std",
+  "height": 46,
   "units": "absolute local units (31 = player height), top-down, origin at the column axis.",
   "silhouette": [
     { "group": "shaft", "color": "hull_dk", "shade": false, "note": "base ring; flat - a crescent on a small top-down octagon reads as a broken ring",

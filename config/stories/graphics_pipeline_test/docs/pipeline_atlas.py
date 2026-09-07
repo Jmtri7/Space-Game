@@ -29,6 +29,12 @@ def load(*parts):
         return json.load(f)
 
 
+def load_story(fname):
+    """A story-root file (cultures.json, story.json, ...) - a level above GDIR."""
+    with open(os.path.join(GDIR, "..", fname), encoding="utf-8") as f:
+        return json.load(f)
+
+
 def palette_for(design):
     return load("palettes", design["palette"] + ".json")
 
@@ -437,6 +443,21 @@ def interior_plate(name):
            else "on a lane, declared <code>blocks_lane</code> - ok" if r["on_lane"]
            else "clear of lanes - ok") + "</li>"
         for r in report)
+
+    # in-game the LocationScreen dresses this floor from the culture; the atlas
+    # renders the bare navmesh plan, so note what the running interior adds.
+    finish = ""
+    try:
+        cultures = load_story("cultures.json")
+        dg = next((c["interior_decoration"] for c in cultures.values()
+                   if c.get("interior_decoration", {}).get("generator") == "deck_grid"), None)
+        if dg:
+            finish = (f"<p class='stat'>in-game the floor carries a "
+                      f"<code>deck_grid</code> panel pattern every {dg.get('spacing', 44)} u "
+                      f"(culture <code>interior_decoration</code>), rendered over the Space View "
+                      f"starfield where the interior config sets <code>space_backdrop</code>.</p>")
+    except FileNotFoundError:
+        pass
     return f"""
     <section class="plate">
       <div class="spec">{plan}</div>
@@ -446,14 +467,44 @@ def interior_plate(name):
         <p class="identity">{design['identity']}</p>
         <p class="stat">floor plan &middot; generated lanes (yellow) + placed hitboxes
           (green = declared blocker, magenta = clear, red = fault)</p>
+        {finish}
         <ul class="stat">{rows}</ul>
       </div>
     </section>"""
 
 
+def _standing_elevation(name, height):
+    """A synthesised side view of a radially-symmetric standing piece (a
+    column): each expanded layer drawn as a vertical bar at its own width -
+    `fill` layers short at the floor, `detail` layers the full height - with
+    the footprint as a foreshortened ellipse it sits in."""
+    import math
+    design = load("decorations", name + ".json")
+    mats = load("materials.json")
+    pal = load("palettes", design["palette"] + ".json")
+    coll = load_asset("collision", name)
+    out = []
+    if coll and coll.get("footprint"):
+        fx = [p[0] for p in coll["footprint"]]
+        hw = (max(fx) - min(fx)) / 2
+        out.append({"points": [[hw * math.cos(t), -hw * 0.28 * math.sin(t)]
+                               for t in (k * math.pi / 12 for k in range(24))],
+                    "color": [230, 90, 200], "opacity": 0.4})
+    base_h = max(3.0, height * 0.1)
+    for p in expand(design, pal, mats):
+        if "points" not in p:
+            continue
+        xs = [q[0] for q in p["points"]]
+        w = max(xs) - min(xs)
+        top = -(height if p.get("role") == "detail" else base_h)
+        out.append(dict(p, points=[[-w / 2, 0.0], [w / 2, 0.0], [w / 2, top], [-w / 2, top]]))
+    return out
+
+
 def decoration_plate(name):
-    """One piece of interior furniture (decorations/<name>.json) - a top-down
-    silhouette in absolute local units, beside its footprint overlay."""
+    """One piece of interior furniture (decorations/<name>.json). Top-down plan
+    with the footprint overlaid (magenta); a `height` piece also gets a
+    synthesised orthographic elevation, footprint at its base."""
     design = load("decorations", name + ".json")
     mats = load("materials.json")
     pal = load("palettes", design["palette"] + ".json")
@@ -466,16 +517,26 @@ def decoration_plate(name):
     xs, ys = [q[0] for q in pts], [q[1] for q in pts]
     r = max(max(xs) - min(xs), max(ys) - min(ys), 12) * 0.62
     cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-    vb = (cx - r, cy - r, 2 * r, 2 * r)
+    plan = svg_specimen(parts + hb, vb=(cx - r, cy - r, 2 * r, 2 * r), px=240, ground=False)
+
+    specs = []
+    if design.get("height"):
+        elev = _standing_elevation(name, design["height"])
+        exs = [q[0] for p in elev for q in p["points"]]
+        eys = [q[1] for p in elev for q in p["points"]]
+        pad = (max(exs) - min(exs)) * 0.35
+        evb = (min(exs) - pad, min(eys) - 3, (max(exs) - min(exs)) + 2 * pad, (max(eys) - min(eys)) + 6)
+        specs.append(svg_specimen(elev, vb=evb, px=180, ground=True))
+    specs.append(plan)
+
+    lane = " &middot; blocks lanes" if coll and coll.get("blocks_lane") else ""
     return f"""
     <section class="plate">
-      <div class="spec">{svg_specimen(parts, vb=vb, px=240, ground=False)}</div>
-      <div class="spec">{svg_specimen(parts + hb, vb=vb, px=240, ground=False)}</div>
+      {"".join(f'<div class="spec">{s}</div>' for s in specs)}
       <div class="meta">
         <h2>decoration: {name}</h2>
         <p class="identity">{design['identity']}</p>
-        <p class="stat">top-down &middot; {design.get('units', '')}</p>
-        <p class="stat">silhouette &middot; footprint overlay (magenta)</p>
+        <p class="stat">{"elevation (synthesised) &middot; " if design.get("height") else ""}top-down plan &middot; footprint overlay (magenta){lane}</p>
       </div>
     </section>"""
 
