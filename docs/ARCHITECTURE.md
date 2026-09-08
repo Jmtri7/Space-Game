@@ -294,7 +294,8 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   | `used_ships_target_mode` | cycle targeting to SHIPS | `SpaceScreen._cycle_target_mode` |
   | `used_autopilot_on_ship` | engage autopilot toward a ship | `SpaceScreen` |
   | `landed_on_landing_site` | land at a station/moon | `SpaceScreen._check_landing` |
-  | `completed_jump` | finish a jump | `SpaceScreen._complete_jump` |
+  | `completed_jump` | finish a jump (any destination, self-jump included) | `SpaceScreen._complete_jump` |
+  | `jumped_to:<system_id>` | finish a jump into that specific system | `SpaceScreen._complete_jump` |
   | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
   | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
   | `bought_ship` / `bought_ship:<type>` | buy a ship (either purchase path) | `LocationScreen.buy_ship` |

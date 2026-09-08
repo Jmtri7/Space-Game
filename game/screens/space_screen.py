@@ -1543,11 +1543,13 @@ class SpaceScreen(ScreenBase):
         self.selected_system_id = self.system_id
         arrival_name = get_star_systems(self.story).get(self.system_id, {}).get("name", self.system_id)
         self._show_toast(f"Jump complete - arrived at {arrival_name}", CYAN)
-        # Generic gameplay-event flag - see K_f's comment above on why
+        # Generic gameplay-event flags - see K_f's comment above on why
         # these live on Possessions.flags instead of a SpaceScreen-only
-        # field. Set for any completed jump, not just a self-jump back to
-        # this same system - both demonstrate the mechanic equally well.
+        # field. "completed_jump" fires for any jump (a self-jump home
+        # counts); "jumped_to:<system_id>" is the per-destination form, for
+        # a mission step like "jump to Kiln".
         self.player.person.possessions.flags["completed_jump"] = True
+        self.player.person.possessions.flags[f"jumped_to:{self.system_id}"] = True
 
     def update_physics(self):
         """Update physics without camera - used when space is background.

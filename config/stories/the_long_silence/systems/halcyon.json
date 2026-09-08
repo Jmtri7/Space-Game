@@ -67,8 +67,8 @@
         "culture": "harbor_authority",
         "portals": [
           {
-            "x": 800,
-            "y": 430,
+            "x": 1360,
+            "y": 465,
             "connected_locations": [],
             "return_to_ship": true
           }
@@ -76,73 +76,127 @@
         "rooms": [
           {
             "label": "Approach Concourse",
-            "shape": "circle",
-            "center": [
-              800,
-              640
-            ],
-            "radius": 320,
-            "sides": 40
-          },
-          {
-            "label": "Lender's Office",
-            "shape": "circle",
-            "center": [
-              300,
-              640
-            ],
-            "radius": 200,
-            "sides": 32
-          },
-          {
-            "label": "West Passage",
             "polygon": [
               [
-                470,
-                580
+                120,
+                560
               ],
               [
-                590,
-                580
+                1480,
+                560
               ],
               [
-                590,
-                700
+                1480,
+                740
               ],
               [
-                470,
-                700
+                120,
+                740
+              ]
+            ]
+          },
+          {
+            "label": "Records Hall",
+            "polygon": [
+              [
+                240,
+                360
+              ],
+              [
+                560,
+                360
+              ],
+              [
+                560,
+                590
+              ],
+              [
+                240,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Control Gallery",
+            "polygon": [
+              [
+                760,
+                360
+              ],
+              [
+                1040,
+                360
+              ],
+              [
+                1040,
+                590
+              ],
+              [
+                760,
+                590
               ]
             ]
           },
           {
             "label": "The Berth",
-            "shape": "circle",
-            "center": [
-              1300,
-              640
-            ],
-            "radius": 210,
-            "sides": 32
-          },
-          {
-            "label": "East Passage",
             "polygon": [
               [
-                1010,
-                580
+                1180,
+                360
               ],
               [
-                1130,
-                580
+                1480,
+                360
               ],
               [
-                1130,
-                700
+                1480,
+                590
               ],
               [
-                1010,
-                700
+                1180,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Lender's Office",
+            "polygon": [
+              [
+                120,
+                710
+              ],
+              [
+                440,
+                710
+              ],
+              [
+                440,
+                980
+              ],
+              [
+                120,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "Quartermaster's Dock",
+            "polygon": [
+              [
+                1160,
+                710
+              ],
+              [
+                1480,
+                710
+              ],
+              [
+                1480,
+                980
+              ],
+              [
+                1160,
+                980
               ]
             ]
           }
@@ -150,25 +204,171 @@
         "structures": [
           {
             "x": 800,
-            "y": 600,
+            "y": 650,
             "building_type": "authority_spire"
           },
           {
+            "x": 560,
+            "y": 582,
+            "building_type": "pipeline_column"
+          },
+          {
             "x": 700,
-            "y": 820,
-            "building_type": "pipeline_bench"
+            "y": 582,
+            "building_type": "pipeline_column"
           },
           {
             "x": 900,
-            "y": 820,
+            "y": 582,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 582,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 560,
+            "y": 718,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 718,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 900,
+            "y": 718,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 718,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 640,
+            "y": 700,
             "building_type": "pipeline_bench"
+          },
+          {
+            "x": 980,
+            "y": 700,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 400,
+            "y": 400,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 300,
+            "y": 940,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1420,
+            "y": 940,
+            "building_type": "crates"
+          },
+          {
+            "x": 900,
+            "y": 400,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
+            "name": "Induction Officer Sella",
+            "x": 780,
+            "y": 660,
+            "role": "concierge",
+            "faction": "harbor_authority",
+            "outfit": "authority_official_femme",
+            "escort_flag": "induction_escorting",
+            "ambient": {
+              "range": 700,
+              "message": "New pilot on the ring? I run inductions - walk over (WASD / arrows) and press T when you reach me."
+            },
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "induction_done",
+                  "node": "done"
+                },
+                {
+                  "flag": "induction_accepted",
+                  "node": "midway"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Harbor Authority induction. First time flying our beacons? I'll walk you through the ring, get you a loan and a hull, and see you off toward Kiln - the next dark lane. Every step tracks in your Mission Log (N).",
+                  "options": [
+                    {
+                      "label": "Walk me through it.",
+                      "next": "accepted",
+                      "actions": [
+                        "set_flag:induction_accepted",
+                        "start_mission:induction"
+                      ]
+                    },
+                    {
+                      "label": "I'll manage on my own.",
+                      "next": null
+                    }
+                  ]
+                },
+                "accepted": {
+                  "text": "Good. Close the comm and lead off down the concourse - I'm right behind you.",
+                  "options": [
+                    {
+                      "label": "Lead on",
+                      "next": null
+                    }
+                  ]
+                },
+                "midway": {
+                  "text": "Still on the induction - check your Mission Log (N) for the current step. Or strike out alone, your call.",
+                  "options": [
+                    {
+                      "label": "Keep going",
+                      "next": null
+                    },
+                    {
+                      "label": "I'll manage from here",
+                      "next": "declined",
+                      "action": "abandon_mission:induction"
+                    }
+                  ]
+                },
+                "declined": {
+                  "text": "Understood. The Berth's east for a hull, the Lender's Office south-west for the credits. Kiln's beacon lights when you're ready to leave - come back and tell me. Safe flying.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": null
+                    }
+                  ]
+                },
+                "done": {
+                  "text": "Back on the ring? The Authority remembers a clean induction. Safe flying, pilot.",
+                  "options": [
+                    {
+                      "label": "Just passing through",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
             "name": "Controller Vane",
-            "x": 800,
-            "y": 520,
+            "x": 850,
+            "y": 460,
             "role": "stationmaster",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
@@ -177,32 +377,35 @@
               "conditional_roots": [
                 {
                   "faction": "harbor_authority",
-                  "min": 20,
+                  "min": 25,
                   "node": "warm"
                 }
               ],
               "nodes": {
                 "start": {
-                  "text": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. Fly our beacons and log what you find, and the Authority remembers it. Kiln's the nearest dark lane - say the word and I'll key our beacon to reach it.",
+                  "text": "I run Hub Control. Beacon 1 is live again - the whole region's about to have company it didn't plan for. Fly our beacons, log what you find, and the Authority holds the network for all of us.",
                   "options": [
                     {
-                      "label": "Light the lane to Kiln.",
-                      "next": "signed",
-                      "requires_not_flag": "vane_signed_on",
+                      "label": "Key the beacon to Kiln - I'm heading out.",
+                      "next": "keyed",
+                      "requires_not_flag": "beacon_kiln_lit",
                       "actions": [
-                        "set_flag:vane_signed_on",
-                        "adjust_rep:harbor_authority:6",
-                        "light_beacon:kiln"
+                        "light_beacon:kiln",
+                        "adjust_rep:harbor_authority:4"
                       ]
                     },
                     {
-                      "label": "Just passing through.",
+                      "label": "Why does the Authority get to hold it?",
+                      "next": "why"
+                    },
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]
                 },
-                "signed": {
-                  "text": "Logged - Kiln's beacon is live. The Berth's east for a hull, the Lender's Office west for the credits to buy one.",
+                "keyed": {
+                  "text": "Done - Kiln's lane is open. Log what you find and come back to Hub Control. Safe flying.",
                   "options": [
                     {
                       "label": "Understood",
@@ -210,8 +413,17 @@
                     }
                   ]
                 },
+                "why": {
+                  "text": "Because someone has to schedule a crossing, and we're the only ones who kept the records to do it. Ask the Vigil what happens when nobody does.",
+                  "options": [
+                    {
+                      "label": "Noted",
+                      "next": null
+                    }
+                  ]
+                },
                 "warm": {
-                  "text": "Good to see one of ours on the approach. The outer beacons are yours to run - Hub Control has your back. If you mean that, say so, and the Authority will hold the network for all of us.",
+                  "text": "Good to see one of ours on the approach. When the Span asks its question, the Authority would be glad of your voice.",
                   "options": [
                     {
                       "label": "Pledge the Authority your beacons.",
@@ -223,13 +435,13 @@
                       ]
                     },
                     {
-                      "label": "Appreciated",
+                      "label": "I'll think on it",
                       "next": null
                     }
                   ]
                 },
                 "pledged": {
-                  "text": "Logged, and remembered. When the Span asks its question, you'll answer for the Authority.",
+                  "text": "Logged, and remembered. You answer for the Authority at the Span.",
                   "options": [
                     {
                       "label": "Understood",
@@ -242,8 +454,8 @@
           },
           {
             "name": "Signal Officer Doss",
-            "x": 300,
-            "y": 620,
+            "x": 280,
+            "y": 860,
             "role": "loan_officer",
             "faction": "harbor_authority",
             "outfit": "authority_official_masc",
@@ -251,21 +463,21 @@
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "Authority underwrites a starter loan for anyone flying our beacons. More than enough for a hull.",
+                  "text": "Authority underwrites a starter loan for any pilot flying our beacons - 100,000 credits, enough for a hull and then some. Interest is the reports you file.",
                   "options": [
                     {
-                      "label": "Take loan - 100000cr",
+                      "label": "Take the loan - 100000cr",
                       "next": "loaned",
                       "action": "take_loan"
                     },
                     {
-                      "label": "Leave",
+                      "label": "Not yet",
                       "next": null
                     }
                   ]
                 },
                 "loaned": {
-                  "text": "Logged. The beacons keep our ledgers now - don't make us come find you.",
+                  "text": "Approved. The beacons are our ledger now - don't make us come find you.",
                   "options": [
                     {
                       "label": "Thanks",
@@ -278,12 +490,12 @@
           },
           {
             "name": "Harbor-Master Crane",
-            "x": 1290,
-            "y": 600,
+            "x": 1300,
+            "y": 430,
             "role": "ship_salesman",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
-            "greeting": "Impounded hulls, mostly - carriers who couldn't pay their approach fees. Cleared for sale.",
+            "greeting": "The Berth. Independent hulls, mostly - carriers who couldn't pay their approach fees, cleared for sale. Take your pick.",
             "shop": {
               "type": "ships",
               "stock": [
@@ -297,12 +509,12 @@
           },
           {
             "name": "Approach Warden Lund",
-            "x": 1300,
-            "y": 700,
+            "x": 1400,
+            "y": 470,
             "role": "outfitter",
             "faction": "harbor_authority",
-            "outfit": "authority_official_masc",
-            "greeting": "Fitting out? Standard-issue only, but it's all rated.",
+            "outfit": "authority_security_masc",
+            "greeting": "Fitting out? Standard-issue only, but every piece is rated and logged.",
             "shop": {
               "type": "outfits",
               "stock": [
@@ -316,12 +528,12 @@
           },
           {
             "name": "Quartermaster Ellin",
-            "x": 640,
-            "y": 700,
+            "x": 1300,
+            "y": 880,
             "role": "quartermaster",
             "faction": "harbor_authority",
             "outfit": "authority_dock_femme",
-            "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates.",
+            "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates. Relief supplies and salvage move fastest right now.",
             "shop": {
               "type": "commodities",
               "stock": [
@@ -332,22 +544,146 @@
             }
           },
           {
-            "name": "Rell, carrier pilot",
-            "x": 900,
-            "y": 720,
-            "role": "traveler",
-            "faction": "free_carrier",
-            "outfit": "carrier_civilian_masc",
-            "greeting": "Twenty years I ran the slow lanes to Verdance. Now a beacon does it in an afternoon. Don't know whether to celebrate.",
+            "name": "Deck-hand Rusk",
+            "x": 1240,
+            "y": 900,
+            "role": "dockworker",
+            "faction": "harbor_authority",
+            "outfit": "authority_dock_masc",
+            "ambient": {
+              "range": 380,
+              "message": "Mind the clamps on pad three - that gantry swings wide when a hull comes in."
+            },
+            "greeting": "Busiest I've seen the Berth in my life. Everyone wants out before the lanes fill up.",
             "dialogue_options": [
-              "Safe flights",
+              "Understood",
               "Leave"
             ]
           },
           {
+            "name": "Barkeep Ottre",
+            "x": 460,
+            "y": 460,
+            "role": "bartender",
+            "faction": "harbor_authority",
+            "outfit": "authority_civilian_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "hub_bar_regular",
+                  "node": "regular"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Records Hall bar. What'll it be?",
+                  "options": [
+                    {
+                      "label": "Order a drink",
+                      "next": "drink"
+                    },
+                    {
+                      "label": "Buy the room a round - 25cr",
+                      "next": "round",
+                      "requires_not_flag": "hub_bar_regular",
+                      "actions": [
+                        "spend_credits:25",
+                        "set_flag:hub_bar_regular"
+                      ]
+                    },
+                    {
+                      "label": "Ask what people are saying",
+                      "next": "gossip"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "regular": {
+                  "text": "Back again - good. First one's poured.",
+                  "options": [
+                    {
+                      "label": "Ask what people are saying",
+                      "next": "gossip"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "drink": {
+                  "text": "Synth-ale, on the house for a new face. Cheers.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": "start"
+                    }
+                  ]
+                },
+                "round": {
+                  "text": "Generous. That buys you the honest version of the news - ask away.",
+                  "options": [
+                    {
+                      "label": "Ask",
+                      "next": "gossip"
+                    }
+                  ]
+                },
+                "gossip": {
+                  "text": "Combine's furious - says the beacon voids two centuries of contracts. The Vigil out at Ossuary say we shouldn't be lighting anything at all. And every carrier on the ring is drinking like the good years are over.",
+                  "options": [
+                    {
+                      "label": "Noted",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Records Keeper Amsel",
+            "x": 300,
+            "y": 470,
+            "role": "clerk",
+            "faction": "harbor_authority",
+            "outfit": "authority_official_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "I keep the approach records - two hundred years of them, unbroken. It's why the Authority can run the lanes and no one else can.",
+                  "options": [
+                    {
+                      "label": "What do the oldest records say?",
+                      "next": "old"
+                    },
+                    {
+                      "label": "Just looking",
+                      "next": null
+                    }
+                  ]
+                },
+                "old": {
+                  "text": "The last clean entries before the Silence. Then a single line, every station, same hour: BEACON NET DOWN - HOLD ALL TRAFFIC. No cause logged. The Vigil think they know why. I only know we obeyed it for two centuries.",
+                  "options": [
+                    {
+                      "label": "Unsettling",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
             "name": "Displaced traveller",
             "x": 620,
-            "y": 560,
+            "y": 700,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_civilian_femme",
@@ -355,6 +691,19 @@
             "greeting": "Came in on the new lane from Verdance. Half the ring's doing the same. Nobody planned for this.",
             "dialogue_options": [
               "Safe travels",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Deck Mechanic Prit",
+            "x": 900,
+            "y": 620,
+            "role": "traveler",
+            "faction": "harbor_authority",
+            "outfit": "authority_dock_femme",
+            "greeting": "If your hull rattles on the way out, that's me you come back to. I'll be here. Everyone comes back.",
+            "dialogue_options": [
+              "Good to know",
               "Leave"
             ]
           }
@@ -368,26 +717,31 @@
     "y": 0.78,
     "size": 30,
     "color": [
-      170,
-      170,
-      180
+      121,
+      137,
+      160
     ],
     "crater_color": [
-      130,
-      130,
-      140
+      91,
+      107,
+      130
     ],
     "landing_distance": 35,
     "craters": [
       {
         "x": -8,
-        "y": -5,
+        "y": -4,
         "radius": 4
       },
       {
-        "x": 10,
-        "y": 8,
+        "x": 9,
+        "y": 7,
         "radius": 5
+      },
+      {
+        "x": 3,
+        "y": -9,
+        "radius": 3
       }
     ],
     "interiors": {
@@ -397,68 +751,120 @@
         "connected_locations": [],
         "entrance": {
           "x": 800,
-          "y": 800
+          "y": 820
         },
         "rooms": [
           {
-            "label": "Watch Station",
-            "shape": "circle",
-            "center": [
-              800,
-              800
-            ],
-            "radius": 300,
-            "sides": 40
+            "label": "Watch Yard",
+            "polygon": [
+              [
+                160,
+                200
+              ],
+              [
+                1440,
+                200
+              ],
+              [
+                1440,
+                1160
+              ],
+              [
+                160,
+                1160
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 520,
             "building_type": "authority_hall"
           },
           {
-            "x": 620,
+            "x": 420,
             "y": 760,
             "building_type": "authority_housing"
           },
           {
-            "x": 980,
+            "x": 1180,
             "y": 760,
             "building_type": "authority_housing"
           },
           {
-            "x": 700,
-            "y": 960,
-            "building_type": "planter"
+            "x": 800,
+            "y": 320,
+            "building_type": "authority_spire"
           },
           {
-            "x": 900,
-            "y": 960,
+            "x": 560,
+            "y": 980,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1040,
+            "y": 980,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 300,
+            "y": 1040,
             "building_type": "crates"
           },
           {
-            "x": 640,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 1300,
+            "y": 1040,
+            "building_type": "crates"
           },
           {
-            "x": 960,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 520,
+            "y": 620,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1080,
+            "y": 620,
+            "building_type": "pipeline_column"
           }
         ],
         "npcs": [
           {
-            "name": "Surface Warden",
+            "name": "Watch Officer Kesh",
             "x": 800,
+            "y": 700,
+            "role": "magistrate",
+            "faction": "harbor_authority",
+            "outfit": "authority_official_masc",
+            "greeting": "Halcyon Watch. We track every hull in the system from here. Keep your approach clean and we'll never speak again.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Relay Tech Bome",
+            "x": 560,
+            "y": 620,
+            "role": "surface_tech",
+            "faction": "harbor_authority",
+            "outfit": "authority_dock_femme",
+            "greeting": "Beacon 1's carrier signal came back clean after 200 years dark. Not a bit-error in it. That should be impossible. Nobody up here likes talking about it.",
+            "dialogue_options": [
+              "Strange",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Off-shift Rating",
+            "x": 1080,
             "y": 900,
             "role": "resident",
             "faction": "harbor_authority",
-            "outfit": "authority_civilian_masc",
-            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "outfit": "authority_civilian_femme",
+            "greeting": "Quiet posting, the Watch. Was. Ask me again in a month.",
             "dialogue_options": [
-              "Understood",
+              "Ha",
               "Leave"
             ]
           }

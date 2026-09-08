@@ -1,65 +1,81 @@
 {
-  "identity": "Harbor Authority Housing - a residential block - where the culture's people actually live. STYLE: orderly and symmetrical, chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron on every surface, over-signed. (Geometry is a placeholder copy of housing_block - reshape.)",
+  "identity": "Harbor Authority Housing - a tall navy residential slab, head-on. Four decks of identical ranked windows in a strict grid, a chrome parapet, a single centred lit entry, and a painted deck-number chevron above the door. Deliberately uniform - Authority housing is a filing system you live in.",
   "tier": "building",
   "palette": "authority",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.6x PLAYER_H tall, ~2.5x wide - a deliberately low outpost block (below the tier's 4x nominal)",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~3.5x PLAYER_H tall, ~2.2x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
       "shade": "matte",
       "note": "wall",
+      "flatten_px": 60,
       "points": [
         [
-          -38,
+          -34,
           0
         ],
         [
-          38,
+          34,
           0
         ],
         [
-          38,
-          -70
+          34,
+          -104
         ],
         [
-          30,
-          -78
-        ],
-        [
-          -30,
-          -78
-        ],
-        [
-          -38,
-          -70
+          -34,
+          -104
         ]
-      ],
-      "flatten_px": 60
+      ]
     },
     {
       "group": "body",
-      "color": "hull",
-      "shade": "deep",
-      "note": "roof",
+      "color": "metal",
+      "shade": "metal",
+      "note": "parapet",
       "points": [
         [
-          -38,
-          -70
+          -36,
+          -104
         ],
         [
-          38,
-          -70
+          36,
+          -104
         ],
         [
-          30,
-          -78
+          36,
+          -110
         ],
         [
-          -30,
-          -78
+          -36,
+          -110
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "engine",
+      "shade": "matte",
+      "note": "entry",
+      "points": [
+        [
+          -8,
+          -18
+        ],
+        [
+          8,
+          -18
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          -8,
+          0
         ]
       ]
     }
@@ -67,133 +83,453 @@
   "details": [
     {
       "group": "body",
-      "color": "engine",
-      "shade": "matte",
+      "color": "lamp",
+      "shade": "glow",
       "role": "detail",
-      "note": "entry",
+      "min_px": 14,
+      "note": "deck chevron over the door",
       "points": [
         [
           -9,
-          -20
+          -26
+        ],
+        [
+          0,
+          -21
         ],
         [
           9,
-          -20
+          -26
         ],
         [
           9,
-          0
+          -29
+        ],
+        [
+          0,
+          -24
         ],
         [
           -9,
-          0
+          -29
         ]
-      ],
-      "min_px": 8
+      ]
     },
     {
       "group": "body",
       "color": "glass",
       "shade": "sheen",
       "role": "detail",
-      "note": "window r0 c0",
+      "min_px": 11,
+      "note": "win r0 c0",
       "points": [
         [
-          -30,
-          -44
+          -28,
+          -98
         ],
         [
-          -18,
-          -44
+          -16,
+          -98
         ],
         [
-          -18,
-          -34
+          -16,
+          -86
         ],
         [
-          -30,
-          -34
+          -28,
+          -86
         ]
-      ],
-      "min_px": 13
+      ]
     },
     {
       "group": "body",
       "color": "glass",
       "shade": "sheen",
       "role": "detail",
-      "note": "window r0 c1",
+      "min_px": 11,
+      "note": "win r0 c1",
       "points": [
         [
-          18,
-          -44
+          -14,
+          -98
         ],
         [
-          30,
-          -44
+          -2,
+          -98
         ],
         [
-          30,
-          -34
+          -2,
+          -86
         ],
         [
-          18,
-          -34
+          -14,
+          -86
         ]
-      ],
-      "min_px": 13
+      ]
     },
     {
       "group": "body",
       "color": "glass",
       "shade": "sheen",
       "role": "detail",
-      "note": "window r1 c0",
+      "min_px": 11,
+      "note": "win r0 c2",
       "points": [
         [
-          -30,
-          -68
+          2,
+          -98
         ],
         [
-          -18,
-          -68
+          14,
+          -98
         ],
         [
-          -18,
-          -58
+          14,
+          -86
         ],
         [
-          -30,
-          -58
+          2,
+          -86
         ]
-      ],
-      "min_px": 13
+      ]
     },
     {
       "group": "body",
       "color": "glass",
       "shade": "sheen",
       "role": "detail",
-      "note": "window r1 c1",
+      "min_px": 11,
+      "note": "win r0 c3",
       "points": [
         [
-          18,
-          -68
+          16,
+          -98
         ],
         [
-          30,
-          -68
+          28,
+          -98
         ],
         [
-          30,
-          -58
+          28,
+          -86
         ],
         [
-          18,
-          -58
+          16,
+          -86
         ]
-      ],
-      "min_px": 13
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r1 c0",
+      "points": [
+        [
+          -28,
+          -76
+        ],
+        [
+          -16,
+          -76
+        ],
+        [
+          -16,
+          -64
+        ],
+        [
+          -28,
+          -64
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r1 c1",
+      "points": [
+        [
+          -14,
+          -76
+        ],
+        [
+          -2,
+          -76
+        ],
+        [
+          -2,
+          -64
+        ],
+        [
+          -14,
+          -64
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r1 c2",
+      "points": [
+        [
+          2,
+          -76
+        ],
+        [
+          14,
+          -76
+        ],
+        [
+          14,
+          -64
+        ],
+        [
+          2,
+          -64
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r1 c3",
+      "points": [
+        [
+          16,
+          -76
+        ],
+        [
+          28,
+          -76
+        ],
+        [
+          28,
+          -64
+        ],
+        [
+          16,
+          -64
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r2 c0",
+      "points": [
+        [
+          -28,
+          -54
+        ],
+        [
+          -16,
+          -54
+        ],
+        [
+          -16,
+          -42
+        ],
+        [
+          -28,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r2 c1",
+      "points": [
+        [
+          -14,
+          -54
+        ],
+        [
+          -2,
+          -54
+        ],
+        [
+          -2,
+          -42
+        ],
+        [
+          -14,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r2 c2",
+      "points": [
+        [
+          2,
+          -54
+        ],
+        [
+          14,
+          -54
+        ],
+        [
+          14,
+          -42
+        ],
+        [
+          2,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r2 c3",
+      "points": [
+        [
+          16,
+          -54
+        ],
+        [
+          28,
+          -54
+        ],
+        [
+          28,
+          -42
+        ],
+        [
+          16,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r3 c0",
+      "points": [
+        [
+          -28,
+          -32
+        ],
+        [
+          -16,
+          -32
+        ],
+        [
+          -16,
+          -20
+        ],
+        [
+          -28,
+          -20
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r3 c1",
+      "points": [
+        [
+          -14,
+          -32
+        ],
+        [
+          -2,
+          -32
+        ],
+        [
+          -2,
+          -20
+        ],
+        [
+          -14,
+          -20
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r3 c2",
+      "points": [
+        [
+          2,
+          -32
+        ],
+        [
+          14,
+          -32
+        ],
+        [
+          14,
+          -20
+        ],
+        [
+          2,
+          -20
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 11,
+      "note": "win r3 c3",
+      "points": [
+        [
+          16,
+          -32
+        ],
+        [
+          28,
+          -32
+        ],
+        [
+          28,
+          -20
+        ],
+        [
+          16,
+          -20
+        ]
+      ]
     }
   ]
 }

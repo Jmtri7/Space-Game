@@ -1,8 +1,8 @@
 {
   "id": "the_long_silence",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "name": "The Long Silence",
-  "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means. WORK IN PROGRESS - plays end to end (5 systems, factions, combat, beacon-gated jumps, 3 endings); every graphic asset is a per-culture stub whose geometry still needs shaping. No tutorial yet. See docs/PLAN.md.",
+  "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means. Halcyon (the start) is a first-pass finished slice - real Harbor Authority art, a full station, an induction tutorial; the other four systems are still per-culture stubs.",
   "difficulty": "normal",
   "starting_system": "halcyon",
   "default_outfit": "carrier_flight_femme",
@@ -22,11 +22,29 @@
     "outfits": [],
     "flags": {}
   },
-  "jump": { "travel_frames": 150, "speed": 40, "arrival_distance": 1400, "self_min_distance": 3200 },
-  "ships": { "player_type": null },
+  "jump": {
+    "travel_frames": 150,
+    "speed": 40,
+    "arrival_distance": 1400,
+    "self_min_distance": 3200
+  },
+  "ships": {
+    "player_type": null
+  },
   "acts": [
-    { "id": "contact", "name": "I - Contact", "advance_flag": "act_pressure" },
-    { "id": "pressure", "name": "II - Pressure", "advance_flag": "act_span" },
-    { "id": "span", "name": "III - The Span" }
+    {
+      "id": "contact",
+      "name": "I - Contact",
+      "advance_flag": "act_pressure"
+    },
+    {
+      "id": "pressure",
+      "name": "II - Pressure",
+      "advance_flag": "act_span"
+    },
+    {
+      "id": "span",
+      "name": "III - The Span"
+    }
   ]
 }

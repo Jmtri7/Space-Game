@@ -1,210 +1,284 @@
 {
-  "identity": "Harbor Authority Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: orderly and symmetrical, chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron on every surface, over-signed. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "identity": "Harbor Authority Spire - the control mast, head-on: whose ground this is. A stepped navy tower in three receding tiers, a chrome-railed gallery near the top, a rotating scan-lamp at the peak, and a lit chevron blazon on the mid tier. Tall, narrow, symmetrical, unmistakable.",
   "tier": "building",
   "palette": "authority",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~5x PLAYER_H tall, ~1.4x wide at the base",
   "silhouette": [
-    {
-      "group": "body",
-      "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
-      "points": [
-        [
-          -25,
-          0
-        ],
-        [
-          25,
-          0
-        ],
-        [
-          25,
-          -55
-        ],
-        [
-          18,
-          -62
-        ],
-        [
-          -18,
-          -62
-        ],
-        [
-          -25,
-          -55
-        ]
-      ],
-      "flatten_px": 55
-    },
     {
       "group": "body",
       "color": "hull",
       "shade": "deep",
-      "note": "roof",
+      "note": "base tier",
+      "flatten_px": 55,
       "points": [
         [
-          -25,
-          -55
+          -22,
+          0
         ],
         [
-          25,
-          -55
+          22,
+          0
         ],
         [
-          18,
-          -62
+          22,
+          -60
         ],
         [
-          -18,
-          -62
+          -22,
+          -60
         ]
       ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "note": "mast",
+      "color": "hull",
+      "shade": "deep",
+      "note": "mid tier",
       "points": [
         [
-          -1.4,
-          -84
-        ],
-        [
-          1.4,
-          -84
-        ],
-        [
-          1.4,
+          -16,
           -60
         ],
         [
-          -1.4,
+          16,
           -60
+        ],
+        [
+          16,
+          -118
+        ],
+        [
+          -16,
+          -118
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "top tier",
+      "points": [
+        [
+          -10,
+          -118
+        ],
+        [
+          10,
+          -118
+        ],
+        [
+          10,
+          -150
+        ],
+        [
+          -10,
+          -150
+        ]
+      ]
+    },
+    {
+      "group": "gallery",
+      "color": "metal",
+      "shade": "metal",
+      "note": "railed gallery",
+      "points": [
+        [
+          -15,
+          -122
+        ],
+        [
+          15,
+          -122
+        ],
+        [
+          15,
+          -128
+        ],
+        [
+          -15,
+          -128
+        ]
+      ]
+    },
+    {
+      "group": "mast",
+      "color": "metal",
+      "shade": "metal",
+      "note": "peak mast",
+      "points": [
+        [
+          -2,
+          -150
+        ],
+        [
+          2,
+          -150
+        ],
+        [
+          2,
+          -166
+        ],
+        [
+          -2,
+          -166
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "body",
-      "color": "engine",
-      "shade": "matte",
-      "role": "detail",
-      "note": "door",
-      "points": [
-        [
-          -7,
-          -22
-        ],
-        [
-          7,
-          -22
-        ],
-        [
-          7,
-          0
-        ],
-        [
-          -7,
-          0
-        ]
-      ],
-      "min_px": 8
-    },
-    {
-      "group": "body",
+      "group": "mast",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "sign",
-      "points": [
-        [
-          -13,
-          -34
-        ],
-        [
-          13,
-          -34
-        ],
-        [
-          13,
-          -25
-        ],
-        [
-          -13,
-          -25
-        ]
-      ],
-      "min_px": 12
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window L",
-      "points": [
-        [
-          -19,
-          -20
-        ],
-        [
-          -11,
-          -20
-        ],
-        [
-          -11,
-          -8
-        ],
-        [
-          -19,
-          -8
-        ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window R",
-      "points": [
-        [
-          11,
-          -20
-        ],
-        [
-          19,
-          -20
-        ],
-        [
-          19,
-          -8
-        ],
-        [
-          11,
-          -8
-        ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "mast lamp",
+      "min_px": 24,
+      "note": "scan lamp",
       "circle": [
         0,
-        -84,
-        1.8
-      ],
-      "min_px": 8
+        -166,
+        5
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 16,
+      "note": "chevron blazon, mid tier",
+      "points": [
+        [
+          -10,
+          -92
+        ],
+        [
+          0,
+          -86
+        ],
+        [
+          10,
+          -92
+        ],
+        [
+          10,
+          -96
+        ],
+        [
+          0,
+          -90
+        ],
+        [
+          -10,
+          -96
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "base window 0",
+      "points": [
+        [
+          -16,
+          -52
+        ],
+        [
+          -8,
+          -52
+        ],
+        [
+          -8,
+          -12
+        ],
+        [
+          -16,
+          -12
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "base window 1",
+      "points": [
+        [
+          8,
+          -52
+        ],
+        [
+          16,
+          -52
+        ],
+        [
+          16,
+          -12
+        ],
+        [
+          8,
+          -12
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "top window 0",
+      "points": [
+        [
+          -7,
+          -144
+        ],
+        [
+          -1,
+          -144
+        ],
+        [
+          -1,
+          -132
+        ],
+        [
+          -7,
+          -132
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "top window 1",
+      "points": [
+        [
+          1,
+          -144
+        ],
+        [
+          7,
+          -144
+        ],
+        [
+          7,
+          -132
+        ],
+        [
+          1,
+          -132
+        ]
+      ]
     }
   ]
 }

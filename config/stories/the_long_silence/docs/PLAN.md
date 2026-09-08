@@ -161,13 +161,17 @@ which are article/palette reuse rather than new shapes.
 - [ ] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — cosmetic, do alongside a real slice
 
 ### What 6.1–6.6 now is
-The stubs exist; each slice is now **shaping the placeholder geometry** for one culture in `config/editor.html` (ships, station, 3 buildings) to match its `identity` brief, plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Still the long pole, but no longer "invent from nothing".
+The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
 
-### 6.1 — Halcyon / Harbor Authority
-- [ ] Real station + moon art; Hub Control floor plan; ~4 ships, ~8 buildings, ~8 outfits
-- [ ] NPC roster + 5–8 pilots, faction-tagged
-- [ ] Anchor mission = the tutorial: controls → loan → ship → first jump → light Beacon 2 (Kiln)
-- [ ] `story.json`: set `starting_mission` + trigger
+### 6.1 — Halcyon / Harbor Authority  ✅ done (first pass) — `docs/gen/gen_halcyon.py`, story `0.9.0`
+- [x] **First-pass Authority ship designs** — `authority_{courier,hauler,patrol}` authored as real design JSON: rectilinear hulls, guidance chevrons, ranked window bands, chrome-and-navy palette (not the placeholder courier copy). `graphics.json` `thrusters`/`local_points` patched to match.
+- [x] **`authority_station`** — a rectilinear cross-hub with a control block, four docking arms, a signal mast (not the octagon ring).
+- [x] **`authority_{hall,housing,spire}`** — elevation buildings: colonnaded civic hall, ranked-window housing slab, three-tier control spire with a scan-lamp. Footprints updated.
+- [x] `authority_dress` palette tuned to pressed navy + chrome.
+- [x] **Hub Control floor plan** — a west-east Approach Concourse spine with five overlapping bays (Records Hall, Control Gallery, The Berth, Lender's Office, Quartermaster's Dock), a central `authority_spire` landmark, ranked colonnade, `deck_grid` floor. Fully walkable; all NPCs reachable from the dock.
+- [x] **Full NPC roster** (11, one flag-gated): Induction Officer Sella, Controller Vane, Signal Officer Doss (loan), Harbor-Master Crane (ships), Approach Warden Lund (outfits), Quartermaster Ellin (commodities), Deck-hand Rusk, Barkeep Ottre, Records Keeper Amsel, Deck Mechanic Prit, Displaced traveller (`requires_flag: beacon_verdance_lit`). Real dialogue trees on the key ones (Vane's `patron:` pledge, Amsel's shutdown-record hint, Ottre's faction gossip). Moon "Watch Station" gets 3 more.
+- [x] **Anchor tutorial — "Harbor Authority Induction"** (`missions.json`, 12 stages): walk / target / talk / mission-log / possessions → loan → ship → board → turn / thrust / brake → **jump to Kiln** (`jumped_to:kiln`, a new generic gameplay-event flag). Started by Sella's dialogue (her `ambient` line prompts a new pilot); `on_start_flags` lights Kiln's beacon; Vane has a fallback for players who skip it.
+- [ ] Real Authority *pilots* in `pilots.json` (still the shared 11-pilot scaffold roster) — a later polish pass.
 
 ### 6.2 — Kiln / Ninefold Combine
 - [ ] Deep-mine station + mine-moon art; contract-law culture floor plan

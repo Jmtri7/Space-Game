@@ -1,65 +1,57 @@
 {
-  "identity": "Harbor Authority Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: orderly and symmetrical, chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron on every surface, over-signed. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "identity": "Harbor Authority Hall - the public records-and-approach hall, head-on. A wide low civic block: a flat chrome fascia carrying a lit guidance chevron dead centre, a colonnade of six square navy piers along the front, a deep recessed entry, and a ranked band of tall narrow windows between the piers. Over-signed, symmetrical.",
   "tier": "building",
   "palette": "authority",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~1.8x PLAYER_H to the fascia, ~3.6x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
       "shade": "matte",
       "note": "wall",
+      "flatten_px": 60,
       "points": [
         [
-          -56,
+          -58,
           0
         ],
         [
-          56,
+          58,
           0
         ],
         [
-          56,
-          -42
+          58,
+          -48
         ],
         [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
-        ],
-        [
-          -56,
-          -42
+          -58,
+          -48
         ]
-      ],
-      "flatten_px": 60
+      ]
     },
     {
       "group": "body",
       "color": "hull",
       "shade": "deep",
-      "note": "roof",
+      "note": "fascia band",
       "points": [
         [
-          -56,
-          -42
+          -58,
+          -48
         ],
         [
-          56,
-          -42
+          58,
+          -48
         ],
         [
-          48,
-          -50
+          58,
+          -58
         ],
         [
-          -48,
-          -50
+          -58,
+          -58
         ]
       ]
     },
@@ -67,22 +59,22 @@
       "group": "body",
       "color": "engine",
       "shade": "matte",
-      "note": "opening",
+      "note": "recessed entry",
       "points": [
         [
-          -46,
-          -34
+          -14,
+          -30
         ],
         [
-          46,
-          -34
+          14,
+          -30
         ],
         [
-          46,
+          14,
           0
         ],
         [
-          -46,
+          -14,
           0
         ]
       ]
@@ -94,130 +86,294 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "fascia",
+      "min_px": 16,
+      "note": "guidance chevron on the fascia",
       "points": [
         [
-          -52,
-          -40
+          -14,
+          -53
         ],
         [
-          52,
-          -40
+          0,
+          -47
         ],
         [
-          52,
-          -34
+          14,
+          -53
         ],
         [
-          -52,
-          -34
+          14,
+          -57
+        ],
+        [
+          0,
+          -51
+        ],
+        [
+          -14,
+          -57
         ]
-      ],
-      "min_px": 18
+      ]
     },
     {
       "group": "body",
       "color": "metal",
       "shade": "metal",
       "role": "detail",
-      "note": "near post",
+      "min_px": 12,
+      "note": "pier 0",
       "points": [
         [
-          -48,
-          -34
+          -54,
+          -48
         ],
         [
-          -44,
-          -34
+          -46,
+          -48
         ],
         [
-          -44,
+          -46,
           0
         ],
         [
-          -48,
+          -54,
           0
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
       "color": "metal",
       "shade": "metal",
       "role": "detail",
-      "note": "far post",
+      "min_px": 12,
+      "note": "pier 1",
       "points": [
         [
-          44,
-          -34
+          -34,
+          -48
         ],
         [
-          48,
-          -34
+          -26,
+          -48
         ],
         [
-          48,
+          -26,
           0
         ],
         [
-          44,
+          -34,
           0
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "deep",
+      "shade": "metal",
       "role": "detail",
-      "note": "stall 0",
+      "min_px": 12,
+      "note": "pier 2",
       "points": [
         [
-          -42,
-          -20
+          -22,
+          -48
         ],
         [
-          -8,
-          -20
+          -14,
+          -48
         ],
         [
-          -8,
+          -14,
           0
         ],
         [
-          -42,
+          -22,
           0
         ]
-      ],
-      "min_px": 24
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "deep",
+      "shade": "metal",
       "role": "detail",
-      "note": "stall 1",
+      "min_px": 12,
+      "note": "pier 3",
       "points": [
         [
-          8,
-          -20
+          14,
+          -48
         ],
         [
-          42,
-          -20
+          22,
+          -48
         ],
         [
-          42,
+          22,
           0
         ],
         [
-          8,
+          14,
           0
         ]
-      ],
-      "min_px": 24
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "min_px": 12,
+      "note": "pier 4",
+      "points": [
+        [
+          26,
+          -48
+        ],
+        [
+          34,
+          -48
+        ],
+        [
+          34,
+          0
+        ],
+        [
+          26,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "min_px": 12,
+      "note": "pier 5",
+      "points": [
+        [
+          46,
+          -48
+        ],
+        [
+          54,
+          -48
+        ],
+        [
+          54,
+          0
+        ],
+        [
+          46,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 13,
+      "note": "window 0",
+      "points": [
+        [
+          -43,
+          -44
+        ],
+        [
+          -37,
+          -44
+        ],
+        [
+          -37,
+          -14
+        ],
+        [
+          -43,
+          -14
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 13,
+      "note": "window 1",
+      "points": [
+        [
+          -27,
+          -44
+        ],
+        [
+          -21,
+          -44
+        ],
+        [
+          -21,
+          -14
+        ],
+        [
+          -27,
+          -14
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 13,
+      "note": "window 2",
+      "points": [
+        [
+          21,
+          -44
+        ],
+        [
+          27,
+          -44
+        ],
+        [
+          27,
+          -14
+        ],
+        [
+          21,
+          -14
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 13,
+      "note": "window 3",
+      "points": [
+        [
+          37,
+          -44
+        ],
+        [
+          43,
+          -44
+        ],
+        [
+          43,
+          -14
+        ],
+        [
+          37,
+          -14
+        ]
+      ]
     }
   ]
 }

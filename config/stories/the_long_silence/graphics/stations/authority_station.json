@@ -1,340 +1,139 @@
 {
-  "identity": "Harbor Authority station - the culture's main orbital dock. STYLE: orderly and symmetrical, chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron on every surface, over-signed. (Geometry is a placeholder copy of the civilian trade ring - reshape.)",
+  "identity": "Harbor Authority orbital control - Hub Control. A rectilinear cross: a squared central control block with a lit core, four straight docking arms ending in blunt pods, and a tall signal mast off the top. Ranked window bands down every arm; a guidance chevron on each pod. Chrome-and-navy. Reads as a bright-cored plus with a mast.",
   "tier": "station",
   "palette": "authority",
   "size": 46,
-  "scale_note": "about 30x the player tall; you dock at one of the four pods.",
-  "units": "fractions of `size`; radially symmetric, so orientation is free.",
+  "units": "fractions of `size`; radially symmetric bar the mast, so orientation is nearly free.",
   "silhouette": [
     {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "note": "wheel rim, octant 1 of 8 - built as radial trapezoids so the centre stays open space",
-      "points": [
-        [
-          0.0,
-          -0.82
-        ],
-        [
-          0.58,
-          -0.58
-        ],
-        [
-          0.735,
-          -0.735
-        ],
-        [
-          0.0,
-          -1.04
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.58,
-          -0.58
-        ],
-        [
-          0.82,
-          0.0
-        ],
-        [
-          1.04,
-          0.0
-        ],
-        [
-          0.735,
-          -0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.82,
-          0.0
-        ],
-        [
-          0.58,
-          0.58
-        ],
-        [
-          0.735,
-          0.735
-        ],
-        [
-          1.04,
-          0.0
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.58,
-          0.58
-        ],
-        [
-          0.0,
-          0.82
-        ],
-        [
-          0.0,
-          1.04
-        ],
-        [
-          0.735,
-          0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.0,
-          0.82
-        ],
-        [
-          -0.58,
-          0.58
-        ],
-        [
-          -0.735,
-          0.735
-        ],
-        [
-          0.0,
-          1.04
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.58,
-          0.58
-        ],
-        [
-          -0.82,
-          0.0
-        ],
-        [
-          -1.04,
-          0.0
-        ],
-        [
-          -0.735,
-          0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.82,
-          0.0
-        ],
-        [
-          -0.58,
-          -0.58
-        ],
-        [
-          -0.735,
-          -0.735
-        ],
-        [
-          -1.04,
-          0.0
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.58,
-          -0.58
-        ],
-        [
-          0.0,
-          -0.82
-        ],
-        [
-          0.0,
-          -1.04
-        ],
-        [
-          -0.735,
-          -0.735
-        ]
-      ]
-    },
-    {
-      "group": "spokes",
+      "group": "arms",
       "color": "hull",
+      "shade": "deep",
       "flatten_px": 55,
-      "shade": false,
-      "note": "the four spokes as one plus-shape from the hub to the pods; drawn flat (a crescent on a concave plus reads as a spike into the centre).",
+      "note": "the four docking arms as one plus",
       "points": [
         [
-          -0.15,
-          -0.92
+          -0.16,
+          -1.0
         ],
         [
-          0.15,
-          -0.92
+          0.16,
+          -1.0
         ],
         [
-          0.15,
-          -0.15
+          0.16,
+          -0.16
         ],
         [
-          0.92,
-          -0.15
+          1.0,
+          -0.16
         ],
         [
-          0.92,
-          0.15
+          1.0,
+          0.16
         ],
         [
-          0.15,
-          0.15
+          0.16,
+          0.16
         ],
         [
-          0.15,
-          0.92
+          0.16,
+          1.0
         ],
         [
-          -0.15,
-          0.92
+          -0.16,
+          1.0
         ],
         [
-          -0.15,
-          0.15
+          -0.16,
+          0.16
         ],
         [
-          -0.92,
-          0.15
+          -1.0,
+          0.16
         ],
         [
-          -0.92,
-          -0.15
+          -1.0,
+          -0.16
         ],
         [
-          -0.15,
-          -0.15
-        ]
-      ]
-    },
-    {
-      "group": "hub",
-      "color": "hull",
-      "flatten_px": 45,
-      "shade": false,
-      "note": "octagonal core hull; drawn flat - too small for a crescent to read as anything but a spike.",
-      "points": [
-        [
-          0.0,
-          -0.34
-        ],
-        [
-          0.24,
-          -0.24
-        ],
-        [
-          0.34,
-          0.0
-        ],
-        [
-          0.24,
-          0.24
-        ],
-        [
-          0.0,
-          0.34
-        ],
-        [
-          -0.24,
-          0.24
-        ],
-        [
-          -0.34,
-          0.0
-        ],
-        [
-          -0.24,
-          -0.24
+          -0.16,
+          -0.16
         ]
       ]
     },
     {
       "group": "core",
-      "color": "glass",
-      "flatten_px": 200,
-      "shade": false,
-      "note": "the lit core; flat, the glow gives it life.",
+      "color": "hull",
+      "shade": "deep",
+      "flatten_px": 45,
+      "note": "central control block",
       "points": [
         [
-          0.0,
+          -0.34,
+          -0.34
+        ],
+        [
+          0.34,
+          -0.34
+        ],
+        [
+          0.34,
+          0.34
+        ],
+        [
+          -0.34,
+          0.34
+        ]
+      ]
+    },
+    {
+      "group": "lit",
+      "color": "glass",
+      "shade": "flat",
+      "flatten_px": 200,
+      "note": "lit core",
+      "points": [
+        [
+          -0.15,
           -0.15
         ],
         [
-          0.11,
-          -0.11
+          0.15,
+          -0.15
         ],
         [
           0.15,
-          0.0
-        ],
-        [
-          0.11,
-          0.11
-        ],
-        [
-          0.0,
           0.15
         ],
         [
-          -0.11,
-          0.11
-        ],
-        [
           -0.15,
-          0.0
+          0.15
+        ]
+      ]
+    },
+    {
+      "group": "mast",
+      "color": "metal",
+      "shade": "metal",
+      "flatten_px": 60,
+      "note": "signal mast",
+      "points": [
+        [
+          -0.05,
+          -1.0
         ],
         [
-          -0.11,
-          -0.11
+          0.05,
+          -1.0
+        ],
+        [
+          0.05,
+          -1.5
+        ],
+        [
+          -0.05,
+          -1.5
         ]
       ]
     },
@@ -343,30 +142,23 @@
       "color": "hull_dk",
       "shade": "matte",
       "flatten_px": 60,
+      "note": "n pod",
       "points": [
         [
           -0.26,
-          -1.12
+          -1.14
         ],
         [
           0.26,
-          -1.12
+          -1.14
         ],
         [
-          0.34,
-          -0.94
+          0.3,
+          -0.96
         ],
         [
-          0.26,
-          -0.8
-        ],
-        [
-          -0.26,
-          -0.8
-        ],
-        [
-          -0.34,
-          -0.94
+          -0.3,
+          -0.96
         ]
       ]
     },
@@ -375,30 +167,23 @@
       "color": "hull_dk",
       "shade": "matte",
       "flatten_px": 60,
+      "note": "s pod",
       "points": [
         [
           -0.26,
-          1.12
+          1.14
         ],
         [
           0.26,
-          1.12
+          1.14
         ],
         [
-          0.34,
-          0.94
+          0.3,
+          0.96
         ],
         [
-          0.26,
-          0.8
-        ],
-        [
-          -0.26,
-          0.8
-        ],
-        [
-          -0.34,
-          0.94
+          -0.3,
+          0.96
         ]
       ]
     },
@@ -407,30 +192,23 @@
       "color": "hull_dk",
       "shade": "matte",
       "flatten_px": 60,
+      "note": "e pod",
       "points": [
         [
-          1.12,
+          1.14,
           -0.26
         ],
         [
-          1.12,
+          1.14,
           0.26
         ],
         [
-          0.94,
-          0.34
+          0.96,
+          0.3
         ],
         [
-          0.8,
-          0.26
-        ],
-        [
-          0.8,
-          -0.26
-        ],
-        [
-          0.94,
-          -0.34
+          0.96,
+          -0.3
         ]
       ]
     },
@@ -439,37 +217,30 @@
       "color": "hull_dk",
       "shade": "matte",
       "flatten_px": 60,
+      "note": "w pod",
       "points": [
         [
-          -1.12,
+          -1.14,
           -0.26
         ],
         [
-          -1.12,
+          -1.14,
           0.26
         ],
         [
-          -0.94,
-          0.34
+          -0.96,
+          0.3
         ],
         [
-          -0.8,
-          0.26
-        ],
-        [
-          -0.8,
-          -0.26
-        ],
-        [
-          -0.94,
-          -0.34
+          -0.96,
+          -0.3
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "hub",
+      "group": "core",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
@@ -482,106 +253,119 @@
       ]
     },
     {
-      "group": "spokes",
+      "group": "mast",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 30,
+      "note": "mast beacon",
+      "circle": [
+        0.0,
+        -1.5,
+        0.06
+      ]
+    },
+    {
+      "group": "arms",
       "color": "hull_dk",
       "shade": "matte",
       "role": "detail",
-      "min_px": 90,
-      "note": "window band, N spoke",
+      "min_px": 80,
+      "note": "window band n",
       "points": [
         [
-          -0.1,
-          -0.85
+          -0.09,
+          -0.9
         ],
         [
-          0.1,
-          -0.85
+          0.09,
+          -0.9
         ],
         [
-          0.1,
-          -0.28
+          0.09,
+          -0.3
         ],
         [
-          -0.1,
-          -0.28
+          -0.09,
+          -0.3
         ]
       ]
     },
     {
-      "group": "spokes",
+      "group": "arms",
       "color": "hull_dk",
       "shade": "matte",
       "role": "detail",
-      "min_px": 90,
-      "note": "window band, E spoke",
+      "min_px": 80,
+      "note": "window band s",
       "points": [
         [
-          0.28,
-          -0.1
+          -0.09,
+          0.3
         ],
         [
-          0.85,
-          -0.1
+          0.09,
+          0.3
         ],
         [
-          0.85,
-          0.1
+          0.09,
+          0.9
         ],
         [
-          0.28,
-          0.1
+          -0.09,
+          0.9
         ]
       ]
     },
     {
-      "group": "spokes",
+      "group": "arms",
       "color": "hull_dk",
       "shade": "matte",
       "role": "detail",
-      "min_px": 90,
-      "note": "window band, S spoke",
+      "min_px": 80,
+      "note": "window band e",
       "points": [
         [
-          -0.1,
-          0.28
+          0.3,
+          -0.09
         ],
         [
-          0.1,
-          0.28
+          0.9,
+          -0.09
         ],
         [
-          0.1,
-          0.85
+          0.9,
+          0.09
         ],
         [
-          -0.1,
-          0.85
+          0.3,
+          0.09
         ]
       ]
     },
     {
-      "group": "spokes",
+      "group": "arms",
       "color": "hull_dk",
       "shade": "matte",
       "role": "detail",
-      "min_px": 90,
-      "note": "window band, W spoke",
+      "min_px": 80,
+      "note": "window band w",
       "points": [
         [
-          -0.85,
-          -0.1
+          -0.9,
+          -0.09
         ],
         [
-          -0.28,
-          -0.1
+          -0.3,
+          -0.09
         ],
         [
-          -0.28,
-          0.1
+          -0.3,
+          0.09
         ],
         [
-          -0.85,
-          0.1
+          -0.9,
+          0.09
         ]
       ]
     },
@@ -590,8 +374,8 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 26,
+      "note": "dock light n",
       "circle": [
         0.0,
         -1.06,
@@ -603,8 +387,8 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 26,
+      "note": "dock light s",
       "circle": [
         0.0,
         1.06,
@@ -616,8 +400,8 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 26,
+      "note": "dock light e",
       "circle": [
         1.06,
         0.0,
@@ -629,8 +413,8 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 26,
+      "note": "dock light w",
       "circle": [
         -1.06,
         0.0,
