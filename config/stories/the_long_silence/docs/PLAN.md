@@ -227,22 +227,31 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 - [x] **Carrier wardrobe** — `carrier_{patch_vest,lash_belt,name_tag,deck_bib,run_band}` + 5 `sets/carrier_*.json`. Patchwork by design — the one wardrobe meant to read as scavenged across cultures.
 - [x] A `free_carrier` AI ship + a berth NPC + berth dressing dropped into **every** system's station interior (idempotent, keyed by name); carrier pilot roster fleshed (rell/Ferro, ash, dume, sable).
 
+### 6.x — remaining polish (not blocking Act II; do opportunistically)
+First-pass content is complete and plays end to end; these are quality passes:
+- [ ] **Playtest the four Act I anchor missions** end to end (`combine_contract`, `the_drift_assembly`, `the_vigil_record`, plus carrier presence) — they are wired + smoke-tested but not played. Watch the dialogue flag chains: `conditional_roots` ordering, the convene / report / filing branches, mission-stage advancement, the abandon/skip fallbacks.
+- [ ] **Wardrobe fitting pass** — every bespoke article (all cultures) is free-drawn in body space with `fits: []`, not fitted to body curves. Give the torso/shoulder pieces real `fits` against `human_{masc,femme}` curves in `config/editor.html` so they follow a reproportioned body.
+- [ ] **Geometry shaping polish** — the authored ship / station / building silhouettes are first-pass rough (generated from the `gen_<system>.py` point lists). A pass each in the vertex editor to tighten them against the `identity` briefs. Combine courier's hazard bands read as one block; Vigil hauler's tail flare; Warden arc stations could use a cleaner inner edge.
+- [ ] Own `ship_outfits.json` (see 6.0) and prune the borrowed `graphics_pipeline_test` foundation (see 6.0).
+- [ ] Register the story in the top-level `docs/` tree (see Phase 0) — it is now real enough to document.
+
 ## Phase 7 — Content: Act II "Pressure"
 
 - [ ] Faction-handler NPCs + dispatch comms (gap F): cargo / refugee runs, escort contracts, recon
 - [ ] Kiln mobilisation — conditional hostile pilots in Verdance (needs Phases C + D)
 - [ ] Reputation swings from mission choices; `set_exclusive_flag` locks in a patron faction
-- [ ] Mid-act gate: standing with ≥1 faction lights the Span beacon
+- [ ] Mid-act gate: standing with ≥1 faction lights the Span beacon (`beacon_the_span_lit`); the Span currently has `act_span` set by the Ossuary anchor but stays `locked` until this gate
+- [ ] **Bespoke Warden wardrobe** (deferred from 6.5): real `warden_*` articles + culture `sets` (a signal-tender's rig, a segment-warden kit, salvage-crew gear, hand-lettered civilian dress) replacing the `warden_dress` recolour, wired the same way as the other five cultures
 
 ## Phase 8 — Content: Act III "The Span" + endings
 
-- [ ] The Span interior: Warden NPCs, the archive terminal, the shutdown reveal
-- [ ] Three `end_story` branches wired to the fork; reputation checks decide availability + epilogue tone
-- [ ] `EndingScreen` epilogue text: per system, per ending
+- [ ] Expand the Hub Zero interior (the 6.5 stub has 4 NPCs + the fork): more Warden NPCs, the archive terminal, and the shutdown-reason reveal as a *place* (right now it is only a dialogue reveal in `the_vigil_record` — quarantine / scorched-earth / accident)
+- [x] Three `end_story` branches wired to the First Warden fork (restore / sever / hold_middle), each with a confirm step; `requires_rep` / `requires_not_flag` gate availability — **built in 6.5**, may want re-tuning here
+- [ ] Reputation checks decide epilogue tone; `EndingScreen` epilogue text: per system, per ending (`endings.json` currently has the base three)
 
 ## Phase 9 — Playtest, balance, save discipline
 
-- [ ] Full playthrough of each ending path
+- [ ] Full playthrough of each ending path (and each Act I anchor mission — see 6.x remaining polish)
 - [ ] Economy / loan tuning (BACKLOG: loan too big; laser-cannon soft-lock)
 - [ ] Combat balance pass; autopilot battery re-run
 - [ ] Final `story.json` version bump; SAVE_SYSTEM.md worked example of an old save vs. the finished story
