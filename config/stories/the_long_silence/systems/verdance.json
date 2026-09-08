@@ -97,11 +97,52 @@
             "role": "stationmaster",
             "faction": "the_drift",
             "outfit": "officer_masc",
-            "greeting": "Welcome, welcome. There's no one in charge here exactly - if you need a decision, the assembly's rolling in the Undergarden. Might take a while.",
-            "dialogue_options": [
-              "Understood",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "beacon_ossuary_told",
+                  "node": "already"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Welcome, welcome. There's no one in charge here exactly - if you need a decision, the assembly's rolling in the Undergarden. Might take a while. The Relay signal is already reaching for Ossuary - I can key our beacon to pass it on, if you mean to go there.",
+                  "options": [
+                    {
+                      "label": "Light the lane to Ossuary.",
+                      "next": "lit",
+                      "actions": [
+                        "set_flag:beacon_ossuary_told",
+                        "light_beacon:ossuary"
+                      ]
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                },
+                "lit": {
+                  "text": "Done. Ossuary's beacon is live. Mind what you carry through it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "already": {
+                  "text": "Ossuary's lane is open. Safe transit.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Seed-warden Nim",
@@ -269,5 +310,7 @@
       "pilot": "priya_nandan",
       "faction": "the_drift"
     }
-  ]
+  ],
+  "locked": true,
+  "unlock_flag": "beacon_verdance_lit"
 }

@@ -504,6 +504,20 @@ def get_faction(story, faction_id):
     return get_factions(story).get(faction_id, {})
 
 
+def system_unlocked(system_config, flags):
+    """Whether a star system can be jumped to. A system is reachable unless
+    its config sets "locked": true, in which case it stays dark until its
+    "unlock_flag" (a Possessions.flags name, set by the "light_beacon:"
+    dialogue/mission action) is set. A locked system with no unlock_flag is
+    permanently unreachable (a not-yet-built system left on the map). Used
+    by SpaceScreen.try_jump and the StarMap to gate a story's beacon
+    progression."""
+    if not system_config.get("locked"):
+        return True
+    unlock_flag = system_config.get("unlock_flag")
+    return bool(unlock_flag and (flags or {}).get(unlock_flag))
+
+
 def get_missions(story):
     """Load mission definitions from config/stories/{story}/missions.json -
     static per-story data (title, ordered stages, each stage's descriptive
@@ -542,6 +556,10 @@ def get_star_systems(story):
                 "star_map_position": data.get("star_map_position", {"x": 0, "y": 0}),
                 "station_name": data.get("station", {}).get("name", "Station"),
                 "moon_name": data.get("moon", {}).get("name", "Moon"),
+                # Beacon jump-gating - see system_unlocked(). Absent (the
+                # common case) means always reachable.
+                "locked": data.get("locked", False),
+                "unlock_flag": data.get("unlock_flag"),
             }
     return systems
 

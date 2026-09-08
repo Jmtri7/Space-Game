@@ -183,15 +183,16 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. Fly our beacons and log what you find, and the Authority remembers it.",
+                  "text": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. Fly our beacons and log what you find, and the Authority remembers it. Kiln's the nearest dark lane - say the word and I'll key our beacon to reach it.",
                   "options": [
                     {
-                      "label": "I'll fly them.",
+                      "label": "Light the lane to Kiln.",
                       "next": "signed",
                       "requires_not_flag": "vane_signed_on",
                       "actions": [
                         "set_flag:vane_signed_on",
-                        "adjust_rep:harbor_authority:6"
+                        "adjust_rep:harbor_authority:6",
+                        "light_beacon:kiln"
                       ]
                     },
                     {
@@ -201,7 +202,7 @@
                   ]
                 },
                 "signed": {
-                  "text": "Logged. The Berth's east for a hull, the Lender's Office west for the credits to buy one.",
+                  "text": "Logged - Kiln's beacon is live. The Berth's east for a hull, the Lender's Office west for the credits to buy one.",
                   "options": [
                     {
                       "label": "Understood",

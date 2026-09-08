@@ -58,6 +58,7 @@ from game.ui.selectable_list import SelectableList
 from game.ui.save_browser import SaveBrowser
 from game.ui.choice_dialog import ChoiceDialog
 from game.ui.backdrop_menu import BackdropMenu
+from game.ui.star_map import StarMap
 from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
@@ -2726,6 +2727,15 @@ class TestDialogueSharedActions(unittest.TestCase):
         self.assertTrue(apply_shared_actions("adjust_rep:the_vigil:-20", possessions))
         self.assertEqual(possessions.reputation_with("the_vigil"), -12)
 
+    def test_light_beacon_action_sets_the_target_systems_unlock_flag(self):
+        possessions = Possessions()
+        # With a story, the flag name comes from the system's config.
+        self.assertTrue(apply_shared_actions("light_beacon:kiln", possessions, story="the_long_silence"))
+        self.assertTrue(possessions.flags.get("beacon_kiln_lit"))
+        # Without a story, it falls back to the beacon_<id>_lit convention.
+        self.assertTrue(apply_shared_actions("light_beacon:someplace", possessions))
+        self.assertTrue(possessions.flags.get("beacon_someplace_lit"))
+
     def test_unrecognized_action_is_not_handled(self):
         self.assertFalse(apply_shared_actions("buy_ship:shuttle", Possessions()))
 
@@ -3271,6 +3281,68 @@ class TestJumpDrive(unittest.TestCase):
         game_screen.try_jump()
         self.assertIsNone(game_screen.jump_state, "Too close to centre - no jump")
         self.assertGreater(game_screen.jump_message_timer, 0, "Shows the 'too close' notice")
+
+
+class TestSystemUnlocked(unittest.TestCase):
+    """utils.system_unlocked - a system is reachable unless "locked" and its
+    "unlock_flag" isn't set (see docs/CONTROLS.md's Star Map / the story's
+    beacon progression)."""
+
+    def test_a_system_with_no_locked_key_is_always_reachable(self):
+        self.assertTrue(utils.system_unlocked({"name": "Home"}, {}))
+
+    def test_a_locked_system_is_unreachable_until_its_unlock_flag_is_set(self):
+        cfg = {"locked": True, "unlock_flag": "beacon_kiln_lit"}
+        self.assertFalse(utils.system_unlocked(cfg, {}))
+        self.assertTrue(utils.system_unlocked(cfg, {"beacon_kiln_lit": True}))
+
+    def test_a_locked_system_with_no_unlock_flag_stays_permanently_dark(self):
+        self.assertFalse(utils.system_unlocked({"locked": True}, {"anything": True}))
+
+
+class TestBeaconJumpGating(unittest.TestCase):
+    """Locked systems can't be jumped to or picked on the Star Map until
+    their beacon is lit; SpaceScreen posts a galaxy-wide message the frame
+    a beacon flag flips. Uses the_long_silence, whose outer systems are
+    beacon-locked."""
+
+    def test_try_jump_refuses_a_locked_destination(self):
+        gs = SpaceScreen(pilot_name="Test", story="the_long_silence", system_id="halcyon")
+        gs.player.x, gs.player.y = 100, 100  # well clear of centre
+        gs.selected_system_id = "kiln"
+        gs.try_jump()
+        self.assertIsNone(gs.jump_state)
+        self.assertGreater(gs.jump_message_timer, 0)
+        self.assertIn("Kiln", gs.jump_message)
+
+    def test_try_jump_allows_the_destination_once_its_beacon_is_lit(self):
+        gs = SpaceScreen(pilot_name="Test", story="the_long_silence", system_id="halcyon")
+        gs.player.x, gs.player.y = 100, 100
+        gs.player.person.possessions.flags["beacon_kiln_lit"] = True
+        gs.selected_system_id = "kiln"
+        gs.try_jump()
+        self.assertIsNotNone(gs.jump_state)
+
+    def test_star_map_drops_a_locked_initial_selection_and_wont_pick_one(self):
+        sm = StarMap("the_long_silence", "halcyon", "kiln", flags={})
+        self.assertEqual(sm.selected_system_id, "halcyon")
+        sm._screen_positions = {"kiln": (100, 100)}
+        self.assertIsNone(sm._system_at((100, 100)))
+        sm_lit = StarMap("the_long_silence", "halcyon", "kiln", flags={"beacon_kiln_lit": True})
+        self.assertEqual(sm_lit.selected_system_id, "kiln")
+
+    def test_check_beacons_posts_a_message_the_frame_a_beacon_lights(self):
+        gs = SpaceScreen(pilot_name="Test", story="the_long_silence", system_id="halcyon")
+        possessions = gs.player.person.possessions
+        gs._lit_beacons = None
+        gs._check_beacons()  # seed - nothing lit yet
+        self.assertEqual(possessions.message_log, [])
+        possessions.flags["beacon_kiln_lit"] = True
+        gs._check_beacons()
+        self.assertEqual(len(possessions.message_log), 1)
+        self.assertIn("Kiln", possessions.message_log[0]["text"])
+        gs._check_beacons()  # no duplicate on the next frame
+        self.assertEqual(len(possessions.message_log), 1)
 
 
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):

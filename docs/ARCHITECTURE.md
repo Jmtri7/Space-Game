@@ -82,11 +82,22 @@ the full tree and the story/save split.
 **`systems/{system_id}.json`** — one star system's layout:
 ```json
 {
+  "star_map_position": {"x": 0, "y": 0},
+  "locked": true,
+  "unlock_flag": "beacon_kiln_lit",
   "station": {"x": 0.75, "y": 0.3},
-  "ai_ships": [{"x": 0.75, "y": 0.1, "ship_type": "freighter"}]
+  "ai_ships": [{"x": 0.75, "y": 0.1, "ship_type": "freighter", "faction": "..."}]
 }
 ```
-Station/AI positions are fractions of `GAME_WIDTH`/`GAME_HEIGHT`.
+Station/AI positions are fractions of `GAME_WIDTH`/`GAME_HEIGHT`. An `ai_ships[]`
+entry (and an interior `npcs[]` entry) may carry a `faction` id
+(`factions.json`). `locked: true` + `unlock_flag` (a `Possessions.flags` name)
+make a system unreachable until that flag is set — beacon jump-gating, checked
+by `utils.system_unlocked()` in `SpaceScreen.try_jump` and the `StarMap`; set
+the flag with the `"light_beacon:<system_id>"` dialogue action, a mission's
+`on_end_flags`, or a plain `set_flag:`. `get_star_systems()` surfaces `name`,
+`star_map_position`, `station_name`, `moon_name`, `locked`, and `unlock_flag`
+(the star-map projection — not the full system file).
 
 **Interior layout** (per key in a landing site's `interiors`): a `culture`, one
 or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
@@ -169,8 +180,8 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   each option either advancing to another node, closing (`"next": null`), or
   carrying one or more actions (`"action": "..."` or `"actions": [...]`, see
   `option_actions()`) applied via `apply_shared_actions()` (`"set_flag:<name>"`,
-  `"give_item:<id>"`, `"spend_credits:<amount>"`, `"adjust_rep:<faction>:<delta>"`
-  - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
+  `"give_item:<id>"`, `"spend_credits:<amount>"`, `"adjust_rep:<faction>:<delta>"`,
+  `"light_beacon:<system_id>"` - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
   `LocationScreen._apply_dialogue_action()`'s own `"buy_ship:<id>"`/
   `"take_loan"` against the player's `Possessions`. An option can also carry
   `"requires_flag"`/`"requires_not_flag"` (a `Possessions.flags` name) -

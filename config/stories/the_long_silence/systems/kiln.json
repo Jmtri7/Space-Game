@@ -97,11 +97,52 @@
             "role": "stationmaster",
             "faction": "ninefold_combine",
             "outfit": "officer_masc",
-            "greeting": "You're on Combine ground. Every transaction here is a contract, and we honour contracts. We did not sign one with a beacon.",
-            "dialogue_options": [
-              "Understood",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "beacon_verdance_told",
+                  "node": "already"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "You're on Combine ground. Every transaction here is a contract, and we honour contracts. We did not sign one with a beacon. The Relay signal is already reaching for Verdance - I can key our beacon to pass it on, if you mean to go there.",
+                  "options": [
+                    {
+                      "label": "Light the lane to Verdance.",
+                      "next": "lit",
+                      "actions": [
+                        "set_flag:beacon_verdance_told",
+                        "light_beacon:verdance"
+                      ]
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                },
+                "lit": {
+                  "text": "Done. Verdance's beacon is live. Mind what you carry through it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "already": {
+                  "text": "Verdance's lane is open. Safe transit.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Tallykeeper Vess",
@@ -269,5 +310,7 @@
       "pilot": "dax_okafor",
       "faction": "ninefold_combine"
     }
-  ]
+  ],
+  "locked": true,
+  "unlock_flag": "beacon_kiln_lit"
 }

@@ -70,6 +70,14 @@ self-jump just flashes a brief "too close" notice instead.
 Completing a jump flashes a brief "arrived at ..." toast in the space view.
 Your thrusters draw as firing for the whole jump.
 
+A story can gate systems behind **jump beacons** (`systems/*.json`'s `locked` +
+`unlock_flag` - see `utils.system_unlocked`). A locked system is drawn dim on
+the map with a **NO SIGNAL** tag and can't be clicked as a target; **J** toward
+one just flashes a "No signal from ..." notice. Its beacon lights when the
+`unlock_flag` is set - by the `"light_beacon:<system_id>"` dialogue action, a
+mission's `on_end_flags`, or any `set_flag:` - and the space view then posts a
+"Beacon relit: ..." message to the Messages log.
+
 ## Station Interior
 
 | Control | Action |

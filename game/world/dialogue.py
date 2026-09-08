@@ -19,7 +19,7 @@ def option_actions(option):
     return []
 
 
-def apply_shared_actions(action, possessions, missions_config=None):
+def apply_shared_actions(action, possessions, missions_config=None, story=None):
     """Handle the dialogue actions generic enough to mean the same thing
     regardless of which screen is driving the conversation - LocationScreen's
     station/moon conversations, or SpaceScreen's ship hails:
@@ -33,6 +33,12 @@ def apply_shared_actions(action, possessions, missions_config=None):
       cross-system faction (possessions.reputation, clamped +-100). delta is
       a signed integer ("adjust_rep:the_vigil:8", "adjust_rep:ninefold_combine:-12").
       Faction ids come from config/stories/{story}/factions.json.
+    - "light_beacon:<system_id>" - relight a locked star system's jump
+      beacon: sets that system's "unlock_flag" (from its systems/*.json;
+      falls back to "beacon_<system_id>_lit"). Needs `story` to resolve the
+      flag name; a no-op without it. SpaceScreen posts a galaxy-wide
+      "beacon relit" message the frame the flag flips - see
+      SpaceScreen._check_beacons().
     - "abandon_mission:<id>" - let the player decline an active mission
       (e.g. "no thanks" to an NPC's offer) - see game/world/mission.py's
       abandon_mission(). Needs missions_config to look up that mission's
@@ -62,6 +68,14 @@ def apply_shared_actions(action, possessions, missions_config=None):
     if action.startswith("adjust_rep:"):
         _, faction_id, delta = action.split(":", 2)
         possessions.adjust_reputation(faction_id, int(delta))
+        return True
+    if action.startswith("light_beacon:"):
+        system_id = action.split(":", 1)[1]
+        flag = f"beacon_{system_id}_lit"
+        if story is not None:
+            from game.utils import get_star_systems
+            flag = get_star_systems(story).get(system_id, {}).get("unlock_flag") or flag
+        possessions.flags[flag] = True
         return True
     if action.startswith("abandon_mission:"):
         if missions_config is not None:

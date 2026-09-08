@@ -768,7 +768,8 @@ def main():
                         location_selector = ls
                     current_screen = next_screen
                 elif action == "star_map":
-                    star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id)
+                    star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id,
+                                       flags=game_screen.player.person.possessions.flags)
                     current_screen = "star_map"
                 elif action == "possessions":
                     possessions_menu = ReportMenu(*possessions_report(game_screen.player.person.possessions, game_screen.story, game_screen.player.ship))

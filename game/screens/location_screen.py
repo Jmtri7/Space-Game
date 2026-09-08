@@ -633,7 +633,7 @@ class LocationScreen(ScreenBase):
         called once the option's full action list is confirmed not blocked
         (see _option_blocked_reason), right before Dialogue.choose()
         advances to the option's response node."""
-        if apply_shared_actions(action, self.player.possessions, self.missions_config):
+        if apply_shared_actions(action, self.player.possessions, self.missions_config, story=self.story):
             return
         if action.startswith("buy_ship:"):
             self.buy_ship(action.split(":", 1)[1])

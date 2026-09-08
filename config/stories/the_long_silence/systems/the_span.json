@@ -269,5 +269,7 @@
       "pilot": "juno_vale",
       "faction": "the_wardens"
     }
-  ]
+  ],
+  "locked": true,
+  "unlock_flag": "beacon_the_span_lit"
 }

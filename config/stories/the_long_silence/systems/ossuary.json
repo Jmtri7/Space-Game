@@ -131,10 +131,27 @@
                   ]
                 },
                 "listen": {
-                  "text": "Read the wall. Two hundred years of names, and every account agrees the shutdown was deliberate. Carry that to the other systems - carefully.",
+                  "text": "Read the wall. Two hundred years of names, and every account agrees the shutdown was deliberate. If you must go to the Span, then go knowing that - and I'll pass the signal on to the core myself.",
                   "options": [
                     {
-                      "label": "I will",
+                      "label": "Do it.",
+                      "next": "toldspan",
+                      "actions": [
+                        "set_flag:beacon_the_span_told",
+                        "light_beacon:the_span"
+                      ]
+                    },
+                    {
+                      "label": "I'll think on it.",
+                      "next": null
+                    }
+                  ]
+                },
+                "toldspan": {
+                  "text": "The Span's beacon is live. May you choose better than they did.",
+                  "options": [
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]
@@ -340,5 +357,7 @@
       "pilot": "elena_voss",
       "faction": "the_vigil"
     }
-  ]
+  ],
+  "locked": true,
+  "unlock_flag": "beacon_ossuary_lit"
 }

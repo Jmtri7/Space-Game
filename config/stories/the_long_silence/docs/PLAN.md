@@ -76,13 +76,18 @@ than migrating off the frozen `default` art.
 
 **Not in Phase 1** (deferred to where they're actually needed): `relations` ripple logic → Phase 7; hostility from low standing → Phase 3; a dedicated Reputation screen/keybinding (the P-menu section is enough for now).
 
-## Phase 2 — Relay / beacon jump-gating (gap B)
+## Phase 2 — Relay / beacon jump-gating (gap B)  ✅ done
 
-- [ ] `systems/*.json`: `locked: true` + `unlock_flag: "beacon_<id>_lit"`
-- [ ] `StarMap` + jump-target picker: locked systems dim / "NO SIGNAL", refuse selection until flag set
-- [ ] `light_beacon:<system>` dialogue/mission action — sets unlock flag + posts a galaxy-wide message
-- [ ] Wire each system's anchor mission `on_end_flag` to light the next beacon
-- [ ] Docs: CONTROLS.md (star map), ARCHITECTURE.md (system fields), UI_FLOW.md if the picker changes
+- [x] `systems/*.json`: `locked: true` + `unlock_flag`; `utils.system_unlocked()`; `get_star_systems()` projection carries `locked` / `unlock_flag`
+- [x] `SpaceScreen.try_jump` refuses a locked destination with a "No signal from ..." notice (`jump_message` generalised from the fixed "too close" string)
+- [x] `StarMap` takes `flags`; locked systems drawn dim with a **NO SIGNAL** tag, unpickable (`_system_at` returns None), a locked initial selection falls back to the current system
+- [x] `light_beacon:<system_id>` shared dialogue action (resolves the system's `unlock_flag`, or `beacon_<id>_lit`); `apply_shared_actions` gained a `story` arg
+- [x] `SpaceScreen._check_beacons()` posts a galaxy-wide "Beacon relit: ..." message the frame a beacon flag flips (seeded on first call so a loaded save stays quiet)
+- [x] the_long_silence: Halcyon unlocked; Kiln/Verdance/Ossuary/The Span `locked` with `beacon_*_lit` flags. Scaffold chain traversable: Controller Vane lights Kiln, each outer host lights the next (Keeper Aramis lights the Span). `story.json` `0.2.0` → `0.3.0`.
+- [x] Tests: `system_unlocked`, `light_beacon` action, try_jump gating, StarMap locked behaviour, `_check_beacons` message (475 pass, +8)
+- [x] Docs: ARCHITECTURE.md (system fields + `get_star_systems` projection), CONTROLS.md (Star Map NO SIGNAL), SAVE_SYSTEM.md (reachability derived from saved flags), dialogue.py
+
+**Deferred:** anchor missions lighting the next beacon via `on_end_flags` — the hook works today (`on_end_flags: ["beacon_<x>_lit"]`); the missions themselves are Phase 6. The scaffold uses host dialogue in the meantime.
 
 ## Phase 3 — Ship-to-ship combat & hostility (gap C)
 

@@ -2,7 +2,7 @@
 Mouse-only."""
 import pygame
 from game.constants import WHITE, YELLOW, GREEN, CYAN
-from game.utils import get_ui_scale, get_star_systems, get_font
+from game.utils import get_ui_scale, get_star_systems, get_font, system_unlocked
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel
 
@@ -14,12 +14,23 @@ class StarMap(MenuBase):
     Positions are in an abstract "star map space" (each system's
     star_map_position, from config/stories/{story}/systems/*.json) - unrelated
     to in-system GAME_WIDTH/HEIGHT coordinates.
+
+    A system whose config sets "locked": true and whose "unlock_flag" isn't
+    in `flags` (see utils.system_unlocked) is drawn dim with a "NO SIGNAL"
+    tag and can't be picked as a jump target - the story's beacon
+    progression. `flags` is the player's Possessions.flags.
     """
-    def __init__(self, story, current_system_id, selected_system_id=None):
+    def __init__(self, story, current_system_id, selected_system_id=None, flags=None):
         self.story = story
         self.systems = get_star_systems(story)
+        self.flags = flags or {}
         self.current_system_id = current_system_id
-        self.selected_system_id = selected_system_id if selected_system_id in self.systems else current_system_id
+        # A locked system (its beacon still dark - see utils.system_unlocked)
+        # can't be selected as a jump target; fall back to the current system.
+        self.selected_system_id = (
+            selected_system_id
+            if selected_system_id in self.systems and self._unlocked(selected_system_id)
+            else current_system_id)
 
         current = self.systems.get(current_system_id, {})
         current_pos = current.get("star_map_position", {"x": 0, "y": 0})
@@ -33,6 +44,9 @@ class StarMap(MenuBase):
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
         self._hud_click_rects = []  # UI panel rects, refreshed each draw()
         self.button_index = 0
+
+    def _unlocked(self, system_id):
+        return system_unlocked(self.systems.get(system_id, {}), self.flags)
 
     def buttons(self):
         return [("close", "Close Map", (235, 235, 240), False)]
@@ -72,7 +86,9 @@ class StarMap(MenuBase):
     def _system_at(self, mouse_pos, radius=16):
         for system_id, (sx, sy) in self._screen_positions.items():
             if (mouse_pos[0] - sx) ** 2 + (mouse_pos[1] - sy) ** 2 <= radius ** 2:
-                return system_id
+                # A locked system can't be picked as a jump target - clicking
+                # it just does nothing (it reads "NO SIGNAL" on the map).
+                return system_id if self._unlocked(system_id) else None
         return None
 
     def draw_content(self, surface):
@@ -93,7 +109,11 @@ class StarMap(MenuBase):
 
             is_current = system_id == self.current_system_id
             is_selected = system_id == self.selected_system_id
-            color = YELLOW if is_selected else (GREEN if is_current else WHITE)
+            is_locked = not self._unlocked(system_id)
+            if is_locked:
+                color = (95, 95, 110)
+            else:
+                color = YELLOW if is_selected else (GREEN if is_current else WHITE)
             radius = int((9 if (is_current or is_selected) else 5) * ui_scale)
 
             pygame.draw.circle(surface, color, (sx, sy), max(1, radius))
@@ -106,6 +126,9 @@ class StarMap(MenuBase):
             surface.blit(label, (label_x, sy - label.get_height() // 2))
             if is_current:
                 tag = font_tag.render("You are here", True, GREEN)
+                surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
+            elif is_locked:
+                tag = font_tag.render("NO SIGNAL", True, (150, 120, 120))
                 surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
 
         # Title top-centre (the top-left corner holds the Close button).

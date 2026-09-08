@@ -12,7 +12,8 @@ from game.utils import (
     set_camera_zoom, set_camera_zoom_limits,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
-    get_asteroid_type, get_commodity, get_missions, get_story, get_factions
+    get_asteroid_type, get_commodity, get_missions, get_story, get_factions,
+    system_unlocked
 )
 import game.utils as utils
 from game.perf_metrics import metrics as perf
@@ -222,7 +223,9 @@ class SpaceScreen(ScreenBase):
         # walking around the station having just bought the ship. Lives on
         # possessions.flags so it survives a save made in that gap.
         self.jump_state = None  # None, or a dict tracking the jump animation
-        self.jump_message_timer = 0  # Transient "too close to jump" feedback
+        self.jump_message_timer = 0  # Transient jump-blocked feedback (see jump_message)
+        self.jump_message = "Too close to jump - move away from center first"
+        self._lit_beacons = None  # seeded on first _check_beacons(); then tracks beacon flips
         # Transient center-screen toast (see _show_toast) - jump completion,
         # mission started / stage completed / mission finished.
         self.toast_text = None
@@ -1174,7 +1177,7 @@ class SpaceScreen(ScreenBase):
             return
         option = options[index]
         for action in option_actions(option):
-            apply_shared_actions(action, possessions, self.missions_config)
+            apply_shared_actions(action, possessions, self.missions_config, story=self.story)
         if self.active_dialogue.advance(option):
             self.active_dialogue = None
         else:
@@ -1255,6 +1258,26 @@ class SpaceScreen(ScreenBase):
                 self._post_message(ai_ship.person.name or "Unknown", one_way.get("message", "..."))
                 return  # one at a time - avoids stacking two banners the same frame
 
+    def _check_beacons(self):
+        """Post a galaxy-wide "beacon relit" message the frame a locked
+        system's unlock_flag first flips true (by the "light_beacon:"
+        dialogue action, a mission's on_end_flags, or a plain set_flag:).
+        The system is jumpable from that point on - see utils.system_unlocked
+        and try_jump. self._lit_beacons is seeded (no announcement) on the
+        first call so a loaded save with already-lit beacons stays quiet,
+        then tracks flips from there."""
+        flags = self.player.person.possessions.flags
+        systems = get_star_systems(self.story)
+        lit_now = {sid for sid, cfg in systems.items()
+                   if cfg.get("locked") and cfg.get("unlock_flag") and flags.get(cfg["unlock_flag"])}
+        if self._lit_beacons is None:
+            self._lit_beacons = lit_now
+            return
+        for sid in lit_now - self._lit_beacons:
+            name = systems.get(sid, {}).get("name", sid)
+            self._post_message("Relay Network", f"Beacon relit: {name}. The jump lane is open.")
+        self._lit_beacons = lit_now
+
     def _sync_escorts(self):
         """Toggle any pilot with a configured "escort_flag" (pilots.json)
         between escorting the player (OrbitPlayerRoutine - circling nearby)
@@ -1309,9 +1332,16 @@ class SpaceScreen(ScreenBase):
         player presses J to leave the Star Map with a destination selected."""
         if not self.selected_system_id:
             return
+        systems = get_star_systems(self.story)
+        dest_cfg = systems.get(self.selected_system_id, {})
+        if not system_unlocked(dest_cfg, self.player.person.possessions.flags):
+            self.jump_message = f"No signal from {dest_cfg.get('name', self.selected_system_id)} - the beacon is dark"
+            self.jump_message_timer = 90
+            return
         cx, cy = SYSTEM_CENTER
         distance_from_center = math.sqrt((self.player.x - cx) ** 2 + (self.player.y - cy) ** 2)
         if self.selected_system_id == self.system_id and distance_from_center < self.jump_self_min_distance:
+            self.jump_message = "Too close to jump - move away from center first"
             self.jump_message_timer = 90  # brief "too close to jump" feedback
             return
         self._begin_jump()
@@ -1468,6 +1498,7 @@ class SpaceScreen(ScreenBase):
         if self.message_alert_timer > 0:
             self.message_alert_timer -= 1
         self._check_one_way_hails()
+        self._check_beacons()
         self._validate_target()
         # Mission progress before _sync_escorts() - a mission finishing
         # this exact frame clears its escort_flag (see mission.py's
@@ -1725,7 +1756,7 @@ class SpaceScreen(ScreenBase):
         # same frame).
         popups = []
         if self.jump_message_timer > 0:
-            popups.append(("Too close to jump - move away from center first", YELLOW, (60, 45, 10)))
+            popups.append((self.jump_message, YELLOW, (60, 45, 10)))
         elif self.hail_banner_timer > 0 and self.hail_banner:
             popups.append((self.hail_banner[0], self.hail_banner[1], (20, 30, 40)))
         if self.toast_timer > 0 and self.toast_text:
