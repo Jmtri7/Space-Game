@@ -164,7 +164,7 @@ class Character:
         self.routine.start(self)
 
     @classmethod
-    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None, systems=None, system_id=None):
+    def for_ai_pilot(cls, x, y, ship_type, ship_type_id, graphics, pilot, route, get_interior_screen, space_drag=0, outfit=None, systems=None, system_id=None, faction=None):
         """Build the Character for an AI-flown ship: a Ship configured from
         ship_type, a Person seeded with the pilot's starting credits/ship
         and flavor dialogue, and the role-driven routine that flies it."""
@@ -215,7 +215,7 @@ class Character:
         # who never escorts.
         person.escort_flag = pilot.get("escort_flag")
 
-        return cls(person, ship=ship, role=pilot.get("role"), faction=pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id, routine_name=pilot.get("routine"))
+        return cls(person, ship=ship, role=pilot.get("role"), faction=faction or pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id, routine_name=pilot.get("routine"))
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/

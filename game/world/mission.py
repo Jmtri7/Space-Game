@@ -52,6 +52,10 @@ stays pygame/UI-free on purpose.
 A mission can also carry "escort_flag" (a flag name cleared - set False -
 whenever the mission ends, finished or abandoned) and "on_end_flags" (a
 list of flag names set True at that same point) - see _on_mission_end().
+"on_start_rep" / "on_end_rep" ({faction_id: delta}) are the reputation
+mirror of on_start_flags / on_end_flags - standing changes applied when
+the mission is accepted / when it ends (see Possessions.adjust_reputation
+and config/stories/{story}/factions.json).
 Lets a mission put an NPC pilot in OrbitPlayerRoutine for its duration (see
 person.escort_flag/SpaceScreen._sync_escorts) and leave a marker behind
 (e.g. so a re-hailed pilot's dialogue can stop offering the same mission
@@ -95,6 +99,12 @@ def _on_mission_end(mission, possessions):
         possessions.flags[escort_flag] = False
     for flag in mission.get("on_end_flags", []):
         possessions.flags[flag] = True
+    # Optional {faction_id: delta} standing changes when the mission ends,
+    # finished or abandoned - a mirror of on_end_flags for reputation. Use
+    # on_start_rep (see start_mission) for a change that should land the
+    # moment the mission is accepted instead.
+    for faction_id, delta in mission.get("on_end_rep", {}).items():
+        possessions.adjust_reputation(faction_id, delta)
 
 
 def start_mission(missions_config, possessions, mission_id):
@@ -115,6 +125,8 @@ def start_mission(missions_config, possessions, mission_id):
     possessions.missions[mission_id] = 0
     for flag in mission.get("on_start_flags", []):
         possessions.flags[flag] = True
+    for faction_id, delta in mission.get("on_start_rep", {}).items():
+        possessions.adjust_reputation(faction_id, delta)
     # Clear every reset_on_activation stage's complete_flag up front so a
     # latching gameplay-event flag the player tripped before the mission
     # even began can't pre-satisfy a step - see _reset_stage_flags.

@@ -95,6 +95,7 @@
             "x": 800,
             "y": 540,
             "role": "stationmaster",
+            "faction": "the_wardens",
             "outfit": "officer_masc",
             "greeting": "You reached the Span. Few do. The Hub sings and we tend it - it began calling the beacons home on its own, or someone told it to. We are not certain there is a difference.",
             "dialogue_options": [
@@ -107,6 +108,7 @@
             "x": 650,
             "y": 700,
             "role": "quartermaster",
+            "faction": "the_wardens",
             "outfit": "ck_dockworker_masc",
             "greeting": "We keep the machinery, not a market. But a carrier who runs parts to the outer segments is always welcome.",
             "shop": {
@@ -120,6 +122,7 @@
             "x": 960,
             "y": 700,
             "role": "resident",
+            "faction": "the_wardens",
             "outfit": "civilian_femme",
             "greeting": "Segment 4 has been dark since before my grandmother tended it. Now its lights are coming up one by one.",
             "dialogue_options": [
@@ -223,6 +226,7 @@
             "x": 800,
             "y": 900,
             "role": "resident",
+            "faction": "the_wardens",
             "outfit": "ck_miner_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
@@ -254,14 +258,16 @@
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "kade_marsh"
+      "pilot": "kade_marsh",
+      "faction": "the_wardens"
     },
     {
       "name": "Core Freighter",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "juno_vale"
+      "pilot": "juno_vale",
+      "faction": "the_wardens"
     }
   ]
 }

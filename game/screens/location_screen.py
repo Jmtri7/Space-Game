@@ -464,7 +464,7 @@ class LocationScreen(ScreenBase):
         # counterpart to a pilot's "one_way_hail" (see _check_npc_ambient).
         # None for an NPC with nothing unprompted to say.
         person.ambient = cfg.get("ambient")
-        return Character(person, role=cfg.get("role", "resident"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
+        return Character(person, role=cfg.get("role", "resident"), faction=cfg.get("faction"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _resolve_portal(self, portal):
         """Which portal get_exit_options() and friends should act on when
@@ -1209,7 +1209,7 @@ class LocationScreen(ScreenBase):
 
         # Draw active dialogue box on top of everything
         if self.active_dialogue:
-            self.active_dialogue.draw(surface, ui_scale, status_fn=self._option_blocked_reason, flags=self.player.possessions.flags)
+            self.active_dialogue.draw(surface, ui_scale, status_fn=self._option_blocked_reason, flags=self.player.possessions.flags, reputation=self.player.possessions.reputation)
 
     def _draw_culture_building(self, surface, structure, building_type_id, scale):
         """Draw a building whose hull/window colors come from its type's culture -
@@ -1391,7 +1391,8 @@ class LocationScreen(ScreenBase):
         its actions, then advance/close the conversation. Shared by the click
         handler; mirrors the old Enter path."""
         flags = self.player.possessions.flags
-        options = self.active_dialogue.current_options(flags)
+        rep = self.player.possessions.reputation
+        options = self.active_dialogue.current_options(flags, rep)
         if not 0 <= index < len(options):
             return
         option = options[index]
@@ -1399,13 +1400,13 @@ class LocationScreen(ScreenBase):
             return
         for action in option_actions(option):
             self._apply_dialogue_action(action)
-        # advance(option), not choose(index, flags) - an action just applied
-        # (e.g. "set_flag:") can change what current_options(flags) returns.
+        # advance(option), not choose(index, ...) - an action just applied
+        # (set_flag:/adjust_rep:) can change what current_options() returns.
         if self.active_dialogue.advance(option):
             self.active_dialogue = None
         else:
             self.active_dialogue.selected_option = self._first_selectable_option(
-                self.active_dialogue.current_options(flags))
+                self.active_dialogue.current_options(flags, rep))
 
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
@@ -1506,8 +1507,8 @@ class LocationScreen(ScreenBase):
                     # resolve_root() (not .root directly) lets a story flag
                     # set earlier open on a different greeting node - see
                     # Dialogue.conditional_roots.
-                    nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags)
-                    nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags))
+                    nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags, self.player.possessions.reputation)
+                    nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags, self.player.possessions.reputation))
                     self.active_dialogue = nearest.dialogue
             elif event.key == pygame.K_p:
                 # Generic gameplay-event flag - lets a tutorial stage use

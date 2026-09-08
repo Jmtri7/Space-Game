@@ -60,15 +60,21 @@ than migrating off the frozen `default` art.
 - No `starting_mission`, so no tutorial yet. Halcyon's anchor mission (Phase 6.1) becomes it.
 - `default_outfit` is `ck_flight_femme` (a borrowed pipeline set) — revisit when the player body/outfit story is designed.
 
-## Phase 1 — Faction & reputation system (gap A)
+## Phase 1 — Faction & reputation system (gap A)  ✅ done
 
-- [ ] `factions.json`: id, name, home_system, colour, starting standing, relationship matrix
-- [ ] `Possessions.reputation` `{faction_id: int}` — add to `get_state()` / `restore_from()` / `from_state()`
-- [ ] Dialogue/mission actions: `adjust_rep:<faction>:<delta>`, `requires_rep:<faction>:<min>`, `requires_rep_below:<faction>:<max>` (mirror `requires_flag` plumbing)
-- [ ] Tag `pilots.json` + station/NPC configs with `faction`
-- [ ] Reputation panel in the `ReportMenu` family
-- [ ] **Save-format change:** document new key in SAVE_SYSTEM.md, bump story version
-- [ ] Docs: ARCHITECTURE.md (new config + Possessions field), CONTROLS.md if a key opens the panel
+- [x] `factions.json`: id, name, `home_system`, `color`, `starting_standing`, `relations` matrix (relations stored for Phase 7 bloc ripples; not yet applied)
+- [x] `Possessions.reputation` `{faction_id: int}` (-100..+100) + `adjust_reputation()` (clamped) + `reputation_with()` — in `__init__` / `get_state()` / `restore_from()` / `from_state()`
+- [x] `utils.get_factions()` / `get_faction()` loaders
+- [x] Dialogue: `adjust_rep:<faction>:<delta>` action; `requires_rep` / `requires_rep_below` (`"<faction>:<n>"`) option gates; `conditional_roots` faction entries (`{"faction","min","node"}`). `current_options` / `resolve_root` / `choose` / `draw` take `reputation`
+- [x] Mission `on_start_rep` / `on_end_rep` (`{faction: delta}`)
+- [x] Reputation seeded in `_apply_start_config` from `starting_standing` + `start.reputation`
+- [x] Tag local NPCs (`_build_local_character`) + AI pilots (`for_ai_pilot`, system `ai_ships[].faction`) with `faction`
+- [x] "Standing" section in `possessions_report` (P menu) — band + signed number, shown only if the story has factions
+- [x] the_long_silence: `factions.json` (6 factions), stub NPCs/pilots tagged, demo rep dialogue (Halcyon Controller Vane, Ossuary Keeper Aramis), `story.json` `0.1.0` → `0.2.0`
+- [x] Tests: reputation persistence + clamp, `adjust_rep` action, `requires_rep` / `requires_rep_below` gates, faction `conditional_roots`, mission `on_*_rep` (467 pass, +8)
+- [x] Docs: SAVE_SYSTEM.md (new `reputation` key + version-bump rule), ARCHITECTURE.md (factions.json, Possessions field, Dialogue gates), CONTROLS.md (Standing section)
+
+**Not in Phase 1** (deferred to where they're actually needed): `relations` ripple logic → Phase 7; hostility from low standing → Phase 3; a dedicated Reputation screen/keybinding (the P-menu section is enough for now).
 
 ## Phase 2 — Relay / beacon jump-gating (gap B)
 

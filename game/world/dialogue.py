@@ -29,6 +29,10 @@ def apply_shared_actions(action, possessions, missions_config=None):
     - "spend_credits:<amount>" - a flat credit cost, for a consequence that
       isn't buying a specific ship/outfit (see "buy_ship:"/shop menus for
       those)
+    - "adjust_rep:<faction>:<delta>" - shift the player's standing with a
+      cross-system faction (possessions.reputation, clamped +-100). delta is
+      a signed integer ("adjust_rep:the_vigil:8", "adjust_rep:ninefold_combine:-12").
+      Faction ids come from config/stories/{story}/factions.json.
     - "abandon_mission:<id>" - let the player decline an active mission
       (e.g. "no thanks" to an NPC's offer) - see game/world/mission.py's
       abandon_mission(). Needs missions_config to look up that mission's
@@ -55,6 +59,10 @@ def apply_shared_actions(action, possessions, missions_config=None):
     if action.startswith("spend_credits:"):
         possessions.spend(int(action.split(":", 1)[1]))
         return True
+    if action.startswith("adjust_rep:"):
+        _, faction_id, delta = action.split(":", 2)
+        possessions.adjust_reputation(faction_id, int(delta))
+        return True
     if action.startswith("abandon_mission:"):
         if missions_config is not None:
             abandon_mission(missions_config, possessions, action.split(":", 1)[1])
@@ -64,6 +72,16 @@ def apply_shared_actions(action, possessions, missions_config=None):
             start_mission(missions_config, possessions, action.split(":", 1)[1])
         return True
     return False
+
+
+def _rep_ok(spec, reputation, want_at_least):
+    """Evaluate a "requires_rep"/"requires_rep_below" spec ("<faction>:<n>")
+    against a {faction_id: standing} dict. want_at_least True means the
+    "requires_rep" sense (standing >= n); False means "requires_rep_below"
+    (standing < n). A faction absent from `reputation` counts as 0."""
+    faction_id, threshold = spec.split(":", 1)
+    standing = (reputation or {}).get(faction_id, 0)
+    return standing >= int(threshold) if want_at_least else standing < int(threshold)
 
 
 def shared_action_blocked_reason(action, possessions):
@@ -85,20 +103,23 @@ class Dialogue:
     including back to itself or an earlier node, for real branching
     conversations.
 
-    An option can also carry "requires_flag"/"requires_not_flag" (a flag
-    name from Possessions.flags) - current_options() drops it from the list
-    entirely (not just dims it, unlike an unaffordable/already-blocked
-    action - see status_fn below) until that condition is met, for a
-    conversation option that shouldn't even be hinted at yet. An option's
-    "action" can be "set_flag:<name>" (see apply_flag_action above) to
-    unlock one of these later, alongside the existing "buy_ship:"/
-    "take_loan" actions LocationScreen understands.
+    An option can also carry a gate - "requires_flag"/"requires_not_flag"
+    (a Possessions.flags name) or "requires_rep"/"requires_rep_below"
+    ("<faction>:<n>", i.e. standing >= n / standing < n) - and
+    current_options() drops it from the list entirely (not just dims it,
+    unlike an unaffordable/already-blocked action - see status_fn below)
+    until that condition is met, for a conversation option that shouldn't
+    even be hinted at yet. An option's "action" can be "set_flag:<name>" or
+    "adjust_rep:<faction>:<delta>" (see apply_shared_actions above) to
+    unlock one of these later, alongside the "buy_ship:"/"take_loan"
+    actions LocationScreen understands.
 
-    `conditional_roots` (optional) is a list of {"flag": name, "node": id}
-    - resolve_root() picks the first entry whose flag is set, letting a
-    conversation open on a different greeting node once some flag is set
-    (e.g. a friendlier greeting after a past kindness) without needing the
-    caller to know why."""
+    `conditional_roots` (optional) is a list of entries tried in order,
+    each keyed on a set flag (`{"flag": name, "node": id}`) or a faction
+    standing (`{"faction": id, "min": n, "node": id}`) - resolve_root()
+    returns the first match's node, letting a conversation open on a
+    different greeting (a friendlier one after a past kindness, a colder
+    one for an enemy faction) without the caller needing to know why."""
     def __init__(self, npc_name, nodes, root="start", conditional_roots=None):
         self.npc_name = npc_name
         self.nodes = nodes
@@ -125,27 +146,39 @@ class Dialogue:
             },
         })
 
-    def resolve_root(self, flags=None):
+    def resolve_root(self, flags=None, reputation=None):
         """Which node a fresh conversation should open on: the first
-        conditional_roots entry whose flag is set in `flags`, else the
-        plain root. Call this (not self.root directly) whenever a
-        conversation restarts from the top, so a story flag set earlier can
-        change the greeting without the caller needing to know why."""
+        matching conditional_roots entry's node, else the plain root. Call
+        this (not self.root directly) whenever a conversation restarts from
+        the top, so earlier story state can change the greeting without the
+        caller needing to know why.
+
+        An entry matches on either a set flag (`{"flag": name, "node": id}`)
+        or a faction standing (`{"faction": id, "min": n, "node": id}` -
+        standing >= n; use a negative `min` for a "cold enough" greeting).
+        Entries are tried in order."""
         flags = flags or {}
+        reputation = reputation or {}
         for entry in self.conditional_roots:
-            if flags.get(entry["flag"]):
-                return entry["node"]
+            if "flag" in entry:
+                if flags.get(entry["flag"]):
+                    return entry["node"]
+            elif "faction" in entry:
+                if reputation.get(entry["faction"], 0) >= entry.get("min", 1):
+                    return entry["node"]
         return self.root
 
     def current_text(self):
         return self.nodes[self.current_node]["text"]
 
-    def current_options(self, flags=None):
-        """Options at the current node, minus any whose requires_flag/
-        requires_not_flag condition isn't met. flags defaults to {} (every
-        conditional option hidden) rather than requiring every call site to
-        pass one - a Dialogue with no conditional options behaves exactly
-        as before either way."""
+    def current_options(self, flags=None, reputation=None):
+        """Options at the current node, minus any whose gate isn't met:
+        - "requires_flag" / "requires_not_flag" - a Possessions.flags name
+        - "requires_rep" / "requires_rep_below" - "<faction>:<n>", meaning
+          standing >= n / standing < n (faction absent counts as 0)
+        `flags` and `reputation` default to {} (every conditional option
+        hidden) rather than requiring every call site to pass them - a
+        Dialogue with no conditional options behaves the same either way."""
         flags = flags or {}
         options = self.nodes[self.current_node]["options"]
         visible = []
@@ -155,6 +188,12 @@ class Dialogue:
             if requires and not flags.get(requires):
                 continue
             if requires_not and flags.get(requires_not):
+                continue
+            rep_req = option.get("requires_rep")
+            rep_below = option.get("requires_rep_below")
+            if rep_req and not _rep_ok(rep_req, reputation, want_at_least=True):
+                continue
+            if rep_below and not _rep_ok(rep_below, reputation, want_at_least=False):
                 continue
             visible.append(option)
         return visible
@@ -190,16 +229,16 @@ class Dialogue:
         """True when `pos` is on the box's ✕ close control."""
         return self._close_rect is not None and self._close_rect.collidepoint(pos)
 
-    def choose(self, index, flags=None):
+    def choose(self, index, flags=None, reputation=None):
         """Convenience wrapper for callers with no actions to apply first
         (see the tests, and from_flat's plain closing options) - resolves
-        `index` against current_options(flags) and calls advance() on it.
-        A caller that also runs the option's own actions (see
-        option_actions) should resolve the option once and call advance()
-        directly instead of this, per advance()'s own docstring."""
-        return self.advance(self.current_options(flags)[index])
+        `index` against current_options(flags, reputation) and calls
+        advance() on it. A caller that also runs the option's own actions
+        (see option_actions) should resolve the option once and call
+        advance() directly instead of this, per advance()'s own docstring."""
+        return self.advance(self.current_options(flags, reputation)[index])
 
-    def draw(self, surface, scale, status_fn=None, flags=None):
+    def draw(self, surface, scale, status_fn=None, flags=None, reputation=None):
         """status_fn(option) -> reason string or None. Options with a
         reason are drawn dim with the reason appended, instead of the
         normal selected/unselected colors - used for actions the player
@@ -225,7 +264,7 @@ class Dialogue:
         header_height = int(50 * scale)
         options_top_gap = int(20 * scale)
         footer_height = int(40 * scale)
-        options_height = len(self.current_options(flags)) * option_line_height
+        options_height = len(self.current_options(flags, reputation)) * option_line_height
         content_height = header_height + text_block_height + options_top_gap + options_height + footer_height
         box_height = max(int(250 * scale), content_height)
 
@@ -253,7 +292,7 @@ class Dialogue:
 
         self._option_rects = []
         options_top = box_y + header_height + text_block_height + options_top_gap
-        for i, option in enumerate(self.current_options(flags)):
+        for i, option in enumerate(self.current_options(flags, reputation)):
             reason = status_fn(option) if status_fn else None
             row_y = options_top + i * option_line_height
             if reason:

@@ -318,9 +318,11 @@ Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
 ### Possessions Menu (open with P)
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
-cargo, personal items, and installed/spare ship outfits. Two columns; wheel
-to scroll if it overflows. **P**, **ESC**, or the **Close** button
-(top-right) closes it.
+cargo, personal items, installed/spare ship outfits, and - only if the story
+has a `factions.json` - a **Standing** section listing the player's reputation
+with each faction (band + signed number: Hostile / Cold / Neutral / Friendly /
+Allied). Two columns; wheel to scroll if it overflows. **P**, **ESC**, or the
+**Close** button (top-right) closes it.
 
 ### Mission Log (open with N)
 Two tabs - **Active** and **Completed** - clicked to switch. Each mission's

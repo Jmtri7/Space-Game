@@ -1,0 +1,46 @@
+{
+  "_comment": "Cross-system factions. Standing is -100..+100 (see Possessions.adjust_reputation); bands: <=-50 Hostile, <=-15 Cold, <15 Neutral, <50 Friendly, else Allied. `relations` maps another faction id to -1 (enemy) or +1 (ally) - stored for Phase 7 bloc-reputation ripples; Phase 1 adjust_rep only touches the named faction. `home_system` is a systems/*.json id.",
+
+  "harbor_authority": {
+    "name": "The Harbor Authority",
+    "home_system": "halcyon",
+    "color": [150, 180, 220],
+    "starting_standing": 10,
+    "relations": {"ninefold_combine": -1, "the_vigil": -1, "free_carrier": -1}
+  },
+  "ninefold_combine": {
+    "name": "The Ninefold Combine",
+    "home_system": "kiln",
+    "color": [230, 140, 70],
+    "starting_standing": 0,
+    "relations": {"harbor_authority": -1, "the_drift": -1}
+  },
+  "the_drift": {
+    "name": "The Drift",
+    "home_system": "verdance",
+    "color": [170, 220, 140],
+    "starting_standing": 0,
+    "relations": {"ninefold_combine": -1, "free_carrier": 1}
+  },
+  "the_vigil": {
+    "name": "The Vigil",
+    "home_system": "ossuary",
+    "color": [180, 170, 210],
+    "starting_standing": 0,
+    "relations": {"harbor_authority": -1, "the_wardens": -1}
+  },
+  "the_wardens": {
+    "name": "The Wardens",
+    "home_system": "the_span",
+    "color": [110, 220, 200],
+    "starting_standing": 0,
+    "relations": {"the_vigil": -1}
+  },
+  "free_carrier": {
+    "name": "Free Carriers",
+    "home_system": null,
+    "color": [230, 200, 150],
+    "starting_standing": 5,
+    "relations": {"harbor_authority": -1, "the_drift": 1}
+  }
+}

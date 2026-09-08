@@ -12,7 +12,7 @@ from game.utils import (
     set_camera_zoom, set_camera_zoom_limits,
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
-    get_asteroid_type, get_commodity, get_missions, get_story
+    get_asteroid_type, get_commodity, get_missions, get_story, get_factions
 )
 import game.utils as utils
 from game.perf_metrics import metrics as perf
@@ -371,7 +371,8 @@ class SpaceScreen(ScreenBase):
                 space_drag=space_drag,
                 outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id),
                 systems=self.systems,
-                system_id=system_id
+                system_id=system_id,
+                faction=ai_cfg.get("faction"),
             )
             state.ai_ships.append(ai_ship)
 
@@ -507,7 +508,9 @@ class SpaceScreen(ScreenBase):
     def _apply_start_config(self):
         """Seed the player's Possessions from story.json's "start" block -
         starting credits, a starting ship, spare outfits, personal items,
-        and story flags. Runs unconditionally in __init__ (exactly like the
+        story flags, and faction standing (from each faction's
+        factions.json starting_standing, plus start.reputation overrides).
+        Runs unconditionally in __init__ (exactly like the
         placeholder ship is always built from story.json's default type):
         for a loaded save it's immediately overwritten by
         restore_possessions(); for a new game it is the actual starting
@@ -517,6 +520,14 @@ class SpaceScreen(ScreenBase):
         start = self.start_config
         possessions = self.player.person.possessions
         possessions.credits = start.get("credits", possessions.credits)
+        # Seed standing with every faction from its factions.json
+        # starting_standing, then apply any story.json start.reputation
+        # overrides. Runs unconditionally like the rest of this method; a
+        # loaded save's restore_possessions() overwrites it right after.
+        for faction_id, faction in get_factions(self.story).items():
+            possessions.reputation.setdefault(faction_id, faction.get("starting_standing", 0))
+        for faction_id, standing in start.get("reputation", {}).items():
+            possessions.reputation[faction_id] = standing
         for item_id, qty in start.get("items", {}).items():
             possessions.add_item(item_id, qty)
         for outfit_id in start.get("outfits", []):
@@ -1139,7 +1150,7 @@ class SpaceScreen(ScreenBase):
         # resolve_root(), not .root directly, so an earlier flag (e.g.
         # having already been hailed by this pilot once - see
         # _check_one_way_hails) can open on a different greeting node.
-        dialogue.current_node = dialogue.resolve_root(flags)
+        dialogue.current_node = dialogue.resolve_root(flags, possessions.reputation)
         dialogue.selected_option = 0
         self.active_dialogue = dialogue
         self.hail_banner = None
@@ -1158,7 +1169,7 @@ class SpaceScreen(ScreenBase):
         none of those block on affordability, so there's no "skip blocked"
         pass like LocationScreen's."""
         possessions = self.player.person.possessions
-        options = self.active_dialogue.current_options(possessions.flags)
+        options = self.active_dialogue.current_options(possessions.flags, possessions.reputation)
         if not 0 <= index < len(options):
             return
         option = options[index]
@@ -1619,7 +1630,7 @@ class SpaceScreen(ScreenBase):
         # Active hail conversation, drawn last so it sits on top of the HUD
         # too - same reason LocationScreen draws active_dialogue last.
         if self.active_dialogue:
-            self.active_dialogue.draw(surface, get_ui_scale(), flags=self.player.person.possessions.flags)
+            self.active_dialogue.draw(surface, get_ui_scale(), flags=self.player.person.possessions.flags, reputation=self.player.person.possessions.reputation)
 
     def _draw_hud(self, surface, target_obj, draw_hud=True):
         """Ship status, targeting, jump-target, help, and status-message

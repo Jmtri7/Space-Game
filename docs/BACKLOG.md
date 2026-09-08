@@ -94,8 +94,15 @@ only appears under a section if it currently has items there.
 
 ## Combat, Crime & Factions
 
-- [ ] Factions — combined with crime/war, would turn the sandbox into a living
+- [~] Factions — combined with crime/war, would turn the sandbox into a living
       political map; cultures/roles already exist as a foundation.
+      (Foundation shipped for the `the_long_silence` story: `factions.json`,
+      `Possessions.reputation` (-100..+100, saved), `adjust_rep:` dialogue
+      action + mission `on_start_rep`/`on_end_rep`, `requires_rep`/
+      `requires_rep_below` option gates + faction `conditional_roots`, NPC/pilot
+      `faction` tags, and a Standing section in the Possessions menu. Still to
+      do: `relations`-matrix bloc ripples, hostility/combat from low standing
+      (needs ship combat first), crime/war on top.)
 - [ ] Combat.
 - [ ] Crime — see factions.
 - [ ] War — see factions.
@@ -188,3 +195,22 @@ only appears under a section if it currently has items there.
 - [ ] Migrate the `default` story onto the design-JSON pipeline
       (docs/GRAPHICS_PIPELINE.md) so its art is regenerable again, then drop
       `person_figure.py` / `figure_signatures.py` and the old draw paths.
+- [ ] Shared asset modules via an `extends` search path. Today `config/stories/{story}/`
+      is fully self-contained and nothing is shared, so a new story that wants the
+      design-JSON pipeline has to vendor the whole `graphics/` tree (the
+      `the_long_silence` Phase 0 scaffold copied ~180 files from
+      `graphics_pipeline_test`). Proposal: add `config/modules/` holding
+      foundation-only packs (e.g. `pipeline_core` — bodies, faces, `rig_walk`,
+      generic articles, `materials.json`, `palettes/`, `draw_order.json`, base
+      ship stat bands, standard weapon outfits); `story.json` gets
+      `extends: ["pipeline_core"]`; asset resolution checks the story dir first,
+      then walks `extends`. Deliberately keep it one level (stories extend
+      modules, modules extend nothing), story-dir-always-wins, and error on
+      duplicate ids across modules rather than resolving by precedence. Saves stay
+      self-contained (they already snapshot the active system); the existing
+      SAVE_SYSTEM.md ⚠️ discipline still applies — a shared-module change that
+      reinterprets a stored value bumps the *story's* version. Cost: every
+      `load_json("config/stories/{story}/...")` call site goes through a resolver,
+      and the editor / atlas tooling (`config/editor.html`, `pipeline_atlas.py`)
+      plus `story_menu_rows()` must understand the search path. Pairs naturally
+      with the `default`-onto-pipeline migration above — do both in one arc.

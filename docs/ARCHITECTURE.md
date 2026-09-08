@@ -31,7 +31,8 @@ space-game/
 ├── config/
 │   └── stories/{story}/     # All config is per-story — nothing shared between stories
 │       ├── story.json, ship_types.json, graphics.json, cultures.json,
-│       │   building_types.json, pilots.json, commodities.json, items.json, missions.json
+│       │   building_types.json, pilots.json, commodities.json, items.json, missions.json,
+│       │   factions.json (optional — cross-system factions + player reputation)
 │       └── systems/{system_id}.json   # Station/moon placement, AI ship roster
 ├── saves/                   # Player save files (runtime-generated)
 ├── tests/                   # test_*.py, discovered by run_tests.py
@@ -168,21 +169,28 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   each option either advancing to another node, closing (`"next": null`), or
   carrying one or more actions (`"action": "..."` or `"actions": [...]`, see
   `option_actions()`) applied via `apply_shared_actions()` (`"set_flag:<name>"`,
-  `"give_item:<id>"`, `"spend_credits:<amount>"` - generic, work from any
-  screen) and/or, for a few commerce-flavored station NPCs,
+  `"give_item:<id>"`, `"spend_credits:<amount>"`, `"adjust_rep:<faction>:<delta>"`
+  - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
   `LocationScreen._apply_dialogue_action()`'s own `"buy_ship:<id>"`/
   `"take_loan"` against the player's `Possessions`. An option can also carry
   `"requires_flag"`/`"requires_not_flag"` (a `Possessions.flags` name) -
-  `current_options(flags)` drops it from the list entirely until that
-  condition is met, for a conversation option that shouldn't be hinted at
-  before then. `"conditional_roots"` lets a fresh conversation open on a
-  different node once a flag is set (`resolve_root(flags)`) - e.g. a
-  friendlier greeting after a past kindness. `Dialogue.from_flat()` builds
+  `current_options(flags, reputation)` drops it from the list entirely until
+  that condition is met, for a conversation option that shouldn't be hinted at
+  before then. `"requires_rep"` / `"requires_rep_below"` (`"<faction>:<n>"`) gate
+  an option on faction standing the same way. `"conditional_roots"` lets a fresh
+  conversation open on a different node once a flag is set or a faction standing
+  is reached (`resolve_root(flags, reputation)`) - e.g. a friendlier greeting
+  after a past kindness, a colder one for an enemy faction. `Dialogue.from_flat()` builds
   the simple one-node shape most NPCs still use. See docs/CONTROLS.md's
   Dialogue and Hailing sections.
 - `Possessions` — credits/owned ships/loans/cargo/items, `flags`
   (`{name: True}` story-progress markers Dialogue's `requires_flag`/
   `conditional_roots`/`"set_flag:"` read and write - see above),
+  `reputation` (`{faction_id: int}`, -100..+100 - the player's standing with
+  each `factions.json` faction; `adjust_reputation()` clamps, `reputation_with()`
+  defaults absent factions to 0; set by `"adjust_rep:"` / mission
+  `on_start_rep`/`on_end_rep`, read by Dialogue's `requires_rep` and the
+  Possessions report's Standing section),
   `missions`/`completed_missions` (mission/stage progress - see below), and
   `message_log` (received one-way hails, newest first - `add_message()`
   inserts at the front, capped at `MESSAGE_LOG_MAX` - rendered by the

@@ -8,7 +8,8 @@ indicators. A report can also be **tabbed** (`tabs=[(label, columns), ...]`):
 the mission log uses this to split Active from Completed missions, switched
 by clicking a tab.
 
-Replaces `PossessionsMenu` (credits/ships/loans/cargo/outfits, two columns)
+Replaces `PossessionsMenu` (credits/ships/loans/cargo/outfits, plus faction
+Standing when the story has factions.json, two columns)
 and `MissionLog` (numbered mission stages with `[x]` / `->` markers, one
 column, Active/Completed tabs). The content lives in the module-level builder
 functions `possessions_report()` / `mission_report()`; `ReportMenu` is just
@@ -17,7 +18,7 @@ the frame.
 import pygame
 from game.constants import WHITE, GRAY
 from game.utils import (get_ui_scale, get_font, get_ship_type, get_ship_outfit,
-                        get_commodity, get_item, _wrap_text)
+                        get_commodity, get_item, get_factions, _wrap_text)
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 from game.world.mission import mission_status_lines
@@ -182,6 +183,20 @@ class ReportMenu(MenuBase):
                 self._scroll_down_rect = pygame.Rect(pos[0], pos[1], down.get_width(), down.get_height())
 
 
+REP_BANDS = [(-50, "Hostile", (220, 110, 110)), (-15, "Cold", (220, 170, 120)),
+             (15, "Neutral", (190, 190, 190)), (50, "Friendly", (170, 210, 150)),
+             (1e9, "Allied", (140, 220, 170))]
+
+
+def _standing_line(name, standing):
+    """`(text, color)` row for one faction's standing - band label + signed
+    number (see Possessions.adjust_reputation / factions.json)."""
+    for ceiling, label, color in REP_BANDS:
+        if standing < ceiling:
+            return (f"{name}: {label} ({standing:+d})", color)
+    return (f"{name}: {standing:+d}", (190, 190, 190))
+
+
 def possessions_report(possessions, story="default", ship=None):
     """`(title, columns)` for a `ReportMenu` showing everything the player
     owns - moved out of the old `PossessionsMenu.draw`."""
@@ -215,6 +230,12 @@ def possessions_report(possessions, story="default", ship=None):
 
     spare_lines = [(get_ship_outfit(story, oid).get("name", oid), (220, 200, 255)) for oid in possessions.owned_outfits]
     right.append(("Spare Outfits", spare_lines or [("- None", DIM)]))
+
+    factions = get_factions(story)
+    if factions:
+        standing_lines = [_standing_line(f.get("name", fid), possessions.reputation_with(fid))
+                          for fid, f in factions.items()]
+        right.append(("Standing", standing_lines))
 
     return "Possessions", [left, right]
 

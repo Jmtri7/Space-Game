@@ -1418,6 +1418,37 @@ class TestPossessionsMissions(unittest.TestCase):
         self.assertEqual(possessions.completed_missions, [])
 
 
+class TestPossessionsReputation(unittest.TestCase):
+    """reputation ({faction_id: standing}, -100..+100 - see
+    config/stories/{story}/factions.json and Dialogue's requires_rep /
+    conditional_roots faction gate) round-trips like every other
+    Possessions field, and adjust_reputation() clamps - see
+    docs/SAVE_SYSTEM.md."""
+
+    def test_reputation_with_defaults_to_zero(self):
+        self.assertEqual(Possessions().reputation_with("the_vigil"), 0)
+
+    def test_adjust_reputation_accumulates_and_clamps(self):
+        p = Possessions()
+        self.assertEqual(p.adjust_reputation("the_vigil", 30), 30)
+        self.assertEqual(p.adjust_reputation("the_vigil", 30), 60)
+        self.assertEqual(p.adjust_reputation("the_vigil", 999), 100)
+        self.assertEqual(p.adjust_reputation("the_vigil", -999), -100)
+
+    def test_reputation_round_trips_through_get_state_and_restore_from(self):
+        p = Possessions()
+        p.adjust_reputation("harbor_authority", 12)
+        state = p.get_state()
+        self.assertEqual(state["reputation"], {"harbor_authority": 12})
+        restored = Possessions()
+        restored.restore_from(state)
+        self.assertEqual(restored.reputation, {"harbor_authority": 12})
+        self.assertEqual(Possessions.from_state(state).reputation, {"harbor_authority": 12})
+
+    def test_from_state_defaults_to_empty_reputation_for_a_pre_existing_save(self):
+        self.assertEqual(Possessions.from_state({"credits": 10}).reputation, {})
+
+
 class TestMessageAlertSchedule(unittest.TestCase):
     """message_alert_state() drives the Message Log's unread light + ping:
     exactly MESSAGE_ALERT_BLINKS blinks, one ping at the start of each, then
@@ -1749,6 +1780,21 @@ class TestMissionEscortAndAbandon(unittest.TestCase):
         possessions = Possessions()
         abandon_mission(self.MISSIONS, possessions, "first_flight")  # must not raise
         self.assertNotIn("kade_escorting", possessions.flags)
+
+    def test_on_start_rep_and_on_end_rep_shift_faction_standing(self):
+        missions = {"job": {
+            "title": "A Job",
+            "on_start_rep": {"harbor_authority": 4},
+            "on_end_rep": {"harbor_authority": 10, "ninefold_combine": -6},
+            "stages": [{"text": "Do it.", "complete_flag": "did_it"}],
+        }}
+        possessions = Possessions()
+        start_mission(missions, possessions, "job")
+        self.assertEqual(possessions.reputation_with("harbor_authority"), 4)
+        possessions.flags["did_it"] = True
+        check_mission_progress(missions, possessions)
+        self.assertEqual(possessions.reputation_with("harbor_authority"), 14)
+        self.assertEqual(possessions.reputation_with("ninefold_combine"), -6)
 
 
 class TestMissionOneWayMessage(unittest.TestCase):
@@ -2630,6 +2676,28 @@ class TestDialogueConditionalOptions(unittest.TestCase):
         self.assertEqual(dialogue.resolve_root(), "start")
         self.assertEqual(dialogue.resolve_root({"met_before": True}), "friendly")
 
+    def test_requires_rep_and_requires_rep_below_gate_options(self):
+        dialogue = Dialogue("Keeper", {
+            "start": {"text": "...", "options": [
+                {"label": "Inner vault", "next": None, "requires_rep": "the_vigil:25"},
+                {"label": "You work for them", "next": None, "requires_rep_below": "the_vigil:0"},
+                {"label": "Leave", "next": None},
+            ]},
+        })
+        self.assertEqual([o["label"] for o in dialogue.current_options({}, {})], ["Leave"])
+        self.assertEqual([o["label"] for o in dialogue.current_options({}, {"the_vigil": 30})],
+                         ["Inner vault", "Leave"])
+        self.assertEqual([o["label"] for o in dialogue.current_options({}, {"the_vigil": -5})],
+                         ["You work for them", "Leave"])
+
+    def test_conditional_roots_matches_a_faction_standing_entry(self):
+        dialogue = Dialogue("Keeper", {
+            "start": {"text": "Stranger.", "options": []},
+            "trusted": {"text": "One of ours.", "options": []},
+        }, conditional_roots=[{"faction": "the_vigil", "min": 25, "node": "trusted"}])
+        self.assertEqual(dialogue.resolve_root({}, {"the_vigil": 10}), "start")
+        self.assertEqual(dialogue.resolve_root({}, {"the_vigil": 25}), "trusted")
+
 
 class TestDialogueSharedActions(unittest.TestCase):
     """option_actions()/apply_shared_actions()/shared_action_blocked_reason() -
@@ -2650,6 +2718,13 @@ class TestDialogueSharedActions(unittest.TestCase):
         self.assertEqual(possessions.items["engraved_flask"], 1)
         self.assertTrue(apply_shared_actions("spend_credits:20", possessions))
         self.assertEqual(possessions.credits, 80)
+
+    def test_adjust_rep_action_shifts_standing_by_a_signed_delta(self):
+        possessions = Possessions()
+        self.assertTrue(apply_shared_actions("adjust_rep:the_vigil:8", possessions))
+        self.assertEqual(possessions.reputation_with("the_vigil"), 8)
+        self.assertTrue(apply_shared_actions("adjust_rep:the_vigil:-20", possessions))
+        self.assertEqual(possessions.reputation_with("the_vigil"), -12)
 
     def test_unrecognized_action_is_not_handled(self):
         self.assertFalse(apply_shared_actions("buy_ship:shuttle", Possessions()))

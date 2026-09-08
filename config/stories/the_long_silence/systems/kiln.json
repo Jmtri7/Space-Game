@@ -95,6 +95,7 @@
             "x": 800,
             "y": 540,
             "role": "stationmaster",
+            "faction": "ninefold_combine",
             "outfit": "officer_masc",
             "greeting": "You're on Combine ground. Every transaction here is a contract, and we honour contracts. We did not sign one with a beacon.",
             "dialogue_options": [
@@ -107,6 +108,7 @@
             "x": 650,
             "y": 700,
             "role": "quartermaster",
+            "faction": "ninefold_combine",
             "outfit": "ck_dockworker_masc",
             "greeting": "Ore and rationed goods. Combine rates, non-negotiable - that's the point of them.",
             "shop": {
@@ -120,6 +122,7 @@
             "x": 960,
             "y": 700,
             "role": "resident",
+            "faction": "ninefold_combine",
             "outfit": "civilian_femme",
             "greeting": "Air's metered by the shift down here. You get used to counting breaths.",
             "dialogue_options": [
@@ -223,6 +226,7 @@
             "x": 800,
             "y": 900,
             "role": "resident",
+            "faction": "ninefold_combine",
             "outfit": "ck_miner_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
@@ -254,14 +258,16 @@
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "rex_calder"
+      "pilot": "rex_calder",
+      "faction": "ninefold_combine"
     },
     {
       "name": "Ore Run",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "dax_okafor"
+      "pilot": "dax_okafor",
+      "faction": "ninefold_combine"
     }
   ]
 }

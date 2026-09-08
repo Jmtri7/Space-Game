@@ -49,7 +49,8 @@ class Possessions:
     entries so a long playthrough doesn't grow this without bound."""
     def __init__(self, credits=0, owned_ships=None, loans=None,
                  owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None,
-                 missions=None, completed_missions=None, message_log=None, active_ship_index=None):
+                 missions=None, completed_missions=None, message_log=None, active_ship_index=None,
+                 reputation=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
         # Which entry of owned_ships is the hull the player currently flies
@@ -67,6 +68,32 @@ class Possessions:
         self.missions = missions or {}  # {mission_id: current_stage_index}
         self.completed_missions = completed_missions or []  # [mission_id, ...]
         self.message_log = message_log or []  # [{"sender": str, "text": str}, ...], newest first
+        # {faction_id: int} - the player's standing with each cross-system
+        # faction (see config/stories/{story}/factions.json, game.utils
+        # get_factions). Range -100..+100, clamped by adjust_reputation();
+        # a faction absent from the dict reads as 0 (reputation_with()). Set
+        # by the "adjust_rep:<faction>:<delta>" dialogue action and mission
+        # on_start_rep/on_end_rep; read by Dialogue's requires_rep/
+        # requires_rep_below option gate and conditional_roots. Lives here,
+        # not a separate save key, for the same reason flags do - it's the
+        # shared-by-reference player state that already round-trips through
+        # save/load, and a standing change made in a station conversation
+        # must be visible when hailing a ship in space later.
+        self.reputation = reputation or {}
+
+    REP_MIN, REP_MAX = -100, 100
+
+    def reputation_with(self, faction_id):
+        """The player's standing with faction_id, defaulting to 0 for a
+        faction they've never affected."""
+        return self.reputation.get(faction_id, 0)
+
+    def adjust_reputation(self, faction_id, delta):
+        """Shift standing with faction_id by delta, clamped to
+        [REP_MIN, REP_MAX]. Returns the new value."""
+        new = max(self.REP_MIN, min(self.REP_MAX, self.reputation_with(faction_id) + delta))
+        self.reputation[faction_id] = new
+        return new
 
     def add_message(self, sender, text):
         """Record a one-way message at the front of message_log (newest
@@ -185,6 +212,7 @@ class Possessions:
         self.missions = dict(state.get("missions", self.missions))
         self.completed_missions = list(state.get("completed_missions", self.completed_missions))
         self.message_log = [dict(m) for m in state.get("message_log", self.message_log)]
+        self.reputation = dict(state.get("reputation", self.reputation))
 
     def get_state(self):
         return {
@@ -200,6 +228,7 @@ class Possessions:
             "missions": dict(self.missions),
             "completed_missions": list(self.completed_missions),
             "message_log": [dict(m) for m in self.message_log],
+            "reputation": dict(self.reputation),
         }
 
     @classmethod
@@ -219,4 +248,5 @@ class Possessions:
             missions=dict(state.get("missions", {})),
             completed_missions=list(state.get("completed_missions", [])),
             message_log=[dict(m) for m in state.get("message_log", [])],
+            reputation=dict(state.get("reputation", {})),
         )

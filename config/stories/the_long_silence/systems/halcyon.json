@@ -170,18 +170,63 @@
             "x": 800,
             "y": 520,
             "role": "stationmaster",
+            "faction": "harbor_authority",
             "outfit": "officer_femme",
-            "greeting": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. The Berth's east, the Lender's Office west.",
-            "dialogue_options": [
-              "Understood",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "faction": "harbor_authority",
+                  "min": 20,
+                  "node": "warm"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. Fly our beacons and log what you find, and the Authority remembers it.",
+                  "options": [
+                    {
+                      "label": "I'll fly them.",
+                      "next": "signed",
+                      "requires_not_flag": "vane_signed_on",
+                      "actions": [
+                        "set_flag:vane_signed_on",
+                        "adjust_rep:harbor_authority:6"
+                      ]
+                    },
+                    {
+                      "label": "Just passing through.",
+                      "next": null
+                    }
+                  ]
+                },
+                "signed": {
+                  "text": "Logged. The Berth's east for a hull, the Lender's Office west for the credits to buy one.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "warm": {
+                  "text": "Good to see one of ours on the approach. The outer beacons are yours to run - Hub Control has your back.",
+                  "options": [
+                    {
+                      "label": "Appreciated",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Signal Officer Doss",
             "x": 300,
             "y": 620,
             "role": "loan_officer",
+            "faction": "harbor_authority",
             "outfit": "ck_command_masc",
             "dialogue_tree": {
               "root": "start",
@@ -217,6 +262,7 @@
             "x": 1290,
             "y": 600,
             "role": "ship_salesman",
+            "faction": "harbor_authority",
             "outfit": "ck_command_femme",
             "greeting": "Impounded hulls, mostly - carriers who couldn't pay their approach fees. Cleared for sale.",
             "shop": {
@@ -231,6 +277,7 @@
             "x": 1300,
             "y": 700,
             "role": "outfitter",
+            "faction": "harbor_authority",
             "outfit": "ck_security_masc",
             "greeting": "Fitting out? Standard-issue only, but it's all rated.",
             "shop": {
@@ -249,6 +296,7 @@
             "x": 640,
             "y": 700,
             "role": "quartermaster",
+            "faction": "harbor_authority",
             "outfit": "ck_dockworker_femme",
             "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates.",
             "shop": {
@@ -262,6 +310,7 @@
             "x": 900,
             "y": 720,
             "role": "traveler",
+            "faction": "free_carrier",
             "outfit": "ck_smuggler_masc",
             "greeting": "Twenty years I ran the slow lanes to Verdance. Now a beacon does it in an afternoon. Don't know whether to celebrate.",
             "dialogue_options": [
@@ -365,6 +414,7 @@
             "x": 800,
             "y": 900,
             "role": "resident",
+            "faction": "harbor_authority",
             "outfit": "ck_miner_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
@@ -414,21 +464,24 @@
       "x": 0.5,
       "y": 0.12,
       "ship_type": "courier",
-      "pilot": "petty_officer_lund"
+      "pilot": "petty_officer_lund",
+      "faction": "harbor_authority"
     },
     {
       "name": "Ledger Run",
       "x": 0.65,
       "y": 0.6,
       "ship_type": "courier",
-      "pilot": "juno_vale"
+      "pilot": "juno_vale",
+      "faction": "free_carrier"
     },
     {
       "name": "Beacon Watch",
       "x": 0.3,
       "y": 0.3,
       "ship_type": "courier",
-      "pilot": "commander_ackley"
+      "pilot": "commander_ackley",
+      "faction": "harbor_authority"
     }
   ]
 }

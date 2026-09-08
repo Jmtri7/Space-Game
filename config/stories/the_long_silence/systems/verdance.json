@@ -95,6 +95,7 @@
             "x": 800,
             "y": 540,
             "role": "stationmaster",
+            "faction": "the_drift",
             "outfit": "officer_masc",
             "greeting": "Welcome, welcome. There's no one in charge here exactly - if you need a decision, the assembly's rolling in the Undergarden. Might take a while.",
             "dialogue_options": [
@@ -107,6 +108,7 @@
             "x": 650,
             "y": 700,
             "role": "quartermaster",
+            "faction": "the_drift",
             "outfit": "ck_dockworker_masc",
             "greeting": "Grain, fibre, water-credits. Pay what's fair and we'll trade again.",
             "shop": {
@@ -120,6 +122,7 @@
             "x": 960,
             "y": 700,
             "role": "resident",
+            "faction": "the_drift",
             "outfit": "civilian_femme",
             "greeting": "The beacon relit and half of us are thrilled and half are terrified. That's Verdance for you.",
             "dialogue_options": [
@@ -223,6 +226,7 @@
             "x": 800,
             "y": 900,
             "role": "resident",
+            "faction": "the_drift",
             "outfit": "ck_miner_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
@@ -254,14 +258,16 @@
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "mira_solis"
+      "pilot": "mira_solis",
+      "faction": "the_drift"
     },
     {
       "name": "Canopy Hauler",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "priya_nandan"
+      "pilot": "priya_nandan",
+      "faction": "the_drift"
     }
   ]
 }

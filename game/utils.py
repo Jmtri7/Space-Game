@@ -488,6 +488,22 @@ def get_item(story, item_id):
     return items.get(item_id, {})
 
 
+def get_factions(story):
+    """Load the story's cross-system factions from
+    config/stories/{story}/factions.json - id -> {name, home_system, color,
+    starting_standing, relations}. Static per-story data; the player's
+    standing with each is mutable state (Possessions.reputation). Returns {}
+    for a story with no factions.json, so faction-free stories are
+    unaffected."""
+    raw = load_json(f"config/stories/{story}/factions.json") or {}
+    return {k: v for k, v in raw.items() if not k.startswith("_")}
+
+
+def get_faction(story, faction_id):
+    """One faction's config dict (see get_factions), or {} if unknown."""
+    return get_factions(story).get(faction_id, {})
+
+
 def get_missions(story):
     """Load mission definitions from config/stories/{story}/missions.json -
     static per-story data (title, ordered stages, each stage's descriptive

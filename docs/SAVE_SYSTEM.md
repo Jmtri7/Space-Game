@@ -140,7 +140,8 @@ name is kept, the timestamp lives inside it.
       "flags": {"hailed_kade": true, "bought_bartender_round": true},
       "missions": {"first_flight": 3},
       "completed_missions": ["docking_101"],
-      "message_log": [{"sender": "Kade Marsh", "text": "Identify yourself or alter course."}]
+      "message_log": [{"sender": "Kade Marsh", "text": "Identify yourself or alter course."}],
+      "reputation": {"harbor_authority": 12, "ninefold_combine": -8}
     },
     "jump_state": {
       "phase": "travel",
@@ -302,6 +303,26 @@ so it self-heals rather than crashing, but a player mid-mission can see one
 stage they've effectively already done. Treat a stage insert/reorder as a
 save-affecting change: bump `story.json`'s `version` so the load-time mismatch
 warning fires.
+
+`reputation` (`{faction_id: int}`, range -100..+100) is the player's standing
+with each of the story's cross-system factions
+(`config/stories/{story}/factions.json`, `game.utils.get_factions`). Lives on
+`Possessions` for the same reason `flags` does - it's shared-by-reference player
+state that already round-trips through save/load, and a standing change made in
+a station conversation must be visible when hailing a ship in space later. Set
+by the `"adjust_rep:<faction>:<delta>"` dialogue action and a mission's
+`on_start_rep` / `on_end_rep`; read by `Dialogue`'s `requires_rep` /
+`requires_rep_below` option gate and `conditional_roots` faction entries, and
+shown in the Possessions report's **Standing** section. A faction absent from
+the dict reads as 0. A save made before this existed has no `"reputation"` key;
+`Possessions.restore_from()` / `from_state()` default it to `{}` - additive and
+safe, exactly like `flags` was. Seeded on a new game from each faction's
+`starting_standing` (plus `story.json` `start.reputation` overrides) in
+`SpaceScreen._apply_start_config()`, then overwritten by
+`restore_possessions()` on the load path. A story with no `factions.json` is
+unaffected end to end. Bump `story.json`'s `version` when adding factions to an
+existing story (the_long_silence went `0.1.0` -> `0.2.0` for Phase 1) so the
+load-time mismatch warning fires for an older save.
 
 `message_log` (`[{"sender": ..., "text": ...}, ...]`, newest first) is the
 history behind the Space View's bottom-left Messages pane - one-way hails

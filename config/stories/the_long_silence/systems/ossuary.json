@@ -95,18 +95,91 @@
             "x": 800,
             "y": 540,
             "role": "stationmaster",
+            "faction": "the_vigil",
             "outfit": "officer_masc",
-            "greeting": "You've come to the Name-Wall. Everyone the first decade of the Silence killed is written here. We think the Relay went dark to keep something out. Turning it back on is a mistake.",
-            "dialogue_options": [
-              "Understood",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "faction": "the_vigil",
+                  "min": 25,
+                  "node": "trusted"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "You've come to the Name-Wall. Everyone the first decade of the Silence killed is written here. We believe the Relay went dark to keep something out - and that relighting it is a mistake.",
+                  "options": [
+                    {
+                      "label": "Tell me what you know.",
+                      "next": "listen",
+                      "actions": [
+                        "set_flag:vigil_heard_warning",
+                        "adjust_rep:the_vigil:5"
+                      ]
+                    },
+                    {
+                      "label": "The Authority sent me to reopen the beacons.",
+                      "next": "cold",
+                      "requires_not_flag": "vigil_heard_warning",
+                      "action": "adjust_rep:the_vigil:-8"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "listen": {
+                  "text": "Read the wall. Two hundred years of names, and every account agrees the shutdown was deliberate. Carry that to the other systems - carefully.",
+                  "options": [
+                    {
+                      "label": "I will",
+                      "next": null
+                    }
+                  ]
+                },
+                "cold": {
+                  "text": "Of course they did. Then we have nothing further to discuss.",
+                  "options": [
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "trusted": {
+                  "text": "You've been honest with us, and it's noted. The archive's inner vault is open to you now - what the First Decade recorded is not for everyone.",
+                  "options": [
+                    {
+                      "label": "Ask about the inner vault",
+                      "next": "vault",
+                      "requires_rep": "the_vigil:25"
+                    },
+                    {
+                      "label": "Later",
+                      "next": null
+                    }
+                  ]
+                },
+                "vault": {
+                  "text": "Later. When the Span's beacon lights and you have to choose - come back, and I'll show you what the Wardens have forgotten.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Warden of Names Vane",
             "x": 650,
             "y": 700,
             "role": "quartermaster",
+            "faction": "the_vigil",
             "outfit": "ck_dockworker_masc",
             "greeting": "We trade only what we can spare - archive copies, mostly. Knowledge, if you'll carry it carefully.",
             "shop": {
@@ -120,6 +193,7 @@
             "x": 960,
             "y": 700,
             "role": "resident",
+            "faction": "the_vigil",
             "outfit": "civilian_femme",
             "greeting": "It's quiet here. We prefer it. The quiet is the point.",
             "dialogue_options": [
@@ -223,6 +297,7 @@
             "x": 800,
             "y": 900,
             "role": "resident",
+            "faction": "the_vigil",
             "outfit": "ck_miner_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
@@ -254,14 +329,16 @@
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "oskar_lindqvist"
+      "pilot": "oskar_lindqvist",
+      "faction": "the_vigil"
     },
     {
       "name": "Grave Tender",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "elena_voss"
+      "pilot": "elena_voss",
+      "faction": "the_vigil"
     }
   ]
 }
