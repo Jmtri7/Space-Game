@@ -1,8 +1,8 @@
 """Infinite, seeded, procedurally generated star field background."""
+import math
 import random
 import pygame
 import game.utils as utils
-from game.constants import GAME_WIDTH, GAME_HEIGHT
 from game.utils import to_screen
 
 CHUNK_SIZE = 1200
@@ -38,11 +38,16 @@ class StarField:
         return stars
 
     def _visible_chunk_range(self):
-        cam_x, cam_y = utils.camera_offset_x, utils.camera_offset_y
-        min_cx = int(cam_x // CHUNK_SIZE) - CHUNK_MARGIN
-        max_cx = int((cam_x + GAME_WIDTH) // CHUNK_SIZE) + CHUNK_MARGIN
-        min_cy = int(cam_y // CHUNK_SIZE) - CHUNK_MARGIN
-        max_cy = int((cam_y + GAME_HEIGHT) // CHUNK_SIZE) + CHUNK_MARGIN
+        # The world rectangle actually on screen - which shrinks as the camera
+        # zooms in, so a zoomed-in interior/Space View iterates a handful of
+        # chunks instead of the whole GAME_WIDTH-at-zoom-1 span (that was ~9x
+        # too wide at max interior zoom, generating and projecting hundreds of
+        # off-screen stars every frame).
+        min_x, min_y, max_x, max_y = utils.visible_world_bounds()
+        min_cx = int(math.floor(min_x / CHUNK_SIZE)) - CHUNK_MARGIN
+        max_cx = int(math.floor(max_x / CHUNK_SIZE)) + CHUNK_MARGIN
+        min_cy = int(math.floor(min_y / CHUNK_SIZE)) - CHUNK_MARGIN
+        max_cy = int(math.floor(max_y / CHUNK_SIZE)) + CHUNK_MARGIN
         return min_cx, max_cx, min_cy, max_cy
 
     def _update_chunks(self, min_cx, max_cx, min_cy, max_cy):

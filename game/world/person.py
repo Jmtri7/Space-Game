@@ -293,19 +293,29 @@ class Person:
         f = -self.facing
         aff = screen_affine()
         polygon = aa.polygon
-        for p in parts:
-            pts = p.get("points")
-            if not pts or len(pts) < 3:
-                continue
-            col = p["color"]
-            col = self._hex(col) if isinstance(col, str) else tuple(col)
-            if aff:
-                a, tx, ty = aff
-                proj = [(round((self.x + gx * f) * a + tx), round((self.y + gy) * a + ty))
-                        for gx, gy in pts]
-            else:
-                proj = [to_screen(self.x + gx * f, self.y + gy) for gx, gy in pts]
-            polygon(surface, col, proj)
+        if aff:
+            # Fold facing + position + camera into two multiply-adds and skip
+            # the per-vertex round() - pygame.draw.polygon takes floats, and
+            # gfxdraw mode rounds internally anyway. ~90 parts * a few verts
+            # per visible figure per frame.
+            a, tx, ty = aff
+            bx, by = self.x * a + tx, self.y * a + ty
+            gm = f * a
+            for p in parts:
+                pts = p.get("points")
+                if not pts or len(pts) < 3:
+                    continue
+                col = p["color"]
+                col = self._hex(col) if isinstance(col, str) else tuple(col)
+                polygon(surface, col, [(gx * gm + bx, gy * a + by) for gx, gy in pts])
+        else:
+            for p in parts:
+                pts = p.get("points")
+                if not pts or len(pts) < 3:
+                    continue
+                col = p["color"]
+                col = self._hex(col) if isinstance(col, str) else tuple(col)
+                polygon(surface, col, [to_screen(self.x + gx * f, self.y + gy) for gx, gy in pts])
 
     def equip_article(self, article_name):
         """Add one more pipeline-body article (docs/GRAPHICS_PIPELINE.md) on

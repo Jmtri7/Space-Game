@@ -1,4 +1,5 @@
 """Configurable location for station, moon city, and moon wilderness."""
+import functools
 import pygame
 import math
 import game.aa_draw as aa
@@ -156,6 +157,15 @@ def _silhouette_local_bounds(building_type):
         w, h = building_type.get("width", 100), building_type.get("height", 100)
         return (0.0, 0.0, float(w), float(h))
     return (min(xs), min(ys), max(xs), max(ys))
+
+
+@functools.lru_cache(maxsize=256)
+def _silhouette_local_bounds_for(story, building_type_id):
+    """Cached `_silhouette_local_bounds` keyed by id - a building type's drawn
+    extent never changes at runtime, and it was being re-derived (re-scanning
+    the whole `parts` list) for every structure every frame in the depth sort
+    and the viewport cull."""
+    return _silhouette_local_bounds(get_building_type(story, building_type_id))
 
 
 def _polygon_centroid(poly):
@@ -467,6 +477,13 @@ class LocationScreen(ScreenBase):
         # structures (decorative terrain like moon rocks has no
         # building_type and contributes none) - see _building_footprint().
         self.building_footprints = [fp for fp in (self._building_footprint(s) for s in self.structures) if fp]
+        # Precompute each structure's Y-sort depth and world-space bounding box
+        # once, sorted back-to-front - draw() then only re-binds a drawer for
+        # the structures whose box is on screen (was: _structure_depth +
+        # _silhouette_local_bounds for every structure every frame).
+        self._structure_meta = sorted(
+            ((self._structure_depth(s), s, self._structure_world_bounds(s)) for s in self.structures),
+            key=lambda t: t[0])
         self._nav_grid = None
         self.npcs = [self._build_local_character(cfg) for cfg in self._npcs_config
                      if passes_content_gate(cfg, flags, reputation)]
@@ -1025,7 +1042,11 @@ class LocationScreen(ScreenBase):
                 if gap:
                     pts = _inset_polygon(pts, gap) or pts
                 if len(pts) >= 3:
-                    tiles.append(([(float(x), float(y)) for x, y in pts], shades[cell["shade"] % len(shades)]))
+                    wp = [(float(x), float(y)) for x, y in pts]
+                    xs = [p[0] for p in wp]
+                    ys = [p[1] for p in wp]
+                    tiles.append((wp, shades[cell["shade"] % len(shades)],
+                                  (min(xs), min(ys), max(xs), max(ys))))
         return tiles
 
     def draw(self, surface, draw_hud=True):
@@ -1051,6 +1072,14 @@ class LocationScreen(ScreenBase):
             surface.fill(self.bg_color)
         scale = get_scale()
 
+        # World rect on screen (+margin) - one calc a frame, shared by the
+        # floor-tile cull, the structure cull, and the NPC cull below. The
+        # margin keeps a tall spire / a figure's head from popping at the edge.
+        _vb_x0, _vb_y0, _vb_x1, _vb_y1 = utils.visible_world_bounds(constants.PLAYER_H * 3)
+
+        def _bbox_visible(b):
+            return not (b[2] < _vb_x0 or b[0] > _vb_x1 or b[3] < _vb_y0 or b[1] > _vb_y1)
+
         with perf.span("render.location_floor"):
             # Wall-layer decorations sit on the wall fill, behind the floor
             # (the floor polygons paint over anything that spills onto them).
@@ -1069,8 +1098,12 @@ class LocationScreen(ScreenBase):
             # Tessellated floor tiles (interior "floor_pattern") - laid over the
             # flat floor fill, under the line decorations and everyone. Plain
             # (non-AA) fills: the tiles abut edge-to-edge, so an AA fringe would
-            # only open hairline seams.
-            for world_pts, color in self._floor_tiles:
+            # only open hairline seams. Culled to the view rect - at interior
+            # zoom only a handful of a concourse's few-hundred tiles are ever
+            # on screen.
+            for world_pts, color, bbox in self._floor_tiles:
+                if not _bbox_visible(bbox):
+                    continue
                 tile_pts = [to_screen(px, py) for px, py in world_pts]
                 if len(tile_pts) >= 3:
                     pygame.draw.polygon(surface, color, tile_pts)
@@ -1144,23 +1177,18 @@ class LocationScreen(ScreenBase):
             # Cull NPCs/visitors outside the camera view before drawing -
             # a pipeline-bodied NPC's walk-cycle deformation
             # (story_assets.body_frame -> apply_walk) is real per-vertex
-            # Python trig work, and a busy interior can hold far more NPCs
-            # than are ever on screen at once at interior zoom. Margin
-            # keeps a figure's head/label from popping in right at the
-            # edge. Structures and the player are never culled: structures
-            # are few and cheap, and the player is always on screen (the
-            # camera follows them).
-            margin = constants.PLAYER_H * 3
-            sw, sh = surface.get_size()
-            wx0, wy0 = to_world(-margin, -margin)
-            wx1, wy1 = to_world(sw + margin, sh + margin)
-            lo_x, hi_x = min(wx0, wx1), max(wx0, wx1)
-            lo_y, hi_y = min(wy0, wy1), max(wy0, wy1)
-
+            # Python trig work, a structure's parts list is a stack of
+            # aa.polygon calls, and a busy interior / big concourse holds far
+            # more of both than are ever on screen at once at interior zoom.
+            # Structures cull by their precomputed world bbox (_structure_meta,
+            # already depth-sorted); NPCs/visitors by their feet. The player is
+            # never culled (the camera follows them).
             def _in_view(x, y):
-                return lo_x <= x <= hi_x and lo_y <= y <= hi_y
+                return _vb_x0 <= x <= _vb_x1 and _vb_y0 <= y <= _vb_y1
 
-            drawables = [(self._structure_depth(structure), self._make_structure_drawer(structure, scale)) for structure in self.structures]
+            drawables = [(depth, self._make_structure_drawer(structure, scale))
+                         for depth, structure, bbox in self._structure_meta
+                         if _bbox_visible(bbox)]
             drawables += [(character.person.y, character.person.draw) for character in self.npcs
                           if _in_view(character.person.x, character.person.y)]
             drawables += [(visitor.y, visitor.draw) for visitor in self.visitors
@@ -1438,6 +1466,28 @@ class LocationScreen(ScreenBase):
         if struct_type == "polygon":
             return max(p["y"] for p in structure["points"])
         return structure["y"]  # circle
+
+    def _structure_world_bounds(self, structure):
+        """(min_x, min_y, max_x, max_y) of a structure's drawn silhouette in
+        world space - for the draw() viewport cull. Tall elevation buildings
+        get their real (negative-y) extent so a spire whose base is just off
+        the bottom of the screen still counts as visible."""
+        x, y = structure["x"], structure["y"]
+        bt_id = structure.get("building_type")
+        if bt_id:
+            lx0, ly0, lx1, ly1 = _silhouette_local_bounds_for(self.story, bt_id)
+            return (x + lx0, y + ly0, x + lx1, y + ly1)
+        t = structure.get("type", "rect")
+        if t == "rect":
+            return (x, y, x + structure.get("width", 100), y + structure.get("height", 100))
+        if t == "circle":
+            r = structure.get("radius", 50)
+            return (x - r, y - r, x + r, y + r)
+        if t == "polygon" and structure.get("points"):
+            xs = [p["x"] for p in structure["points"]]
+            ys = [p["y"] for p in structure["points"]]
+            return (min(xs), min(ys), max(xs), max(ys))
+        return (x - 60, y - 60, x + 60, y + 60)
 
     def _make_structure_drawer(self, structure, scale):
         """Bind one structure's draw call so draw() can sort it alongside

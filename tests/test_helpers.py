@@ -192,6 +192,26 @@ class TestCameraRotation(unittest.TestCase):
         self.assertGreater(north[0], focus[0])
         self.assertAlmostEqual(north[1], focus[1], delta=2)
 
+    def test_visible_world_bounds_shrink_as_the_camera_zooms_in(self):
+        cam = self._camera_focused_on(4000, 4000, 0)
+        cam.set_zoom_limits(1.0, 10.0)
+        cam.set_zoom(2.0)
+        wx0, wy0, wx1, wy1 = cam.visible_world_bounds()
+        span_lo = (wx1 - wx0, wy1 - wy0)
+        cam.set_zoom(8.0)
+        wx0, wy0, wx1, wy1 = cam.visible_world_bounds()
+        span_hi = (wx1 - wx0, wy1 - wy0)
+        # 4x the zoom -> ~1/4 the visible world span, and the focus stays inside
+        self.assertAlmostEqual(span_lo[0] / span_hi[0], 4.0, delta=0.2)
+        self.assertTrue(wx0 <= 4000 <= wx1 and wy0 <= 4000 <= wy1)
+
+    def test_visible_world_bounds_margin_grows_the_box(self):
+        cam = self._camera_focused_on(0, 0, 0)
+        a = cam.visible_world_bounds()
+        b = cam.visible_world_bounds(100)
+        self.assertAlmostEqual(b[0], a[0] - 100)
+        self.assertAlmostEqual(b[2], a[2] + 100)
+
     def test_to_world_inverts_to_screen_at_an_angle(self):
         cam = self._camera_focused_on(7000, 1500, 37)
         for wx, wy in ((7000, 1500), (7200, 1400), (6800, 1750), (7000, 900)):

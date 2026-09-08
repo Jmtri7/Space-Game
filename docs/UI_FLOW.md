@@ -606,6 +606,17 @@ panel whenever your change adds per-frame work: a new drawable, an AI/physics
 routine, a per-frame scan over all entities/systems/interiors, a new
 `update()` / `draw()` path, or anything in `main.py`'s loop.
 
+**Viewport culling.** Anything drawn per-frame per-object in the world (not the
+HUD) must skip work for objects off screen. `utils.visible_world_bounds(margin)`
+gives the on-screen world rect (it shrinks correctly as the camera zooms in —
+the `StarField` and `LocationScreen` both cull against it). `LocationScreen`
+culls floor-pattern tiles, structures (by a precomputed `_structure_meta` world
+bbox), and NPCs; a big concourse holds far more of each than are ever visible at
+interior zoom. Person bodies (`Person._draw_pipeline_body`) fold the camera
+transform into two multiply-adds and pass float points straight to
+`pygame.draw.polygon` (no per-vertex `round()`); `gfxdraw` mode rounds
+internally so the look is unchanged.
+
 1. Toggle debug (`` ` ``), note the `frame` average and the relevant
    `sim.*` / `render.*` span.
 2. Make the change.

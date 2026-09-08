@@ -144,6 +144,19 @@ class Camera:
         x_camera, y_camera = self._rotate_about_center(x_camera, y_camera, inverse=True)
         return (x_camera + self.offset_x, y_camera + self.offset_y)
 
+    def visible_world_bounds(self, margin=0):
+        """(min_x, min_y, max_x, max_y) of the world rectangle currently on
+        screen, optionally grown by `margin` world units on every side. The
+        inverse of the four screen corners (all four, so a rotated Space View
+        still gives a correct axis-aligned bound). Cheap enough to call once
+        a frame for viewport culling."""
+        corners = [self.to_world(0, 0), self.to_world(self.screen_width, 0),
+                   self.to_world(0, self.screen_height),
+                   self.to_world(self.screen_width, self.screen_height)]
+        xs = [c[0] for c in corners]
+        ys = [c[1] for c in corners]
+        return (min(xs) - margin, min(ys) - margin, max(xs) + margin, max(ys) + margin)
+
     def to_screen_x(self, x):
         """Convert world X coordinate to screen space."""
         return int(round(x * self.get_scale()))
@@ -258,6 +271,12 @@ def screen_affine():
 def to_world(x, y):
     """Convert screen coordinates back to world coordinates (inverse of to_screen)."""
     return _camera.to_world(x, y)
+
+
+def visible_world_bounds(margin=0):
+    """(min_x, min_y, max_x, max_y) of the on-screen world rect (+margin) -
+    for viewport culling. See Camera.visible_world_bounds."""
+    return _camera.visible_world_bounds(margin)
 
 
 def to_screen_x(x):
