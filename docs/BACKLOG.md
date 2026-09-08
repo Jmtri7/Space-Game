@@ -14,8 +14,16 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Say "messages", not "comms", everywhere in the UI.
-- [ ] Button overlapping in the shipyard menu.
-- [ ] Shipyard ship-description text runs off the edge of the menu panel.
+- [x] Button overlapping in the shipyard menu. Fixed: `ui_theme.fit_text`
+      ellipsises any grid-cell label to its cell width (shared by Shipyard /
+      Shop / Outfitter Buy cells), so a long story-authored ship name can't
+      spill into the neighbouring cell.
+- [x] Shipyard ship-description text runs off the edge / drifts onto the Buy
+      button. Fixed: `ShipBrowserMenu` now reserves the always-shown stat rows,
+      gives the free-form description whatever vertical budget is left
+      (ellipsised, never spilling), and hard-caps the readout above the
+      fixed-position action button; compact stat labels + a smaller font.
+      `OutfittingMenu._draw_stat_panel` got the same clamp.
 
 ## Navigation & Flight
 

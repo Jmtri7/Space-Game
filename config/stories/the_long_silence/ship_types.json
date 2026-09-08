@@ -1,7 +1,7 @@
 {
   "_comment": "Phase 6 stubs - per-culture ships. Geometry still borrowed from the courier design; each has its own design file + identity to shape in config/editor.html.",
   "authority_courier": {
-    "name": "Courier (Harbor Authority)",
+    "name": "Authority Courier",
     "description": "Harbor Authority courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -38,7 +38,7 @@
     ]
   },
   "authority_hauler": {
-    "name": "Hauler (Harbor Authority)",
+    "name": "Authority Hauler",
     "description": "Harbor Authority hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -87,7 +87,7 @@
     ]
   },
   "authority_patrol": {
-    "name": "Patrol (Harbor Authority)",
+    "name": "Authority Patrol",
     "description": "Harbor Authority patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,
@@ -136,7 +136,7 @@
     ]
   },
   "combine_courier": {
-    "name": "Courier (Ninefold Combine)",
+    "name": "Combine Courier",
     "description": "Ninefold Combine courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -173,7 +173,7 @@
     ]
   },
   "combine_hauler": {
-    "name": "Hauler (Ninefold Combine)",
+    "name": "Combine Hauler",
     "description": "Ninefold Combine hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -222,7 +222,7 @@
     ]
   },
   "combine_patrol": {
-    "name": "Patrol (Ninefold Combine)",
+    "name": "Combine Patrol",
     "description": "Ninefold Combine patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,
@@ -271,7 +271,7 @@
     ]
   },
   "drift_courier": {
-    "name": "Courier (the Drift)",
+    "name": "Drift Courier",
     "description": "The Drift courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -308,7 +308,7 @@
     ]
   },
   "drift_hauler": {
-    "name": "Hauler (the Drift)",
+    "name": "Drift Hauler",
     "description": "The Drift hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -357,7 +357,7 @@
     ]
   },
   "drift_patrol": {
-    "name": "Patrol (the Drift)",
+    "name": "Drift Patrol",
     "description": "The Drift patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,
@@ -406,7 +406,7 @@
     ]
   },
   "vigil_courier": {
-    "name": "Courier (the Vigil)",
+    "name": "Vigil Courier",
     "description": "The Vigil courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -443,7 +443,7 @@
     ]
   },
   "vigil_hauler": {
-    "name": "Hauler (the Vigil)",
+    "name": "Vigil Hauler",
     "description": "The Vigil hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -492,7 +492,7 @@
     ]
   },
   "vigil_patrol": {
-    "name": "Patrol (the Vigil)",
+    "name": "Vigil Patrol",
     "description": "The Vigil patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,
@@ -541,7 +541,7 @@
     ]
   },
   "warden_courier": {
-    "name": "Courier (the Wardens)",
+    "name": "Warden Courier",
     "description": "The Wardens courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -578,7 +578,7 @@
     ]
   },
   "warden_hauler": {
-    "name": "Hauler (the Wardens)",
+    "name": "Warden Hauler",
     "description": "The Wardens hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -627,7 +627,7 @@
     ]
   },
   "warden_patrol": {
-    "name": "Patrol (the Wardens)",
+    "name": "Warden Patrol",
     "description": "The Wardens patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,
@@ -676,7 +676,7 @@
     ]
   },
   "carrier_courier": {
-    "name": "Courier (the free carriers)",
+    "name": "Carrier Courier",
     "description": "The free carriers courier - a small fast dispatch hull.",
     "max_thrust": 0.17,
     "max_velocity": 3.8,
@@ -713,7 +713,7 @@
     ]
   },
   "carrier_hauler": {
-    "name": "Hauler (the free carriers)",
+    "name": "Carrier Hauler",
     "description": "The free carriers hauler - a mid-weight cargo hull, slow to turn.",
     "max_thrust": 0.11,
     "max_velocity": 2.4,
@@ -762,7 +762,7 @@
     ]
   },
   "carrier_patrol": {
-    "name": "Patrol (the free carriers)",
+    "name": "Carrier Patrol",
     "description": "The free carriers patrol - an armed patrol / warship hull.",
     "max_thrust": 0.3,
     "max_velocity": 4.6,

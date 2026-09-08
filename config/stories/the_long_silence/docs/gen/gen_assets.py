@@ -122,7 +122,9 @@ for cid, (pfx, adj, theme) in CULTURE.items():
                           "local_points": COURIER_LOCAL, "thrusters": [[0.56, 0.92], [-0.56, 0.92]],
                           "thruster_width": 0.07, "thruster_length": 22}
         ship_types[sid] = {
-            "name": f"{klabel} ({adj})",
+            # Short name (fits a shop grid cell) - "Authority Courier",
+            # "Combine Hauler". The full faction name is in the description.
+            "name": f"{pfx.capitalize()} {klabel}",
             "description": f"{adj[0].upper() + adj[1:]} {klabel.lower()} - {kdesc}.",
             "max_thrust": stats["max_thrust"], "max_velocity": stats["max_velocity"],
             "rotation_speed": stats["rotation_speed"], "size": stats["size"],

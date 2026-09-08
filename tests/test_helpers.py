@@ -44,6 +44,7 @@ from game.ui.report_menu import ReportMenu, mission_report, possessions_report
 from game.ui.ui_theme import (
     side_panel_max_width, center_panel_max_width, side_panel_width, hud_margin,
     message_alert_state, MESSAGE_ALERT_FRAMES, MESSAGE_ALERT_BLINKS, MESSAGE_ALERT_BLINK_FRAMES,
+    fit_text,
 )
 from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
 from game.graphics.deck_grid import clip_segment_convex as _clip_segment_convex, grid_segments as _grid_segments
@@ -2325,6 +2326,23 @@ class TestShipBrowserMenu(unittest.TestCase):
         self.assertEqual(dict((b[0], b[3]) for b in rich.buttons()).get("action"), False)
         broke = ShipBrowserMenu(Possessions(credits=0), "default", {"stock": ["shuttle"]}, on_buy=lambda x: None)
         self.assertTrue(dict((b[0], b[3]) for b in broke.buttons())["action"])
+
+
+class TestFitText(unittest.TestCase):
+    """ui_theme.fit_text - trims a label with a trailing ellipsis until it
+    renders within a width, so a long story-authored ship/outfit name can
+    never spill into the neighbouring grid cell (see draw_shop_cell)."""
+
+    def test_short_text_is_returned_unchanged(self):
+        self.assertEqual(fit_text(_FakeFont(), "Courier", 100), "Courier")
+
+    def test_long_text_is_ellipsised_to_fit(self):
+        out = fit_text(_FakeFont(), "Authority Courier XL", 12)  # _FakeFont: 1px/char
+        self.assertTrue(out.endswith("…"))
+        self.assertLessEqual(_FakeFont().size(out)[0], 12)
+
+    def test_non_positive_width_is_a_noop(self):
+        self.assertEqual(fit_text(_FakeFont(), "anything", 0), "anything")
 
 
 class TestApproximateSizeLabel(unittest.TestCase):

@@ -782,6 +782,31 @@ def draw_button(surface, rect, label, font, ui_scale, selected=False, accent=(25
     surface.blit(text, (rect.centerx - text.get_width() // 2, rect.centery - text.get_height() // 2))
 
 
+def fit_text(font, text, max_width):
+    """`text` trimmed with a trailing ellipsis until it renders within
+    `max_width` px. Returns `text` unchanged when it already fits (or when
+    `max_width` is non-positive). Used to keep grid-cell labels from
+    spilling into the neighbouring cell whatever the story names a ship."""
+    if not isinstance(max_width, (int, float)):
+        return text  # mocked geometry in tests
+
+    def width(s):
+        w = font.size(s)[0]
+        return w if isinstance(w, (int, float)) else 0  # mocked font in tests
+
+    if max_width <= 0 or width(text) <= max_width:
+        return text
+    ell = "…"
+    lo, hi = 0, len(text)
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if width(text[:mid].rstrip() + ell) <= max_width:
+            lo = mid
+        else:
+            hi = mid - 1
+    return (text[:lo].rstrip() + ell) if lo else ell
+
+
 def draw_shop_cell(surface, rect, is_selected, reason, icon_fn, name, detail, scale):
     """Shared cell layout for the game's icon-grid shops (ShopMenu's buy/
     sell tabs, OutfittingMenu's Buy tab, ShipBrowserMenu's ship grid): a
@@ -803,17 +828,18 @@ def draw_shop_cell(surface, rect, is_selected, reason, icon_fn, name, detail, sc
     icon_size = int(rect.height * 0.22)
     icon_fn(surface, rect.centerx, icon_cy, icon_size)
 
-    font_name = get_font(int(19 * scale))
+    font_name = get_font(int(18 * scale))
     font_detail = get_font(int(15 * scale))
 
+    label_max_w = rect.width - int(8 * scale)
     name_color = DISABLED_TEXT_COLOR if reason else (WHITE if is_selected else GRAY)
-    name_text = font_name.render(name, True, name_color)
+    name_text = font_name.render(fit_text(font_name, name, label_max_w), True, name_color)
     surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.52)))
 
     detail_color = DISABLED_TEXT_COLOR if reason else YELLOW
-    detail_text = font_detail.render(detail, True, detail_color)
+    detail_text = font_detail.render(fit_text(font_detail, detail, label_max_w), True, detail_color)
     surface.blit(detail_text, (rect.centerx - detail_text.get_width() // 2, rect.y + int(rect.height * 0.7)))
 
     if reason:
-        reason_text = font_detail.render(f"({reason})", True, DISABLED_TEXT_COLOR)
+        reason_text = font_detail.render(fit_text(font_detail, f"({reason})", label_max_w), True, DISABLED_TEXT_COLOR)
         surface.blit(reason_text, (rect.centerx - reason_text.get_width() // 2, rect.y + int(rect.height * 0.86)))

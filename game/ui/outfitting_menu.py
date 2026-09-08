@@ -9,7 +9,7 @@ from game.constants import YELLOW, GRAY, GREEN, WHITE, CYAN
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_outfit, get_ship_type, get_graphics_asset, _wrap_text
 from game.ui.ui_theme import (
     draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_selection_highlight, draw_item_icon,
-    draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR,
+    draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, DISABLED_TEXT_COLOR, fit_text,
 )
 from game.ui.selectable_list import SelectableList
 from game.ui.icon_grid import IconGrid
@@ -247,31 +247,43 @@ class OutfittingMenu(MenuBase):
         description = next((text for tag, text in lines if tag == "desc"), None) if show_description else None
         stat_rows = [(label, value) for label, value in lines if label != "desc"]
 
-        if description:
-            for wrapped_line in _wrap_text(font_label, description, rect.width - int(8 * scale)):
-                desc_text = font_label.render(wrapped_line, True, GRAY)
-                surface.blit(desc_text, (rect.x, y))
-                y += desc_text.get_height() + int(2 * scale)
+        line_h = font_label.get_height() + int(2 * scale)
+        row_height = font_label.get_height() + int(3 * scale)
+        # Reserve room for the stat rows so a long description never pushes
+        # them off the panel (which is what ran them into the fixed Buy
+        # button). In one column that's all rows; the two-column layout
+        # below only needs half. The description then gets whatever's left.
+        min_two_col_width = int(340 * scale)
+        two_col = rect.width >= min_two_col_width
+        reserved_rows = math.ceil(len(stat_rows) / 2) if two_col else len(stat_rows)
+        desc_budget_px = max(0, rect.bottom - y - int(6 * scale) - reserved_rows * row_height)
+        desc_rows_allowed = desc_budget_px // line_h if line_h else 0
+
+        if description and desc_rows_allowed > 0:
+            wrapped = _wrap_text(font_label, description, rect.width - int(8 * scale))
+            if len(wrapped) > desc_rows_allowed:
+                wrapped = wrapped[:desc_rows_allowed]
+                wrapped[-1] = fit_text(font_label, wrapped[-1] + " …", rect.width - int(8 * scale))
+            for wrapped_line in wrapped:
+                surface.blit(font_label.render(wrapped_line, True, GRAY), (rect.x, y))
+                y += line_h
             y += int(6 * scale)
 
-        row_height = font_label.get_height() + int(3 * scale)
         stats_top = y
         available_height = max(row_height, rect.bottom - stats_top)
-        min_two_col_width = int(340 * scale)
-        columns = 2 if (rect.width >= min_two_col_width
-                         and row_height * len(stat_rows) > available_height) else 1
+        columns = 2 if (two_col and row_height * len(stat_rows) > available_height) else 1
         rows_per_col = math.ceil(len(stat_rows) / columns)
         col_width = rect.width // columns
 
         for i, (label, value) in enumerate(stat_rows):
             col, row = divmod(i, rows_per_col)
+            row_y = stats_top + row * row_height
+            if row_y + row_height > rect.bottom + int(2 * scale):
+                continue  # never spill past the panel
             col_x = rect.x + col * col_width
             value_x = col_x + int(col_width * 0.55)
-            row_y = stats_top + row * row_height
-            label_text = font_label.render(f"{label}:", True, GRAY)
-            value_text = font_label.render(str(value), True, WHITE)
-            surface.blit(label_text, (col_x, row_y))
-            surface.blit(value_text, (value_x, row_y))
+            surface.blit(font_label.render(f"{label}:", True, GRAY), (col_x, row_y))
+            surface.blit(font_label.render(str(value), True, WHITE), (value_x, row_y))
 
     def _draw_owned_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
         """cell_draw_fn for owned_grid (see IconGrid.draw) - an icon plus
@@ -595,11 +607,12 @@ class OutfittingMenu(MenuBase):
         name_color = DISABLED_TEXT_COLOR if reason else (WHITE if is_selected else GRAY)
         cost_color = DISABLED_TEXT_COLOR if reason else YELLOW
 
-        name_text = font_name.render(outfit.get("name", outfit_id), True, name_color)
+        label_max_w = rect.width - int(8 * scale)
+        name_text = font_name.render(fit_text(font_name, outfit.get("name", outfit_id), label_max_w), True, name_color)
         surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.5)))
 
         cost_or_reason = f"({reason})" if reason else f"{outfit.get('cost', 0)}cr"
-        cost_text = font_detail.render(cost_or_reason, True, DISABLED_TEXT_COLOR if reason else cost_color)
+        cost_text = font_detail.render(fit_text(font_detail, cost_or_reason, label_max_w), True, DISABLED_TEXT_COLOR if reason else cost_color)
         surface.blit(cost_text, (rect.centerx - cost_text.get_width() // 2, rect.y + int(rect.height * 0.74)))
 
     def _draw_install_tab(self, surface, panel_rect, y, scale, font_text, font_info):

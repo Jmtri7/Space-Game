@@ -6,7 +6,7 @@ import functools
 import pygame
 from game.constants import YELLOW, GRAY
 from game.utils import get_ui_scale, get_ui_offset, get_font, get_ship_type, get_graphics_asset, _wrap_text
-from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES
+from game.ui.ui_theme import draw_glass_panel, draw_glow_title, draw_ship_glyph, draw_shop_cell, draw_purchase_message, modal_panel_rect, PURCHASE_MESSAGE_FRAMES, fit_text
 from game.ui.icon_grid import IconGrid
 from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.menu_base import MenuBase
@@ -239,7 +239,7 @@ class ShipBrowserMenu(MenuBase):
         grid_top = y + int(40 * scale)
 
         gap = int(14 * scale)
-        grid_area_width = int(panel_rect.width * 0.42)
+        grid_area_width = int(panel_rect.width * 0.46)
         cell_width = (grid_area_width - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
         cell_height = int(120 * scale)
         grid_left = panel_rect.x + int(30 * scale)
@@ -255,7 +255,7 @@ class ShipBrowserMenu(MenuBase):
             selected_id = self._id_of(selected_item)
             ship_type = get_ship_type(self.story, selected_id)
             graphics = get_graphics_asset(self.story, "ships", selected_id)
-            preview_center_y = panel_rect.y + int(140 * scale)
+            preview_center_y = panel_rect.y + int(122 * scale)
             # Slowly spin the preview and cycle its thrusters on/off so a
             # browsed ship's silhouette, windows, and engine mounts are all
             # visible without needing to buy it first. Driven off the clock
@@ -267,38 +267,45 @@ class ShipBrowserMenu(MenuBase):
             ticks = pygame.time.get_ticks()
             preview_angle = (ticks / 30) % 360
             preview_thrust = 1.0 if (ticks // 1000) % 2 == 0 else 0.0
-            draw_ship_glyph(surface, preview_x, preview_center_y, int(45 * scale), graphics,
+            draw_ship_glyph(surface, preview_x, preview_center_y, int(38 * scale), graphics,
                              angle=preview_angle, thrust=preview_thrust)
 
             if self._owned_mode():
                 head = "CURRENTLY FLYING" if self.grid.selected == self._active_index() else "Owned hull"
             else:
                 head = f"Owned: {self._owned_count(selected_id)}"
-            slots = ship_type.get("slots", [])
-            slot_summary = self._format_slots(slots)
-            stats = [
-                ship_type.get("description", ""),
+            # Compact labels + a narrower line height: this readout shares a
+            # fixed-height panel with the Buy button, so it has to fit.
+            fixed_lines = [
                 head,
-                f"Approximate Size: {_approximate_size_label(graphics)}",
-                f"Thrust: {ship_type.get('max_thrust', 0)}",
-                f"Max Velocity: {ship_type.get('max_velocity', 0)}",
-                f"Rotation: {ship_type.get('rotation_speed', 0)}",
-                f"Cargo Capacity: {ship_type.get('cargo_capacity', 0)}",
-                f"Slots: {slot_summary}",
+                f"Size: {_approximate_size_label(graphics)}",
+                f"Thrust {ship_type.get('max_thrust', 0)}   Speed {ship_type.get('max_velocity', 0)}   Turn {ship_type.get('rotation_speed', 0)}",
+                f"Cargo {ship_type.get('cargo_capacity', 0)}",
+                f"Slots: {self._format_slots(ship_type.get('slots', []))}",
                 f"Cost: {ship_type.get('cost', 0)}cr",
             ]
-            # Word-wrap every stat line (the description and the slot
-            # summary are both free-form/variable-length and would
-            # otherwise run past the panel's right edge - see _wrap_text)
-            # to a width that stays inside the preview column.
-            stats_max_width = int(panel_rect.width * 0.44)
-            stat_y = preview_center_y + int(62 * scale)
-            for line in stats:
-                color = GRAY if line != stats[-1] else YELLOW
-                for wrapped_line in _wrap_text(font_info, line, stats_max_width) or [""]:
-                    text = font_info.render(wrapped_line, True, color)
-                    surface.blit(text, (preview_x - text.get_width() // 2, stat_y))
-                    stat_y += int(23 * scale)
+            font_stat = get_font(int(17 * scale))
+            stats_max_width = int(panel_rect.width * 0.42)
+            line_h = int(20 * scale)
+            stat_y = preview_center_y + int(56 * scale)
+            # Hard floor: never reach the fixed-position action button
+            # (panel.bottom - 58*scale). Reserve the always-shown rows
+            # first; the free-form description gets whatever's left,
+            # ellipsised rather than spilling.
+            stats_bottom = panel_rect.bottom - int(64 * scale)
+            fixed_wrapped = [wl for line in fixed_lines
+                             for wl in (_wrap_text(font_stat, line, stats_max_width) or [""])]
+            desc_rows = max(0, (stats_bottom - stat_y - len(fixed_wrapped) * line_h) // line_h)
+
+            desc_wrapped = _wrap_text(font_stat, ship_type.get("description", ""), stats_max_width) or []
+            if len(desc_wrapped) > desc_rows:
+                desc_wrapped = desc_wrapped[:desc_rows]
+                if desc_wrapped:
+                    desc_wrapped[-1] = fit_text(font_stat, desc_wrapped[-1] + " …", stats_max_width)
+            for wl in desc_wrapped + fixed_wrapped:
+                color = YELLOW if wl.startswith("Cost:") else GRAY
+                surface.blit(font_stat.render(wl, True, color), (preview_x - font_stat.size(wl)[0] // 2, stat_y))
+                stat_y += line_h
 
         # The Close/Buy buttons, and deferring to the purchase ConfirmDialog
         # while it's up, are handled by MenuBase.draw via buttons()/active_popup().
