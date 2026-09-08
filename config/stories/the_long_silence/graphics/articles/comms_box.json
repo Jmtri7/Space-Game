@@ -1,0 +1,84 @@
+{
+  "identity": "A small comms box clipped to the near side of the helmet, with a single red status indicator. Free-drawn against the reference head - sits the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "#26282c",
+      "shade": "deep",
+      "note": "box",
+      "tag": "head accessory",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              1.083,
+              -29.522
+            ],
+            [
+              1.619,
+              -29.397
+            ],
+            [
+              1.656,
+              -28.399
+            ],
+            [
+              1.108,
+              -28.306
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#e5473a",
+              "shade": "flat",
+              "note": "red status indicator",
+              "circle": [
+                1.37,
+                -28.836,
+                0.187
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              1.058,
+              -29.626
+            ],
+            [
+              1.672,
+              -29.483
+            ],
+            [
+              1.715,
+              -28.342
+            ],
+            [
+              1.087,
+              -28.235
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#e5473a",
+              "shade": "flat",
+              "note": "red status indicator",
+              "circle": [
+                1.386,
+                -28.841,
+                0.214
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

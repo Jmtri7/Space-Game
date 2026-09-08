@@ -1,0 +1,285 @@
+{
+  "identity": "deep eyes + brows",
+  "details": [
+    {
+      "color": "skin",
+      "shade": "soft",
+      "tone": "dark",
+      "note": "near eye socket, deep-set",
+      "points": [
+        [
+          -0.08,
+          -29.02
+        ],
+        [
+          0.34,
+          -29.2
+        ],
+        [
+          0.82,
+          -29.16
+        ],
+        [
+          1,
+          -28.94
+        ],
+        [
+          0.92,
+          -28.6
+        ],
+        [
+          0.5,
+          -28.46
+        ],
+        [
+          0.1,
+          -28.5
+        ],
+        [
+          -0.08,
+          -28.72
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "skin",
+      "shade": "soft",
+      "tone": "dark",
+      "note": "far eye socket, deep-set",
+      "points": [
+        [
+          -1.847,
+          -28.877
+        ],
+        [
+          -1.427,
+          -29.057
+        ],
+        [
+          -0.947,
+          -29.017
+        ],
+        [
+          -0.767,
+          -28.797
+        ],
+        [
+          -0.847,
+          -28.457
+        ],
+        [
+          -1.267,
+          -28.317
+        ],
+        [
+          -1.667,
+          -28.357
+        ],
+        [
+          -1.847,
+          -28.577
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "sclera",
+      "shade": "soft",
+      "note": "near eye white",
+      "points": [
+        [
+          0.043,
+          -28.9
+        ],
+        [
+          0.27,
+          -29.006
+        ],
+        [
+          0.607,
+          -28.986
+        ],
+        [
+          0.751,
+          -28.877
+        ],
+        [
+          0.701,
+          -28.656
+        ],
+        [
+          0.14,
+          -28.63
+        ],
+        [
+          0.02,
+          -28.76
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "iris",
+      "shade": "soft",
+      "note": "near iris",
+      "circle": [
+        0.269,
+        -28.808,
+        0.18
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "pupil",
+      "shade": "flat",
+      "note": "near pupil",
+      "circle": [
+        0.269,
+        -28.808,
+        0.08
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "sclera",
+      "shade": "soft",
+      "note": "far eye white",
+      "points": [
+        [
+          -1.615,
+          -28.804
+        ],
+        [
+          -1.38,
+          -28.913
+        ],
+        [
+          -1.042,
+          -28.899
+        ],
+        [
+          -0.899,
+          -28.732
+        ],
+        [
+          -0.971,
+          -28.541
+        ],
+        [
+          -1.52,
+          -28.541
+        ],
+        [
+          -1.639,
+          -28.66
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "iris",
+      "shade": "soft",
+      "note": "far iris",
+      "circle": [
+        -1.364,
+        -28.714,
+        0.165,
+        1.434
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "pupil",
+      "shade": "flat",
+      "note": "far pupil",
+      "circle": [
+        -1.364,
+        -28.714,
+        0.079,
+        -2.971
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "hair",
+      "shade": "matte",
+      "tone": "dark",
+      "note": "near brow, heavy and level",
+      "points": [
+        [
+          -0.053,
+          -29.341
+        ],
+        [
+          0.45,
+          -29.5
+        ],
+        [
+          1.049,
+          -29.395
+        ],
+        [
+          1.115,
+          -29.106
+        ],
+        [
+          0.88,
+          -29.22
+        ],
+        [
+          0.45,
+          -29.28
+        ],
+        [
+          -0.034,
+          -29.142
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    },
+    {
+      "color": "hair",
+      "shade": "matte",
+      "tone": "dark",
+      "note": "far brow",
+      "points": [
+        [
+          -0.922,
+          -29.244
+        ],
+        [
+          -1.319,
+          -29.31
+        ],
+        [
+          -1.8,
+          -29.206
+        ],
+        [
+          -1.87,
+          -28.993
+        ],
+        [
+          -1.257,
+          -29.112
+        ],
+        [
+          -0.877,
+          -29.052
+        ]
+      ],
+      "group": "face",
+      "role": "detail"
+    }
+  ]
+}

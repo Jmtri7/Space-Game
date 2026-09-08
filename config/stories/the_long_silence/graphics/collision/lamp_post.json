@@ -1,0 +1,21 @@
+{
+  "identity": "Lamp Post footprint (derived from the elevation): 6.4 wide, 5.0 deep, front edge on the base line.",
+  "footprint": [
+    [
+      -3.2,
+      -5.0
+    ],
+    [
+      3.2,
+      -5.0
+    ],
+    [
+      3.2,
+      0.0
+    ],
+    [
+      -3.2,
+      0.0
+    ]
+  ]
+}

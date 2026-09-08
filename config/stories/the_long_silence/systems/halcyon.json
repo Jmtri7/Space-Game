@@ -1,0 +1,434 @@
+{
+  "name": "Halcyon",
+  "description": "A cluster of well-kept orbital stations around a yellow star, run by the Harbor Authority - the descendants of the Relay's traffic controllers. The first beacon to relight.",
+  "star_map_position": {
+    "x": 0,
+    "y": 0
+  },
+  "station_asset": "trade_ring",
+  "moon_asset": "regolith_moon",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Halcyon",
+    "size": 100,
+    "color": [
+      255,
+      240,
+      150
+    ]
+  },
+  "player_start": {
+    "x": 0.4,
+    "y": 0.35
+  },
+  "star_seed": 101,
+  "asteroid_field": {
+    "per_chunk_range": [
+      1,
+      3
+    ],
+    "types": [
+      {
+        "type": "gray_rock",
+        "weight": 3,
+        "size_range": [
+          4,
+          18
+        ],
+        "speed_range": [
+          0.05,
+          0.3
+        ],
+        "mine_yield": 10
+      },
+      {
+        "type": "brown_rock",
+        "weight": 1,
+        "size_range": [
+          6,
+          25
+        ],
+        "speed_range": [
+          0.05,
+          0.25
+        ],
+        "mine_yield": 15
+      }
+    ]
+  },
+  "station": {
+    "x": 0.15,
+    "y": 0.2,
+    "name": "Hub Control",
+    "interiors": {
+      "default": {
+        "label": "Hub Control",
+        "culture": "harbor_authority",
+        "portals": [
+          {
+            "x": 800,
+            "y": 430,
+            "connected_locations": [],
+            "return_to_ship": true
+          }
+        ],
+        "rooms": [
+          {
+            "label": "Approach Concourse",
+            "shape": "circle",
+            "center": [
+              800,
+              640
+            ],
+            "radius": 320,
+            "sides": 40
+          },
+          {
+            "label": "Lender's Office",
+            "shape": "circle",
+            "center": [
+              300,
+              640
+            ],
+            "radius": 200,
+            "sides": 32
+          },
+          {
+            "label": "West Passage",
+            "polygon": [
+              [
+                470,
+                580
+              ],
+              [
+                590,
+                580
+              ],
+              [
+                590,
+                700
+              ],
+              [
+                470,
+                700
+              ]
+            ]
+          },
+          {
+            "label": "The Berth",
+            "shape": "circle",
+            "center": [
+              1300,
+              640
+            ],
+            "radius": 210,
+            "sides": 32
+          },
+          {
+            "label": "East Passage",
+            "polygon": [
+              [
+                1010,
+                580
+              ],
+              [
+                1130,
+                580
+              ],
+              [
+                1130,
+                700
+              ],
+              [
+                1010,
+                700
+              ]
+            ]
+          }
+        ],
+        "structures": [
+          {
+            "x": 800,
+            "y": 600,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 820,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 900,
+            "y": 820,
+            "building_type": "pipeline_bench"
+          }
+        ],
+        "npcs": [
+          {
+            "name": "Controller Vane",
+            "x": 800,
+            "y": 520,
+            "role": "stationmaster",
+            "outfit": "officer_femme",
+            "greeting": "Harbor Authority, Hub Control. Beacon 1 is live again - which is why you're here, and why the outer systems are about to have company. The Berth's east, the Lender's Office west.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Signal Officer Doss",
+            "x": 300,
+            "y": 620,
+            "role": "loan_officer",
+            "outfit": "ck_command_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "Authority underwrites a starter loan for anyone flying our beacons. More than enough for a hull.",
+                  "options": [
+                    {
+                      "label": "Take loan - 100000cr",
+                      "next": "loaned",
+                      "action": "take_loan"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "loaned": {
+                  "text": "Logged. The beacons keep our ledgers now - don't make us come find you.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Harbor-Master Crane",
+            "x": 1290,
+            "y": 600,
+            "role": "ship_salesman",
+            "outfit": "ck_command_femme",
+            "greeting": "Impounded hulls, mostly - carriers who couldn't pay their approach fees. Cleared for sale.",
+            "shop": {
+              "type": "ships",
+              "stock": [
+                "courier"
+              ]
+            }
+          },
+          {
+            "name": "Approach Warden Lund",
+            "x": 1300,
+            "y": 700,
+            "role": "outfitter",
+            "outfit": "ck_security_masc",
+            "greeting": "Fitting out? Standard-issue only, but it's all rated.",
+            "shop": {
+              "type": "outfits",
+              "stock": [
+                "laser_cannon",
+                "pulse_blaster",
+                "afterburner",
+                "cargo_expansion",
+                "reinforced_hull"
+              ]
+            }
+          },
+          {
+            "name": "Quartermaster Ellin",
+            "x": 640,
+            "y": 700,
+            "role": "quartermaster",
+            "outfit": "ck_dockworker_femme",
+            "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates.",
+            "shop": {
+              "type": "commodities",
+              "stock": [],
+              "sell_multiplier": 1.2
+            }
+          },
+          {
+            "name": "Rell, carrier pilot",
+            "x": 900,
+            "y": 720,
+            "role": "traveler",
+            "outfit": "ck_smuggler_masc",
+            "greeting": "Twenty years I ran the slow lanes to Verdance. Now a beacon does it in an afternoon. Don't know whether to celebrate.",
+            "dialogue_options": [
+              "Safe flights",
+              "Leave"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "name": "Halcyon Watch",
+    "x": 0.82,
+    "y": 0.78,
+    "size": 30,
+    "color": [
+      170,
+      170,
+      180
+    ],
+    "crater_color": [
+      130,
+      130,
+      140
+    ],
+    "landing_distance": 35,
+    "craters": [
+      {
+        "x": -8,
+        "y": -5,
+        "radius": 4
+      },
+      {
+        "x": 10,
+        "y": 8,
+        "radius": 5
+      }
+    ],
+    "interiors": {
+      "city": {
+        "label": "Watch Station",
+        "culture": "harbor_authority",
+        "connected_locations": [],
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "rooms": [
+          {
+            "label": "Watch Station",
+            "shape": "circle",
+            "center": [
+              800,
+              800
+            ],
+            "radius": 300,
+            "sides": 40
+          }
+        ],
+        "structures": [
+          {
+            "x": 800,
+            "y": 620,
+            "building_type": "market_hall"
+          },
+          {
+            "x": 620,
+            "y": 760,
+            "building_type": "housing_block"
+          },
+          {
+            "x": 980,
+            "y": 760,
+            "building_type": "housing_block"
+          },
+          {
+            "x": 700,
+            "y": 960,
+            "building_type": "planter"
+          },
+          {
+            "x": 900,
+            "y": 960,
+            "building_type": "crates"
+          },
+          {
+            "x": 640,
+            "y": 640,
+            "building_type": "lamp_post"
+          },
+          {
+            "x": 960,
+            "y": 640,
+            "building_type": "lamp_post"
+          }
+        ],
+        "npcs": [
+          {
+            "name": "Surface Warden",
+            "x": 800,
+            "y": 900,
+            "role": "resident",
+            "outfit": "ck_miner_masc",
+            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "celestial_bodies": [
+    {
+      "name": "Sentinel",
+      "x": 0.6,
+      "y": 0.55,
+      "size": 16,
+      "color": [
+        180,
+        160,
+        140
+      ],
+      "body_type": "rocky"
+    },
+    {
+      "name": "Verge",
+      "x": 0.08,
+      "y": 0.9,
+      "size": 46,
+      "color": [
+        225,
+        200,
+        150
+      ],
+      "body_type": "gas_giant",
+      "has_ring": true,
+      "ring_color": [
+        200,
+        190,
+        160
+      ]
+    }
+  ],
+  "ai_ships": [
+    {
+      "name": "Approach Tender",
+      "x": 0.5,
+      "y": 0.12,
+      "ship_type": "courier",
+      "pilot": "petty_officer_lund"
+    },
+    {
+      "name": "Ledger Run",
+      "x": 0.65,
+      "y": 0.6,
+      "ship_type": "courier",
+      "pilot": "juno_vale"
+    },
+    {
+      "name": "Beacon Watch",
+      "x": 0.3,
+      "y": 0.3,
+      "ship_type": "courier",
+      "pilot": "commander_ackley"
+    }
+  ]
+}

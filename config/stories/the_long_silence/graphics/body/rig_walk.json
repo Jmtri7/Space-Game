@@ -1,0 +1,14 @@
+{
+  "identity": "Walking gait. Per animation group: swing amplitude in degrees about the body's pivot for that group, a phase offset (fraction of the cycle), an optional `pivot` override, and an optional `parent` group whose swing is inherited first. Legs swing opposite each other; each arm swings counter to the leg on its own side; each foot adds a small ankle flex on top of its leg's swing; the torso bobs at twice the stride frequency.",
+  "swing": {
+    "leg_near":  { "deg": 20, "phase": 0.0 },
+    "leg_far":   { "deg": 20, "phase": 0.5 },
+    "foot_near": { "deg": 13, "phase": 0.15, "pivot": "foot_near", "parent": "leg_near" },
+    "foot_far":  { "deg": 13, "phase": 0.65, "pivot": "foot_far", "parent": "leg_far" },
+    "arm_near":  { "deg": 11, "phase": 0.5 },
+    "hand_near": { "deg": 11, "phase": 0.5, "pivot": "arm_near" },
+    "arm_far":   { "deg": 11, "phase": 0.0 },
+    "hand_far":  { "deg": 11, "phase": 0.0, "pivot": "arm_far" }
+  },
+  "bob": { "amp": 0.3 }
+}

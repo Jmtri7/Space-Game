@@ -1,0 +1,34 @@
+{
+  "ore": {
+    "name": "Raw Ore",
+    "description": "Unrefined metal ore, sold by weight",
+    "base_price": 12,
+    "mass_per_unit": 1,
+    "icon_shape": "crate",
+    "icon_color": [150, 110, 80]
+  },
+  "medicine": {
+    "name": "Medicine",
+    "description": "Packaged pharmaceuticals",
+    "base_price": 45,
+    "mass_per_unit": 1,
+    "icon_shape": "vial",
+    "icon_color": [150, 220, 190]
+  },
+  "fuel_cells": {
+    "name": "Fuel Cells",
+    "description": "Standard reactor fuel canisters",
+    "base_price": 20,
+    "mass_per_unit": 1,
+    "icon_shape": "crate",
+    "icon_color": [220, 190, 80]
+  },
+  "luxury_goods": {
+    "name": "Luxury Goods",
+    "description": "Fine textiles and delicacies from the core worlds",
+    "base_price": 90,
+    "mass_per_unit": 1,
+    "icon_shape": "gem",
+    "icon_color": [230, 150, 220]
+  }
+}

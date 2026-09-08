@@ -1,0 +1,138 @@
+{
+  "identity": "A stack of civilian cargo from the side: two shipping crates on the ground with a third crate stacked on the left one. About 1.2 m across. Edge clutter - place it against a wall.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~0.7x PLAYER_H tall, ~0.9x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "crate A",
+      "points": [
+        [
+          -14,
+          -13
+        ],
+        [
+          -2,
+          -13
+        ],
+        [
+          -2,
+          0
+        ],
+        [
+          -14,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "note": "crate B",
+      "points": [
+        [
+          3,
+          -17
+        ],
+        [
+          14,
+          -17
+        ],
+        [
+          14,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "crate C",
+      "points": [
+        [
+          -13,
+          -22
+        ],
+        [
+          -3,
+          -22
+        ],
+        [
+          -3,
+          -13
+        ],
+        [
+          -13,
+          -13
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "role": "detail",
+      "note": "strap A",
+      "points": [
+        [
+          -14,
+          -8
+        ],
+        [
+          -2,
+          -8
+        ],
+        [
+          -2,
+          -6.5
+        ],
+        [
+          -14,
+          -6.5
+        ]
+      ],
+      "min_px": 22,
+      "tone": "dark"
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "role": "detail",
+      "note": "strap B",
+      "points": [
+        [
+          3,
+          -11
+        ],
+        [
+          14,
+          -11
+        ],
+        [
+          14,
+          -9.5
+        ],
+        [
+          3,
+          -9.5
+        ]
+      ],
+      "min_px": 22,
+      "tone": "dark"
+    }
+  ]
+}

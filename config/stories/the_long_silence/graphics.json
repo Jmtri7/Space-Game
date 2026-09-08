@@ -1,0 +1,383 @@
+{
+  "ships": {
+    "courier": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    }
+  },
+  "space_stations": {
+    "trade_ring": {
+      "design": "stations/trade_ring",
+      "culture": "orbital_std",
+      "size": 46,
+      "rotation_speed": 0.35,
+      "landing_distance": 150,
+      "core_color": [
+        127,
+        216,
+        200
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ],
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "moons": {
+    "regolith_moon": {
+      "name": "Regolith Moon",
+      "size": 30,
+      "color": [
+        138,
+        129,
+        117
+      ],
+      "crater_color": [
+        108,
+        100,
+        90
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    }
+  },
+  "outfits": {
+    "civilian_femme": {
+      "body": "human_femme",
+      "set": "civilian_work_femme",
+      "palette": "civilian"
+    },
+    "civilian_masc": {
+      "body": "human_masc",
+      "set": "civilian_work_masc",
+      "palette": "civilian"
+    },
+    "civilian_summer_femme": {
+      "body": "human_femme",
+      "set": "civilian_summer",
+      "palette": "civilian"
+    },
+    "civilian_summer_masc": {
+      "body": "human_masc",
+      "set": "civilian_summer",
+      "palette": "civilian"
+    },
+    "civilian_masc_bun": {
+      "body": "human_masc",
+      "set": "civilian_work_masc_bun",
+      "palette": "civilian"
+    },
+    "civilian_femme_swept": {
+      "body": "human_femme",
+      "set": "civilian_work_femme_swept",
+      "palette": "civilian"
+    },
+    "officer_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "civilian"
+    },
+    "officer_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "civilian"
+    },
+    "ck_eva_masc": {
+      "body": "human_masc",
+      "set": "ck_eva",
+      "palette": "civilian"
+    },
+    "ck_eva_femme": {
+      "body": "human_femme",
+      "set": "ck_eva",
+      "palette": "civilian"
+    },
+    "ck_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "civilian"
+    },
+    "ck_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "civilian"
+    },
+    "ck_mechanic_masc": {
+      "body": "human_masc",
+      "set": "ck_mechanic",
+      "palette": "civilian"
+    },
+    "ck_mechanic_femme": {
+      "body": "human_femme",
+      "set": "ck_mechanic",
+      "palette": "civilian"
+    },
+    "ck_dockworker_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "civilian"
+    },
+    "ck_dockworker_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "civilian"
+    },
+    "ck_miner_masc": {
+      "body": "human_masc",
+      "set": "ck_miner",
+      "palette": "civilian"
+    },
+    "ck_miner_femme": {
+      "body": "human_femme",
+      "set": "ck_miner",
+      "palette": "civilian"
+    },
+    "ck_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "civilian"
+    },
+    "ck_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "civilian"
+    },
+    "ck_command_masc": {
+      "body": "human_masc",
+      "set": "ck_command",
+      "palette": "civilian"
+    },
+    "ck_command_femme": {
+      "body": "human_femme",
+      "set": "ck_command",
+      "palette": "civilian"
+    },
+    "ck_marshal_masc": {
+      "body": "human_masc",
+      "set": "ck_marshal",
+      "palette": "civilian"
+    },
+    "ck_marshal_femme": {
+      "body": "human_femme",
+      "set": "ck_marshal",
+      "palette": "civilian"
+    },
+    "ck_medic_masc": {
+      "body": "human_masc",
+      "set": "ck_medic",
+      "palette": "civilian"
+    },
+    "ck_medic_femme": {
+      "body": "human_femme",
+      "set": "ck_medic",
+      "palette": "civilian"
+    },
+    "ck_surgeon_masc": {
+      "body": "human_masc",
+      "set": "ck_surgeon",
+      "palette": "civilian"
+    },
+    "ck_surgeon_femme": {
+      "body": "human_femme",
+      "set": "ck_surgeon",
+      "palette": "civilian"
+    },
+    "ck_researcher_masc": {
+      "body": "human_masc",
+      "set": "ck_researcher",
+      "palette": "civilian"
+    },
+    "ck_researcher_femme": {
+      "body": "human_femme",
+      "set": "ck_researcher",
+      "palette": "civilian"
+    },
+    "ck_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "civilian"
+    },
+    "ck_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "civilian"
+    },
+    "ck_smuggler_masc": {
+      "body": "human_masc",
+      "set": "ck_smuggler",
+      "palette": "civilian"
+    },
+    "ck_smuggler_femme": {
+      "body": "human_femme",
+      "set": "ck_smuggler",
+      "palette": "civilian"
+    },
+    "ck_ranger_masc": {
+      "body": "human_masc",
+      "set": "ck_ranger",
+      "palette": "civilian"
+    },
+    "ck_ranger_femme": {
+      "body": "human_femme",
+      "set": "ck_ranger",
+      "palette": "civilian"
+    },
+    "ck_bounty_masc": {
+      "body": "human_masc",
+      "set": "ck_bounty",
+      "palette": "civilian"
+    },
+    "ck_bounty_femme": {
+      "body": "human_femme",
+      "set": "ck_bounty",
+      "palette": "civilian"
+    }
+  }
+}

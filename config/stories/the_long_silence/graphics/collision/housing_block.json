@@ -1,0 +1,21 @@
+{
+  "identity": "Housing Block footprint (derived from the elevation): 76 wide, 45.6 deep, front edge on the base line.",
+  "footprint": [
+    [
+      -38.0,
+      -45.6
+    ],
+    [
+      38.0,
+      -45.6
+    ],
+    [
+      38.0,
+      0.0
+    ],
+    [
+      -38.0,
+      0.0
+    ]
+  ]
+}

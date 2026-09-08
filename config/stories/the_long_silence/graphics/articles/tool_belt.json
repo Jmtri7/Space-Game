@@ -1,0 +1,210 @@
+{
+  "identity": "A leather work belt like belt.json, hung with two tool pouches and a loop. Same waistline/low-waist fit, so it sits flush at the natural waist on any body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "deep",
+      "note": "band",
+      "tag": "belt",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.631,
+              -19.746
+            ],
+            [
+              2.551,
+              -19.703
+            ],
+            [
+              2.47,
+              -18.956
+            ],
+            [
+              -2.389,
+              -18.962
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "hip pouch",
+              "points": [
+                [
+                  1.446,
+                  -19.912
+                ],
+                [
+                  2.118,
+                  -19.912
+                ],
+                [
+                  2.219,
+                  -18.703
+                ],
+                [
+                  1.345,
+                  -18.703
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "far hip pouch",
+              "points": [
+                [
+                  0.506,
+                  -19.912
+                ],
+                [
+                  -0.166,
+                  -19.912
+                ],
+                [
+                  -0.267,
+                  -18.703
+                ],
+                [
+                  0.606,
+                  -18.703
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "buckle",
+              "points": [
+                [
+                  0.74,
+                  -20.047
+                ],
+                [
+                  1.21,
+                  -20.047
+                ],
+                [
+                  1.21,
+                  -19.577
+                ],
+                [
+                  0.74,
+                  -19.577
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -1.677,
+              -20.46
+            ],
+            [
+              1.806,
+              -20.472
+            ],
+            [
+              2.068,
+              -19.71
+            ],
+            [
+              -1.93,
+              -19.715
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "hip pouch",
+              "points": [
+                [
+                  0.123,
+                  -20.426
+                ],
+                [
+                  0.536,
+                  -20.426
+                ],
+                [
+                  0.598,
+                  -19.683
+                ],
+                [
+                  0.061,
+                  -19.683
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "tone": "dark",
+              "note": "far hip pouch",
+              "points": [
+                [
+                  -0.455,
+                  -20.426
+                ],
+                [
+                  -0.868,
+                  -20.426
+                ],
+                [
+                  -0.93,
+                  -19.683
+                ],
+                [
+                  -0.393,
+                  -19.683
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "buckle",
+              "points": [
+                [
+                  -0.311,
+                  -20.509
+                ],
+                [
+                  -0.022,
+                  -20.509
+                ],
+                [
+                  -0.022,
+                  -20.22
+                ],
+                [
+                  -0.311,
+                  -20.22
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

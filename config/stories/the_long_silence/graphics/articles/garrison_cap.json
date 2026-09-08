@@ -1,0 +1,76 @@
+{
+  "identity": "A soft garrison (side) cap - a creased fore-and-aft wedge that sits low on the head, pointed front and back, with a folded curtain seam along the lower edge. No peak.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "denim",
+      "shade": "matte",
+      "note": "cap",
+      "tag": "hat",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.256,
+              -30.832
+            ],
+            [
+              -0.906,
+              -32.36
+            ],
+            [
+              0.421,
+              -32.433
+            ],
+            [
+              1.75,
+              -31.041
+            ],
+            [
+              0.209,
+              -30.311
+            ],
+            [
+              -0.841,
+              -30.314
+            ]
+          ],
+          "fits": [],
+          "details": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.256,
+              -30.832
+            ],
+            [
+              -0.906,
+              -32.36
+            ],
+            [
+              0.421,
+              -32.433
+            ],
+            [
+              1.75,
+              -31.041
+            ],
+            [
+              0.209,
+              -30.311
+            ],
+            [
+              -0.841,
+              -30.314
+            ]
+          ],
+          "fits": [],
+          "details": []
+        }
+      }
+    }
+  ]
+}

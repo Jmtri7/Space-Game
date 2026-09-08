@@ -1,0 +1,13 @@
+{
+  "identity": "Common Kit - Civilian. Plain blue-grey clothes, dark shoes, a soft folded collar and a cross-body shoulder satchel.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants",
+    "shoes",
+    "collar",
+    "satchel",
+    "hair_long"
+  ]
+}

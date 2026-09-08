@@ -1,0 +1,206 @@
+{
+  "identity": "A three-pen array in the breast pocket - red, cyan, gold. The researcher's tell. Free-drawn, either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "#2f333a",
+      "shade": "matte",
+      "note": "pocket",
+      "tag": "badge",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              0.62,
+              -22.5
+            ],
+            [
+              1.86,
+              -22.5
+            ],
+            [
+              1.86,
+              -22.1
+            ],
+            [
+              0.62,
+              -22.1
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#c0392b",
+              "shade": "flat",
+              "note": "pen 1",
+              "points": [
+                [
+                  0.72,
+                  -23.5
+                ],
+                [
+                  0.9199999999999999,
+                  -23.5
+                ],
+                [
+                  0.9199999999999999,
+                  -22.3
+                ],
+                [
+                  0.72,
+                  -22.3
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#3aa8b0",
+              "shade": "flat",
+              "note": "pen 2",
+              "points": [
+                [
+                  1.12,
+                  -23.5
+                ],
+                [
+                  1.32,
+                  -23.5
+                ],
+                [
+                  1.32,
+                  -22.3
+                ],
+                [
+                  1.12,
+                  -22.3
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#d8b24a",
+              "shade": "flat",
+              "note": "pen 3",
+              "points": [
+                [
+                  1.52,
+                  -23.5
+                ],
+                [
+                  1.72,
+                  -23.5
+                ],
+                [
+                  1.72,
+                  -22.3
+                ],
+                [
+                  1.52,
+                  -22.3
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              0.62,
+              -22.5
+            ],
+            [
+              1.86,
+              -22.5
+            ],
+            [
+              1.86,
+              -22.1
+            ],
+            [
+              0.62,
+              -22.1
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#c0392b",
+              "shade": "flat",
+              "note": "pen 1",
+              "points": [
+                [
+                  0.72,
+                  -23.5
+                ],
+                [
+                  0.92,
+                  -23.5
+                ],
+                [
+                  0.92,
+                  -22.3
+                ],
+                [
+                  0.72,
+                  -22.3
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#3aa8b0",
+              "shade": "flat",
+              "note": "pen 2",
+              "points": [
+                [
+                  1.12,
+                  -23.5
+                ],
+                [
+                  1.32,
+                  -23.5
+                ],
+                [
+                  1.32,
+                  -22.3
+                ],
+                [
+                  1.12,
+                  -22.3
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#d8b24a",
+              "shade": "flat",
+              "note": "pen 3",
+              "points": [
+                [
+                  1.52,
+                  -23.5
+                ],
+                [
+                  1.72,
+                  -23.5
+                ],
+                [
+                  1.72,
+                  -22.3
+                ],
+                [
+                  1.52,
+                  -22.3
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

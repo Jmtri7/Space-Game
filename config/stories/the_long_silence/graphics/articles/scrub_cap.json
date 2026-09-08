@@ -1,0 +1,103 @@
+{
+  "identity": "A loose tie-back scrub cap: the same silhouette as cap.json/hair_short scaled up a little for a poofier fit, plus a thin tie-band across the forehead.",
+  "tier": "person",
+  "palette": "civilian",
+  "hides_hair": true,
+  "regions": [
+    {
+      "group": "torso",
+      "color": "sclera",
+      "shade": "matte",
+      "note": "crown",
+      "tag": "hat",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              1.383,
+              -29.435
+            ],
+            [
+              -0.221,
+              -32.71
+            ],
+            [
+              -1.995,
+              -29.393
+            ],
+            [
+              -1.529,
+              -29.651
+            ],
+            [
+              -0.345,
+              -29.857
+            ],
+            [
+              0.888,
+              -29.735
+            ]
+          ],
+          "fits": [
+            {
+              "curve": "head.skull",
+              "from": 1,
+              "to": 1
+            }
+          ],
+          "details": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2,
+              -29.1
+            ],
+            [
+              -1.827,
+              -29.486
+            ],
+            [
+              0.938,
+              -29.62
+            ],
+            [
+              1.4,
+              -29.1
+            ],
+            [
+              1.26,
+              -30
+            ],
+            [
+              0.86,
+              -30.63
+            ],
+            [
+              0.26,
+              -30.95
+            ],
+            [
+              -0.3,
+              -31.05
+            ],
+            [
+              -0.86,
+              -30.95
+            ],
+            [
+              -1.46,
+              -30.63
+            ],
+            [
+              -1.86,
+              -30
+            ]
+          ],
+          "fits": [],
+          "details": []
+        }
+      }
+    }
+  ]
+}

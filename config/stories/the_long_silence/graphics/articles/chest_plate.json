@@ -1,0 +1,100 @@
+{
+  "identity": "A solid front breastplate, closed edge to edge (no gap, unlike vest/jacket). Same shoulder-arc and side-curve fit as vest, just met at the centreline instead of left open.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "chest plate",
+      "tag": "chest plate",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              0.683,
+              -20.846
+            ],
+            [
+              1.839,
+              -20.99
+            ],
+            [
+              2.336,
+              -23.484
+            ],
+            [
+              -0.838,
+              -23.843
+            ],
+            [
+              -3.491,
+              -23.475
+            ],
+            [
+              -2.845,
+              -21.086
+            ],
+            [
+              -1.877,
+              -20.869
+            ],
+            [
+              -0.771,
+              -20.042
+            ]
+          ],
+          "fits": [],
+          "details": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.324,
+              -21.691
+            ],
+            [
+              2.257,
+              -22.223
+            ],
+            [
+              2.511,
+              -22.911
+            ],
+            [
+              1.24,
+              -23.824
+            ],
+            [
+              -2.115,
+              -23.851
+            ],
+            [
+              -2.899,
+              -23.067
+            ],
+            [
+              -2.561,
+              -22.145
+            ],
+            [
+              -2,
+              -21.708
+            ],
+            [
+              -1.712,
+              -20.665
+            ],
+            [
+              1.142,
+              -20.654
+            ]
+          ],
+          "fits": [],
+          "details": []
+        }
+      }
+    }
+  ]
+}

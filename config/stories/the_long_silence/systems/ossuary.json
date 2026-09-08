@@ -1,0 +1,267 @@
+{
+  "name": "Ossuary",
+  "description": "A dead system - one habitable moon, abandoned stations, and the Vigil: a few hundred who stayed to keep the graves and the archives.",
+  "star_map_position": {
+    "x": 40,
+    "y": 260
+  },
+  "station_asset": "trade_ring",
+  "moon_asset": "regolith_moon",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "Ossuary",
+    "size": 90,
+    "color": [
+      200,
+      200,
+      230
+    ]
+  },
+  "player_start": {
+    "x": 0.4,
+    "y": 0.35
+  },
+  "star_seed": 204,
+  "asteroid_field": {
+    "per_chunk_range": [
+      1,
+      3
+    ],
+    "types": [
+      {
+        "type": "gray_rock",
+        "weight": 3,
+        "size_range": [
+          4,
+          18
+        ],
+        "speed_range": [
+          0.05,
+          0.3
+        ],
+        "mine_yield": 10
+      }
+    ]
+  },
+  "station": {
+    "x": 0.2,
+    "y": 0.25,
+    "name": "the Name-Wall",
+    "interiors": {
+      "default": {
+        "label": "the Name-Wall",
+        "culture": "the_vigil",
+        "portals": [
+          {
+            "x": 800,
+            "y": 430,
+            "connected_locations": [],
+            "return_to_ship": true
+          }
+        ],
+        "rooms": [
+          {
+            "label": "Concourse",
+            "shape": "circle",
+            "center": [
+              800,
+              640
+            ],
+            "radius": 320,
+            "sides": 40
+          }
+        ],
+        "structures": [
+          {
+            "x": 800,
+            "y": 620,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 650,
+            "y": 820,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 950,
+            "y": 820,
+            "building_type": "pipeline_bench"
+          }
+        ],
+        "npcs": [
+          {
+            "name": "Keeper Aramis",
+            "x": 800,
+            "y": 540,
+            "role": "stationmaster",
+            "outfit": "officer_masc",
+            "greeting": "You've come to the Name-Wall. Everyone the first decade of the Silence killed is written here. We think the Relay went dark to keep something out. Turning it back on is a mistake.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Warden of Names Vane",
+            "x": 650,
+            "y": 700,
+            "role": "quartermaster",
+            "outfit": "ck_dockworker_masc",
+            "greeting": "We trade only what we can spare - archive copies, mostly. Knowledge, if you'll carry it carefully.",
+            "shop": {
+              "type": "commodities",
+              "stock": [],
+              "sell_multiplier": 1.15
+            }
+          },
+          {
+            "name": "Sister of the Vigil",
+            "x": 960,
+            "y": 700,
+            "role": "resident",
+            "outfit": "civilian_femme",
+            "greeting": "It's quiet here. We prefer it. The quiet is the point.",
+            "dialogue_options": [
+              "I see",
+              "Leave"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "name": "Vault of the First Decade",
+    "x": 0.82,
+    "y": 0.78,
+    "size": 30,
+    "color": [
+      170,
+      170,
+      180
+    ],
+    "crater_color": [
+      130,
+      130,
+      140
+    ],
+    "landing_distance": 35,
+    "craters": [
+      {
+        "x": -8,
+        "y": -5,
+        "radius": 4
+      },
+      {
+        "x": 10,
+        "y": 8,
+        "radius": 5
+      }
+    ],
+    "interiors": {
+      "city": {
+        "label": "Vault of the First Decade",
+        "culture": "the_vigil",
+        "connected_locations": [],
+        "entrance": {
+          "x": 800,
+          "y": 800
+        },
+        "rooms": [
+          {
+            "label": "Vault of the First Decade",
+            "shape": "circle",
+            "center": [
+              800,
+              800
+            ],
+            "radius": 300,
+            "sides": 40
+          }
+        ],
+        "structures": [
+          {
+            "x": 800,
+            "y": 620,
+            "building_type": "market_hall"
+          },
+          {
+            "x": 620,
+            "y": 760,
+            "building_type": "housing_block"
+          },
+          {
+            "x": 980,
+            "y": 760,
+            "building_type": "housing_block"
+          },
+          {
+            "x": 700,
+            "y": 960,
+            "building_type": "planter"
+          },
+          {
+            "x": 900,
+            "y": 960,
+            "building_type": "crates"
+          },
+          {
+            "x": 640,
+            "y": 640,
+            "building_type": "lamp_post"
+          },
+          {
+            "x": 960,
+            "y": 640,
+            "building_type": "lamp_post"
+          }
+        ],
+        "npcs": [
+          {
+            "name": "Surface Warden",
+            "x": 800,
+            "y": 900,
+            "role": "resident",
+            "outfit": "ck_miner_masc",
+            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "celestial_bodies": [
+    {
+      "name": "Ossuary b",
+      "x": 0.62,
+      "y": 0.5,
+      "size": 18,
+      "color": [
+        160,
+        140,
+        130
+      ],
+      "body_type": "rocky"
+    }
+  ],
+  "ai_ships": [
+    {
+      "name": "Long Vigil",
+      "x": 0.6,
+      "y": 0.55,
+      "ship_type": "courier",
+      "pilot": "oskar_lindqvist"
+    },
+    {
+      "name": "Grave Tender",
+      "x": 0.35,
+      "y": 0.2,
+      "ship_type": "courier",
+      "pilot": "elena_voss"
+    }
+  ]
+}

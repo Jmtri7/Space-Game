@@ -1,0 +1,10 @@
+{
+  "identity": "Everyday civilian, masc cut: knit tank, denim trousers, slip-on shoes, short hair. The femme cut (civilian_work_femme) picks long hair instead, which is why this outfit stays split.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top",
+    "pants",
+    "shoes",
+    "hair_short"
+  ]
+}

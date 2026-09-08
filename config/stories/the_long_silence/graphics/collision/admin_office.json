@@ -1,0 +1,21 @@
+{
+  "identity": "Admin Office footprint (derived from the elevation): 50 wide, 30.0 deep, front edge on the base line.",
+  "footprint": [
+    [
+      -25.0,
+      -30.0
+    ],
+    [
+      25.0,
+      -30.0
+    ],
+    [
+      25.0,
+      0.0
+    ],
+    [
+      -25.0,
+      0.0
+    ]
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "station_tour": {
+    "title": "Getting Your Bearings",
+    "escort_flag": "station_guide_escorting",
+    "on_start_flags": ["station_guide_escorting"],
+    "on_end_flags": ["station_tour_done"],
+    "stages": [
+      {
+        "text": "Accept Selu Vaeren's offer to show you around.",
+        "complete_flag": "station_tour_accepted"
+      },
+      {
+        "text": "Walk around the concourse - WASD or the arrow keys.",
+        "complete_flag": "walked_interior",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "You're on the tour - it's tracking in your Mission Log (N). Let's start with your feet: walk a lap of the concourse on WASD or the arrow keys."
+        }
+      },
+      {
+        "text": "Target one of the people here - press [ or ] to cycle, or click them.",
+        "complete_flag": "targeted_person",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "See everyone around us? Tap [ or ] to cycle a target lock, or just click someone. Their name and role show up top-right."
+        }
+      },
+      {
+        "text": "Walk up to someone and talk - press T.",
+        "complete_flag": "talked_to_npc",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Get in close to anyone and press T to talk. Shopkeepers open their store; everyone else has something to say."
+        }
+      },
+      {
+        "text": "Open your Mission Log - press N.",
+        "complete_flag": "viewed_mission_log",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Press N for your Mission Log. Every step I give you is listed there, so you'll never have to guess what's next."
+        }
+      },
+      {
+        "text": "Open your Possessions - press P.",
+        "complete_flag": "viewed_possessions",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Now press P for your Possessions - credits, ships, cargo, outfits. Pretty bare right now. Let's fix that."
+        }
+      },
+      {
+        "text": "Scroll back through the Message Log - mouse wheel while pointing at the bottom-left pane.",
+        "complete_flag": "scrolled_message_log",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Piling up a few comms? Everything I send lands in the Message Log, bottom-left. Point at that pane and roll the mouse wheel to scroll back through it - the blue arrows show when there's more above or below."
+        }
+      },
+      {
+        "text": "Go to the Lender's Vault (west pod) and take the starter loan from Petira Valune.",
+        "complete_flag": "took_loan",
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Head west off the concourse to the Lender's Vault. Talk to Petira Valune and take the station's starter loan - you'll need the credits for a ship."
+        }
+      },
+      {
+        "text": "Go to the Berth (east pod) and buy a ship from Daxen Reeve.",
+        "complete_flag": "bought_ship",
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "Now the Berth, east side. Daxen Reeve has a few hulls for sale - buy whichever you like. The skiff's an easy first ship."
+        }
+      },
+      {
+        "text": "You're flight-ready - board your ship through the Berth portal (L).",
+        "complete_flag": "bought_ship",
+        "one_way_message": {
+          "sender": "Selu Vaeren",
+          "text": "That's everything. Your ship's docked and waiting - step on the Berth portal and press L to board when you're ready. Come find me if you're ever back this way. Good luck out there, pilot."
+        }
+      }
+    ]
+  },
+  "first_flight": {
+    "title": "First Flight",
+    "escort_flag": "kade_escorting",
+    "on_end_flags": ["kade_tutorial_done"],
+    "stages": [
+      {
+        "text": "Cycle your targeting mode (T) until it reads SHIPS.",
+        "complete_flag": "used_ships_target_mode"
+      },
+      {
+        "text": "Cycle your target ([ or ]) until you're targeting Kade Marsh, then hail him (H).",
+        "complete_flag": "hailed_pilot:Kade Marsh",
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Nice, SHIPS mode. Now cycle your target with [ or ] until you're locked onto me, then hit H and let's talk."
+        }
+      },
+      {
+        "text": "Talk to Kade Marsh - he's offering to show you the ropes.",
+        "complete_flag": "accepted_kade_help"
+      },
+      {
+        "text": "Turn your ship both ways - left (A / Left arrow), then right (D / Right arrow).",
+        "complete_flag": "turned_both_ways",
+        "reset_on_activation": true,
+        "reset_flags": ["turned_left", "turned_right"],
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Alright, let's start simple. Turn left with A or the left arrow, then right with D or the right arrow - give me both so I know your thrusters are good."
+        }
+      },
+      {
+        "text": "Thrust forward - W or the Up arrow.",
+        "complete_flag": "used_thrust",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Good. Now hold W or the up arrow to thrust forward. Watch your speed build - space doesn't slow you down on its own."
+        }
+      },
+      {
+        "text": "Turn around and brake until your speed drops - S or the Down arrow, then thrust.",
+        "complete_flag": "braked_below_threshold",
+        "reset_on_activation": true,
+        "reset_flags": ["used_brake"],
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Now the fun part - turning around. Hold S or the down arrow to point opposite your velocity, then thrust to cancel it out. Get your speed down."
+        }
+      },
+      {
+        "text": "Fly far from the system center, wait for the drift prompt, then jump home (J).",
+        "complete_flag": "completed_jump",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "Nicely done. Jumping needs room - fly well clear of the system center until a prompt tells you you've drifted far enough. Your current system is already the default jump target, so from there just tap J to warp home. When you want to travel somewhere else, open the Star Map (M) first and pick your destination."
+        }
+      },
+      {
+        "text": "Target the station/moon (T for LANDING SITES, then [ ]), autopilot in (Space), land (L).",
+        "complete_flag": "landed_on_landing_site",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Kade Marsh",
+          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDING SITES for stations and moons, MISC for the rest. Set it to LANDING SITES, then [ or ] to pick the station or moon. With it targeted, hit Space and the autopilot flies you in and sets you down - or fly it yourself and press L once you're close and slow. Good luck out there, pilot."
+        }
+      }
+    ]
+  }
+}

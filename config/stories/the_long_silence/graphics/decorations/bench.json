@@ -1,0 +1,134 @@
+{
+  "identity": "A public bench from the side: two end legs, a seat plank at sitting height, a low slatted back. About 1.4 m long. Sits against a wall and never blocks a lane.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "seat at ~0.26x PLAYER_H (SIT_H), ~0.8x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "near leg",
+      "points": [
+        [
+          -11.5,
+          -8.2
+        ],
+        [
+          -8.5,
+          -8.2
+        ],
+        [
+          -8.5,
+          0
+        ],
+        [
+          -11.5,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far leg",
+      "points": [
+        [
+          8.5,
+          -8.2
+        ],
+        [
+          11.5,
+          -8.2
+        ],
+        [
+          11.5,
+          0
+        ],
+        [
+          8.5,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "seat",
+      "points": [
+        [
+          -12,
+          -9.4
+        ],
+        [
+          12,
+          -9.4
+        ],
+        [
+          12,
+          -7.4
+        ],
+        [
+          -12,
+          -7.4
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "backrest",
+      "points": [
+        [
+          -12,
+          -15.5
+        ],
+        [
+          12,
+          -15.5
+        ],
+        [
+          12,
+          -13
+        ],
+        [
+          -12,
+          -13
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "role": "detail",
+      "note": "back slat",
+      "points": [
+        [
+          -12,
+          -13
+        ],
+        [
+          12,
+          -13
+        ],
+        [
+          12,
+          -11
+        ],
+        [
+          -12,
+          -11
+        ]
+      ],
+      "min_px": 24
+    }
+  ]
+}

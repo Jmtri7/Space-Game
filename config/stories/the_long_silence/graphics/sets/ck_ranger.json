@@ -1,0 +1,13 @@
+{
+  "identity": "Common Kit - Ranger. Field-green coat and trousers, dark boots, a tall trek pack and a hood - long survey treks, no station for weeks.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top",
+    "coat_field",
+    "pants_field",
+    "boots_charcoal",
+    "backpack_brown",
+    "hood_field",
+    "hair_short"
+  ]
+}

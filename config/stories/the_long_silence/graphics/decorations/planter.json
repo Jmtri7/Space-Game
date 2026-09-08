@@ -1,0 +1,116 @@
+{
+  "identity": "A raised planter bed from the side: a low trough with a dark soil line and a rounded mound of greenery. About 0.8 m across. Solid to walkers.",
+  "tier": "decoration",
+  "palette": "ship_std",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~0.5x PLAYER_H tall, ~0.8x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "trough",
+      "points": [
+        [
+          -13,
+          -8
+        ],
+        [
+          13,
+          -8
+        ],
+        [
+          13,
+          0
+        ],
+        [
+          -13,
+          0
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "leaf",
+      "shade": "soft",
+      "note": "foliage",
+      "points": [
+        [
+          -11,
+          -8
+        ],
+        [
+          -6,
+          -13
+        ],
+        [
+          0,
+          -15
+        ],
+        [
+          6,
+          -13
+        ],
+        [
+          11,
+          -8
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "engine",
+      "shade": "matte",
+      "role": "detail",
+      "note": "soil",
+      "points": [
+        [
+          -11.5,
+          -8.6
+        ],
+        [
+          11.5,
+          -8.6
+        ],
+        [
+          11.5,
+          -7.4
+        ],
+        [
+          -11.5,
+          -7.4
+        ]
+      ],
+      "min_px": 18
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "note": "rim",
+      "points": [
+        [
+          -13,
+          -8.6
+        ],
+        [
+          13,
+          -8.6
+        ],
+        [
+          13,
+          -7.2
+        ],
+        [
+          -13,
+          -7.2
+        ]
+      ],
+      "min_px": 22
+    }
+  ]
+}

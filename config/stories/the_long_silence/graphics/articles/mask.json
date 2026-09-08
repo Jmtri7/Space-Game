@@ -1,0 +1,90 @@
+{
+  "identity": "A surgical mask over the nose and mouth, tied behind the ears. Free-drawn between the brow and chin, small enough to read the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "sclera",
+      "shade": "matte",
+      "note": "mask",
+      "tag": "mouth cover",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.102,
+              -28.097
+            ],
+            [
+              -1.802,
+              -27.164
+            ],
+            [
+              -1.237,
+              -26.409
+            ],
+            [
+              -0.35,
+              -26.108
+            ],
+            [
+              0.698,
+              -26.469
+            ],
+            [
+              1.253,
+              -27.378
+            ],
+            [
+              1.57,
+              -28.135
+            ],
+            [
+              -0.498,
+              -28.323
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.9,
+              -28.15
+            ],
+            [
+              -1.689,
+              -27.19
+            ],
+            [
+              -1.114,
+              -26.423
+            ],
+            [
+              -0.273,
+              -26.131
+            ],
+            [
+              0.51,
+              -26.406
+            ],
+            [
+              1.079,
+              -27.183
+            ],
+            [
+              1.364,
+              -28.176
+            ],
+            [
+              -0.623,
+              -28.323
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

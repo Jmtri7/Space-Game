@@ -1,0 +1,58 @@
+{
+  "identity": "A stiff stand collar: a trapezoid band rising from the chest to the base of the neck, flaring wider at the top. Free-drawn, reads the same on either body.",
+  "tier": "person",
+  "palette": "civilian",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "sclera",
+      "shade": "matte",
+      "note": "collar band",
+      "tag": "collar",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.687,
+              -24.567
+            ],
+            [
+              1.172,
+              -24.545
+            ],
+            [
+              1.319,
+              -26.692
+            ],
+            [
+              -1.848,
+              -26.667
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.553,
+              -24.559
+            ],
+            [
+              1.046,
+              -24.587
+            ],
+            [
+              1.336,
+              -26.507
+            ],
+            [
+              -1.764,
+              -26.499
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

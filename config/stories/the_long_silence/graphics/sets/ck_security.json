@@ -1,0 +1,14 @@
+{
+  "identity": "Common Kit - Security. Dark blue-grey uniform, black boots, a grey helmet with a cyan visor, a light-blue face visor, a padded stab vest and a duty belt.",
+  "palette": "civilian",
+  "articles": [
+    "tank_top",
+    "jacket_secblue",
+    "pants_secblue",
+    "boots_black",
+    "helmet_sec",
+    "visor_ice",
+    "vest",
+    "belt"
+  ]
+}
