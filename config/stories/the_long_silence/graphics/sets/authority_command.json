@@ -1,0 +1,15 @@
+{
+  "identity": "Harbor Authority command turn-out - navy tunic-coat and trousers, black boots, a white stand collar, chrome shoulder boards, a peaked service cap, and the approach-chevron tab.",
+  "palette": "authority_dress",
+  "articles": [
+    "tank_top",
+    "coat_command",
+    "pants_navy",
+    "boots_black",
+    "stand_collar_white",
+    "authority_shoulder_boards",
+    "authority_service_cap",
+    "authority_chevron_tab",
+    "hair_short"
+  ]
+}

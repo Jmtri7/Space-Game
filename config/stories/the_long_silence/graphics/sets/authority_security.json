@@ -1,0 +1,15 @@
+{
+  "identity": "Approach Warden kit - blue-grey security uniform, stab vest, duty belt, a sealed helmet, the warden's brassard, and the approach-chevron tab.",
+  "palette": "authority_dress",
+  "articles": [
+    "tank_top",
+    "jacket_secblue",
+    "pants_secblue",
+    "boots_black",
+    "helmet_sec",
+    "vest",
+    "authority_duty_belt",
+    "authority_brassard",
+    "authority_chevron_tab"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "identity": "Authority civilian dress - plain navy clothes and a soft collar, worn with the approach-chevron tab as a lapel pin. Even the Authority's civilians wear the mark.",
+  "palette": "authority_dress",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants",
+    "shoes",
+    "collar",
+    "authority_chevron_tab",
+    "hair_long"
+  ]
+}

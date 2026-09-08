@@ -296,6 +296,164 @@ dress.update({"cloth": "#3a4560", "denim": "#2b3450", "knit": "#4a5878", "leathe
               "metal": "#c8cdd6", "glass": "#b4dcff", "lamp": "#ffd98a"})
 w(f"{G}/palettes/authority_dress.json", dress)
 
+# ======================================================================
+# 4b. BESPOKE AUTHORITY WARDROBE
+#     Five small free-drawn identity articles (no body fitting - they sit
+#     the same on either cut, like badge / epaulettes / armband) plus five
+#     culture sets that combine them with recoloured base garments. The
+#     read: every Authority uniform carries the downward guidance chevron
+#     at the throat, squared chrome fittings, a peaked service cap.
+# ======================================================================
+def down_chevron(cx, cy, half, drop, th):
+    """A downward-pointing > guidance chevron, apex below (toward the feet)."""
+    return [[cx - half, cy], [cx, cy + drop], [cx + half, cy],
+            [cx + half, cy - th], [cx, cy + drop - th], [cx - half, cy - th]]
+
+
+def article(regions):
+    return {"tier": "person", "palette": "authority_dress", "regions": regions}
+
+
+def region(group, tag, note, color, shade, masc, femme, m_det=None, f_det=None):
+    g = {"masc": {"points": masc, "fits": []}, "femme": {"points": femme, "fits": []}}
+    if m_det is not None:
+        g["masc"]["details"] = m_det
+    if f_det is not None:
+        g["femme"]["details"] = f_det
+    return {"group": group, "tag": tag, "note": note, "color": color, "shade": shade, "geometry": g}
+
+
+ARTICLES = {
+    # the identity mark: a lit amber approach-chevron on a chrome tab, worn
+    # high on the chest over any coat. Every Authority kit carries it.
+    "authority_chevron_tab": {
+        "identity": "Harbor Authority approach-chevron tab - a downward amber guidance chevron on a chrome ground, worn at the throat. The Authority's mark; every uniform carries it.",
+        **article([
+            region("torso", "badge", "chevron backing", "metal", "metal",
+                   [[-1.9, -23.5], [1.9, -23.5], [1.9, -25.3], [-1.9, -25.3]],
+                   [[-1.7, -23.4], [1.7, -23.4], [1.7, -25.1], [-1.7, -25.1]]),
+            region("torso", "badge", "approach chevron", "lamp", "glow",
+                   down_chevron(0.0, -24.4, 1.5, 1.0, 0.45),
+                   down_chevron(0.0, -24.2, 1.35, 0.9, 0.4)),
+        ])},
+    # squared, rigid chrome shoulder boards (harder-edged than soft epaulettes)
+    "authority_shoulder_boards": {
+        "identity": "Harbor Authority shoulder boards - a pair of stiff squared chrome boards, one per shoulder. Rank is read off the chevron pips, not the board.",
+        **article([
+            region("arm_near", "epaulette", "near board", "metal", "metal",
+                   [[1.85, -24.62], [4.62, -24.5], [4.62, -23.86], [1.9, -23.98]],
+                   [[1.3, -24.45], [3.42, -24.36], [3.42, -23.78], [1.32, -23.86]]),
+            region("arm_far", "epaulette", "far board", "metal", "metal",
+                   [[-2.5, -24.5], [-4.5, -24.58], [-4.5, -23.98], [-2.55, -23.9]],
+                   [[-1.72, -24.42], [-3.4, -24.5], [-3.4, -23.94], [-1.75, -23.88]]),
+        ])},
+    # a peaked navy service cap with a chevron cap-badge
+    "authority_service_cap": {
+        "identity": "Harbor Authority service cap - a stiff navy peaked cap, chrome band, a small amber chevron badge above the peak. Worn by control and command staff.",
+        **article([
+            region("torso", "hat", "cap crown", "cloth", "matte",
+                   [[-2.508, -29.684], [2.016, -29.659], [1.983, -30.314], [1.834, -31.006],
+                    [1.52, -31.615], [0.98, -32.054], [0.21, -32.314], [-0.766, -32.294],
+                    [-1.379, -32.01], [-1.915, -31.602], [-2.289, -30.934], [-2.482, -30.317]],
+                   [[-2.456, -29.862], [-1.326, -29.872], [0.471, -29.89], [2.149, -29.878],
+                    [2.157, -30.449], [1.992, -31.384], [1.527, -32.156], [0.805, -32.569],
+                    [-0.636, -32.598], [-1.543, -32.201], [-2.201, -31.498], [-2.435, -30.512]],
+                   m_det=[
+                       {"group": "torso", "color": "metal", "shade": "metal", "note": "cap band",
+                        "points": [[-2.52, -29.6], [2.03, -29.58], [2.0, -30.05], [-2.5, -30.08]]},
+                       {"group": "torso", "color": "metal", "shade": "deep", "note": "cap peak",
+                        "points": [[-2.4, -29.6], [-4.7, -30.05], [-4.5, -29.35], [-2.3, -29.1]]},
+                       {"group": "torso", "color": "lamp", "shade": "glow", "note": "cap chevron badge",
+                        "points": down_chevron(-0.25, -30.95, 0.9, 0.5, 0.28)},
+                   ],
+                   f_det=[
+                       {"group": "torso", "color": "metal", "shade": "metal", "note": "cap band",
+                        "points": [[-2.47, -29.78], [2.17, -29.79], [2.14, -30.25], [-2.45, -30.26]]},
+                       {"group": "torso", "color": "metal", "shade": "deep", "note": "cap peak",
+                        "points": [[-2.4, -29.78], [-4.7, -30.2], [-4.5, -29.5], [-2.3, -29.3]]},
+                       {"group": "torso", "color": "lamp", "shade": "glow", "note": "cap chevron badge",
+                        "points": down_chevron(-0.1, -31.05, 0.85, 0.5, 0.26)},
+                   ]),
+        ])},
+    # the Approach Warden's wide brassard - a tall band with its own chevron
+    "authority_brassard": {
+        "identity": "Approach Warden's brassard - a wide navy band on the near upper arm carrying a lit amber chevron. Worn by Authority security and wardens.",
+        **article([
+            region("arm_near", "armband", "brassard band", "cloth", "matte",
+                   [[2.42, -24.3], [4.62, -24.18], [4.62, -21.5], [2.5, -21.62]],
+                   [[1.6, -21.5], [3.42, -21.62], [3.3, -24.28], [1.62, -24.05]],
+                   m_det=[{"group": "arm_near", "color": "lamp", "shade": "glow", "note": "brassard chevron",
+                           "points": [[2.7, -23.3], [3.55, -22.6], [4.4, -23.3], [4.4, -22.85],
+                                      [3.55, -22.15], [2.7, -22.85]]}],
+                   f_det=[{"group": "arm_near", "color": "lamp", "shade": "glow", "note": "brassard chevron",
+                           "points": [[1.85, -23.2], [2.55, -22.55], [3.25, -23.2], [3.25, -22.78],
+                                      [2.55, -22.13], [1.85, -22.78]]}]),
+        ])},
+    # duty belt with a chevron buckle and a side pouch
+    "authority_duty_belt": {
+        "identity": "Harbor Authority duty belt - a dark webbing belt with a chevron buckle and a squared side pouch on the near hip.",
+        **article([
+            region("torso", "belt", "duty belt", "leather", "deep",
+                   [[-2.615, -19.748], [2.55, -19.623], [2.469, -18.974], [-2.432, -19.116]],
+                   [[-1.678, -20.447], [1.822, -20.351], [2.037, -19.623], [-1.892, -19.714]],
+                   m_det=[
+                       {"group": "torso", "color": "lamp", "shade": "glow", "note": "chevron buckle",
+                        "points": down_chevron(-0.2, -19.45, 0.62, 0.4, 0.22)},
+                       {"group": "torso", "color": "leather", "shade": "deep", "note": "belt pouch",
+                        "points": [[1.55, -19.85], [2.6, -19.7], [2.7, -18.5], [1.65, -18.6]]},
+                   ],
+                   f_det=[
+                       {"group": "torso", "color": "lamp", "shade": "glow", "note": "chevron buckle",
+                        "points": down_chevron(-0.1, -20.1, 0.58, 0.4, 0.2)},
+                       {"group": "torso", "color": "leather", "shade": "deep", "note": "belt pouch",
+                        "points": [[1.2, -20.5], [2.1, -20.35], [2.2, -19.3], [1.3, -19.4]]},
+                   ]),
+        ])},
+}
+for aid, design in ARTICLES.items():
+    w(f"{G}/articles/{aid}.json", design)
+
+# Five culture sets. Base garments are recoloured by the set palette
+# (authority_dress); the five bespoke articles above give the silhouette.
+SETS = {
+    "authority_command": {
+        "identity": "Harbor Authority command turn-out - navy tunic-coat and trousers, black boots, a white stand collar, chrome shoulder boards, a peaked service cap, and the approach-chevron tab.",
+        "palette": "authority_dress",
+        "articles": ["tank_top", "coat_command", "pants_navy", "boots_black", "stand_collar_white",
+                     "authority_shoulder_boards", "authority_service_cap", "authority_chevron_tab", "hair_short"]},
+    "authority_security": {
+        "identity": "Approach Warden kit - blue-grey security uniform, stab vest, duty belt, a sealed helmet, the warden's brassard, and the approach-chevron tab.",
+        "palette": "authority_dress",
+        "articles": ["tank_top", "jacket_secblue", "pants_secblue", "boots_black", "helmet_sec",
+                     "vest", "authority_duty_belt", "authority_brassard", "authority_chevron_tab"]},
+    "authority_dock": {
+        "identity": "Authority dock crew - navy work suit, amber hard hat and hi-vis tabard, heavy gloves, and the approach-chevron tab.",
+        "palette": "authority_dress",
+        "articles": ["tank_top", "jacket_dock", "pants_dock", "boots_charcoal", "cap_amber",
+                     "hi_vis_tabard_amber", "gloves_dark", "authority_chevron_tab", "hair_short"]},
+    "authority_flight": {
+        "identity": "Authority flight rig - navy flight jacket and trousers, a flight helmet, chrome shoulder boards, and the approach-chevron tab.",
+        "palette": "authority_dress",
+        "articles": ["tank_top", "jacket_navy", "pants_navy", "boots_black", "helmet_flight",
+                     "authority_shoulder_boards", "authority_chevron_tab", "hair_short"]},
+    "authority_civilian": {
+        "identity": "Authority civilian dress - plain navy clothes and a soft collar, worn with the approach-chevron tab as a lapel pin. Even the Authority's civilians wear the mark.",
+        "palette": "authority_dress",
+        "articles": ["tank_top", "jacket_civ", "pants", "shoes", "collar",
+                     "authority_chevron_tab", "hair_long"]},
+}
+for sid, design in SETS.items():
+    w(f"{G}/sets/{sid}.json", design)
+
+# Repoint the ten authority_* outfit entries at the bespoke sets (the body
+# still picks the masc/femme geometry cut everywhere downstream).
+OUTFIT_SET = {"civilian": "authority_civilian", "official": "authority_command",
+              "flight": "authority_flight", "security": "authority_security", "dock": "authority_dock"}
+for role, sid in OUTFIT_SET.items():
+    for cut in ("femme", "masc"):
+        gfx["outfits"][f"authority_{role}_{cut}"] = {
+            "body": f"human_{cut}", "set": sid, "palette": "authority_dress"}
+
 w(f"{S}/graphics.json", gfx)
 
 # ======================================================================
@@ -516,15 +674,48 @@ HALCYON = {
         {"name": "Sentinel", "x": 0.6, "y": 0.55, "size": 16, "color": [180, 160, 140], "body_type": "rocky"},
         {"name": "Verge", "x": 0.08, "y": 0.9, "size": 46, "color": [225, 200, 150], "body_type": "gas_giant", "has_ring": True, "ring_color": [200, 190, 160]}],
     "ai_ships": [
-        {"name": "Hub Patrol", "x": 0.5, "y": 0.12, "ship_type": "authority_patrol", "pilot": "ackley",
+        {"name": "Hub Patrol Kestrel", "x": 0.5, "y": 0.12, "ship_type": "authority_patrol", "pilot": "ackley",
          "faction": "harbor_authority", "route": ["station", "moon"]},
-        {"name": "Authority Freight", "x": 0.65, "y": 0.6, "ship_type": "authority_hauler", "pilot": "lund",
+        {"name": "Approach Cutter Tern", "x": 0.22, "y": 0.28, "ship_type": "authority_courier", "pilot": "pell",
          "faction": "harbor_authority", "route": ["station", "moon"]},
+        {"name": "Authority Freight 9", "x": 0.65, "y": 0.6, "ship_type": "authority_hauler", "pilot": "lund",
+         "faction": "harbor_authority", "route": ["station", "moon"]},
+        {"name": "Relief Hauler Vesper", "x": 0.7, "y": 0.35, "ship_type": "authority_hauler", "pilot": "voss",
+         "faction": "harbor_authority", "route": ["moon", "station"]},
         {"name": "Ferro's Slip", "x": 0.3, "y": 0.55, "ship_type": "carrier_hauler", "pilot": "rell",
          "faction": "free_carrier", "route": ["station", "moon"]},
     ],
 }
 w(f"{S}/systems/halcyon.json", HALCYON)
+
+# ======================================================================
+# 6b. HALCYON PILOTS  (flesh out the three scaffold pilots + add two;
+#     other systems keep the Phase 3/4 scaffold roster until their slice)
+# ======================================================================
+pilots = r(f"{S}/pilots.json")
+pilots.update({
+    "ackley": {
+        "name": "Controller Ackley", "faction": "harbor_authority", "role": "patrol_officer",
+        "personality": "Correct, unhurried, certain the regulations exist for a reason - and that you have not read them.",
+        "hail_greeting": "Hub Control patrol, Kestrel. Your approach is logged and clean. Keep it that way and we've no business with each other."},
+    "pell": {
+        "name": "Approach Officer Pell", "faction": "harbor_authority", "role": "patrol_officer",
+        "personality": "New to the cutter and keen to be seen doing it right; recites the beacon protocol at you unprompted.",
+        "hail_greeting": "Cutter Tern on the inner approach. First time through Halcyon? Hold your heading for the beacon and let the guidance chevrons walk you in."},
+    "lund": {
+        "name": "Freight-Warden Lund", "faction": "harbor_authority", "role": "freighter_pilot",
+        "personality": "Talks like a manifest - flat, exact, faintly relieved when a run closes out clean.",
+        "hail_greeting": "Authority freight, station to moon, manifest sealed. Nothing on my ticket concerns you."},
+    "voss": {
+        "name": "Hauler Voss", "faction": "harbor_authority", "role": "freighter_pilot",
+        "personality": "Twenty years on the milk run; now hauling relief crates for carriers stranded by the beacon and quietly furious about the waste.",
+        "hail_greeting": "Relief hauler Vesper, moon to Hub. Half this load is for people who had homes last month. Give me room."},
+    "rell": {
+        "name": "Rell", "faction": "free_carrier", "role": "freighter_pilot",
+        "personality": "Twenty years on the slow lanes; the beacon just made her route worthless and she is trying to laugh about it.",
+        "hail_greeting": "Independent carrier, Ferro's Slip. I was running this lane before your beacon woke up, friend. Now I'm just in the way."},
+})
+w(f"{S}/pilots.json", pilots)
 
 # ======================================================================
 # 6. ANCHOR MISSION  "induction"  (replaces the borrowed missions.json)
@@ -588,7 +779,7 @@ w(f"{S}/missions.json", missions)
 # 7. story.json wiring
 # ======================================================================
 story = r(f"{S}/story.json")
-story["version"] = "0.9.0"
+story["version"] = "0.9.1"
 # NOT starting_mission - that always defers to the first launch when the
 # player starts docked (see docs/ARCHITECTURE.md), which would skip every
 # station stage. The induction is started by Induction Officer Sella's
@@ -603,5 +794,7 @@ story["description"] = ("The Relay went dark 200 years ago and is switching itse
                         "art, a full station, an induction tutorial; the other four systems are still per-culture stubs.")
 w(f"{S}/story.json", story)
 
-print("Halcyon slice written: 3 ships, 1 station, 3 buildings, dress palette, Hub Control (11 rooms / "
-      f"{len(HUB_NPCS)} NPCs), induction mission ({len(INDUCTION['stages'])} stages). story 0.9.0.")
+print(f"Halcyon slice written: 3 ships, 1 station, 3 buildings, dress palette, "
+      f"{len(ARTICLES)} bespoke articles + {len(SETS)} culture sets, Hub Control ("
+      f"{len(HUB_ROOMS)} rooms / {len(HUB_NPCS)} NPCs), induction mission "
+      f"({len(INDUCTION['stages'])} stages), {len(pilots)} pilots. story 0.9.1.")

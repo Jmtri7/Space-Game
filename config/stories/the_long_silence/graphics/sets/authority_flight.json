@@ -1,0 +1,14 @@
+{
+  "identity": "Authority flight rig - navy flight jacket and trousers, a flight helmet, chrome shoulder boards, and the approach-chevron tab.",
+  "palette": "authority_dress",
+  "articles": [
+    "tank_top",
+    "jacket_navy",
+    "pants_navy",
+    "boots_black",
+    "helmet_flight",
+    "authority_shoulder_boards",
+    "authority_chevron_tab",
+    "hair_short"
+  ]
+}

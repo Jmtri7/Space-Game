@@ -518,6 +518,37 @@ class TestPersonOutfitRendering(unittest.TestCase):
         self.assertEqual(circles_plain, circles_visor)
 
 
+class TestLongSilenceOutfitRendering(unittest.TestCase):
+    """Every the_long_silence outfit is a design-JSON pipeline outfit
+    ({body, set, palette}); this expands and draws all of them so a broken
+    article / set / palette key in the bespoke Authority wardrobe (Phase 6.1)
+    or the per-culture stubs is caught. pygame is mocked, so this exercises
+    expand() + compose_worn + apply_walk, not the pixels."""
+
+    def _all_outfit_ids(self):
+        return list((utils.load_json("config/stories/the_long_silence/graphics.json") or {}).get("outfits", {}))
+
+    def test_every_outfit_draws_without_error(self):
+        ids = self._all_outfit_ids()
+        self.assertGreater(len(ids), 50)
+        for outfit_id in ids:
+            outfit = utils.get_graphics_asset("the_long_silence", "outfits", outfit_id)
+            Person(570, 400, outfit=outfit).draw(MagicMock())
+
+    def test_bespoke_authority_wardrobe_is_wired(self):
+        gfx = utils.load_json("config/stories/the_long_silence/graphics.json") or {}
+        for role in ("civilian", "official", "flight", "security", "dock"):
+            for cut in ("femme", "masc"):
+                entry = gfx["outfits"][f"authority_{role}_{cut}"]
+                self.assertTrue(entry["set"].startswith("authority_"), entry)
+                self.assertEqual(entry["body"], f"human_{cut}")
+        for aid in ("authority_chevron_tab", "authority_shoulder_boards",
+                    "authority_service_cap", "authority_brassard", "authority_duty_belt"):
+            self.assertTrue(
+                os.path.exists(f"config/stories/the_long_silence/graphics/articles/{aid}.json"),
+                f"missing bespoke article {aid}")
+
+
 class TestLocationExitOptions(unittest.TestCase):
     """Test LocationScreen.get_exit_options() - the config-driven list of
     where an interior's exit leads (connected_locations plus "ship"),

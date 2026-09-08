@@ -1,0 +1,15 @@
+{
+  "identity": "Authority dock crew - navy work suit, amber hard hat and hi-vis tabard, heavy gloves, and the approach-chevron tab.",
+  "palette": "authority_dress",
+  "articles": [
+    "tank_top",
+    "jacket_dock",
+    "pants_dock",
+    "boots_charcoal",
+    "cap_amber",
+    "hi_vis_tabard_amber",
+    "gloves_dark",
+    "authority_chevron_tab",
+    "hair_short"
+  ]
+}

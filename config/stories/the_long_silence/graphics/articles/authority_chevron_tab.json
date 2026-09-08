@@ -1,0 +1,125 @@
+{
+  "identity": "Harbor Authority approach-chevron tab - a downward amber guidance chevron on a chrome ground, worn at the throat. The Authority's mark; every uniform carries it.",
+  "tier": "person",
+  "palette": "authority_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "badge",
+      "note": "chevron backing",
+      "color": "metal",
+      "shade": "metal",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.9,
+              -23.5
+            ],
+            [
+              1.9,
+              -23.5
+            ],
+            [
+              1.9,
+              -25.3
+            ],
+            [
+              -1.9,
+              -25.3
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.7,
+              -23.4
+            ],
+            [
+              1.7,
+              -23.4
+            ],
+            [
+              1.7,
+              -25.1
+            ],
+            [
+              -1.7,
+              -25.1
+            ]
+          ],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "torso",
+      "tag": "badge",
+      "note": "approach chevron",
+      "color": "lamp",
+      "shade": "glow",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.5,
+              -24.4
+            ],
+            [
+              0.0,
+              -23.4
+            ],
+            [
+              1.5,
+              -24.4
+            ],
+            [
+              1.5,
+              -24.849999999999998
+            ],
+            [
+              0.0,
+              -23.849999999999998
+            ],
+            [
+              -1.5,
+              -24.849999999999998
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.35,
+              -24.2
+            ],
+            [
+              0.0,
+              -23.3
+            ],
+            [
+              1.35,
+              -24.2
+            ],
+            [
+              1.35,
+              -24.599999999999998
+            ],
+            [
+              0.0,
+              -23.7
+            ],
+            [
+              -1.35,
+              -24.599999999999998
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

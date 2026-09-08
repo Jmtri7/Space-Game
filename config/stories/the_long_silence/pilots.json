@@ -1,28 +1,26 @@
 {
   "_comment": "Phase 3/4 scaffold roster - one patrol (OrbitRoutine) + one hauler (DockRoutine) per system, plus Halcyon's free carrier. Each is faction-tagged so combat/hostility works. Real per-system rosters come in Phase 6.",
-
   "ackley": {
     "name": "Controller Ackley",
     "faction": "harbor_authority",
     "role": "patrol_officer",
-    "personality": "Correct, unhurried, and quietly certain the regulations exist for a reason.",
-    "hail_greeting": "Hub Control patrol. Keep your approach clean and we've no quarrel."
+    "personality": "Correct, unhurried, certain the regulations exist for a reason - and that you have not read them.",
+    "hail_greeting": "Hub Control patrol, Kestrel. Your approach is logged and clean. Keep it that way and we've no business with each other."
   },
   "lund": {
     "name": "Freight-Warden Lund",
     "faction": "harbor_authority",
     "role": "freighter_pilot",
-    "personality": "Talks like a manifest - flat, exact, faintly relieved when a run goes to plan.",
-    "hail_greeting": "Authority freight, station to moon and back. Nothing on my ticket concerns you."
+    "personality": "Talks like a manifest - flat, exact, faintly relieved when a run closes out clean.",
+    "hail_greeting": "Authority freight, station to moon, manifest sealed. Nothing on my ticket concerns you."
   },
   "rell": {
     "name": "Rell",
     "faction": "free_carrier",
     "role": "freighter_pilot",
-    "personality": "Twenty years on the slow lanes; watching the beacons put her out of a job and trying to laugh about it.",
-    "hail_greeting": "Independent carrier. I was running this route before your beacon woke up, friend."
+    "personality": "Twenty years on the slow lanes; the beacon just made her route worthless and she is trying to laugh about it.",
+    "hail_greeting": "Independent carrier, Ferro's Slip. I was running this lane before your beacon woke up, friend. Now I'm just in the way."
   },
-
   "tolvic": {
     "name": "Watch-Chief Tolvic",
     "faction": "ninefold_combine",
@@ -44,7 +42,6 @@
     "personality": "Treats every contract breach as a personal insult and every insult as a firing solution.",
     "hail_greeting": "The Combine's writ runs here now too. You broke the contract. Clear off."
   },
-
   "sella": {
     "name": "Tide-pilot Sella",
     "faction": "the_drift",
@@ -59,7 +56,6 @@
     "personality": "Cheerful about the work, vague about the schedule.",
     "hail_greeting": "Grain run for the Undergarden. Lovely day for it, isn't it."
   },
-
   "vane_watch": {
     "name": "Warden Vane",
     "faction": "the_vigil",
@@ -74,7 +70,6 @@
     "personality": "Handles cargo the way others handle relics.",
     "hail_greeting": "Archive transfer. Fragile. Keep your distance."
   },
-
   "segment_warden": {
     "name": "Segment Warden",
     "faction": "the_wardens",
@@ -88,5 +83,19 @@
     "role": "freighter_pilot",
     "personality": "Ferries parts to the dark segments and never quite says what for.",
     "hail_greeting": "Parts run, Segment Four. It's been dark a long time. It's waking up."
+  },
+  "pell": {
+    "name": "Approach Officer Pell",
+    "faction": "harbor_authority",
+    "role": "patrol_officer",
+    "personality": "New to the cutter and keen to be seen doing it right; recites the beacon protocol at you unprompted.",
+    "hail_greeting": "Cutter Tern on the inner approach. First time through Halcyon? Hold your heading for the beacon and let the guidance chevrons walk you in."
+  },
+  "voss": {
+    "name": "Hauler Voss",
+    "faction": "harbor_authority",
+    "role": "freighter_pilot",
+    "personality": "Twenty years on the milk run; now hauling relief crates for carriers stranded by the beacon and quietly furious about the waste.",
+    "hail_greeting": "Relief hauler Vesper, moon to Hub. Half this load is for people who had homes last month. Give me room."
   }
 }

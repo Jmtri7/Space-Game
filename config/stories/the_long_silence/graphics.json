@@ -1640,52 +1640,52 @@
     },
     "authority_civilian_femme": {
       "body": "human_femme",
-      "set": "ck_civilian",
+      "set": "authority_civilian",
       "palette": "authority_dress"
     },
     "authority_civilian_masc": {
       "body": "human_masc",
-      "set": "ck_civilian",
+      "set": "authority_civilian",
       "palette": "authority_dress"
     },
     "authority_official_femme": {
       "body": "human_femme",
-      "set": "civilian_officer",
+      "set": "authority_command",
       "palette": "authority_dress"
     },
     "authority_official_masc": {
       "body": "human_masc",
-      "set": "civilian_officer",
+      "set": "authority_command",
       "palette": "authority_dress"
     },
     "authority_flight_femme": {
       "body": "human_femme",
-      "set": "ck_flight",
+      "set": "authority_flight",
       "palette": "authority_dress"
     },
     "authority_flight_masc": {
       "body": "human_masc",
-      "set": "ck_flight",
+      "set": "authority_flight",
       "palette": "authority_dress"
     },
     "authority_security_femme": {
       "body": "human_femme",
-      "set": "ck_security",
+      "set": "authority_security",
       "palette": "authority_dress"
     },
     "authority_security_masc": {
       "body": "human_masc",
-      "set": "ck_security",
+      "set": "authority_security",
       "palette": "authority_dress"
     },
     "authority_dock_femme": {
       "body": "human_femme",
-      "set": "ck_dockworker",
+      "set": "authority_dock",
       "palette": "authority_dress"
     },
     "authority_dock_masc": {
       "body": "human_masc",
-      "set": "ck_dockworker",
+      "set": "authority_dock",
       "palette": "authority_dress"
     },
     "combine_civilian_femme": {
