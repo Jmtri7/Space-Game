@@ -615,6 +615,12 @@ HUB_INTERIOR = {
     "rooms": HUB_ROOMS,
     "structures": HUB_STRUCTURES,
     "npcs": HUB_NPCS,
+    # one open lit deck on the Space View starfield, ranked Authority floor
+    # panels (see LocationScreen: seamless / space_backdrop / floor_pattern).
+    "seamless": True,
+    "space_backdrop": True,
+    "star_seed": 101,
+    "floor_pattern": {"pattern": "square", "tile": 64, "gap": 2.0},
 }
 
 

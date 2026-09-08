@@ -11,7 +11,7 @@ Warden style (cultures.json): vast smooth Relay-era forms in dark alloy and
 teal light, patched with mismatched salvage and hand-lettered ritual markings.
 """
 import math
-from _slice_kit import S, G, w, r, rect, concourse_plan, BAY_N, BAY_S
+from _slice_kit import S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, station_shell
 
 PFX = "warden"
 
@@ -279,7 +279,8 @@ HZ_NPCS = [
 ]
 HZ_INTERIOR = {"label": "Hub Zero", "culture": "the_wardens",
                "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
-               "rooms": HZ_ROOMS, "structures": HZ_STRUCTURES, "npcs": HZ_NPCS}
+               "rooms": HZ_ROOMS, "structures": HZ_STRUCTURES, "npcs": HZ_NPCS,
+               **station_shell(PFX, 205)}
 
 
 def core_moon():

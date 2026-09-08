@@ -14,7 +14,7 @@ Combine style (cultures.json): heavy dark iron banded with ember-orange hazard
 light, blast doors, riveted seams, ration-stencil numerals, built for the deep
 mines. Odd counts and ornament are waste - everything is blunt, paired, stencilled.
 """
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
                         article, region, down_chevron, write_wardrobe,
                         numeral_plate_region, shoulder_slab_region, far_shoulder_slab_region,
                         bib_region, hip_seal_region, brassard_region, hood_region)
@@ -460,7 +460,8 @@ HOLD_NPCS = [
 
 HOLD_INTERIOR = {"label": "Combine Hold", "culture": "ninefold_combine",
                  "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
-                 "rooms": HOLD_ROOMS, "structures": HOLD_STRUCTURES, "npcs": HOLD_NPCS}
+                 "rooms": HOLD_ROOMS, "structures": HOLD_STRUCTURES, "npcs": HOLD_NPCS,
+                 **station_shell(PFX, 202)}
 
 
 def shaft_moon():

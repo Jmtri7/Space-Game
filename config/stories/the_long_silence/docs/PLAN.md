@@ -229,6 +229,9 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 
 ### 6.x — remaining polish (not blocking Act II; do opportunistically)
 First-pass content is complete and plays end to end; these are quality passes:
+- [x] Station concourses render as one open lit deck on the Space View starfield
+  with a culture-tiled floor — `LocationScreen` `seamless` / `space_backdrop` /
+  `floor_pattern` (`deck_grid.tessellate`), set per-culture by `_slice_kit.station_shell`.
 - [ ] **Playtest the four Act I anchor missions** end to end (`combine_contract`, `the_drift_assembly`, `the_vigil_record`, plus carrier presence) — they are wired + smoke-tested but not played. Watch the dialogue flag chains: `conditional_roots` ordering, the convene / report / filing branches, mission-stage advancement, the abandon/skip fallbacks.
 - [ ] **Wardrobe fitting pass** — every bespoke article (all cultures) is free-drawn in body space with `fits: []`, not fitted to body curves. Give the torso/shoulder pieces real `fits` against `human_{masc,femme}` curves in `config/editor.html` so they follow a reproportioned body.
 - [ ] **Geometry shaping polish** — the authored ship / station / building silhouettes are first-pass rough (generated from the `gen_<system>.py` point lists). A pass each in the vertex editor to tighten them against the `identity` briefs. Combine courier's hazard bands read as one block; Vigil hauler's tail flare; Warden arc stations could use a cleaner inner edge.

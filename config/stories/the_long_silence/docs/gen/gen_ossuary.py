@@ -10,7 +10,7 @@ Vigil style (cultures.json): austere and vertical - long cold halls, name-walls,
 narrow light, unpolished grey stone and violet-white glass, no decoration that
 is not a record. A library that is also a tomb.
 """
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
                         article, region, write_wardrobe, stole_region,
                         pendant_region, hood_region, sash_region, apron_region)
 
@@ -404,7 +404,8 @@ NW_NPCS = [
 ]
 NW_INTERIOR = {"label": "the Name-Wall", "culture": "the_vigil",
                "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
-               "rooms": NW_ROOMS, "structures": NW_STRUCTURES, "npcs": NW_NPCS}
+               "rooms": NW_ROOMS, "structures": NW_STRUCTURES, "npcs": NW_NPCS,
+               **station_shell(PFX, 204)}
 
 
 def grave_moon():

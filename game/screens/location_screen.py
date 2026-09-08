@@ -19,7 +19,7 @@ from game.world.content_gate import passes_content_gate
 from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.starfield import StarField
-from game.graphics.deck_grid import grid_segments as _grid_segments
+from game.graphics.deck_grid import grid_segments as _grid_segments, tessellate as _tessellate
 
 
 # Frames an interior message banner stays lit after a message arrives (see
@@ -176,6 +176,18 @@ def _inset_polygon(poly, inset):
     return out
 
 
+def _clamp_rgb(c):
+    return tuple(max(0, min(255, int(round(v)))) for v in c)
+
+
+def _scale_rgb(c, f):
+    return _clamp_rgb((c[0] * f, c[1] * f, c[2] * f))
+
+
+def _mix_rgb(a, b, t):
+    return _clamp_rgb((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t))
+
+
 def _edge_ticks(poly, spacing, length):
     """Short segments straddling each polygon edge every `spacing` units -
     the geometry behind the "seam_rivets" culture decoration."""
@@ -325,6 +337,13 @@ class LocationScreen(ScreenBase):
         # instead of one flat fill. Locations with no culture keep the old
         # flat-background behavior (movement bounded by the full world rect).
         self.culture_id = self.config.get("culture")
+        # "seamless": true drops everything that visually chops the floor into
+        # separate rooms - the per-room trim outline, the room-name labels, and
+        # the culture's edge-emphasising interior_decoration (edge_veins /
+        # seam_rivets / deck_grid) - so overlapping room polygons read as one
+        # open deck. Pair with "space_backdrop" + a "floor_pattern" for a
+        # concourse that floats, tiled, against the Space View starfield.
+        self.seamless = bool(self.config.get("seamless"))
         # Each room is {"polygon": [(x, y), ...], "label": str or None} in world
         # space (see normalize_room - "rect" and "circle" configs are folded to
         # polygons on the way in). Movement is allowed anywhere in the union of
@@ -357,7 +376,11 @@ class LocationScreen(ScreenBase):
             else:
                 margin = self.config.get("wall_margin", 60)
                 self.rooms = [normalize_room({"rect": [margin, margin, world_width - 2 * margin, world_height - 2 * margin]})]
-            self.decorations = self._build_culture_decorations(culture) + self.decorations
+            if not self.seamless:
+                self.decorations = self._build_culture_decorations(culture) + self.decorations
+        # Tessellated floor tiles (see _build_floor_pattern) - independent of a
+        # culture, driven by the interior's optional "floor_pattern" spec.
+        self._floor_tiles = self._build_floor_pattern()
 
         # Opt-in: render the interior over the space starfield instead of a
         # flat wall fill - a station concourse open to the void, its lit decks
@@ -974,6 +997,37 @@ class LocationScreen(ScreenBase):
                     out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
         return out
 
+    def _build_floor_pattern(self):
+        """Expand the interior's optional "floor_pattern" spec into a cached
+        list of (world-space polygon, rgb) tiles that fill every room. Spec:
+          {"pattern": "hex"|"square"|"triangle"|"rhombus",  # default "hex"
+           "tile": <world units, default ~2x player height>,
+           "gap": <shrink each tile toward its centre, default 2>,
+           "colors": [[r,g,b], ...]}   # optional; else 3 shades off the culture
+        Tiles cycle through the shade list by lattice parity, so the floor
+        reads as laid panels in the culture's own colours."""
+        spec = self.config.get("floor_pattern")
+        if not spec or not self.rooms:
+            return []
+        kind = spec.get("pattern", "hex")
+        size = float(spec.get("tile", constants.PLAYER_H * 2.0))
+        gap = float(spec.get("gap", 2.0))
+        if spec.get("colors"):
+            shades = [_clamp_rgb(c) for c in spec["colors"]]
+        else:
+            base = self.floor_color or tuple(self.bg_color)
+            accent = self.wall_trim_color or _scale_rgb(base, 1.3)
+            shades = [tuple(base), _mix_rgb(base, accent, 0.45), _scale_rgb(base, 0.8)]
+        tiles = []
+        for room in self.rooms:
+            for cell in _tessellate(room["polygon"], kind, size):
+                pts = cell["points"]
+                if gap:
+                    pts = _inset_polygon(pts, gap) or pts
+                if len(pts) >= 3:
+                    tiles.append(([(float(x), float(y)) for x, y in pts], shades[cell["shade"] % len(shades)]))
+        return tiles
+
     def draw(self, surface, draw_hud=True):
         """Draw location from config. draw_hud=False skips the top-left
         Controls pane and bottom status pane (e.g. "Press T to talk to
@@ -1009,13 +1063,22 @@ class LocationScreen(ScreenBase):
                 screen_pts = [to_screen(px, py) for px, py in room["polygon"]]
                 if len(screen_pts) >= 3:
                     pygame.draw.polygon(surface, self.floor_color, screen_pts)
-                    if self.wall_trim_color:
+                    if self.wall_trim_color and not self.seamless:
                         pygame.draw.polygon(surface, self.wall_trim_color, screen_pts, max(1, int(2 * scale)))
+
+            # Tessellated floor tiles (interior "floor_pattern") - laid over the
+            # flat floor fill, under the line decorations and everyone. Plain
+            # (non-AA) fills: the tiles abut edge-to-edge, so an AA fringe would
+            # only open hairline seams.
+            for world_pts, color in self._floor_tiles:
+                tile_pts = [to_screen(px, py) for px, py in world_pts]
+                if len(tile_pts) >= 3:
+                    pygame.draw.polygon(surface, color, tile_pts)
 
             # Floor-layer decorations: on top of the floor, under everyone.
             self._draw_decorations(surface, "floor")
 
-            if self.rooms:
+            if self.rooms and not self.seamless:
                 font_room_label = get_font(max(10, int(16 * scale)))
                 for room in self.rooms:
                     if not room["label"]:

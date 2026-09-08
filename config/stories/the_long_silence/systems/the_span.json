@@ -364,7 +364,15 @@
               "Leave"
             ]
           }
-        ]
+        ],
+        "seamless": true,
+        "space_backdrop": true,
+        "star_seed": 205,
+        "floor_pattern": {
+          "pattern": "hex",
+          "tile": 76,
+          "gap": 2.5
+        }
       }
     }
   },

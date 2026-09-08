@@ -47,7 +47,8 @@ from game.ui.ui_theme import (
     fit_text,
 )
 from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
-from game.graphics.deck_grid import clip_segment_convex as _clip_segment_convex, grid_segments as _grid_segments
+from game.graphics.deck_grid import (clip_segment_convex as _clip_segment_convex, grid_segments as _grid_segments,
+                                     clip_polygon_convex as _clip_polygon_convex, tessellate as _tessellate)
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.character import Character
@@ -895,6 +896,44 @@ class TestDeckGridDecoration(unittest.TestCase):
             for x, y in ((ax, ay), (bx, by)):
                 self.assertTrue(point_in_polygon(x, y, wedge),
                                 f"grid endpoint ({x:.1f},{y:.1f}) outside the room")
+
+
+class TestFloorTessellation(unittest.TestCase):
+    """clip_polygon_convex / tessellate - the geometry behind the interior
+    'floor_pattern' tiled floor."""
+
+    SQUARE = [(0, 0), (200, 0), (200, 200), (0, 200)]
+
+    def test_clip_polygon_trims_an_overhanging_tile(self):
+        tile = [(150, 150), (350, 150), (350, 350), (150, 350)]  # pokes out top-right
+        out = _clip_polygon_convex(tile, self.SQUARE)
+        self.assertGreaterEqual(len(out), 3)
+        for x, y in out:
+            self.assertLessEqual(x, 200 + 1e-6)
+            self.assertLessEqual(y, 200 + 1e-6)
+
+    def test_clip_polygon_drops_a_tile_fully_outside(self):
+        tile = [(300, 300), (400, 300), (400, 400), (300, 400)]
+        self.assertLess(len(_clip_polygon_convex(tile, self.SQUARE)), 3)
+
+    def test_every_tile_kind_fills_the_room_and_stays_inside(self):
+        for kind in ("square", "hex", "triangle", "rhombus"):
+            tiles = _tessellate(self.SQUARE, kind, 40)
+            self.assertGreater(len(tiles), 8, kind)
+            area = 0.0
+            for t in tiles:
+                pts = t["points"]
+                self.assertIn(t["shade"], (0, 1, 2))
+                for x, y in pts:
+                    self.assertTrue(-0.5 <= x <= 200.5 and -0.5 <= y <= 200.5,
+                                    f"{kind} tile vertex ({x:.1f},{y:.1f}) outside the room")
+                # shoelace
+                a = sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1]
+                        for i in range(len(pts)))
+                area += abs(a) / 2
+            # tiles tile the room: total area is close to the room's 40000
+            self.assertGreater(area, 40000 * 0.9, kind)
+            self.assertLess(area, 40000 * 1.02, kind)
 
 
 class TestIndoorPathfinder(unittest.TestCase):

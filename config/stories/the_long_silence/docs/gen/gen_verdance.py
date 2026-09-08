@@ -11,7 +11,7 @@ trellised grow-light, growing things worked into the structure, pale
 timber-and-canvas over a green cast. Nothing load-bearing that could be woven.
 """
 import math
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
                         article, region, write_wardrobe, sash_region,
                         apron_region, brassard_region)
 
@@ -413,7 +413,8 @@ HC_NPCS = [
 ]
 HC_INTERIOR = {"label": "Highcanopy", "culture": "the_drift",
                "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
-               "rooms": HC_ROOMS, "structures": HC_STRUCTURES, "npcs": HC_NPCS}
+               "rooms": HC_ROOMS, "structures": HC_STRUCTURES, "npcs": HC_NPCS,
+               **station_shell(PFX, 203)}
 
 
 def undergarden_moon():

@@ -902,7 +902,16 @@ each room by `_clip_segment_convex`) stamps a pack onto every room
 automatically. An interior config with `"space_backdrop": true` fills with the
 Space View's black + a `StarField` (own `star_seed` / `star_density`) instead of
 the flat wall colour, so the lit floor polygons read as decks open to the void
-(the concourse in `graphics_pipeline_test`). `structures` that name a
+(the concourse in `graphics_pipeline_test`). `"seamless": true` drops the
+per-room trim outline, the room-name labels, and the culture's edge-emphasising
+`interior_decoration` — so an interior of overlapping room polygons reads as one
+open deck rather than a set of boxes. `"floor_pattern": {"pattern": "hex" |
+"square" | "triangle" | "rhombus", "tile": <world units>, "gap": <inset>,
+"colors": [[r,g,b], …]}` fills every room with a repeating tile clipped to the
+room polygon (`deck_grid.tessellate` / `clip_polygon_convex`); with no explicit
+`colors` it cycles three shades derived from the culture's `floor_color` /
+`wall_trim_color`. `the_long_silence`'s station concourses set all three (see
+`config/stories/the_long_silence/docs/gen/_slice_kit.py` `station_shell`). `structures` that name a
 `building_type` are solid: anything with a `footprint` block (spires, halls,
 and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
 `*_seat_pod`, `*_crate`, `*_barrel`) contributes a ground-level collision box
