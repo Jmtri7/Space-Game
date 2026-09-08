@@ -146,11 +146,12 @@ routines + hail dialogue, 1 anchor mission. Whole-story totals: ~6–7 cultures,
 30–45 pilots, ~200 asset defs — dominated by buildings and outfits, most of
 which are article/palette reuse rather than new shapes.
 
-### 6.0 — Pipeline foundation (once, no culture content)
-- [ ] Prune the borrowed `graphics_pipeline_test` set down to what this story keeps (bodies, faces, `rig_walk`, generic articles, shared furniture/decoration/collision, `draw_order`, `materials`, `palettes`)
-- [ ] Base ship *stat* blocks (8–10 gameplay-distinct hulls) in `ship_types.json` — currently just the borrowed `courier`
-- [ ] Base commodity + ship-outfit set (Phase 3 combat gear folds in here) — currently the borrowed `default` files
-- [ ] Own the `graphics.json` catalogue (station/ship/moon/outfit entries) instead of the verbatim borrow
+### 6.0 — Pipeline foundation (once, no culture content)  ~half done
+- [x] Base ship *stat* blocks — 8 gameplay-distinct hulls in `ship_types.json` (courier / shuttle / hauler / freighter / interceptor / gunship / liner / miner), each with `max_health`, slots, cost. Bands per ARCHITECTURE.md.
+- [x] `graphics.json` `ships` entries for all 8 (the 7 new ones reuse the `courier` design size-varied — **placeholder hulls until 6.1–6.6**)
+- [x] `commodities.json` — 9 thematic goods (ore / alloy / grain / water_credits / relief_supplies / salvage / archive_copies / hub_parts / contraband); per-system quartermaster stock + a ship dealer at Halcyon (5 civilian) / Kiln (4 heavy) / Verdance (3 passenger). `story.json` `0.6.0` → `0.7.0`.
+- [ ] Own `ship_outfits.json` (still the borrowed `default` 8: 4 weapons + afterburner / ion_thruster / cargo_expansion / reinforced_hull — a decent base; add a shield + scanner later)
+- [ ] Prune / own the borrowed `graphics_pipeline_test` set (bodies, faces, `rig_walk`, generic articles, furniture/decoration/collision, `draw_order`, `materials`, `palettes`, `graphics.json` shell) — do alongside the first real culture slice
 
 ### 6.1 — Halcyon / Harbor Authority
 - [ ] Real station + moon art; Hub Control floor plan; ~4 ships, ~8 buildings, ~8 outfits

@@ -1,19 +1,117 @@
 {
+  "_comment": "Phase 6.0 foundation roster - stats + slots + hull only. Every entry still renders with the borrowed 'courier' design (size-varied) until per-culture hulls land in 6.1-6.6; see graphics.json. Bands from docs/ARCHITECTURE.md.",
+
   "courier": {
     "name": "Courier",
-    "description": "A blunt-nosed civilian courier - stubby delta hull, raised canopy, two outboard engine pods.",
-    "max_thrust": 0.14,
-    "max_velocity": 2.4,
-    "rotation_speed": 3.5,
-    "size": 11,
-    "color": [154, 164, 173],
-    "shape": "triangle",
-    "cost": 6000,
-    "cargo_capacity": 18,
+    "description": "A blunt-nosed civilian courier - fast enough, carries little, cheap to keep. What most new pilots start in.",
+    "max_thrust": 0.16, "max_velocity": 3.6, "rotation_speed": 4.0,
+    "size": 11, "color": [154, 164, 173], "shape": "triangle",
+    "cost": 6000, "cargo_capacity": 18, "max_health": 26,
     "slots": [
       { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.2 },
       { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85 },
       { "id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55 }
+    ]
+  },
+
+  "shuttle": {
+    "name": "Shuttle",
+    "description": "A short-hop passenger and light-freight shuttle - forgiving, slow, unarmed by habit.",
+    "max_thrust": 0.13, "max_velocity": 2.8, "rotation_speed": 3.5,
+    "size": 13, "color": [160, 168, 176], "shape": "triangle",
+    "cost": 4500, "cargo_capacity": 22, "max_health": 30,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.2 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.85 },
+      { "id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55 }
+    ]
+  },
+
+  "hauler": {
+    "name": "Hauler",
+    "description": "A mid-weight cargo hull - the workhorse of the slow lanes. Turns like a moon.",
+    "max_thrust": 0.11, "max_velocity": 2.4, "rotation_speed": 2.2,
+    "size": 20, "color": [150, 150, 158], "shape": "hexagon",
+    "cost": 24000, "cargo_capacity": 55, "max_health": 55,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9 },
+      { "id": "utility_1", "type": "utility", "x": 0.35, "y": 0.55 },
+      { "id": "utility_2", "type": "utility", "x": 0.65, "y": 0.55 }
+    ]
+  },
+
+  "freighter": {
+    "name": "Freighter",
+    "description": "A heavy bulk freighter - vast holds, thick plate, and the agility of a filing cabinet.",
+    "max_thrust": 0.09, "max_velocity": 2.1, "rotation_speed": 1.4,
+    "size": 30, "color": [140, 140, 148], "shape": "hexagon",
+    "cost": 62000, "cargo_capacity": 110, "max_health": 90,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.35, "y": 0.15 },
+      { "id": "weapon_2", "type": "weapon", "x": 0.65, "y": 0.15 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.92 },
+      { "id": "utility_1", "type": "utility", "x": 0.35, "y": 0.55 },
+      { "id": "utility_2", "type": "utility", "x": 0.65, "y": 0.55 }
+    ]
+  },
+
+  "interceptor": {
+    "name": "Interceptor",
+    "description": "A light patrol interceptor - quick, sharp-turning, and made of not very much.",
+    "max_thrust": 0.36, "max_velocity": 5.4, "rotation_speed": 5.0,
+    "size": 12, "color": [170, 176, 184], "shape": "arrow",
+    "cost": 38000, "cargo_capacity": 10, "max_health": 32,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15 },
+      { "id": "weapon_2", "type": "weapon", "x": 0.5, "y": 0.35 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.88 },
+      { "id": "utility_1", "type": "utility", "x": 0.5, "y": 0.6 }
+    ]
+  },
+
+  "gunship": {
+    "name": "Gunship",
+    "description": "A dedicated warship - heavy guns, real armour, and enough thrust to bring them to bear.",
+    "max_thrust": 0.22, "max_velocity": 3.8, "rotation_speed": 3.4,
+    "size": 22, "color": [130, 134, 140], "shape": "arrow",
+    "cost": 95000, "cargo_capacity": 20, "max_health": 120,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.35, "y": 0.15 },
+      { "id": "weapon_2", "type": "weapon", "x": 0.65, "y": 0.15 },
+      { "id": "weapon_3", "type": "weapon", "x": 0.5, "y": 0.35 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9 },
+      { "id": "utility_1", "type": "utility", "x": 0.35, "y": 0.6 },
+      { "id": "utility_2", "type": "utility", "x": 0.65, "y": 0.6 }
+    ]
+  },
+
+  "liner": {
+    "name": "Liner",
+    "description": "A long-haul passenger liner refitted for cargo - big, steady, and comfortable to fly for days.",
+    "max_thrust": 0.12, "max_velocity": 3.0, "rotation_speed": 2.0,
+    "size": 26, "color": [162, 160, 166], "shape": "hexagon",
+    "cost": 48000, "cargo_capacity": 70, "max_health": 70,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9 },
+      { "id": "utility_1", "type": "utility", "x": 0.3, "y": 0.55 },
+      { "id": "utility_2", "type": "utility", "x": 0.5, "y": 0.55 },
+      { "id": "utility_3", "type": "utility", "x": 0.7, "y": 0.55 }
+    ]
+  },
+
+  "miner": {
+    "name": "Prospector",
+    "description": "An asteroid prospector - reinforced nose, ore bins amidships, and a hardpoint that started life as a mining laser.",
+    "max_thrust": 0.13, "max_velocity": 2.5, "rotation_speed": 2.6,
+    "size": 18, "color": [158, 146, 132], "shape": "hexagon",
+    "cost": 21000, "cargo_capacity": 45, "max_health": 60,
+    "slots": [
+      { "id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.12 },
+      { "id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9 },
+      { "id": "utility_1", "type": "utility", "x": 0.4, "y": 0.55 },
+      { "id": "utility_2", "type": "utility", "x": 0.6, "y": 0.55 }
     ]
   }
 }

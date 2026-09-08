@@ -155,7 +155,10 @@
             "greeting": "Grain, fibre, water-credits. Pay what's fair and we'll trade again.",
             "shop": {
               "type": "commodities",
-              "stock": [],
+              "stock": [
+                "grain",
+                "water_credits"
+              ],
               "sell_multiplier": 1.15
             }
           },
@@ -171,6 +174,23 @@
               "I see",
               "Leave"
             ]
+          },
+          {
+            "name": "Ferry-wright Osei",
+            "x": 800,
+            "y": 780,
+            "role": "ship_salesman",
+            "faction": "the_drift",
+            "outfit": "ck_command_masc",
+            "greeting": "We refit liners and passenger hulls, mostly. Roomy. Slow. Kind to fly.",
+            "shop": {
+              "type": "ships",
+              "stock": [
+                "shuttle",
+                "liner",
+                "hauler"
+              ]
+            }
           }
         ]
       }

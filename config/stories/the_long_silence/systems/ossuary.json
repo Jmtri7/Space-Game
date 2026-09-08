@@ -217,7 +217,10 @@
             "greeting": "We trade only what we can spare - archive copies, mostly. Knowledge, if you'll carry it carefully.",
             "shop": {
               "type": "commodities",
-              "stock": [],
+              "stock": [
+                "archive_copies",
+                "relief_supplies"
+              ],
               "sell_multiplier": 1.15
             }
           },

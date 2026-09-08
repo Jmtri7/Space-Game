@@ -1,34 +1,58 @@
 {
+  "_comment": "Phase 6.0. Each system's quartermaster sets its own stock + sell_multiplier in systems/*.json; mined ore sells anywhere. Real per-faction buy/sell spreads are a later pass (BACKLOG).",
+
   "ore": {
     "name": "Raw Ore",
-    "description": "Unrefined metal ore, sold by weight",
-    "base_price": 12,
-    "mass_per_unit": 1,
-    "icon_shape": "crate",
-    "icon_color": [150, 110, 80]
+    "description": "Unrefined metal ore, sold by weight. What a mined asteroid leaves behind.",
+    "base_price": 12, "mass_per_unit": 1,
+    "icon_shape": "crate", "icon_color": [150, 110, 80]
   },
-  "medicine": {
-    "name": "Medicine",
-    "description": "Packaged pharmaceuticals",
-    "base_price": 45,
-    "mass_per_unit": 1,
-    "icon_shape": "vial",
-    "icon_color": [150, 220, 190]
+  "alloy": {
+    "name": "Combine Alloy",
+    "description": "Refined structural alloy from Kiln's deep smelters - rationed, stamped, and never sold cheap.",
+    "base_price": 55, "mass_per_unit": 1,
+    "icon_shape": "crate", "icon_color": [180, 150, 120]
   },
-  "fuel_cells": {
-    "name": "Fuel Cells",
-    "description": "Standard reactor fuel canisters",
-    "base_price": 20,
-    "mass_per_unit": 1,
-    "icon_shape": "crate",
-    "icon_color": [220, 190, 80]
+  "grain": {
+    "name": "Ring Grain",
+    "description": "Bulk staple grain from Verdance's habitat rings.",
+    "base_price": 18, "mass_per_unit": 1,
+    "icon_shape": "crate", "icon_color": [210, 190, 110]
   },
-  "luxury_goods": {
-    "name": "Luxury Goods",
-    "description": "Fine textiles and delicacies from the core worlds",
-    "base_price": 90,
-    "mass_per_unit": 1,
-    "icon_shape": "gem",
-    "icon_color": [230, 150, 220]
+  "water_credits": {
+    "name": "Water Credits",
+    "description": "Transferable claims on Verdance's reclaimed water - light to carry, heavily regulated.",
+    "base_price": 40, "mass_per_unit": 1,
+    "icon_shape": "vial", "icon_color": [130, 200, 220]
+  },
+  "relief_supplies": {
+    "name": "Relief Supplies",
+    "description": "Sealed food, filters, and med-packs for people moving through the half-restored lanes.",
+    "base_price": 35, "mass_per_unit": 1,
+    "icon_shape": "crate", "icon_color": [200, 210, 190]
+  },
+  "salvage": {
+    "name": "Salvage",
+    "description": "Hull cuttings, dead electronics, and Relay-era parts pulled off drifting wrecks. The carriers' bread and butter.",
+    "base_price": 28, "mass_per_unit": 1,
+    "icon_shape": "crate", "icon_color": [120, 130, 140]
+  },
+  "archive_copies": {
+    "name": "Archive Copies",
+    "description": "Sealed record-slates copied from the Vigil's vaults. Carry them level and keep them dry.",
+    "base_price": 70, "mass_per_unit": 1,
+    "icon_shape": "gem", "icon_color": [190, 180, 210]
+  },
+  "hub_parts": {
+    "name": "Hub Parts",
+    "description": "Machined components the Wardens run out to the Span's dark segments. Nobody quite says what for.",
+    "base_price": 85, "mass_per_unit": 1,
+    "icon_shape": "gem", "icon_color": [120, 220, 200]
+  },
+  "contraband": {
+    "name": "Unlabelled Cargo",
+    "description": "Crates with no manifest. Profitable, and a very good way to get a patrol's attention.",
+    "base_price": 130, "mass_per_unit": 1,
+    "icon_shape": "gem", "icon_color": [200, 120, 120]
   }
 }

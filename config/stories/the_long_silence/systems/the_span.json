@@ -139,7 +139,10 @@
             "greeting": "We keep the machinery, not a market. But a carrier who runs parts to the outer segments is always welcome.",
             "shop": {
               "type": "commodities",
-              "stock": [],
+              "stock": [
+                "hub_parts",
+                "salvage"
+              ],
               "sell_multiplier": 1.15
             }
           },

@@ -287,7 +287,11 @@
             "shop": {
               "type": "ships",
               "stock": [
-                "courier"
+                "shuttle",
+                "courier",
+                "hauler",
+                "interceptor",
+                "liner"
               ]
             }
           },
@@ -320,7 +324,10 @@
             "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates.",
             "shop": {
               "type": "commodities",
-              "stock": [],
+              "stock": [
+                "relief_supplies",
+                "salvage"
+              ],
               "sell_multiplier": 1.2
             }
           },

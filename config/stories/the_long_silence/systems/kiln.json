@@ -155,7 +155,10 @@
             "greeting": "Ore and rationed goods. Combine rates, non-negotiable - that's the point of them.",
             "shop": {
               "type": "commodities",
-              "stock": [],
+              "stock": [
+                "alloy",
+                "ore"
+              ],
               "sell_multiplier": 1.15
             }
           },
@@ -171,6 +174,24 @@
               "I see",
               "Leave"
             ]
+          },
+          {
+            "name": "Deck-chief Marn",
+            "x": 800,
+            "y": 780,
+            "role": "ship_salesman",
+            "faction": "ninefold_combine",
+            "outfit": "ck_command_femme",
+            "greeting": "Combine hulls. Built heavy, priced by the contract. What's your trade need?",
+            "shop": {
+              "type": "ships",
+              "stock": [
+                "hauler",
+                "miner",
+                "gunship",
+                "freighter"
+              ]
+            }
           }
         ]
       }

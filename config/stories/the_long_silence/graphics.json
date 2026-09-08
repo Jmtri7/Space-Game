@@ -61,6 +61,440 @@
         30,
         34
       ]
+    },
+    "shuttle": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 13,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "hauler": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "freighter": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 30,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "interceptor": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 12,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "gunship": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 22,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "liner": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 26,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
+    },
+    "miner": {
+      "design": "ships/courier",
+      "culture": "orbital_std",
+      "size": 18,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22,
+      "thrust_color": [
+        255,
+        178,
+        87
+      ],
+      "window_color": [
+        127,
+        216,
+        200
+      ],
+      "outline_color": [
+        28,
+        30,
+        34
+      ]
     }
   },
   "space_stations": {
@@ -379,5 +813,6 @@
       "set": "ck_bounty",
       "palette": "civilian"
     }
-  }
+  },
+  "_comment": "Phase 6.0: every ship except courier reuses the courier design at a different size - placeholder until per-culture hulls in 6.1-6.6."
 }
