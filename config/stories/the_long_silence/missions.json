@@ -122,5 +122,166 @@
         }
       }
     ]
+  },
+  "combine_contract": {
+    "title": "A Combine Carriage",
+    "on_end_flags": [
+      "combine_contract_done",
+      "beacon_verdance_lit"
+    ],
+    "on_start_rep": {
+      "ninefold_combine": 2
+    },
+    "on_end_rep": {
+      "ninefold_combine": 4
+    },
+    "stages": [
+      {
+        "text": "Have your mark witnessed - Warden of Contract Raik, the Contract Hall (north-west).",
+        "complete_flag": "combine_witnessed",
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "The Warden of Contract witnesses first. Contract Hall, north-west corner of the concourse. Put your hand on the seal-stone."
+        }
+      },
+      {
+        "text": "Collect the sealed manifest from Tallykeeper Vess, the Assay Office (north).",
+        "complete_flag": "combine_manifest_taken",
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "Vess has the manifest in the Assay Office. Sealed. You carry it - you do not open it."
+        }
+      },
+      {
+        "text": "Fly to the moon Shaft VII and land at its headworks.",
+        "complete_flag": "landed_on_landing_site",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "Shaft VII is the near moon. Fly clear of the Hold, match the moon, and set down at the headworks pad."
+        }
+      },
+      {
+        "text": "Deliver the manifest to Deepmaster Orin and take his tally.",
+        "complete_flag": "combine_tally_returned",
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "Deepmaster Orin runs the headworks. Hand him the manifest - sealed - and bring back his tally."
+        }
+      },
+      {
+        "text": "Carry the tally back to Tallykeeper Vess at the Combine Hold.",
+        "complete_flag": "combine_tally_filed",
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "Back to Vess with Orin's tally. Then the carriage is closed and the Factor will key Verdance's lane."
+        }
+      },
+      {
+        "text": "Report to Factor Tol.",
+        "complete_flag": "combine_contract_reported",
+        "one_way_message": {
+          "sender": "Factor Tol",
+          "text": "Come and tell me it's done. The Combine keys Verdance's beacon for a partner who kept terms - and remembers you now know our door."
+        }
+      }
+    ]
+  },
+  "the_drift_assembly": {
+    "title": "A Rolling Assembly",
+    "escort_flag": "assembly_walking",
+    "on_end_flags": [
+      "assembly_done",
+      "beacon_ossuary_lit",
+      "act_pressure"
+    ],
+    "on_start_rep": {
+      "the_drift": 3
+    },
+    "on_end_rep": {
+      "the_drift": 6
+    },
+    "stages": [
+      {
+        "text": "Hear Ferry-wright Osei's view - the Ferry Slip (north-east).",
+        "complete_flag": "assembly_view_osei",
+        "one_way_message": {
+          "sender": "Sela of Highcanopy",
+          "text": "Osei's at the Ferry Slip, north-east end of the Walk. He'll have an opinion - he always does."
+        }
+      },
+      {
+        "text": "Hear Water-keeper Tam's view - the Water Office (south-west).",
+        "complete_flag": "assembly_view_tam",
+        "one_way_message": {
+          "sender": "Sela of Highcanopy",
+          "text": "Tam keeps the water accounts, south-west. Hers is the cautious voice. Hear it properly."
+        }
+      },
+      {
+        "text": "Hear Old Bevin's view - Canopy Rest (south-east).",
+        "complete_flag": "assembly_view_bevin",
+        "one_way_message": {
+          "sender": "Sela of Highcanopy",
+          "text": "Bevin's down in Canopy Rest with a cup. Sixty years of watching us dither - he's earned a hearing."
+        }
+      },
+      {
+        "text": "Bring the three views back to Sela and let the assembly sit.",
+        "complete_flag": "assembly_convened",
+        "one_way_message": {
+          "sender": "Sela of Highcanopy",
+          "text": "You've heard all three? Come back to the assembly floor. With every view in the room in person, we have to choose - and we will."
+        }
+      }
+    ]
+  },
+  "the_vigil_record": {
+    "title": "Reading the Name-Wall",
+    "on_end_flags": [
+      "vigil_record_done",
+      "beacon_the_span_lit",
+      "act_span"
+    ],
+    "on_start_rep": {
+      "the_vigil": 2
+    },
+    "on_end_rep": {
+      "the_vigil": 6
+    },
+    "stages": [
+      {
+        "text": "Read the First Wall with Warden of Names Vane - the Long Vault (north-west).",
+        "complete_flag": "vigil_read_first",
+        "one_way_message": {
+          "sender": "Keeper Aramis",
+          "text": "Warden of Names Vane keeps the First Wall in the Long Vault. The first year's names, and the order that started the Silence. Read it."
+        }
+      },
+      {
+        "text": "Read the middle years with Brother Sol - the Reading Cells (north).",
+        "complete_flag": "vigil_read_second",
+        "one_way_message": {
+          "sender": "Keeper Aramis",
+          "text": "Brother Sol has the middle-year accounts in the Reading Cells. Three explanations, none certain. Read all three - the uncertainty is the honest part."
+        }
+      },
+      {
+        "text": "Enter the Vault of the First Decade with Sister Edda (north-east).",
+        "complete_flag": "vigil_read_vault",
+        "one_way_message": {
+          "sender": "Keeper Aramis",
+          "text": "Sister Edda holds the inner Vault. What the First Decade sent toward the core, and why the last choice was left to whoever reached it. To you."
+        }
+      },
+      {
+        "text": "Return to Keeper Aramis.",
+        "complete_flag": "vigil_record_reported",
+        "one_way_message": {
+          "sender": "Keeper Aramis",
+          "text": "Come back to me. I will light the lane to the Span, and you will carry the wall's account into whatever is waiting there."
+        }
+      }
+    ]
   }
 }

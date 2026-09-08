@@ -86,7 +86,7 @@
     "description": "Ninefold Combine hall - the public / trading hall - the culture's front room, seen head-on. See buildings/combine_hall.json.",
     "design": "buildings/combine_hall",
     "footprint": {
-      "width": 112,
+      "width": 120,
       "depth": 30.0
     }
   },
@@ -96,8 +96,8 @@
     "description": "Ninefold Combine housing - a residential block - where the culture's people actually live. See buildings/combine_housing.json.",
     "design": "buildings/combine_housing",
     "footprint": {
-      "width": 96,
-      "depth": 28.0
+      "width": 68,
+      "depth": 22.0
     }
   },
   "combine_spire": {
@@ -106,8 +106,8 @@
     "description": "Ninefold Combine spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/combine_spire.json.",
     "design": "buildings/combine_spire",
     "footprint": {
-      "width": 70,
-      "depth": 24.0
+      "width": 56,
+      "depth": 20.0
     }
   },
   "drift_hall": {
@@ -117,7 +117,7 @@
     "design": "buildings/drift_hall",
     "footprint": {
       "width": 112,
-      "depth": 30.0
+      "depth": 34.0
     }
   },
   "drift_housing": {
@@ -126,8 +126,8 @@
     "description": "The Drift housing - a residential block - where the culture's people actually live. See buildings/drift_housing.json.",
     "design": "buildings/drift_housing",
     "footprint": {
-      "width": 96,
-      "depth": 28.0
+      "width": 76,
+      "depth": 26.0
     }
   },
   "drift_spire": {
@@ -136,8 +136,8 @@
     "description": "The Drift spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/drift_spire.json.",
     "design": "buildings/drift_spire",
     "footprint": {
-      "width": 70,
-      "depth": 24.0
+      "width": 56,
+      "depth": 20.0
     }
   },
   "vigil_hall": {
@@ -146,8 +146,8 @@
     "description": "The Vigil hall - the public / trading hall - the culture's front room, seen head-on. See buildings/vigil_hall.json.",
     "design": "buildings/vigil_hall",
     "footprint": {
-      "width": 112,
-      "depth": 30.0
+      "width": 68,
+      "depth": 22.0
     }
   },
   "vigil_housing": {
@@ -156,8 +156,8 @@
     "description": "The Vigil housing - a residential block - where the culture's people actually live. See buildings/vigil_housing.json.",
     "design": "buildings/vigil_housing",
     "footprint": {
-      "width": 96,
-      "depth": 28.0
+      "width": 44,
+      "depth": 16.0
     }
   },
   "vigil_spire": {
@@ -166,8 +166,8 @@
     "description": "The Vigil spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/vigil_spire.json.",
     "design": "buildings/vigil_spire",
     "footprint": {
-      "width": 70,
-      "depth": 24.0
+      "width": 30,
+      "depth": 14.0
     }
   },
   "warden_hall": {
@@ -176,8 +176,8 @@
     "description": "The Wardens hall - the public / trading hall - the culture's front room, seen head-on. See buildings/warden_hall.json.",
     "design": "buildings/warden_hall",
     "footprint": {
-      "width": 112,
-      "depth": 30.0
+      "width": 124,
+      "depth": 36.0
     }
   },
   "warden_housing": {
@@ -186,8 +186,8 @@
     "description": "The Wardens housing - a residential block - where the culture's people actually live. See buildings/warden_housing.json.",
     "design": "buildings/warden_housing",
     "footprint": {
-      "width": 96,
-      "depth": 28.0
+      "width": 80,
+      "depth": 26.0
     }
   },
   "warden_spire": {
@@ -196,8 +196,8 @@
     "description": "The Wardens spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/warden_spire.json.",
     "design": "buildings/warden_spire",
     "footprint": {
-      "width": 70,
-      "depth": 24.0
+      "width": 48,
+      "depth": 18.0
     }
   },
   "carrier_hall": {
@@ -207,7 +207,7 @@
     "design": "buildings/carrier_hall",
     "footprint": {
       "width": 112,
-      "depth": 30.0
+      "depth": 40.0
     }
   },
   "carrier_housing": {
@@ -216,7 +216,7 @@
     "description": "The free carriers housing - a residential block - where the culture's people actually live. See buildings/carrier_housing.json.",
     "design": "buildings/carrier_housing",
     "footprint": {
-      "width": 96,
+      "width": 72,
       "depth": 28.0
     }
   },
@@ -226,8 +226,8 @@
     "description": "The free carriers spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/carrier_spire.json.",
     "design": "buildings/carrier_spire",
     "footprint": {
-      "width": 70,
-      "depth": 24.0
+      "width": 44,
+      "depth": 18.0
     }
   }
 }

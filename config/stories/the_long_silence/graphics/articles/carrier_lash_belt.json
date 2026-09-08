@@ -1,0 +1,158 @@
+{
+  "identity": "Free carrier lash belt - a heavy webbing belt hung with a coil of cargo strap, a shackle, and a folding knife. A carrier's whole toolkit is on it.",
+  "tier": "person",
+  "palette": "carrier_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "belt",
+      "note": "lash belt",
+      "color": "leather",
+      "shade": "deep",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.7,
+              -19.8
+            ],
+            [
+              2.7,
+              -19.7
+            ],
+            [
+              2.6,
+              -18.9
+            ],
+            [
+              -2.6,
+              -19.0
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "belt shackle",
+              "points": [
+                [
+                  -0.5,
+                  -19.9
+                ],
+                [
+                  0.4,
+                  -19.9
+                ],
+                [
+                  0.4,
+                  -19.0
+                ],
+                [
+                  -0.5,
+                  -19.0
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "note": "strap coil",
+              "points": [
+                [
+                  1.6,
+                  -20.2
+                ],
+                [
+                  2.8,
+                  -20.0
+                ],
+                [
+                  2.9,
+                  -18.4
+                ],
+                [
+                  1.7,
+                  -18.6
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -1.8,
+              -20.5
+            ],
+            [
+              1.9,
+              -20.4
+            ],
+            [
+              2.1,
+              -19.6
+            ],
+            [
+              -2.0,
+              -19.7
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "belt shackle",
+              "points": [
+                [
+                  -0.4,
+                  -20.4
+                ],
+                [
+                  0.4,
+                  -20.4
+                ],
+                [
+                  0.4,
+                  -19.6
+                ],
+                [
+                  -0.4,
+                  -19.6
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "note": "strap coil",
+              "points": [
+                [
+                  1.3,
+                  -20.6
+                ],
+                [
+                  2.4,
+                  -20.4
+                ],
+                [
+                  2.5,
+                  -19.0
+                ],
+                [
+                  1.4,
+                  -19.2
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

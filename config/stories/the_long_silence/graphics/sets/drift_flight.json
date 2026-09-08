@@ -1,0 +1,13 @@
+{
+  "identity": "Drift skiff-pilot kit - light canvas suit, a soft flight helmet, the leaf mantle, a woven collar.",
+  "articles": [
+    "tank_top",
+    "jacket_tan",
+    "pants_tan",
+    "shoes",
+    "helmet_flight",
+    "drift_leaf_mantle",
+    "drift_woven_collar"
+  ],
+  "palette": "drift_dress"
+}

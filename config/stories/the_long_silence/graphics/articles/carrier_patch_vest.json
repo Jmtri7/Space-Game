@@ -1,0 +1,182 @@
+{
+  "identity": "Free carrier patch vest - a canvas work vest covered in mismatched patches, each from a different hull the wearer has crewed. Worn shut against the cargo bay chill.",
+  "tier": "person",
+  "palette": "carrier_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "vest",
+      "note": "patch vest",
+      "color": "cloth",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -3.4,
+              -25.2
+            ],
+            [
+              3.4,
+              -25.2
+            ],
+            [
+              3.0,
+              -19.2
+            ],
+            [
+              -3.0,
+              -19.2
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#96a5b9",
+              "shade": "matte",
+              "note": "vest patch a",
+              "points": [
+                [
+                  -2.6,
+                  -24.0
+                ],
+                [
+                  -1.0,
+                  -24.0
+                ],
+                [
+                  -1.0,
+                  -22.2
+                ],
+                [
+                  -2.6,
+                  -22.2
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#7a986f",
+              "shade": "matte",
+              "note": "vest patch b",
+              "points": [
+                [
+                  0.8,
+                  -23.2
+                ],
+                [
+                  2.6,
+                  -23.2
+                ],
+                [
+                  2.6,
+                  -21.0
+                ],
+                [
+                  0.8,
+                  -21.0
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#a28e5c",
+              "shade": "matte",
+              "note": "vest patch c",
+              "points": [
+                [
+                  -1.6,
+                  -21.4
+                ],
+                [
+                  0.4,
+                  -21.4
+                ],
+                [
+                  0.4,
+                  -19.6
+                ],
+                [
+                  -1.6,
+                  -19.6
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -3.0,
+              -25.1
+            ],
+            [
+              3.0,
+              -25.1
+            ],
+            [
+              2.6,
+              -19.6
+            ],
+            [
+              -2.6,
+              -19.6
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "#706660",
+              "shade": "matte",
+              "note": "vest patch a",
+              "points": [
+                [
+                  -2.2,
+                  -24.0
+                ],
+                [
+                  -0.8,
+                  -24.0
+                ],
+                [
+                  -0.8,
+                  -22.4
+                ],
+                [
+                  -2.2,
+                  -22.4
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "#5c5c6a",
+              "shade": "matte",
+              "note": "vest patch b",
+              "points": [
+                [
+                  0.6,
+                  -23.0
+                ],
+                [
+                  2.2,
+                  -23.0
+                ],
+                [
+                  2.2,
+                  -21.2
+                ],
+                [
+                  0.6,
+                  -21.2
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

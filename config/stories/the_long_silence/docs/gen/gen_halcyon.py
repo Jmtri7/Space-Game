@@ -1,7 +1,7 @@
 """Phase 6.1 - the Halcyon slice, end to end. The worked example / template
 for 6.2-6.6.
 
-Produces, self-contained (run after gen_systems + gen_assets + retag):
+Produces, self-contained (run after gen_assets; see docs/gen/README.md):
   - graphics/ships/authority_{courier,hauler,patrol}.json   first-pass Authority hulls
   - graphics/stations/authority_station.json                 Authority orbital dock
   - graphics/buildings/authority_{hall,housing,spire}.json   Authority elevation buildings
@@ -779,7 +779,7 @@ w(f"{S}/missions.json", missions)
 # 7. story.json wiring
 # ======================================================================
 story = r(f"{S}/story.json")
-story["version"] = "0.9.1"
+story["version"] = "0.10.0"
 # NOT starting_mission - that always defers to the first launch when the
 # player starts docked (see docs/ARCHITECTURE.md), which would skip every
 # station stage. The induction is started by Induction Officer Sella's
@@ -797,4 +797,4 @@ w(f"{S}/story.json", story)
 print(f"Halcyon slice written: 3 ships, 1 station, 3 buildings, dress palette, "
       f"{len(ARTICLES)} bespoke articles + {len(SETS)} culture sets, Hub Control ("
       f"{len(HUB_ROOMS)} rooms / {len(HUB_NPCS)} NPCs), induction mission "
-      f"({len(INDUCTION['stages'])} stages), {len(pilots)} pilots. story 0.9.1.")
+      f"({len(INDUCTION['stages'])} stages), {len(pilots)} pilots. story 0.10.0.")

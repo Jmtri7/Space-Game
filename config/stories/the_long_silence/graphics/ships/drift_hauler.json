@@ -1,152 +1,504 @@
 {
-  "identity": "the Drift Hauler - a mid-weight cargo hull, slow to turn. STYLE: soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Drift Barge - a fat bulbous freighter: a rounded body swelling to three cargo blisters down each flank, a soft domed cab forward, a broad low engine ring aft. Grow-light runs the seams. Slow, roomy, kind to fly. Reads as a bunch of round pods with a green glow.",
   "tier": "ship_near",
   "palette": "drift",
   "size": 20,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
     {
       "group": "hull",
       "color": "hull",
-      "shade": "deep",
-      "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "shade": "soft",
+      "flatten_px": 60,
+      "note": "bulbous body",
       "points": [
         [
           0.0,
-          -1.15
+          -1.04
         ],
         [
-          0.32,
-          -0.55
+          0.157,
+          -0.977
         ],
         [
-          0.42,
-          0.1
+          0.296,
+          -0.797
         ],
         [
-          0.95,
-          0.75
+          0.398,
+          -0.52
         ],
         [
-          0.9,
-          1.05
+          0.453,
+          -0.181
         ],
         [
-          0.42,
-          0.95
+          0.453,
+          0.181
         ],
         [
-          0.3,
-          1.15
+          0.398,
+          0.52
         ],
         [
-          -0.3,
-          1.15
+          0.296,
+          0.797
         ],
         [
-          -0.42,
-          0.95
+          0.157,
+          0.977
         ],
         [
-          -0.9,
-          1.05
+          0.0,
+          1.04
         ],
         [
-          -0.95,
-          0.75
+          -0.157,
+          0.977
         ],
         [
-          -0.42,
-          0.1
+          -0.296,
+          0.797
         ],
         [
-          -0.32,
-          -0.55
+          -0.398,
+          0.52
+        ],
+        [
+          -0.453,
+          0.181
+        ],
+        [
+          -0.453,
+          -0.181
+        ],
+        [
+          -0.398,
+          -0.52
+        ],
+        [
+          -0.296,
+          -0.797
+        ],
+        [
+          -0.157,
+          -0.977
         ]
       ]
     },
     {
-      "group": "canopy",
+      "group": "cab",
       "color": "glass",
       "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
+      "flatten_px": 55,
+      "note": "domed cab",
       "points": [
         [
           0.0,
-          -0.72
+          -0.9
         ],
         [
-          0.16,
-          -0.42
+          0.11,
+          -0.86
         ],
         [
-          0.14,
-          0.05
+          0.191,
+          -0.75
+        ],
+        [
+          0.22,
+          -0.6
+        ],
+        [
+          0.191,
+          -0.45
+        ],
+        [
+          0.11,
+          -0.34
         ],
         [
           0.0,
-          0.2
+          -0.3
         ],
         [
-          -0.14,
-          0.05
+          -0.11,
+          -0.34
         ],
         [
-          -0.16,
-          -0.42
+          -0.191,
+          -0.45
+        ],
+        [
+          -0.22,
+          -0.6
+        ],
+        [
+          -0.191,
+          -0.75
+        ],
+        [
+          -0.11,
+          -0.86
         ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "blister_r0",
       "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "right cargo blister 0",
       "points": [
         [
-          0.42,
-          0.35
+          0.44,
+          -0.5
         ],
         [
-          0.62,
-          0.35
+          0.534,
+          -0.462
         ],
         [
-          0.66,
-          1.0
+          0.592,
+          -0.362
         ],
         [
-          0.46,
-          1.0
+          0.592,
+          -0.238
+        ],
+        [
+          0.534,
+          -0.138
+        ],
+        [
+          0.44,
+          -0.1
+        ],
+        [
+          0.346,
+          -0.138
+        ],
+        [
+          0.288,
+          -0.238
+        ],
+        [
+          0.288,
+          -0.362
+        ],
+        [
+          0.346,
+          -0.462
         ]
       ]
     },
     {
-      "group": "engine_l",
+      "group": "blister_r1",
       "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "right cargo blister 1",
       "points": [
         [
-          -0.42,
-          0.35
+          0.44,
+          -0.1
         ],
         [
-          -0.62,
-          0.35
+          0.534,
+          -0.062
         ],
         [
-          -0.66,
-          1.0
+          0.592,
+          0.038
         ],
         [
-          -0.46,
-          1.0
+          0.592,
+          0.162
+        ],
+        [
+          0.534,
+          0.262
+        ],
+        [
+          0.44,
+          0.3
+        ],
+        [
+          0.346,
+          0.262
+        ],
+        [
+          0.288,
+          0.162
+        ],
+        [
+          0.288,
+          0.038
+        ],
+        [
+          0.346,
+          -0.062
+        ]
+      ]
+    },
+    {
+      "group": "blister_r2",
+      "color": "engine",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "right cargo blister 2",
+      "points": [
+        [
+          0.44,
+          0.3
+        ],
+        [
+          0.534,
+          0.338
+        ],
+        [
+          0.592,
+          0.438
+        ],
+        [
+          0.592,
+          0.562
+        ],
+        [
+          0.534,
+          0.662
+        ],
+        [
+          0.44,
+          0.7
+        ],
+        [
+          0.346,
+          0.662
+        ],
+        [
+          0.288,
+          0.562
+        ],
+        [
+          0.288,
+          0.438
+        ],
+        [
+          0.346,
+          0.338
+        ]
+      ]
+    },
+    {
+      "group": "blister_l0",
+      "color": "engine",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "left cargo blister 0",
+      "points": [
+        [
+          -0.44,
+          -0.5
+        ],
+        [
+          -0.346,
+          -0.462
+        ],
+        [
+          -0.288,
+          -0.362
+        ],
+        [
+          -0.288,
+          -0.238
+        ],
+        [
+          -0.346,
+          -0.138
+        ],
+        [
+          -0.44,
+          -0.1
+        ],
+        [
+          -0.534,
+          -0.138
+        ],
+        [
+          -0.592,
+          -0.238
+        ],
+        [
+          -0.592,
+          -0.362
+        ],
+        [
+          -0.534,
+          -0.462
+        ]
+      ]
+    },
+    {
+      "group": "blister_l1",
+      "color": "engine",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "left cargo blister 1",
+      "points": [
+        [
+          -0.44,
+          -0.1
+        ],
+        [
+          -0.346,
+          -0.062
+        ],
+        [
+          -0.288,
+          0.038
+        ],
+        [
+          -0.288,
+          0.162
+        ],
+        [
+          -0.346,
+          0.262
+        ],
+        [
+          -0.44,
+          0.3
+        ],
+        [
+          -0.534,
+          0.262
+        ],
+        [
+          -0.592,
+          0.162
+        ],
+        [
+          -0.592,
+          0.038
+        ],
+        [
+          -0.534,
+          -0.062
+        ]
+      ]
+    },
+    {
+      "group": "blister_l2",
+      "color": "engine",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "left cargo blister 2",
+      "points": [
+        [
+          -0.44,
+          0.3
+        ],
+        [
+          -0.346,
+          0.338
+        ],
+        [
+          -0.288,
+          0.438
+        ],
+        [
+          -0.288,
+          0.562
+        ],
+        [
+          -0.346,
+          0.662
+        ],
+        [
+          -0.44,
+          0.7
+        ],
+        [
+          -0.534,
+          0.662
+        ],
+        [
+          -0.592,
+          0.562
+        ],
+        [
+          -0.592,
+          0.438
+        ],
+        [
+          -0.534,
+          0.338
+        ]
+      ]
+    },
+    {
+      "group": "engine",
+      "color": "engine",
+      "shade": "soft",
+      "flatten_px": 50,
+      "note": "engine ring",
+      "points": [
+        [
+          0.0,
+          0.8
+        ],
+        [
+          0.174,
+          0.82
+        ],
+        [
+          0.313,
+          0.875
+        ],
+        [
+          0.39,
+          0.955
+        ],
+        [
+          0.39,
+          1.045
+        ],
+        [
+          0.313,
+          1.125
+        ],
+        [
+          0.174,
+          1.18
+        ],
+        [
+          0.0,
+          1.2
+        ],
+        [
+          -0.174,
+          1.18
+        ],
+        [
+          -0.313,
+          1.125
+        ],
+        [
+          -0.39,
+          1.045
+        ],
+        [
+          -0.39,
+          0.955
+        ],
+        [
+          -0.313,
+          0.875
+        ],
+        [
+          -0.174,
+          0.82
         ]
       ]
     }
@@ -154,119 +506,54 @@
   "details": [
     {
       "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 55,
-      "note": "spine panel line",
-      "points": [
-        [
-          -0.06,
-          -0.5
-        ],
-        [
-          0.06,
-          -0.5
-        ],
-        [
-          0.06,
-          1.05
-        ],
-        [
-          -0.06,
-          1.05
-        ]
-      ]
-    },
-    {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
-      "points": [
-        [
-          0.34,
-          0.15
-        ],
-        [
-          0.42,
-          0.15
-        ],
-        [
-          0.9,
-          0.78
-        ],
-        [
-          0.82,
-          0.82
-        ]
-      ]
-    },
-    {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
-      "points": [
-        [
-          -0.34,
-          0.15
-        ],
-        [
-          -0.42,
-          0.15
-        ],
-        [
-          -0.9,
-          0.78
-        ],
-        [
-          -0.82,
-          0.82
-        ]
-      ]
-    },
-    {
-      "group": "hull",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 90,
-      "note": "forward nav light, at the nose tip",
-      "circle": [
-        0.0,
-        -1.02,
-        0.045
+      "min_px": 50,
+      "note": "seam grow-light",
+      "points": [
+        [
+          -0.04,
+          -0.5
+        ],
+        [
+          0.04,
+          -0.5
+        ],
+        [
+          0.04,
+          0.7
+        ],
+        [
+          -0.04,
+          0.7
+        ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "engine",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
-      "min_px": 12,
+      "min_px": 14,
       "note": "right thruster",
       "circle": [
-        0.56,
-        1.02,
-        0.11
+        0.2,
+        1.08,
+        0.13
       ]
     },
     {
-      "group": "engine_l",
+      "group": "engine",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
-      "min_px": 12,
+      "min_px": 14,
       "note": "left thruster",
       "circle": [
-        -0.56,
-        1.02,
-        0.11
+        -0.2,
+        1.08,
+        0.13
       ]
     }
   ]

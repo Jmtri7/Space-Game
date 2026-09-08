@@ -1,6 +1,6 @@
 {
   "name": "Ossuary",
-  "description": "A dead system - one habitable moon, abandoned stations, and the Vigil: a few hundred who stayed to keep the graves and the archives.",
+  "description": "A dead system - one habitable moon, abandoned stations, and the Vigil: a monastic order of a few hundred who stayed to keep the graves and the archives of everyone the first decades of the Silence killed. They hold the truest history in the region.",
   "star_map_position": {
     "x": 40,
     "y": 260
@@ -11,16 +11,16 @@
     "x": 0.5,
     "y": 0.5,
     "name": "Ossuary",
-    "size": 90,
+    "size": 70,
     "color": [
+      206,
       200,
-      200,
-      230
+      226
     ]
   },
   "player_start": {
     "x": 0.4,
-    "y": 0.35
+    "y": 0.36
   },
   "star_seed": 204,
   "asteroid_field": {
@@ -31,14 +31,14 @@
     "types": [
       {
         "type": "gray_rock",
-        "weight": 3,
+        "weight": 4,
         "size_range": [
           4,
-          18
+          22
         ],
         "speed_range": [
-          0.05,
-          0.3
+          0.03,
+          0.2
         ],
         "mine_yield": 10
       }
@@ -46,7 +46,7 @@
   },
   "station": {
     "x": 0.2,
-    "y": 0.25,
+    "y": 0.24,
     "name": "the Name-Wall",
     "interiors": {
       "default": {
@@ -54,111 +54,305 @@
         "culture": "the_vigil",
         "portals": [
           {
-            "x": 800,
-            "y": 430,
+            "x": 1360,
+            "y": 470,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Concourse",
-            "shape": "circle",
-            "center": [
-              800,
-              640
-            ],
-            "radius": 320,
-            "sides": 40
+            "label": "the Long Vigil",
+            "polygon": [
+              [
+                120,
+                560
+              ],
+              [
+                1480,
+                560
+              ],
+              [
+                1480,
+                740
+              ],
+              [
+                120,
+                740
+              ]
+            ]
+          },
+          {
+            "label": "the Long Vault",
+            "polygon": [
+              [
+                240,
+                360
+              ],
+              [
+                560,
+                360
+              ],
+              [
+                560,
+                590
+              ],
+              [
+                240,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Reading Cells",
+            "polygon": [
+              [
+                760,
+                360
+              ],
+              [
+                1040,
+                360
+              ],
+              [
+                1040,
+                590
+              ],
+              [
+                760,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Vault of the First Decade",
+            "polygon": [
+              [
+                1180,
+                360
+              ],
+              [
+                1480,
+                360
+              ],
+              [
+                1480,
+                590
+              ],
+              [
+                1180,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Spare Stores",
+            "polygon": [
+              [
+                160,
+                710
+              ],
+              [
+                460,
+                710
+              ],
+              [
+                460,
+                980
+              ],
+              [
+                160,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "the Refectory",
+            "polygon": [
+              [
+                1140,
+                710
+              ],
+              [
+                1480,
+                710
+              ],
+              [
+                1480,
+                980
+              ],
+              [
+                1140,
+                980
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 650,
             "building_type": "vigil_spire"
           },
           {
-            "x": 650,
-            "y": 820,
+            "x": 540,
+            "y": 586,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 680,
+            "y": 586,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 920,
+            "y": 586,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1060,
+            "y": 586,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 540,
+            "y": 714,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 680,
+            "y": 714,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 920,
+            "y": 714,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1060,
+            "y": 714,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 380,
+            "y": 470,
             "building_type": "pipeline_bench"
           },
           {
-            "x": 950,
-            "y": 820,
+            "x": 300,
+            "y": 900,
+            "building_type": "crates"
+          },
+          {
+            "x": 1320,
+            "y": 470,
             "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1300,
+            "y": 900,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1140,
+            "y": 690,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "Keeper Aramis",
             "x": 800,
-            "y": 540,
-            "role": "stationmaster",
+            "y": 660,
+            "role": "concierge",
             "faction": "the_vigil",
             "outfit": "vigil_official_masc",
+            "ambient": {
+              "range": 720,
+              "message": "You came to the Name-Wall. Few do, now. Walk over - there is something the Vigil records that you should carry with you."
+            },
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
                 {
+                  "flag": "vigil_record_done",
+                  "node": "done"
+                },
+                {
+                  "flag": "vigil_read_vault",
+                  "node": "report"
+                },
+                {
+                  "flag": "vigil_record_accepted",
+                  "node": "midway"
+                },
+                {
                   "faction": "the_vigil",
                   "min": 25,
-                  "node": "trusted"
+                  "node": "warm"
                 }
               ],
               "nodes": {
                 "start": {
-                  "text": "You've come to the Name-Wall. Everyone the first decade of the Silence killed is written here. We believe the Relay went dark to keep something out - and that relighting it is a mistake.",
+                  "text": "Everyone the first decades of the Silence killed is written on this wall. We stayed to keep it - and to keep the reason. We believe the Relay went dark on purpose, and that the signal now relighting it is finishing something that was meant to stay unfinished. Read the wall with me - three accounts - and then judge the Span for yourself. I will pass the signal to the core myself when you have.",
                   "options": [
                     {
-                      "label": "Tell me what you know.",
-                      "next": "listen",
+                      "label": "Show me the accounts.",
+                      "next": "accepted",
                       "actions": [
-                        "set_flag:vigil_heard_warning",
-                        "adjust_rep:the_vigil:5"
+                        "set_flag:vigil_record_accepted",
+                        "start_mission:the_vigil_record",
+                        "adjust_rep:the_vigil:4"
                       ]
                     },
                     {
                       "label": "The Authority sent me to reopen the beacons.",
                       "next": "cold",
-                      "requires_not_flag": "vigil_heard_warning",
+                      "requires_not_flag": "vigil_record_accepted",
                       "action": "adjust_rep:the_vigil:-8"
                     },
                     {
-                      "label": "Leave",
+                      "label": "Not now.",
                       "next": null
                     }
                   ]
                 },
-                "listen": {
-                  "text": "Read the wall. Two hundred years of names, and every account agrees the shutdown was deliberate. If you must go to the Span, then go knowing that - and I'll pass the signal on to the core myself.",
+                "accepted": {
+                  "text": "Begin at the First Wall with Warden of Names Vane. Then the Reading Cells, then the inner Vault. Sister Edda will open it once you have read the first two.",
                   "options": [
                     {
-                      "label": "Do it.",
-                      "next": "toldspan",
-                      "actions": [
-                        "set_flag:beacon_the_span_told",
-                        "light_beacon:the_span",
-                        "set_flag:act_span"
-                      ]
-                    },
-                    {
-                      "label": "I'll think on it.",
+                      "label": "I'll read",
                       "next": null
                     }
                   ]
                 },
-                "toldspan": {
-                  "text": "The Span's beacon is live. May you choose better than they did.",
+                "midway": {
+                  "text": "Keep reading. Vane at the First Wall, the Reading Cells, then the inner Vault. Your Mission Log holds the order.",
+                  "options": [
+                    {
+                      "label": "Continue",
+                      "next": null
+                    },
+                    {
+                      "label": "I've read enough.",
+                      "next": "declined",
+                      "action": "abandon_mission:the_vigil_record"
+                    }
+                  ]
+                },
+                "declined": {
+                  "text": "Then you go to the Span less prepared than I would send you. The lane is keyed regardless - someone has to reach it. Choose as if the wall were watching.",
                   "options": [
                     {
                       "label": "Understood",
-                      "next": null
+                      "next": null,
+                      "action": "light_beacon:the_span"
                     }
                   ]
                 },
                 "cold": {
-                  "text": "Of course they did. Then we have nothing further to discuss.",
+                  "text": "Of course they did. Read the wall anyway, if you ever change your mind. The dead do not take sides.",
                   "options": [
                     {
                       "label": "Leave",
@@ -166,41 +360,52 @@
                     }
                   ]
                 },
-                "trusted": {
-                  "text": "You've been honest with us, and it's noted. The archive's inner vault is open to you now - what the First Decade recorded is not for everyone. And if you'll carry our caution to the Span, say so.",
+                "done": {
+                  "text": "You have read what we keep. You know the Silence was a choice, and roughly what it cost, and that the Vigil would not make it again the same way - nor unmake it carelessly. The Span's beacon is lit. Go and choose.",
                   "options": [
                     {
-                      "label": "Ask about the inner vault",
-                      "next": "vault",
-                      "requires_rep": "the_vigil:25"
-                    },
-                    {
-                      "label": "Pledge the Vigil your caution.",
-                      "next": "pledged",
-                      "requires_not_flag": "patron:the_vigil",
-                      "action": "set_exclusive_flag:patron:the_vigil"
-                    },
-                    {
-                      "label": "Later",
+                      "label": "Understood",
                       "next": null
                     }
                   ]
                 },
-                "vault": {
-                  "text": "Later. When the Span's beacon lights and you have to choose - come back, and I'll show you what the Wardens have forgotten.",
+                "warm": {
+                  "text": "You carried the wall's account honestly. If the Hub asks what the dead would want, we would trust you to say it: understand a thing before you undo it.",
                   "options": [
                     {
-                      "label": "Understood",
+                      "label": "Pledge the Vigil your caution.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:the_vigil",
+                      "actions": [
+                        "set_exclusive_flag:patron:the_vigil",
+                        "adjust_rep:the_vigil:8"
+                      ]
+                    },
+                    {
+                      "label": "I'll think on it",
                       "next": null
                     }
                   ]
                 },
                 "pledged": {
-                  "text": "Then you'll speak for the dead when the Hub asks. Choose as if they were listening.",
+                  "text": "Then you speak for the dead at the Hub. Choose slowly.",
                   "options": [
                     {
                       "label": "I will",
                       "next": null
+                    }
+                  ]
+                },
+                "report": {
+                  "text": "You have read all three - the wall, the doubt, and the warning. Then I keep my word: the lane to the Span is lit. Go knowing that the Silence was a choice someone made carefully, and that unmaking it deserves the same care.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null,
+                      "requires_not_flag": "vigil_record_reported",
+                      "actions": [
+                        "set_flag:vigil_record_reported"
+                      ]
                     }
                   ]
                 }
@@ -209,31 +414,287 @@
           },
           {
             "name": "Warden of Names Vane",
-            "x": 650,
-            "y": 700,
+            "x": 400,
+            "y": 470,
             "role": "quartermaster",
             "faction": "the_vigil",
-            "outfit": "vigil_dock_masc",
-            "greeting": "We trade only what we can spare - archive copies, mostly. Knowledge, if you'll carry it carefully.",
+            "outfit": "vigil_official_femme",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "vigil_read_first",
+                  "node": "read"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "The First Wall - the names of the first year. The accounts agree: the beacons did not fail. Every station logged the same order, the same hour - HOLD ALL TRAFFIC, NET DOWN BY INSTRUCTION. Someone sent that. Read it yourself.",
+                  "options": [
+                    {
+                      "label": "Read the First Wall.",
+                      "next": "ok",
+                      "requires_flag": "vigil_record_accepted",
+                      "actions": [
+                        "set_flag:vigil_read_first"
+                      ]
+                    },
+                    {
+                      "label": "What can you spare to trade?",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Now the Reading Cells - the middle years, when they worked out why. Go to Brother Sol.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "read": {
+                  "text": "You've read the First Wall. The Reading Cells next. I can spare archive copies if you'll carry them carefully.",
+                  "options": [
+                    {
+                      "label": "Trade",
+                      "next": "shop"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "shop": {
+                  "text": "Archive copies, relief supplies. What we can spare.",
+                  "options": [
+                    {
+                      "label": "(browse)",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            },
             "shop": {
               "type": "commodities",
               "stock": [
                 "archive_copies",
                 "relief_supplies"
               ],
-              "sell_multiplier": 1.15
+              "sell_multiplier": 1.0
             }
           },
           {
-            "name": "Sister of the Vigil",
+            "name": "Brother Sol",
+            "x": 900,
+            "y": 470,
+            "role": "clerk",
+            "faction": "the_vigil",
+            "outfit": "vigil_dock_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "vigil_read_second",
+                  "node": "read"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "The Reading Cells. The middle-year accounts don't agree on why - and that's the honest part. Some wrote it was a quarantine: something came through the Relay and the net was cut to trap it. Some wrote it was the last act of a war nobody won. One hand, near the end, wrote only: it broke, and we made the silence mean something. Read all three.",
+                  "options": [
+                    {
+                      "label": "Read the middle years.",
+                      "next": "ok",
+                      "requires_flag": "vigil_read_first",
+                      "actions": [
+                        "set_flag:vigil_read_second"
+                      ]
+                    },
+                    {
+                      "label": "Later.",
+                      "next": null
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Now the inner Vault - the First Decade's own record, and the warning they left the Span. Sister Edda holds the door.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "read": {
+                  "text": "You've read the middle years. The inner Vault is the last of it - Sister Edda will open the door for you now.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Sister Edda",
+            "x": 1300,
+            "y": 470,
+            "role": "magistrate",
+            "faction": "the_vigil",
+            "outfit": "vigil_official_femme",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "vigil_read_vault",
+                  "node": "read"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "The Vault of the First Decade. Not for everyone - but you have read the wall, so. Inside is what the First Decade sent toward the core, in case the beacons ever woke: a warning, and an instruction. It says - whatever you find at the Span, the choice was left deliberately to whoever arrived last. That is you. Read it, and I will tell the Keeper you are ready.",
+                  "options": [
+                    {
+                      "label": "Enter the Vault.",
+                      "next": "ok",
+                      "requires_flag": "vigil_read_second",
+                      "actions": [
+                        "set_flag:vigil_read_vault",
+                        "adjust_rep:the_vigil:5"
+                      ]
+                    },
+                    {
+                      "label": "I'm not ready.",
+                      "next": null
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Then you carry it. Go back to Keeper Aramis - he will light the lane to the Span, and you will go knowing what the wall knows.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "read": {
+                  "text": "You have read the Vault. The Keeper is expecting you.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Deck-warden Oren",
+            "x": 640,
+            "y": 700,
+            "role": "guard",
+            "faction": "the_vigil",
+            "outfit": "vigil_security_masc",
+            "greeting": "The Vigil keeps a distance and asks the same of visitors. Stand off the graves and we will never speak again.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Quiet-warden Pell",
             "x": 960,
             "y": 700,
+            "role": "outfitter",
+            "faction": "the_vigil",
+            "outfit": "vigil_security_femme",
+            "greeting": "We arm the grave-watch, nothing more. But a light-lance keeps a raider at a distance without a shot, and the Vigil approves of distance.",
+            "shop": {
+              "type": "outfits",
+              "stock": [
+                "laser_cannon",
+                "pulse_blaster",
+                "reinforced_hull",
+                "afterburner",
+                "cargo_expansion"
+              ]
+            }
+          },
+          {
+            "name": "Ferry-keeper Nis",
+            "x": 1240,
+            "y": 700,
+            "role": "ship_salesman",
+            "faction": "the_vigil",
+            "outfit": "vigil_official_masc",
+            "greeting": "We keep a few stele hulls and one reliquary barge. Slow. Quiet. They carry what should be carried gently.",
+            "shop": {
+              "type": "ships",
+              "stock": [
+                "vigil_courier",
+                "carrier_courier",
+                "vigil_hauler"
+              ]
+            }
+          },
+          {
+            "name": "the Vigil-Master",
+            "x": 800,
+            "y": 720,
+            "role": "resident",
+            "faction": "the_vigil",
+            "outfit": "vigil_official_femme",
+            "greeting": "Three hundred of us keep this system. When the last of us is written on the wall, someone else will have to decide who keeps the wall. I hope the Relay does not answer that for us.",
+            "dialogue_options": [
+              "I understand",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Sister of the Vigil",
+            "x": 300,
+            "y": 900,
             "role": "resident",
             "faction": "the_vigil",
             "outfit": "vigil_civilian_femme",
-            "greeting": "It's quiet here. We prefer it. The quiet is the point.",
+            "greeting": "It's quiet here. We prefer it. The quiet is the point - it's the shape the grief settled into.",
             "dialogue_options": [
               "I see",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Authority envoy",
+            "x": 1300,
+            "y": 900,
+            "role": "traveler",
+            "faction": "harbor_authority",
+            "outfit": "authority_official_femme",
+            "requires_flag": "act_span",
+            "greeting": "The Authority sent me to secure the archive before the Span decides anything. The Vigil won't speak to me. Perhaps they'll speak to you - tell them we only want it preserved.",
+            "dialogue_options": [
+              "I'll pass that on",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Carrier keeping distance",
+            "x": 1180,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_flight_femme",
+            "greeting": "The Vigil doesn't trade much, but they'll let you tie up and they don't ask questions. For a carrier that's most of what you want from a port.",
+            "dialogue_options": [
+              "Fair enough",
               "Leave"
             ]
           }
@@ -243,101 +704,148 @@
   },
   "moon": {
     "name": "Vault of the First Decade",
-    "x": 0.82,
-    "y": 0.78,
-    "size": 30,
+    "x": 0.8,
+    "y": 0.8,
+    "size": 28,
     "color": [
-      170,
-      170,
-      180
+      96,
+      96,
+      108
     ],
     "crater_color": [
-      130,
-      130,
-      140
+      70,
+      70,
+      82
     ],
-    "landing_distance": 35,
+    "landing_distance": 34,
     "craters": [
       {
-        "x": -8,
-        "y": -5,
+        "x": -7,
+        "y": -4,
         "radius": 4
       },
       {
-        "x": 10,
-        "y": 8,
-        "radius": 5
+        "x": 8,
+        "y": 6,
+        "radius": 4
+      },
+      {
+        "x": 1,
+        "y": -9,
+        "radius": 3
       }
     ],
     "interiors": {
       "city": {
-        "label": "Vault of the First Decade",
+        "label": "the Grave-Yard",
         "culture": "the_vigil",
         "connected_locations": [],
         "entrance": {
           "x": 800,
-          "y": 800
+          "y": 840
         },
         "rooms": [
           {
-            "label": "Vault of the First Decade",
-            "shape": "circle",
-            "center": [
-              800,
-              800
-            ],
-            "radius": 300,
-            "sides": 40
+            "label": "the Grave-Yard",
+            "polygon": [
+              [
+                200,
+                240
+              ],
+              [
+                1400,
+                240
+              ],
+              [
+                1400,
+                1120
+              ],
+              [
+                200,
+                1120
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 520,
             "building_type": "vigil_hall"
           },
           {
-            "x": 620,
-            "y": 760,
+            "x": 460,
+            "y": 780,
             "building_type": "vigil_housing"
           },
           {
-            "x": 980,
-            "y": 760,
+            "x": 1140,
+            "y": 780,
             "building_type": "vigil_housing"
           },
           {
-            "x": 700,
-            "y": 960,
-            "building_type": "planter"
+            "x": 800,
+            "y": 320,
+            "building_type": "vigil_spire"
           },
           {
-            "x": 900,
-            "y": 960,
-            "building_type": "crates"
+            "x": 560,
+            "y": 1000,
+            "building_type": "pipeline_column"
           },
           {
-            "x": 640,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 1040,
+            "y": 1000,
+            "building_type": "pipeline_column"
           },
           {
-            "x": 960,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 320,
+            "y": 1040,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1280,
+            "y": 1040,
+            "building_type": "pipeline_bench"
           }
         ],
         "npcs": [
           {
-            "name": "Surface Warden",
+            "name": "Grave-Keeper Toll",
             "x": 800,
+            "y": 700,
+            "role": "magistrate",
+            "faction": "the_vigil",
+            "outfit": "vigil_official_masc",
+            "greeting": "The oldest graves are here, under the hall. If the Span's choice goes wrong, this is the moon that fills first. I would like you to have seen it before you decide.",
+            "dialogue_options": [
+              "I have",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Grave-tender Isa",
+            "x": 560,
+            "y": 620,
+            "role": "dockworker",
+            "faction": "the_vigil",
+            "outfit": "vigil_dock_femme",
+            "greeting": "I tend the First Decade's rows. Two centuries and we've never missed a name. Whatever the Relay brings back, we'll keep doing that.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Novice Bre",
+            "x": 1040,
             "y": 900,
             "role": "resident",
             "faction": "the_vigil",
             "outfit": "vigil_civilian_masc",
-            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "greeting": "I took a name to keep when I joined. Someone who died in the third year. I never met them. I think about them more than anyone I have met.",
             "dialogue_options": [
-              "Understood",
+              "I understand",
               "Leave"
             ]
           }
@@ -347,23 +855,41 @@
   },
   "celestial_bodies": [
     {
-      "name": "Ossuary b",
+      "name": "the First Grave",
       "x": 0.62,
       "y": 0.5,
-      "size": 18,
+      "size": 16,
       "color": [
-        160,
-        140,
-        130
+        120,
+        120,
+        134
       ],
       "body_type": "rocky"
+    },
+    {
+      "name": "Silent Verge",
+      "x": 0.26,
+      "y": 0.7,
+      "size": 40,
+      "color": [
+        150,
+        145,
+        165
+      ],
+      "body_type": "gas_giant",
+      "has_ring": true,
+      "ring_color": [
+        130,
+        125,
+        150
+      ]
     }
   ],
   "ai_ships": [
     {
-      "name": "Vigil Watch",
-      "x": 0.6,
-      "y": 0.55,
+      "name": "Grave-watch Vane",
+      "x": 0.55,
+      "y": 0.16,
       "ship_type": "vigil_patrol",
       "pilot": "vane_watch",
       "faction": "the_vigil",
@@ -373,12 +899,36 @@
       ]
     },
     {
-      "name": "Grave Tender",
+      "name": "Reliquary Oskal",
       "x": 0.35,
-      "y": 0.2,
+      "y": 0.22,
       "ship_type": "vigil_hauler",
       "pilot": "oskal",
       "faction": "the_vigil",
+      "route": [
+        "moon",
+        "station"
+      ]
+    },
+    {
+      "name": "Stele Courier Aen",
+      "x": 0.68,
+      "y": 0.58,
+      "ship_type": "vigil_courier",
+      "pilot": "aen",
+      "faction": "the_vigil",
+      "route": [
+        "station",
+        "moon"
+      ]
+    },
+    {
+      "name": "Sable's Watch",
+      "x": 0.66,
+      "y": 0.4,
+      "ship_type": "carrier_patrol",
+      "pilot": "sable",
+      "faction": "free_carrier",
       "route": [
         "station",
         "moon"

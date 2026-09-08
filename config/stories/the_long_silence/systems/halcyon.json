@@ -276,6 +276,11 @@
             "x": 900,
             "y": 400,
             "building_type": "crates"
+          },
+          {
+            "x": 1140,
+            "y": 690,
+            "building_type": "crates"
           }
         ],
         "npcs": [
@@ -704,6 +709,19 @@
             "greeting": "If your hull rattles on the way out, that's me you come back to. I'll be here. Everyone comes back.",
             "dialogue_options": [
               "Good to know",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Deckhand at the Slip",
+            "x": 1180,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_flight_masc",
+            "greeting": "Half the carriers on the ring are drinking like the good years are over. The other half are betting they're just starting. I haven't decided.",
+            "dialogue_options": [
+              "Fair enough",
               "Leave"
             ]
           }

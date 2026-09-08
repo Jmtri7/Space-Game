@@ -1,5 +1,5 @@
 {
-  "identity": "the Vigil dress palette - human tones, cloth pulled toward the culture's colours (austere and vertical, long cold surfaces, narrow violet-white light, unpolished grey, no decoration that is not a record).",
+  "identity": "Vigil dress - unbleached cold grey, unpolished pewter, a single violet-white lamp accent. Mourning colours worn every day. Human skin/hair unchanged.",
   "skin": "#c69b74",
   "hair": "#3b2b21",
   "eye": "#5a4633",
@@ -7,11 +7,11 @@
   "iris": "#6b4a2e",
   "pupil": "#1a1109",
   "lip": "#b07a63",
-  "cloth": "#7a7a8a",
-  "denim": "#33333a",
-  "leather": "#2e2e35",
-  "knit": "#62626e",
-  "metal": "#53535f",
-  "glass": "#c0b6d6",
-  "lamp": "#ada4c1"
+  "cloth": "#4a4a54",
+  "denim": "#3a3a44",
+  "leather": "#3e3e46",
+  "knit": "#565662",
+  "metal": "#8a8a96",
+  "glass": "#d6ccec",
+  "lamp": "#c8bce8"
 }

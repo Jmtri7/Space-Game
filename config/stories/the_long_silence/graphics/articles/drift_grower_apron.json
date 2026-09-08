@@ -1,0 +1,109 @@
+{
+  "identity": "Drift grower's apron - a canvas apron from the waist to mid-shin with two seed pockets and a grow-green hem, worn on the agri-rings.",
+  "tier": "person",
+  "palette": "drift_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "skirt",
+      "note": "grower's apron",
+      "color": "denim",
+      "shade": "soft",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.6,
+              -19.6
+            ],
+            [
+              2.6,
+              -19.6
+            ],
+            [
+              3.0,
+              -10.0
+            ],
+            [
+              -3.0,
+              -10.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.3,
+              -20.2
+            ],
+            [
+              2.3,
+              -20.2
+            ],
+            [
+              2.7,
+              -10.4
+            ],
+            [
+              -2.7,
+              -10.4
+            ]
+          ],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "torso",
+      "tag": "hip accessory",
+      "note": "seed pocket",
+      "color": "leather",
+      "shade": "soft",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.6,
+              -17.0
+            ],
+            [
+              -0.6,
+              -17.0
+            ],
+            [
+              -0.6,
+              -14.0
+            ],
+            [
+              -2.6,
+              -14.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.3,
+              -17.4
+            ],
+            [
+              -0.5,
+              -17.4
+            ],
+            [
+              -0.5,
+              -14.4
+            ],
+            [
+              -2.3,
+              -14.4
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "identity": "Vigil Warden turn-out - grey uniform, a plain helmet, the ash sash, mourning stole, a name-pendant.",
+  "articles": [
+    "tank_top",
+    "jacket_secblue",
+    "pants_secblue",
+    "boots_black",
+    "helmet_sec",
+    "vigil_ash_sash",
+    "vigil_mourning_stole",
+    "vigil_name_pendant"
+  ],
+  "palette": "vigil_dress"
+}

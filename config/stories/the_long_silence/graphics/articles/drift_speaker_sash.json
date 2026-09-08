@@ -1,0 +1,58 @@
+{
+  "identity": "Drift speaker-for-now sash - a wide woven band worn across the chest by whoever holds the floor in the rolling assembly. Passed on, not kept.",
+  "tier": "person",
+  "palette": "drift_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "bandolier",
+      "note": "speaker sash",
+      "color": "lamp",
+      "shade": "glow",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              2.9,
+              -25.5
+            ],
+            [
+              3.5,
+              -25.1
+            ],
+            [
+              -2.7,
+              -18.6
+            ],
+            [
+              -3.3,
+              -19.2
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.6,
+              -25.6
+            ],
+            [
+              2.1,
+              -25.2
+            ],
+            [
+              -1.8,
+              -19.5
+            ],
+            [
+              -1.95,
+              -20.1
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

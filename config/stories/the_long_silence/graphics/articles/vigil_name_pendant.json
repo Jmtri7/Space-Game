@@ -1,0 +1,110 @@
+{
+  "identity": "Vigil name-pendant - a small pewter tablet on a cord at the sternum, carrying the name the wearer keeps watch for.",
+  "tier": "person",
+  "palette": "vigil_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "badge",
+      "note": "name tablet",
+      "color": "metal",
+      "shade": "metal",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -0.7,
+              -23.2
+            ],
+            [
+              0.7,
+              -23.2
+            ],
+            [
+              0.7,
+              -21.6
+            ],
+            [
+              -0.7,
+              -21.6
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "name tablet cord",
+              "points": [
+                [
+                  -0.1,
+                  -25.3
+                ],
+                [
+                  0.1,
+                  -25.3
+                ],
+                [
+                  0.5,
+                  -23.2
+                ],
+                [
+                  -0.5,
+                  -23.2
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -0.6,
+              -23.6
+            ],
+            [
+              0.6,
+              -23.6
+            ],
+            [
+              0.6,
+              -22.1
+            ],
+            [
+              -0.6,
+              -22.1
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "metal",
+              "shade": "metal",
+              "note": "name tablet cord",
+              "points": [
+                [
+                  -0.1,
+                  -25.5
+                ],
+                [
+                  0.1,
+                  -25.5
+                ],
+                [
+                  0.45,
+                  -23.6
+                ],
+                [
+                  -0.45,
+                  -23.6
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

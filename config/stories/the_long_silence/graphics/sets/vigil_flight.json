@@ -1,0 +1,13 @@
+{
+  "identity": "Vigil stele-pilot kit - grey suit, a plain flight helmet, the mourning stole, a name-pendant.",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants_charcoal",
+    "boots_black",
+    "helmet_flight",
+    "vigil_mourning_stole",
+    "vigil_name_pendant"
+  ],
+  "palette": "vigil_dress"
+}

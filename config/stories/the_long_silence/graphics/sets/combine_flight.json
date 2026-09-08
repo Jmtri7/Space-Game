@@ -1,0 +1,14 @@
+{
+  "identity": "Combine hauler-pilot kit - work suit, flight helmet, the ration plate, a contract seal.",
+  "articles": [
+    "tank_top",
+    "jacket_olive",
+    "pants_field",
+    "boots_charcoal",
+    "helmet_flight",
+    "combine_ration_plate",
+    "combine_contract_seal",
+    "hair_short"
+  ],
+  "palette": "combine_dress"
+}

@@ -1,0 +1,110 @@
+{
+  "identity": "Drift woven collar - a soft open collar of plaited fibre with a small grow-lamp bead at the throat. Everyday Drift dress.",
+  "tier": "person",
+  "palette": "drift_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "collar",
+      "note": "woven collar",
+      "color": "knit",
+      "shade": "soft",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.2,
+              -24.6
+            ],
+            [
+              2.2,
+              -24.6
+            ],
+            [
+              2.4,
+              -26.2
+            ],
+            [
+              -2.4,
+              -26.2
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "collar bead",
+              "points": [
+                [
+                  -0.4,
+                  -25.6
+                ],
+                [
+                  0.4,
+                  -25.6
+                ],
+                [
+                  0.4,
+                  -25.0
+                ],
+                [
+                  -0.4,
+                  -25.0
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -2.0,
+              -24.7
+            ],
+            [
+              2.0,
+              -24.7
+            ],
+            [
+              2.2,
+              -26.0
+            ],
+            [
+              -2.2,
+              -26.0
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "collar bead",
+              "points": [
+                [
+                  -0.4,
+                  -25.5
+                ],
+                [
+                  0.4,
+                  -25.5
+                ],
+                [
+                  0.4,
+                  -24.9
+                ],
+                [
+                  -0.4,
+                  -24.9
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

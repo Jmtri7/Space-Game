@@ -15,74 +15,74 @@
     "hail_greeting": "Authority freight, station to moon, manifest sealed. Nothing on my ticket concerns you."
   },
   "rell": {
-    "name": "Rell",
+    "name": "Nix Ferro",
     "faction": "free_carrier",
     "role": "freighter_pilot",
-    "personality": "Twenty years on the slow lanes; the beacon just made her route worthless and she is trying to laugh about it.",
-    "hail_greeting": "Independent carrier, Ferro's Slip. I was running this lane before your beacon woke up, friend. Now I'm just in the way."
+    "personality": "Twenty years on the slow lanes; the beacon just made her route worthless and she is trying to laugh about it. Knows every berth in the region by its smell.",
+    "hail_greeting": "Independent carrier, Ferro's Slip. I was running this lane before your beacon woke up, friend. Now I'm just in the way of it."
   },
   "tolvic": {
     "name": "Watch-Chief Tolvic",
     "faction": "ninefold_combine",
     "role": "patrol_officer",
-    "personality": "Speaks only in terms of what the contract permits, and it permits very little.",
-    "hail_greeting": "Combine watch. You are logged. Do not deviate from a docking approach."
+    "personality": "Speaks only in what the contract permits, and it permits very little. Not cruel - correct.",
+    "hail_greeting": "Combine watch. You are logged against a carriage contract. Hold a docking approach and do not deviate."
   },
   "corran": {
     "name": "Hauler Corran",
     "faction": "ninefold_combine",
     "role": "freighter_pilot",
-    "personality": "Counts everything twice, trusts nothing that wasn't mined here.",
-    "hail_greeting": "Ore run, Shaft VII to the Hold. Rationed cargo. Move along."
+    "personality": "Counts every crate twice, trusts nothing that wasn't mined here, resents the beacon on principle.",
+    "hail_greeting": "Ore run, Shaft VII to the Hold. Rationed cargo, sealed and tallied. Move along."
   },
   "raska": {
     "name": "Gun-bosun Raska",
     "faction": "ninefold_combine",
     "role": "patrol_officer",
     "personality": "Treats every contract breach as a personal insult and every insult as a firing solution.",
-    "hail_greeting": "The Combine's writ runs here now too. You broke the contract. Clear off."
+    "hail_greeting": "Boarding cutter. The Combine's writ runs here. Give me a reason - I keep a list."
   },
   "sella": {
     "name": "Tide-pilot Sella",
     "faction": "the_drift",
     "role": "patrol_officer",
-    "personality": "Friendly, unhurried, would rather talk it through than escalate anything.",
-    "hail_greeting": "Highcanopy drift-watch. Welcome in - fly gentle near the habitats."
+    "personality": "Friendly, unhurried, would rather talk anything through than escalate it. The watchboat's light-lance has never been fired.",
+    "hail_greeting": "Highcanopy drift-watch. Welcome in - fly gentle near the habitats and we'll get along fine."
   },
   "nim": {
     "name": "Canopy-hand Nim",
     "faction": "the_drift",
     "role": "freighter_pilot",
-    "personality": "Cheerful about the work, vague about the schedule.",
-    "hail_greeting": "Grain run for the Undergarden. Lovely day for it, isn't it."
+    "personality": "Cheerful about the work, vague about the schedule, genuinely delighted to have company on the lane.",
+    "hail_greeting": "Grain run for the Undergarden. Lovely day for it, isn't it. Wave if you pass close."
   },
   "vane_watch": {
     "name": "Warden Vane",
     "faction": "the_vigil",
     "role": "patrol_officer",
-    "personality": "Quiet to the point of severity; every word measured against the Name-Wall.",
-    "hail_greeting": "The Vigil keeps this approach. State that you mean the graves no disrespect."
+    "personality": "Quiet to the point of severity; every word measured against the Name-Wall. Fires the lance only to hold a distance, never to close one.",
+    "hail_greeting": "The Vigil keeps this approach. State that you mean the graves no disrespect, and hold your distance."
   },
   "oskal": {
     "name": "Tender Oskal",
     "faction": "the_vigil",
     "role": "freighter_pilot",
-    "personality": "Handles cargo the way others handle relics.",
-    "hail_greeting": "Archive transfer. Fragile. Keep your distance."
+    "personality": "Handles cargo the way others handle relics. Slow, deliberate, unhurried by anything.",
+    "hail_greeting": "Reliquary transfer, moon to the Name-Wall. Fragile, and named. Keep well clear."
   },
   "segment_warden": {
     "name": "Segment Warden",
     "faction": "the_wardens",
     "role": "patrol_officer",
-    "personality": "Talks about the Hub the way the devout talk about a god they also do maintenance on.",
-    "hail_greeting": "You are inside the Span. The Hub hears you. Mind that it does."
+    "personality": "Talks about the Hub the way the devout talk about a god they also do the maintenance on. Never hostile without cause - the Hub does not approve of noise.",
+    "hail_greeting": "You are inside the Span. The Hub hears you. Hold your approach and it will let you pass."
   },
   "threa": {
     "name": "Core-hand Threa",
     "faction": "the_wardens",
     "role": "freighter_pilot",
-    "personality": "Ferries parts to the dark segments and never quite says what for.",
-    "hail_greeting": "Parts run, Segment Four. It's been dark a long time. It's waking up."
+    "personality": "Ferries salvage to the dark segments and never quite says what for. Has stopped asking herself.",
+    "hail_greeting": "Parts run, Segment Four. It has been dark a long time. It is waking up, and we feed it."
   },
   "pell": {
     "name": "Approach Officer Pell",
@@ -97,5 +97,47 @@
     "role": "freighter_pilot",
     "personality": "Twenty years on the milk run; now hauling relief crates for carriers stranded by the beacon and quietly furious about the waste.",
     "hail_greeting": "Relief hauler Vesper, moon to Hub. Half this load is for people who had homes last month. Give me room."
+  },
+  "molt": {
+    "name": "Deep Freight Molt",
+    "faction": "ninefold_combine",
+    "role": "freighter_pilot",
+    "personality": "Thirty years on the same loop; would keep flying it if the Relay swallowed every other lane whole.",
+    "hail_greeting": "Combine deep freight. My route hasn't changed in three decades and it isn't changing for you."
+  },
+  "ost": {
+    "name": "Ring-hand Ost",
+    "faction": "the_drift",
+    "role": "freighter_pilot",
+    "personality": "Quiet, steady, has flown the same ring loop so long the barge knows the way itself.",
+    "hail_greeting": "Drift barge, ring to city. No hurry. There never is."
+  },
+  "aen": {
+    "name": "Stele-pilot Aen",
+    "faction": "the_vigil",
+    "role": "courier_pilot",
+    "personality": "Young for the Vigil; carries messages between the graves and the archive and says little else.",
+    "hail_greeting": "Vigil courier. Archive traffic only. I'll pass you by."
+  },
+  "ash": {
+    "name": "Captain Ash",
+    "faction": "free_carrier",
+    "role": "freighter_pilot",
+    "personality": "Old, unbothered, has outlived three governments and expects to outlive the Relay too.",
+    "hail_greeting": "Carrier hull, no cargo you'd want. Forty years I've flown between these stars. A beacon doesn't change where they are."
+  },
+  "dume": {
+    "name": "Dume Halloran",
+    "faction": "free_carrier",
+    "role": "courier_pilot",
+    "personality": "Fast, chatty, runs messages and small freight and gossip in equal measure; thrilled the lanes are opening.",
+    "hail_greeting": "Halloran, carrier courier. Quick run through. Anything you need moved, I'm cheaper than a beacon fee."
+  },
+  "sable": {
+    "name": "Sable Nix",
+    "faction": "free_carrier",
+    "role": "patrol_officer",
+    "personality": "Rides escort on the dangerous lanes for whoever pays; not a fighter by trade, just the one who stayed calm.",
+    "hail_greeting": "Carrier escort, paid by the run. I'm not looking for trouble - I'm looking at you so trouble doesn't."
   }
 }

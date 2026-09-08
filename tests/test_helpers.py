@@ -535,18 +535,27 @@ class TestLongSilenceOutfitRendering(unittest.TestCase):
             outfit = utils.get_graphics_asset("the_long_silence", "outfits", outfit_id)
             Person(570, 400, outfit=outfit).draw(MagicMock())
 
-    def test_bespoke_authority_wardrobe_is_wired(self):
-        gfx = utils.load_json("config/stories/the_long_silence/graphics.json") or {}
-        for role in ("civilian", "official", "flight", "security", "dock"):
-            for cut in ("femme", "masc"):
-                entry = gfx["outfits"][f"authority_{role}_{cut}"]
-                self.assertTrue(entry["set"].startswith("authority_"), entry)
-                self.assertEqual(entry["body"], f"human_{cut}")
-        for aid in ("authority_chevron_tab", "authority_shoulder_boards",
-                    "authority_service_cap", "authority_brassard", "authority_duty_belt"):
-            self.assertTrue(
-                os.path.exists(f"config/stories/the_long_silence/graphics/articles/{aid}.json"),
-                f"missing bespoke article {aid}")
+    def test_bespoke_culture_wardrobes_are_wired(self):
+        # Every Act I culture (Halcyon/Kiln/Verdance/Ossuary + carriers) has
+        # its ten <pfx>_<role>_<cut> outfits pointed at a bespoke <pfx>_* set
+        # backed by real culture-specific articles, not a <pfx>_dress recolour
+        # of the borrowed ck_* sets. The Wardens are the exception - their
+        # wardrobe is deferred to Act II (still a palette recolour).
+        base = "config/stories/the_long_silence/graphics"
+        gfx = utils.load_json(f"{base}/../graphics.json") or {}
+        for pfx in ("authority", "combine", "drift", "vigil", "carrier"):
+            sets_seen = set()
+            for role in ("civilian", "official", "flight", "security", "dock"):
+                for cut in ("femme", "masc"):
+                    entry = gfx["outfits"][f"{pfx}_{role}_{cut}"]
+                    self.assertTrue(entry["set"].startswith(f"{pfx}_"),
+                                    f"{pfx}_{role}_{cut} -> {entry['set']}")
+                    self.assertEqual(entry["body"], f"human_{cut}")
+                    sets_seen.add(entry["set"])
+            for sid in sets_seen:
+                sj = utils.load_json(f"{base}/sets/{sid}.json")
+                self.assertTrue(sj and any(a.startswith(f"{pfx}_") for a in sj["articles"]),
+                                f"set {sid} has no bespoke {pfx}_ article")
 
 
 class TestLocationExitOptions(unittest.TestCase):

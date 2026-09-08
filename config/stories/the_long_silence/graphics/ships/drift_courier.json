@@ -1,69 +1,80 @@
 {
-  "identity": "the Drift Courier - a small fast dispatch hull. STYLE: soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Drift Skiff - a rounded seed-pod hull, a bulbous forward canopy blister, a single soft dorsal fin, two short strut pods aft trailing a green grow-light. No hard edge anywhere. Reads at a dozen pixels as a smooth teardrop with two pale-green dots.",
   "tier": "ship_near",
   "palette": "drift",
   "size": 11,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
     {
       "group": "hull",
       "color": "hull",
-      "shade": "deep",
+      "shade": "soft",
       "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "note": "seed-pod hull",
       "points": [
         [
           0.0,
-          -1.15
+          -1.02
         ],
         [
-          0.32,
-          -0.55
+          0.161,
+          -0.942
         ],
         [
-          0.42,
-          0.1
+          0.297,
+          -0.721
         ],
         [
-          0.95,
-          0.75
-        ],
-        [
-          0.9,
-          1.05
+          0.388,
+          -0.39
         ],
         [
           0.42,
-          0.95
+          -0.0
         ],
         [
-          0.3,
-          1.15
+          0.388,
+          0.39
         ],
         [
-          -0.3,
-          1.15
+          0.297,
+          0.721
+        ],
+        [
+          0.161,
+          0.942
+        ],
+        [
+          0.0,
+          1.02
+        ],
+        [
+          -0.161,
+          0.942
+        ],
+        [
+          -0.297,
+          0.721
+        ],
+        [
+          -0.388,
+          0.39
         ],
         [
           -0.42,
-          0.95
+          0.0
         ],
         [
-          -0.9,
-          1.05
+          -0.388,
+          -0.39
         ],
         [
-          -0.95,
-          0.75
+          -0.297,
+          -0.721
         ],
         [
-          -0.42,
-          0.1
-        ],
-        [
-          -0.32,
-          -0.55
+          -0.161,
+          -0.942
         ]
       ]
     },
@@ -71,82 +82,179 @@
       "group": "canopy",
       "color": "glass",
       "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
+      "flatten_px": 55,
+      "note": "canopy blister",
       "points": [
         [
           0.0,
-          -0.72
+          -0.77
         ],
         [
-          0.16,
-          -0.42
+          0.09,
+          -0.727
         ],
         [
-          0.14,
-          0.05
+          0.156,
+          -0.61
+        ],
+        [
+          0.18,
+          -0.45
+        ],
+        [
+          0.156,
+          -0.29
+        ],
+        [
+          0.09,
+          -0.173
         ],
         [
           0.0,
-          0.2
+          -0.13
         ],
         [
-          -0.14,
-          0.05
+          -0.09,
+          -0.173
         ],
         [
-          -0.16,
-          -0.42
+          -0.156,
+          -0.29
+        ],
+        [
+          -0.18,
+          -0.45
+        ],
+        [
+          -0.156,
+          -0.61
+        ],
+        [
+          -0.09,
+          -0.727
         ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "pod_r",
       "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "right strut pod",
       "points": [
         [
           0.42,
-          0.35
+          0.52
         ],
         [
-          0.62,
-          0.35
+          0.502,
+          0.57
         ],
         [
-          0.66,
-          1.0
+          0.553,
+          0.7
         ],
         [
-          0.46,
-          1.0
+          0.553,
+          0.86
+        ],
+        [
+          0.502,
+          0.99
+        ],
+        [
+          0.42,
+          1.04
+        ],
+        [
+          0.338,
+          0.99
+        ],
+        [
+          0.287,
+          0.86
+        ],
+        [
+          0.287,
+          0.7
+        ],
+        [
+          0.338,
+          0.57
         ]
       ]
     },
     {
-      "group": "engine_l",
+      "group": "pod_l",
       "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
+      "shade": "soft",
+      "flatten_px": 45,
+      "note": "left strut pod",
       "points": [
         [
           -0.42,
-          0.35
+          0.52
         ],
         [
-          -0.62,
-          0.35
+          -0.338,
+          0.57
         ],
         [
-          -0.66,
-          1.0
+          -0.287,
+          0.7
         ],
         [
-          -0.46,
-          1.0
+          -0.287,
+          0.86
+        ],
+        [
+          -0.338,
+          0.99
+        ],
+        [
+          -0.42,
+          1.04
+        ],
+        [
+          -0.502,
+          0.99
+        ],
+        [
+          -0.553,
+          0.86
+        ],
+        [
+          -0.553,
+          0.7
+        ],
+        [
+          -0.502,
+          0.57
+        ]
+      ]
+    },
+    {
+      "group": "fin",
+      "color": "metal",
+      "shade": "soft",
+      "flatten_px": 40,
+      "note": "soft dorsal fin",
+      "points": [
+        [
+          -0.05,
+          0.1
+        ],
+        [
+          0.05,
+          0.1
+        ],
+        [
+          0.04,
+          0.9
+        ],
+        [
+          -0.04,
+          0.9
         ]
       ]
     }
@@ -154,79 +262,27 @@
   "details": [
     {
       "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
+      "color": "lamp",
+      "shade": "glow",
       "role": "detail",
-      "min_px": 55,
-      "note": "spine panel line",
+      "min_px": 60,
+      "note": "trellis grow-strip",
       "points": [
         [
           -0.06,
-          -0.5
+          -0.4
         ],
         [
           0.06,
-          -0.5
+          -0.4
         ],
         [
           0.06,
-          1.05
+          0.7
         ],
         [
           -0.06,
-          1.05
-        ]
-      ]
-    },
-    {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
-      "points": [
-        [
-          0.34,
-          0.15
-        ],
-        [
-          0.42,
-          0.15
-        ],
-        [
-          0.9,
-          0.78
-        ],
-        [
-          0.82,
-          0.82
-        ]
-      ]
-    },
-    {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
-      "points": [
-        [
-          -0.34,
-          0.15
-        ],
-        [
-          -0.42,
-          0.15
-        ],
-        [
-          -0.9,
-          0.78
-        ],
-        [
-          -0.82,
-          0.82
+          0.7
         ]
       ]
     },
@@ -236,36 +292,36 @@
       "shade": "glow",
       "role": "detail",
       "min_px": 90,
-      "note": "forward nav light, at the nose tip",
+      "note": "nav light, nose",
       "circle": [
         0.0,
-        -1.02,
-        0.045
+        -0.96,
+        0.05
       ]
     },
     {
-      "group": "engine_r",
+      "group": "pod_r",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "right thruster",
       "circle": [
-        0.56,
-        1.02,
+        0.42,
+        1.0,
         0.11
       ]
     },
     {
-      "group": "engine_l",
+      "group": "pod_l",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "left thruster",
       "circle": [
-        -0.56,
-        1.02,
+        -0.42,
+        1.0,
         0.11
       ]
     }

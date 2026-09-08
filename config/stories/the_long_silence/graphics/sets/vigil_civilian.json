@@ -1,0 +1,13 @@
+{
+  "identity": "Vigil daily dress - plain grey robe, the mourning stole and name-pendant every member wears, soft shoes.",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants",
+    "shoes",
+    "vigil_mourning_stole",
+    "vigil_name_pendant",
+    "hair_short"
+  ],
+  "palette": "vigil_dress"
+}

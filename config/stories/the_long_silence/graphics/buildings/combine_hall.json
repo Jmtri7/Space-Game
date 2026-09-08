@@ -1,64 +1,56 @@
 {
-  "identity": "Ninefold Combine Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: heavy dark iron banded with ember-orange hazard light, blast doors, riveted seams, ration-stencil numerals, built for the deep mines. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "identity": "Combine Contract Hall, head-on: a low wide vaulted block of dark iron, a single heavy blast-door entry dead centre under an ember lintel, riveted horizontal seams across the whole face, a ration-stencil numeral panel each side of the door. Squat, symmetrical, unwelcoming.",
   "tier": "building",
   "palette": "combine",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~1.6x PLAYER_H to the parapet, ~3.8x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
       "shade": "matte",
       "note": "wall",
+      "flatten_px": 60,
       "points": [
         [
-          -56,
+          -60,
           0
         ],
         [
-          56,
+          60,
           0
         ],
         [
-          56,
-          -42
+          60,
+          -44
         ],
         [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
-        ],
-        [
-          -56,
-          -42
+          -60,
+          -44
         ]
-      ],
-      "flatten_px": 60
+      ]
     },
     {
       "group": "body",
       "color": "hull",
       "shade": "deep",
-      "note": "roof",
+      "note": "parapet",
       "points": [
         [
-          -56,
-          -42
+          -60,
+          -44
         ],
         [
-          56,
-          -42
+          60,
+          -44
         ],
         [
-          48,
+          60,
           -50
         ],
         [
-          -48,
+          -60,
           -50
         ]
       ]
@@ -67,22 +59,22 @@
       "group": "body",
       "color": "engine",
       "shade": "matte",
-      "note": "opening",
+      "note": "blast-door entry",
       "points": [
         [
-          -46,
-          -34
+          -12,
+          -32
         ],
         [
-          46,
-          -34
+          12,
+          -32
         ],
         [
-          46,
+          12,
           0
         ],
         [
-          -46,
+          -12,
           0
         ]
       ]
@@ -94,130 +86,156 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "fascia",
+      "min_px": 16,
+      "note": "ember lintel",
       "points": [
         [
-          -52,
-          -40
-        ],
-        [
-          52,
-          -40
-        ],
-        [
-          52,
+          -16,
           -34
         ],
         [
-          -52,
+          16,
           -34
+        ],
+        [
+          16,
+          -30
+        ],
+        [
+          -16,
+          -30
         ]
-      ],
-      "min_px": 18
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
+      "color": "engine",
+      "shade": "matte",
       "role": "detail",
-      "note": "near post",
+      "min_px": 30,
+      "note": "rivet seam 0",
       "points": [
         [
-          -48,
-          -34
+          -58,
+          -12
         ],
         [
-          -44,
-          -34
+          58,
+          -12
         ],
         [
-          -44,
-          0
+          58,
+          -10.5
         ],
         [
-          -48,
-          0
+          -58,
+          -10.5
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
+      "color": "engine",
+      "shade": "matte",
       "role": "detail",
-      "note": "far post",
+      "min_px": 30,
+      "note": "rivet seam 1",
       "points": [
         [
-          44,
-          -34
+          -58,
+          -24
         ],
         [
-          48,
-          -34
+          58,
+          -24
         ],
         [
-          48,
-          0
+          58,
+          -22.5
         ],
         [
-          44,
-          0
+          -58,
+          -22.5
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "deep",
+      "color": "engine",
+      "shade": "matte",
       "role": "detail",
-      "note": "stall 0",
+      "min_px": 30,
+      "note": "rivet seam 2",
       "points": [
         [
-          -42,
-          -20
+          -58,
+          -36
         ],
         [
-          -8,
-          -20
+          58,
+          -36
         ],
         [
-          -8,
-          0
+          58,
+          -34.5
         ],
         [
-          -42,
-          0
+          -58,
+          -34.5
         ]
-      ],
-      "min_px": 24
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "deep",
+      "color": "lamp",
+      "shade": "glow",
       "role": "detail",
-      "note": "stall 1",
+      "min_px": 14,
+      "note": "ration numerals L",
       "points": [
         [
-          8,
-          -20
+          -40,
+          -26
         ],
         [
-          42,
-          -20
+          -24,
+          -26
         ],
         [
-          42,
-          0
+          -24,
+          -10
         ],
         [
-          8,
-          0
+          -40,
+          -10
         ]
-      ],
-      "min_px": 24
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 14,
+      "note": "ration numerals R",
+      "points": [
+        [
+          24,
+          -26
+        ],
+        [
+          40,
+          -26
+        ],
+        [
+          40,
+          -10
+        ],
+        [
+          24,
+          -10
+        ]
+      ]
     }
   ]
 }

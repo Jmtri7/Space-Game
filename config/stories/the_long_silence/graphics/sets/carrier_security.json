@@ -1,0 +1,14 @@
+{
+  "identity": "Free carrier escort-watch kit - work clothes, a scavenged helmet, the patch vest, the run-band, the lash belt.",
+  "articles": [
+    "tank_top",
+    "jacket_olive",
+    "pants_field",
+    "boots_charcoal",
+    "helmet_bounty",
+    "carrier_patch_vest",
+    "carrier_run_band",
+    "carrier_lash_belt"
+  ],
+  "palette": "carrier_dress"
+}

@@ -1,5 +1,5 @@
 {
-  "identity": "Ninefold Combine dress palette - human tones, cloth pulled toward the culture's colours (heavy dark iron banded with ember-orange hazard light, blast doors, riveted seams, ration-stencil numerals, built for the deep mines).",
+  "identity": "Ninefold Combine dress - dark iron-grey work cloth banded with ember hazard-orange, heavy leather, stencil-white numerals. Human skin/hair unchanged.",
   "skin": "#c69b74",
   "hair": "#3b2b21",
   "eye": "#5a4633",
@@ -7,11 +7,11 @@
   "iris": "#6b4a2e",
   "pupil": "#1a1109",
   "lip": "#b07a63",
-  "cloth": "#463c36",
-  "denim": "#3e3835",
-  "leather": "#383330",
-  "knit": "#38302b",
-  "metal": "#655c56",
+  "cloth": "#3a3430",
+  "denim": "#2a2523",
+  "leather": "#3c332c",
+  "knit": "#4a4038",
+  "metal": "#8a8078",
   "glass": "#ff8c3c",
-  "lamp": "#e67e36"
+  "lamp": "#ff9a44"
 }

@@ -1,6 +1,6 @@
 {
   "name": "Verdance",
-  "description": "A gas giant with one enormous cloud-city and a ring of farm habitats. The Drift runs on rolling consensus and can't quite decide anything.",
+  "description": "A gas giant with a single enormous cloud-city and a ring of agricultural habitats. The Drift runs on rolling consensus, holds no fixed hierarchy, and is the most welcoming - and least decisive - system in the region.",
   "star_map_position": {
     "x": 210,
     "y": 150
@@ -11,11 +11,11 @@
     "x": 0.5,
     "y": 0.5,
     "name": "Verdance",
-    "size": 90,
+    "size": 92,
     "color": [
       255,
-      230,
-      160
+      236,
+      168
     ]
   },
   "player_start": {
@@ -26,27 +26,27 @@
   "asteroid_field": {
     "per_chunk_range": [
       1,
-      3
+      2
     ],
     "types": [
       {
         "type": "gray_rock",
         "weight": 3,
         "size_range": [
-          4,
-          18
+          3,
+          14
         ],
         "speed_range": [
           0.05,
-          0.3
+          0.28
         ],
-        "mine_yield": 10
+        "mine_yield": 8
       }
     ]
   },
   "station": {
     "x": 0.2,
-    "y": 0.25,
+    "y": 0.24,
     "name": "Highcanopy",
     "interiors": {
       "default": {
@@ -54,78 +54,326 @@
         "culture": "the_drift",
         "portals": [
           {
-            "x": 800,
-            "y": 430,
+            "x": 1360,
+            "y": 470,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Concourse",
-            "shape": "circle",
-            "center": [
-              800,
-              640
-            ],
-            "radius": 320,
-            "sides": 40
+            "label": "Canopy Walk",
+            "polygon": [
+              [
+                120,
+                560
+              ],
+              [
+                1480,
+                560
+              ],
+              [
+                1480,
+                740
+              ],
+              [
+                120,
+                740
+              ]
+            ]
+          },
+          {
+            "label": "The Rolling Assembly",
+            "polygon": [
+              [
+                240,
+                360
+              ],
+              [
+                620,
+                360
+              ],
+              [
+                620,
+                590
+              ],
+              [
+                240,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Seed Store",
+            "polygon": [
+              [
+                820,
+                360
+              ],
+              [
+                1100,
+                360
+              ],
+              [
+                1100,
+                590
+              ],
+              [
+                820,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Ferry Slip",
+            "polygon": [
+              [
+                1200,
+                360
+              ],
+              [
+                1480,
+                360
+              ],
+              [
+                1480,
+                590
+              ],
+              [
+                1200,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Water Office",
+            "polygon": [
+              [
+                160,
+                710
+              ],
+              [
+                480,
+                710
+              ],
+              [
+                480,
+                980
+              ],
+              [
+                160,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "Canopy Rest",
+            "polygon": [
+              [
+                1120,
+                710
+              ],
+              [
+                1480,
+                710
+              ],
+              [
+                1480,
+                980
+              ],
+              [
+                1120,
+                980
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 650,
             "building_type": "drift_spire"
           },
           {
-            "x": 650,
-            "y": 820,
+            "x": 560,
+            "y": 582,
+            "building_type": "planter"
+          },
+          {
+            "x": 700,
+            "y": 582,
+            "building_type": "planter"
+          },
+          {
+            "x": 900,
+            "y": 582,
+            "building_type": "planter"
+          },
+          {
+            "x": 1040,
+            "y": 582,
+            "building_type": "planter"
+          },
+          {
+            "x": 560,
+            "y": 718,
+            "building_type": "planter"
+          },
+          {
+            "x": 700,
+            "y": 718,
+            "building_type": "planter"
+          },
+          {
+            "x": 900,
+            "y": 718,
+            "building_type": "planter"
+          },
+          {
+            "x": 1040,
+            "y": 718,
+            "building_type": "planter"
+          },
+          {
+            "x": 400,
+            "y": 470,
             "building_type": "pipeline_bench"
           },
           {
-            "x": 950,
-            "y": 820,
+            "x": 300,
+            "y": 900,
+            "building_type": "planter"
+          },
+          {
+            "x": 1320,
+            "y": 470,
+            "building_type": "crates"
+          },
+          {
+            "x": 1300,
+            "y": 900,
             "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1140,
+            "y": 690,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "Sela of Highcanopy",
             "x": 800,
-            "y": 540,
-            "role": "stationmaster",
+            "y": 660,
+            "role": "concierge",
             "faction": "the_drift",
-            "outfit": "drift_official_masc",
+            "outfit": "drift_official_femme",
+            "escort_flag": "assembly_walking",
+            "ambient": {
+              "range": 700,
+              "message": "Oh - a new face! Welcome in. There's nobody in charge exactly, but I speak for the assembly this week. Come say hello (walk over, press T)."
+            },
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
                 {
-                  "flag": "beacon_ossuary_told",
-                  "node": "already"
+                  "flag": "assembly_done",
+                  "node": "done"
+                },
+                {
+                  "flag": "assembly_view_bevin",
+                  "node": "convene"
+                },
+                {
+                  "flag": "assembly_accepted",
+                  "node": "midway"
+                },
+                {
+                  "faction": "the_drift",
+                  "min": 25,
+                  "node": "warm"
                 }
               ],
               "nodes": {
                 "start": {
-                  "text": "Welcome, welcome. There's no one in charge here exactly - if you need a decision, the assembly's rolling in the Undergarden. Might take a while. The Relay signal is already reaching for Ossuary - I can key our beacon to pass it on, if you mean to go there.",
+                  "text": "The beacon relit and the assembly's been rolling for six days without a decision. Half of us want to open the lane to Ossuary, half think the Relay coming back is how Kiln finds an excuse to send warships. I can't force a vote - but if you carry three neighbours' views back here in person, the room has to sit and choose. Will you?",
                   "options": [
                     {
-                      "label": "Light the lane to Ossuary.",
-                      "next": "lit",
+                      "label": "I'll gather the three views.",
+                      "next": "accepted",
                       "actions": [
-                        "set_flag:beacon_ossuary_told",
-                        "light_beacon:ossuary",
-                        "set_flag:act_pressure"
+                        "set_flag:assembly_accepted",
+                        "start_mission:the_drift_assembly"
                       ]
                     },
                     {
-                      "label": "Not yet.",
+                      "label": "Decide it yourselves.",
                       "next": null
                     }
                   ]
                 },
-                "lit": {
-                  "text": "Done. Ossuary's beacon is live. Mind what you carry through it.",
+                "accepted": {
+                  "text": "Thank you. Ferry-wright Osei at the Slip, Water-keeper Tam at the Water Office, and old Bevin down in Canopy Rest. Hear each of them out and come back.",
+                  "options": [
+                    {
+                      "label": "On my way",
+                      "next": null
+                    }
+                  ]
+                },
+                "midway": {
+                  "text": "Still gathering? Osei, Tam, and Bevin. Your Mission Log has them. The room won't sit until all three have been heard.",
+                  "options": [
+                    {
+                      "label": "Keep going",
+                      "next": null
+                    },
+                    {
+                      "label": "I'll leave you to it",
+                      "next": "declined",
+                      "action": "abandon_mission:the_drift_assembly"
+                    }
+                  ]
+                },
+                "declined": {
+                  "text": "That's alright. We'll get there. We always do, eventually. Ossuary's lane is keyed for you whenever you want it - go gently.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": null,
+                      "action": "light_beacon:ossuary"
+                    }
+                  ]
+                },
+                "done": {
+                  "text": "The room chose - narrowly, and nobody's happy, which is how you know it was fair. Ossuary's lane is open, and we've sent word we may need friends soon. Thank you for making us sit down.",
+                  "options": [
+                    {
+                      "label": "Safe assembly",
+                      "next": null
+                    }
+                  ]
+                },
+                "warm": {
+                  "text": "You gave us a decision when we couldn't reach one ourselves. If the Span asks what the Drift wants, we'd trust you to say it: open, and ungoverned.",
+                  "options": [
+                    {
+                      "label": "Pledge the Drift your voice.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:the_drift",
+                      "actions": [
+                        "set_exclusive_flag:patron:the_drift",
+                        "adjust_rep:the_drift:8"
+                      ]
+                    },
+                    {
+                      "label": "I'll think on it",
+                      "next": null
+                    }
+                  ]
+                },
+                "pledged": {
+                  "text": "Then you speak for us at the Hub. Keep it open. Keep it everyone's.",
                   "options": [
                     {
                       "label": "Understood",
@@ -133,11 +381,233 @@
                     }
                   ]
                 },
-                "already": {
-                  "text": "Ossuary's lane is open. Safe transit.",
+                "convene": {
+                  "text": "All three, heard in person. Then the assembly sits - now, with you in the room. ... It's done. Narrowly. We open the lane to Ossuary, and we send word we may need friends. Thank you for making us choose.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null,
+                      "requires_not_flag": "assembly_convened",
+                      "actions": [
+                        "set_flag:assembly_convened"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Ferry-wright Osei",
+            "x": 1320,
+            "y": 470,
+            "role": "ship_salesman",
+            "faction": "the_drift",
+            "outfit": "drift_official_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "assembly_view_osei",
+                  "node": "heard"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "We refit liners and barges, mostly - roomy, slow, kind to fly. You're carrying views to the assembly? Mine's simple: open the lane. Trade's been a decades-long loop my whole life. Let it be a day.",
+                  "options": [
+                    {
+                      "label": "I'll carry that.",
+                      "next": "ok",
+                      "requires_flag": "assembly_accepted",
+                      "actions": [
+                        "set_flag:assembly_view_osei"
+                      ]
+                    },
+                    {
+                      "label": "Just browsing.",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Good. Tell Sela the Slip votes to open. And come back if you need a hull with room to sleep in.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "heard": {
+                  "text": "You've got my view. Open the lane. Now - a barge, or just looking?",
+                  "options": [
+                    {
+                      "label": "Show me the hulls",
+                      "next": "shop"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "shop": {
+                  "text": "Take a look.",
+                  "options": [
+                    {
+                      "label": "(browse)",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            },
+            "shop": {
+              "type": "ships",
+              "stock": [
+                "drift_hauler",
+                "drift_courier",
+                "carrier_hauler",
+                "carrier_courier"
+              ]
+            }
+          },
+          {
+            "name": "Water-keeper Tam",
+            "x": 300,
+            "y": 470,
+            "role": "quartermaster",
+            "faction": "the_drift",
+            "outfit": "drift_dock_femme",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "assembly_view_tam",
+                  "node": "heard"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "I keep the ring's water accounts. My view for the assembly? Caution. If we open the lane, Kiln's next through it, and they don't send traders. But I won't stand in the way of a vote.",
+                  "options": [
+                    {
+                      "label": "I'll carry that.",
+                      "next": "ok",
+                      "requires_flag": "assembly_accepted",
+                      "actions": [
+                        "set_flag:assembly_view_tam"
+                      ]
+                    },
+                    {
+                      "label": "What do you trade?",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Thank you. Tell them the Water Office says wait - but says it, doesn't shout it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": "shop"
+                    }
+                  ]
+                },
+                "heard": {
+                  "text": "You have my view. Trade, if you need to.",
+                  "options": [
+                    {
+                      "label": "Trade",
+                      "next": "shop"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "shop": {
+                  "text": "Grain, fibre, water-credits.",
+                  "options": [
+                    {
+                      "label": "(browse)",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            },
+            "shop": {
+              "type": "commodities",
+              "stock": [
+                "grain",
+                "water_credits"
+              ],
+              "sell_multiplier": 1.1
+            }
+          },
+          {
+            "name": "Old Bevin",
+            "x": 1300,
+            "y": 900,
+            "role": "bartender",
+            "faction": "the_drift",
+            "outfit": "drift_civilian_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "assembly_view_bevin",
+                  "node": "heard"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Canopy Rest. I've watched the Drift not-decide things for sixty years. My view? Doesn't matter which way. What matters is we choose together and mean it. Tell the room that.",
+                  "options": [
+                    {
+                      "label": "I'll carry that.",
+                      "next": "ok",
+                      "requires_flag": "assembly_accepted",
+                      "actions": [
+                        "set_flag:assembly_view_bevin"
+                      ]
+                    },
+                    {
+                      "label": "Pour me one.",
+                      "next": "drink"
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Good lad. Now sit - one cup before you go back up there.",
                   "options": [
                     {
                       "label": "Thanks",
+                      "next": "drink"
+                    }
+                  ]
+                },
+                "heard": {
+                  "text": "Said my piece. Have a cup.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": "drink"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "drink": {
+                  "text": "Highcanopy cordial. Grown three rings over. Sl? Cheers.",
+                  "options": [
+                    {
+                      "label": "Cheers",
                       "next": null
                     }
                   ]
@@ -147,51 +617,88 @@
           },
           {
             "name": "Seed-warden Nim",
-            "x": 650,
-            "y": 700,
-            "role": "quartermaster",
+            "x": 900,
+            "y": 470,
+            "role": "clerk",
             "faction": "the_drift",
             "outfit": "drift_dock_masc",
-            "greeting": "Grain, fibre, water-credits. Pay what's fair and we'll trade again.",
-            "shop": {
-              "type": "commodities",
-              "stock": [
-                "grain",
-                "water_credits"
-              ],
-              "sell_multiplier": 1.15
-            }
-          },
-          {
-            "name": "Wander-from traveler",
-            "x": 960,
-            "y": 700,
-            "role": "resident",
-            "faction": "the_drift",
-            "outfit": "drift_civilian_femme",
-            "greeting": "The beacon relit and half of us are thrilled and half are terrified. That's Verdance for you.",
+            "greeting": "Every habitat sends a seed-share to the store, every habitat draws one back. It's worked for two hundred years without anyone in charge of it. That frightens the Authority more than any warship.",
             "dialogue_options": [
-              "I see",
+              "I can see why",
               "Leave"
             ]
           },
           {
-            "name": "Ferry-wright Osei",
-            "x": 800,
-            "y": 780,
-            "role": "ship_salesman",
+            "name": "Canopy-warden Rue",
+            "x": 640,
+            "y": 700,
+            "role": "guard",
             "faction": "the_drift",
-            "outfit": "drift_official_masc",
-            "greeting": "We refit liners and passenger hulls, mostly. Roomy. Slow. Kind to fly.",
+            "outfit": "drift_security_femme",
+            "greeting": "I've the watch this week. It's just walking the Walk and being someone to shout for. Next week it's someone else. That's the whole militia.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Trellis-hand Fen",
+            "x": 960,
+            "y": 700,
+            "role": "outfitter",
+            "faction": "the_drift",
+            "outfit": "drift_security_masc",
+            "greeting": "We don't really make weapons. But the light-lances off the watchboats fit a civilian hull, and a hull that carries more grain is a hull worth more to everyone.",
             "shop": {
-              "type": "ships",
+              "type": "outfits",
               "stock": [
-                "drift_courier",
-                "drift_hauler",
-                "carrier_courier",
-                "carrier_hauler"
+                "pulse_blaster",
+                "afterburner",
+                "cargo_expansion",
+                "reinforced_hull",
+                "laser_cannon"
               ]
             }
+          },
+          {
+            "name": "Under-ring traveller",
+            "x": 400,
+            "y": 700,
+            "role": "resident",
+            "faction": "the_drift",
+            "outfit": "drift_civilian_femme",
+            "greeting": "The beacon relit and half of us are thrilled and half are terrified. That's Verdance for you. We'll talk about it for a month.",
+            "dialogue_options": [
+              "Ha",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Carrier at the Slip",
+            "x": 1240,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_flight_masc",
+            "requires_flag": "beacon_ossuary_lit",
+            "greeting": "Drift's the only system that just lets us tie up and rest. Carriers won't forget that when the Hub asks who to trust.",
+            "dialogue_options": [
+              "Fly safe",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Carrier off the Slip",
+            "x": 1180,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_civilian_masc",
+            "greeting": "Drift's the only berth in the region that just says 'tie up, rest'. Carriers remember that. When the Hub asks who to trust, we'll say the Drift.",
+            "dialogue_options": [
+              "Fair enough",
+              "Leave"
+            ]
           }
         ]
       }
@@ -199,28 +706,28 @@
   },
   "moon": {
     "name": "the Undergarden",
-    "x": 0.82,
-    "y": 0.78,
-    "size": 30,
+    "x": 0.8,
+    "y": 0.8,
+    "size": 32,
     "color": [
-      170,
-      170,
-      180
+      110,
+      140,
+      100
     ],
     "crater_color": [
-      130,
-      130,
-      140
+      80,
+      108,
+      74
     ],
-    "landing_distance": 35,
+    "landing_distance": 36,
     "craters": [
       {
-        "x": -8,
-        "y": -5,
+        "x": -9,
+        "y": -3,
         "radius": 4
       },
       {
-        "x": 10,
+        "x": 8,
         "y": 8,
         "radius": 5
       }
@@ -232,68 +739,120 @@
         "connected_locations": [],
         "entrance": {
           "x": 800,
-          "y": 800
+          "y": 840
         },
         "rooms": [
           {
-            "label": "the Undergarden",
-            "shape": "circle",
-            "center": [
-              800,
-              800
-            ],
-            "radius": 300,
-            "sides": 40
+            "label": "Undergarden Ring",
+            "polygon": [
+              [
+                160,
+                220
+              ],
+              [
+                1440,
+                220
+              ],
+              [
+                1440,
+                1140
+              ],
+              [
+                160,
+                1140
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 520,
             "building_type": "drift_hall"
           },
           {
-            "x": 620,
-            "y": 760,
+            "x": 440,
+            "y": 780,
             "building_type": "drift_housing"
           },
           {
-            "x": 980,
-            "y": 760,
+            "x": 1160,
+            "y": 780,
             "building_type": "drift_housing"
+          },
+          {
+            "x": 800,
+            "y": 320,
+            "building_type": "drift_spire"
+          },
+          {
+            "x": 520,
+            "y": 1000,
+            "building_type": "planter"
           },
           {
             "x": 700,
-            "y": 960,
+            "y": 1000,
             "building_type": "planter"
           },
           {
             "x": 900,
-            "y": 960,
-            "building_type": "crates"
+            "y": 1000,
+            "building_type": "planter"
           },
           {
-            "x": 640,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 1080,
+            "y": 1000,
+            "building_type": "planter"
           },
           {
-            "x": 960,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 320,
+            "y": 1060,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1300,
+            "y": 1060,
+            "building_type": "pipeline_bench"
           }
         ],
         "npcs": [
           {
-            "name": "Surface Warden",
+            "name": "Speaker-for-now Adda",
             "x": 800,
-            "y": 900,
+            "y": 700,
+            "role": "magistrate",
+            "faction": "the_drift",
+            "outfit": "drift_official_femme",
+            "greeting": "The Undergarden grows most of what the ring eats. If the vote goes to open the lane, we're the ones Kiln's warships pass first. I hope your three views weigh that.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Grower Pell",
+            "x": 520,
+            "y": 620,
             "role": "resident",
             "faction": "the_drift",
             "outfit": "drift_civilian_masc",
-            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "greeting": "Forty crops I've raised down here. Never once needed a hierarchy to do it. Tell that to whoever asks.",
             "dialogue_options": [
-              "Understood",
+              "I will",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Canopy-hand Wen",
+            "x": 1080,
+            "y": 900,
+            "role": "dockworker",
+            "faction": "the_drift",
+            "outfit": "drift_dock_femme",
+            "greeting": "Grain run's ready whenever the assembly says a word. We've been ready for six days.",
+            "dialogue_options": [
+              "Soon",
               "Leave"
             ]
           }
@@ -303,13 +862,31 @@
   },
   "celestial_bodies": [
     {
-      "name": "Verdance b",
-      "x": 0.62,
+      "name": "Verdance",
+      "x": 0.5,
       "y": 0.5,
-      "size": 18,
+      "size": 62,
       "color": [
-        160,
-        140,
+        210,
+        190,
+        120
+      ],
+      "body_type": "gas_giant",
+      "has_ring": true,
+      "ring_color": [
+        180,
+        200,
+        150
+      ]
+    },
+    {
+      "name": "Ring Nine",
+      "x": 0.28,
+      "y": 0.66,
+      "size": 10,
+      "color": [
+        150,
+        170,
         130
       ],
       "body_type": "rocky"
@@ -317,9 +894,9 @@
   ],
   "ai_ships": [
     {
-      "name": "Drift Watch",
-      "x": 0.6,
-      "y": 0.55,
+      "name": "Drift Watch Sella",
+      "x": 0.55,
+      "y": 0.16,
       "ship_type": "drift_patrol",
       "pilot": "sella",
       "faction": "the_drift",
@@ -329,15 +906,27 @@
       ]
     },
     {
-      "name": "Canopy Hauler",
+      "name": "Canopy Barge Nim",
       "x": 0.35,
-      "y": 0.2,
+      "y": 0.22,
       "ship_type": "drift_hauler",
       "pilot": "nim",
       "faction": "the_drift",
       "route": [
         "station",
         "moon"
+      ]
+    },
+    {
+      "name": "Grain Run Ost",
+      "x": 0.68,
+      "y": 0.6,
+      "ship_type": "drift_hauler",
+      "pilot": "ost",
+      "faction": "the_drift",
+      "route": [
+        "moon",
+        "station"
       ]
     },
     {
@@ -352,6 +941,18 @@
         "moon"
       ],
       "requires_rep_below": "ninefold_combine:-20"
+    },
+    {
+      "name": "Captain Ash",
+      "x": 0.72,
+      "y": 0.28,
+      "ship_type": "carrier_hauler",
+      "pilot": "ash",
+      "faction": "free_carrier",
+      "route": [
+        "station",
+        "moon"
+      ]
     }
   ],
   "locked": true,

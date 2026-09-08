@@ -1,0 +1,110 @@
+{
+  "identity": "Drift leaf mantle - a soft layered shoulder wrap of overlapping canvas leaves, worn by growers and hosts against the cloud-city chill.",
+  "tier": "person",
+  "palette": "drift_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "long coat",
+      "note": "leaf mantle",
+      "color": "cloth",
+      "shade": "soft",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -4.6,
+              -25.6
+            ],
+            [
+              4.6,
+              -25.6
+            ],
+            [
+              3.8,
+              -18.0
+            ],
+            [
+              -3.8,
+              -18.0
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "denim",
+              "shade": "soft",
+              "note": "mantle leaf edge",
+              "points": [
+                [
+                  -4.2,
+                  -20.5
+                ],
+                [
+                  4.2,
+                  -20.5
+                ],
+                [
+                  3.6,
+                  -18.4
+                ],
+                [
+                  -3.6,
+                  -18.4
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -4.1,
+              -25.5
+            ],
+            [
+              4.1,
+              -25.5
+            ],
+            [
+              3.4,
+              -18.6
+            ],
+            [
+              -3.4,
+              -18.6
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "denim",
+              "shade": "soft",
+              "note": "mantle leaf edge",
+              "points": [
+                [
+                  -3.7,
+                  -21.0
+                ],
+                [
+                  3.7,
+                  -21.0
+                ],
+                [
+                  3.2,
+                  -19.0
+                ],
+                [
+                  -3.2,
+                  -19.0
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

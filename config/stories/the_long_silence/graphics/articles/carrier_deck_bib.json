@@ -1,0 +1,58 @@
+{
+  "identity": "Free carrier deck bib - a scuffed canvas apron to the thigh with grease-black hand-prints and two big tool pockets, worn on the cargo deck.",
+  "tier": "person",
+  "palette": "carrier_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "skirt",
+      "note": "deck bib",
+      "color": "denim",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.6,
+              -19.6
+            ],
+            [
+              2.6,
+              -19.6
+            ],
+            [
+              3.0,
+              -10.0
+            ],
+            [
+              -3.0,
+              -10.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.3,
+              -20.2
+            ],
+            [
+              2.3,
+              -20.2
+            ],
+            [
+              2.7,
+              -10.4
+            ],
+            [
+              -2.7,
+              -10.4
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

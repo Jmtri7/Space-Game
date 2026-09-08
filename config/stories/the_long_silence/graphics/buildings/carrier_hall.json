@@ -1,16 +1,17 @@
 {
-  "identity": "the free carriers Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "identity": "Free carrier berth-hall, head-on: a wide patched cargo shed of welded panels in six greys, a roller door, a hand-painted name-board across the front. Whoever's tied up here this month.",
   "tier": "building",
   "palette": "carrier",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~1.4x PLAYER_H tall, ~3.6x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
       "shade": "matte",
-      "note": "wall",
+      "note": "shed wall",
+      "flatten_px": 60,
       "points": [
         [
           -56,
@@ -22,44 +23,19 @@
         ],
         [
           56,
-          -42
+          -36
         ],
         [
-          48,
-          -50
+          50,
+          -44
         ],
         [
-          -48,
-          -50
+          -50,
+          -44
         ],
         [
           -56,
-          -42
-        ]
-      ],
-      "flatten_px": 60
-    },
-    {
-      "group": "body",
-      "color": "hull",
-      "shade": "deep",
-      "note": "roof",
-      "points": [
-        [
-          -56,
-          -42
-        ],
-        [
-          56,
-          -42
-        ],
-        [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
+          -36
         ]
       ]
     },
@@ -67,22 +43,22 @@
       "group": "body",
       "color": "engine",
       "shade": "matte",
-      "note": "opening",
+      "note": "roller door",
       "points": [
         [
-          -46,
-          -34
+          -22.400000000000002,
+          -26.4
         ],
         [
-          46,
-          -34
+          22.400000000000002,
+          -26.4
         ],
         [
-          46,
+          22.400000000000002,
           0
         ],
         [
-          -46,
+          -22.400000000000002,
           0
         ]
       ]
@@ -91,133 +67,107 @@
   "details": [
     {
       "group": "body",
+      "color": "#96a5b9",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 35,
+      "note": "welded panel 0",
+      "points": [
+        [
+          -41.440000000000005,
+          -27.28
+        ],
+        [
+          -25.76,
+          -27.28
+        ],
+        [
+          -25.76,
+          -16.72
+        ],
+        [
+          -41.440000000000005,
+          -16.72
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "#706660",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 35,
+      "note": "welded panel 1",
+      "points": [
+        [
+          21.840000000000003,
+          -23.76
+        ],
+        [
+          39.760000000000005,
+          -23.76
+        ],
+        [
+          39.760000000000005,
+          -11.440000000000001
+        ],
+        [
+          21.840000000000003,
+          -11.440000000000001
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "#7a986f",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 35,
+      "note": "welded panel 2",
+      "points": [
+        [
+          -16.8,
+          -40.92
+        ],
+        [
+          16.8,
+          -40.92
+        ],
+        [
+          16.8,
+          -33.879999999999995
+        ],
+        [
+          -16.8,
+          -33.879999999999995
+        ]
+      ]
+    },
+    {
+      "group": "body",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "fascia",
+      "min_px": 14,
+      "note": "name-board",
       "points": [
         [
-          -52,
-          -40
+          -28.0,
+          -31.68
         ],
         [
-          52,
-          -40
+          28.0,
+          -31.68
         ],
         [
-          52,
-          -34
+          28.0,
+          -26.4
         ],
         [
-          -52,
-          -34
+          -28.0,
+          -26.4
         ]
-      ],
-      "min_px": 18
-    },
-    {
-      "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "role": "detail",
-      "note": "near post",
-      "points": [
-        [
-          -48,
-          -34
-        ],
-        [
-          -44,
-          -34
-        ],
-        [
-          -44,
-          0
-        ],
-        [
-          -48,
-          0
-        ]
-      ],
-      "min_px": 16
-    },
-    {
-      "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "role": "detail",
-      "note": "far post",
-      "points": [
-        [
-          44,
-          -34
-        ],
-        [
-          48,
-          -34
-        ],
-        [
-          48,
-          0
-        ],
-        [
-          44,
-          0
-        ]
-      ],
-      "min_px": 16
-    },
-    {
-      "group": "body",
-      "color": "metal",
-      "shade": "deep",
-      "role": "detail",
-      "note": "stall 0",
-      "points": [
-        [
-          -42,
-          -20
-        ],
-        [
-          -8,
-          -20
-        ],
-        [
-          -8,
-          0
-        ],
-        [
-          -42,
-          0
-        ]
-      ],
-      "min_px": 24
-    },
-    {
-      "group": "body",
-      "color": "metal",
-      "shade": "deep",
-      "role": "detail",
-      "note": "stall 1",
-      "points": [
-        [
-          8,
-          -20
-        ],
-        [
-          42,
-          -20
-        ],
-        [
-          42,
-          0
-        ],
-        [
-          8,
-          0
-        ]
-      ],
-      "min_px": 24
+      ]
     }
   ]
 }

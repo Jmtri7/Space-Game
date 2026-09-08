@@ -1,6 +1,6 @@
 {
   "name": "Kiln",
-  "description": "A red-dwarf system, one scorched world, deep-mine settlements under the moons. The Ninefold Combine rations everything and does not want the Relay back.",
+  "description": "A red-dwarf system - one scorched inner world, deep-mine settlements under the moons. The Ninefold Combine rations everything, enforces it without mercy, and does not want the Relay back.",
   "star_map_position": {
     "x": 260,
     "y": -40
@@ -11,22 +11,22 @@
     "x": 0.5,
     "y": 0.5,
     "name": "Kiln",
-    "size": 90,
+    "size": 84,
     "color": [
       255,
-      150,
-      110
+      140,
+      96
     ]
   },
   "player_start": {
     "x": 0.4,
-    "y": 0.35
+    "y": 0.32
   },
   "star_seed": 202,
   "asteroid_field": {
     "per_chunk_range": [
-      1,
-      3
+      2,
+      4
     ],
     "types": [
       {
@@ -34,19 +34,32 @@
         "weight": 3,
         "size_range": [
           4,
-          18
+          20
         ],
         "speed_range": [
           0.05,
           0.3
         ],
-        "mine_yield": 10
+        "mine_yield": 12
+      },
+      {
+        "type": "brown_rock",
+        "weight": 2,
+        "size_range": [
+          8,
+          28
+        ],
+        "speed_range": [
+          0.04,
+          0.22
+        ],
+        "mine_yield": 18
       }
     ]
   },
   "station": {
-    "x": 0.2,
-    "y": 0.25,
+    "x": 0.18,
+    "y": 0.22,
     "name": "Combine Hold",
     "interiors": {
       "default": {
@@ -54,78 +67,272 @@
         "culture": "ninefold_combine",
         "portals": [
           {
-            "x": 800,
-            "y": 430,
+            "x": 1360,
+            "y": 470,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Concourse",
-            "shape": "circle",
-            "center": [
-              800,
-              640
-            ],
-            "radius": 320,
-            "sides": 40
+            "label": "Hold Concourse",
+            "polygon": [
+              [
+                120,
+                560
+              ],
+              [
+                1480,
+                560
+              ],
+              [
+                1480,
+                740
+              ],
+              [
+                120,
+                740
+              ]
+            ]
+          },
+          {
+            "label": "Contract Hall",
+            "polygon": [
+              [
+                240,
+                360
+              ],
+              [
+                560,
+                360
+              ],
+              [
+                560,
+                590
+              ],
+              [
+                240,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Assay Office",
+            "polygon": [
+              [
+                760,
+                360
+              ],
+              [
+                1040,
+                360
+              ],
+              [
+                1040,
+                590
+              ],
+              [
+                760,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "The Ledger Dock",
+            "polygon": [
+              [
+                1180,
+                360
+              ],
+              [
+                1480,
+                360
+              ],
+              [
+                1480,
+                590
+              ],
+              [
+                1180,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "Ration Store",
+            "polygon": [
+              [
+                160,
+                710
+              ],
+              [
+                460,
+                710
+              ],
+              [
+                460,
+                980
+              ],
+              [
+                160,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "Cutters' Rest",
+            "polygon": [
+              [
+                1140,
+                710
+              ],
+              [
+                1480,
+                710
+              ],
+              [
+                1480,
+                980
+              ],
+              [
+                1140,
+                980
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 650,
             "building_type": "combine_spire"
           },
           {
-            "x": 650,
-            "y": 820,
+            "x": 560,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 720,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 880,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 560,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 720,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 880,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 360,
+            "y": 470,
+            "building_type": "crates"
+          },
+          {
+            "x": 300,
+            "y": 900,
+            "building_type": "crates"
+          },
+          {
+            "x": 1300,
+            "y": 470,
+            "building_type": "crates"
+          },
+          {
+            "x": 1300,
+            "y": 900,
             "building_type": "pipeline_bench"
           },
           {
-            "x": 950,
-            "y": 820,
-            "building_type": "pipeline_bench"
+            "x": 1140,
+            "y": 690,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "Factor Tol",
             "x": 800,
-            "y": 540,
+            "y": 660,
             "role": "stationmaster",
             "faction": "ninefold_combine",
             "outfit": "combine_official_masc",
+            "ambient": {
+              "range": 620,
+              "message": "New hull on Combine ground. Nothing moves here without a contract - come to me before you trade a bolt."
+            },
             "dialogue_tree": {
               "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "combine_tally_filed",
+                  "node": "report"
+                },
+                {
+                  "flag": "combine_contract_done",
+                  "node": "done"
+                },
+                {
+                  "flag": "combine_contract_accepted",
+                  "node": "midway"
+                },
+                {
+                  "faction": "ninefold_combine",
+                  "min": 25,
+                  "node": "warm"
+                }
+              ],
               "nodes": {
                 "start": {
-                  "text": "You're on Combine ground. Every transaction here is a contract, and we did not sign one with a beacon. State your business.",
+                  "text": "You're on Combine ground, and the Combine did not sign a contract with a beacon. But a hull that will carry a sealed manifest to Shaft VII and back has proven it can follow terms - and the Combine will key Verdance's lane for a partner, not a tourist. Or you can leave now.",
                   "options": [
                     {
-                      "label": "I'm passing through - and heading for Verdance.",
-                      "next": "civil",
-                      "requires_not_flag": "beacon_verdance_told",
+                      "label": "I'll sign. Give me the terms.",
+                      "next": "signed",
                       "actions": [
-                        "set_flag:beacon_verdance_told",
-                        "light_beacon:verdance",
-                        "adjust_rep:ninefold_combine:4"
+                        "set_flag:combine_contract_accepted",
+                        "start_mission:combine_contract"
                       ]
                     },
                     {
-                      "label": "The Authority is opening this system with or without your consent.",
+                      "label": "The Authority opens this system with or without you.",
                       "next": "threatened",
-                      "action": "adjust_rep:ninefold_combine:-50"
+                      "actions": [
+                        "adjust_rep:ninefold_combine:-45"
+                      ]
                     },
                     {
-                      "label": "Nothing. Leaving.",
+                      "label": "Just leave.",
                       "next": null
                     }
                   ]
                 },
-                "civil": {
-                  "text": "Then be quick and be gone. Verdance's lane is keyed - the Combine will note that you asked politely.",
+                "signed": {
+                  "text": "Terms: the manifest is sealed, you do not open it, you do not deviate. Tallykeeper Vess holds it - the Assay Office, north. The Warden of Contract witnesses your mark first.",
                   "options": [
                     {
                       "label": "Understood",
@@ -133,11 +340,137 @@
                     }
                   ]
                 },
-                "threatened": {
-                  "text": "Then the contract is void, and so is your safe conduct. Clear our space.",
+                "midway": {
+                  "text": "The contract is open. Check your Mission Log. Break the seal or the route and it voids - and so does your welcome.",
+                  "options": [
+                    {
+                      "label": "Keep going",
+                      "next": null
+                    },
+                    {
+                      "label": "I'm done with this.",
+                      "next": "abandoned",
+                      "action": "abandon_mission:combine_contract"
+                    }
+                  ]
+                },
+                "abandoned": {
+                  "text": "Void, then. Clear our space before the Warden logs it.",
                   "options": [
                     {
                       "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "threatened": {
+                  "text": "Then the contract is void before it is written, and so is your safe conduct. The Combine has already voted on hulls that will not leave. Clear our space.",
+                  "options": [
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "done": {
+                  "text": "The manifest is logged and the seal intact. Verdance's lane is keyed - the Combine will remember you kept terms. It will also remember that you now know the way to our door.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "warm": {
+                  "text": "You've kept every term the Combine set you. When the Span asks its question, a voice that honours a contract is one the Combine would stand behind.",
+                  "options": [
+                    {
+                      "label": "Pledge the Combine your word.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:ninefold_combine",
+                      "actions": [
+                        "set_exclusive_flag:patron:ninefold_combine",
+                        "adjust_rep:ninefold_combine:8"
+                      ]
+                    },
+                    {
+                      "label": "I'll consider it",
+                      "next": null
+                    }
+                  ]
+                },
+                "pledged": {
+                  "text": "Sealed. You answer for the Combine at the Span - and the Combine wants the beacons dark.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "report": {
+                  "text": "The carriage is closed and the seal was never touched. Verdance's lane is yours - the Combine keeps its word, and expects the same from a partner it now knows how to find.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null,
+                      "requires_not_flag": "combine_contract_reported",
+                      "actions": [
+                        "set_flag:combine_contract_reported"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Warden of Contract Raik",
+            "x": 470,
+            "y": 470,
+            "role": "guard",
+            "faction": "ninefold_combine",
+            "outfit": "combine_security_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "combine_witnessed",
+                  "node": "witnessed"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "I witness marks and I enforce them. You're signing the Shaft VII carriage? Put your hand on the seal-stone and I'll log it.",
+                  "options": [
+                    {
+                      "label": "Witness my mark.",
+                      "next": "ok",
+                      "requires_flag": "combine_contract_accepted",
+                      "actions": [
+                        "set_flag:combine_witnessed"
+                      ]
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Logged. Vess has the manifest. Break the seal and the next Combine hull you meet is a patrol, not a greeting.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "witnessed": {
+                  "text": "Your mark's logged. Keep the seal whole.",
+                  "options": [
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]
@@ -147,12 +480,87 @@
           },
           {
             "name": "Tallykeeper Vess",
-            "x": 650,
-            "y": 700,
+            "x": 900,
+            "y": 470,
             "role": "quartermaster",
             "faction": "ninefold_combine",
             "outfit": "combine_dock_masc",
-            "greeting": "Ore and rationed goods. Combine rates, non-negotiable - that's the point of them.",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "combine_tally_returned",
+                  "node": "filing"
+                },
+                {
+                  "flag": "combine_manifest_taken",
+                  "node": "taken"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Sealed manifest for Shaft VII. Witnessed? Then it's yours to carry - and only to carry.",
+                  "options": [
+                    {
+                      "label": "Take the sealed manifest.",
+                      "next": "handed",
+                      "requires_flag": "combine_witnessed",
+                      "actions": [
+                        "set_flag:combine_manifest_taken"
+                      ]
+                    },
+                    {
+                      "label": "Come back for it.",
+                      "next": null
+                    }
+                  ]
+                },
+                "handed": {
+                  "text": "Logged out. Shaft VII, hand it to Deepmaster Orin, bring back his tally. Don't open it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "taken": {
+                  "text": "You're carrying Combine cargo. Shaft VII. Orin. His tally comes back to me.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "filing": {
+                  "text": "Orin's tally. Give it here - I'll file it against the carriage.",
+                  "options": [
+                    {
+                      "label": "File the tally.",
+                      "next": "filed",
+                      "requires_not_flag": "combine_tally_filed",
+                      "actions": [
+                        "set_flag:combine_tally_filed"
+                      ]
+                    },
+                    {
+                      "label": "In a moment.",
+                      "next": null
+                    }
+                  ]
+                },
+                "filed": {
+                  "text": "Filed. Tell the Factor the carriage is closed.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            },
             "shop": {
               "type": "commodities",
               "stock": [
@@ -163,26 +571,13 @@
             }
           },
           {
-            "name": "Deep-hand Corr",
-            "x": 960,
-            "y": 700,
-            "role": "resident",
-            "faction": "ninefold_combine",
-            "outfit": "combine_civilian_femme",
-            "greeting": "Air's metered by the shift down here. You get used to counting breaths.",
-            "dialogue_options": [
-              "I see",
-              "Leave"
-            ]
-          },
-          {
             "name": "Deck-chief Marn",
-            "x": 800,
-            "y": 780,
+            "x": 1300,
+            "y": 470,
             "role": "ship_salesman",
             "faction": "ninefold_combine",
             "outfit": "combine_official_femme",
-            "greeting": "Combine hulls. Built heavy, priced by the contract. What's your trade need?",
+            "greeting": "Combine hulls. Built heavy, priced by the contract, and they come back from the deep. What's your trade need?",
             "shop": {
               "type": "ships",
               "stock": [
@@ -192,6 +587,143 @@
                 "carrier_hauler"
               ]
             }
+          },
+          {
+            "name": "Assay-clerk Dorn",
+            "x": 900,
+            "y": 540,
+            "role": "clerk",
+            "faction": "ninefold_combine",
+            "outfit": "combine_dock_femme",
+            "greeting": "Every gram in, every gram out, weighed twice. The Combine survived two centuries on that habit. We're not about to stop for a beacon.",
+            "dialogue_options": [
+              "Fair enough",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Approach-Warden Sesk",
+            "x": 1400,
+            "y": 480,
+            "role": "outfitter",
+            "faction": "ninefold_combine",
+            "outfit": "combine_security_femme",
+            "greeting": "Combine-issue only, and rationed. Everything's rated for the shafts - it'll take worse than you can give it.",
+            "shop": {
+              "type": "outfits",
+              "stock": [
+                "pulse_blaster",
+                "laser_cannon",
+                "reinforced_hull",
+                "cargo_expansion",
+                "afterburner"
+              ]
+            }
+          },
+          {
+            "name": "Cutter Sol",
+            "x": 1300,
+            "y": 900,
+            "role": "bartender",
+            "faction": "ninefold_combine",
+            "outfit": "combine_civilian_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "Cutters' Rest. Ration ale, one measure. What do you want?",
+                  "options": [
+                    {
+                      "label": "A measure",
+                      "next": "drink"
+                    },
+                    {
+                      "label": "What are people saying?",
+                      "next": "gossip"
+                    },
+                    {
+                      "label": "Leave",
+                      "next": null
+                    }
+                  ]
+                },
+                "drink": {
+                  "text": "One measure. Make it last - there isn't a second one coming.",
+                  "options": [
+                    {
+                      "label": "Thanks",
+                      "next": "start"
+                    }
+                  ]
+                },
+                "gossip": {
+                  "text": "The Factors held a closed vote last week. Nobody'll say on what. But the patrol crews are drilling boarding actions, and the assayers are counting hull-plate like we're going to need it.",
+                  "options": [
+                    {
+                      "label": "Noted",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Deep-hand Corr",
+            "x": 300,
+            "y": 900,
+            "role": "resident",
+            "faction": "ninefold_combine",
+            "outfit": "combine_civilian_femme",
+            "greeting": "Air's metered by the shift down here. You get used to counting breaths. A beacon doesn't change what a lungful costs.",
+            "dialogue_options": [
+              "I see",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Rockjack Bsix",
+            "x": 640,
+            "y": 700,
+            "role": "dockworker",
+            "faction": "ninefold_combine",
+            "outfit": "combine_dock_masc",
+            "ambient": {
+              "range": 360,
+              "message": "Mind the claw arm - it swings on the ember light, not before it."
+            },
+            "greeting": "Thirty years cutting the Ninefold Deep. The Combine fed me every one of them. I know what I owe.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Stranded carrier",
+            "x": 980,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_civilian_femme",
+            "requires_flag": "beacon_ossuary_lit",
+            "greeting": "Combine impounded my hold for an unpaid approach fee I didn't know I owed. Two centuries they set their own rules. Now the beacon's back and they still do.",
+            "dialogue_options": [
+              "Rough",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Carrier at the claw",
+            "x": 1180,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_flight_femme",
+            "greeting": "Combine let me tie up for exactly one shift and charged me for the air. Two centuries of that. The beacon won't fix it but it might route around it.",
+            "dialogue_options": [
+              "Fair enough",
+              "Leave"
+            ]
           }
         ]
       }
@@ -203,97 +735,196 @@
     "y": 0.78,
     "size": 30,
     "color": [
-      170,
-      170,
-      180
+      120,
+      108,
+      100
     ],
     "crater_color": [
-      130,
-      130,
-      140
+      90,
+      78,
+      70
     ],
     "landing_distance": 35,
     "craters": [
       {
         "x": -8,
-        "y": -5,
+        "y": -4,
+        "radius": 5
+      },
+      {
+        "x": 9,
+        "y": 7,
         "radius": 4
       },
       {
-        "x": 10,
-        "y": 8,
-        "radius": 5
+        "x": 2,
+        "y": -9,
+        "radius": 3
       }
     ],
     "interiors": {
       "city": {
-        "label": "Shaft VII",
+        "label": "Shaft VII Headworks",
         "culture": "ninefold_combine",
         "connected_locations": [],
         "entrance": {
           "x": 800,
-          "y": 800
+          "y": 840
         },
         "rooms": [
           {
-            "label": "Shaft VII",
-            "shape": "circle",
-            "center": [
-              800,
-              800
-            ],
-            "radius": 300,
-            "sides": 40
+            "label": "Headworks Floor",
+            "polygon": [
+              [
+                160,
+                220
+              ],
+              [
+                1440,
+                220
+              ],
+              [
+                1440,
+                1140
+              ],
+              [
+                160,
+                1140
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 520,
             "building_type": "combine_hall"
           },
           {
-            "x": 620,
-            "y": 760,
+            "x": 430,
+            "y": 780,
             "building_type": "combine_housing"
           },
           {
-            "x": 980,
-            "y": 760,
+            "x": 1170,
+            "y": 780,
             "building_type": "combine_housing"
           },
           {
-            "x": 700,
-            "y": 960,
-            "building_type": "planter"
+            "x": 800,
+            "y": 330,
+            "building_type": "combine_spire"
           },
           {
-            "x": 900,
-            "y": 960,
+            "x": 560,
+            "y": 1000,
             "building_type": "crates"
           },
           {
-            "x": 640,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 1040,
+            "y": 1000,
+            "building_type": "crates"
           },
           {
-            "x": 960,
+            "x": 320,
+            "y": 1060,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1300,
+            "y": 1060,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 520,
             "y": 640,
-            "building_type": "lamp_post"
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1080,
+            "y": 640,
+            "building_type": "pipeline_column"
           }
         ],
         "npcs": [
           {
-            "name": "Surface Warden",
+            "name": "Deepmaster Orin",
             "x": 800,
+            "y": 700,
+            "role": "magistrate",
+            "faction": "ninefold_combine",
+            "outfit": "combine_official_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "combine_tally_returned",
+                  "node": "returned"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Shaft VII. You're the carrier with Vess's manifest. Hand it here - sealed.",
+                  "options": [
+                    {
+                      "label": "Deliver the sealed manifest.",
+                      "next": "ok",
+                      "requires_flag": "combine_manifest_taken",
+                      "actions": [
+                        "set_flag:combine_tally_returned",
+                        "adjust_rep:ninefold_combine:6"
+                      ]
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                },
+                "ok": {
+                  "text": "Seal's whole. Good. Here's my tally - back to Vess, and tell the Factor the Deep held its terms. It always does.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "returned": {
+                  "text": "You've your tally. The Hold's expecting it. Don't linger down here - the air's counted.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Shift-warden Palo",
+            "x": 560,
+            "y": 620,
+            "role": "guard",
+            "faction": "ninefold_combine",
+            "outfit": "combine_security_masc",
+            "greeting": "Every hull that lands here is logged against a contract. Yours checks out. Keep it that way.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Cutter Rell",
+            "x": 1080,
             "y": 900,
             "role": "resident",
             "faction": "ninefold_combine",
-            "outfit": "combine_civilian_masc",
-            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "outfit": "combine_civilian_femme",
+            "greeting": "Born in this shaft. I'll die in it. The Relay coming back just means more people to ration the same air.",
             "dialogue_options": [
-              "Understood",
+              "I see",
               "Leave"
             ]
           }
@@ -305,21 +936,33 @@
     {
       "name": "Kiln b",
       "x": 0.62,
-      "y": 0.5,
-      "size": 18,
+      "y": 0.52,
+      "size": 20,
       "color": [
-        160,
-        140,
-        130
+        150,
+        96,
+        74
+      ],
+      "body_type": "rocky"
+    },
+    {
+      "name": "Cinder",
+      "x": 0.3,
+      "y": 0.72,
+      "size": 12,
+      "color": [
+        120,
+        92,
+        84
       ],
       "body_type": "rocky"
     }
   ],
   "ai_ships": [
     {
-      "name": "Combine Watch",
-      "x": 0.6,
-      "y": 0.55,
+      "name": "Combine Watch Tolvic",
+      "x": 0.55,
+      "y": 0.14,
       "ship_type": "combine_patrol",
       "pilot": "tolvic",
       "faction": "ninefold_combine",
@@ -329,12 +972,48 @@
       ]
     },
     {
-      "name": "Ore Run",
+      "name": "Boarding Cutter Raska",
+      "x": 0.7,
+      "y": 0.4,
+      "ship_type": "combine_patrol",
+      "pilot": "raska",
+      "faction": "ninefold_combine",
+      "route": [
+        "station",
+        "moon"
+      ]
+    },
+    {
+      "name": "Ore Run Corran",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "combine_hauler",
       "pilot": "corran",
       "faction": "ninefold_combine",
+      "route": [
+        "moon",
+        "station"
+      ]
+    },
+    {
+      "name": "Deep Freight Molt",
+      "x": 0.66,
+      "y": 0.66,
+      "ship_type": "combine_hauler",
+      "pilot": "molt",
+      "faction": "ninefold_combine",
+      "route": [
+        "station",
+        "moon"
+      ]
+    },
+    {
+      "name": "Halloran's Run",
+      "x": 0.28,
+      "y": 0.62,
+      "ship_type": "carrier_courier",
+      "pilot": "dume",
+      "faction": "free_carrier",
       "route": [
         "station",
         "moon"

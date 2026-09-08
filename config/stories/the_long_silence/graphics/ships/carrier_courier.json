@@ -1,69 +1,82 @@
 {
-  "identity": "the free carriers Courier - a small fast dispatch hull. STYLE: patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Free carrier run-hull - three mismatched hull modules welded nose-to-tail, a canopy scavenged from a fourth ship, two odd-sized nacelles, cargo lashing over the spine and a hand-painted name bar on the flank. Reads as a lumpy dark box with two bright dots and a bright stripe.",
   "tier": "ship_near",
   "palette": "carrier",
   "size": 11,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
     {
-      "group": "hull",
+      "group": "fwd",
       "color": "hull",
-      "shade": "deep",
+      "shade": "matte",
       "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "note": "forward module",
       "points": [
         [
-          0.0,
-          -1.15
+          -0.28,
+          -1.1
         ],
         [
-          0.32,
-          -0.55
+          0.28,
+          -1.1
+        ],
+        [
+          0.34,
+          -0.6
+        ],
+        [
+          -0.34,
+          -0.6
+        ]
+      ]
+    },
+    {
+      "group": "mid",
+      "color": "hull_dk",
+      "shade": "matte",
+      "flatten_px": 45,
+      "note": "mid module",
+      "points": [
+        [
+          -0.38,
+          -0.6
+        ],
+        [
+          0.38,
+          -0.6
         ],
         [
           0.42,
-          0.1
+          0.4
         ],
         [
-          0.95,
-          0.75
+          -0.42,
+          0.4
+        ]
+      ]
+    },
+    {
+      "group": "aft",
+      "color": "engine",
+      "shade": "deep",
+      "flatten_px": 45,
+      "note": "aft module",
+      "points": [
+        [
+          -0.36,
+          0.4
         ],
         [
-          0.9,
-          1.05
-        ],
-        [
-          0.42,
-          0.95
+          0.36,
+          0.4
         ],
         [
           0.3,
-          1.15
+          0.98
         ],
         [
           -0.3,
-          1.15
-        ],
-        [
-          -0.42,
-          0.95
-        ],
-        [
-          -0.9,
-          1.05
-        ],
-        [
-          -0.95,
-          0.75
-        ],
-        [
-          -0.42,
-          0.1
-        ],
-        [
-          -0.32,
-          -0.55
+          0.98
         ]
       ]
     },
@@ -71,202 +84,246 @@
       "group": "canopy",
       "color": "glass",
       "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
+      "flatten_px": 55,
+      "note": "scavenged canopy",
       "points": [
         [
-          0.0,
-          -0.72
+          -0.13,
+          -0.9
         ],
         [
-          0.16,
-          -0.42
+          0.15,
+          -0.86
         ],
         [
-          0.14,
-          0.05
+          0.13,
+          -0.5
         ],
         [
-          0.0,
-          0.2
-        ],
-        [
-          -0.14,
-          0.05
-        ],
-        [
-          -0.16,
-          -0.42
+          -0.15,
+          -0.54
         ]
       ]
     },
     {
-      "group": "engine_r",
-      "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "group": "nac_r",
+      "color": "metal",
+      "shade": "metal",
+      "flatten_px": 45,
+      "note": "right nacelle (larger)",
       "points": [
         [
-          0.42,
-          0.35
+          0.36,
+          0.3
         ],
         [
-          0.62,
-          0.35
+          0.58,
+          0.3
         ],
         [
-          0.66,
-          1.0
+          0.58,
+          1.02
         ],
         [
-          0.46,
-          1.0
+          0.36,
+          1.02
         ]
       ]
     },
     {
-      "group": "engine_l",
-      "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
+      "group": "nac_l",
+      "color": "metal",
+      "shade": "metal",
+      "flatten_px": 45,
+      "note": "left nacelle (smaller)",
       "points": [
         [
-          -0.42,
-          0.35
+          -0.34,
+          0.36
         ],
         [
-          -0.62,
-          0.35
+          -0.5,
+          0.36
         ],
         [
-          -0.66,
-          1.0
+          -0.5,
+          0.94
         ],
         [
-          -0.46,
-          1.0
+          -0.34,
+          0.94
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "hull",
-      "color": "hull_dk",
+      "group": "mid",
+      "color": "#96a5b9",
       "shade": "matte",
       "role": "detail",
-      "min_px": 55,
-      "note": "spine panel line",
+      "min_px": 35,
+      "note": "welded panel 0",
       "points": [
         [
-          -0.06,
-          -0.5
+          -0.32,
+          -0.42
         ],
         [
-          0.06,
-          -0.5
+          -0.08000000000000002,
+          -0.42
         ],
         [
-          0.06,
-          1.05
+          -0.08000000000000002,
+          -0.18
         ],
         [
-          -0.06,
-          1.05
+          -0.32,
+          -0.18
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "hull_dk",
+      "group": "mid",
+      "color": "#706660",
       "shade": "matte",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
+      "min_px": 35,
+      "note": "welded panel 1",
       "points": [
         [
-          0.34,
-          0.15
+          0.07999999999999999,
+          0.0
         ],
         [
-          0.42,
-          0.15
+          0.36,
+          0.0
         ],
         [
-          0.9,
-          0.78
+          0.36,
+          0.2
         ],
         [
-          0.82,
-          0.82
+          0.07999999999999999,
+          0.2
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
+      "group": "mid",
+      "color": "#4a3f33",
+      "shade": "deep",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
+      "min_px": 45,
+      "note": "cargo lashing 0",
       "points": [
         [
-          -0.34,
-          0.15
+          -0.36,
+          -0.2
         ],
         [
-          -0.42,
-          0.15
+          0.36,
+          -0.1
         ],
         [
-          -0.9,
-          0.78
+          0.38,
+          -0.08
         ],
         [
-          -0.82,
-          0.82
+          -0.33999999999999997,
+          -0.18000000000000002
         ]
       ]
     },
     {
-      "group": "hull",
+      "group": "mid",
+      "color": "#4a3f33",
+      "shade": "deep",
+      "role": "detail",
+      "min_px": 45,
+      "note": "cargo lashing 1",
+      "points": [
+        [
+          -0.36,
+          0.1
+        ],
+        [
+          0.36,
+          0.2
+        ],
+        [
+          0.38,
+          0.22
+        ],
+        [
+          -0.33999999999999997,
+          0.12000000000000001
+        ]
+      ]
+    },
+    {
+      "group": "mid",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 50,
+      "note": "hand-painted name bar",
+      "points": [
+        [
+          -0.36,
+          -0.05
+        ],
+        [
+          0.36,
+          -0.05
+        ],
+        [
+          0.36,
+          0.05
+        ],
+        [
+          -0.36,
+          0.05
+        ]
+      ]
+    },
+    {
+      "group": "fwd",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
       "min_px": 90,
-      "note": "forward nav light, at the nose tip",
+      "note": "nav light",
       "circle": [
         0.0,
-        -1.02,
-        0.045
+        -1.05,
+        0.05
       ]
     },
     {
-      "group": "engine_r",
+      "group": "nac_r",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "right thruster",
       "circle": [
-        0.56,
+        0.47,
         1.02,
-        0.11
+        0.12
       ]
     },
     {
-      "group": "engine_l",
+      "group": "nac_l",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "left thruster",
       "circle": [
-        -0.56,
-        1.02,
-        0.11
+        -0.42,
+        0.94,
+        0.1
       ]
     }
   ]

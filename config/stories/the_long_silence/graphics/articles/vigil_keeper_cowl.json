@@ -1,0 +1,75 @@
+{
+  "identity": "Vigil keeper's cowl - a deep grey cowl drawn over the head in the cold halls, a faint violet lamp at the brow. Drops any hairstyle.",
+  "tier": "person",
+  "palette": "vigil_dress",
+  "regions": [
+    {
+      "group": "head",
+      "tag": "hood back",
+      "note": "keeper's cowl",
+      "color": "cloth",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -3.0,
+              -28.0
+            ],
+            [
+              3.0,
+              -28.0
+            ],
+            [
+              3.4,
+              -32.0
+            ],
+            [
+              1.6,
+              -34.4
+            ],
+            [
+              -1.6,
+              -34.4
+            ],
+            [
+              -3.4,
+              -32.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.9,
+              -28.2
+            ],
+            [
+              2.9,
+              -28.2
+            ],
+            [
+              3.3,
+              -32.1
+            ],
+            [
+              1.5,
+              -34.4
+            ],
+            [
+              -1.5,
+              -34.4
+            ],
+            [
+              -3.3,
+              -32.1
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ],
+  "hides_hair": true
+}

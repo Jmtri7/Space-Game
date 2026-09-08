@@ -1,0 +1,110 @@
+{
+  "identity": "Vigil mourning stole - two long narrow grey panels hung from the shoulders past the waist, each stitched with a single name. Worn by every member of the Vigil, every day.",
+  "tier": "person",
+  "palette": "vigil_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "long coat",
+      "note": "mourning stole",
+      "color": "cloth",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.4,
+              -25.4
+            ],
+            [
+              -1.2,
+              -25.4
+            ],
+            [
+              -1.4,
+              -13.0
+            ],
+            [
+              -2.8,
+              -13.0
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "cloth",
+              "shade": "matte",
+              "note": "mourning stole near panel",
+              "points": [
+                [
+                  1.2,
+                  -25.4
+                ],
+                [
+                  2.4,
+                  -25.4
+                ],
+                [
+                  2.8,
+                  -13.0
+                ],
+                [
+                  1.4,
+                  -13.0
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -2.1,
+              -25.3
+            ],
+            [
+              -1.0,
+              -25.3
+            ],
+            [
+              -1.2,
+              -13.4
+            ],
+            [
+              -2.5,
+              -13.4
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "cloth",
+              "shade": "matte",
+              "note": "mourning stole near panel",
+              "points": [
+                [
+                  1.0,
+                  -25.3
+                ],
+                [
+                  2.1,
+                  -25.3
+                ],
+                [
+                  2.5,
+                  -13.4
+                ],
+                [
+                  1.2,
+                  -13.4
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "identity": "Combine ration plate - a stencil-numeral iron plate on the chest recording the wearer's metered share. Every Combine kit carries one.",
+  "tier": "person",
+  "palette": "combine_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "chest plate",
+      "note": "ration plate",
+      "color": "metal",
+      "shade": "metal",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.4,
+              -24.2
+            ],
+            [
+              2.4,
+              -24.2
+            ],
+            [
+              2.4,
+              -21.0
+            ],
+            [
+              -2.4,
+              -21.0
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "ration plate numerals",
+              "points": [
+                [
+                  -1.8,
+                  -23.4
+                ],
+                [
+                  -1.2,
+                  -23.4
+                ],
+                [
+                  -1.2,
+                  -21.8
+                ],
+                [
+                  -1.8,
+                  -21.8
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "ration plate numerals 2",
+              "points": [
+                [
+                  -0.3,
+                  -23.4
+                ],
+                [
+                  0.3,
+                  -23.4
+                ],
+                [
+                  0.3,
+                  -21.8
+                ],
+                [
+                  -0.3,
+                  -21.8
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "ration plate numerals 3",
+              "points": [
+                [
+                  1.2,
+                  -23.4
+                ],
+                [
+                  1.8,
+                  -23.4
+                ],
+                [
+                  1.8,
+                  -21.8
+                ],
+                [
+                  1.2,
+                  -21.8
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -2.1,
+              -24.4
+            ],
+            [
+              2.1,
+              -24.4
+            ],
+            [
+              2.1,
+              -21.4
+            ],
+            [
+              -2.1,
+              -21.4
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "ration plate numerals",
+              "points": [
+                [
+                  -1.6,
+                  -23.6
+                ],
+                [
+                  -1.0,
+                  -23.6
+                ],
+                [
+                  -1.0,
+                  -22.1
+                ],
+                [
+                  -1.6,
+                  -22.1
+                ]
+              ]
+            },
+            {
+              "group": "torso",
+              "color": "lamp",
+              "shade": "glow",
+              "note": "ration plate numerals 2",
+              "points": [
+                [
+                  1.0,
+                  -23.6
+                ],
+                [
+                  1.6,
+                  -23.6
+                ],
+                [
+                  1.6,
+                  -22.1
+                ],
+                [
+                  1.0,
+                  -22.1
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

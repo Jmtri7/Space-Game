@@ -1,0 +1,75 @@
+{
+  "identity": "Combine deep hood - a close iron-grey hood with an ember lamp at the brow, worn below-ground. Drops any hairstyle.",
+  "tier": "person",
+  "palette": "combine_dress",
+  "regions": [
+    {
+      "group": "head",
+      "tag": "hood back",
+      "note": "deep hood",
+      "color": "cloth",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -3.0,
+              -28.0
+            ],
+            [
+              3.0,
+              -28.0
+            ],
+            [
+              3.4,
+              -32.0
+            ],
+            [
+              1.6,
+              -34.4
+            ],
+            [
+              -1.6,
+              -34.4
+            ],
+            [
+              -3.4,
+              -32.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.9,
+              -28.2
+            ],
+            [
+              2.9,
+              -28.2
+            ],
+            [
+              3.3,
+              -32.1
+            ],
+            [
+              1.5,
+              -34.4
+            ],
+            [
+              -1.5,
+              -34.4
+            ],
+            [
+              -3.3,
+              -32.1
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ],
+  "hides_hair": true
+}

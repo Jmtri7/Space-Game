@@ -1,0 +1,58 @@
+{
+  "identity": "Combine contract seal - a heavy wax-and-iron disc worn at the near hip on a short chain, stamped with the wearer's lineage. Breaking it voids a contract.",
+  "tier": "person",
+  "palette": "combine_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "hip accessory",
+      "note": "contract seal",
+      "color": "leather",
+      "shade": "deep",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              1.6,
+              -19.9
+            ],
+            [
+              2.9,
+              -19.9
+            ],
+            [
+              2.9,
+              -18.4
+            ],
+            [
+              1.6,
+              -18.4
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.3,
+              -20.4
+            ],
+            [
+              2.5,
+              -20.4
+            ],
+            [
+              2.5,
+              -19.0
+            ],
+            [
+              1.3,
+              -19.0
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

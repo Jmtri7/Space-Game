@@ -1,0 +1,13 @@
+{
+  "identity": "Drift watch kit - everyday clothes with the militia band and a woven collar. No uniform - the Drift doesn't have one.",
+  "articles": [
+    "tank_top",
+    "jacket_olive",
+    "pants_field",
+    "boots_charcoal",
+    "drift_militia_band",
+    "drift_woven_collar",
+    "hair_short"
+  ],
+  "palette": "drift_dress"
+}

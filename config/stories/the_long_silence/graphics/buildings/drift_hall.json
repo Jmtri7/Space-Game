@@ -1,88 +1,84 @@
 {
-  "identity": "the Drift Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "identity": "Drift assembly pavilion, head-on: a wide low canvas dome on rounded timber posts, the whole front open, a planted roofline trailing greenery, a soft grow-lamp band under the eaves. Improvised by committee and quietly alive.",
   "tier": "building",
   "palette": "drift",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~1.6x PLAYER_H to the dome, ~3.6x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
+      "shade": "soft",
+      "note": "back wall",
+      "flatten_px": 60,
       "points": [
         [
-          -56,
+          -54,
           0
         ],
         [
-          56,
+          54,
           0
         ],
         [
-          56,
-          -42
+          54,
+          -34
         ],
         [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
-        ],
-        [
-          -56,
-          -42
+          -54,
+          -34
         ]
-      ],
-      "flatten_px": 60
+      ]
     },
     {
       "group": "body",
       "color": "hull",
-      "shade": "deep",
-      "note": "roof",
+      "shade": "soft",
+      "note": "canvas dome",
       "points": [
         [
           -56,
-          -42
+          -34
+        ],
+        [
+          -40,
+          -48
+        ],
+        [
+          0,
+          -54
+        ],
+        [
+          40,
+          -48
         ],
         [
           56,
-          -42
-        ],
-        [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
+          -34
         ]
       ]
     },
     {
       "group": "body",
       "color": "engine",
-      "shade": "matte",
-      "note": "opening",
+      "shade": "soft",
+      "note": "open front",
       "points": [
         [
-          -46,
-          -34
+          -44,
+          -30
         ],
         [
-          46,
-          -34
+          44,
+          -30
         ],
         [
-          46,
+          44,
           0
         ],
         [
-          -46,
+          -44,
           0
         ]
       ]
@@ -94,130 +90,208 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "fascia",
+      "min_px": 16,
+      "note": "grow-lamp band",
       "points": [
         [
-          -52,
-          -40
+          -50,
+          -32
         ],
         [
-          52,
-          -40
+          50,
+          -32
         ],
         [
-          52,
-          -34
+          50,
+          -27
         ],
         [
-          -52,
-          -34
+          -50,
+          -27
         ]
-      ],
-      "min_px": 18
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "metal",
+      "shade": "soft",
       "role": "detail",
-      "note": "near post",
+      "min_px": 14,
+      "note": "timber post 0",
       "points": [
         [
-          -48,
-          -34
+          -49,
+          -32
         ],
         [
-          -44,
-          -34
+          -43,
+          -32
         ],
         [
-          -44,
+          -43,
           0
         ],
         [
-          -48,
+          -49,
           0
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "metal",
+      "shade": "soft",
       "role": "detail",
-      "note": "far post",
+      "min_px": 14,
+      "note": "timber post 1",
       "points": [
         [
-          44,
-          -34
+          -23,
+          -32
         ],
         [
-          48,
-          -34
+          -17,
+          -32
         ],
         [
-          48,
+          -17,
           0
         ],
         [
-          44,
+          -23,
           0
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "deep",
+      "shade": "soft",
       "role": "detail",
-      "note": "stall 0",
+      "min_px": 14,
+      "note": "timber post 2",
       "points": [
         [
-          -42,
-          -20
+          17,
+          -32
         ],
         [
-          -8,
-          -20
+          23,
+          -32
         ],
         [
-          -8,
+          23,
           0
         ],
         [
-          -42,
+          17,
           0
         ]
-      ],
-      "min_px": 24
+      ]
     },
     {
       "group": "body",
       "color": "metal",
-      "shade": "deep",
+      "shade": "soft",
       "role": "detail",
-      "note": "stall 1",
+      "min_px": 14,
+      "note": "timber post 3",
       "points": [
         [
-          8,
-          -20
+          43,
+          -32
         ],
         [
-          42,
-          -20
+          49,
+          -32
         ],
         [
-          42,
+          49,
           0
         ],
         [
-          8,
+          43,
           0
         ]
-      ],
-      "min_px": 24
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "roof greenery 0",
+      "points": [
+        [
+          -36,
+          -50
+        ],
+        [
+          -24,
+          -50
+        ],
+        [
+          -26,
+          -42
+        ],
+        [
+          -34,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "roof greenery 1",
+      "points": [
+        [
+          -6,
+          -50
+        ],
+        [
+          6,
+          -50
+        ],
+        [
+          4,
+          -42
+        ],
+        [
+          -4,
+          -42
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "roof greenery 2",
+      "points": [
+        [
+          24,
+          -50
+        ],
+        [
+          36,
+          -50
+        ],
+        [
+          34,
+          -42
+        ],
+        [
+          26,
+          -42
+        ]
+      ]
     }
   ]
 }

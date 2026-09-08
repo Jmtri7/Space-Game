@@ -1,210 +1,228 @@
 {
-  "identity": "Ninefold Combine Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: heavy dark iron banded with ember-orange hazard light, blast doors, riveted seams, ration-stencil numerals, built for the deep mines. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "identity": "Combine Deep-Warden's tower, head-on: a squat heavy two-tier block of dark iron - whose contract this is. A broad base, a stepped upper stage, a hazard beacon on a stub mast, a lit contract-seal disc blazoned on the upper face. Not tall - immovable.",
   "tier": "building",
   "palette": "combine",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~3.4x PLAYER_H tall, ~1.8x wide at the base",
   "silhouette": [
-    {
-      "group": "body",
-      "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
-      "points": [
-        [
-          -25,
-          0
-        ],
-        [
-          25,
-          0
-        ],
-        [
-          25,
-          -55
-        ],
-        [
-          18,
-          -62
-        ],
-        [
-          -18,
-          -62
-        ],
-        [
-          -25,
-          -55
-        ]
-      ],
-      "flatten_px": 55
-    },
     {
       "group": "body",
       "color": "hull",
       "shade": "deep",
-      "note": "roof",
+      "note": "base stage",
+      "flatten_px": 55,
       "points": [
         [
-          -25,
-          -55
+          -28,
+          0
         ],
         [
-          25,
-          -55
+          28,
+          0
         ],
         [
-          18,
+          28,
           -62
         ],
         [
-          -18,
+          -28,
           -62
         ]
       ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "note": "mast",
+      "color": "hull",
+      "shade": "deep",
+      "note": "upper stage",
       "points": [
         [
-          -1.4,
-          -84
+          -20,
+          -62
         ],
         [
-          1.4,
-          -84
+          20,
+          -62
         ],
         [
-          1.4,
-          -60
+          20,
+          -104
         ],
         [
-          -1.4,
-          -60
+          -20,
+          -104
+        ]
+      ]
+    },
+    {
+      "group": "mast",
+      "color": "metal",
+      "shade": "metal",
+      "note": "stub mast",
+      "points": [
+        [
+          -2.5,
+          -104
+        ],
+        [
+          2.5,
+          -104
+        ],
+        [
+          2.5,
+          -120
+        ],
+        [
+          -2.5,
+          -120
         ]
       ]
     }
   ],
   "details": [
     {
+      "group": "mast",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 20,
+      "note": "hazard beacon",
+      "circle": [
+        0,
+        -120,
+        4
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 16,
+      "note": "contract-seal disc",
+      "points": [
+        [
+          -9,
+          -92
+        ],
+        [
+          9,
+          -92
+        ],
+        [
+          9,
+          -74
+        ],
+        [
+          -9,
+          -74
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "slit 0",
+      "points": [
+        [
+          -19,
+          -52
+        ],
+        [
+          -13,
+          -52
+        ],
+        [
+          -13,
+          -14
+        ],
+        [
+          -19,
+          -14
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "min_px": 12,
+      "note": "slit 1",
+      "points": [
+        [
+          13,
+          -52
+        ],
+        [
+          19,
+          -52
+        ],
+        [
+          19,
+          -14
+        ],
+        [
+          13,
+          -14
+        ]
+      ]
+    },
+    {
       "group": "body",
       "color": "engine",
       "shade": "matte",
       "role": "detail",
-      "note": "door",
+      "min_px": 24,
+      "note": "base rivet seam 0",
       "points": [
         [
-          -7,
-          -22
-        ],
-        [
-          7,
-          -22
-        ],
-        [
-          7,
-          0
-        ],
-        [
-          -7,
-          0
-        ]
-      ],
-      "min_px": 8
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "sign",
-      "points": [
-        [
-          -13,
-          -34
-        ],
-        [
-          13,
-          -34
-        ],
-        [
-          13,
-          -25
-        ],
-        [
-          -13,
-          -25
-        ]
-      ],
-      "min_px": 12
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window L",
-      "points": [
-        [
-          -19,
+          -26,
           -20
         ],
         [
-          -11,
+          26,
           -20
         ],
         [
-          -11,
-          -8
+          26,
+          -18.4
         ],
         [
-          -19,
-          -8
+          -26,
+          -18.4
         ]
-      ],
-      "min_px": 14
+      ]
     },
     {
       "group": "body",
-      "color": "glass",
-      "shade": "sheen",
+      "color": "engine",
+      "shade": "matte",
       "role": "detail",
-      "note": "window R",
+      "min_px": 24,
+      "note": "base rivet seam 1",
       "points": [
         [
-          11,
-          -20
+          -26,
+          -44
         ],
         [
-          19,
-          -20
+          26,
+          -44
         ],
         [
-          19,
-          -8
+          26,
+          -42.4
         ],
         [
-          11,
-          -8
+          -26,
+          -42.4
         ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "mast lamp",
-      "circle": [
-        0,
-        -84,
-        1.8
-      ],
-      "min_px": 8
+      ]
     }
   ]
 }

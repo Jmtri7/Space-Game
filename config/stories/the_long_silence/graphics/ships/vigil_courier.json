@@ -1,152 +1,86 @@
 {
-  "identity": "the Vigil Courier - a small fast dispatch hull. STYLE: austere and vertical, long cold surfaces, narrow violet-white light, unpolished grey, no decoration that is not a record. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Vigil Stele - a narrow vertical dart: a long needle prow, a slender grey body, one small tail flare, a single violet-white lamp at the nose. No ornament. Reads at a dozen pixels as a thin bright-tipped line.",
   "tier": "ship_near",
   "palette": "vigil",
   "size": 11,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
+    {
+      "group": "prow",
+      "color": "metal",
+      "shade": "metal",
+      "flatten_px": 45,
+      "note": "needle prow",
+      "points": [
+        [
+          0.0,
+          -1.3
+        ],
+        [
+          0.06,
+          -0.7
+        ],
+        [
+          -0.06,
+          -0.7
+        ]
+      ]
+    },
     {
       "group": "hull",
       "color": "hull",
       "shade": "deep",
       "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "note": "slender body",
       "points": [
         [
-          0.0,
-          -1.15
-        ],
-        [
-          0.32,
-          -0.55
-        ],
-        [
-          0.42,
-          0.1
-        ],
-        [
-          0.95,
-          0.75
-        ],
-        [
-          0.9,
-          1.05
-        ],
-        [
-          0.42,
-          0.95
-        ],
-        [
-          0.3,
-          1.15
-        ],
-        [
-          -0.3,
-          1.15
-        ],
-        [
-          -0.42,
-          0.95
-        ],
-        [
-          -0.9,
-          1.05
-        ],
-        [
-          -0.95,
-          0.75
-        ],
-        [
-          -0.42,
-          0.1
-        ],
-        [
-          -0.32,
-          -0.55
-        ]
-      ]
-    },
-    {
-      "group": "canopy",
-      "color": "glass",
-      "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
-      "points": [
-        [
-          0.0,
-          -0.72
+          -0.16,
+          -0.7
         ],
         [
           0.16,
-          -0.42
+          -0.7
+        ],
+        [
+          0.2,
+          0.7
         ],
         [
           0.14,
-          0.05
-        ],
-        [
-          0.0,
-          0.2
+          1.0
         ],
         [
           -0.14,
-          0.05
+          1.0
         ],
         [
-          -0.16,
-          -0.42
+          -0.2,
+          0.7
         ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "flare",
       "color": "engine",
       "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "flatten_px": 45,
+      "note": "tail flare",
       "points": [
         [
-          0.42,
-          0.35
+          -0.2,
+          0.8
         ],
         [
-          0.62,
-          0.35
+          0.2,
+          0.8
         ],
         [
-          0.66,
-          1.0
+          0.28,
+          1.08
         ],
         [
-          0.46,
-          1.0
-        ]
-      ]
-    },
-    {
-      "group": "engine_l",
-      "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
-      "points": [
-        [
-          -0.42,
-          0.35
-        ],
-        [
-          -0.62,
-          0.35
-        ],
-        [
-          -0.66,
-          1.0
-        ],
-        [
-          -0.46,
-          1.0
+          -0.28,
+          1.08
         ]
       ]
     }
@@ -154,119 +88,80 @@
   "details": [
     {
       "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
+      "color": "glass",
+      "shade": "sheen",
       "role": "detail",
       "min_px": 55,
-      "note": "spine panel line",
+      "note": "slit canopy",
       "points": [
         [
-          -0.06,
-          -0.5
+          -0.05,
+          -0.6
         ],
         [
-          0.06,
-          -0.5
+          0.05,
+          -0.6
         ],
         [
-          0.06,
-          1.05
+          0.05,
+          -0.2
         ],
         [
-          -0.06,
-          1.05
+          -0.05,
+          -0.2
         ]
       ]
     },
     {
       "group": "hull",
-      "color": "hull_dk",
+      "color": "engine",
       "shade": "matte",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
+      "min_px": 60,
+      "note": "engraved band",
       "points": [
         [
-          0.34,
-          0.15
+          -0.18,
+          0.2
         ],
         [
-          0.42,
-          0.15
+          0.19,
+          0.2
         ],
         [
-          0.9,
-          0.78
+          0.19,
+          0.28
         ],
         [
-          0.82,
-          0.82
+          -0.18,
+          0.28
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
-      "points": [
-        [
-          -0.34,
-          0.15
-        ],
-        [
-          -0.42,
-          0.15
-        ],
-        [
-          -0.9,
-          0.78
-        ],
-        [
-          -0.82,
-          0.82
-        ]
-      ]
-    },
-    {
-      "group": "hull",
+      "group": "prow",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
       "min_px": 90,
-      "note": "forward nav light, at the nose tip",
+      "note": "nose lamp",
       "circle": [
         0.0,
-        -1.02,
-        0.045
+        -1.24,
+        0.05
       ]
     },
     {
-      "group": "engine_r",
+      "group": "flare",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
-      "note": "right thruster",
+      "note": "thruster",
       "circle": [
-        0.56,
-        1.02,
-        0.11
-      ]
-    },
-    {
-      "group": "engine_l",
-      "color": "thrust",
-      "shade": "glow",
-      "role": "detail",
-      "min_px": 12,
-      "note": "left thruster",
-      "circle": [
-        -0.56,
-        1.02,
-        0.11
+        0.0,
+        1.08,
+        0.16
       ]
     }
   ]

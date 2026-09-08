@@ -1,89 +1,65 @@
 {
-  "identity": "the free carriers Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "identity": "Free carrier lash-tower, head-on: a tall narrow patchwork mast of stacked container frames the carriers use as a lookout and a comms rig, a name-board at the top, guy-lines everywhere.",
   "tier": "building",
   "palette": "carrier",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~2.9x PLAYER_H tall, ~1.4x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
       "shade": "matte",
-      "note": "wall",
+      "note": "shed wall",
+      "flatten_px": 60,
       "points": [
         [
-          -25,
+          -22,
           0
         ],
         [
-          25,
+          22,
           0
         ],
         [
-          25,
-          -55
+          22,
+          -82
         ],
         [
-          18,
-          -62
+          16,
+          -90
         ],
         [
-          -18,
-          -62
+          -16,
+          -90
         ],
         [
-          -25,
-          -55
-        ]
-      ],
-      "flatten_px": 55
-    },
-    {
-      "group": "body",
-      "color": "hull",
-      "shade": "deep",
-      "note": "roof",
-      "points": [
-        [
-          -25,
-          -55
-        ],
-        [
-          25,
-          -55
-        ],
-        [
-          18,
-          -62
-        ],
-        [
-          -18,
-          -62
+          -22,
+          -82
         ]
       ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "note": "mast",
+      "color": "engine",
+      "shade": "matte",
+      "note": "roller door",
       "points": [
         [
-          -1.4,
-          -84
+          -8.8,
+          -54.0
         ],
         [
-          1.4,
-          -84
+          8.8,
+          -54.0
         ],
         [
-          1.4,
-          -60
+          8.8,
+          0
         ],
         [
-          -1.4,
-          -60
+          -8.8,
+          0
         ]
       ]
     }
@@ -91,120 +67,107 @@
   "details": [
     {
       "group": "body",
-      "color": "engine",
+      "color": "#96a5b9",
       "shade": "matte",
       "role": "detail",
-      "note": "door",
+      "min_px": 35,
+      "note": "welded panel 0",
       "points": [
         [
-          -7,
-          -22
+          -16.28,
+          -55.8
         ],
         [
-          7,
-          -22
+          -10.12,
+          -55.8
         ],
         [
-          7,
-          0
+          -10.12,
+          -34.2
         ],
         [
-          -7,
-          0
+          -16.28,
+          -34.2
         ]
-      ],
-      "min_px": 8
+      ]
+    },
+    {
+      "group": "body",
+      "color": "#706660",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 35,
+      "note": "welded panel 1",
+      "points": [
+        [
+          8.580000000000002,
+          -48.6
+        ],
+        [
+          15.620000000000001,
+          -48.6
+        ],
+        [
+          15.620000000000001,
+          -23.4
+        ],
+        [
+          8.580000000000002,
+          -23.4
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "#7a986f",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 35,
+      "note": "welded panel 2",
+      "points": [
+        [
+          -6.6,
+          -83.7
+        ],
+        [
+          6.6,
+          -83.7
+        ],
+        [
+          6.6,
+          -69.3
+        ],
+        [
+          -6.6,
+          -69.3
+        ]
+      ]
     },
     {
       "group": "body",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "sign",
+      "min_px": 14,
+      "note": "name-board",
       "points": [
         [
-          -13,
-          -34
+          -11.0,
+          -64.8
         ],
         [
-          13,
-          -34
+          11.0,
+          -64.8
         ],
         [
-          13,
-          -25
+          11.0,
+          -54.0
         ],
         [
-          -13,
-          -25
+          -11.0,
+          -54.0
         ]
-      ],
-      "min_px": 12
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window L",
-      "points": [
-        [
-          -19,
-          -20
-        ],
-        [
-          -11,
-          -20
-        ],
-        [
-          -11,
-          -8
-        ],
-        [
-          -19,
-          -8
-        ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window R",
-      "points": [
-        [
-          11,
-          -20
-        ],
-        [
-          19,
-          -20
-        ],
-        [
-          19,
-          -8
-        ],
-        [
-          11,
-          -8
-        ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "mast lamp",
-      "circle": [
-        0,
-        -84,
-        1.8
-      ],
-      "min_px": 8
+      ]
     }
   ]
 }

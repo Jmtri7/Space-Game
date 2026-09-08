@@ -1,0 +1,58 @@
+{
+  "identity": "Vigil grave-tender's apron - a plain grey apron to the shin with a single tool loop, worn on the grave-moon.",
+  "tier": "person",
+  "palette": "vigil_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "skirt",
+      "note": "grave apron",
+      "color": "leather",
+      "shade": "deep",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.6,
+              -19.6
+            ],
+            [
+              2.6,
+              -19.6
+            ],
+            [
+              3.0,
+              -10.0
+            ],
+            [
+              -3.0,
+              -10.0
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -2.3,
+              -20.2
+            ],
+            [
+              2.3,
+              -20.2
+            ],
+            [
+              2.7,
+              -10.4
+            ],
+            [
+              -2.7,
+              -10.4
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

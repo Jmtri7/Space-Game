@@ -1,69 +1,48 @@
 {
-  "identity": "Ninefold Combine Courier - a small fast dispatch hull. STYLE: heavy dark iron banded with ember-orange hazard light, blast doors, riveted seams, ration-stencil numerals, built for the deep mines. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Ninefold Combine Courier - a blunt iron ingot with a chopped prow, a single ranked hazard band each flank, two paired stub nacelles, an ember running light. No sweep, no taper the rules don't require. Reads at a dozen pixels as a short dark bar with two orange dots.",
   "tier": "ship_near",
   "palette": "combine",
   "size": 11,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
     {
       "group": "hull",
       "color": "hull",
       "shade": "deep",
       "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "note": "ingot hull",
       "points": [
         [
-          0.0,
-          -1.15
-        ],
-        [
-          0.32,
-          -0.55
-        ],
-        [
-          0.42,
-          0.1
-        ],
-        [
-          0.95,
-          0.75
-        ],
-        [
-          0.9,
-          1.05
-        ],
-        [
-          0.42,
-          0.95
+          -0.3,
+          -0.98
         ],
         [
           0.3,
-          1.15
+          -0.98
+        ],
+        [
+          0.4,
+          -0.72
+        ],
+        [
+          0.4,
+          0.86
+        ],
+        [
+          0.3,
+          1.04
         ],
         [
           -0.3,
-          1.15
+          1.04
         ],
         [
-          -0.42,
-          0.95
+          -0.4,
+          0.86
         ],
         [
-          -0.9,
-          1.05
-        ],
-        [
-          -0.95,
-          0.75
-        ],
-        [
-          -0.42,
-          0.1
-        ],
-        [
-          -0.32,
-          -0.55
+          -0.4,
+          -0.72
         ]
       ]
     },
@@ -71,82 +50,74 @@
       "group": "canopy",
       "color": "glass",
       "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
+      "flatten_px": 55,
+      "note": "armoured slit canopy",
       "points": [
         [
-          0.0,
-          -0.72
+          -0.16,
+          -0.66
         ],
         [
           0.16,
-          -0.42
+          -0.66
         ],
         [
-          0.14,
-          0.05
-        ],
-        [
-          0.0,
-          0.2
-        ],
-        [
-          -0.14,
-          0.05
+          0.16,
+          -0.34
         ],
         [
           -0.16,
-          -0.42
+          -0.34
         ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "nac_r",
       "color": "engine",
       "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "flatten_px": 45,
+      "note": "right stub nacelle",
       "points": [
         [
-          0.42,
-          0.35
+          0.4,
+          0.42
         ],
         [
-          0.62,
-          0.35
+          0.6,
+          0.42
         ],
         [
-          0.66,
-          1.0
+          0.6,
+          1.02
         ],
         [
-          0.46,
-          1.0
+          0.4,
+          1.02
         ]
       ]
     },
     {
-      "group": "engine_l",
+      "group": "nac_l",
       "color": "engine",
       "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
+      "flatten_px": 45,
+      "note": "left stub nacelle",
       "points": [
         [
-          -0.42,
-          0.35
+          -0.4,
+          0.42
         ],
         [
-          -0.62,
-          0.35
+          -0.6,
+          0.42
         ],
         [
-          -0.66,
-          1.0
+          -0.6,
+          1.02
         ],
         [
-          -0.46,
-          1.0
+          -0.4,
+          1.02
         ]
       ]
     }
@@ -154,79 +125,131 @@
   "details": [
     {
       "group": "hull",
-      "color": "hull_dk",
+      "color": "engine",
       "shade": "matte",
       "role": "detail",
-      "min_px": 55,
-      "note": "spine panel line",
+      "min_px": 40,
+      "note": "hull seam 0",
       "points": [
         [
-          -0.06,
+          -0.3,
           -0.5
         ],
         [
-          0.06,
+          0.3,
           -0.5
         ],
         [
-          0.06,
-          1.05
+          0.3,
+          -0.45
         ],
         [
-          -0.06,
-          1.05
+          -0.3,
+          -0.45
         ]
       ]
     },
     {
       "group": "hull",
-      "color": "hull_dk",
+      "color": "engine",
       "shade": "matte",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
+      "min_px": 40,
+      "note": "hull seam 1",
       "points": [
+        [
+          -0.3,
+          0.0
+        ],
+        [
+          0.3,
+          0.0
+        ],
+        [
+          0.3,
+          0.05
+        ],
+        [
+          -0.3,
+          0.05
+        ]
+      ]
+    },
+    {
+      "group": "hull",
+      "color": "engine",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 40,
+      "note": "hull seam 2",
+      "points": [
+        [
+          -0.3,
+          0.5
+        ],
+        [
+          0.3,
+          0.5
+        ],
+        [
+          0.3,
+          0.55
+        ],
+        [
+          -0.3,
+          0.55
+        ]
+      ]
+    },
+    {
+      "group": "hull",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 60,
+      "note": "hazard band, right",
+      "points": [
+        [
+          0.24,
+          -0.5
+        ],
         [
           0.34,
-          0.15
+          -0.5
         ],
         [
-          0.42,
-          0.15
+          0.34,
+          0.5
         ],
         [
-          0.9,
-          0.78
-        ],
-        [
-          0.82,
-          0.82
+          0.24,
+          0.5
         ]
       ]
     },
     {
       "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
+      "color": "lamp",
+      "shade": "glow",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
+      "min_px": 60,
+      "note": "hazard band, left",
       "points": [
         [
+          -0.24,
+          -0.5
+        ],
+        [
           -0.34,
-          0.15
+          -0.5
         ],
         [
-          -0.42,
-          0.15
+          -0.34,
+          0.5
         ],
         [
-          -0.9,
-          0.78
-        ],
-        [
-          -0.82,
-          0.82
+          -0.24,
+          0.5
         ]
       ]
     },
@@ -236,37 +259,37 @@
       "shade": "glow",
       "role": "detail",
       "min_px": 90,
-      "note": "forward nav light, at the nose tip",
+      "note": "nav light, prow",
       "circle": [
         0.0,
-        -1.02,
-        0.045
+        -0.9,
+        0.05
       ]
     },
     {
-      "group": "engine_r",
+      "group": "nac_r",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "right thruster",
       "circle": [
-        0.56,
+        0.5,
         1.02,
-        0.11
+        0.12
       ]
     },
     {
-      "group": "engine_l",
+      "group": "nac_l",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
       "min_px": 12,
       "note": "left thruster",
       "circle": [
-        -0.56,
+        -0.5,
         1.02,
-        0.11
+        0.12
       ]
     }
   ]

@@ -1,0 +1,14 @@
+{
+  "identity": "Combine rockjack kit - iron work suit under the hazard bib, deep hood, heavy gloves, the ration plate.",
+  "articles": [
+    "tank_top",
+    "jacket_dock",
+    "pants_dock",
+    "boots_charcoal",
+    "gloves_dark",
+    "combine_hazard_bib",
+    "combine_deep_hood",
+    "combine_ration_plate"
+  ],
+  "palette": "combine_dress"
+}

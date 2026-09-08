@@ -1,0 +1,14 @@
+{
+  "identity": "Free carrier deck-hand kit - canvas suit under the deck bib, the patch vest, gloves, a name-tag, the lash belt.",
+  "articles": [
+    "tank_top",
+    "jacket_dock",
+    "pants_dock",
+    "boots_charcoal",
+    "gloves_dark",
+    "carrier_deck_bib",
+    "carrier_name_tag",
+    "carrier_lash_belt"
+  ],
+  "palette": "carrier_dress"
+}

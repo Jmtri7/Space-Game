@@ -1,5 +1,5 @@
 {
-  "identity": "the free carriers dress palette - human tones, cloth pulled toward the culture's colours (patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name).",
+  "identity": "Free carrier dress - hard-worn canvas and salvaged leather in mismatched greys and tans, patched everywhere, a hand-painted name somewhere on it. Amber running-light trim. Human skin/hair unchanged.",
   "skin": "#c69b74",
   "hair": "#3b2b21",
   "eye": "#5a4633",
@@ -7,11 +7,11 @@
   "iris": "#6b4a2e",
   "pupil": "#1a1109",
   "lip": "#b07a63",
-  "cloth": "#605a54",
-  "denim": "#5f5952",
-  "leather": "#56514b",
-  "knit": "#4d4843",
-  "metal": "#9b9287",
-  "glass": "#ffdc8c",
-  "lamp": "#e6c67e"
+  "cloth": "#8a8073",
+  "denim": "#5c564e",
+  "leather": "#6a5a48",
+  "knit": "#9a8f7c",
+  "metal": "#a8a090",
+  "glass": "#ffcf8c",
+  "lamp": "#ffbf7c"
 }

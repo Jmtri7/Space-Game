@@ -1,210 +1,174 @@
 {
-  "identity": "the Vigil Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: austere and vertical, long cold surfaces, narrow violet-white light, unpolished grey, no decoration that is not a record. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "identity": "the Vigil-tower, head-on: a very tall thin grey obelisk tapering to a point, a single violet-white lamp at the peak, three engraved memorial bands down the shaft. The tallest thing in a dead system, and the quietest.",
   "tier": "building",
   "palette": "vigil",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~5.2x PLAYER_H tall, ~1x wide at the base",
   "silhouette": [
-    {
-      "group": "body",
-      "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
-      "points": [
-        [
-          -25,
-          0
-        ],
-        [
-          25,
-          0
-        ],
-        [
-          25,
-          -55
-        ],
-        [
-          18,
-          -62
-        ],
-        [
-          -18,
-          -62
-        ],
-        [
-          -25,
-          -55
-        ]
-      ],
-      "flatten_px": 55
-    },
     {
       "group": "body",
       "color": "hull",
       "shade": "deep",
-      "note": "roof",
+      "note": "obelisk",
+      "flatten_px": 55,
       "points": [
         [
-          -25,
-          -55
+          -15,
+          0
         ],
         [
-          25,
-          -55
+          15,
+          0
         ],
         [
-          18,
-          -62
+          4,
+          -150
         ],
         [
-          -18,
-          -62
+          -4,
+          -150
         ]
       ]
     },
     {
-      "group": "body",
+      "group": "cap",
       "color": "metal",
       "shade": "metal",
-      "note": "mast",
+      "note": "peak cap",
       "points": [
         [
-          -1.4,
-          -84
+          -4,
+          -150
         ],
         [
-          1.4,
-          -84
+          4,
+          -150
         ],
         [
-          1.4,
-          -60
-        ],
-        [
-          -1.4,
-          -60
+          0,
+          -162
         ]
       ]
     }
   ],
   "details": [
     {
+      "group": "cap",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 22,
+      "note": "peak lamp",
+      "circle": [
+        0,
+        -156,
+        4
+      ]
+    },
+    {
       "group": "body",
       "color": "engine",
       "shade": "matte",
       "role": "detail",
-      "note": "door",
+      "min_px": 16,
+      "note": "memorial band 0",
       "points": [
         [
-          -7,
-          -22
+          -13,
+          -30
         ],
         [
-          7,
-          -22
+          13,
+          -30
         ],
         [
-          7,
-          0
+          13,
+          -27
         ],
         [
-          -7,
-          0
+          -13,
+          -27
         ]
-      ],
-      "min_px": 8
+      ]
     },
     {
       "group": "body",
-      "color": "lamp",
-      "shade": "glow",
+      "color": "engine",
+      "shade": "matte",
       "role": "detail",
-      "note": "sign",
+      "min_px": 16,
+      "note": "memorial band 1",
       "points": [
         [
-          -13,
-          -34
+          -10,
+          -70
         ],
         [
-          13,
-          -34
+          10,
+          -70
         ],
         [
-          13,
-          -25
+          10,
+          -67
         ],
         [
-          -13,
-          -25
+          -10,
+          -67
         ]
-      ],
-      "min_px": 12
+      ]
+    },
+    {
+      "group": "body",
+      "color": "engine",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 16,
+      "note": "memorial band 2",
+      "points": [
+        [
+          -7,
+          -110
+        ],
+        [
+          7,
+          -110
+        ],
+        [
+          7,
+          -107
+        ],
+        [
+          -7,
+          -107
+        ]
+      ]
     },
     {
       "group": "body",
       "color": "glass",
       "shade": "sheen",
       "role": "detail",
-      "note": "window L",
+      "min_px": 12,
+      "note": "base slit",
       "points": [
         [
-          -19,
-          -20
+          -3,
+          -40
         ],
         [
-          -11,
-          -20
+          3,
+          -40
         ],
         [
-          -11,
-          -8
+          3,
+          -10
         ],
         [
-          -19,
-          -8
+          -3,
+          -10
         ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window R",
-      "points": [
-        [
-          11,
-          -20
-        ],
-        [
-          19,
-          -20
-        ],
-        [
-          19,
-          -8
-        ],
-        [
-          11,
-          -8
-        ]
-      ],
-      "min_px": 14
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "mast lamp",
-      "circle": [
-        0,
-        -84,
-        1.8
-      ],
-      "min_px": 8
+      ]
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "identity": "Drift grower / ferry-hand kit - work tunic under the grower's apron, the leaf mantle, gloves, a woven collar.",
+  "articles": [
+    "tank_top",
+    "jacket_dock",
+    "pants_dock",
+    "boots_charcoal",
+    "gloves_dark",
+    "drift_grower_apron",
+    "drift_woven_collar",
+    "hair_bun"
+  ],
+  "palette": "drift_dress"
+}

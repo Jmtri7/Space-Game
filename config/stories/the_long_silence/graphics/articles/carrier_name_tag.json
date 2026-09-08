@@ -1,0 +1,110 @@
+{
+  "identity": "Free carrier name-tag - a hand-painted board on a cord at the chest with the wearer's ship and given name. Carriers introduce the hull before the person.",
+  "tier": "person",
+  "palette": "carrier_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "badge",
+      "note": "name board",
+      "color": "lamp",
+      "shade": "glow",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -1.6,
+              -23.6
+            ],
+            [
+              1.6,
+              -23.6
+            ],
+            [
+              1.6,
+              -22.2
+            ],
+            [
+              -1.6,
+              -22.2
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "note": "name board cord",
+              "points": [
+                [
+                  -0.1,
+                  -25.4
+                ],
+                [
+                  0.1,
+                  -25.4
+                ],
+                [
+                  0.5,
+                  -23.6
+                ],
+                [
+                  -0.5,
+                  -23.6
+                ]
+              ]
+            }
+          ]
+        },
+        "femme": {
+          "points": [
+            [
+              -1.4,
+              -23.9
+            ],
+            [
+              1.4,
+              -23.9
+            ],
+            [
+              1.4,
+              -22.6
+            ],
+            [
+              -1.4,
+              -22.6
+            ]
+          ],
+          "fits": [],
+          "details": [
+            {
+              "group": "torso",
+              "color": "leather",
+              "shade": "deep",
+              "note": "name board cord",
+              "points": [
+                [
+                  -0.1,
+                  -25.6
+                ],
+                [
+                  0.1,
+                  -25.6
+                ],
+                [
+                  0.45,
+                  -23.9
+                ],
+                [
+                  -0.45,
+                  -23.9
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

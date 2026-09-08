@@ -1,468 +1,592 @@
 {
-  "identity": "the Drift station - the culture's main orbital dock. STYLE: soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. (Geometry is a placeholder copy of the civilian trade ring - reshape.)",
+  "identity": "Highcanopy - the Drift's cloud-city dock: a soft rounded ring, its inner edge glowing green, hung with six teardrop habitat-pods like leaves off a branch, a bright grow-core at the hub on three woven spokes. No hard edge. Reads as a green-lit wreath.",
   "tier": "station",
   "palette": "drift",
   "size": 46,
-  "scale_note": "about 30x the player tall; you dock at one of the four pods.",
-  "units": "fractions of `size`; radially symmetric, so orientation is free.",
+  "units": "fractions of `size`; radially symmetric.",
   "silhouette": [
     {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "note": "wheel rim, octant 1 of 8 - built as radial trapezoids so the centre stays open space",
-      "points": [
-        [
-          0.0,
-          -0.82
-        ],
-        [
-          0.58,
-          -0.58
-        ],
-        [
-          0.735,
-          -0.735
-        ],
-        [
-          0.0,
-          -1.04
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.58,
-          -0.58
-        ],
-        [
-          0.82,
-          0.0
-        ],
-        [
-          1.04,
-          0.0
-        ],
-        [
-          0.735,
-          -0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.82,
-          0.0
-        ],
-        [
-          0.58,
-          0.58
-        ],
-        [
-          0.735,
-          0.735
-        ],
-        [
-          1.04,
-          0.0
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.58,
-          0.58
-        ],
-        [
-          0.0,
-          0.82
-        ],
-        [
-          0.0,
-          1.04
-        ],
-        [
-          0.735,
-          0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          0.0,
-          0.82
-        ],
-        [
-          -0.58,
-          0.58
-        ],
-        [
-          -0.735,
-          0.735
-        ],
-        [
-          0.0,
-          1.04
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.58,
-          0.58
-        ],
-        [
-          -0.82,
-          0.0
-        ],
-        [
-          -1.04,
-          0.0
-        ],
-        [
-          -0.735,
-          0.735
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.82,
-          0.0
-        ],
-        [
-          -0.58,
-          -0.58
-        ],
-        [
-          -0.735,
-          -0.735
-        ],
-        [
-          -1.04,
-          0.0
-        ]
-      ]
-    },
-    {
-      "group": "rim",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 70,
-      "points": [
-        [
-          -0.58,
-          -0.58
-        ],
-        [
-          0.0,
-          -0.82
-        ],
-        [
-          0.0,
-          -1.04
-        ],
-        [
-          -0.735,
-          -0.735
-        ]
-      ]
-    },
-    {
-      "group": "spokes",
+      "group": "ring",
       "color": "hull",
-      "flatten_px": 55,
-      "shade": false,
-      "note": "the four spokes as one plus-shape from the hub to the pods; drawn flat (a crescent on a concave plus reads as a spike into the centre).",
+      "shade": "soft",
+      "flatten_px": 70,
+      "note": "outer ring",
       "points": [
         [
-          -0.15,
-          -0.92
+          0.0,
+          -1.0
         ],
         [
-          0.15,
-          -0.92
+          0.223,
+          -0.975
         ],
         [
-          0.15,
-          -0.15
+          0.434,
+          -0.901
         ],
         [
-          0.92,
-          -0.15
+          0.623,
+          -0.782
         ],
         [
-          0.92,
-          0.15
+          0.782,
+          -0.623
         ],
         [
-          0.15,
-          0.15
+          0.901,
+          -0.434
         ],
         [
-          0.15,
-          0.92
+          0.975,
+          -0.223
         ],
         [
-          -0.15,
-          0.92
+          1.0,
+          -0.0
         ],
         [
-          -0.15,
-          0.15
+          0.975,
+          0.223
         ],
         [
-          -0.92,
-          0.15
+          0.901,
+          0.434
         ],
         [
-          -0.92,
-          -0.15
+          0.782,
+          0.623
         ],
         [
-          -0.15,
-          -0.15
+          0.623,
+          0.782
+        ],
+        [
+          0.434,
+          0.901
+        ],
+        [
+          0.223,
+          0.975
+        ],
+        [
+          0.0,
+          1.0
+        ],
+        [
+          -0.223,
+          0.975
+        ],
+        [
+          -0.434,
+          0.901
+        ],
+        [
+          -0.623,
+          0.782
+        ],
+        [
+          -0.782,
+          0.623
+        ],
+        [
+          -0.901,
+          0.434
+        ],
+        [
+          -0.975,
+          0.223
+        ],
+        [
+          -1.0,
+          0.0
+        ],
+        [
+          -0.975,
+          -0.223
+        ],
+        [
+          -0.901,
+          -0.434
+        ],
+        [
+          -0.782,
+          -0.623
+        ],
+        [
+          -0.623,
+          -0.782
+        ],
+        [
+          -0.434,
+          -0.901
+        ],
+        [
+          -0.223,
+          -0.975
+        ]
+      ]
+    },
+    {
+      "group": "well",
+      "color": "engine",
+      "shade": "flat",
+      "flatten_px": 200,
+      "note": "green inner well",
+      "points": [
+        [
+          0.0,
+          -0.6
+        ],
+        [
+          0.155,
+          -0.58
+        ],
+        [
+          0.3,
+          -0.52
+        ],
+        [
+          0.424,
+          -0.424
+        ],
+        [
+          0.52,
+          -0.3
+        ],
+        [
+          0.58,
+          -0.155
+        ],
+        [
+          0.6,
+          -0.0
+        ],
+        [
+          0.58,
+          0.155
+        ],
+        [
+          0.52,
+          0.3
+        ],
+        [
+          0.424,
+          0.424
+        ],
+        [
+          0.3,
+          0.52
+        ],
+        [
+          0.155,
+          0.58
+        ],
+        [
+          0.0,
+          0.6
+        ],
+        [
+          -0.155,
+          0.58
+        ],
+        [
+          -0.3,
+          0.52
+        ],
+        [
+          -0.424,
+          0.424
+        ],
+        [
+          -0.52,
+          0.3
+        ],
+        [
+          -0.58,
+          0.155
+        ],
+        [
+          -0.6,
+          0.0
+        ],
+        [
+          -0.58,
+          -0.155
+        ],
+        [
+          -0.52,
+          -0.3
+        ],
+        [
+          -0.424,
+          -0.424
+        ],
+        [
+          -0.3,
+          -0.52
+        ],
+        [
+          -0.155,
+          -0.58
         ]
       ]
     },
     {
       "group": "hub",
       "color": "hull",
+      "shade": "soft",
       "flatten_px": 45,
-      "shade": false,
-      "note": "octagonal core hull; drawn flat - too small for a crescent to read as anything but a spike.",
+      "note": "grow-core hub",
       "points": [
         [
           0.0,
-          -0.34
+          -0.22
         ],
         [
-          0.24,
-          -0.24
+          0.095,
+          -0.198
         ],
         [
-          0.34,
-          0.0
+          0.172,
+          -0.137
         ],
         [
-          0.24,
-          0.24
+          0.214,
+          -0.049
+        ],
+        [
+          0.214,
+          0.049
+        ],
+        [
+          0.172,
+          0.137
+        ],
+        [
+          0.095,
+          0.198
         ],
         [
           0.0,
-          0.34
+          0.22
         ],
         [
-          -0.24,
-          0.24
+          -0.095,
+          0.198
         ],
         [
-          -0.34,
-          0.0
+          -0.172,
+          0.137
         ],
         [
-          -0.24,
-          -0.24
+          -0.214,
+          0.049
+        ],
+        [
+          -0.214,
+          -0.049
+        ],
+        [
+          -0.172,
+          -0.137
+        ],
+        [
+          -0.095,
+          -0.198
         ]
       ]
     },
     {
-      "group": "core",
-      "color": "glass",
-      "flatten_px": 200,
-      "shade": false,
-      "note": "the lit core; flat, the glow gives it life.",
-      "points": [
-        [
-          0.0,
-          -0.15
-        ],
-        [
-          0.11,
-          -0.11
-        ],
-        [
-          0.15,
-          0.0
-        ],
-        [
-          0.11,
-          0.11
-        ],
-        [
-          0.0,
-          0.15
-        ],
-        [
-          -0.11,
-          0.11
-        ],
-        [
-          -0.15,
-          0.0
-        ],
-        [
-          -0.11,
-          -0.11
-        ]
-      ]
-    },
-    {
-      "group": "pod_n",
+      "group": "pod0",
       "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 60,
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 0",
       "points": [
         [
-          -0.26,
-          -1.12
+          0.0,
+          -1.34
         ],
         [
-          0.26,
-          -1.12
+          0.118,
+          -1.287
         ],
         [
-          0.34,
-          -0.94
+          0.19,
+          -1.147
         ],
         [
-          0.26,
-          -0.8
+          0.19,
+          -0.973
         ],
         [
-          -0.26,
-          -0.8
+          0.118,
+          -0.833
         ],
         [
-          -0.34,
-          -0.94
+          0.0,
+          -0.78
+        ],
+        [
+          -0.118,
+          -0.833
+        ],
+        [
+          -0.19,
+          -0.973
+        ],
+        [
+          -0.19,
+          -1.147
+        ],
+        [
+          -0.118,
+          -1.287
         ]
       ]
     },
     {
-      "group": "pod_s",
+      "group": "pod1",
       "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 60,
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 1",
       "points": [
         [
-          -0.26,
-          1.12
+          0.918,
+          -0.81
         ],
         [
-          0.26,
-          1.12
+          1.036,
+          -0.757
         ],
         [
-          0.34,
-          0.94
+          1.108,
+          -0.617
         ],
         [
-          0.26,
-          0.8
+          1.108,
+          -0.443
         ],
         [
-          -0.26,
-          0.8
+          1.036,
+          -0.303
         ],
         [
-          -0.34,
-          0.94
-        ]
-      ]
-    },
-    {
-      "group": "pod_e",
-      "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 60,
-      "points": [
-        [
-          1.12,
-          -0.26
-        ],
-        [
-          1.12,
-          0.26
-        ],
-        [
-          0.94,
-          0.34
+          0.918,
+          -0.25
         ],
         [
           0.8,
-          0.26
+          -0.303
+        ],
+        [
+          0.728,
+          -0.443
+        ],
+        [
+          0.728,
+          -0.617
         ],
         [
           0.8,
-          -0.26
-        ],
-        [
-          0.94,
-          -0.34
+          -0.757
         ]
       ]
     },
     {
-      "group": "pod_w",
+      "group": "pod2",
       "color": "hull_dk",
-      "shade": "matte",
-      "flatten_px": 60,
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 2",
       "points": [
         [
-          -1.12,
-          -0.26
+          0.918,
+          0.25
         ],
         [
-          -1.12,
-          0.26
+          1.036,
+          0.303
         ],
         [
-          -0.94,
-          0.34
+          1.108,
+          0.443
+        ],
+        [
+          1.108,
+          0.617
+        ],
+        [
+          1.036,
+          0.757
+        ],
+        [
+          0.918,
+          0.81
+        ],
+        [
+          0.8,
+          0.757
+        ],
+        [
+          0.728,
+          0.617
+        ],
+        [
+          0.728,
+          0.443
+        ],
+        [
+          0.8,
+          0.303
+        ]
+      ]
+    },
+    {
+      "group": "pod3",
+      "color": "hull_dk",
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 3",
+      "points": [
+        [
+          0.0,
+          0.78
+        ],
+        [
+          0.118,
+          0.833
+        ],
+        [
+          0.19,
+          0.973
+        ],
+        [
+          0.19,
+          1.147
+        ],
+        [
+          0.118,
+          1.287
+        ],
+        [
+          0.0,
+          1.34
+        ],
+        [
+          -0.118,
+          1.287
+        ],
+        [
+          -0.19,
+          1.147
+        ],
+        [
+          -0.19,
+          0.973
+        ],
+        [
+          -0.118,
+          0.833
+        ]
+      ]
+    },
+    {
+      "group": "pod4",
+      "color": "hull_dk",
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 4",
+      "points": [
+        [
+          -0.918,
+          0.25
         ],
         [
           -0.8,
-          0.26
+          0.303
+        ],
+        [
+          -0.728,
+          0.443
+        ],
+        [
+          -0.728,
+          0.617
         ],
         [
           -0.8,
-          -0.26
+          0.757
         ],
         [
-          -0.94,
-          -0.34
+          -0.918,
+          0.81
+        ],
+        [
+          -1.036,
+          0.757
+        ],
+        [
+          -1.108,
+          0.617
+        ],
+        [
+          -1.108,
+          0.443
+        ],
+        [
+          -1.036,
+          0.303
+        ]
+      ]
+    },
+    {
+      "group": "pod5",
+      "color": "hull_dk",
+      "shade": "soft",
+      "flatten_px": 55,
+      "note": "habitat pod 5",
+      "points": [
+        [
+          -0.918,
+          -0.81
+        ],
+        [
+          -0.8,
+          -0.757
+        ],
+        [
+          -0.728,
+          -0.617
+        ],
+        [
+          -0.728,
+          -0.443
+        ],
+        [
+          -0.8,
+          -0.303
+        ],
+        [
+          -0.918,
+          -0.25
+        ],
+        [
+          -1.036,
+          -0.303
+        ],
+        [
+          -1.108,
+          -0.443
+        ],
+        [
+          -1.108,
+          -0.617
+        ],
+        [
+          -1.036,
+          -0.757
         ]
       ]
     }
@@ -474,124 +598,20 @@
       "shade": "glow",
       "role": "detail",
       "min_px": 18,
-      "note": "core glow",
+      "note": "grow-core glow",
       "circle": [
         0.0,
         0.0,
-        0.22
+        0.24
       ]
     },
     {
-      "group": "spokes",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 90,
-      "note": "window band, N spoke",
-      "points": [
-        [
-          -0.1,
-          -0.85
-        ],
-        [
-          0.1,
-          -0.85
-        ],
-        [
-          0.1,
-          -0.28
-        ],
-        [
-          -0.1,
-          -0.28
-        ]
-      ]
-    },
-    {
-      "group": "spokes",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 90,
-      "note": "window band, E spoke",
-      "points": [
-        [
-          0.28,
-          -0.1
-        ],
-        [
-          0.85,
-          -0.1
-        ],
-        [
-          0.85,
-          0.1
-        ],
-        [
-          0.28,
-          0.1
-        ]
-      ]
-    },
-    {
-      "group": "spokes",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 90,
-      "note": "window band, S spoke",
-      "points": [
-        [
-          -0.1,
-          0.28
-        ],
-        [
-          0.1,
-          0.28
-        ],
-        [
-          0.1,
-          0.85
-        ],
-        [
-          -0.1,
-          0.85
-        ]
-      ]
-    },
-    {
-      "group": "spokes",
-      "color": "hull_dk",
-      "shade": "matte",
-      "role": "detail",
-      "min_px": 90,
-      "note": "window band, W spoke",
-      "points": [
-        [
-          -0.85,
-          -0.1
-        ],
-        [
-          -0.28,
-          -0.1
-        ],
-        [
-          -0.28,
-          0.1
-        ],
-        [
-          -0.85,
-          0.1
-        ]
-      ]
-    },
-    {
-      "group": "pod_n",
+      "group": "pod0",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 24,
+      "note": "pod light 0",
       "circle": [
         0.0,
         -1.06,
@@ -599,41 +619,67 @@
       ]
     },
     {
-      "group": "pod_s",
+      "group": "pod1",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 24,
+      "note": "pod light 1",
       "circle": [
-        0.0,
+        0.9179869280115049,
+        -0.5300000000000001,
+        0.05
+      ]
+    },
+    {
+      "group": "pod2",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 24,
+      "note": "pod light 2",
+      "circle": [
+        0.917986928011505,
+        0.5299999999999998,
+        0.05
+      ]
+    },
+    {
+      "group": "pod3",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 24,
+      "note": "pod light 3",
+      "circle": [
+        1.2981256070961945e-16,
         1.06,
         0.05
       ]
     },
     {
-      "group": "pod_e",
+      "group": "pod4",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 24,
+      "note": "pod light 4",
       "circle": [
-        1.06,
-        0.0,
+        -0.9179869280115048,
+        0.5300000000000005,
         0.05
       ]
     },
     {
-      "group": "pod_w",
+      "group": "pod5",
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "min_px": 30,
-      "note": "dock light",
+      "min_px": 24,
+      "note": "pod light 5",
       "circle": [
-        -1.06,
-        0.0,
+        -0.9179869280115049,
+        -0.5300000000000001,
         0.05
       ]
     }

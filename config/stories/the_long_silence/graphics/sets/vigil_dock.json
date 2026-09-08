@@ -1,0 +1,14 @@
+{
+  "identity": "Vigil grave-tender kit - grey work robe under the apron, the cowl, gloves, a name-pendant.",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants_charcoal",
+    "boots_charcoal",
+    "gloves_dark",
+    "vigil_grave_apron",
+    "vigil_keeper_cowl",
+    "vigil_name_pendant"
+  ],
+  "palette": "vigil_dress"
+}

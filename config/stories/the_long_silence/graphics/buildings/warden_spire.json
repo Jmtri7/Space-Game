@@ -1,210 +1,243 @@
 {
-  "identity": "the Wardens Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: vast smooth Relay-era forms in dark alloy and teal light, patched with mismatched salvage and hand-lettered ritual markings. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "identity": "the Signal-Mast, head-on: a colossal smooth Relay-era pylon rising out of sight, teal light climbing its length in pulses, a scaffold of salvage clinging to the base where the Wardens tend it. The thing the reactivation signal comes from.",
   "tier": "building",
   "palette": "warden",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~5.5x PLAYER_H of visible mast, ~1.6x wide at the base",
   "silhouette": [
     {
       "group": "body",
-      "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
-      "points": [
-        [
-          -25,
-          0
-        ],
-        [
-          25,
-          0
-        ],
-        [
-          25,
-          -55
-        ],
-        [
-          18,
-          -62
-        ],
-        [
-          -18,
-          -62
-        ],
-        [
-          -25,
-          -55
-        ]
-      ],
-      "flatten_px": 55
-    },
-    {
-      "group": "body",
       "color": "hull",
-      "shade": "deep",
-      "note": "roof",
+      "shade": "metal",
+      "note": "pylon",
+      "flatten_px": 55,
       "points": [
         [
-          -25,
-          -55
+          -24,
+          0
         ],
         [
-          25,
-          -55
+          24,
+          0
         ],
         [
-          18,
-          -62
+          16,
+          -168
         ],
         [
-          -18,
-          -62
+          -16,
+          -168
         ]
       ]
     },
     {
-      "group": "body",
-      "color": "metal",
-      "shade": "metal",
-      "note": "mast",
+      "group": "core",
+      "color": "glass",
+      "shade": "flat",
+      "note": "teal channel",
       "points": [
         [
-          -1.4,
-          -84
+          -5,
+          0
         ],
         [
-          1.4,
-          -84
+          5,
+          0
         ],
         [
-          1.4,
-          -60
+          4,
+          -168
         ],
         [
-          -1.4,
-          -60
+          -4,
+          -168
         ]
       ]
     }
   ],
   "details": [
     {
+      "group": "core",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "signal pulse 0",
+      "points": [
+        [
+          -4,
+          -20
+        ],
+        [
+          4,
+          -20
+        ],
+        [
+          4,
+          -14
+        ],
+        [
+          -4,
+          -14
+        ]
+      ]
+    },
+    {
+      "group": "core",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "signal pulse 1",
+      "points": [
+        [
+          -4,
+          -60
+        ],
+        [
+          4,
+          -60
+        ],
+        [
+          4,
+          -54
+        ],
+        [
+          -4,
+          -54
+        ]
+      ]
+    },
+    {
+      "group": "core",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "signal pulse 2",
+      "points": [
+        [
+          -4,
+          -100
+        ],
+        [
+          4,
+          -100
+        ],
+        [
+          4,
+          -94
+        ],
+        [
+          -4,
+          -94
+        ]
+      ]
+    },
+    {
+      "group": "core",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "signal pulse 3",
+      "points": [
+        [
+          -4,
+          -140
+        ],
+        [
+          4,
+          -140
+        ],
+        [
+          4,
+          -134
+        ],
+        [
+          -4,
+          -134
+        ]
+      ]
+    },
+    {
       "group": "body",
-      "color": "engine",
+      "color": "#7a6a52",
       "shade": "matte",
       "role": "detail",
-      "note": "door",
+      "min_px": 40,
+      "note": "salvage patch 0",
       "points": [
         [
-          -7,
-          -22
-        ],
-        [
-          7,
-          -22
-        ],
-        [
-          7,
-          0
-        ],
-        [
-          -7,
-          0
-        ]
-      ],
-      "min_px": 8
-    },
-    {
-      "group": "body",
-      "color": "lamp",
-      "shade": "glow",
-      "role": "detail",
-      "note": "sign",
-      "points": [
-        [
-          -13,
-          -34
-        ],
-        [
-          13,
-          -34
-        ],
-        [
-          13,
-          -25
-        ],
-        [
-          -13,
-          -25
-        ]
-      ],
-      "min_px": 12
-    },
-    {
-      "group": "body",
-      "color": "glass",
-      "shade": "sheen",
-      "role": "detail",
-      "note": "window L",
-      "points": [
-        [
-          -19,
-          -20
+          -29,
+          -26
         ],
         [
           -11,
-          -20
+          -26
         ],
         [
           -11,
-          -8
+          -2
         ],
         [
-          -19,
-          -8
+          -29,
+          -2
         ]
-      ],
-      "min_px": 14
+      ]
     },
     {
       "group": "body",
-      "color": "glass",
-      "shade": "sheen",
+      "color": "#5a6a6a",
+      "shade": "matte",
       "role": "detail",
-      "note": "window R",
+      "min_px": 40,
+      "note": "salvage patch 1",
       "points": [
         [
           11,
-          -20
+          -26
         ],
         [
-          19,
-          -20
+          29,
+          -26
         ],
         [
-          19,
-          -8
+          29,
+          -2
         ],
         [
           11,
-          -8
+          -2
         ]
-      ],
-      "min_px": 14
+      ]
     },
     {
       "group": "body",
-      "color": "lamp",
-      "shade": "glow",
+      "color": "#6a5a5a",
+      "shade": "matte",
       "role": "detail",
-      "note": "mast lamp",
-      "circle": [
-        0,
-        -84,
-        1.8
-      ],
-      "min_px": 8
+      "min_px": 40,
+      "note": "salvage patch 2",
+      "points": [
+        [
+          -10,
+          -38
+        ],
+        [
+          10,
+          -38
+        ],
+        [
+          10,
+          -22
+        ],
+        [
+          -10,
+          -22
+        ]
+      ]
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "identity": "Warden of Contract kit - heavy work suit, blast pauldrons, a sealed helmet, the ration plate, a hazard brassard.",
+  "articles": [
+    "tank_top",
+    "jacket_secblue",
+    "pants_secblue",
+    "boots_black",
+    "helmet_sec",
+    "combine_blast_pauldrons",
+    "combine_ration_plate",
+    "combine_contract_seal"
+  ],
+  "palette": "combine_dress"
+}

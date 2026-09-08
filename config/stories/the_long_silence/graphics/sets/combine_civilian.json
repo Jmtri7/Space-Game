@@ -1,0 +1,14 @@
+{
+  "identity": "Combine indentured dress - plain dark clothes, a soft collar, the ration plate every citizen wears, a contract seal.",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants",
+    "shoes",
+    "collar",
+    "combine_ration_plate",
+    "combine_contract_seal",
+    "hair_long"
+  ],
+  "palette": "combine_dress"
+}

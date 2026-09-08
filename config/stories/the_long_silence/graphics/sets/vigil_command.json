@@ -1,0 +1,13 @@
+{
+  "identity": "Vigil Keeper's turn-out - a long grey robe-coat, the mourning stole, a name-pendant, the keeper's cowl, dark shoes.",
+  "articles": [
+    "tank_top",
+    "coat_charcoal",
+    "pants_charcoal",
+    "shoes",
+    "vigil_mourning_stole",
+    "vigil_name_pendant",
+    "vigil_keeper_cowl"
+  ],
+  "palette": "vigil_dress"
+}

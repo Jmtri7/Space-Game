@@ -1,6 +1,6 @@
 {
   "name": "The Span",
-  "description": "A ringworld fragment around a blue-white star, still powered, sparsely held by the Wardens - a maintenance cult operating Relay-era machinery. The reactivation signal starts here.",
+  "description": "A ringworld fragment around a blue-white star - the old Relay network core. Still powered, mostly automated, sparsely held by the Wardens: a maintenance cult operating Relay-era machinery they no longer understand. The reactivation signal originates here.",
   "star_map_position": {
     "x": 470,
     "y": 90
@@ -11,10 +11,10 @@
     "x": 0.5,
     "y": 0.5,
     "name": "The Span",
-    "size": 90,
+    "size": 76,
     "color": [
-      200,
-      220,
+      206,
+      224,
       255
     ]
   },
@@ -46,7 +46,7 @@
   },
   "station": {
     "x": 0.2,
-    "y": 0.25,
+    "y": 0.24,
     "name": "Hub Zero",
     "interiors": {
       "default": {
@@ -54,75 +54,254 @@
         "culture": "the_wardens",
         "portals": [
           {
-            "x": 800,
-            "y": 430,
+            "x": 1360,
+            "y": 470,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Concourse",
-            "shape": "circle",
-            "center": [
-              800,
-              640
-            ],
-            "radius": 320,
-            "sides": 40
+            "label": "the Approach Span",
+            "polygon": [
+              [
+                120,
+                560
+              ],
+              [
+                1480,
+                560
+              ],
+              [
+                1480,
+                740
+              ],
+              [
+                120,
+                740
+              ]
+            ]
+          },
+          {
+            "label": "the Core Choir",
+            "polygon": [
+              [
+                440,
+                360
+              ],
+              [
+                900,
+                360
+              ],
+              [
+                900,
+                590
+              ],
+              [
+                440,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "the Arrival Span",
+            "polygon": [
+              [
+                1180,
+                360
+              ],
+              [
+                1480,
+                360
+              ],
+              [
+                1480,
+                590
+              ],
+              [
+                1180,
+                590
+              ]
+            ]
+          },
+          {
+            "label": "the Signal-Tender's post",
+            "polygon": [
+              [
+                220,
+                710
+              ],
+              [
+                560,
+                710
+              ],
+              [
+                560,
+                980
+              ],
+              [
+                220,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "Segment Four watch",
+            "polygon": [
+              [
+                1060,
+                710
+              ],
+              [
+                1420,
+                710
+              ],
+              [
+                1420,
+                980
+              ],
+              [
+                1060,
+                980
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 640,
             "building_type": "warden_spire"
           },
           {
-            "x": 650,
-            "y": 820,
-            "building_type": "pipeline_bench"
+            "x": 560,
+            "y": 584,
+            "building_type": "pipeline_column"
           },
           {
-            "x": 950,
-            "y": 820,
-            "building_type": "pipeline_bench"
+            "x": 720,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 880,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 584,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 560,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 720,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 880,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 1040,
+            "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 360,
+            "y": 900,
+            "building_type": "crates"
+          },
+          {
+            "x": 1240,
+            "y": 900,
+            "building_type": "crates"
+          },
+          {
+            "x": 1140,
+            "y": 690,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "First Warden",
             "x": 800,
-            "y": 540,
-            "role": "stationmaster",
+            "y": 470,
+            "role": "magistrate",
             "faction": "the_wardens",
-            "outfit": "warden_official_masc",
+            "outfit": "warden_official_femme",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "You reached the Span. The Hub sings, and it is asking you a question it has asked no one in two hundred years: what should the Relay be? Stand at the Choir and choose. There is no undoing it.",
+                  "text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We tend the machinery. We do not decide for it. You will. Stand at the Core Choir and choose - there is no undoing it.",
                   "options": [
                     {
                       "label": "Restore the Relay - one network, run from a hub.",
-                      "next": null,
-                      "action": "end_story:restore"
+                      "next": "confirm_restore"
                     },
                     {
                       "label": "Sever it. Destroy the core.",
-                      "next": null,
-                      "action": "end_story:sever"
+                      "next": "confirm_sever"
                     },
                     {
                       "label": "Keep the beacons, break only the hub - no one rules the network.",
-                      "next": null,
+                      "next": "confirm_middle",
                       "requires_rep": "the_vigil:10",
-                      "requires_not_flag": "patron:harbor_authority",
-                      "action": "end_story:hold_middle"
+                      "requires_not_flag": "patron:harbor_authority"
                     },
                     {
                       "label": "Not yet.",
                       "next": null
+                    }
+                  ]
+                },
+                "confirm_restore": {
+                  "text": "Then the lanes reopen, and whoever holds Halcyon holds the hub. A connected region, unequal and unstable. You are certain?",
+                  "options": [
+                    {
+                      "label": "Do it.",
+                      "next": null,
+                      "action": "end_story:restore"
+                    },
+                    {
+                      "label": "Wait.",
+                      "next": "start"
+                    }
+                  ]
+                },
+                "confirm_sever": {
+                  "text": "Then the core goes dark for good, and the systems stay islands - trade back to the slow carriers and their decade-long loops. You are certain?",
+                  "options": [
+                    {
+                      "label": "Do it.",
+                      "next": null,
+                      "action": "end_story:sever"
+                    },
+                    {
+                      "label": "Wait.",
+                      "next": "start"
+                    }
+                  ]
+                },
+                "confirm_middle": {
+                  "text": "Then the beacons stay lit and the hub breaks - no single system can dominate the network, and none can schedule it either. The hardest road to hold. You are certain?",
+                  "options": [
+                    {
+                      "label": "Do it.",
+                      "next": null,
+                      "action": "end_story:hold_middle"
+                    },
+                    {
+                      "label": "Wait.",
+                      "next": "start"
                     }
                   ]
                 }
@@ -130,32 +309,58 @@
             }
           },
           {
-            "name": "Signal-Tender",
-            "x": 650,
-            "y": 700,
+            "name": "the Signal-Tender",
+            "x": 380,
+            "y": 900,
             "role": "quartermaster",
             "faction": "the_wardens",
             "outfit": "warden_dock_masc",
-            "greeting": "We keep the machinery, not a market. But a carrier who runs parts to the outer segments is always welcome.",
+            "greeting": "We keep the machinery, not a market. A carrier who runs parts to the outer segments is always welcome - and we are always short of parts.",
             "shop": {
               "type": "commodities",
               "stock": [
                 "hub_parts",
                 "salvage"
               ],
-              "sell_multiplier": 1.15
+              "sell_multiplier": 1.1
             }
           },
           {
             "name": "Keeper of the Hub",
-            "x": 960,
-            "y": 700,
+            "x": 1240,
+            "y": 900,
             "role": "resident",
             "faction": "the_wardens",
             "outfit": "warden_civilian_femme",
-            "greeting": "Segment 4 has been dark since before my grandmother tended it. Now its lights are coming up one by one.",
+            "greeting": "Segment Four was dark since before my grandmother tended it. Now its lights come up one by one, and none of us set them to. The Hub is finishing something. We only keep it swept.",
             "dialogue_options": [
-              "I see",
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Warden of the Fourth Segment",
+            "x": 800,
+            "y": 700,
+            "role": "guard",
+            "faction": "the_wardens",
+            "outfit": "warden_security_masc",
+            "greeting": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Parts carrier",
+            "x": 1180,
+            "y": 700,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "carrier_dock_masc",
+            "greeting": "I run salvage to the dark segments. The Wardens pay in whatever's lying around. It's honest work and nobody else wants it.",
+            "dialogue_options": [
+              "Fair enough",
               "Leave"
             ]
           }
@@ -167,97 +372,116 @@
     "name": "the Core Choir",
     "x": 0.82,
     "y": 0.78,
-    "size": 30,
+    "size": 26,
     "color": [
-      170,
-      170,
-      180
+      90,
+      120,
+      116
     ],
     "crater_color": [
-      130,
-      130,
-      140
+      60,
+      90,
+      86
     ],
-    "landing_distance": 35,
+    "landing_distance": 34,
     "craters": [
       {
-        "x": -8,
-        "y": -5,
+        "x": -7,
+        "y": -3,
         "radius": 4
       },
       {
-        "x": 10,
-        "y": 8,
-        "radius": 5
+        "x": 8,
+        "y": 7,
+        "radius": 4
       }
     ],
     "interiors": {
       "city": {
-        "label": "the Core Choir",
+        "label": "Ring Segment Four",
         "culture": "the_wardens",
         "connected_locations": [],
         "entrance": {
           "x": 800,
-          "y": 800
+          "y": 840
         },
         "rooms": [
           {
-            "label": "the Core Choir",
-            "shape": "circle",
-            "center": [
-              800,
-              800
-            ],
-            "radius": 300,
-            "sides": 40
+            "label": "Segment Four Floor",
+            "polygon": [
+              [
+                220,
+                260
+              ],
+              [
+                1380,
+                260
+              ],
+              [
+                1380,
+                1100
+              ],
+              [
+                220,
+                1100
+              ]
+            ]
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 620,
+            "y": 520,
             "building_type": "warden_hall"
           },
           {
-            "x": 620,
-            "y": 760,
+            "x": 470,
+            "y": 780,
             "building_type": "warden_housing"
           },
           {
-            "x": 980,
-            "y": 760,
+            "x": 1130,
+            "y": 780,
             "building_type": "warden_housing"
           },
           {
-            "x": 700,
-            "y": 960,
-            "building_type": "planter"
+            "x": 800,
+            "y": 330,
+            "building_type": "warden_spire"
           },
           {
-            "x": 900,
-            "y": 960,
+            "x": 360,
+            "y": 1000,
             "building_type": "crates"
           },
           {
-            "x": 640,
-            "y": 640,
-            "building_type": "lamp_post"
-          },
-          {
-            "x": 960,
-            "y": 640,
-            "building_type": "lamp_post"
+            "x": 1240,
+            "y": 1000,
+            "building_type": "crates"
           }
         ],
         "npcs": [
           {
-            "name": "Surface Warden",
+            "name": "Segment Warden Threa-kin",
             "x": 800,
-            "y": 900,
-            "role": "resident",
+            "y": 700,
+            "role": "magistrate",
             "faction": "the_wardens",
-            "outfit": "warden_civilian_masc",
-            "greeting": "Nothing out here but us and the dust. Watch your seals.",
+            "outfit": "warden_official_masc",
+            "greeting": "Segment Four wakes a little more each day. We do not know what it is waking for. When you stand at the Choir, ask it gently.",
+            "dialogue_options": [
+              "I will",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Core-hand Vess",
+            "x": 520,
+            "y": 620,
+            "role": "dockworker",
+            "faction": "the_wardens",
+            "outfit": "warden_dock_femme",
+            "greeting": "Been patching this segment my whole life with whatever the carriers bring. It has never once told me thank you. I keep doing it.",
             "dialogue_options": [
               "Understood",
               "Leave"
@@ -269,23 +493,41 @@
   },
   "celestial_bodies": [
     {
-      "name": "The Span b",
-      "x": 0.62,
-      "y": 0.5,
-      "size": 18,
+      "name": "Ring Segment 4",
+      "x": 0.6,
+      "y": 0.55,
+      "size": 20,
       "color": [
-        160,
         140,
-        130
+        160,
+        175
       ],
       "body_type": "rocky"
+    },
+    {
+      "name": "Hub Halo",
+      "x": 0.3,
+      "y": 0.72,
+      "size": 44,
+      "color": [
+        180,
+        200,
+        230
+      ],
+      "body_type": "gas_giant",
+      "has_ring": true,
+      "ring_color": [
+        150,
+        190,
+        220
+      ]
     }
   ],
   "ai_ships": [
     {
-      "name": "Segment Patrol",
-      "x": 0.6,
-      "y": 0.55,
+      "name": "Segment-guard Warden",
+      "x": 0.55,
+      "y": 0.16,
       "ship_type": "warden_patrol",
       "pilot": "segment_warden",
       "faction": "the_wardens",
@@ -295,12 +537,24 @@
       ]
     },
     {
-      "name": "Core Freighter",
+      "name": "Core Barque Threa",
       "x": 0.35,
-      "y": 0.2,
+      "y": 0.22,
       "ship_type": "warden_hauler",
       "pilot": "threa",
       "faction": "the_wardens",
+      "route": [
+        "moon",
+        "station"
+      ]
+    },
+    {
+      "name": "Ash's Barque",
+      "x": 0.62,
+      "y": 0.62,
+      "ship_type": "carrier_hauler",
+      "pilot": "ash",
+      "faction": "free_carrier",
       "route": [
         "station",
         "moon"

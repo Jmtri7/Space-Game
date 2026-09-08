@@ -1,0 +1,14 @@
+{
+  "identity": "Ninefold Combine command turn-out - dark iron tunic and trousers, blast pauldrons, the ration plate, a contract seal at the hip, near-black boots.",
+  "articles": [
+    "tank_top",
+    "coat_charcoal",
+    "pants_charcoal",
+    "boots_black",
+    "combine_blast_pauldrons",
+    "combine_ration_plate",
+    "combine_contract_seal",
+    "hair_short"
+  ],
+  "palette": "combine_dress"
+}

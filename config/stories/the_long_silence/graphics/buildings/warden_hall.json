@@ -1,88 +1,92 @@
 {
-  "identity": "the Wardens Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: vast smooth Relay-era forms in dark alloy and teal light, patched with mismatched salvage and hand-lettered ritual markings. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "identity": "Warden Choir hall, head-on: a vast smooth Relay-era arch of dark alloy, a teal-lit inner recess, hand-lettered ritual markings across the span, mismatched salvage bolted along the base. Older than any culture that reads it now.",
   "tier": "building",
   "palette": "warden",
   "view": "elevation",
-  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
-  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "units": "absolute local units (31 = player height). ELEVATION.",
+  "scale_note": "~2.2x PLAYER_H to the crown, ~4x wide",
   "silhouette": [
     {
       "group": "body",
       "color": "hull_dk",
-      "shade": "matte",
-      "note": "wall",
+      "shade": "metal",
+      "note": "arch mass",
+      "flatten_px": 60,
       "points": [
         [
-          -56,
+          -62,
           0
         ],
         [
-          56,
+          -62,
+          -40
+        ],
+        [
+          -42,
+          -60
+        ],
+        [
+          0,
+          -68
+        ],
+        [
+          42,
+          -60
+        ],
+        [
+          62,
+          -40
+        ],
+        [
+          62,
           0
         ],
         [
-          56,
-          -42
+          40,
+          0
         ],
         [
-          48,
-          -50
+          40,
+          -44
         ],
         [
-          -48,
-          -50
+          0,
+          -52
         ],
         [
-          -56,
-          -42
-        ]
-      ],
-      "flatten_px": 60
-    },
-    {
-      "group": "body",
-      "color": "hull",
-      "shade": "deep",
-      "note": "roof",
-      "points": [
-        [
-          -56,
-          -42
+          -40,
+          -44
         ],
         [
-          56,
-          -42
-        ],
-        [
-          48,
-          -50
-        ],
-        [
-          -48,
-          -50
+          -40,
+          0
         ]
       ]
     },
     {
       "group": "body",
-      "color": "engine",
-      "shade": "matte",
-      "note": "opening",
+      "color": "glass",
+      "shade": "flat",
+      "note": "teal recess",
       "points": [
         [
-          -46,
-          -34
-        ],
-        [
-          46,
-          -34
-        ],
-        [
-          46,
+          -38,
           0
         ],
         [
-          -46,
+          -38,
+          -42
+        ],
+        [
+          0,
+          -50
+        ],
+        [
+          38,
+          -42
+        ],
+        [
+          38,
           0
         ]
       ]
@@ -94,130 +98,208 @@
       "color": "lamp",
       "shade": "glow",
       "role": "detail",
-      "note": "fascia",
+      "min_px": 16,
+      "note": "recess glow",
       "points": [
         [
-          -52,
-          -40
+          -34,
+          -6
         ],
         [
-          52,
-          -40
+          34,
+          -6
         ],
         [
-          52,
-          -34
+          34,
+          0
         ],
         [
-          -52,
-          -34
+          -34,
+          0
         ]
-      ],
-      "min_px": 18
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
+      "color": "lamp",
+      "shade": "glow",
       "role": "detail",
-      "note": "near post",
+      "min_px": 12,
+      "note": "warden marking 0",
       "points": [
         [
-          -48,
-          -34
+          -27,
+          -58
+        ],
+        [
+          -21,
+          -58
+        ],
+        [
+          -21,
+          -48
+        ],
+        [
+          -27,
+          -48
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "warden marking 1",
+      "points": [
+        [
+          -11,
+          -58
+        ],
+        [
+          -5,
+          -58
+        ],
+        [
+          -5,
+          -48
+        ],
+        [
+          -11,
+          -48
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "warden marking 2",
+      "points": [
+        [
+          5,
+          -58
+        ],
+        [
+          11,
+          -58
+        ],
+        [
+          11,
+          -48
+        ],
+        [
+          5,
+          -48
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "min_px": 12,
+      "note": "warden marking 3",
+      "points": [
+        [
+          21,
+          -58
+        ],
+        [
+          27,
+          -58
+        ],
+        [
+          27,
+          -48
+        ],
+        [
+          21,
+          -48
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "#7a6a52",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 40,
+      "note": "salvage patch 0",
+      "points": [
+        [
+          -60,
+          -22
         ],
         [
           -44,
-          -34
+          -22
         ],
         [
           -44,
-          0
+          -2
         ],
         [
-          -48,
-          0
+          -60,
+          -2
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "metal",
+      "color": "#5a6a6a",
+      "shade": "matte",
       "role": "detail",
-      "note": "far post",
+      "min_px": 40,
+      "note": "salvage patch 1",
       "points": [
         [
           44,
-          -34
+          -22
         ],
         [
-          48,
-          -34
+          60,
+          -22
         ],
         [
-          48,
-          0
+          60,
+          -2
         ],
         [
           44,
-          0
+          -2
         ]
-      ],
-      "min_px": 16
+      ]
     },
     {
       "group": "body",
-      "color": "metal",
-      "shade": "deep",
+      "color": "#6a5a5a",
+      "shade": "matte",
       "role": "detail",
-      "note": "stall 0",
+      "min_px": 40,
+      "note": "salvage patch 2",
       "points": [
         [
-          -42,
-          -20
+          -10,
+          -10
         ],
         [
-          -8,
-          -20
+          10,
+          -10
         ],
         [
-          -8,
-          0
+          10,
+          2
         ],
         [
-          -42,
-          0
+          -10,
+          2
         ]
-      ],
-      "min_px": 24
-    },
-    {
-      "group": "body",
-      "color": "metal",
-      "shade": "deep",
-      "role": "detail",
-      "note": "stall 1",
-      "points": [
-        [
-          8,
-          -20
-        ],
-        [
-          42,
-          -20
-        ],
-        [
-          42,
-          0
-        ],
-        [
-          8,
-          0
-        ]
-      ],
-      "min_px": 24
+      ]
     }
   ]
 }

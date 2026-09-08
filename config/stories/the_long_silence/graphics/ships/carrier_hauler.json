@@ -1,272 +1,423 @@
 {
-  "identity": "the free carriers Hauler - a mid-weight cargo hull, slow to turn. STYLE: patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name. (Geometry is a placeholder copy of the civilian courier - reshape.)",
+  "identity": "Free carrier freight raft - a flat frame carrying nine lashed cargo cans in six different colours, a small scavenged cab bolted forward-left, an oversized patched engine block aft. The whole thing looks temporary and has flown for forty years. Reads as a raft of mismatched boxes with a bright engine.",
   "tier": "ship_near",
   "palette": "carrier",
-  "size": 20,
-  "scale_note": "about 1.4x the player's own ship; ~15 m wingtip to wingtip.",
-  "units": "fractions of `size`; nose points up (-y).",
+  "size": 21,
+  "units": "fractions of `size`; nose points up (-y); symmetric about x=0.",
   "silhouette": [
     {
-      "group": "hull",
-      "color": "hull",
+      "group": "frame",
+      "color": "engine",
       "shade": "deep",
-      "flatten_px": 40,
-      "note": "delta hull, nose to swept tail.",
+      "flatten_px": 60,
+      "note": "flat frame",
       "points": [
         [
-          0.0,
-          -1.15
+          -0.44,
+          -0.95
         ],
         [
-          0.32,
-          -0.55
+          0.44,
+          -0.95
         ],
         [
-          0.42,
-          0.1
+          0.44,
+          0.85
         ],
         [
-          0.95,
-          0.75
-        ],
-        [
-          0.9,
-          1.05
-        ],
-        [
-          0.42,
-          0.95
-        ],
-        [
-          0.3,
-          1.15
-        ],
-        [
-          -0.3,
-          1.15
-        ],
-        [
-          -0.42,
-          0.95
-        ],
-        [
-          -0.9,
-          1.05
-        ],
-        [
-          -0.95,
-          0.75
-        ],
-        [
-          -0.42,
-          0.1
-        ],
-        [
-          -0.32,
-          -0.55
+          -0.44,
+          0.85
         ]
       ]
     },
     {
-      "group": "canopy",
+      "group": "cab",
       "color": "glass",
       "shade": "sheen",
-      "flatten_px": 60,
-      "note": "cockpit blister, forward.",
+      "flatten_px": 55,
+      "note": "scavenged cab",
       "points": [
         [
-          0.0,
-          -0.72
+          -0.4,
+          -0.92
         ],
         [
-          0.16,
-          -0.42
+          -0.06,
+          -0.92
         ],
         [
-          0.14,
-          0.05
+          -0.06,
+          -0.6
         ],
         [
-          0.0,
-          0.2
-        ],
-        [
-          -0.14,
-          0.05
-        ],
-        [
-          -0.16,
-          -0.42
+          -0.4,
+          -0.6
         ]
       ]
     },
     {
-      "group": "engine_r",
-      "color": "engine",
+      "group": "engine",
+      "color": "hull_dk",
       "shade": "deep",
-      "flatten_px": 50,
-      "note": "right engine pod.",
+      "flatten_px": 55,
+      "note": "patched engine block",
       "points": [
+        [
+          -0.5,
+          0.78
+        ],
+        [
+          0.5,
+          0.78
+        ],
         [
           0.42,
-          0.35
+          1.18
         ],
-        [
-          0.62,
-          0.35
-        ],
-        [
-          0.66,
-          1.0
-        ],
-        [
-          0.46,
-          1.0
-        ]
-      ]
-    },
-    {
-      "group": "engine_l",
-      "color": "engine",
-      "shade": "deep",
-      "flatten_px": 50,
-      "note": "left engine pod.",
-      "points": [
         [
           -0.42,
-          0.35
-        ],
-        [
-          -0.62,
-          0.35
-        ],
-        [
-          -0.66,
-          1.0
-        ],
-        [
-          -0.46,
-          1.0
+          1.18
         ]
       ]
     }
   ],
   "details": [
     {
-      "group": "hull",
-      "color": "hull_dk",
+      "group": "frame",
+      "color": "#96a5b9",
       "shade": "matte",
       "role": "detail",
-      "min_px": 55,
-      "note": "spine panel line",
+      "min_px": 22,
+      "note": "cargo can 0",
       "points": [
         [
-          -0.06,
-          -0.5
+          -0.41000000000000003,
+          -0.5900000000000001
         ],
         [
-          0.06,
-          -0.5
+          -0.15000000000000002,
+          -0.5900000000000001
         ],
         [
-          0.06,
-          1.05
+          -0.15000000000000002,
+          -0.21000000000000002
         ],
         [
-          -0.06,
-          1.05
+          -0.41000000000000003,
+          -0.21000000000000002
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "hull_dk",
+      "group": "frame",
+      "color": "#706660",
       "shade": "matte",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, right",
+      "min_px": 22,
+      "note": "cargo can 1",
       "points": [
         [
-          0.34,
-          0.15
+          -0.13,
+          -0.5900000000000001
+        ],
+        [
+          0.13,
+          -0.5900000000000001
+        ],
+        [
+          0.13,
+          -0.21000000000000002
+        ],
+        [
+          -0.13,
+          -0.21000000000000002
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#7a986f",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 2",
+      "points": [
+        [
+          0.15000000000000002,
+          -0.5900000000000001
+        ],
+        [
+          0.41000000000000003,
+          -0.5900000000000001
+        ],
+        [
+          0.41000000000000003,
+          -0.21000000000000002
+        ],
+        [
+          0.15000000000000002,
+          -0.21000000000000002
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#5c5c6a",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 3",
+      "points": [
+        [
+          -0.41000000000000003,
+          -0.14
+        ],
+        [
+          -0.15000000000000002,
+          -0.14
+        ],
+        [
+          -0.15000000000000002,
+          0.24
+        ],
+        [
+          -0.41000000000000003,
+          0.24
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#a28e5c",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 4",
+      "points": [
+        [
+          -0.13,
+          -0.14
+        ],
+        [
+          0.13,
+          -0.14
+        ],
+        [
+          0.13,
+          0.24
+        ],
+        [
+          -0.13,
+          0.24
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#96a5b9",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 5",
+      "points": [
+        [
+          0.15000000000000002,
+          -0.14
+        ],
+        [
+          0.41000000000000003,
+          -0.14
+        ],
+        [
+          0.41000000000000003,
+          0.24
+        ],
+        [
+          0.15000000000000002,
+          0.24
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#706660",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 6",
+      "points": [
+        [
+          -0.41000000000000003,
+          0.31
+        ],
+        [
+          -0.15000000000000002,
+          0.31
+        ],
+        [
+          -0.15000000000000002,
+          0.69
+        ],
+        [
+          -0.41000000000000003,
+          0.69
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#7a986f",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 7",
+      "points": [
+        [
+          -0.13,
+          0.31
+        ],
+        [
+          0.13,
+          0.31
+        ],
+        [
+          0.13,
+          0.69
+        ],
+        [
+          -0.13,
+          0.69
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#5c5c6a",
+      "shade": "matte",
+      "role": "detail",
+      "min_px": 22,
+      "note": "cargo can 8",
+      "points": [
+        [
+          0.15000000000000002,
+          0.31
+        ],
+        [
+          0.41000000000000003,
+          0.31
+        ],
+        [
+          0.41000000000000003,
+          0.69
+        ],
+        [
+          0.15000000000000002,
+          0.69
+        ]
+      ]
+    },
+    {
+      "group": "frame",
+      "color": "#4a3f33",
+      "shade": "deep",
+      "role": "detail",
+      "min_px": 45,
+      "note": "cargo lashing 0",
+      "points": [
+        [
+          -0.42,
+          -0.15
         ],
         [
           0.42,
-          0.15
+          -0.15
         ],
         [
-          0.9,
-          0.78
+          0.44,
+          -0.13
         ],
         [
-          0.82,
-          0.82
+          -0.39999999999999997,
+          -0.13
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "hull_dk",
-      "shade": "matte",
+      "group": "frame",
+      "color": "#4a3f33",
+      "shade": "deep",
       "role": "detail",
-      "min_px": 70,
-      "note": "wing root seam, left",
+      "min_px": 45,
+      "note": "cargo lashing 1",
       "points": [
         [
-          -0.34,
-          0.15
-        ],
-        [
           -0.42,
-          0.15
+          0.3
         ],
         [
-          -0.9,
-          0.78
+          0.42,
+          0.3
         ],
         [
-          -0.82,
-          0.82
+          0.44,
+          0.32
+        ],
+        [
+          -0.39999999999999997,
+          0.32
         ]
       ]
     },
     {
-      "group": "hull",
-      "color": "lamp",
-      "shade": "glow",
+      "group": "frame",
+      "color": "#4a3f33",
+      "shade": "deep",
       "role": "detail",
-      "min_px": 90,
-      "note": "forward nav light, at the nose tip",
-      "circle": [
-        0.0,
-        -1.02,
-        0.045
+      "min_px": 45,
+      "note": "cargo lashing 2",
+      "points": [
+        [
+          0.0,
+          -0.9
+        ],
+        [
+          0.0,
+          0.75
+        ],
+        [
+          0.02,
+          0.77
+        ],
+        [
+          0.02,
+          -0.88
+        ]
       ]
     },
     {
-      "group": "engine_r",
+      "group": "engine",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
-      "min_px": 12,
+      "min_px": 16,
       "note": "right thruster",
       "circle": [
-        0.56,
-        1.02,
-        0.11
+        0.22,
+        1.14,
+        0.14
       ]
     },
     {
-      "group": "engine_l",
+      "group": "engine",
       "color": "thrust",
       "shade": "glow",
       "role": "detail",
-      "min_px": 12,
+      "min_px": 16,
       "note": "left thruster",
       "circle": [
-        -0.56,
-        1.02,
-        0.11
+        -0.22,
+        1.14,
+        0.14
       ]
     }
   ]
