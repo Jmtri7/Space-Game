@@ -461,28 +461,40 @@
   ],
   "ai_ships": [
     {
-      "name": "Approach Tender",
+      "name": "Hub Patrol",
       "x": 0.5,
       "y": 0.12,
       "ship_type": "courier",
-      "pilot": "petty_officer_lund",
-      "faction": "harbor_authority"
+      "pilot": "ackley",
+      "faction": "harbor_authority",
+      "route": [
+        "station",
+        "moon"
+      ]
     },
     {
-      "name": "Ledger Run",
+      "name": "Authority Freight",
       "x": 0.65,
       "y": 0.6,
       "ship_type": "courier",
-      "pilot": "juno_vale",
-      "faction": "free_carrier"
+      "pilot": "lund",
+      "faction": "harbor_authority",
+      "route": [
+        "station",
+        "moon"
+      ]
     },
     {
-      "name": "Beacon Watch",
+      "name": "Ferro's Slip",
       "x": 0.3,
-      "y": 0.3,
+      "y": 0.55,
       "ship_type": "courier",
-      "pilot": "commander_ackley",
-      "faction": "harbor_authority"
+      "pilot": "rell",
+      "faction": "free_carrier",
+      "route": [
+        "station",
+        "moon"
+      ]
     }
   ]
 }

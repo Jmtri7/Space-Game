@@ -101,8 +101,9 @@ than migrating off the frozen `default` art.
 - [x] **No autopilot change** — the full AUTOPILOT_TESTING.md battery doesn't apply (see its Scope note). Validated: `run_tests.py` (incl. `TestAutopilotPhysics`) + a 2000-frame headless pursuit sim vs. a circling target (bounded distance, no NaN, no runaway)
 - [x] **Save:** player + per-AI-ship `health` (additive; old saves load full; clamped `[1, max_health]`). `story.json` `0.3.0` → `0.4.0`
 - [x] the_long_silence: Factor Tol's "The Authority is opening this system with or without your consent" (`adjust_rep:ninefold_combine:-50`) drops Kiln below the threshold and its pilots attack
-- [x] Tests: +13 (488) — `TestShipHealth`, `TestCombatRoutine`, `TestShipCombat` (hostility swap, collision ownership, destruction, player recovery, health save round-trip)
-- [x] Docs: ARCHITECTURE.md ("Weapons, Combat & Asteroid Mining" + routine table), SAVE_SYSTEM.md, AUTOPILOT_TESTING.md (scope note), CONTROLS.md, BACKLOG.md
+- [x] **Follow-up (playtest fixes):** `_provoke` — a player shot on any neutral AI ship makes *that* ship fight back (persisted `hostile_to_player:<name>` flag) and costs −10 with its faction, so sustained aggression turns the whole faction hostile via the normal threshold. Scaffold `pilots.json` rewritten to 11 faction-tagged patrol/hauler pilots, and every scaffold `ai_ships` entry given a `["station","moon"]` route — system traffic actually moves now instead of sitting idle (patrol pilots had no route → `OrbitRoutine` no-op; `courier_pilot`/`mining_foreman` roles fall back to `IdleRoutine`).
+- [x] Tests: +14 (489) — `TestShipHealth`, `TestCombatRoutine`, `TestShipCombat` (hostility swap, provocation, collision ownership, destruction, player recovery, health save round-trip)
+- [x] Docs: ARCHITECTURE.md ("Weapons, Combat & Asteroid Mining" + routine table + provocation), SAVE_SYSTEM.md, AUTOPILOT_TESTING.md (scope note), CONTROLS.md, BACKLOG.md
 
 **Deferred:** hostile-ship target brackets / red HUD, AI weapon variety, formations, boarding/derelicts, loot drops on kill.
 

@@ -296,20 +296,28 @@
   ],
   "ai_ships": [
     {
-      "name": "Claim-Watch",
+      "name": "Combine Watch",
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "rex_calder",
-      "faction": "ninefold_combine"
+      "pilot": "tolvic",
+      "faction": "ninefold_combine",
+      "route": [
+        "station",
+        "moon"
+      ]
     },
     {
       "name": "Ore Run",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "dax_okafor",
-      "faction": "ninefold_combine"
+      "pilot": "corran",
+      "faction": "ninefold_combine",
+      "route": [
+        "station",
+        "moon"
+      ]
     }
   ],
   "locked": true,

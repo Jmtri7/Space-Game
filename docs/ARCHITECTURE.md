@@ -640,6 +640,13 @@ owner)` is the shared spawn path - the player calls it from
 `_update_ai_weapon_fire` with the weaker `_ai_weapon_stats()` (laser baseline,
 half fire rate), rate-limited per pilot by `character.ai_fire_cooldown`.
 
+**Provocation.** `_provoke(ship)` runs whenever a player shot lands on an AI
+ship: once per pilot it sets that ship's `hostile_to_player:<name>` flag (so it
+fights back next frame and the grudge persists in the save) and docks a one-time
+−10 from its faction's standing - so shooting up enough of a faction's ships
+crosses `HOSTILE_REP_THRESHOLD` and turns the whole faction hostile. A nameless
+ship goes straight into `CombatRoutine` instead (no flag key to persist).
+
 **Hostility** is a routine swap, mirroring `_sync_escorts`:
 `SpaceScreen._sync_hostiles` (every frame) puts a pilot into `CombatRoutine`
 (`game/world/combat_routine.py` - turn to face the player, close to

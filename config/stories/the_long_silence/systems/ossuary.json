@@ -342,20 +342,28 @@
   ],
   "ai_ships": [
     {
-      "name": "Long Vigil",
+      "name": "Vigil Watch",
       "x": 0.6,
       "y": 0.55,
       "ship_type": "courier",
-      "pilot": "oskar_lindqvist",
-      "faction": "the_vigil"
+      "pilot": "vane_watch",
+      "faction": "the_vigil",
+      "route": [
+        "station",
+        "moon"
+      ]
     },
     {
       "name": "Grave Tender",
       "x": 0.35,
       "y": 0.2,
       "ship_type": "courier",
-      "pilot": "elena_voss",
-      "faction": "the_vigil"
+      "pilot": "oskal",
+      "faction": "the_vigil",
+      "route": [
+        "station",
+        "moon"
+      ]
     }
   ],
   "locked": true,

@@ -3458,6 +3458,23 @@ class TestShipCombat(unittest.TestCase):
         gs._sync_hostiles()
         self.assertTrue(hostile.in_combat)
 
+    def test_shooting_a_neutral_ship_provokes_it_and_dents_faction_standing(self):
+        from game.world.projectile import Projectile
+        gs, victim = self._combat_screen()   # faction ninefold_combine, standing 0
+        pos = gs.player.person.possessions
+        self.assertFalse(victim.in_combat)
+        gs.projectiles.append(Projectile(victim.ship.x, victim.ship.y, 0, 0, damage=3, owner="player"))
+        gs._update_projectiles()
+        self.assertTrue(pos.flags.get("hostile_to_player:Bandit"))
+        self.assertEqual(pos.reputation_with("ninefold_combine"), -10)  # one-time hit
+        gs._sync_hostiles()
+        self.assertIsInstance(victim.routine, CombatRoutine)
+        # more hits on the same ship don't keep dropping standing
+        for _ in range(4):
+            gs.projectiles.append(Projectile(victim.ship.x, victim.ship.y, 0, 0, damage=1, owner="player"))
+            gs._update_projectiles()
+        self.assertEqual(pos.reputation_with("ninefold_combine"), -10)
+
     def test_player_fired_shots_damage_and_destroy_a_hostile_ship(self):
         from game.world.projectile import Projectile
         gs, hostile = self._combat_screen()

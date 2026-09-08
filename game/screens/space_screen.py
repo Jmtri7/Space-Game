@@ -1305,6 +1305,29 @@ class SpaceScreen(ScreenBase):
                     ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction, ai_ship.routine_name)(ai_ship.route))
                     ai_ship.escorting = False
 
+    def _provoke(self, ship):
+        """The player shot an AI ship - it fights back. Once per pilot: set
+        its "hostile_to_player:<name>" flag (persisted; _sync_hostiles picks
+        it up next frame) and dock a one-time chunk of standing with its
+        faction, so shooting up enough of a faction's ships eventually turns
+        the whole faction hostile via the normal rep threshold. A nameless
+        ship (no config pilot) just goes straight into CombatRoutine, since
+        there's no flag key to hang persistence off."""
+        if ship.in_combat:
+            return
+        flags = self.player.person.possessions.flags
+        name = getattr(ship.person, "name", None)
+        if name:
+            key = f"hostile_to_player:{name}"
+            if flags.get(key):
+                return
+            flags[key] = True
+            if ship.faction:
+                self.player.person.possessions.adjust_reputation(ship.faction, -10)
+        else:
+            ship.set_routine(CombatRoutine(self.player))
+            ship.in_combat = True
+
     def _sync_hostiles(self):
         """Swap any AI pilot between CombatRoutine (attacking the player)
         and its normal role routine, based on whether it's currently
@@ -2175,6 +2198,7 @@ class SpaceScreen(ScreenBase):
                 return False
             self._spawn_impact_explosion(projectile.x, projectile.y)
             sound_board.play("impact")
+            self._provoke(hit)
             if hit.ship.take_damage(projectile.damage):
                 self._destroy_ship(hit)
             return True
