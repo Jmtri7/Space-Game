@@ -175,16 +175,16 @@ flight rigs).
   - `graphics/stations/<pfx>_station.json` — 6 station designs + catalogue entries
   - `graphics.json` `moons` — 6 per-culture moons (real culture-tinted colour)
   - `graphics/buildings/<pfx>_{hall,housing,spire}.json` — 18 building designs + `building_types.json` entries (furniture stays the 5 shared `pipeline_*` types)
-  - `graphics.json` `outfits` — 60 per-culture outfit entries (5 roles × femme/masc). **First pass only** reuses the shared `ck_*` article sets with a `<pfx>_dress` palette; each slice 6.1–6.6 replaces its culture's entries with a bespoke wardrobe (real articles + culture `sets`, ~4 garment sets by role — see the culture-wardrobe note above).
+  - `graphics.json` `outfits` — 60 per-culture outfit entries (5 roles × femme/masc). Slices 6.1–6.4 + 6.6 have **replaced** their culture's entries with a bespoke wardrobe (real articles + culture `sets`); the Warden (6.5) entries stay a tuned `warden_dress` recolour until Act II.
   - **Each design file carries a written `identity` brief** from that culture's theme + a "geometry is a placeholder copy — reshape" note
-  - `systems/*.json` retagged to reference the per-culture ids (station/moon/ship/building/outfit); ship dealers sell culture-appropriate lineups
+  - `systems/*.json` retagged to reference the per-culture ids — now all owned by the slice generators (Phase 0's `gen_systems.py` + `retag_assets.py` are retired)
 - [ ] Own `ship_outfits.json` (still the borrowed `default` 8 — a decent base; add a shield + scanner later)
 - [ ] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — cosmetic, do alongside a real slice
 
 ### What 6.1–6.6 now is
 The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, **authors that culture's bespoke wardrobe** (real garment articles + culture `sets`, ~4 sets by role — replacing the first-pass `<pfx>_dress` palette recolors), plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
 
-### 6.1 — Halcyon / Harbor Authority  ✅ done — `docs/gen/gen_halcyon.py`, story `0.9.1`
+### 6.1 — Halcyon / Harbor Authority  ✅ done — `docs/gen/gen_halcyon.py` (owns story.json; version now `0.10.0`)
 - [x] **First-pass Authority ship designs** — `authority_{courier,hauler,patrol}` authored as real design JSON: rectilinear hulls, guidance chevrons, ranked window bands, chrome-and-navy palette (not the placeholder courier copy). `graphics.json` `thrusters`/`local_points` patched to match.
 - [x] **`authority_station`** — a rectilinear cross-hub with a control block, four docking arms, a signal mast (not the octagon ring).
 - [x] **`authority_{hall,housing,spire}`** — elevation buildings: colonnaded civic hall, ranked-window housing slab, three-tier control spire with a scan-lamp. Footprints updated.
