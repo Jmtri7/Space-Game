@@ -36,7 +36,13 @@ only appears under a section if it currently has items there.
 
 ## Stations, Interiors & World Building
 
-- [ ] Characters added to a story don't show up in old saves.
+- [x] Characters added to a story don't show up in old saves. Fixed by Phase 4:
+      NPC and AI-ship rosters are re-derived from config (filtered through
+      `content_gate.passes_content_gate`) on every interior / system entry, never
+      from the save — so a newly-added or flag-gated character appears in an old
+      save once eligible. See `LocationScreen._apply_content_gates` /
+      `SpaceScreen._sync_conditional_ships` and SAVE_SYSTEM.md. (Renaming an
+      existing pilot still orphans its save-position entry — separate, narrower.)
 - [ ] The concierge desk should sit right in front of the player on entry.
 
 ## Graphics & Rendering

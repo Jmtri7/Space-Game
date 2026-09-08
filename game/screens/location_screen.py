@@ -15,6 +15,7 @@ from game.world.character import Character, resolve_routine_class
 from game.world.person import Person
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
 from game.world.player_character import PlayerCharacter
+from game.world.content_gate import passes_content_gate
 from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.starfield import StarField
@@ -368,22 +369,21 @@ class LocationScreen(ScreenBase):
             stars_per_chunk_range=tuple(self.config.get("star_density", (55, 95))),
         ) if self.config.get("space_backdrop") else None
 
-        # Load structures (buildings, craters, rocks, etc.)
-        self.structures = self.config.get("structures", [])
-        # Ground-level collision boxes for the buildings among those
-        # structures (decorative terrain like moon rocks has no
-        # building_type and contributes none) - see _building_footprint()
-        # for why this is deliberately smaller than each building's full
-        # drawn silhouette.
-        self.building_footprints = [fp for fp in (self._building_footprint(s) for s in self.structures) if fp]
         # Static mission definitions for this story (missions.json) - needed
         # so a dialogue "start_mission:" / "abandon_mission:" action (see
         # apply_shared_actions) can look one up, e.g. a station guide's
         # offer to walk the player through the place. {} for a story with
         # no missions.json.
         self.missions_config = get_missions(story)
-        self.npcs_config = self.config.get("npcs", [])
-        self.npcs = [self._build_local_character(cfg) for cfg in self.npcs_config]
+        # Full, unfiltered config for the flag/reputation-conditional
+        # content (see game/world/content_gate.py). _apply_content_gates()
+        # derives self.structures / self.building_footprints / self.npcs
+        # from these against the player's current flags+standing, and is
+        # re-run on every interior (re-)entry (arrive_from) so a beacon lit
+        # or a faction mobilised actually changes what's here.
+        self._structures_config = self.config.get("structures", [])
+        self._npcs_config = self.config.get("npcs", [])
+        self._apply_content_gates()
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
         self.active_shop = None  # Set to an NPC's shop config when "shop" is returned from handle_input
@@ -425,6 +425,28 @@ class LocationScreen(ScreenBase):
         # "scrolled_message_log" tutorial flag when there was actually
         # something to scroll.
         self._message_log_max_scroll = 0
+
+    def _apply_content_gates(self):
+        """(Re)derive the flag/reputation-conditional content from the raw
+        config against the player's *current* flags + standing - the NPC
+        roster, the solid structures, and their collision footprints (which
+        invalidates the lazily-built nav grid so plan_path re-rasterises).
+        Run once at construction and again on every interior (re-)entry via
+        arrive_from(), so a beacon lit / faction mobilised between visits
+        actually changes what's in the room. See game/world/content_gate.py.
+        Cosmetic `decorations` are not gated (purely visual decals); an
+        NPC/structure with no conditional key is unaffected either way."""
+        flags = self.player.possessions.flags
+        reputation = self.player.possessions.reputation
+        self.structures = [s for s in self._structures_config
+                           if passes_content_gate(s, flags, reputation)]
+        # Ground-level collision boxes for the buildings among those
+        # structures (decorative terrain like moon rocks has no
+        # building_type and contributes none) - see _building_footprint().
+        self.building_footprints = [fp for fp in (self._building_footprint(s) for s in self.structures) if fp]
+        self._nav_grid = None
+        self.npcs = [self._build_local_character(cfg) for cfg in self._npcs_config
+                     if passes_content_gate(cfg, flags, reputation)]
 
     def _build_local_character(self, cfg):
         """Build one config-driven local resident: a Person (with a
@@ -557,6 +579,11 @@ class LocationScreen(ScreenBase):
         appear next to the door they actually walked through instead of
         wherever they happened to be left the last time they visited this
         location."""
+        # Re-evaluate flag/reputation-conditional content against the
+        # player's current state - this cached LocationScreen may have been
+        # built (or last entered) before a beacon was lit or a faction
+        # turned. See _apply_content_gates / game/world/content_gate.py.
+        self._apply_content_gates()
         portal = self.portal_for(origin_key)
         self.player.x, self.player.y = portal["x"], portal["y"]
 

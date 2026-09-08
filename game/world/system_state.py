@@ -20,6 +20,13 @@ class SystemState:
         self.celestial_bodies = celestial_bodies
         self.ai_ships = ai_ships
         self.space_drag = space_drag  # reapplied to the player's ship on activation (see SpaceScreen._activate_system)
+        # Set by SpaceScreen._build_system_state: this system's id, and its
+        # full (unfiltered) ai_ships config - the latter so
+        # _sync_conditional_ships() can add/drop flag-gated ships on
+        # (re-)entry (see game/world/content_gate.py). ai_ships above holds
+        # only the ships eligible right now.
+        self.system_id = None
+        self.ai_ship_configs = []
 
     def update_physics(self):
         """Advance this system's station/moon rotation, celestial bodies,

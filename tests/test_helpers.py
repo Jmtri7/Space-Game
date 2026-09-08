@@ -60,6 +60,7 @@ from game.ui.choice_dialog import ChoiceDialog
 from game.ui.backdrop_menu import BackdropMenu
 from game.ui.star_map import StarMap
 from game.world.combat_routine import CombatRoutine, _signed_angle_delta
+from game.world.content_gate import passes_content_gate, is_gated
 from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
@@ -3358,6 +3359,94 @@ class TestCombatRoutine(unittest.TestCase):
         self.assertTrue(char.ship.autopilot_active)
         CombatRoutine(SimpleNamespace(x=0, y=100)).start(char)
         self.assertFalse(char.ship.autopilot_active)
+
+
+class TestContentGate(unittest.TestCase):
+    """game/world/content_gate.py - the flag / reputation visibility check
+    shared by SpaceScreen's conditional AI ships and LocationScreen's
+    conditional NPCs / structures."""
+
+    def test_an_entry_with_no_gate_keys_always_passes(self):
+        self.assertFalse(is_gated({"name": "Bob"}))
+        self.assertTrue(passes_content_gate({"name": "Bob"}, {}, {}))
+
+    def test_requires_flag_and_requires_not_flag(self):
+        self.assertTrue(is_gated({"requires_flag": "x"}))
+        self.assertFalse(passes_content_gate({"requires_flag": "x"}, {}, {}))
+        self.assertTrue(passes_content_gate({"requires_flag": "x"}, {"x": True}, {}))
+        self.assertFalse(passes_content_gate({"requires_not_flag": "x"}, {"x": True}, {}))
+        self.assertTrue(passes_content_gate({"requires_not_flag": "x"}, {}, {}))
+
+    def test_requires_rep_and_requires_rep_below(self):
+        self.assertFalse(passes_content_gate({"requires_rep": "kiln:10"}, {}, {}))
+        self.assertTrue(passes_content_gate({"requires_rep": "kiln:10"}, {}, {"kiln": 10}))
+        self.assertTrue(passes_content_gate({"requires_rep_below": "kiln:-20"}, {}, {"kiln": -30}))
+        self.assertFalse(passes_content_gate({"requires_rep_below": "kiln:-20"}, {}, {"kiln": 0}))
+
+    def test_all_conditions_must_hold(self):
+        entry = {"requires_flag": "war", "requires_rep_below": "kiln:0"}
+        self.assertFalse(passes_content_gate(entry, {"war": True}, {"kiln": 5}))
+        self.assertTrue(passes_content_gate(entry, {"war": True}, {"kiln": -5}))
+
+
+class TestConditionalWorldContent(unittest.TestCase):
+    """Flag/reputation-gated NPCs and structures appear/disappear on interior
+    (re-)entry (LocationScreen._apply_content_gates via arrive_from); gated
+    AI ships appear/disappear on system (re-)entry
+    (SpaceScreen._sync_conditional_ships). See docs/ARCHITECTURE.md."""
+
+    def _interior(self, possessions):
+        cfg = {
+            "label": "Bay",
+            "rooms": [{"shape": "circle", "center": [400, 400], "radius": 300, "sides": 24}],
+            "portals": [{"x": 400, "y": 250, "return_to_ship": True}],
+            "structures": [
+                {"x": 400, "y": 400, "building_type": "vherathi_lamp"},
+                {"x": 500, "y": 400, "building_type": "vherathi_lamp", "requires_flag": "mobilised"},
+            ],
+            "npcs": [
+                {"name": "Local", "x": 350, "y": 400, "role": "resident"},
+                {"name": "Refugee", "x": 450, "y": 400, "role": "resident", "requires_flag": "lane_open"},
+            ],
+        }
+        return LocationScreen(config_data=cfg, world_width=800, world_height=800,
+                              story="default", player_possessions=possessions)
+
+    def test_gated_npc_and_structure_appear_when_the_flag_is_set(self):
+        pos = Possessions()
+        sc = self._interior(pos)
+        self.assertEqual(sorted(c.person.name for c in sc.npcs), ["Local"])
+        self.assertEqual(len(sc.structures), 1)
+        pos.flags["lane_open"] = True
+        pos.flags["mobilised"] = True
+        sc.arrive_from("ship")
+        self.assertEqual(sorted(c.person.name for c in sc.npcs), ["Local", "Refugee"])
+        self.assertEqual(len(sc.structures), 2)
+
+    def test_gated_npc_disappears_again_when_the_flag_clears(self):
+        pos = Possessions()
+        pos.flags["lane_open"] = True
+        sc = self._interior(pos)
+        self.assertIn("Refugee", [c.person.name for c in sc.npcs])
+        pos.flags["lane_open"] = False
+        sc.arrive_from("ship")
+        self.assertNotIn("Refugee", [c.person.name for c in sc.npcs])
+
+    def test_sync_conditional_ships_adds_and_removes_a_gated_ai_ship(self):
+        gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
+        pos = gs.player.person.possessions
+
+        def has_raider():
+            return any(getattr(s, "_spawn_cfg", {}).get("name") == "Combine Raider"
+                       for s in gs.systems["verdance"].ai_ships)
+
+        self.assertFalse(has_raider())
+        pos.reputation["ninefold_combine"] = -30
+        gs._sync_conditional_ships()
+        self.assertTrue(has_raider())
+        pos.reputation["ninefold_combine"] = 0
+        gs._sync_conditional_ships()
+        self.assertFalse(has_raider())
 
 
 class TestSystemUnlocked(unittest.TestCase):

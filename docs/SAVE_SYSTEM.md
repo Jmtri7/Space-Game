@@ -56,17 +56,24 @@ capturing something the player can now actually change.
 when an *old* save (made before that entity existed) loads it. Don't assume
 "new content" is automatically safe because it's additive.
 
-- **Station/moon NPCs are the easy case:** pure story config, rebuilt fresh
-  from `npcs` every time a location loads, never referenced by a save. A new
-  one just appears regardless of which save is loaded.
-- **AI ship pilots are the case that needs checking:** `SpaceScreen.get_state()`'s
-  `ai_ships` dict is keyed by pilot name, and `restore_state()` uses that name
-  to reposition an existing ship. A new pilot with no matching save entry
-  starts fresh from its config position (fine). But **renaming** an existing
-  pilot silently orphans its old save entry instead of erroring — the ship
-  quietly resets to its config default instead of restoring where the player
-  left it. Load (or construct, in a test) an old-shaped save state after this
-  kind of change and confirm the actual outcome.
+- **Station/moon NPCs are the easy case:** pure story config, filtered through
+  `content_gate.passes_content_gate` and rebuilt fresh from `npcs` on every
+  interior (re-)entry (`LocationScreen._apply_content_gates` from
+  `arrive_from`), never referenced by a save. A new one — or a
+  `requires_flag`-gated one whose flag is now set — just appears regardless of
+  which save is loaded. Same for gated `structures[]`.
+- **AI ship pilots** are keyed by pilot name in `SpaceScreen.get_state()`'s
+  `ai_ships` dict; `restore_state()` uses that name to reposition an existing
+  ship. The **roster itself** is re-derived from config on entry, not the save:
+  `_build_system_state` builds only the ships eligible right now, and
+  `_sync_conditional_ships` (on system re-entry / launch) adds or drops
+  `requires_flag`/`requires_rep`-gated ships as the player's state changes — so
+  a pilot added to a story, or one gated behind a flag, appears in an old save
+  once eligible. A new *unconditional* pilot with no save entry starts fresh
+  from its config position (fine). **Renaming** an existing pilot still
+  silently orphans its old save entry (the ship resets to its config default
+  instead of where the player left it) — load or construct an old-shaped save
+  state after that kind of change and confirm the outcome.
 
 ### Warn the user, explicitly and up front
 

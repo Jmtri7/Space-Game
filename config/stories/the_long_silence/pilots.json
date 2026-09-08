@@ -37,6 +37,13 @@
     "personality": "Counts everything twice, trusts nothing that wasn't mined here.",
     "hail_greeting": "Ore run, Shaft VII to the Hold. Rationed cargo. Move along."
   },
+  "raska": {
+    "name": "Gun-bosun Raska",
+    "faction": "ninefold_combine",
+    "role": "patrol_officer",
+    "personality": "Treats every contract breach as a personal insult and every insult as a firing solution.",
+    "hail_greeting": "The Combine's writ runs here now too. You broke the contract. Clear off."
+  },
 
   "sella": {
     "name": "Tide-pilot Sella",

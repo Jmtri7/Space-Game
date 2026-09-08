@@ -318,6 +318,20 @@
               "Safe flights",
               "Leave"
             ]
+          },
+          {
+            "name": "Displaced traveller",
+            "x": 620,
+            "y": 560,
+            "role": "traveler",
+            "faction": "free_carrier",
+            "outfit": "civilian_femme",
+            "requires_flag": "beacon_verdance_lit",
+            "greeting": "Came in on the new lane from Verdance. Half the ring's doing the same. Nobody planned for this.",
+            "dialogue_options": [
+              "Safe travels",
+              "Leave"
+            ]
           }
         ]
       }

@@ -90,8 +90,19 @@ the full tree and the story/save split.
 }
 ```
 Station/AI positions are fractions of `GAME_WIDTH`/`GAME_HEIGHT`. An `ai_ships[]`
-entry (and an interior `npcs[]` entry) may carry a `faction` id
-(`factions.json`). `locked: true` + `unlock_flag` (a `Possessions.flags` name)
+entry (and an interior `npcs[]` / `structures[]` entry) may carry a `faction` id
+(`factions.json`) and/or a **content gate** — `requires_flag` /
+`requires_not_flag` (a `Possessions.flags` name) or `requires_rep` /
+`requires_rep_below` (`"<faction>:<n>"`, standing `>= n` / `< n`). Gated content
+is present only when its conditions hold *right now*: `content_gate.passes_content_gate`
+is the check, re-run on **system (re-)entry and on launch** for ships
+(`SpaceScreen._sync_conditional_ships`, from `_activate_system` / `board_ship`)
+and on **interior (re-)entry** for NPCs + structures
+(`LocationScreen._apply_content_gates`, from `arrive_from` — also rebuilds
+`building_footprints` and invalidates the nav grid). Cosmetic `decorations` are
+not gated. This is also what fixes "a character added to a story doesn't appear
+in an old save" — the roster is re-derived from config on every entry, never
+from the save. `locked: true` + `unlock_flag` (a `Possessions.flags` name)
 make a system unreachable until that flag is set — beacon jump-gating, checked
 by `utils.system_unlocked()` in `SpaceScreen.try_jump` and the `StarMap`; set
 the flag with the `"light_beacon:<system_id>"` dialogue action, a mission's
@@ -104,8 +115,11 @@ or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
 "circle", "center": […], "radius": r}` — walkable area is their union),
 `portals` (`{"x", "y", "return_to_ship": true}` for a ship dock), optional
 `decorations` (cosmetic decals) and `structures` (solid, if they carry a
-`footprint`), and `npcs`. A default-story station is one such interior. See
-"Interior geometry" below and `game/screens/location_screen.py`.
+`footprint`), and `npcs`. A `structures[]` or `npcs[]` entry may carry a
+content gate (`requires_flag` / `requires_rep` / … — see the `systems/*.json`
+note above); gated entries are (re-)evaluated on every interior entry. A
+default-story station is one such interior. See "Interior geometry" below and
+`game/screens/location_screen.py`.
 ```json
 {
   "label": "Alpha Station", "culture": "vherathi",

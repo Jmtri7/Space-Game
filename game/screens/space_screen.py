@@ -30,6 +30,7 @@ from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
 from game.world.combat_routine import CombatRoutine
+from game.world.content_gate import passes_content_gate, is_gated
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
 from game.world.landing_site import LandingSite
@@ -341,6 +342,7 @@ class SpaceScreen(ScreenBase):
         ]
 
         state = SystemState(station, moon, central_star, celestial_bodies, ai_ships=[], space_drag=space_drag)
+        state.system_id = system_id
         state.star_field = StarField(seed=config.get("star_seed", 0))
         # No seed passed - unlike StarField, AsteroidField is meant to look
         # different every time (see its docstring), including the very
@@ -355,33 +357,43 @@ class SpaceScreen(ScreenBase):
         # self.systems the moment the first explorer is constructed.
         self.systems[system_id] = state
 
-        # LandingSites that an AI ship's route config can reference by key
-        landing_site_lookup = {"station": station, "moon": moon}
-
-        for ai_cfg in config.get("ai_ships", []):
-            ship_type_id = ai_cfg.get("ship_type", "freighter")
-            ship_type = get_ship_type(self.story, ship_type_id)
-            ship_graphics = get_graphics_asset(self.story, "ships", ship_type_id)
-            pilot = get_pilot(self.story, ai_cfg["pilot"]) if "pilot" in ai_cfg else None
-            route = [landing_site_lookup[key] for key in ai_cfg.get("route", []) if key in landing_site_lookup]
-            ai_ship = Character.for_ai_pilot(
-                GAME_WIDTH * ai_cfg.get("x", 0.75),
-                GAME_HEIGHT * ai_cfg.get("y", 0.1),
-                ship_type=ship_type,
-                ship_type_id=ship_type_id,
-                graphics=ship_graphics,
-                pilot=pilot,
-                route=route,
-                get_interior_screen=self.get_interior_screen,
-                space_drag=space_drag,
-                outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id),
-                systems=self.systems,
-                system_id=system_id,
-                faction=ai_cfg.get("faction"),
-            )
-            state.ai_ships.append(ai_ship)
+        # The full ai_ships config is kept on the SystemState so
+        # _sync_conditional_ships() can add/drop flag-gated ships on
+        # (re-)entry - see game/world/content_gate.py. Only entries eligible
+        # right now are built here.
+        state.ai_ship_configs = config.get("ai_ships", [])
+        flags = self.player.person.possessions.flags
+        reputation = self.player.person.possessions.reputation
+        for ai_cfg in state.ai_ship_configs:
+            if passes_content_gate(ai_cfg, flags, reputation):
+                state.ai_ships.append(self._build_ai_ship(state, ai_cfg))
 
         return state
+
+    def _build_ai_ship(self, state, ai_cfg):
+        """One AI-pilot Character from an `ai_ships[]` config entry, in
+        `state`'s system. Split out of _build_system_state so
+        _sync_conditional_ships can spawn a flag-gated ship later too."""
+        landing_site_lookup = {"station": state.station, "moon": state.moon}
+        ship_type_id = ai_cfg.get("ship_type", "freighter")
+        route = [landing_site_lookup[k] for k in ai_cfg.get("route", []) if k in landing_site_lookup]
+        ai_ship = Character.for_ai_pilot(
+            GAME_WIDTH * ai_cfg.get("x", 0.75),
+            GAME_HEIGHT * ai_cfg.get("y", 0.1),
+            ship_type=get_ship_type(self.story, ship_type_id),
+            ship_type_id=ship_type_id,
+            graphics=get_graphics_asset(self.story, "ships", ship_type_id),
+            pilot=get_pilot(self.story, ai_cfg["pilot"]) if "pilot" in ai_cfg else None,
+            route=route,
+            get_interior_screen=self.get_interior_screen,
+            space_drag=state.space_drag,
+            outfit=get_graphics_asset(self.story, "outfits", self.default_outfit_id),
+            systems=self.systems,
+            system_id=state.system_id,
+            faction=ai_cfg.get("faction"),
+        )
+        ai_ship._spawn_cfg = ai_cfg
+        return ai_ship
 
     def _activate_system(self, system_id):
         """Point every per-system alias (station/moon/ai_ships/...) at the
@@ -394,6 +406,10 @@ class SpaceScreen(ScreenBase):
         self.system_config = self.system_configs[system_id]
         state = self.systems[system_id]
         self.player.ship.space_drag = state.space_drag
+        # Match this system's flag/reputation-gated roster to the player's
+        # current state before anything below reads state.ai_ships (the
+        # targetable list, self.ai_ship). See _sync_conditional_ships.
+        self._sync_conditional_ships()
 
         self.station = state.station
         self.moon = state.moon
@@ -619,6 +635,12 @@ class SpaceScreen(ScreenBase):
         and any missed transition). Marks the ship in flight and starts a
         starting_mission that _on_ship_purchased armed but deferred until
         launch - idempotent, safe to call every frame."""
+        if not self.in_flight:
+            # Real docked -> flying transition (not the per-frame catch-all
+            # re-call): re-sync the active system's flag-gated roster, since
+            # the player may have changed a flag / their standing while
+            # docked. See _sync_conditional_ships.
+            self._sync_conditional_ships()
         self.in_flight = True
         if self.player.person.possessions.flags.get("starting_mission_armed"):
             self.player.person.possessions.flags["starting_mission_armed"] = False
@@ -1329,6 +1351,27 @@ class SpaceScreen(ScreenBase):
         else:
             ship.set_routine(CombatRoutine(self.player))
             ship.in_combat = True
+
+    def _sync_conditional_ships(self):
+        """Add/drop the flag- or reputation-gated AI ships of the *active*
+        system so its roster matches the player's current state - a Kiln
+        patrol wing that only appears once `kiln_mobilised` is set, a
+        blockade that lifts when standing recovers. Run on system
+        (re-)entry (_activate_system) and on launch (board_ship), not every
+        frame, so a ship never pops in right in front of the player.
+        Unconditional ships (no gate key) are never touched. See
+        game/world/content_gate.py."""
+        state = self.systems[self.system_id]
+        possessions = self.player.person.possessions
+        flags, reputation = possessions.flags, possessions.reputation
+        for ship in list(state.ai_ships):
+            cfg = getattr(ship, "_spawn_cfg", None)
+            if cfg is not None and is_gated(cfg) and not passes_content_gate(cfg, flags, reputation):
+                state.ai_ships.remove(ship)
+        present = {id(getattr(s, "_spawn_cfg", None)) for s in state.ai_ships}
+        for cfg in getattr(state, "ai_ship_configs", []):
+            if is_gated(cfg) and id(cfg) not in present and passes_content_gate(cfg, flags, reputation):
+                state.ai_ships.append(self._build_ai_ship(state, cfg))
 
     def _sync_hostiles(self):
         """Swap any AI pilot between CombatRoutine (attacking the player)

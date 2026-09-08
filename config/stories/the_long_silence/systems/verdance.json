@@ -317,6 +317,19 @@
         "station",
         "moon"
       ]
+    },
+    {
+      "name": "Combine Raider",
+      "x": 0.55,
+      "y": 0.45,
+      "ship_type": "courier",
+      "pilot": "raska",
+      "faction": "ninefold_combine",
+      "route": [
+        "station",
+        "moon"
+      ],
+      "requires_rep_below": "ninefold_combine:-20"
     }
   ],
   "locked": true,

@@ -107,13 +107,17 @@ than migrating off the frozen `default` art.
 
 **Deferred:** hostile-ship target brackets / red HUD, AI weapon variety, formations, boarding/derelicts, loot drops on kill.
 
-## Phase 4 — Flag-conditional world content (gaps D + G)
+## Phase 4 — Flag-conditional world content (gaps D + G)  ✅ done
 
-- [ ] `ai_ships[]` and interior `npcs[]` entries may carry `requires_flag` / `requires_not_flag` / `requires_rep…`; filter in `_build_system_state()` / `_build_local_character()`
-- [ ] Same for `decorations` / `structures`
-- [ ] Re-evaluate on system (re-)entry, not just new game
-- [ ] Fix / document "new characters don't appear in old saves" (gap G) here
-- [ ] Docs: ARCHITECTURE.md (system + interior config), SAVE_SYSTEM.md (roster re-derivation)
+- [x] `game/world/content_gate.py` — `passes_content_gate(entry, flags, reputation)` / `is_gated(entry)`. Keys: `requires_flag` / `requires_not_flag` / `requires_rep` / `requires_rep_below` (`"<faction>:<n>"`), same vocab as `Dialogue`'s option gate. An entry with no key always passes.
+- [x] `ai_ships[]` gated: `_build_system_state` builds only eligible ships (+ `state.ai_ship_configs` / `state.system_id` / `ship._spawn_cfg`); `_build_ai_ship` extracted; `_sync_conditional_ships` adds/drops gated ships on `_activate_system` (re-entry) and `board_ship` (launch) — not per-frame, so nothing pops in in front of the player
+- [x] interior `npcs[]` + `structures[]` gated: `LocationScreen._apply_content_gates` (re-run from `arrive_from`) rebuilds `self.npcs` / `self.structures` / `self.building_footprints` and invalidates the nav grid. Cosmetic `decorations` not gated (deferred — culture-pack interaction is fiddly, low value)
+- [x] **Gap G fixed:** rosters are re-derived from config on entry, never from the save, so a character added to a story (or gated behind a now-set flag) appears in an old save
+- [x] the_long_silence (`0.4.0` → `0.5.0`): a "Displaced traveller" NPC at Hub Control (`requires_flag: beacon_verdance_lit`), a "Combine Raider" ship over Verdance (`requires_rep_below: ninefold_combine:-20`, pilot `raska`). Story description de-scaffolded.
+- [x] Tests: +7 (499) — `TestContentGate`, `TestConditionalWorldContent` (gated NPC/structure on `arrive_from`, gated ship on `_sync_conditional_ships`)
+- [x] Docs: ARCHITECTURE.md (system + interior config + the gate mechanism), SAVE_SYSTEM.md (roster re-derivation, gap G), BACKLOG.md (bug closed)
+
+**Deferred:** gating cosmetic `decorations`; a mid-flight re-sync (currently only on entry/launch — a flag set by an in-space event won't change the roster until the next dock+launch or jump).
 
 ## Phase 5 — Arc framework, exclusive choices, ending (gap E)
 
