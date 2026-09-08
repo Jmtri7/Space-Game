@@ -139,12 +139,26 @@ art, floor plans, NPC roster, pilots, and an anchor mission that lights the next
 beacon. Do them in narrative order (Halcyon first — it becomes the tutorial).
 
 Per-slice asset budget (rough): culture palette + `theme`, ~4 ship graphics,
-~8 building types, ~8 person outfits, 1 station + 1 moon, 1–2 interior floor
-plans, 5–8 NPCs (each revealing a feature or a faction stance), 5–8 pilots with
-routines + hail dialogue, 1 anchor mission. Whole-story totals: ~6–7 cultures,
-8–10 ship *types*, 20–30 ship *graphics*, 40–55 building types, 40–60 outfits,
-30–45 pilots, ~200 asset defs — dominated by buildings and outfits, most of
-which are article/palette reuse rather than new shapes.
+~8 building types, **1 culture wardrobe** (see below), 1 station + 1 moon, 1–2
+interior floor plans, 5–8 NPCs (each revealing a feature or a faction stance),
+5–8 pilots with routines + hail dialogue, 1 anchor mission. Whole-story totals:
+~6–7 cultures, 8–10 ship *types*, 20–30 ship *graphics*, 40–55 building types,
+~5 culture wardrobes, 30–45 pilots, ~200 asset defs — dominated by buildings.
+
+**Culture wardrobe (bespoke articles, not palette recolors).** Each slice
+authors real garment geometry for its culture — new `graphics/articles/` +
+`graphics/items/` + culture-specific `graphics/sets/` — not just a `<pfx>_dress`
+palette over the borrowed `ck_*` sets. Budget per culture is ~4 garment sets by
+*role*, and same-role NPCs share the same set or a close variant:
+- an **official / command** uniform (the faction's identity garment)
+- a **security / enforcement** kit
+- a **work / dock** kit
+- **civilian** dress (1–2 variants)
+Femme/masc cuts of each via the body `regions[].geometry.{masc,femme}` +
+`fits:` machinery. Distinct silhouette per culture is the point — Authority
+pressed tailoring vs Combine hardwear vs Drift layered soft goods, etc. Reuse
+across cultures is fine only where the fiction supports it (e.g. free-carrier
+flight rigs).
 
 ### 6.0 — Foundation + per-culture asset stubs  ✅ done
 - [x] `commodities.json` — 9 thematic goods; per-system quartermaster stock. (`0.6.0` → `0.7.0`)
@@ -154,20 +168,21 @@ which are article/palette reuse rather than new shapes.
   - `graphics/stations/<pfx>_station.json` — 6 station designs + catalogue entries
   - `graphics.json` `moons` — 6 per-culture moons (real culture-tinted colour)
   - `graphics/buildings/<pfx>_{hall,housing,spire}.json` — 18 building designs + `building_types.json` entries (furniture stays the 5 shared `pipeline_*` types)
-  - `graphics.json` `outfits` — 60 per-culture outfit entries (5 roles × femme/masc, reusing the shared `ck_*` article sets with a `<pfx>_dress` palette)
+  - `graphics.json` `outfits` — 60 per-culture outfit entries (5 roles × femme/masc). **First pass only** reuses the shared `ck_*` article sets with a `<pfx>_dress` palette; each slice 6.1–6.6 replaces its culture's entries with a bespoke wardrobe (real articles + culture `sets`, ~4 garment sets by role — see the culture-wardrobe note above).
   - **Each design file carries a written `identity` brief** from that culture's theme + a "geometry is a placeholder copy — reshape" note
   - `systems/*.json` retagged to reference the per-culture ids (station/moon/ship/building/outfit); ship dealers sell culture-appropriate lineups
 - [ ] Own `ship_outfits.json` (still the borrowed `default` 8 — a decent base; add a shield + scanner later)
 - [ ] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — cosmetic, do alongside a real slice
 
 ### What 6.1–6.6 now is
-The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
+The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, **authors that culture's bespoke wardrobe** (real garment articles + culture `sets`, ~4 sets by role — replacing the first-pass `<pfx>_dress` palette recolors), plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
 
 ### 6.1 — Halcyon / Harbor Authority  ✅ done (first pass) — `docs/gen/gen_halcyon.py`, story `0.9.0`
 - [x] **First-pass Authority ship designs** — `authority_{courier,hauler,patrol}` authored as real design JSON: rectilinear hulls, guidance chevrons, ranked window bands, chrome-and-navy palette (not the placeholder courier copy). `graphics.json` `thrusters`/`local_points` patched to match.
 - [x] **`authority_station`** — a rectilinear cross-hub with a control block, four docking arms, a signal mast (not the octagon ring).
 - [x] **`authority_{hall,housing,spire}`** — elevation buildings: colonnaded civic hall, ranked-window housing slab, three-tier control spire with a scan-lamp. Footprints updated.
 - [x] `authority_dress` palette tuned to pressed navy + chrome.
+- [ ] **Bespoke Authority wardrobe** — still first-pass only: the 10 `authority_*` outfits are the borrowed `ck_*` article sets under `authority_dress`. Needs real garments: a pressed-tailoring command uniform (Sella/Vane/Crane/Lund), a warden security kit (Lund/Rusk), a dock kit (Prit/Rusk), civilian dress (Ottre/Amsel/Ellin) — femme/masc cuts, culture `sets`, distinct pressed silhouette.
 - [x] **Hub Control floor plan** — a west-east Approach Concourse spine with five overlapping bays (Records Hall, Control Gallery, The Berth, Lender's Office, Quartermaster's Dock), a central `authority_spire` landmark, ranked colonnade, `deck_grid` floor. Fully walkable; all NPCs reachable from the dock.
 - [x] **Full NPC roster** (11, one flag-gated): Induction Officer Sella, Controller Vane, Signal Officer Doss (loan), Harbor-Master Crane (ships), Approach Warden Lund (outfits), Quartermaster Ellin (commodities), Deck-hand Rusk, Barkeep Ottre, Records Keeper Amsel, Deck Mechanic Prit, Displaced traveller (`requires_flag: beacon_verdance_lit`). Real dialogue trees on the key ones (Vane's `patron:` pledge, Amsel's shutdown-record hint, Ottre's faction gossip). Moon "Watch Station" gets 3 more.
 - [x] **Anchor tutorial — "Harbor Authority Induction"** (`missions.json`, 12 stages): walk / target / talk / mission-log / possessions → loan → ship → board → turn / thrust / brake → **jump to Kiln** (`jumped_to:kiln`, a new generic gameplay-event flag). Started by Sella's dialogue (her `ambient` line prompts a new pilot); `on_start_flags` lights Kiln's beacon; Vane has a fallback for players who skip it.
@@ -175,22 +190,27 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 
 ### 6.2 — Kiln / Ninefold Combine
 - [ ] Deep-mine station + mine-moon art; contract-law culture floor plan
+- [ ] **Combine wardrobe** — bespoke: hardwear management uniform, mine-security kit, rockjack work kit, indentured/civilian dress; heavy layered hardware silhouette
 - [ ] NPCs + pilots; anchor mission ends hostile-leaning, lights Beacon 3 (Verdance)
 
 ### 6.3 — Verdance / the Drift
 - [ ] Cloud-city + agri-ring art; consensus-assembly interior
+- [ ] **Drift wardrobe** — bespoke: assembly-speaker robes, no dedicated security (militia sash over civ), grower's kit, layered soft-goods civilian dress
 - [ ] NPCs + pilots; anchor mission (the assembly can't decide), lights Beacon 4 (Ossuary)
 
 ### 6.4 — Ossuary / the Vigil
 - [ ] Name-Wall / archive interior; grave-moon
+- [ ] **Vigil wardrobe** — bespoke: keeper's mourning vestments, warden kit, gravedigger work kit, austere civilian dress
 - [ ] NPCs + pilots; anchor mission delivers the true history + the warning
 
 ### 6.5 — The Span / the Wardens (Act I stub)
 - [ ] Minimal Warden interior + exterior art; system stays **beacon-locked** until Act II
+- [ ] Warden wardrobe deferred to Act II (only glimpsed here)
 - [ ] Just enough to exist on the star map as "NO SIGNAL"
 
 ### 6.6 — Free carriers pass
 - [ ] Faction-tag the existing wandering pilots across all five systems; carrier berth dressing; 2–3 carrier-specific ship graphics
+- [ ] **Carrier wardrobe** — bespoke: patched flight rigs + deck coveralls (this is the one wardrobe meant to read as shared/scavenged across cultures)
 
 ## Phase 7 — Content: Act II "Pressure"
 
