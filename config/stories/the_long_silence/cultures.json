@@ -1,5 +1,5 @@
 {
-  "_comment": "Phase 0 scaffold. The six named cultures below are palette + theme stubs; furniture/outfit/ship/station art is borrowed from the graphics_pipeline_test story (design-JSON pipeline - see docs/GRAPHICS_PIPELINE.md). Real per-culture assets land in Phase 6.1-6.6 - see docs/PLAN.md. orbital_std / regolith_std are kept only so the borrowed pipeline building_types keep resolving their culture colours; remove them once every system has its own.",
+  "_comment": "Six cultures: palette + written theme + naming brief. Phase 6 gave each its own ship/station/moon/building/outfit stubs (graphics/ships/<pfx>_*, graphics/palettes/<pfx>*, etc.) - distinct named files with identity briefs, geometry still a placeholder copy pending a shaping pass in config/editor.html. orbital_std / regolith_std remain only for the 5 shared furniture building_types (bench/column/planter/lamp/crates).",
 
   "harbor_authority": {
     "name": "The Harbor Authority",

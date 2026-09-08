@@ -1,0 +1,10 @@
+{
+  "identity": "Harbor Authority ship palette - orderly and symmetrical, chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron on every surface, over-signed. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#96a5b9",
+  "hull_dk": "#5d6673",
+  "engine": "#3f454e",
+  "metal": "#808c9d",
+  "glass": "#b4dcff",
+  "lamp": "#a2c6e6",
+  "thrust": "#78b4ff"
+}

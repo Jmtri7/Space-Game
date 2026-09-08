@@ -1,0 +1,10 @@
+{
+  "identity": "the Drift ship palette - soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#7a9870",
+  "hull_dk": "#4c5e45",
+  "engine": "#33402f",
+  "metal": "#68815f",
+  "glass": "#c8ffac",
+  "lamp": "#b4e69b",
+  "thrust": "#ace88e"
+}

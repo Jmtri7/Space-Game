@@ -1,0 +1,210 @@
+{
+  "identity": "the Wardens Spire - the landmark - an administrative / ceremonial tower that says whose ground this is. STYLE: vast smooth Relay-era forms in dark alloy and teal light, patched with mismatched salvage and hand-lettered ritual markings. (Geometry is a placeholder copy of admin_office - reshape.)",
+  "tier": "building",
+  "palette": "warden",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~2.2x PLAYER_H tall (~2.7x with the mast), ~1.6x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "wall",
+      "points": [
+        [
+          -25,
+          0
+        ],
+        [
+          25,
+          0
+        ],
+        [
+          25,
+          -55
+        ],
+        [
+          18,
+          -62
+        ],
+        [
+          -18,
+          -62
+        ],
+        [
+          -25,
+          -55
+        ]
+      ],
+      "flatten_px": 55
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -25,
+          -55
+        ],
+        [
+          25,
+          -55
+        ],
+        [
+          18,
+          -62
+        ],
+        [
+          -18,
+          -62
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "mast",
+      "points": [
+        [
+          -1.4,
+          -84
+        ],
+        [
+          1.4,
+          -84
+        ],
+        [
+          1.4,
+          -60
+        ],
+        [
+          -1.4,
+          -60
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "engine",
+      "shade": "matte",
+      "role": "detail",
+      "note": "door",
+      "points": [
+        [
+          -7,
+          -22
+        ],
+        [
+          7,
+          -22
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          -7,
+          0
+        ]
+      ],
+      "min_px": 8
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "sign",
+      "points": [
+        [
+          -13,
+          -34
+        ],
+        [
+          13,
+          -34
+        ],
+        [
+          13,
+          -25
+        ],
+        [
+          -13,
+          -25
+        ]
+      ],
+      "min_px": 12
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window L",
+      "points": [
+        [
+          -19,
+          -20
+        ],
+        [
+          -11,
+          -20
+        ],
+        [
+          -11,
+          -8
+        ],
+        [
+          -19,
+          -8
+        ]
+      ],
+      "min_px": 14
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window R",
+      "points": [
+        [
+          11,
+          -20
+        ],
+        [
+          19,
+          -20
+        ],
+        [
+          19,
+          -8
+        ],
+        [
+          11,
+          -8
+        ]
+      ],
+      "min_px": 14
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "mast lamp",
+      "circle": [
+        0,
+        -84,
+        1.8
+      ],
+      "min_px": 8
+    }
+  ]
+}

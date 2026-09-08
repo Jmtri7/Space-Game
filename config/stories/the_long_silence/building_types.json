@@ -1,4 +1,5 @@
 {
+  "_comment": "Phase 6 stubs - per-culture structures. Geometry borrowed (market_hall / housing_block / admin_office); furniture (pipeline_bench/planter/lamp_post) stays shared. Each has its own design file + identity.",
   "pipeline_bench": {
     "name": "Bench",
     "description": "A slatted public bench. Furniture: a low collision footprint, placed clear of every traffic lane.",
@@ -17,36 +18,6 @@
     "footprint": {
       "width": 8.4,
       "depth": 5.0
-    }
-  },
-  "housing_block": {
-    "name": "Housing Block",
-    "description": "Housing Block - civilian surface settlement. See buildings/housing_block.json.",
-    "design": "buildings/housing_block",
-    "culture": "regolith_std",
-    "footprint": {
-      "width": 76,
-      "depth": 45.6
-    }
-  },
-  "market_hall": {
-    "name": "Market Hall",
-    "description": "Market Hall - civilian surface settlement. See buildings/market_hall.json.",
-    "design": "buildings/market_hall",
-    "culture": "regolith_std",
-    "footprint": {
-      "width": 112,
-      "depth": 30.0
-    }
-  },
-  "admin_office": {
-    "name": "Admin Office",
-    "description": "Admin Office - civilian surface settlement. See buildings/admin_office.json.",
-    "design": "buildings/admin_office",
-    "culture": "regolith_std",
-    "footprint": {
-      "width": 50,
-      "depth": 30.0
     }
   },
   "planter": {
@@ -77,6 +48,186 @@
     "footprint": {
       "width": 28,
       "depth": 13.2
+    }
+  },
+  "authority_hall": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Hall",
+    "description": "Harbor Authority hall - the public / trading hall - the culture's front room, seen head-on. See buildings/authority_hall.json.",
+    "design": "buildings/authority_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "authority_housing": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Housing",
+    "description": "Harbor Authority housing - a residential block - where the culture's people actually live. See buildings/authority_housing.json.",
+    "design": "buildings/authority_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "authority_spire": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Spire",
+    "description": "Harbor Authority spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/authority_spire.json.",
+    "design": "buildings/authority_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
+    }
+  },
+  "combine_hall": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Hall",
+    "description": "Ninefold Combine hall - the public / trading hall - the culture's front room, seen head-on. See buildings/combine_hall.json.",
+    "design": "buildings/combine_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "combine_housing": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Housing",
+    "description": "Ninefold Combine housing - a residential block - where the culture's people actually live. See buildings/combine_housing.json.",
+    "design": "buildings/combine_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "combine_spire": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Spire",
+    "description": "Ninefold Combine spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/combine_spire.json.",
+    "design": "buildings/combine_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
+    }
+  },
+  "drift_hall": {
+    "culture": "the_drift",
+    "name": "The Drift Hall",
+    "description": "The Drift hall - the public / trading hall - the culture's front room, seen head-on. See buildings/drift_hall.json.",
+    "design": "buildings/drift_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "drift_housing": {
+    "culture": "the_drift",
+    "name": "The Drift Housing",
+    "description": "The Drift housing - a residential block - where the culture's people actually live. See buildings/drift_housing.json.",
+    "design": "buildings/drift_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "drift_spire": {
+    "culture": "the_drift",
+    "name": "The Drift Spire",
+    "description": "The Drift spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/drift_spire.json.",
+    "design": "buildings/drift_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
+    }
+  },
+  "vigil_hall": {
+    "culture": "the_vigil",
+    "name": "The Vigil Hall",
+    "description": "The Vigil hall - the public / trading hall - the culture's front room, seen head-on. See buildings/vigil_hall.json.",
+    "design": "buildings/vigil_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "vigil_housing": {
+    "culture": "the_vigil",
+    "name": "The Vigil Housing",
+    "description": "The Vigil housing - a residential block - where the culture's people actually live. See buildings/vigil_housing.json.",
+    "design": "buildings/vigil_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "vigil_spire": {
+    "culture": "the_vigil",
+    "name": "The Vigil Spire",
+    "description": "The Vigil spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/vigil_spire.json.",
+    "design": "buildings/vigil_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
+    }
+  },
+  "warden_hall": {
+    "culture": "the_wardens",
+    "name": "The Wardens Hall",
+    "description": "The Wardens hall - the public / trading hall - the culture's front room, seen head-on. See buildings/warden_hall.json.",
+    "design": "buildings/warden_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "warden_housing": {
+    "culture": "the_wardens",
+    "name": "The Wardens Housing",
+    "description": "The Wardens housing - a residential block - where the culture's people actually live. See buildings/warden_housing.json.",
+    "design": "buildings/warden_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "warden_spire": {
+    "culture": "the_wardens",
+    "name": "The Wardens Spire",
+    "description": "The Wardens spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/warden_spire.json.",
+    "design": "buildings/warden_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
+    }
+  },
+  "carrier_hall": {
+    "culture": "free_carrier",
+    "name": "The free carriers Hall",
+    "description": "The free carriers hall - the public / trading hall - the culture's front room, seen head-on. See buildings/carrier_hall.json.",
+    "design": "buildings/carrier_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 30.0
+    }
+  },
+  "carrier_housing": {
+    "culture": "free_carrier",
+    "name": "The free carriers Housing",
+    "description": "The free carriers housing - a residential block - where the culture's people actually live. See buildings/carrier_housing.json.",
+    "design": "buildings/carrier_housing",
+    "footprint": {
+      "width": 96,
+      "depth": 28.0
+    }
+  },
+  "carrier_spire": {
+    "culture": "free_carrier",
+    "name": "The free carriers Spire",
+    "description": "The free carriers spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/carrier_spire.json.",
+    "design": "buildings/carrier_spire",
+    "footprint": {
+      "width": 70,
+      "depth": 24.0
     }
   }
 }

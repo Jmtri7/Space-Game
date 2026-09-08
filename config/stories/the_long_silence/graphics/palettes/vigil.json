@@ -1,0 +1,10 @@
+{
+  "identity": "the Vigil ship palette - austere and vertical, long cold surfaces, narrow violet-white light, unpolished grey, no decoration that is not a record. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#5c5c6a",
+  "hull_dk": "#393942",
+  "engine": "#27272d",
+  "metal": "#4e4e5a",
+  "glass": "#c0b6d6",
+  "lamp": "#ada4c1",
+  "thrust": "#8c82ac"
+}

@@ -1,0 +1,10 @@
+{
+  "identity": "Ninefold Combine ship palette - heavy dark iron banded with ember-orange hazard light, blast doors, riveted seams, ration-stencil numerals, built for the deep mines. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#706660",
+  "hull_dk": "#453f3c",
+  "engine": "#2f2b28",
+  "metal": "#5f5752",
+  "glass": "#ff8c3c",
+  "lamp": "#e67e36",
+  "thrust": "#ff6e28"
+}

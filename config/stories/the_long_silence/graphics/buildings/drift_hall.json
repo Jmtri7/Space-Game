@@ -1,0 +1,223 @@
+{
+  "identity": "the Drift Hall - the public / trading hall - the culture's front room, seen head-on. STYLE: soft and rounded, curved partitions, trellised grow-light, growing things worked into the structure, pale timber-and-canvas over a green cast. (Geometry is a placeholder copy of market_hall - reshape.)",
+  "tier": "building",
+  "palette": "drift",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is the facade width about 0, y<=0 is height above the floor. The engine billboards it upright from its floor anchor, like a person.",
+  "scale_note": "~1.8x PLAYER_H to the eaves, ~3.6x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "wall",
+      "points": [
+        [
+          -56,
+          0
+        ],
+        [
+          56,
+          0
+        ],
+        [
+          56,
+          -42
+        ],
+        [
+          48,
+          -50
+        ],
+        [
+          -48,
+          -50
+        ],
+        [
+          -56,
+          -42
+        ]
+      ],
+      "flatten_px": 60
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "roof",
+      "points": [
+        [
+          -56,
+          -42
+        ],
+        [
+          56,
+          -42
+        ],
+        [
+          48,
+          -50
+        ],
+        [
+          -48,
+          -50
+        ]
+      ]
+    },
+    {
+      "group": "body",
+      "color": "engine",
+      "shade": "matte",
+      "note": "opening",
+      "points": [
+        [
+          -46,
+          -34
+        ],
+        [
+          46,
+          -34
+        ],
+        [
+          46,
+          0
+        ],
+        [
+          -46,
+          0
+        ]
+      ]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "fascia",
+      "points": [
+        [
+          -52,
+          -40
+        ],
+        [
+          52,
+          -40
+        ],
+        [
+          52,
+          -34
+        ],
+        [
+          -52,
+          -34
+        ]
+      ],
+      "min_px": 18
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "note": "near post",
+      "points": [
+        [
+          -48,
+          -34
+        ],
+        [
+          -44,
+          -34
+        ],
+        [
+          -44,
+          0
+        ],
+        [
+          -48,
+          0
+        ]
+      ],
+      "min_px": 16
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "role": "detail",
+      "note": "far post",
+      "points": [
+        [
+          44,
+          -34
+        ],
+        [
+          48,
+          -34
+        ],
+        [
+          48,
+          0
+        ],
+        [
+          44,
+          0
+        ]
+      ],
+      "min_px": 16
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "role": "detail",
+      "note": "stall 0",
+      "points": [
+        [
+          -42,
+          -20
+        ],
+        [
+          -8,
+          -20
+        ],
+        [
+          -8,
+          0
+        ],
+        [
+          -42,
+          0
+        ]
+      ],
+      "min_px": 24
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "deep",
+      "role": "detail",
+      "note": "stall 1",
+      "points": [
+        [
+          8,
+          -20
+        ],
+        [
+          42,
+          -20
+        ],
+        [
+          42,
+          0
+        ],
+        [
+          8,
+          0
+        ]
+      ],
+      "min_px": 24
+    }
+  ]
+}

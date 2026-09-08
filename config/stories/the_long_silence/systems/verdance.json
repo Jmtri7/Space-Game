@@ -5,8 +5,8 @@
     "x": 210,
     "y": 150
   },
-  "station_asset": "trade_ring",
-  "moon_asset": "regolith_moon",
+  "station_asset": "drift_station",
+  "moon_asset": "drift_moon",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
@@ -76,7 +76,7 @@
           {
             "x": 800,
             "y": 620,
-            "building_type": "pipeline_column"
+            "building_type": "drift_spire"
           },
           {
             "x": 650,
@@ -96,7 +96,7 @@
             "y": 540,
             "role": "stationmaster",
             "faction": "the_drift",
-            "outfit": "officer_masc",
+            "outfit": "drift_official_masc",
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
@@ -151,7 +151,7 @@
             "y": 700,
             "role": "quartermaster",
             "faction": "the_drift",
-            "outfit": "ck_dockworker_masc",
+            "outfit": "drift_dock_masc",
             "greeting": "Grain, fibre, water-credits. Pay what's fair and we'll trade again.",
             "shop": {
               "type": "commodities",
@@ -168,7 +168,7 @@
             "y": 700,
             "role": "resident",
             "faction": "the_drift",
-            "outfit": "civilian_femme",
+            "outfit": "drift_civilian_femme",
             "greeting": "The beacon relit and half of us are thrilled and half are terrified. That's Verdance for you.",
             "dialogue_options": [
               "I see",
@@ -181,14 +181,15 @@
             "y": 780,
             "role": "ship_salesman",
             "faction": "the_drift",
-            "outfit": "ck_command_masc",
+            "outfit": "drift_official_masc",
             "greeting": "We refit liners and passenger hulls, mostly. Roomy. Slow. Kind to fly.",
             "shop": {
               "type": "ships",
               "stock": [
-                "shuttle",
-                "liner",
-                "hauler"
+                "drift_courier",
+                "drift_hauler",
+                "carrier_courier",
+                "carrier_hauler"
               ]
             }
           }
@@ -249,17 +250,17 @@
           {
             "x": 800,
             "y": 620,
-            "building_type": "market_hall"
+            "building_type": "drift_hall"
           },
           {
             "x": 620,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "drift_housing"
           },
           {
             "x": 980,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "drift_housing"
           },
           {
             "x": 700,
@@ -289,7 +290,7 @@
             "y": 900,
             "role": "resident",
             "faction": "the_drift",
-            "outfit": "ck_miner_masc",
+            "outfit": "drift_civilian_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
               "Understood",
@@ -319,7 +320,7 @@
       "name": "Drift Watch",
       "x": 0.6,
       "y": 0.55,
-      "ship_type": "courier",
+      "ship_type": "drift_patrol",
       "pilot": "sella",
       "faction": "the_drift",
       "route": [
@@ -331,7 +332,7 @@
       "name": "Canopy Hauler",
       "x": 0.35,
       "y": 0.2,
-      "ship_type": "courier",
+      "ship_type": "drift_hauler",
       "pilot": "nim",
       "faction": "the_drift",
       "route": [
@@ -343,7 +344,7 @@
       "name": "Combine Raider",
       "x": 0.55,
       "y": 0.45,
-      "ship_type": "courier",
+      "ship_type": "combine_patrol",
       "pilot": "raska",
       "faction": "ninefold_combine",
       "route": [

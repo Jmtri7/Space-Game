@@ -5,8 +5,8 @@
     "x": 0,
     "y": 0
   },
-  "station_asset": "trade_ring",
-  "moon_asset": "regolith_moon",
+  "station_asset": "authority_station",
+  "moon_asset": "authority_moon",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
@@ -151,7 +151,7 @@
           {
             "x": 800,
             "y": 600,
-            "building_type": "pipeline_column"
+            "building_type": "authority_spire"
           },
           {
             "x": 700,
@@ -171,7 +171,7 @@
             "y": 520,
             "role": "stationmaster",
             "faction": "harbor_authority",
-            "outfit": "officer_femme",
+            "outfit": "authority_official_femme",
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
@@ -246,7 +246,7 @@
             "y": 620,
             "role": "loan_officer",
             "faction": "harbor_authority",
-            "outfit": "ck_command_masc",
+            "outfit": "authority_official_masc",
             "dialogue_tree": {
               "root": "start",
               "nodes": {
@@ -282,16 +282,16 @@
             "y": 600,
             "role": "ship_salesman",
             "faction": "harbor_authority",
-            "outfit": "ck_command_femme",
+            "outfit": "authority_official_femme",
             "greeting": "Impounded hulls, mostly - carriers who couldn't pay their approach fees. Cleared for sale.",
             "shop": {
               "type": "ships",
               "stock": [
-                "shuttle",
-                "courier",
-                "hauler",
-                "interceptor",
-                "liner"
+                "carrier_courier",
+                "authority_courier",
+                "authority_hauler",
+                "carrier_hauler",
+                "authority_patrol"
               ]
             }
           },
@@ -301,7 +301,7 @@
             "y": 700,
             "role": "outfitter",
             "faction": "harbor_authority",
-            "outfit": "ck_security_masc",
+            "outfit": "authority_official_masc",
             "greeting": "Fitting out? Standard-issue only, but it's all rated.",
             "shop": {
               "type": "outfits",
@@ -320,7 +320,7 @@
             "y": 700,
             "role": "quartermaster",
             "faction": "harbor_authority",
-            "outfit": "ck_dockworker_femme",
+            "outfit": "authority_dock_femme",
             "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates.",
             "shop": {
               "type": "commodities",
@@ -337,7 +337,7 @@
             "y": 720,
             "role": "traveler",
             "faction": "free_carrier",
-            "outfit": "ck_smuggler_masc",
+            "outfit": "carrier_civilian_masc",
             "greeting": "Twenty years I ran the slow lanes to Verdance. Now a beacon does it in an afternoon. Don't know whether to celebrate.",
             "dialogue_options": [
               "Safe flights",
@@ -350,7 +350,7 @@
             "y": 560,
             "role": "traveler",
             "faction": "free_carrier",
-            "outfit": "civilian_femme",
+            "outfit": "carrier_civilian_femme",
             "requires_flag": "beacon_verdance_lit",
             "greeting": "Came in on the new lane from Verdance. Half the ring's doing the same. Nobody planned for this.",
             "dialogue_options": [
@@ -415,17 +415,17 @@
           {
             "x": 800,
             "y": 620,
-            "building_type": "market_hall"
+            "building_type": "authority_hall"
           },
           {
             "x": 620,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "authority_housing"
           },
           {
             "x": 980,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "authority_housing"
           },
           {
             "x": 700,
@@ -455,7 +455,7 @@
             "y": 900,
             "role": "resident",
             "faction": "harbor_authority",
-            "outfit": "ck_miner_masc",
+            "outfit": "authority_civilian_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
               "Understood",
@@ -503,7 +503,7 @@
       "name": "Hub Patrol",
       "x": 0.5,
       "y": 0.12,
-      "ship_type": "courier",
+      "ship_type": "authority_patrol",
       "pilot": "ackley",
       "faction": "harbor_authority",
       "route": [
@@ -515,7 +515,7 @@
       "name": "Authority Freight",
       "x": 0.65,
       "y": 0.6,
-      "ship_type": "courier",
+      "ship_type": "authority_hauler",
       "pilot": "lund",
       "faction": "harbor_authority",
       "route": [
@@ -527,7 +527,7 @@
       "name": "Ferro's Slip",
       "x": 0.3,
       "y": 0.55,
-      "ship_type": "courier",
+      "ship_type": "carrier_hauler",
       "pilot": "rell",
       "faction": "free_carrier",
       "route": [

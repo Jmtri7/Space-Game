@@ -5,8 +5,8 @@
     "x": 40,
     "y": 260
   },
-  "station_asset": "trade_ring",
-  "moon_asset": "regolith_moon",
+  "station_asset": "vigil_station",
+  "moon_asset": "vigil_moon",
   "central_star": {
     "x": 0.5,
     "y": 0.5,
@@ -76,7 +76,7 @@
           {
             "x": 800,
             "y": 620,
-            "building_type": "pipeline_column"
+            "building_type": "vigil_spire"
           },
           {
             "x": 650,
@@ -96,7 +96,7 @@
             "y": 540,
             "role": "stationmaster",
             "faction": "the_vigil",
-            "outfit": "officer_masc",
+            "outfit": "vigil_official_masc",
             "dialogue_tree": {
               "root": "start",
               "conditional_roots": [
@@ -213,7 +213,7 @@
             "y": 700,
             "role": "quartermaster",
             "faction": "the_vigil",
-            "outfit": "ck_dockworker_masc",
+            "outfit": "vigil_dock_masc",
             "greeting": "We trade only what we can spare - archive copies, mostly. Knowledge, if you'll carry it carefully.",
             "shop": {
               "type": "commodities",
@@ -230,7 +230,7 @@
             "y": 700,
             "role": "resident",
             "faction": "the_vigil",
-            "outfit": "civilian_femme",
+            "outfit": "vigil_civilian_femme",
             "greeting": "It's quiet here. We prefer it. The quiet is the point.",
             "dialogue_options": [
               "I see",
@@ -294,17 +294,17 @@
           {
             "x": 800,
             "y": 620,
-            "building_type": "market_hall"
+            "building_type": "vigil_hall"
           },
           {
             "x": 620,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "vigil_housing"
           },
           {
             "x": 980,
             "y": 760,
-            "building_type": "housing_block"
+            "building_type": "vigil_housing"
           },
           {
             "x": 700,
@@ -334,7 +334,7 @@
             "y": 900,
             "role": "resident",
             "faction": "the_vigil",
-            "outfit": "ck_miner_masc",
+            "outfit": "vigil_civilian_masc",
             "greeting": "Nothing out here but us and the dust. Watch your seals.",
             "dialogue_options": [
               "Understood",
@@ -364,7 +364,7 @@
       "name": "Vigil Watch",
       "x": 0.6,
       "y": 0.55,
-      "ship_type": "courier",
+      "ship_type": "vigil_patrol",
       "pilot": "vane_watch",
       "faction": "the_vigil",
       "route": [
@@ -376,7 +376,7 @@
       "name": "Grave Tender",
       "x": 0.35,
       "y": 0.2,
-      "ship_type": "courier",
+      "ship_type": "vigil_hauler",
       "pilot": "oskal",
       "faction": "the_vigil",
       "route": [

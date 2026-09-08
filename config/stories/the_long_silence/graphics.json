@@ -1,8 +1,8 @@
 {
   "ships": {
-    "courier": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
+    "authority_courier": {
+      "design": "ships/authority_courier",
+      "culture": "harbor_authority",
       "size": 11,
       "local_points": [
         [
@@ -45,88 +45,11 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "shuttle": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 13,
-      "local_points": [
-        [
-          0.0,
-          -1.1
-        ],
-        [
-          0.4,
-          0.05
-        ],
-        [
-          0.92,
-          0.9
-        ],
-        [
-          0.35,
-          1.12
-        ],
-        [
-          -0.35,
-          1.12
-        ],
-        [
-          -0.92,
-          0.9
-        ],
-        [
-          -0.4,
-          0.05
-        ]
-      ],
-      "thrusters": [
-        [
-          0.56,
-          0.92
-        ],
-        [
-          -0.56,
-          0.92
-        ]
-      ],
-      "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
-    },
-    "hauler": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
+    "authority_hauler": {
+      "design": "ships/authority_hauler",
+      "culture": "harbor_authority",
       "size": 20,
       "local_points": [
         [
@@ -169,27 +92,12 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "freighter": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 30,
+    "authority_patrol": {
+      "design": "ships/authority_patrol",
+      "culture": "harbor_authority",
+      "size": 16,
       "local_points": [
         [
           0.0,
@@ -231,27 +139,12 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "interceptor": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 12,
+    "combine_courier": {
+      "design": "ships/combine_courier",
+      "culture": "ninefold_combine",
+      "size": 11,
       "local_points": [
         [
           0.0,
@@ -293,27 +186,12 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "gunship": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 22,
+    "combine_hauler": {
+      "design": "ships/combine_hauler",
+      "culture": "ninefold_combine",
+      "size": 20,
       "local_points": [
         [
           0.0,
@@ -355,27 +233,12 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "liner": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 26,
+    "combine_patrol": {
+      "design": "ships/combine_patrol",
+      "culture": "ninefold_combine",
+      "size": 16,
       "local_points": [
         [
           0.0,
@@ -417,27 +280,12 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
-      ],
-      "window_color": [
-        127,
-        216,
-        200
-      ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_length": 22
     },
-    "miner": {
-      "design": "ships/courier",
-      "culture": "orbital_std",
-      "size": 18,
+    "drift_courier": {
+      "design": "ships/drift_courier",
+      "culture": "the_drift",
+      "size": 11,
       "local_points": [
         [
           0.0,
@@ -479,46 +327,903 @@
         ]
       ],
       "thruster_width": 0.07,
-      "thruster_length": 22,
-      "thrust_color": [
-        255,
-        178,
-        87
+      "thruster_length": 22
+    },
+    "drift_hauler": {
+      "design": "ships/drift_hauler",
+      "culture": "the_drift",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
       ],
-      "window_color": [
-        127,
-        216,
-        200
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
       ],
-      "outline_color": [
-        28,
-        30,
-        34
-      ]
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "drift_patrol": {
+      "design": "ships/drift_patrol",
+      "culture": "the_drift",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "vigil_courier": {
+      "design": "ships/vigil_courier",
+      "culture": "the_vigil",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "vigil_hauler": {
+      "design": "ships/vigil_hauler",
+      "culture": "the_vigil",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "vigil_patrol": {
+      "design": "ships/vigil_patrol",
+      "culture": "the_vigil",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "warden_courier": {
+      "design": "ships/warden_courier",
+      "culture": "the_wardens",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "warden_hauler": {
+      "design": "ships/warden_hauler",
+      "culture": "the_wardens",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "warden_patrol": {
+      "design": "ships/warden_patrol",
+      "culture": "the_wardens",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "carrier_courier": {
+      "design": "ships/carrier_courier",
+      "culture": "free_carrier",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "carrier_hauler": {
+      "design": "ships/carrier_hauler",
+      "culture": "free_carrier",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
+    },
+    "carrier_patrol": {
+      "design": "ships/carrier_patrol",
+      "culture": "free_carrier",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.4,
+          0.05
+        ],
+        [
+          0.92,
+          0.9
+        ],
+        [
+          0.35,
+          1.12
+        ],
+        [
+          -0.35,
+          1.12
+        ],
+        [
+          -0.92,
+          0.9
+        ],
+        [
+          -0.4,
+          0.05
+        ]
+      ],
+      "thrusters": [
+        [
+          0.56,
+          0.92
+        ],
+        [
+          -0.56,
+          0.92
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 22
     }
   },
   "space_stations": {
-    "trade_ring": {
-      "design": "stations/trade_ring",
-      "culture": "orbital_std",
+    "authority_station": {
+      "design": "stations/authority_station",
+      "culture": "harbor_authority",
       "size": 46,
-      "rotation_speed": 0.35,
+      "rotation_speed": 0.3,
       "landing_distance": 150,
-      "core_color": [
-        127,
-        216,
-        200
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
       ],
-      "window_color": [
-        127,
-        216,
-        200
+      "windows": []
+    },
+    "combine_station": {
+      "design": "stations/combine_station",
+      "culture": "ninefold_combine",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
       ],
-      "outline_color": [
-        28,
-        30,
-        34
+      "windows": []
+    },
+    "drift_station": {
+      "design": "stations/drift_station",
+      "culture": "the_drift",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
       ],
+      "windows": []
+    },
+    "vigil_station": {
+      "design": "stations/vigil_station",
+      "culture": "the_vigil",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
+      ],
+      "windows": []
+    },
+    "warden_station": {
+      "design": "stations/warden_station",
+      "culture": "the_wardens",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
+      ],
+      "windows": []
+    },
+    "carrier_station": {
+      "design": "stations/carrier_station",
+      "culture": "free_carrier",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
       "local_points": [
         [
           0.0,
@@ -589,18 +1294,178 @@
     }
   },
   "moons": {
-    "regolith_moon": {
-      "name": "Regolith Moon",
+    "authority_moon": {
+      "name": "Harbor Authority moon",
       "size": 30,
       "color": [
-        138,
-        129,
-        117
+        121,
+        137,
+        160
       ],
       "crater_color": [
-        108,
-        100,
-        90
+        91,
+        107,
+        130
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    },
+    "combine_moon": {
+      "name": "Ninefold Combine moon",
+      "size": 30,
+      "color": [
+        104,
+        94,
+        87
+      ],
+      "crater_color": [
+        74,
+        64,
+        57
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    },
+    "drift_moon": {
+      "name": "the Drift moon",
+      "size": 30,
+      "color": [
+        121,
+        144,
+        109
+      ],
+      "crater_color": [
+        91,
+        114,
+        79
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    },
+    "vigil_moon": {
+      "name": "the Vigil moon",
+      "size": 30,
+      "color": [
+        94,
+        94,
+        108
+      ],
+      "crater_color": [
+        64,
+        64,
+        78
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    },
+    "warden_moon": {
+      "name": "the Wardens moon",
+      "size": 30,
+      "color": [
+        122,
+        119,
+        94
+      ],
+      "crater_color": [
+        92,
+        89,
+        64
+      ],
+      "landing_distance": 35,
+      "craters": [
+        {
+          "x": -8,
+          "y": -4,
+          "radius": 4
+        },
+        {
+          "x": 9,
+          "y": 7,
+          "radius": 5
+        },
+        {
+          "x": 3,
+          "y": -9,
+          "radius": 3
+        }
+      ]
+    },
+    "carrier_moon": {
+      "name": "the free carriers moon",
+      "size": 30,
+      "color": [
+        147,
+        139,
+        129
+      ],
+      "crater_color": [
+        117,
+        109,
+        99
       ],
       "landing_distance": 35,
       "craters": [
@@ -812,7 +1677,307 @@
       "body": "human_femme",
       "set": "ck_bounty",
       "palette": "civilian"
+    },
+    "authority_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "authority_dress"
+    },
+    "authority_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "authority_dress"
+    },
+    "authority_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "authority_dress"
+    },
+    "authority_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "authority_dress"
+    },
+    "authority_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "authority_dress"
+    },
+    "authority_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "authority_dress"
+    },
+    "authority_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "authority_dress"
+    },
+    "authority_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "authority_dress"
+    },
+    "authority_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "authority_dress"
+    },
+    "authority_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "authority_dress"
+    },
+    "combine_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "combine_dress"
+    },
+    "combine_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "combine_dress"
+    },
+    "combine_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "combine_dress"
+    },
+    "combine_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "combine_dress"
+    },
+    "combine_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "combine_dress"
+    },
+    "combine_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "combine_dress"
+    },
+    "combine_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "combine_dress"
+    },
+    "combine_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "combine_dress"
+    },
+    "combine_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "combine_dress"
+    },
+    "combine_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "combine_dress"
+    },
+    "drift_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "drift_dress"
+    },
+    "drift_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "drift_dress"
+    },
+    "drift_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "drift_dress"
+    },
+    "drift_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "drift_dress"
+    },
+    "drift_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "drift_dress"
+    },
+    "drift_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "drift_dress"
+    },
+    "drift_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "drift_dress"
+    },
+    "drift_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "drift_dress"
+    },
+    "drift_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "drift_dress"
+    },
+    "drift_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "drift_dress"
+    },
+    "vigil_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "vigil_dress"
+    },
+    "vigil_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "vigil_dress"
+    },
+    "vigil_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "vigil_dress"
+    },
+    "vigil_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "vigil_dress"
+    },
+    "vigil_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "vigil_dress"
+    },
+    "vigil_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "vigil_dress"
+    },
+    "vigil_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "vigil_dress"
+    },
+    "vigil_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "vigil_dress"
+    },
+    "vigil_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "vigil_dress"
+    },
+    "vigil_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "vigil_dress"
+    },
+    "warden_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "warden_dress"
+    },
+    "warden_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "warden_dress"
+    },
+    "warden_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "warden_dress"
+    },
+    "warden_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "warden_dress"
+    },
+    "warden_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "warden_dress"
+    },
+    "warden_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "warden_dress"
+    },
+    "warden_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "warden_dress"
+    },
+    "warden_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "warden_dress"
+    },
+    "warden_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "warden_dress"
+    },
+    "warden_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "warden_dress"
+    },
+    "carrier_civilian_femme": {
+      "body": "human_femme",
+      "set": "ck_civilian",
+      "palette": "carrier_dress"
+    },
+    "carrier_civilian_masc": {
+      "body": "human_masc",
+      "set": "ck_civilian",
+      "palette": "carrier_dress"
+    },
+    "carrier_official_femme": {
+      "body": "human_femme",
+      "set": "civilian_officer",
+      "palette": "carrier_dress"
+    },
+    "carrier_official_masc": {
+      "body": "human_masc",
+      "set": "civilian_officer",
+      "palette": "carrier_dress"
+    },
+    "carrier_flight_femme": {
+      "body": "human_femme",
+      "set": "ck_flight",
+      "palette": "carrier_dress"
+    },
+    "carrier_flight_masc": {
+      "body": "human_masc",
+      "set": "ck_flight",
+      "palette": "carrier_dress"
+    },
+    "carrier_security_femme": {
+      "body": "human_femme",
+      "set": "ck_security",
+      "palette": "carrier_dress"
+    },
+    "carrier_security_masc": {
+      "body": "human_masc",
+      "set": "ck_security",
+      "palette": "carrier_dress"
+    },
+    "carrier_dock_femme": {
+      "body": "human_femme",
+      "set": "ck_dockworker",
+      "palette": "carrier_dress"
+    },
+    "carrier_dock_masc": {
+      "body": "human_masc",
+      "set": "ck_dockworker",
+      "palette": "carrier_dress"
     }
   },
-  "_comment": "Phase 6.0: every ship except courier reuses the courier design at a different size - placeholder until per-culture hulls in 6.1-6.6."
+  "_comment": "Phase 6 stubs. Per-culture ships/stations/moons/outfits; each design file carries an identity brief. Geometry is placeholder (borrowed) until authored in config/editor.html."
 }

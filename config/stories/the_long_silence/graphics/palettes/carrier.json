@@ -1,0 +1,10 @@
+{
+  "identity": "the free carriers ship palette - patchwork - mismatched hull segments welded into one working whole, cargo lashing everywhere, a hand-painted name. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#aca296",
+  "hull_dk": "#6b645d",
+  "engine": "#48443f",
+  "metal": "#928a80",
+  "glass": "#ffdc8c",
+  "lamp": "#e6c67e",
+  "thrust": "#ffac5c"
+}

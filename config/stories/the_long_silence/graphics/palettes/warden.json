@@ -1,0 +1,10 @@
+{
+  "identity": "the Wardens ship palette - vast smooth Relay-era forms in dark alloy and teal light, patched with mismatched salvage and hand-lettered ritual markings. Hull from the culture's metal, glass from its light, a distinct thruster glow.",
+  "hull": "#a28e5c",
+  "hull_dk": "#645839",
+  "engine": "#443c27",
+  "metal": "#8a794e",
+  "glass": "#78ffdc",
+  "lamp": "#6ce6c6",
+  "thrust": "#5affd2"
+}
