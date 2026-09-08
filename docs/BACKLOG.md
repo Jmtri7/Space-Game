@@ -67,7 +67,9 @@ only appears under a section if it currently has items there.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
-- [ ] Show the active mission on the in-world HUD.
+- [x] Show the active mission on the in-world HUD. (Space View status pane now
+      shows the current act — story.json `acts` / `utils.current_act` — and the
+      active mission title. Interior HUD still doesn't; low priority.)
 - [ ] Controls should be usable without moving the hand off WASD / arrow keys —
       avoid bindings that force the player to reposition their hand.
 - [ ] Allow arrow keys to change meny selections.

@@ -1,6 +1,6 @@
 {
   "id": "the_long_silence",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "name": "The Long Silence",
   "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means. WORK IN PROGRESS - boots and plays (5 systems, factions, combat, beacon-gated jumps) but uses placeholder art and has no tutorial yet; see docs/PLAN.md.",
   "difficulty": "normal",
@@ -23,5 +23,10 @@
     "flags": {}
   },
   "jump": { "travel_frames": 150, "speed": 40, "arrival_distance": 1400, "self_min_distance": 3200 },
-  "ships": { "player_type": null }
+  "ships": { "player_type": null },
+  "acts": [
+    { "id": "contact", "name": "I - Contact", "advance_flag": "act_pressure" },
+    { "id": "pressure", "name": "II - Pressure", "advance_flag": "act_span" },
+    { "id": "span", "name": "III - The Span" }
+  ]
 }

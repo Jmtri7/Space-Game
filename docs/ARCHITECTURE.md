@@ -32,7 +32,8 @@ space-game/
 │   └── stories/{story}/     # All config is per-story — nothing shared between stories
 │       ├── story.json, ship_types.json, graphics.json, cultures.json,
 │       │   building_types.json, pilots.json, commodities.json, items.json, missions.json,
-│       │   factions.json (optional — cross-system factions + player reputation)
+│       │   factions.json (optional — cross-system factions + player reputation),
+│       │   endings.json (optional — epilogue text per "end_story:<id>", by faction standing)
 │       └── systems/{system_id}.json   # Station/moon placement, AI ship roster
 ├── saves/                   # Player save files (runtime-generated)
 ├── tests/                   # test_*.py, discovered by run_tests.py
@@ -195,7 +196,10 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s
   carrying one or more actions (`"action": "..."` or `"actions": [...]`, see
   `option_actions()`) applied via `apply_shared_actions()` (`"set_flag:<name>"`,
   `"give_item:<id>"`, `"spend_credits:<amount>"`, `"adjust_rep:<faction>:<delta>"`,
-  `"light_beacon:<system_id>"` - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
+  `"light_beacon:<system_id>"`, `"set_exclusive_flag:<group>:<name>"` (sets one
+  `<group>:*` flag, clears the rest - a one-time allegiance / fork choice),
+  `"end_story:<id>"` (sets `story_over` + `ending:<id>`; `main.py` hands off to
+  the `EndingScreen`) - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
   `LocationScreen._apply_dialogue_action()`'s own `"buy_ship:<id>"`/
   `"take_loan"` against the player's `Possessions`. An option can also carry
   `"requires_flag"`/`"requires_not_flag"` (a `Possessions.flags` name) -
@@ -859,6 +863,7 @@ except where a story clearly needs it; code holds the default.
 | `version` | Save-compat version (see SAVE_SYSTEM.md) |
 | `starting_system` | Which `systems/*.json` a new game loads |
 | `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
+| `acts` | `[{"id", "name", "advance_flag"?}]` - the current act (last one whose predecessor's `advance_flag` is set) shows on the Space View HUD; `utils.current_act()` |
 | `start` | New-game state: `location` (`station`/`moon`/`space`), `interior`, `credits`, `ship`, `outfits[]`, `items{}`, `flags{}` (see `SpaceScreen._apply_start_config` / `begin_new_game`) |
 | `loan` | `lender` / `amount` / `max_active` for the `take_loan` dialogue action |
 | `jump` | `travel_frames` / `speed` / `arrival_distance` / `self_min_distance` |

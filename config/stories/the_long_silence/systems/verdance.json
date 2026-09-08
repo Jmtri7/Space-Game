@@ -114,7 +114,8 @@
                       "next": "lit",
                       "actions": [
                         "set_flag:beacon_ossuary_told",
-                        "light_beacon:ossuary"
+                        "light_beacon:ossuary",
+                        "set_flag:act_pressure"
                       ]
                     },
                     {

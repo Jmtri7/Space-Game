@@ -277,7 +277,11 @@ which conversation branches have been unlocked, which one-way ship hails
 have already fired, which minor dialogue consequences have happened, which
 locked star systems' jump beacons have been lit (a system's `unlock_flag` -
 see `utils.system_unlocked`, so system *reachability* is derived from saved
-flags), and whether the story's `starting_mission` is armed-but-not-yet-launched
+flags), which act the story is in (`acts[].advance_flag`, `utils.current_act`),
+a one-time exclusive choice (`set_exclusive_flag`'s `<group>:<name>`), whether
+the story is over (`story_over` + `ending:<id>` — a save with these loads
+straight into the `EndingScreen`), and whether the story's `starting_mission`
+is armed-but-not-yet-launched
 (`"starting_mission_armed"` - set when a ship is bought while docked,
 cleared when the player next launches, see `SpaceScreen.board_ship()`).
 See `Dialogue`'s `requires_flag`/`requires_not_flag`/`conditional_roots`, the

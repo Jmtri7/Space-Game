@@ -61,6 +61,7 @@ from game.ui.backdrop_menu import BackdropMenu
 from game.ui.star_map import StarMap
 from game.world.combat_routine import CombatRoutine, _signed_angle_delta
 from game.world.content_gate import passes_content_gate, is_gated
+from game.ui.ending_screen import EndingScreen, ending_report
 from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
@@ -3359,6 +3360,55 @@ class TestCombatRoutine(unittest.TestCase):
         self.assertTrue(char.ship.autopilot_active)
         CombatRoutine(SimpleNamespace(x=0, y=100)).start(char)
         self.assertFalse(char.ship.autopilot_active)
+
+
+class TestActsAndEndings(unittest.TestCase):
+    """utils.current_act (story.json "acts" + advance_flags), the
+    set_exclusive_flag / end_story dialogue actions, and the EndingScreen
+    (game/ui/ending_screen.py) - Phase 5's arc / ending framework."""
+
+    def test_current_act_advances_as_advance_flags_are_set(self):
+        self.assertEqual(utils.current_act("the_long_silence", {}).get("name"), "I - Contact")
+        self.assertEqual(utils.current_act("the_long_silence", {"act_pressure": True}).get("name"), "II - Pressure")
+        self.assertEqual(
+            utils.current_act("the_long_silence", {"act_pressure": True, "act_span": True}).get("name"),
+            "III - The Span")
+
+    def test_current_act_is_empty_for_a_story_with_no_acts(self):
+        self.assertEqual(utils.current_act("default", {}), {})
+
+    def test_set_exclusive_flag_sets_one_and_clears_the_rest_of_its_group(self):
+        p = Possessions()
+        self.assertTrue(apply_shared_actions("set_exclusive_flag:patron:harbor_authority", p))
+        self.assertTrue(p.flags["patron:harbor_authority"])
+        apply_shared_actions("set_exclusive_flag:patron:the_vigil", p)
+        self.assertFalse(p.flags["patron:harbor_authority"])
+        self.assertTrue(p.flags["patron:the_vigil"])
+        # a differently-prefixed flag is untouched
+        p.flags["allegiance:kiln"] = True
+        apply_shared_actions("set_exclusive_flag:patron:the_drift", p)
+        self.assertTrue(p.flags["allegiance:kiln"])
+
+    def test_end_story_sets_the_flags_resolve_ending_reads(self):
+        p = Possessions()
+        self.assertIsNone(utils.resolve_ending(p.flags))
+        self.assertTrue(apply_shared_actions("end_story:sever", p))
+        self.assertTrue(p.flags["story_over"])
+        self.assertEqual(utils.resolve_ending(p.flags), "sever")
+
+    def test_ending_report_picks_faction_lines_by_final_standing(self):
+        p = Possessions()
+        p.reputation = {"harbor_authority": 40, "ninefold_combine": -60}
+        title, columns = ending_report("the_long_silence", "restore", p)
+        self.assertEqual(title, "The Relay Restored")
+        text = " ".join(line for _h, lines in columns[0] for line, _c in lines)
+        self.assertIn("credits you by name", text)      # harbor_authority: allied
+        self.assertIn("shoots first", text)             # ninefold_combine: hostile
+
+    def test_ending_screen_button_returns_menu(self):
+        p = Possessions()
+        es = EndingScreen(*ending_report("the_long_silence", "hold_middle", p))
+        self.assertEqual(es.buttons()[0][0], "menu")
 
 
 class TestContentGate(unittest.TestCase):

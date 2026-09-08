@@ -101,8 +101,9 @@ class ReportMenu(MenuBase):
                     for i, rect in enumerate(self._tab_bar_rects(get_ui_scale())):
                         if rect.collidepoint(event.pos):
                             self._select_tab(i)
-            if self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale())) == "close":
-                return "close"
+            pressed = self.handle_button_event(event, lambda: self.button_bar_rects(get_ui_scale()))
+            if pressed:  # "close" for the report menus; a subclass (EndingScreen) may return its own id
+                return pressed
         return None
 
     # --- rendering ------------------------------------------------

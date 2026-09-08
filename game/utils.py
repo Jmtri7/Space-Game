@@ -488,6 +488,44 @@ def get_item(story, item_id):
     return items.get(item_id, {})
 
 
+def current_act(story, flags):
+    """The story's current act - the first entry in story.json's "acts"
+    list whose predecessor's "advance_flag" is set but whose own isn't (so
+    the act advances when a mission / dialogue sets that flag). Returns {}
+    for a story with no "acts". Each act is {"id", "name", "advance_flag"?}."""
+    acts = (get_story(story).get("acts") or [])
+    if not acts:
+        return {}
+    flags = flags or {}
+    index = 0
+    for act in acts:
+        if act.get("advance_flag") and flags.get(act["advance_flag"]):
+            index += 1
+        else:
+            break
+    return acts[min(index, len(acts) - 1)]
+
+
+def get_endings(story):
+    """Load config/stories/{story}/endings.json - {ending_id: {title,
+    epilogue, faction_epilogue, ...}} rendered by the EndingScreen when an
+    "end_story:<id>" dialogue action fires. {} for a story with no endings."""
+    return load_json(f"config/stories/{story}/endings.json") or {}
+
+
+def resolve_ending(flags):
+    """The ending id from an "ending:<id>" flag set by the "end_story:"
+    dialogue action (see game/world/dialogue.py), or None if the story
+    isn't over. main.py checks this each frame to hand off to the
+    EndingScreen."""
+    if not (flags or {}).get("story_over"):
+        return None
+    for key in flags:
+        if key.startswith("ending:") and flags[key]:
+            return key.split(":", 1)[1]
+    return None
+
+
 def get_factions(story):
     """Load the story's cross-system factions from
     config/stories/{story}/factions.json - id -> {name, home_system, color,

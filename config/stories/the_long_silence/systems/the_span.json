@@ -97,11 +97,37 @@
             "role": "stationmaster",
             "faction": "the_wardens",
             "outfit": "officer_masc",
-            "greeting": "You reached the Span. Few do. The Hub sings and we tend it - it began calling the beacons home on its own, or someone told it to. We are not certain there is a difference.",
-            "dialogue_options": [
-              "Understood",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "You reached the Span. The Hub sings, and it is asking you a question it has asked no one in two hundred years: what should the Relay be? Stand at the Choir and choose. There is no undoing it.",
+                  "options": [
+                    {
+                      "label": "Restore the Relay - one network, run from a hub.",
+                      "next": null,
+                      "action": "end_story:restore"
+                    },
+                    {
+                      "label": "Sever it. Destroy the core.",
+                      "next": null,
+                      "action": "end_story:sever"
+                    },
+                    {
+                      "label": "Keep the beacons, break only the hub - no one rules the network.",
+                      "next": null,
+                      "requires_rep": "the_vigil:10",
+                      "requires_not_flag": "patron:harbor_authority",
+                      "action": "end_story:hold_middle"
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           },
           {
             "name": "Signal-Tender",

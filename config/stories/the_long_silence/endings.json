@@ -1,0 +1,118 @@
+{
+  "_comment": "Rendered by game/ui/ending_screen.py when an end_story:<id> dialogue action fires (First Warden at the Span). epilogue = paragraphs; faction_epilogue[<faction>][allied|neutral|hostile] = one line chosen by the player's final standing.",
+
+  "restore": {
+    "title": "The Relay Restored",
+    "epilogue": [
+      "You gave the Hub its answer, and the beacons stayed lit.",
+      "Within a year a ship could cross from Halcyon to the Span in an afternoon, and within five the question of who scheduled that crossing had an answer too. The Harbor Authority administers the lanes now, from the same desks it kept pressed for two centuries. It is not the empire the old records describe. It is close enough that the people who remember the Silence are not sure the trade was worth it.",
+      "The region is connected, unequal, and moving too fast to see itself clearly - which is, the archivists note, exactly how it looked the last time."
+    ],
+    "faction_epilogue": {
+      "harbor_authority": {
+        "allied": "runs the hub, and credits you by name in the founding record.",
+        "neutral": "runs the hub, and files your part of it under 'contractors, external'.",
+        "hostile": "runs the hub, and keeps a flagged file on the pilot who nearly cost them it."
+      },
+      "ninefold_combine": {
+        "allied": "sealed Kiln behind its own contracts anyway, and left the lane open only for you.",
+        "neutral": "trades on the network under protest, rationing every berth.",
+        "hostile": "declared the lanes void ground and shoots first at anything flying Authority colours."
+      },
+      "the_vigil": {
+        "allied": "keeps the Name-Wall, and has started a new panel for the names this will cost.",
+        "neutral": "keeps the Name-Wall, and says nothing, which from the Vigil is a verdict.",
+        "hostile": "closed Ossuary to Authority traffic and will not say what they buried deeper."
+      },
+      "the_drift": {
+        "allied": "feeds half the inner lanes now and still cannot hold a vote to noon.",
+        "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to."
+      },
+      "the_wardens": {
+        "allied": "tend the Hub for the Authority now, and pray at it the same as before.",
+        "neutral": "tend the Hub, and have stopped explaining it to the people who ask."
+      },
+      "free_carrier": {
+        "allied": "lost the slow lanes and the life that went with them, and toasts you anyway.",
+        "neutral": "took contracts with the Authority because the alternative was the ground."
+      }
+    }
+  },
+
+  "sever": {
+    "title": "The Long Silence, Kept",
+    "epilogue": [
+      "You brought the core down. The Hub's song stopped mid-note, and every beacon behind you went dark within the hour.",
+      "The five systems are islands again, each keeping the strange shape isolation gave it. Trade runs on the slow carriers and their decade-long loops, the way it did before you were born. The Vigil says you chose correctly and will not elaborate. The Harbor Authority says you chose for them, which is not the same as wrong.",
+      "Whatever the Relay was severed to contain, if it was contained at all, stays where it was. No one will know for another two hundred years. That was always the point."
+    ],
+    "faction_epilogue": {
+      "harbor_authority": {
+        "allied": "disbanded its traffic service with full honours and no traffic to service.",
+        "neutral": "keeps Halcyon lit out of habit, a harbour for ships that no longer come far.",
+        "hostile": "blames you, loudly, in a record no one outside Halcyon will ever read."
+      },
+      "ninefold_combine": {
+        "allied": "got exactly the sealed border it voted for, and named a shaft after you.",
+        "neutral": "returned to rationing breath by the shift, satisfied.",
+        "hostile": "still sends a raider toward where Verdance's lane used to be, out of spite."
+      },
+      "the_vigil": {
+        "allied": "opened the inner vault to you before you left. You are the only outsider who has read it.",
+        "neutral": "keeps the graves, and keeps the reason, and thanks you in a letter that arrives by slow carrier.",
+        "hostile": "keeps the graves. That is all the Vigil ever promised anyone."
+      },
+      "the_drift": {
+        "allied": "misses the traffic and admits it, at length, in a rolling assembly that has not adjourned.",
+        "neutral": "goes back to feeding only itself, and is quietly relieved."
+      },
+      "the_wardens": {
+        "allied": "stood aside when you reached the core, because you had earned the walk.",
+        "neutral": "watched the Hub die and did not stop you, which for the Wardens is a kind of grief.",
+        "hostile": "fought for the Hub to the last segment. Some of them are still in there."
+      },
+      "free_carrier": {
+        "allied": "got their lanes back, their life back, and the drinks are on the fleet forever.",
+        "neutral": "shrugs. The slow way always paid. It just never paid fast."
+      }
+    }
+  },
+
+  "hold_middle": {
+    "title": "No One's Network",
+    "epilogue": [
+      "You kept the beacons and broke only the hub - no throne at the centre for anyone to take.",
+      "It is the hardest thing to hold. The lanes stay open, but every system polices its own, and the schedule that used to come from one desk now comes from five arguments. It is slower than the Authority wanted, faster than the Combine allowed, and messier than the Vigil trusts. So far it holds, because enough people who could break it decided not to - which is the only reason anything holds.",
+      "The archivists have not started a new panel on the Name-Wall. They are waiting to see if they need one."
+    ],
+    "faction_epilogue": {
+      "harbor_authority": {
+        "allied": "administers the Halcyon approaches and no more, and calls the restraint yours.",
+        "neutral": "wanted the hub. Settled for a seat. Has not forgiven the arithmetic.",
+        "hostile": "calls the arrangement a failure of nerve and files you as the cause."
+      },
+      "ninefold_combine": {
+        "allied": "keeps its own space and, for the first time on record, keeps a lane open by choice.",
+        "neutral": "trades under a hundred conditions, each one a small victory it can point to.",
+        "hostile": "signed nothing, patrols the Verdance lane armed, and waits for the middle to fail."
+      },
+      "the_vigil": {
+        "allied": "watches the balance the way it watches the graves - closely, and ready to be proven right.",
+        "neutral": "keeps the warning on file. Keeps hoping it stays a file.",
+        "hostile": "still believes the Relay should be dark, and still keeps the names of everyone who disagrees."
+      },
+      "the_drift": {
+        "allied": "thrives on a network no one controls, which is the only kind the Drift was ever built for.",
+        "neutral": "finds the new mess more congenial than the old order, and says so at length."
+      },
+      "the_wardens": {
+        "allied": "tend the broken Hub as a shrine now, and let anyone walk the Choir who comes in peace.",
+        "neutral": "tend what's left. The song is gone. They hum it themselves."
+      },
+      "free_carrier": {
+        "allied": "runs the lanes free and ungoverned, exactly as promised, and named a berth after you.",
+        "neutral": "flies where it likes and pays whom it must, which is the most a carrier ever hoped for."
+      }
+    }
+  }
+}

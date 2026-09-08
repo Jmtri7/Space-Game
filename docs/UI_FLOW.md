@@ -290,6 +290,22 @@ opened them.
 **Transitions:**
 - close → back to whichever screen opened it (`possessions_return_screen` / `missions_return_screen` in `main.py`)
 
+### EndingScreen (`"ending"` state)
+**Shows:** The end-of-game epilogue - a `ReportMenu` subclass
+(`game/ui/ending_screen.py`) with one **Return to Menu** button. `ending_report()`
+assembles the story's `endings.json` entry (title + epilogue paragraphs) plus
+one line per faction chosen by the player's final standing with it.
+
+**Trigger:** an `"end_story:<id>"` dialogue action sets the `story_over` /
+`ending:<id>` flags; `main.py` checks `utils.resolve_ending()` once per frame
+after the game/station/moon input phase and switches `current_screen` to
+`"ending"` (a full modal - `step_world()` does nothing for it). A loaded save
+whose `story_over` flag is already set drops straight into it.
+
+**Inputs:** click **Return to Menu**, or ESC / Enter
+
+**Transitions:** → `"menu"` (rebuilds `main_menu()`)
+
 ### ShopMenu
 **Shows:** Buy/sell for commodities or personal items - `game/ui/
 shop_menu.py`. Opened by talking (T) to an NPC whose config has a `"shop"`

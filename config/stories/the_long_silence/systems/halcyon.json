@@ -211,10 +211,28 @@
                   ]
                 },
                 "warm": {
-                  "text": "Good to see one of ours on the approach. The outer beacons are yours to run - Hub Control has your back.",
+                  "text": "Good to see one of ours on the approach. The outer beacons are yours to run - Hub Control has your back. If you mean that, say so, and the Authority will hold the network for all of us.",
                   "options": [
                     {
+                      "label": "Pledge the Authority your beacons.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:harbor_authority",
+                      "actions": [
+                        "set_exclusive_flag:patron:harbor_authority",
+                        "adjust_rep:harbor_authority:8"
+                      ]
+                    },
+                    {
                       "label": "Appreciated",
+                      "next": null
+                    }
+                  ]
+                },
+                "pledged": {
+                  "text": "Logged, and remembered. When the Span asks its question, you'll answer for the Authority.",
+                  "options": [
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]

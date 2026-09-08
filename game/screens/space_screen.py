@@ -1919,6 +1919,18 @@ class SpaceScreen(ScreenBase):
                 pct = max(0, int(100 * ship.health / ship.max_health))
                 status_lines.append((f"Hull: {pct}%", RED if pct < 34 else YELLOW))
 
+            # Current act + active mission, so the story context is always
+            # on screen (see utils.current_act, story.json's "acts").
+            possessions = self.player.person.possessions
+            act = utils.current_act(self.story, possessions.flags)
+            if act.get("name"):
+                status_lines.append((f"Act: {act['name']}", CYAN))
+            for mission_id in possessions.missions:
+                title = self.missions_config.get(mission_id, {}).get("title")
+                if title:
+                    status_lines.append((f"Mission: {title}", CYAN))
+                break
+
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # --- Bottom-left: received one-way messages (see

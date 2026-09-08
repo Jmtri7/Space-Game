@@ -12,7 +12,7 @@ from game.constants import (
 )
 from game.utils import (
     load_save_file, create_save_file, set_camera_offset, set_screen_size, load_json, get_story,
-    advance_accumulator, save_display_name, load_settings, save_settings
+    advance_accumulator, save_display_name, load_settings, save_settings, resolve_ending
 )
 from game.world.player_controller import PlayerController
 from game.audio.sound_board import sound_board
@@ -22,6 +22,7 @@ from game.ui.backdrop_menu import BackdropMenu
 from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.choice_dialog import ChoiceDialog
 from game.ui.report_menu import ReportMenu, possessions_report, mission_report
+from game.ui.ending_screen import EndingScreen, ending_report
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.ui.outfitting_menu import OutfittingMenu
@@ -515,6 +516,7 @@ def main():
         mission_log = None
         missions_return_screen = None  # "game" / "station" / "moon" - where N/ESC closes back to
         shop_menu = None
+        ending_menu = None
         shop_return_screen = None  # "station" / "moon" - where ESC closes back to
         pilot_name_dialog = None
         pause_menu = PauseMenu()
@@ -1034,6 +1036,24 @@ def main():
                         current_screen = "menu"
                         menu = main_menu()
 
+            elif current_screen == "ending":
+                action = ending_menu.handle_input(events)
+                if action == "menu" or _pressed_any(events, pygame.K_ESCAPE, pygame.K_RETURN):
+                    current_screen = "menu"
+                    menu = main_menu()
+                # Modal - the world is over (step_world does nothing here).
+
+            # An "end_story:<id>" dialogue action (see game/world/dialogue.py)
+            # set the story_over / ending:<id> flags this frame - hand off to
+            # the epilogue screen. Checked once, centrally, since the action
+            # can fire from a station conversation or a ship hail alike.
+            if game_screen is not None and current_screen in ("game", "station", "moon"):
+                ending_id = resolve_ending(game_screen.player.person.possessions.flags)
+                if ending_id is not None:
+                    ending_menu = EndingScreen(*ending_report(
+                        game_screen.story, ending_id, game_screen.player.person.possessions))
+                    current_screen = "ending"
+
             # Background music follows the screen: the "menu" loop on the
             # menu/story/pilot/load screens, the sparser "ingame" loop
             # everywhere else. set_scene() is a cheap no-op when the track
@@ -1144,6 +1164,9 @@ def main():
                 elif shop_return_screen == "moon" and moon_interior:
                     moon_interior.draw(dst, draw_hud=False)
                 shop_menu.draw(dst)
+            elif current_screen == "ending":
+                dst.fill((6, 8, 16))
+                ending_menu.draw(dst)
             elif current_screen == "moon":
                 if moon_interior:
                     moon_interior.draw(dst)

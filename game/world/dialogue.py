@@ -44,6 +44,14 @@ def apply_shared_actions(action, possessions, missions_config=None, story=None):
       abandon_mission(). Needs missions_config to look up that mission's
       escort_flag/on_end_flags cleanup; a no-op if the caller didn't pass
       one.
+    - "set_exclusive_flag:<group>:<name>" - set flag "<group>:<name>" and
+      clear every other "<group>:*" flag, for a one-time mutually-exclusive
+      choice (a faction allegiance, an ending). Options then gate on
+      "requires_flag": "<group>:<name>".
+    - "end_story:<id>" - end the game: sets "story_over" plus "ending:<id>".
+      main.py notices the flag and shows the EndingScreen (see
+      utils.get_endings / game/ui/ending_screen.py), then returns to the
+      main menu.
     - "start_mission:<id>" - begin a mission from a dialogue choice (e.g.
       accepting a station guide's offer to walk you through the place),
       instead of it only being kick-started by story.json's
@@ -76,6 +84,16 @@ def apply_shared_actions(action, possessions, missions_config=None, story=None):
             from game.utils import get_star_systems
             flag = get_star_systems(story).get(system_id, {}).get("unlock_flag") or flag
         possessions.flags[flag] = True
+        return True
+    if action.startswith("set_exclusive_flag:"):
+        _, group, name = action.split(":", 2)
+        for key in [k for k in possessions.flags if k.startswith(group + ":")]:
+            possessions.flags[key] = False
+        possessions.flags[f"{group}:{name}"] = True
+        return True
+    if action.startswith("end_story:"):
+        possessions.flags["story_over"] = True
+        possessions.flags[f"ending:{action.split(':', 1)[1]}"] = True
         return True
     if action.startswith("abandon_mission:"):
         if missions_config is not None:

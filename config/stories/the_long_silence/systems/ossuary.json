@@ -138,7 +138,8 @@
                       "next": "toldspan",
                       "actions": [
                         "set_flag:beacon_the_span_told",
-                        "light_beacon:the_span"
+                        "light_beacon:the_span",
+                        "set_flag:act_span"
                       ]
                     },
                     {
@@ -166,12 +167,18 @@
                   ]
                 },
                 "trusted": {
-                  "text": "You've been honest with us, and it's noted. The archive's inner vault is open to you now - what the First Decade recorded is not for everyone.",
+                  "text": "You've been honest with us, and it's noted. The archive's inner vault is open to you now - what the First Decade recorded is not for everyone. And if you'll carry our caution to the Span, say so.",
                   "options": [
                     {
                       "label": "Ask about the inner vault",
                       "next": "vault",
                       "requires_rep": "the_vigil:25"
+                    },
+                    {
+                      "label": "Pledge the Vigil your caution.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:the_vigil",
+                      "action": "set_exclusive_flag:patron:the_vigil"
                     },
                     {
                       "label": "Later",
@@ -184,6 +191,15 @@
                   "options": [
                     {
                       "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "pledged": {
+                  "text": "Then you'll speak for the dead when the Hub asks. Choose as if they were listening.",
+                  "options": [
+                    {
+                      "label": "I will",
                       "next": null
                     }
                   ]

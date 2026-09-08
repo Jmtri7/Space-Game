@@ -119,12 +119,17 @@ than migrating off the frozen `default` art.
 
 **Deferred:** gating cosmetic `decorations`; a mid-flight re-sync (currently only on entry/launch — a flag set by an in-space event won't change the roster until the next dock+launch or jump).
 
-## Phase 5 — Arc framework, exclusive choices, ending (gap E)
+## Phase 5 — Arc framework, exclusive choices, ending (gap E)  ✅ done
 
-- [ ] `story.json` `acts[]` with an `advance_flag`; current-act line on the HUD
-- [ ] `set_exclusive_flag:<group>:<flag>` action — sets one flag in a group, bars the rest
-- [ ] `EndingScreen` (menu family) + `"ending"` `current_screen` + `end_story:<id>` action; epilogue keyed to reputation + exclusive flags; returns to main menu
-- [ ] Docs: UI_FLOW.md (new screen + transition), ARCHITECTURE.md (`acts`), SAVE_SYSTEM.md (act/ending flags)
+- [x] `story.json` `acts[]` (`id` / `name` / `advance_flag`); `utils.current_act`; Space View HUD status pane shows the current act + active mission title (closes BACKLOG "show active mission on HUD")
+- [x] `set_exclusive_flag:<group>:<name>` action — sets `<group>:<name>`, clears every other `<group>:*`
+- [x] `end_story:<id>` action → `story_over` + `ending:<id>` flags; `utils.resolve_ending`; `main.py` checks it each frame and switches to `"ending"`
+- [x] `EndingScreen` (`ReportMenu` subclass, one "Return to Menu" button) + `ending_report(story, id, possessions)` — title + epilogue paragraphs + one line per faction chosen by final standing band. `endings.json` per story. `ReportMenu.handle_input` generalised to return any button id.
+- [x] the_long_silence (`0.5.0` → `0.6.0`): `acts` (I Contact / II Pressure / III The Span, advanced by lighting Verdance's / the Span's beacon); `endings.json` (restore / sever / hold_middle, ~3 epilogue paras + 6 factions × 2–3 bands each); First Warden at the Span offers the 3-way fork (`hold_middle` gated on Vigil standing ≥ 10 and not having pledged the Authority); `set_exclusive_flag:patron:*` pledges at Controller Vane (Authority) and Keeper Aramis (Vigil)
+- [x] Tests: +6 (505) — `TestActsAndEndings`
+- [x] Docs: UI_FLOW.md (`"ending"` state), ARCHITECTURE.md (`acts`, `endings.json`, new actions), SAVE_SYSTEM.md (act/ending/exclusive flags), BACKLOG.md
+
+**Deferred:** interior HUD act line; a per-act HUD colour/framing; richer ending art (it's plain scrolling text).
 
 ## Phase 6 — Content: Act I "Contact" (the five systems)
 
