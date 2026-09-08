@@ -297,14 +297,15 @@ hotkeys do nothing. There is no dim hint line under the buttons any more - a
 menu is meant to
 be self-explanatory from its buttons and labels. Every menu has a visible
 **Close** / **Cancel** / **Resume** / **Back** button. The exception to
-"keyboard does nothing" is the four modals opened by a single key - the
-**Pause menu** (ESC), the **Star Map** (M), **Possessions** (P), and the
-**Mission Log** (N): each also closes on the key that opened it, so all four
-close on **ESC** (the pause menu resumes; the overlays close). Handled in
-`main.py`'s state machine (`_pressed_any`), not the menu classes. A
-save/load sub-dialog stacked on the pause menu swallows ESC until it's
-closed with its own button. No other modal has
-ESC-to-close. No modal uses the top-left Controls pane (that belongs to the
+"keyboard does nothing" is **ESC-to-close**: the **Pause menu** (ESC), the
+**Star Map** (M), **Possessions** (P), and the **Mission Log** (N) each also
+close on the key that opened them, and the **Shop / Shipyard / Outfitting**
+menus (opened with T, so no opening key) close on **ESC** alone - a pending
+purchase confirmation eats the ESC as a cancel first. The pause menu
+resumes; every other overlay closes. Handled in `main.py`'s state machine
+(`_pressed_any`), not the menu classes. A save/load sub-dialog stacked on
+the pause menu swallows ESC until it's closed with its own button. No modal
+uses the top-left Controls pane (that belongs to the
 space view and interiors); while a modal is open the base screen's Controls
 pane and bottom status prompt are hidden. A four-button bar (the Save menu)
 shrinks its buttons to stay inside the panel. Long reports and lists scroll
@@ -347,7 +348,7 @@ stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **N**,
 | **Click** an item | Select it (updates the readout) |
 | **Buy** / **Sell** button, **double-click** an item, or **Enter** | Buy/sell one unit of the selected item |
 | **Mouse wheel** | Scroll the item grid |
-| **Close** button (top-left) | Close |
+| **Close** button (top-left), or **ESC** | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
 opens this instead of a conversation. Buy lists the shop's stock, priced from
@@ -367,8 +368,8 @@ their own dedicated menus.
 | **Click** a ship | Select it (updates the live preview + stat readout) |
 | **Buy** button, **double-click** a ship, or **Enter** | Open a Yes/No purchase confirmation |
 | **Mouse wheel** | Scroll the ship grid |
-| **Click** a **Yes** / **No** button | Confirm / cancel the pending purchase |
-| **Close** button (top-left) | Close (when nothing is pending confirmation) |
+| **Click** a **Yes** / **No** button, or **ESC** | Confirm / cancel the pending purchase |
+| **Close** button (top-left), or **ESC** | Close (when nothing is pending confirmation) |
 
 Shows the shop's stock as a grid - each cell a static silhouette, name, cost,
 and an "(own N)" note if you already have one. The selected cell also gets a
@@ -388,8 +389,8 @@ fading "Bought 1 `<ship>`" confirmation.
 | **Drag** an installed slot out to empty space (Install tab) | Unequip it |
 | **Click** an empty slot (Install tab) | Open the compatible-spares picker |
 | **Double-click** an occupied slot (Install tab) | Uninstall it back to spares |
-| **Click** an outfit in the picker | Install it (click **Cancel** / off a row to dismiss) |
-| **Close** button (top-left) | Close (dismisses an open picker first) |
+| **Click** an outfit in the picker | Install it (click **Cancel** / off a row, or **ESC**, to dismiss) |
+| **Close** button (top-left), or **ESC** | Close (dismisses an open picker first) |
 
 Buy shows the shop's stock as a grid of icons; each cell shows how many you
 own, its slot type, and whether your ship can fit one. Buying adds an outfit
@@ -508,10 +509,11 @@ averages and peaks over the last ~2 seconds. See
   **saved with the game** (unlike Q/E view rotation, which is not)
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC pauses** the game from the space view and interiors, and **ESC
-  again resumes** from the pause menu; in the Star Map, Possessions, and
-  Mission Log overlays it closes the overlay. Every other menu/dialog has
-  no ESC binding (a save/load sub-dialog on top of the pause menu also
-  swallows ESC - close it with its own button first)
+  again resumes** from the pause menu; in the Star Map, Possessions,
+  Mission Log, and Shop / Shipyard / Outfitting overlays - and an open NPC
+  conversation or ship hail - it closes that overlay instead. A save/load
+  sub-dialog stacked on the pause menu, and a pending purchase
+  confirmation, swallow ESC as their own cancel first
 - **Ctrl + M mutes/unmutes all audio** (handled globally in `main.py`, like the debug toggle)
 - Every menu and dialog shows its actions as **buttons in its own panel**
   (click, or Tab/arrow + Enter); the top-left Controls pane is the space

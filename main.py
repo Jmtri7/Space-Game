@@ -885,6 +885,20 @@ def main():
 
             elif current_screen == "shop":
                 action = shop_menu.handle_input(events)
+                # ESC closes the shop / outfitter / shipyard (opened with T,
+                # so there's no opening key to toggle - see the key-opened
+                # modals' _pressed_any handling above and CONTROLS.md's
+                # Menus note). A nested sub-widget - the shipyard's purchase
+                # ConfirmDialog, or the outfitter's compatible-spares picker
+                # - eats the ESC as its own cancel first (both are otherwise
+                # mouse-only).
+                if _pressed_any(events, pygame.K_ESCAPE):
+                    if getattr(shop_menu, "confirm", None) is not None:
+                        shop_menu.confirm = None
+                    elif getattr(shop_menu, "picker", None) is not None:
+                        shop_menu.picker = None
+                    elif action != "close":
+                        action = "close"
                 if action == "close":
                     current_screen = shop_return_screen
                 # Modal - world frozen (step_world() does nothing here).

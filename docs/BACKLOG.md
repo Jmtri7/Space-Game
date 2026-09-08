@@ -65,12 +65,13 @@ only appears under a section if it currently has items there.
 - [ ] Controls should be usable without moving the hand off WASD / arrow keys —
       avoid bindings that force the player to reposition their hand.
 - [ ] Allow arrow keys to change meny selections.
-- [~] `ESC` should close the NPC conversation box and the shop menus (deliberate
-      change to the mouse-only-modal / no-ESC-to-close rule — see
-      DESIGN_PATTERNS.md's "Menu vs. Dialog" and CONTROLS.md's "Menus").
-      Conversation / hail box done (ESC closes it, Enter picks the highlighted
-      option); the `game/ui/` shop / outfitter / shipyard menus still need their
-      own ESC-to-close.
+- [x] `ESC` closes the NPC conversation box and the shop menus. Conversation /
+      hail box: ESC closes it (Enter picks the highlighted option), handled in
+      each screen's `handle_input`. Shop / shipyard / outfitter: ESC closes them
+      (a nested purchase confirm or spares picker eats the ESC first), handled
+      in `main.py`'s state machine like the key-opened modals. Menu classes stay
+      mouse-only. See DESIGN_PATTERNS.md's "Menu vs. Dialog" and CONTROLS.md's
+      "Menus".
 
 ## Navigation & Flight
 
