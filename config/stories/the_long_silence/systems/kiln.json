@@ -99,32 +99,33 @@
             "outfit": "officer_masc",
             "dialogue_tree": {
               "root": "start",
-              "conditional_roots": [
-                {
-                  "flag": "beacon_verdance_told",
-                  "node": "already"
-                }
-              ],
               "nodes": {
                 "start": {
-                  "text": "You're on Combine ground. Every transaction here is a contract, and we honour contracts. We did not sign one with a beacon. The Relay signal is already reaching for Verdance - I can key our beacon to pass it on, if you mean to go there.",
+                  "text": "You're on Combine ground. Every transaction here is a contract, and we did not sign one with a beacon. State your business.",
                   "options": [
                     {
-                      "label": "Light the lane to Verdance.",
-                      "next": "lit",
+                      "label": "I'm passing through - and heading for Verdance.",
+                      "next": "civil",
+                      "requires_not_flag": "beacon_verdance_told",
                       "actions": [
                         "set_flag:beacon_verdance_told",
-                        "light_beacon:verdance"
+                        "light_beacon:verdance",
+                        "adjust_rep:ninefold_combine:4"
                       ]
                     },
                     {
-                      "label": "Not yet.",
+                      "label": "The Authority is opening this system with or without your consent.",
+                      "next": "threatened",
+                      "action": "adjust_rep:ninefold_combine:-50"
+                    },
+                    {
+                      "label": "Nothing. Leaving.",
                       "next": null
                     }
                   ]
                 },
-                "lit": {
-                  "text": "Done. Verdance's beacon is live. Mind what you carry through it.",
+                "civil": {
+                  "text": "Then be quick and be gone. Verdance's lane is keyed - the Combine will note that you asked politely.",
                   "options": [
                     {
                       "label": "Understood",
@@ -132,11 +133,11 @@
                     }
                   ]
                 },
-                "already": {
-                  "text": "Verdance's lane is open. Safe transit.",
+                "threatened": {
+                  "text": "Then the contract is void, and so is your safe conduct. Clear our space.",
                   "options": [
                     {
-                      "label": "Thanks",
+                      "label": "Leave",
                       "next": null
                     }
                   ]

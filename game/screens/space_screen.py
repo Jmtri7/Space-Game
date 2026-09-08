@@ -29,6 +29,7 @@ from game.world.ore_pickup import OrePickup, PICKUP_RANGE
 from game.world.autopilot import has_arrived
 from game.world.character import Character, resolve_routine_class
 from game.world.orbit_player_routine import OrbitPlayerRoutine
+from game.world.combat_routine import CombatRoutine
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
 from game.world.landing_site import LandingSite
@@ -42,6 +43,7 @@ from game.world.system_state import SystemState
 ONE_WAY_HAIL_RANGE = 500          # world units - how close an NPC-initiated hail can trigger from
 ONE_WAY_HAIL_BANNER_FRAMES = 300  # ~5s at 60fps an incoming-hail banner stays up
 HAIL_BUSY_BANNER_FRAMES = 150     # ~2.5s "no response" flash when hailing a docked/ashore pilot
+HOSTILE_REP_THRESHOLD = -40       # faction standing at/below this turns its pilots hostile (see _sync_hostiles)
 
 # How slow (units/frame) counts as "braked to a stop" for the generic
 # "braked_below_threshold" gameplay-event flag (see update_physics) - a
@@ -1303,6 +1305,35 @@ class SpaceScreen(ScreenBase):
                     ai_ship.set_routine(resolve_routine_class(ai_ship.role, ai_ship.faction, ai_ship.routine_name)(ai_ship.route))
                     ai_ship.escorting = False
 
+    def _sync_hostiles(self):
+        """Swap any AI pilot between CombatRoutine (attacking the player)
+        and its normal role routine, based on whether it's currently
+        hostile: faction standing at or below HOSTILE_REP_THRESHOLD, a
+        per-pilot "hostile_to_player:<name>" flag, or a
+        "faction_hostile:<faction>" flag. The hostility mirror of
+        _sync_escorts; an escorting pilot is never made hostile. Checks
+        every system so it stays correct across jumps."""
+        possessions = self.player.person.possessions
+        flags = possessions.flags
+        for state in self.systems.values():
+            for ship in state.ai_ships:
+                if ship.escorting:
+                    continue
+                name = getattr(ship.person, "name", None)
+                faction = ship.faction
+                hostile = bool(
+                    (name and flags.get(f"hostile_to_player:{name}"))
+                    or (faction and flags.get(f"faction_hostile:{faction}"))
+                    or (faction and possessions.reputation_with(faction) <= HOSTILE_REP_THRESHOLD)
+                )
+                if hostile and not ship.in_combat:
+                    ship.set_routine(CombatRoutine(self.player))
+                    ship.in_combat = True
+                elif not hostile and ship.in_combat:
+                    ship.set_routine(resolve_routine_class(ship.role, ship.faction, ship.routine_name)(ship.route))
+                    ship.in_combat = False
+                    ship.firing = False
+
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
 
@@ -1480,12 +1511,16 @@ class SpaceScreen(ScreenBase):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
         if flags.get("used_thrust") and flags.get("used_brake") and speed < self.brake_slow_threshold:
             flags["braked_below_threshold"] = True
+        self._sync_hostiles()
         with perf.span("sim.ai_ships"):
             for state in self.systems.values():
                 state.update_physics()
             self.asteroid_field.update()
         with perf.span("sim.projectiles"):
+            self._update_ai_weapon_fire()
             self._update_projectiles()
+            if self.player.ship and self.player.ship.health <= 0:
+                self._on_player_destroyed()
             self.explosions = [e for e in self.explosions if e.update()]
             self._update_ore_pickups()
         # Update weapon fire cooldown
@@ -1811,6 +1846,11 @@ class SpaceScreen(ScreenBase):
                 if isinstance(target_obj, Character):
                     status_lines.append((f"Press H to Hail {target_obj.person.name or 'Target'}", GREEN))
 
+            ship = self.player.ship
+            if ship and ship.health < ship.max_health:
+                pct = max(0, int(100 * ship.health / ship.max_health))
+                status_lines.append((f"Hull: {pct}%", RED if pct < 34 else YELLOW))
+
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # --- Bottom-left: received one-way messages (see
@@ -1841,7 +1881,8 @@ class SpaceScreen(ScreenBase):
                 "angle": self.player.angle,
                 "velocity_x": self.player.velocity_x,
                 "velocity_y": self.player.velocity_y,
-                "thrust": self.player.thrust
+                "thrust": self.player.thrust,
+                "health": self.player.ship.health if self.player.ship else None,
             },
             "possessions": self.player.person.possessions.get_state(),
             # Player's remembered Space View zoom level (mouse wheel). Clamped
@@ -1871,7 +1912,8 @@ class SpaceScreen(ScreenBase):
                     "angle": ai_ship.angle,
                     "velocity_x": ai_ship.velocity_x,
                     "velocity_y": ai_ship.velocity_y,
-                    "thrust": ai_ship.thrust
+                    "thrust": ai_ship.thrust,
+                    "health": ai_ship.ship.health,
                 }
         if ai_ships:
             state["ai_ships"] = ai_ships
@@ -1925,6 +1967,11 @@ class SpaceScreen(ScreenBase):
         # the player applied thrust and the velocity cap silently clamped it.
         self.jump_state = dict(saved_jump) if saved_jump else None
         self.restore_possessions(state)
+        # After restore_possessions/_apply_ship_type has set the real
+        # max_health for the owned hull - a mid-flight save can carry a
+        # damaged hull (older saves have no "health"; ship stays full).
+        if "player" in state and self.player.ship and state["player"].get("health") is not None:
+            self.player.ship.health = max(1, min(state["player"]["health"], self.player.ship.max_health))
         # Restore every AI ship in every system, keyed by pilot name (see
         # get_state()) - older saves stored this as a plain per-system list
         # instead (isinstance check below), which this deliberately does
@@ -1946,6 +1993,8 @@ class SpaceScreen(ScreenBase):
                     ai_ship.velocity_x = saved.get("velocity_x", ai_ship.velocity_x)
                     ai_ship.velocity_y = saved.get("velocity_y", ai_ship.velocity_y)
                     ai_ship.thrust = saved.get("thrust", ai_ship.thrust)
+                    if saved.get("health") is not None:
+                        ai_ship.ship.health = max(1, min(saved["health"], ai_ship.ship.max_health))
                     dest_sid = saved.get("system_id", sid)
                     if dest_sid != sid and dest_sid in self.systems:
                         migrations.append((ai_ship, sys_state, dest_sid))
@@ -2003,73 +2052,189 @@ class SpaceScreen(ScreenBase):
             "fire_sound": outfit.get("fire_sound", baseline.get("fire_sound", "laser")),
         }
 
-    def _update_weapon_fire(self):
-        """Fire the equipped weapon if its cooldown allows - one shot
-        (randomly offset within `inaccuracy` degrees, if any) for a
-        single-pellet weapon, or `projectile_count` pellets fanned evenly
-        across `pellet_spread` degrees - each also independently offset by
-        `inaccuracy` - for a shotgun-style one (see ship_outfits.json's
-        scatter_gun)."""
-        if self.weapon_fire_cooldown > 0:
-            return
-        if not self.player.ship:
-            return
-        stats = self._equipped_weapon_stats()
+    def _fire_weapon(self, shooter, stats, aim_angle, owner):
+        """Spawn this shot's projectile(s) from `shooter` (anything with
+        live x/y/velocity_x/velocity_y and a `.ship`) toward `aim_angle`
+        (degrees), tagged with `owner` ("player" or an AI Character). One
+        shot for a single-pellet weapon (randomly offset within
+        `inaccuracy` degrees, if any), or `projectile_count` pellets fanned
+        evenly across `pellet_spread` degrees - each also independently
+        offset by `inaccuracy` - for a shotgun-style one. Shared by the
+        player (SPACE) and hostile AI (CombatRoutine); plays the fire
+        sound. Returns nothing - the caller owns cooldown bookkeeping."""
         count = stats["projectile_count"]
         inaccuracy = stats["inaccuracy"]
         pellet_spread = stats["pellet_spread"]
+        nose = shooter.ship.size
 
         def wobble():
             return random.uniform(-inaccuracy / 2, inaccuracy / 2) if inaccuracy else 0
 
         if count == 1:
-            fire_angles = [self.player.angle + wobble()]
+            fire_angles = [aim_angle + wobble()]
         else:
-            # Evenly fan the pellets across the arc, then apply the
-            # weapon's own aim wobble to each pellet independently, so a
-            # multi-pellet shot doesn't look like a perfectly rigid comb.
             fire_angles = [
-                self.player.angle - pellet_spread / 2 + pellet_spread * i / (count - 1) + wobble()
+                aim_angle - pellet_spread / 2 + pellet_spread * i / (count - 1) + wobble()
                 for i in range(count)
             ]
 
         for fire_angle in fire_angles:
             rad = math.radians(fire_angle)
-            projectile_x = self.player.x + math.sin(rad) * self.player.ship.size
-            projectile_y = self.player.y - math.cos(rad) * self.player.ship.size
-            projectile_vel_x = self.player.velocity_x + math.sin(rad) * stats["projectile_speed"]
-            projectile_vel_y = self.player.velocity_y - math.cos(rad) * stats["projectile_speed"]
+            px = shooter.x + math.sin(rad) * nose
+            py = shooter.y - math.cos(rad) * nose
+            vx = shooter.velocity_x + math.sin(rad) * stats["projectile_speed"]
+            vy = shooter.velocity_y - math.cos(rad) * stats["projectile_speed"]
             # Orient the drawn icon to the shot's actual resultant travel
-            # direction (velocity vector), not the raw aim angle - the two
-            # can differ once the ship's own velocity is added in (e.g.
-            # strafing sideways while firing forward skews the real path),
-            # and the icon should visibly point where the shot is actually
-            # going, not just where it started aimed.
-            travel_angle = math.degrees(math.atan2(projectile_vel_x, -projectile_vel_y))
-            projectile = Projectile(
-                projectile_x, projectile_y, projectile_vel_x, projectile_vel_y,
-                angle=travel_angle, icon_shape=stats["icon_shape"], icon_color=stats["icon_color"],
-                size=stats["projectile_size"], damage=stats["damage"], lifetime=stats["projectile_lifetime"],
-            )
-            self.projectiles.append(projectile)
-
-        self.weapon_fire_cooldown = stats["fire_rate"]
+            # direction (velocity vector), not the raw aim angle - see the
+            # long note this replaced; the two differ once the ship's own
+            # velocity is folded in.
+            travel_angle = math.degrees(math.atan2(vx, -vy))
+            self.projectiles.append(Projectile(
+                px, py, vx, vy, angle=travel_angle,
+                icon_shape=stats["icon_shape"], icon_color=stats["icon_color"],
+                size=stats["projectile_size"], damage=stats["damage"],
+                lifetime=stats["projectile_lifetime"], owner=owner,
+            ))
         sound_board.play(stats["fire_sound"])
 
+    def _update_weapon_fire(self):
+        """Player weapon fire (SPACE held) - fires the equipped weapon if
+        its cooldown allows."""
+        if self.weapon_fire_cooldown > 0 or not self.player.ship:
+            return
+        stats = self._equipped_weapon_stats()
+        self._fire_weapon(self.player, stats, self.player.angle, owner="player")
+        self.weapon_fire_cooldown = stats["fire_rate"]
+
+    def _ai_weapon_stats(self):
+        """The weapon a hostile AI ship fires - the story's laser_cannon
+        baseline, at a slower fire rate so a dogfight with the player isn't
+        a one-sided wall of fire. Field-for-field like
+        _equipped_weapon_stats so _fire_weapon reads it identically."""
+        w = get_ship_outfit(self.story, "laser_cannon")
+        return {
+            "icon_shape": w.get("icon_shape", "blade"),
+            "icon_color": tuple(w.get("icon_color", (255, 130, 110))),
+            "damage": w.get("damage", PROJECTILE_DAMAGE),
+            "fire_rate": max(30, int(w.get("fire_rate", 18) * 2)),
+            "projectile_speed": w.get("projectile_speed", PROJECTILE_SPEED),
+            "projectile_size": w.get("projectile_size", PROJECTILE_SIZE),
+            "projectile_lifetime": w.get("projectile_lifetime", PROJECTILE_LIFETIME),
+            "inaccuracy": max(4, w.get("inaccuracy", 0)),
+            "pellet_spread": 0,
+            "projectile_count": 1,
+            "fire_sound": w.get("fire_sound", "laser"),
+        }
+
+    def _update_ai_weapon_fire(self):
+        """Let each hostile AI ship in the active system (CombatRoutine set
+        character.firing this frame) shoot at the player, rate-limited by
+        its own per-character cooldown. Skipped while docked (not in_flight)
+        - a parked ship isn't in the fight."""
+        if not self.in_flight:
+            return
+        stats = self._ai_weapon_stats()
+        for ship in self.ai_ships:
+            cd = getattr(ship, "ai_fire_cooldown", 0)
+            if cd > 0:
+                ship.ai_fire_cooldown = cd - 1
+                continue
+            if getattr(ship, "firing", False) and not ship.ashore and ship.ship:
+                self._fire_weapon(ship, stats, ship.angle, owner=ship)
+                ship.ai_fire_cooldown = stats["fire_rate"]
+
     def _update_projectiles(self):
-        """Update all projectiles; handle collisions with asteroids."""
+        """Update all projectiles; handle collisions with asteroids and ships."""
         alive_projectiles = []
         for projectile in self.projectiles:
             if not projectile.update():
                 continue  # Projectile expired
-
-            # Check for collision with asteroids
             if self._check_projectile_asteroid_collision(projectile):
-                continue  # Projectile destroyed on impact
-
+                continue  # destroyed on impact
+            if self._check_projectile_ship_collision(projectile):
+                continue
             alive_projectiles.append(projectile)
 
         self.projectiles = alive_projectiles
+
+    def _check_projectile_ship_collision(self, projectile):
+        """A player-fired shot hits any AI ship in the active system; an
+        AI-fired shot hits the player. A shot never hits its own owner.
+        Returns True (and applies damage / destruction) if it connected."""
+        if projectile.owner == "player":
+            hit = None
+            best = -1
+            for ship in self.ai_ships:
+                if ship.ashore or not ship.ship:
+                    continue
+                r = ship.ship.size + projectile.size
+                pen = r - math.hypot(projectile.x - ship.x, projectile.y - ship.y)
+                if pen > best and pen >= 0:
+                    best, hit = pen, ship
+            if hit is None:
+                return False
+            self._spawn_impact_explosion(projectile.x, projectile.y)
+            sound_board.play("impact")
+            if hit.ship.take_damage(projectile.damage):
+                self._destroy_ship(hit)
+            return True
+        elif projectile.owner is not None:
+            # AI-fired: only the player is a target.
+            if not self.in_flight or not self.player.ship:
+                return False
+            r = self.player.ship.size + projectile.size
+            if math.hypot(projectile.x - self.player.x, projectile.y - self.player.y) > r:
+                return False
+            self._spawn_impact_explosion(projectile.x, projectile.y)
+            sound_board.play("impact")
+            # Death is handled after _update_projectiles returns (see
+            # update_physics) - _on_player_destroyed reassigns
+            # self.projectiles, which this method's caller would then
+            # clobber with its own alive-list if done inline.
+            self.player.ship.take_damage(projectile.damage)
+            return True
+        return False
+
+    def _destroy_ship(self, character):
+        """Blow up a defeated AI ship: a cluster of explosions, the impact
+        sound, and removal from its system's roster. Clears any escort /
+        combat state so nothing keeps referencing it."""
+        for _ in range(3):
+            self.explosions.append(Explosion(
+                character.x + random.uniform(-12, 12),
+                character.y + random.uniform(-12, 12)))
+        sound_board.play("impact")
+        self._show_toast(f"{character.person.name or 'Hostile'} destroyed", (255, 180, 120))
+        character.escorting = False
+        character.in_combat = False
+        character.firing = False
+        for state in self.systems.values():
+            if character in state.ai_ships:
+                state.ai_ships.remove(character)
+                break
+        # current_target (an index into _filtered_targets) is re-synced by
+        # _validate_target() next frame, which already handles a targeted
+        # ship disappearing.
+
+    def _on_player_destroyed(self):
+        """The player's hull hit zero. Blow up in place, then recover to
+        this system's station: full repair, zero velocity, cargo lost."""
+        for _ in range(4):
+            self.explosions.append(Explosion(
+                self.player.x + random.uniform(-14, 14),
+                self.player.y + random.uniform(-14, 14)))
+        sound_board.play("impact")
+        possessions = self.player.person.possessions
+        lost = possessions.cargo_quantity_total()
+        possessions.cargo = {}
+        self.projectiles = [p for p in self.projectiles if p.owner == "player"]
+        self.player.ship.autopilot.disengage()
+        self.jump_state = None
+        self.park_at(self.station)
+        self.player.ship.health = self.player.ship.max_health
+        station_name = getattr(self.station, "name", "the station")
+        extra = f" Cargo lost ({lost})." if lost else ""
+        self._post_message("Rescue Service", f"Your ship was destroyed. Hull recovered and repaired at {station_name}.{extra}")
 
     def _check_projectile_asteroid_collision(self, projectile):
         """Check if projectile hits an asteroid; damage it and handle breakup/mining.

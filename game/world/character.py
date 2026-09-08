@@ -148,6 +148,13 @@ class Character:
         # SpaceScreen._sync_escorts(). Never true for a character built
         # without that opt-in.
         self.escorting = False
+        # Whether SpaceScreen._sync_hostiles() currently has this character
+        # in CombatRoutine (attacking the player) rather than its normal
+        # routine - the hostility mirror of self.escorting. `firing` is set
+        # each frame by CombatRoutine and read by
+        # SpaceScreen._update_ai_weapon_fire.
+        self.in_combat = False
+        self.firing = False
 
         routine_cls = resolve_routine_class(role, faction, routine_name)
         self.routine = routine_cls(self.route)

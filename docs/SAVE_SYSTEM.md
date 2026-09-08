@@ -126,7 +126,8 @@ name is kept, the timestamp lives inside it.
       "angle": 45,
       "velocity_x": 1.2,
       "velocity_y": -0.5,
-      "thrust": 0.15
+      "thrust": 0.15,
+      "health": 22.5
     },
     "possessions": {
       "credits": 0,
@@ -157,7 +158,8 @@ name is kept, the timestamp lives inside it.
         "angle": 180,
         "velocity_x": -2.0,
         "velocity_y": 0.5,
-        "thrust": 0.2
+        "thrust": 0.2,
+        "health": 27
       }
     }
   }
@@ -392,7 +394,13 @@ def get_state(self):
 ```
 
 **What's captured:**
-- Player position, angle, velocity, thrust (space) or just x/y (locations)
+- Player position, angle, velocity, thrust, and ship `health` (space) or just
+  x/y (locations). `health` is additive - a save made before ship combat
+  existed has no key and the hull loads full; a value is clamped to
+  `[1, max_health]` on load (after `restore_possessions` has set the real
+  `max_health` for the owned hull), so a mid-flight save can carry a damaged
+  ship. Bump `story.json`'s `version` when adding combat to an existing story
+  (the_long_silence went `0.3.0` -> `0.4.0` for Phase 3).
 - Credits, owned ship type IDs, and loans (`possessions` - space or locations)
 - `jump_state` (space only, when a jump is in progress) - phase (`"align"`/
   `"travel"`), heading, elapsed timer, and destination system ID. Without this,
@@ -401,6 +409,8 @@ def get_state(self):
   back down via `_complete_jump()` - since space has no drag, the ship would
   otherwise fly at `JUMP_SPEED` indefinitely and be uncontrollable until the
   player applied thrust and the velocity cap happened to clamp it back down.
+- Every AI ship's `health` too, in the same per-pilot dict (defaults to full
+  for an older save's entry)
 - Every AI ship, in every system the story defines — position, angle,
   velocity, thrust, and which system it's currently in — keyed by pilot
   name, not list order (see `get_state()` above for why)

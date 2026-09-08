@@ -33,6 +33,13 @@ class Ship(WorldObject):
         self.rotation_speed = 5
         self.space_drag = space_drag
         self.cargo_capacity = 0
+        # Hull integrity for ship-to-ship combat (see take_damage /
+        # SpaceScreen._check_projectile_ship_collision). max_health comes
+        # from ship_types.json's "max_health" (apply_ship_type), defaulting
+        # to a size-derived value so a story that never sets the key still
+        # gets a sane hull. Repaired to full on park() (landed/docked).
+        self.max_health = 30
+        self.health = 30
         self.autopilot = Autopilot(self)
 
     # --- Backward-compatible views onto the autopilot's state ---
@@ -69,6 +76,13 @@ class Ship(WorldObject):
         self.max_velocity = ship_type.get("max_velocity", self.max_velocity)
         self.rotation_speed = ship_type.get("rotation_speed", self.rotation_speed)
         self.cargo_capacity = ship_type.get("cargo_capacity", self.cargo_capacity)
+        # Size-derived default so a story with no "max_health" still gets a
+        # hull that scales with the ship (a big freighter soaks more than a
+        # courier). Preserves the current fraction of health when a stat
+        # re-apply happens mid-flight (a save re-equipping the flown ship).
+        frac = self.health / self.max_health if self.max_health else 1.0
+        self.max_health = ship_type.get("max_health", max(20, int(ship_type.get("size", 15) * 2.5)))
+        self.health = self.max_health * frac
 
     def apply_outfits(self, outfits):
         """Add each installed outfit's stat_modifiers on top of whatever
@@ -286,11 +300,20 @@ class Ship(WorldObject):
         """Release thrust immediately."""
         self.thrust = 0
 
+    def take_damage(self, amount):
+        """Reduce hull integrity by `amount`; return True if this destroyed
+        the ship (health at or below 0). Mirrors Asteroid.take_damage."""
+        self.health -= amount
+        return self.health <= 0
+
     def park(self):
         """Come to a full stop and release thrust - landed/docked, not just
-        autopilot-disengaged, so the ship doesn't keep drifting."""
+        autopilot-disengaged, so the ship doesn't keep drifting. Also
+        repairs the hull to full: landing somewhere is the (only) way a
+        damaged ship gets fixed."""
         self.velocity_x = 0
         self.velocity_y = 0
+        self.health = self.max_health
         self.release_thrust()
 
     def point_to_reverse_velocity(self):

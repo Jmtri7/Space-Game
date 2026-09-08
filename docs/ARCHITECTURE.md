@@ -536,6 +536,7 @@ that routine flies a ship or just moves a body around a room:
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |
 | `OrbitPlayerRoutine` | `orbit_player_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted, temporary override via `Character.set_routine()` (see `person.escort_flag` above), not a role pick; circles a moving target at a fixed radius |
+| `CombatRoutine` | `combat_routine.py` | Yes | Not in this table/`ROLE_ROUTINES` - a scripted override via `Character.set_routine()`, swapped in by `SpaceScreen._sync_hostiles()` when a pilot turns hostile (see "Weapons, Combat & Asteroid Mining"). Drives the ship low-level (no autopilot); sets `character.firing` |
 | `FollowPlayerRoutine` | `follow_player_routine.py` | No | Not in this table/`ROLE_ROUTINES` - the on-foot counterpart to `OrbitPlayerRoutine`; a scripted override that trails a moving target (the player) at a polite distance, wall-sliding via `character.can_move_to`. Driven by an interior NPC config's `"escort_flag"` through `LocationScreen._sync_npc_escorts()` (the mirror of `SpaceScreen._sync_escorts()`) - e.g. Sela Cordova walking the player through Alpha Station for the `station_tour` mission |
 
 Every `Routine` implements the same two methods regardless of which table
@@ -572,7 +573,7 @@ active one is ever drawn/given a camera).
 - `interiors` — dict of location keys → interior config (file path or inline dict),
   consumed by `LocationScreen` when the player lands
 
-## Weapons & Asteroid Mining
+## Weapons, Combat & Asteroid Mining
 
 **Weapon outfits:** every ship type carries at least one `"weapon"` slot in
 its `ship_types.json` `slots` list (see "`ship_types.json`" fields and the
@@ -625,6 +626,40 @@ Outfitter-menu icon.
 
 **F engages autopilot** (moved off SPACE so the two controls don't
 collide - see `handle_input`'s `K_f` branch and docs/CONTROLS.md).
+
+**Ship-to-ship combat.** Every `Ship` has `health` / `max_health`
+(`ship_types.json`'s `"max_health"`, else `max(20, size*2.5)`; `take_damage()`
+returns True on destruction; `park()` repairs to full - landing is the only
+repair). Every `Projectile` carries an `owner` (`"player"` or an AI
+`Character`). `SpaceScreen._check_projectile_ship_collision` (run per shot in
+`_update_projectiles`, alongside the asteroid check): a `"player"`-owned shot
+hits any AI ship in the active system, an AI-owned shot hits only the player,
+and a shot never hits its own owner. `_fire_weapon(shooter, stats, aim_angle,
+owner)` is the shared spawn path - the player calls it from
+`_update_weapon_fire` (SPACE) with `_equipped_weapon_stats()`, hostile AI from
+`_update_ai_weapon_fire` with the weaker `_ai_weapon_stats()` (laser baseline,
+half fire rate), rate-limited per pilot by `character.ai_fire_cooldown`.
+
+**Hostility** is a routine swap, mirroring `_sync_escorts`:
+`SpaceScreen._sync_hostiles` (every frame) puts a pilot into `CombatRoutine`
+(`game/world/combat_routine.py` - turn to face the player, close to
+~`PREFERRED_RANGE`, set `character.firing` while lined up and in range) when
+its faction standing is `<= HOSTILE_REP_THRESHOLD` (-40), or a
+`hostile_to_player:<name>` / `faction_hostile:<faction>` flag is set - and back
+to its role routine otherwise (`character.in_combat` tracks which, like
+`escorting`). **`CombatRoutine` drives the ship through its low-level controls
+(`turn_left`/`increase_thrust`/…) exactly as `PlayerController` does - it never
+touches `autopilot.py` / `SeekMode`, so it carries none of the
+[AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md) regression risk.** Like
+`OrbitPlayerRoutine` it's a scripted override, not in `ROLE_ROUTINES` /
+`ROUTINE_REGISTRY`.
+
+**Destruction.** `_destroy_ship(character)` - explosions + sound, remove from
+its `SystemState.ai_ships` (the target pointer re-syncs via `_validate_target`).
+`_on_player_destroyed()` - explode in place, then recover at the current
+system's station: full repair, zero velocity, **cargo lost**, a "Rescue
+Service" message. Checked once per frame after `_update_projectiles` (not inline
+in the collision, which would clobber the alive-projectile list).
 
 **Asteroid damage:** `Asteroid` (`game/world/asteroid.py`) carries a
 `health` pool (`max(5, size * 2)`) and `take_damage()`.

@@ -103,7 +103,12 @@ only appears under a section if it currently has items there.
       `faction` tags, and a Standing section in the Possessions menu. Still to
       do: `relations`-matrix bloc ripples, hostility/combat from low standing
       (needs ship combat first), crime/war on top.)
-- [ ] Combat.
+- [~] Combat. (Ship-to-ship shipped in Phase 3: `Ship.health`/`take_damage`,
+      `Projectile.owner`, `SpaceScreen._check_projectile_ship_collision`,
+      `CombatRoutine` (hostile AI - drives the ship low-level, no autopilot),
+      `_sync_hostiles` (rep `<= -40` or a `hostile_to_player:`/`faction_hostile:`
+      flag), ship destruction + player recover-at-station. Still open: hostile
+      target brackets/UI polish, weapon variety for AI, formations, boarding.)
 - [ ] Crime — see factions.
 - [ ] War — see factions.
 - [ ] Bounty hunting board — a station terminal listing wanted ships/NPCs with a

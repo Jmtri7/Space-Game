@@ -1,4 +1,5 @@
-"""Weapon projectile fired from the player's ship."""
+"""Weapon projectile fired from a ship - the player's, or a hostile AI's
+(see SpaceScreen._fire_weapon / CombatRoutine)."""
 import math
 from game.utils import to_screen, get_scale
 from game.world.world_object import WorldObject
@@ -31,7 +32,8 @@ class Projectile(WorldObject):
     than a single hardcoded look."""
     def __init__(self, x, y, velocity_x, velocity_y, angle=0,
                  icon_shape=DEFAULT_ICON_SHAPE, icon_color=DEFAULT_ICON_COLOR,
-                 size=PROJECTILE_SIZE, damage=PROJECTILE_DAMAGE, lifetime=PROJECTILE_LIFETIME):
+                 size=PROJECTILE_SIZE, damage=PROJECTILE_DAMAGE, lifetime=PROJECTILE_LIFETIME,
+                 owner=None):
         super().__init__(x, y)
         self.velocity_x = velocity_x
         self.velocity_y = velocity_y
@@ -41,6 +43,10 @@ class Projectile(WorldObject):
         self.size = size
         self.lifetime = lifetime
         self.damage = damage
+        # Who fired this - the string "player", or an AI Character. Used by
+        # SpaceScreen._check_projectile_ship_collision so a shot never hits
+        # its own shooter and player/AI shots hit the right targets.
+        self.owner = owner
 
     def update(self):
         """Move projectile; return False if expired."""

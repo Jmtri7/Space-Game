@@ -59,6 +59,7 @@ from game.ui.save_browser import SaveBrowser
 from game.ui.choice_dialog import ChoiceDialog
 from game.ui.backdrop_menu import BackdropMenu
 from game.ui.star_map import StarMap
+from game.world.combat_routine import CombatRoutine, _signed_angle_delta
 from game.ui.confirm_dialog import ConfirmDialog
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu, _approximate_size_label
@@ -3283,6 +3284,82 @@ class TestJumpDrive(unittest.TestCase):
         self.assertGreater(game_screen.jump_message_timer, 0, "Shows the 'too close' notice")
 
 
+class TestShipHealth(unittest.TestCase):
+    """Ship.health / take_damage / park-repair, and apply_ship_type's
+    max_health (from ship_types.json's "max_health", else size-derived) -
+    the hull model behind ship-to-ship combat (see docs/ARCHITECTURE.md's
+    Weapons & Combat)."""
+
+    def test_take_damage_reports_destruction_at_zero(self):
+        s = Ship(0, 0)
+        s.max_health = s.health = 10
+        self.assertFalse(s.take_damage(4))
+        self.assertEqual(s.health, 6)
+        self.assertTrue(s.take_damage(6))
+
+    def test_park_repairs_to_full(self):
+        s = Ship(0, 0)
+        s.max_health = 20
+        s.health = 3
+        s.park()
+        self.assertEqual(s.health, 20)
+
+    def test_apply_ship_type_takes_max_health_or_derives_from_size(self):
+        explicit = Ship(0, 0)
+        explicit.apply_ship_type({"size": 10, "max_health": 55})
+        self.assertEqual(explicit.max_health, 55)
+        derived = Ship(0, 0)
+        derived.apply_ship_type({"size": 20})  # max(20, 20*2.5) == 50
+        self.assertEqual(derived.max_health, 50)
+
+    def test_apply_ship_type_preserves_the_current_damage_fraction(self):
+        s = Ship(0, 0)
+        s.apply_ship_type({"size": 20})   # max_health 50
+        s.health = 25                      # half hull
+        s.apply_ship_type({"size": 20, "max_health": 80})
+        self.assertEqual(s.health, 40)     # still half
+
+
+class TestCombatRoutine(unittest.TestCase):
+    """CombatRoutine turns to face a target, closes to firing range, and
+    sets character.firing while lined up - driving the ship through its
+    low-level controls, never autopilot (see docs/AUTOPILOT_TESTING.md -
+    this routine carries no SeekMode risk)."""
+
+    def _character(self, x, y, angle=0):
+        ship = Ship(x, y)
+        ship.apply_ship_type({"size": 11, "max_thrust": 0.14, "max_velocity": 2.4, "rotation_speed": 3.5})
+        ship.angle = angle
+        return Character(Person(x, y, name="Bandit"), ship=ship)
+
+    def test_turns_toward_the_target(self):
+        char = self._character(0, 0, angle=0)     # facing up (+ -y)
+        target = SimpleNamespace(x=0, y=500)      # directly below -> desired angle 180
+        routine = CombatRoutine(target)
+        routine.start(char)
+        before = abs(_signed_angle_delta(char.ship.angle, 180))
+        for _ in range(5):
+            routine.run(char)
+        after = abs(_signed_angle_delta(char.ship.angle, 180))
+        self.assertLess(after, before)
+
+    def test_fires_only_when_aligned_and_in_range(self):
+        char = self._character(0, 0, angle=180)   # already facing the target
+        routine = CombatRoutine(SimpleNamespace(x=0, y=300))  # in range, aligned
+        routine.run(char)
+        self.assertTrue(char.firing)
+        routine2 = CombatRoutine(SimpleNamespace(x=0, y=5000))  # aligned but far
+        routine2.run(char)
+        self.assertFalse(char.firing)
+
+    def test_start_drops_autopilot(self):
+        char = self._character(0, 0)
+        char.ship.engage_seek(SimpleNamespace(x=100, y=100))
+        self.assertTrue(char.ship.autopilot_active)
+        CombatRoutine(SimpleNamespace(x=0, y=100)).start(char)
+        self.assertFalse(char.ship.autopilot_active)
+
+
 class TestSystemUnlocked(unittest.TestCase):
     """utils.system_unlocked - a system is reachable unless "locked" and its
     "unlock_flag" isn't set (see docs/CONTROLS.md's Star Map / the story's
@@ -3343,6 +3420,94 @@ class TestBeaconJumpGating(unittest.TestCase):
         self.assertIn("Kiln", possessions.message_log[0]["text"])
         gs._check_beacons()  # no duplicate on the next frame
         self.assertEqual(len(possessions.message_log), 1)
+
+
+class TestShipCombat(unittest.TestCase):
+    """Ship-to-ship combat: _sync_hostiles swaps a low-standing pilot into
+    CombatRoutine and back, player fire destroys an AI ship, AI fire damages
+    the player, and a destroyed player recovers at the station (cargo lost).
+    Uses the_long_silence (its outer factions can drop below the hostile
+    threshold)."""
+
+    def _combat_screen(self):
+        gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="halcyon")
+        gs.in_flight = True
+        gs._apply_ship_type("courier")
+        gs.player.x, gs.player.y = 1200, 1000
+        hostile = gs.systems["halcyon"].ai_ships[0]
+        hostile.faction = "ninefold_combine"
+        hostile.person.name = "Bandit"
+        hostile.ship.x, hostile.ship.y = 1200, 1350
+        hostile.ship.velocity_x = hostile.ship.velocity_y = 0
+        return gs, hostile
+
+    def test_sync_hostiles_engages_below_threshold_and_stands_down_above(self):
+        gs, hostile = self._combat_screen()
+        gs.player.person.possessions.reputation["ninefold_combine"] = -60
+        gs._sync_hostiles()
+        self.assertTrue(hostile.in_combat)
+        self.assertIsInstance(hostile.routine, CombatRoutine)
+        gs.player.person.possessions.reputation["ninefold_combine"] = 0
+        gs._sync_hostiles()
+        self.assertFalse(hostile.in_combat)
+        self.assertNotIsInstance(hostile.routine, CombatRoutine)
+
+    def test_a_per_pilot_flag_also_makes_a_ship_hostile(self):
+        gs, hostile = self._combat_screen()
+        gs.player.person.possessions.flags["hostile_to_player:Bandit"] = True
+        gs._sync_hostiles()
+        self.assertTrue(hostile.in_combat)
+
+    def test_player_fired_shots_damage_and_destroy_a_hostile_ship(self):
+        from game.world.projectile import Projectile
+        gs, hostile = self._combat_screen()
+        hostile.ship.health = hostile.ship.max_health
+        while hostile in gs.systems["halcyon"].ai_ships:
+            gs.projectiles.append(Projectile(hostile.ship.x, hostile.ship.y, 0, 0, damage=6, owner="player"))
+            gs._update_projectiles()
+            if hostile.ship.health < -100:
+                self.fail("hostile never removed from the roster")
+        self.assertNotIn(hostile, gs.systems["halcyon"].ai_ships)
+
+    def test_an_ai_fired_shot_damages_the_player_and_never_its_owner(self):
+        from game.world.projectile import Projectile
+        gs, hostile = self._combat_screen()
+        full = gs.player.ship.health
+        # A shot sitting on the player, fired by the AI - hits the player.
+        gs.projectiles.append(Projectile(gs.player.x, gs.player.y, 0, 0, damage=5, owner=hostile))
+        gs._update_projectiles()
+        self.assertEqual(gs.player.ship.health, full - 5)
+        # A shot sitting on its own AI owner - never hits it.
+        h0 = hostile.ship.health
+        gs.projectiles.append(Projectile(hostile.ship.x, hostile.ship.y, 0, 0, damage=5, owner=hostile))
+        gs._update_projectiles()
+        self.assertEqual(hostile.ship.health, h0)
+
+    def test_destroyed_player_recovers_at_the_station_and_loses_cargo(self):
+        gs, hostile = self._combat_screen()
+        gs.player.person.possessions.add_cargo("ore", 7)
+        gs.player.ship.health = 1
+        gs._on_player_destroyed()
+        self.assertEqual(gs.player.person.possessions.cargo, {})
+        self.assertEqual(gs.player.ship.health, gs.player.ship.max_health)
+        self.assertFalse(gs.in_flight)
+        self.assertEqual((gs.player.x, gs.player.y), (gs.station.x, gs.station.y))
+
+    def test_ai_and_player_ship_health_round_trip_through_save(self):
+        gs, hostile = self._combat_screen()
+        gs.player.ship.health = 12.5
+        hostile.ship.health = 8
+        state = gs.get_state()
+        self.assertEqual(state["player"]["health"], 12.5)
+        target_name = hostile.person.name  # renamed to "Bandit" by _combat_screen
+        gs2 = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="halcyon")
+        # match gs's renamed roster so the by-name save lookup resolves
+        gs2.systems["halcyon"].ai_ships[0].person.name = target_name
+        gs2._apply_ship_type("courier")
+        gs2.restore_state(state)
+        self.assertEqual(gs2.player.ship.health, 12.5)
+        restored_hostile = next(a for a in gs2.systems["halcyon"].ai_ships if a.person.name == target_name)
+        self.assertEqual(restored_hostile.ship.health, 8)
 
 
 class TestLocationScreenPausesDuringDialogue(unittest.TestCase):

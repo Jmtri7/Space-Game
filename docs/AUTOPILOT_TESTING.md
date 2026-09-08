@@ -27,6 +27,15 @@ If someone asks you to change autopilot behavior, tell them up front that it's a
 history of subtle regressions and that you'll validate with the standard battery - broken out
 per ship, not just aggregated - before calling it done. This doc is what that means in practice.
 
+**Scope note.** This battery is for changes to `autopilot.py` itself. A *routine* that only
+*calls* the existing public control surface is out of scope: `CombatRoutine`
+(`game/world/combat_routine.py`, Phase 3 ship-to-ship combat) deliberately drives its ship
+through `turn_left`/`turn_right`/`increase_thrust`/`release_thrust` - the same low-level API
+`PlayerController` uses - and never engages `SeekMode`/`OrbitMode`, precisely so it stays clear
+of this history. It was validated with `run_tests.py` (which includes `TestAutopilotPhysics`)
+plus a headless 2000-frame pursuit sim against a circling target (distance stayed bounded, no
+NaN, no runaway) - not the full battery, which doesn't apply.
+
 ## The protocol
 
 1. **Before changing anything**, run the current code through the battery (below) and record

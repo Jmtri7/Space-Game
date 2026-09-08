@@ -89,16 +89,22 @@ than migrating off the frozen `default` art.
 
 **Deferred:** anchor missions lighting the next beacon via `on_end_flags` — the hook works today (`on_end_flags: ["beacon_<x>_lit"]`); the missions themselves are Phase 6. The scaffold uses host dialogue in the meantime.
 
-## Phase 3 — Ship-to-ship combat & hostility (gap C)
+## Phase 3 — Ship-to-ship combat & hostility (gap C)  ✅ done
 
-- [ ] `Ship.health` / `max_health` from `ship_types.json`; `take_damage()`; destruction → `Explosion` + optional loot; remove from `SystemState.ai_ships`
-- [ ] `SpaceScreen._check_projectile_ship_collision` (player hittable too)
-- [ ] Hostility model: `Character` hostile when `reputation[faction] < threshold` or a flag says so
-- [ ] `CombatRoutine` (new, registered in `ROUTINE_REGISTRY`) — seek player + fire
-- [ ] Player death handling (min: respawn at last station, lose cargo)
-- [ ] **Autopilot regression:** `CombatRoutine` uses `engage_seek` — run the AUTOPILOT_TESTING.md battery, warn the user up front
-- [ ] **Save:** ship health persistence; bump story version
-- [ ] Docs: ARCHITECTURE.md ("Weapons & Combat"), PHYSICS.md if seek changes, AUTOPILOT_TESTING.md sign-off
+- [x] `Ship.health` / `max_health` (`ship_types.json` `"max_health"`, else size-derived), `take_damage()`, `park()` repairs to full
+- [x] `Projectile.owner`; `_fire_weapon(shooter, stats, aim, owner)` shared by player (SPACE) and AI; `_ai_weapon_stats` (laser baseline, half rate); `_update_ai_weapon_fire` (per-pilot `ai_fire_cooldown`)
+- [x] `SpaceScreen._check_projectile_ship_collision` — player shot hits any AI, AI shot hits only the player, never own owner
+- [x] `_destroy_ship` (explosions + roster removal, target re-syncs via `_validate_target`); `_on_player_destroyed` (explode → recover at station, full repair, **cargo lost**, message) — checked once/frame after `_update_projectiles`, not inline
+- [x] `CombatRoutine` (`combat_routine.py`) — turn to face, close to `PREFERRED_RANGE`, set `character.firing`. **Drives the ship low-level, never `engage_seek`/autopilot** — a scripted override like `OrbitPlayerRoutine`, not in `ROUTINE_REGISTRY` (deviates from the plan's wording, matches the established pattern)
+- [x] `_sync_hostiles` (every frame, all systems) — `CombatRoutine` when faction standing `<= -40` (`HOSTILE_REP_THRESHOLD`) or a `hostile_to_player:<name>` / `faction_hostile:<faction>` flag; back to the role routine otherwise; `character.in_combat` tracks it
+- [x] HUD **Hull: N%** in the status pane when damaged
+- [x] **No autopilot change** — the full AUTOPILOT_TESTING.md battery doesn't apply (see its Scope note). Validated: `run_tests.py` (incl. `TestAutopilotPhysics`) + a 2000-frame headless pursuit sim vs. a circling target (bounded distance, no NaN, no runaway)
+- [x] **Save:** player + per-AI-ship `health` (additive; old saves load full; clamped `[1, max_health]`). `story.json` `0.3.0` → `0.4.0`
+- [x] the_long_silence: Factor Tol's "The Authority is opening this system with or without your consent" (`adjust_rep:ninefold_combine:-50`) drops Kiln below the threshold and its pilots attack
+- [x] Tests: +13 (488) — `TestShipHealth`, `TestCombatRoutine`, `TestShipCombat` (hostility swap, collision ownership, destruction, player recovery, health save round-trip)
+- [x] Docs: ARCHITECTURE.md ("Weapons, Combat & Asteroid Mining" + routine table), SAVE_SYSTEM.md, AUTOPILOT_TESTING.md (scope note), CONTROLS.md, BACKLOG.md
+
+**Deferred:** hostile-ship target brackets / red HUD, AI weapon variety, formations, boarding/derelicts, loot drops on kill.
 
 ## Phase 4 — Flag-conditional world content (gaps D + G)
 
