@@ -670,8 +670,8 @@ class SpaceScreen(ScreenBase):
                 self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
 
         for event in events:
-            # An open hail is mouse-only and swallows all input: hover
-            # highlights an option, a click picks it, the ✕ closes.
+            # An open hail swallows all other input: hover highlights an
+            # option, a click or Enter picks it, the ✕ or ESC closes it.
             if self.active_dialogue:
                 if event.type == pygame.MOUSEMOTION:
                     hovered = self.active_dialogue.option_at(event.pos)
@@ -686,6 +686,8 @@ class SpaceScreen(ScreenBase):
                             self._choose_hail_option(picked)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     self._choose_hail_option(self.active_dialogue.selected_option)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.active_dialogue = None
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:

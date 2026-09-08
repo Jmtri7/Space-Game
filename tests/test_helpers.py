@@ -3565,6 +3565,38 @@ class TestLocationScreenPausesDuringDialogue(unittest.TestCase):
         self.assertNotEqual((wanderer.x, wanderer.y), before)
 
 
+class TestDialogueClosesOnEsc(unittest.TestCase):
+    """ESC (and Enter on the highlighted option) closes an open NPC
+    conversation / ship hail, instead of only the mouse ✕ - see
+    docs/CONTROLS.md's Dialogue section and docs/DESIGN_PATTERNS.md. ESC
+    while a conversation is open must NOT also fall through to the pause
+    menu."""
+
+    def _key(self, key):
+        return SimpleNamespace(type=pygame_mock.KEYDOWN, key=key)
+
+    def test_esc_closes_a_location_conversation_without_pausing(self):
+        config = {"label": "Room", "npcs": [{"name": "Talker", "x": 100, "y": 100, "role": "resident"}]}
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        screen.active_dialogue = screen.npcs[0].person.dialogue
+        action = screen.handle_input([self._key(pygame_mock.K_ESCAPE)])
+        self.assertIsNone(screen.active_dialogue)
+        self.assertNotEqual(action, "pause")
+
+    def test_esc_still_opens_the_pause_menu_with_no_conversation_open(self):
+        config = {"label": "Room", "npcs": []}
+        screen = LocationScreen(config_data=config, world_width=800, world_height=600)
+        self.assertEqual(screen.handle_input([self._key(pygame_mock.K_ESCAPE)]), "pause")
+
+    def test_esc_closes_a_ship_hail(self):
+        gs = SpaceScreen(pilot_name="T", story="default", system_id="sol_alpha")
+        gs.in_flight = True
+        ai = gs.systems["sol_alpha"].ai_ships[0]
+        gs.active_dialogue = ai.person.hail_dialogue
+        gs.handle_input([self._key(pygame_mock.K_ESCAPE)])
+        self.assertIsNone(gs.active_dialogue)
+
+
 class TestLocationScreenDrawDoesNoPerFrameFontConstruction(unittest.TestCase):
     """Regression: LocationScreen.draw() built two `pygame.font.Font(None, ...)`
     objects every frame (room-label + portal-label fonts). Each construction

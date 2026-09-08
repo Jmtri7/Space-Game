@@ -146,13 +146,15 @@ up at a distance, not for choosing who to talk to.
 
 ## Dialogue
 
-The NPC conversation box is **mouse-only**, like every other modal:
+The NPC conversation box is mouse-driven for choosing options, but closes on
+the keyboard too (unlike the `game/ui/` modals - it's a screen overlay, and a
+conversation you can't back out of with **ESC** is a trap):
 
 | Control | Action |
 |---------|--------|
 | **Hover** an option | Highlights it |
 | **Click** an option, or **Enter** on the highlighted one | Choose it - closes the conversation, advances to another node, or (for a few NPCs) buys a ship / takes a loan |
-| **Click** the **X** (top-right of the box) | Leave the conversation |
+| **Click** the **X** (top-right of the box), or **ESC** | Leave the conversation (ESC does not also open the pause menu while a conversation is open) |
 
 Most NPCs offer a flat greeting plus a couple of closing options ("Thanks" /
 "Leave"). A few (e.g. the Bartender, the spaceport's ship salesman, the loan
@@ -174,7 +176,7 @@ you've bought him a round once. See `game/world/dialogue.py`.
 | Control | Action |
 |---------|--------|
 | **H** (Space View) | Hail the currently targeted ship |
-| Hover / click an option, click the **X** | Same as Dialogue above, once a hail is open (mouse-only) |
+| Hover / click an option, **Enter**, click the **X**, or **ESC** | Same as Dialogue above, once a hail is open |
 
 Hailing reuses the exact same conversation UI as talking to someone
 face-to-face, but requires a targeted AI ship first (SHIPS target mode -

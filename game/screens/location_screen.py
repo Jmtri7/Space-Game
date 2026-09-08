@@ -1411,8 +1411,9 @@ class LocationScreen(ScreenBase):
     def handle_input(self, events):
         """Override for area-specific input (dialogue, etc.)"""
         for event in events:
-            # A conversation is mouse-only and swallows all input while open:
-            # hover highlights an option, a click picks it, the ✕ closes.
+            # A conversation swallows all other input while open: hover
+            # highlights an option, a click or Enter picks it, the ✕ or ESC
+            # closes it.
             if self.active_dialogue:
                 if event.type == pygame.MOUSEMOTION:
                     hovered = self.active_dialogue.option_at(event.pos)
@@ -1427,6 +1428,8 @@ class LocationScreen(ScreenBase):
                             self._choose_dialogue_option(picked)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     self._choose_dialogue_option(self.active_dialogue.selected_option)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.active_dialogue = None
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:

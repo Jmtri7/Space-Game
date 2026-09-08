@@ -1025,7 +1025,18 @@ mouse-only; it's a toggle affordance for the key that opened them, not
 general keyboard control. A save/load `SaveBrowser` stacked on the pause
 menu still swallows `ESC` (`dialog_was_open`) - close it with its button.
 There is no dim hint line - a modal is expected to be self-explanatory from
-its buttons and labels. Two base classes:
+its buttons and labels.
+
+**The NPC conversation / hail box is not one of these `game/ui/` modals** -
+it's a `game/world/dialogue.py` `Dialogue` drawn and driven directly by
+`SpaceScreen` / `LocationScreen`, not a `MenuBase`. It keeps the mouse for
+picking options (hover + click, or the ✕) but also closes on **ESC** and
+picks the highlighted option on **Enter**: a story conversation you can only
+leave by finding the ✕ is a trap, and ESC while it's open closes the
+conversation instead of opening the pause menu (handled in the screen's
+`handle_input`, inside its `if self.active_dialogue:` branch).
+
+Two base classes:
 
 - **`MenuBase`** (`game/ui/menu_base.py`) - a **menu** you *dwell in*;
   acting doesn't close it. Owns all the button infrastructure: `buttons()` →
