@@ -17,6 +17,7 @@ that document as the work crosses areas. You should not need to read every doc.
 | Work on frame timing / performance / the perf panel | [UI_FLOW.md](UI_FLOW.md#frame-timing-metrics) | [PHYSICS.md](PHYSICS.md#frame-timing--smooth-motion--two-deliberate-tradeoffs) |
 | Add or edit sound / music | [SOUND.md](SOUND.md) | |
 | Add or change a graphic asset (ship, station, body, outfit, decoration, interior) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md) | [DESIGN_ATLAS.md](DESIGN_ATLAS.md) for the frozen `default`-story art |
+| Work in the `config/editor.html` vertex editor | [GRAPHICS_EDITOR.md](GRAPHICS_EDITOR.md) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md) |
 | Add an entity, screen, role/routine, or ship type | [ARCHITECTURE.md](ARCHITECTURE.md#extensibility-points) | [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) |
 | Generalise a repeated solution into a reusable pattern | [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) | |
 | Run tests, restart the game, write a commit message | [WORKFLOW.md](WORKFLOW.md) | |

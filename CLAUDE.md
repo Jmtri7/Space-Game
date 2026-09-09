@@ -21,6 +21,7 @@ CLAUDE.md  (you are here — the protocol)
     ├── UI_FLOW.md        — screen state machine, modals, the fixed-timestep loop, perf panel
     ├── DESIGN_PATTERNS.md — reusable patterns + working principles
     ├── GRAPHICS_PIPELINE.md — design-JSON → expand() asset pipeline (current)
+    ├── GRAPHICS_EDITOR.md   — config/editor.html vertex-editor UI + repo-write behaviour
     ├── DESIGN_ATLAS.md   — the retired atlas toolchain; where the frozen default-story art lives
     ├── SOUND.md          — runtime-synthesized SFX and music
     ├── WORKFLOW.md       — edit → restart → test → commit loop, testing, commit format
