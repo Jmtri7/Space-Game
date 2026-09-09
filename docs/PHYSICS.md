@@ -352,4 +352,4 @@ For the current entity count (<10), per-entity physics is fine.
 - Note: this rule is `StarField`-only. `AsteroidField` intentionally does the opposite -
   see "No World Boundary" above - so don't "fix" asteroids back into determinism.
 
-See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md#coordinate-conversion) for the coordinate conversion pattern.
+See [patterns/rendering.md](patterns/rendering.md#pattern-coordinate-conversion) for the coordinate conversion pattern.

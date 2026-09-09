@@ -6,7 +6,7 @@ Menu hierarchy, screen transitions, and state management.
 **menu** - navigate freely, doesn't close on an action) or `DialogBase` (a
 **dialog** - closes on any pick). Neither draws a Controls pane; both show
 their actions as `draw_button` widgets in their own panel (mouse + Tab/arrow
-+ Enter). See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s "Menu vs. Dialog".
++ Enter). See [patterns/ui-screens.md](patterns/ui-screens.md)'s "Menu vs. Dialog".
 Four pairs of
 old classes were merged: the main menu and story picker are both
 `BackdropMenu`; the "landing spot" and "where to?" pickers are both
@@ -636,4 +636,4 @@ spans sharing a prefix **non-overlapping** (a phase's spans should sum to
 something meaningful). Recording is cheap and always on; only the overlay is
 gated on `constants.DEBUG_MODE`.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md#state-machine-screen-flow) for class hierarchy.
+See [architecture/class-hierarchy.md](architecture/class-hierarchy.md#state-machine-screen-flow) for class hierarchy.

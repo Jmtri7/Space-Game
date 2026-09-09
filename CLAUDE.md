@@ -13,13 +13,18 @@ branch that matches the work in front of you.**
 ```
 CLAUDE.md  (you are here — the protocol)
 └── docs/README.md   (the index — routes you to the right document by task)
-    ├── ARCHITECTURE.md   — structure, class hierarchy, file conventions, config formats
+    ├── ARCHITECTURE.md   — hub: project layout, file conventions, then routes to:
+    │   ├── architecture/class-hierarchy.md — classes, composition, Character/Routine, screen flow
+    │   ├── architecture/config-formats.md  — every per-story JSON shape + interior geometry
+    │   ├── architecture/combat-and-mining.md — weapons, ship combat, asteroid mining
+    │   └── architecture/extensibility.md   — recipes: new entity / screen / routine / ship type
     ├── CONTROLS.md       — every keyboard binding + the trail to follow when you add one
     ├── PHYSICS.md        — coordinates, movement, collision, frame-timing tradeoffs
     ├── AUTOPILOT_TESTING.md ⚠️ — mandatory validation before any autopilot change
     ├── SAVE_SYSTEM.md    ⚠️ — save format, story/save split, story versioning
     ├── UI_FLOW.md        — screen state machine, modals, the fixed-timestep loop, perf panel
-    ├── DESIGN_PATTERNS.md — reusable patterns + working principles
+    ├── DESIGN_PATTERNS.md — hub: working principles + routes to patterns/{rendering,
+    │   movement, entities, ui-screens, persistence}.md (one cluster per task)
     ├── GRAPHICS_PIPELINE.md — design-JSON → expand() asset pipeline (current)
     ├── GRAPHICS_EDITOR.md   — config/editor.html vertex-editor UI + repo-write behaviour
     ├── DESIGN_ATLAS.md   — the retired atlas toolchain; where the frozen default-story art lives

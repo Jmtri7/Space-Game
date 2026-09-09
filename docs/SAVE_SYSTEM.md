@@ -558,7 +558,7 @@ Shows **all saves** in the directory, not filtered by pilot.
 
 **Scrolling Logic:** shared with the load browser via `SelectableList` /
 `utils._handle_scrolling_input()`
-(see the "Scrollable List Handler" pattern in [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)).
+(see the "Scrollable List Handler" pattern in [patterns/ui-screens.md](patterns/ui-screens.md)).
 
 ## Extending State Persistence
 
@@ -640,4 +640,4 @@ if the story config changes later.
 - [ ] Save slots with thumbnails/previews
 - [ ] Compression for large state objects
 
-See [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md#state-persistence) for the state persistence pattern.
+See [patterns/persistence.md](patterns/persistence.md) for the state persistence pattern.

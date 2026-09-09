@@ -13,7 +13,7 @@ All interactive controls and their bindings.
    changed.
 
 Menus and dialogs are mouse-only — see "Menus" below and
-[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)'s "Menu vs. Dialog" before adding an
+[patterns/ui-screens.md](patterns/ui-screens.md)'s "Menu vs. Dialog" before adding an
 action to a modal (add a button, not a key).
 
 ## Space View (Default)
