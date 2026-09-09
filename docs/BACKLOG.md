@@ -213,6 +213,26 @@ only appears under a section if it currently has items there.
 
 ## Meta, Tooling & Performance
 
+- [ ] **Agent token optimisation — checked-in permission allowlist.** Add
+      `.claude/settings.json` (checked in) with a generalised allowlist of safe
+      read-only / dev commands so agents don't burn round-trips on permission
+      prompts. `settings.local.json` currently holds ~70 hyper-specific one-off
+      entries that collapse to ~20 patterns (`git status/diff/log`,
+      `git add/commit/push/checkout/stash`, `python run_tests.py`,
+      `python -m py_compile:*`, `python -c:*`, `python main.py`,
+      `SDL_VIDEODRIVER=dummy python:*`, `taskkill:*` / `pkill -f:*`,
+      `Get-Process python` / `Stop-Process:*`). Writing permission files is
+      classifier-gated, so this needs a human (`/permissions` in an interactive
+      terminal, or the `update-config` skill).
+- [ ] **Agent token optimisation — split `ARCHITECTURE.md` (~950 lines) and
+      `DESIGN_PATTERNS.md` (~1100 lines)** into a short hub + focused sub-pages,
+      the same lazy-navigation pattern the top-level docs tree already uses (and
+      that `GRAPHICS_PIPELINE.md` → `GRAPHICS_EDITOR.md` now follows). An agent on
+      one task pulls in the whole doc today. Candidate cuts: ARCHITECTURE →
+      class-hierarchy / config-formats / extensibility-points as their own files;
+      DESIGN_PATTERNS → group the ~25 patterns (rendering, movement, UI/screens,
+      persistence) so a reader loads one cluster. Keep the route table in
+      `docs/README.md` and the `CLAUDE.md` tree honest in the same commit.
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame
       already handles that.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
