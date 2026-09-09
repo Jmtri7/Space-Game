@@ -23,43 +23,7 @@ that document as the work crosses areas. You should not need to read every doc.
 | Package a standalone Windows build | [BUILD.md](BUILD.md) | |
 | Check known bugs / planned features | [BACKLOG.md](BACKLOG.md) | |
 
-## The documents
-
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — project file layout and the One
-  Class Per File rule, class hierarchy, entity/composition patterns,
-  `story.json` / system / interior / config formats, `utils.py` helpers,
-  extensibility points. **Source of truth for structure.**
-- **[CONTROLS.md](CONTROLS.md)** — every keyboard binding, per screen, and the
-  documentation trail to follow when you add or change one.
-- **[PHYSICS.md](PHYSICS.md)** — game-space vs. screen-space, movement / drag /
-  rotation math, the chunk-streamed unbounded world, the two frame-timing /
-  smooth-motion tradeoffs, common physics bugs.
-- **[AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md)** ⚠️ — the mandatory
-  validation battery before any change to `SeekMode` / `OrbitMode` / their
-  helpers. Real, repeated regression history — read it before touching
-  `game/world/autopilot.py`.
-- **[SAVE_SYSTEM.md](SAVE_SYSTEM.md)** ⚠️ — save file format, state
-  capture/restore, the story/save split, story versioning, and exactly when a
-  change must warn the user before it's made.
-- **[UI_FLOW.md](UI_FLOW.md)** — the screen state machine, every modal, the
-  fixed-timestep three-phase main loop, and the always-on frame-timing metrics
-  (plus the agent guidance for staying under the 16.67 ms budget).
-- **[DESIGN_PATTERNS.md](DESIGN_PATTERNS.md)** — reusable patterns discovered
-  during development; the working principles (cross-cutting concerns,
-  generalisation strategy); how to contribute a new pattern.
-- **[GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md)** — the current asset pipeline:
-  committed design JSON → `game/graphics/expand.py` → flat parts list, drawn
-  identically by the game and the atlas viewer. Materials, auto-shade, the
-  anchor/curve fitting model, the walk rig, LOD, collision, interiors, the
-  approval gates. Used by the `graphics_pipeline_test` story.
-- **[DESIGN_ATLAS.md](DESIGN_ATLAS.md)** — the retired atlas-generator toolchain
-  that built the `default` story's art. That art is now frozen, hand-maintained
-  source; the reference HTML mockups live in `config/stories/default/atlases/`.
-- **[SOUND.md](SOUND.md)** — the runtime sound board and procedurally generated
-  background music (no asset files).
-- **[WORKFLOW.md](WORKFLOW.md)** — the edit → restart → test → commit loop,
-  automated and manual testing, when to add a test, commit message convention.
-- **[BUILD.md](BUILD.md)** — packaging a standalone Windows build with
-  PyInstaller.
-- **[BACKLOG.md](BACKLOG.md)** — running list of known bugs and planned
-  features; add to it whenever you notice something.
+Each document owns one area in depth and is the source of truth for it. Open
+only the one your task needs; follow its internal links as the work crosses
+areas. ⚠️ marks docs with a regression history whose validation steps are
+mandatory.
