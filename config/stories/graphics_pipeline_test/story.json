@@ -2,6 +2,10 @@
   "id": "graphics_pipeline_test",
   "version": "0.1.0",
   "name": "Graphics Pipeline Test",
+  "modules": [
+    "figures-human",
+    "audio-core"
+  ],
   "description": "A proving ground for the design-JSON graphics pipeline: one courier, one trade ring, one concourse. Not a story yet - a place to see the assets render in the engine.",
   "difficulty": "normal",
   "starting_system": "proving_ground",
@@ -22,6 +26,13 @@
     "outfits": [],
     "flags": {}
   },
-  "jump": { "travel_frames": 150, "speed": 40, "arrival_distance": 1400, "self_min_distance": 3200 },
-  "ships": { "player_type": null }
+  "jump": {
+    "travel_frames": 150,
+    "speed": 40,
+    "arrival_distance": 1400,
+    "self_min_distance": 3200
+  },
+  "ships": {
+    "player_type": null
+  }
 }

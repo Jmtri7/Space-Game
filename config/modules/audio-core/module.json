@@ -1,0 +1,5 @@
+{
+  "name": "audio-core",
+  "version": "1.0.0",
+  "description": "The default SFX board and the two ambient music loops, as data. Stories that list this module get the standard sounds for free and override any of them (or add their own) in their story-local audio.json."
+}

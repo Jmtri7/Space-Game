@@ -7,10 +7,13 @@ design-JSON art pipeline is [GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md).
 
 ## Configuration Files
 
-Everything under `config/stories/{story}/` — nothing is shared between stories,
-so two stories can define the same key with different values. Configs are never
-modified by play. See [SAVE_SYSTEM.md](../SAVE_SYSTEM.md#directory-structure) for
-the full tree and the story/save split.
+Under `config/stories/{story}/` — two stories can define the same key with
+different values. A story's `story.json` may also list shared **`modules`**
+(`config/modules/{name}/`, same subtree shape) that the resolver merges under
+the story's own files — see [CONFIG_MODULES.md](../CONFIG_MODULES.md). Configs
+are never modified by play. See
+[SAVE_SYSTEM.md](../SAVE_SYSTEM.md#directory-structure) for the full tree and
+the story/save split.
 
 **`systems/{system_id}.json`** — one star system's layout:
 ```json
@@ -119,6 +122,7 @@ except where a story clearly needs it; code holds the default.
 |---|---|
 | `id` / `name` / `description` / `difficulty` | Identity + story-picker card |
 | `version` | Save-compat version (see SAVE_SYSTEM.md) |
+| `modules` | Optional list of shared config kits under `config/modules/` to merge under this story's files, earlier entries winning (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)) |
 | `starting_system` | Which `systems/*.json` a new game loads |
 | `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
 | `acts` | `[{"id", "name", "advance_flag"?}]` - the current act (last one whose predecessor's `advance_flag` is set) shows on the Space View HUD; `utils.current_act()` |

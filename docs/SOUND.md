@@ -5,6 +5,20 @@ asset files, matching the "only `config/` ships next to the exe" rule in
 [BUILD.md](BUILD.md). Synthesis lives in
 [`game/audio/sound_board.py`](../game/audio/sound_board.py).
 
+## Where the recipes live
+
+The default board and the two music loops are **data**, in the shared
+`audio-core` module: `config/modules/audio-core/audio.json`
+(`{"sounds": {...}, "music": {...}}`). `SoundBoard` / `MusicPlayer` load it at
+construction (the Python `_register_default_board()` / `MENU_TRACK` /
+`INGAME_TRACK` values remain as a fallback and are kept in sync). A story that
+lists `audio-core` in its `story.json` `"modules"` gets these for free and
+**overrides or adds** any sound/track by putting an `audio.json` in its own
+folder — merged over the module by
+[`config_source.story_catalogue`](../game/config_source.py), applied by
+`sound_board.apply_story()` / `music.apply_story()` from `SpaceScreen.__init__`.
+See [CONFIG_MODULES.md](CONFIG_MODULES.md).
+
 ## The sound board
 
 One shared instance, `sound_board`, is created at import time (same pattern as

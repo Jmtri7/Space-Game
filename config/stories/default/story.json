@@ -2,6 +2,9 @@
   "id": "default",
   "version": "1.14.0",
   "name": "Explorer",
+  "modules": [
+    "audio-core"
+  ],
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
   "starting_system": "sol_alpha",

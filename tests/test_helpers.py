@@ -6230,19 +6230,35 @@ class TestComposeWorn(unittest.TestCase):
 class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
     """The graphics_pipeline_test story is on the decoupled color/shade model:
     materials.json carries only `shading` profiles, and every design part names
-    a `color` + a real `shade` (or `shade: false`)."""
+    a `color` + a real `shade` (or `shade: false`). Its figure kit now lives in
+    the shared `figures-human` module, so these walk every resolved graphics
+    root (story + modules), not one hardcoded directory."""
+
+    STORY = "graphics_pipeline_test"
+
+    def _graphics_roots(self):
+        from game import config_source
+        return [os.path.join(r, "graphics") + os.sep
+                for r in config_source._search_roots(self.STORY)]
+
+    def _graphics_files(self, subpath="**/*.json"):
+        import glob
+        seen = {}
+        for base in self._graphics_roots():
+            for f in glob.glob(base + subpath, recursive=True):
+                seen.setdefault(os.path.relpath(f, base), f)  # story wins
+        return sorted(seen.values())
 
     def test_materials_json_has_shading_and_no_material_map(self):
-        m = utils.load_json("config/stories/graphics_pipeline_test/graphics/materials.json")
+        from game.graphics import story_assets
+        m = story_assets._materials(self.STORY)
         self.assertTrue(m.get("shading"))
         self.assertNotIn("materials", m)
 
     def test_every_part_names_a_known_shade_and_a_color(self):
-        import glob
         import json
-        m = utils.load_json("config/stories/graphics_pipeline_test/graphics/materials.json")
-        profiles = set(m["shading"])
-        base = "config/stories/graphics_pipeline_test/graphics/"
+        from game.graphics import story_assets
+        profiles = set(story_assets._materials(self.STORY)["shading"])
         bad = []
 
         def walk(o, f):
@@ -6258,31 +6274,30 @@ class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
                 for v in o.values():
                     walk(v, f)
 
-        for f in glob.glob(base + "**/*.json", recursive=True):
+        for f in self._graphics_files():
             if f.endswith("materials.json"):
                 continue
             walk(json.load(open(f, encoding="utf-8")), f)
         self.assertEqual(bad, [])
 
     def test_no_item_uses_the_retired_colors_key(self):
-        import glob
         import json
         bad = []
-        for f in glob.glob("config/stories/graphics_pipeline_test/graphics/items/*.json"):
+        for f in self._graphics_files("items/*.json"):
             if "colors" in json.load(open(f, encoding="utf-8")):
                 bad.append(f)
         self.assertEqual(bad, [], "items now use `color` + `parts`, not `colors`")
 
     def test_every_item_parts_note_exists_in_its_geometry(self):
-        import glob
         import json
-        base = "config/stories/graphics_pipeline_test/graphics/"
+        from game import config_source
         bad = []
-        for f in glob.glob(base + "items/*.json"):
+        for f in self._graphics_files("items/*.json"):
             it = json.load(open(f, encoding="utf-8"))
             if not it.get("parts"):
                 continue
-            art = json.load(open(base + "articles/" + it["geometry"] + ".json", encoding="utf-8"))
+            art = json.load(open(config_source.story_path(
+                self.STORY, "graphics", "articles", it["geometry"] + ".json"), encoding="utf-8"))
             notes = set()
             for r in art.get("regions", []):
                 notes.add(r.get("note"))
@@ -6300,13 +6315,50 @@ class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
         import glob
         import json
         from game.graphics import story_assets
-        base = "config/stories/graphics_pipeline_test/graphics/"
-        for f in sorted(glob.glob(base + "sets/ck_*.json")):
-            name = f.split("/")[-1][:-5]
+        for f in self._graphics_files("sets/ck_*.json"):
+            name = os.path.basename(f)[:-5]
             for body in ("human_masc", "human_femme"):
                 _, worn = story_assets._body_worn(
                     "graphics_pipeline_test", body, name, "civilian")
                 self.assertTrue(worn, f"{name} on {body} expanded to nothing")
+
+
+class TestConfigModuleResolver(unittest.TestCase):
+    """game/config_source.py - the story-first, then module-by-module search
+    path (story_path) and the deep-merge for flat catalogues (story_catalogue)."""
+
+    def test_story_with_no_modules_is_unchanged(self):
+        from game import config_source
+        self.assertEqual(config_source.story_modules("default"), ["audio-core"])
+        # a per-name file the story owns resolves to the story dir
+        p = config_source.story_path("the_long_silence", "graphics", "graphics.json")
+        self.assertIn(os.path.join("stories", "the_long_silence"), p)
+
+    def test_story_path_falls_through_to_a_module(self):
+        from game import config_source
+        # rig_walk was moved into figures-human; the_long_silence keeps no copy
+        p = config_source.story_path("the_long_silence", "graphics", "body", "rig_walk.json")
+        self.assertTrue(os.path.exists(p))
+        self.assertIn(os.path.join("modules", "figures-human"), p)
+
+    def test_story_file_shadows_the_module(self):
+        from game import config_source
+        # the_long_silence deliberately keeps its own tuned human_femme body
+        p = config_source.story_path("the_long_silence", "graphics", "body", "human_femme.json")
+        self.assertIn(os.path.join("stories", "the_long_silence"), p)
+
+    def test_catalogue_merge_layers_story_over_module(self):
+        from game import config_source
+        merged = config_source.story_catalogue("the_long_silence", "audio.json")
+        # audio-core provides the sounds; the story adds none, so they're all present
+        self.assertIn("ping", merged.get("sounds", {}))
+        self.assertIn("laser", merged.get("sounds", {}))
+
+    def test_module_versions_recorded(self):
+        from game import config_source
+        mv = config_source.module_versions("the_long_silence")
+        self.assertEqual(set(mv), {"figures-human", "audio-core"})
+        self.assertRegex(mv["figures-human"], r"^\d")
 
 
 if __name__ == "__main__":

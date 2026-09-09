@@ -1,0 +1,304 @@
+{
+  "_comment": "Shared audio kit. Sounds: SoundBoard recipes (see docs/SOUND.md). Music: procedurally-synthesised ambient loops (game/audio/music.py). A story overrides or adds entries via its own audio.json.",
+  "sounds": {
+    "ping": {
+      "volume": 1.0,
+      "layers": [
+        {
+          "freq": 1244.51,
+          "dur": 0.1,
+          "wave": "sine",
+          "attack": 0.004,
+          "decay": 0.055,
+          "amp": 0.9
+        },
+        {
+          "freq": 1864.66,
+          "dur": 0.17,
+          "wave": "sine",
+          "attack": 0.004,
+          "decay": 0.11,
+          "amp": 0.55,
+          "delay": 0.035
+        }
+      ]
+    },
+    "blip": {
+      "volume": 0.4,
+      "layers": [
+        {
+          "freq": 880.0,
+          "dur": 0.05,
+          "wave": "square",
+          "attack": 0.002,
+          "decay": 0.028,
+          "amp": 0.35
+        }
+      ]
+    },
+    "confirm": {
+      "volume": 1.0,
+      "layers": [
+        {
+          "freq": 659.26,
+          "dur": 0.1,
+          "wave": "sine",
+          "decay": 0.07,
+          "amp": 0.8
+        },
+        {
+          "freq": 987.77,
+          "dur": 0.16,
+          "wave": "sine",
+          "decay": 0.11,
+          "amp": 0.7,
+          "delay": 0.075
+        }
+      ]
+    },
+    "deny": {
+      "volume": 1.0,
+      "layers": [
+        {
+          "freq": 220.0,
+          "dur": 0.18,
+          "wave": "saw",
+          "decay": 0.13,
+          "amp": 0.5
+        },
+        {
+          "freq": 208.0,
+          "dur": 0.18,
+          "wave": "saw",
+          "decay": 0.13,
+          "amp": 0.4,
+          "delay": 0.015
+        }
+      ]
+    },
+    "alert": {
+      "volume": 1.0,
+      "layers": [
+        {
+          "freq": 1568.0,
+          "dur": 0.09,
+          "wave": "triangle",
+          "decay": 0.07,
+          "amp": 0.7
+        },
+        {
+          "freq": 1568.0,
+          "dur": 0.09,
+          "wave": "triangle",
+          "decay": 0.07,
+          "amp": 0.7,
+          "delay": 0.13
+        }
+      ]
+    },
+    "laser": {
+      "volume": 0.5,
+      "layers": [
+        {
+          "freq": 1800.0,
+          "freq_end": 300.0,
+          "dur": 0.09,
+          "wave": "square",
+          "attack": 0.002,
+          "decay": 0.05,
+          "amp": 0.6
+        },
+        {
+          "freq": 900.0,
+          "freq_end": 150.0,
+          "dur": 0.09,
+          "wave": "saw",
+          "attack": 0.002,
+          "decay": 0.05,
+          "amp": 0.3
+        }
+      ]
+    },
+    "impact": {
+      "volume": 0.4,
+      "layers": [
+        {
+          "freq": 3200.0,
+          "dur": 0.05,
+          "wave": "noise",
+          "attack": 0.001,
+          "decay": 0.025,
+          "amp": 0.5
+        },
+        {
+          "freq": 110.0,
+          "freq_end": 60.0,
+          "dur": 0.07,
+          "wave": "triangle",
+          "attack": 0.001,
+          "decay": 0.04,
+          "amp": 0.45
+        }
+      ]
+    },
+    "blaster": {
+      "volume": 0.4,
+      "layers": [
+        {
+          "freq": 2600.0,
+          "freq_end": 1100.0,
+          "dur": 0.05,
+          "wave": "square",
+          "attack": 0.001,
+          "decay": 0.03,
+          "amp": 0.55
+        }
+      ]
+    },
+    "cannon": {
+      "volume": 0.6,
+      "layers": [
+        {
+          "freq": 180.0,
+          "freq_end": 45.0,
+          "dur": 0.16,
+          "wave": "triangle",
+          "attack": 0.002,
+          "decay": 0.09,
+          "amp": 0.8
+        },
+        {
+          "freq": 2200.0,
+          "dur": 0.04,
+          "wave": "noise",
+          "attack": 0.001,
+          "decay": 0.02,
+          "amp": 0.35
+        }
+      ]
+    },
+    "scatter": {
+      "volume": 0.5,
+      "layers": [
+        {
+          "freq": 2000.0,
+          "dur": 0.06,
+          "wave": "noise",
+          "attack": 0.001,
+          "decay": 0.035,
+          "amp": 0.5
+        },
+        {
+          "freq": 1500.0,
+          "dur": 0.06,
+          "wave": "noise",
+          "attack": 0.001,
+          "decay": 0.035,
+          "amp": 0.4,
+          "delay": 0.012
+        },
+        {
+          "freq": 250.0,
+          "freq_end": 90.0,
+          "dur": 0.08,
+          "wave": "triangle",
+          "attack": 0.001,
+          "decay": 0.05,
+          "amp": 0.45
+        }
+      ]
+    },
+    "pickup": {
+      "volume": 0.5,
+      "layers": [
+        {
+          "freq": 880.0,
+          "dur": 0.07,
+          "wave": "sine",
+          "attack": 0.003,
+          "decay": 0.05,
+          "amp": 0.7
+        },
+        {
+          "freq": 1318.51,
+          "dur": 0.11,
+          "wave": "sine",
+          "attack": 0.003,
+          "decay": 0.08,
+          "amp": 0.6,
+          "delay": 0.045
+        }
+      ]
+    }
+  },
+  "music": {
+    "menu": {
+      "loop": 24.0,
+      "root": 110.0,
+      "chords": [
+        [
+          0,
+          7,
+          12,
+          15,
+          19,
+          26
+        ],
+        [
+          -4,
+          3,
+          8,
+          12,
+          17,
+          22
+        ],
+        [
+          3,
+          10,
+          15,
+          19,
+          22,
+          27
+        ],
+        [
+          -2,
+          5,
+          10,
+          14,
+          19,
+          24
+        ]
+      ],
+      "wave": "sine",
+      "detune_cents": 8.0,
+      "lfo_rate": 0.055,
+      "lfo_depth": 0.28,
+      "shimmer": true,
+      "peak": 0.74
+    },
+    "ingame": {
+      "loop": 28.0,
+      "root": 98.0,
+      "chords": [
+        [
+          0,
+          7,
+          14,
+          19
+        ],
+        [
+          -3,
+          4,
+          9,
+          16
+        ]
+      ],
+      "wave": "sine",
+      "detune_cents": 5.0,
+      "lfo_rate": 0.035,
+      "lfo_depth": 0.18,
+      "shimmer": false,
+      "peak": 0.5
+    }
+  }
+}

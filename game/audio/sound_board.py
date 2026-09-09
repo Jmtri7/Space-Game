@@ -25,12 +25,28 @@ asteroid, see SpaceScreen._check_projectile_asteroid_collision), and
 `pickup` (collecting drifting ore, see SpaceScreen._update_ore_pickups).
 Add more with `define()`.
 """
+import json
 import math
 import os
 import random
 from array import array
 
 import pygame
+
+_AUDIO_MODULE_PATH = os.path.join("config", "modules", "audio-core", "audio.json")
+
+
+def _load_audio_module():
+    """The shared audio-core module (`config/modules/audio-core/audio.json`) -
+    `{"sounds": {...}, "music": {...}}`. `{}` if it isn't present, so the
+    Python `_register_default_board` / `MENU_TRACK` defaults still stand
+    alone."""
+    try:
+        with open(_AUDIO_MODULE_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
 
 SAMPLE_RATE = 44100      # Hz - requested mixer rate; the real rate is read back
                          # from pygame.mixer.get_init() and rendered to match
@@ -159,6 +175,25 @@ class SoundBoard:
         self._channels = 2
         self._init_mixer()
         self._register_default_board()
+        self._overlay_recipes(_load_audio_module().get("sounds"))
+
+    def _overlay_recipes(self, sounds):
+        """Define (or replace) recipes from a `{name: {"layers": [...],
+        "volume"?: 0..1}}` dict - the shared audio-core module at startup,
+        then a story's own `audio.json` via `apply_story()`. Silently ignores
+        a malformed entry so one bad recipe can't take the board down."""
+        if not isinstance(sounds, dict):
+            return
+        for name, spec in sounds.items():
+            if isinstance(spec, dict) and isinstance(spec.get("layers"), list):
+                self.define(name, spec["layers"], volume=spec.get("volume", 1.0))
+
+    def apply_story(self, story):
+        """Layer a story's own `audio.json` `"sounds"` on top of the board
+        (story entries merged over the shared audio-core module - see
+        game/config_source.story_catalogue). Call when a story starts."""
+        from game.config_source import story_catalogue
+        self._overlay_recipes(story_catalogue(story, "audio.json").get("sounds"))
 
     def _init_mixer(self):
         try:

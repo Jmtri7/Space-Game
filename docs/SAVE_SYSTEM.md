@@ -102,6 +102,16 @@ or predates versioning entirely (no `story_version` key).
 user" criteria above** — that's what gives the warning teeth instead of it
 staying accurate by accident.
 
+### Shared-module versioning
+
+A story may pull in shared config from `config/modules/{name}/` (see
+[CONFIG_MODULES.md](CONFIG_MODULES.md)). Each module has its own `version` in
+its `module.json`; a save records `game_state["module_versions"]`
+(`{name: version}`), and `main.py`'s `warn_if_module_version_mismatch()` warns
+(non-blocking, next to the story-version check) when one changed since the
+save. **Bump a module's version** on any change to it that fits the "warn the
+user" criteria — and remember it hits *every* story that lists the module.
+
 ## File Format
 
 **Filename:** `save_{name}.json`, where `name` is whatever the player typed/accepted
@@ -124,6 +134,7 @@ name is kept, the timestamp lives inside it.
   "game_state": {
     "story": "default",
     "story_version": "1.0.0",
+    "module_versions": {"audio-core": "1.0.0"},
     "system_id": "sol_alpha",
     "location": "space",
     "camera_zoom": 3.0,
@@ -616,9 +627,12 @@ space-game/
 │               └── keplers_reach.json      # A second star system within the same story
 ```
 
-**Note:** Every config file lives entirely under one story's folder — nothing is shared
-between stories, so two stories can define the same ship-type key with completely
-different stats. Configs under `config/` are never modified by play. Each save captures
+**Note:** Config lives under one story's folder, except for the shared kits a
+story explicitly opts into via `story.json` `"modules"`
+(`config/modules/{name}/` — see [CONFIG_MODULES.md](CONFIG_MODULES.md)); a
+story's own files always override a module's. Two stories can still define the
+same ship-type key with completely different stats. Configs under `config/`
+are never modified by play. Each save captures
 a snapshot of the current system's config as `system`, so the save is self-contained even
 if the story config changes later.
 

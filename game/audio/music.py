@@ -35,7 +35,7 @@ from array import array
 
 import pygame
 
-from game.audio.sound_board import _wave_sample
+from game.audio.sound_board import _wave_sample, _load_audio_module
 from game.constants import MUSIC_CACHE_DIR
 
 MUSIC_CHANNEL = 15      # dedicated mixer channel for the background loop, up
@@ -301,6 +301,11 @@ class MusicPlayer:
         self.muted = False
         self._volumes = {"menu": menu_volume, "ingame": ingame_volume}
         self._recipes = {"menu": MENU_TRACK, "ingame": INGAME_TRACK}
+        _mod_music = _load_audio_module().get("music")
+        if isinstance(_mod_music, dict):
+            for name in ("menu", "ingame"):
+                if isinstance(_mod_music.get(name), dict):
+                    self._recipes[name] = _mod_music[name]
         self._rendered = {}
         self._renders = {}        # track -> in-progress _ambient_loop_frames generator
         self._channel = None
@@ -317,6 +322,22 @@ class MusicPlayer:
                 self.enabled = True
         except Exception:
             self.enabled = False
+
+    def apply_story(self, story):
+        """Adopt a story's own `audio.json` `"music"` recipes (merged over
+        the shared audio-core module). A changed recipe re-renders on its own
+        - the disk cache is keyed by the recipe - so this just swaps the spec
+        and drops any in-memory render for the affected track."""
+        from game.config_source import story_catalogue
+        music = story_catalogue(story, "audio.json").get("music")
+        if not isinstance(music, dict):
+            return
+        for name in ("menu", "ingame"):
+            spec = music.get(name)
+            if isinstance(spec, dict) and spec != self._recipes.get(name):
+                self._recipes[name] = spec
+                self._rendered.pop(name, None)
+                self._renders.pop(name, None)
 
     # --- scene driving ------------------------------------------------
     def set_scene(self, screen_name):

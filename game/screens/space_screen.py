@@ -95,6 +95,13 @@ class SpaceScreen(ScreenBase):
         super().__init__(pilot_name=pilot_name)
         self.story = story  # fixed for the whole playthrough - stories are wholly separate
 
+        # Adopt this story's audio kit: the shared audio-core module plus any
+        # story-local audio.json overrides (see docs/SOUND.md). SpaceScreen is
+        # the single chokepoint every new-game and load path passes through.
+        from game.audio.music import music
+        sound_board.apply_story(story)
+        music.apply_story(story)
+
         # Load story metadata (player ship type, starting system, etc)
         story_meta = get_story(story)
         self.system_id = system_id or story_meta.get("starting_system", "default")
@@ -105,6 +112,10 @@ class SpaceScreen(ScreenBase):
         # existing save behave differently once reloaded (see
         # docs/SAVE_SYSTEM.md's "Save Compatibility Discipline").
         self.story_version = story_meta.get("version", "0.0.0")
+        from game.config_source import module_versions
+        self.module_versions = module_versions(story)  # shared modules the
+        # story opts into, recorded into saves so a load can warn when one
+        # changed under an existing save (docs/CONFIG_MODULES.md)
         # Static mission definitions for this story (title + ordered stages -
         # see game/world/mission.py); which mission(s) a player actually has
         # active/completed is state on their own Possessions, not here.

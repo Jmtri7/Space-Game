@@ -38,12 +38,14 @@ space-game/
 │   └── audio/
 │       └── sound_board.py, music.py
 ├── config/
-│   └── stories/{story}/     # All config is per-story — nothing shared between stories
-│       ├── story.json, ship_types.json, graphics.json, cultures.json,
-│       │   building_types.json, pilots.json, commodities.json, items.json, missions.json,
-│       │   factions.json (optional — cross-system factions + player reputation),
-│       │   endings.json (optional — epilogue text per "end_story:<id>", by faction standing)
-│       └── systems/{system_id}.json   # Station/moon placement, AI ship roster
+│   ├── stories/{story}/     # Per-story config (a story may also opt into shared modules)
+│   │   ├── story.json, ship_types.json, graphics.json, cultures.json,
+│   │   │   building_types.json, pilots.json, commodities.json, items.json, missions.json,
+│   │   │   factions.json (optional — cross-system factions + player reputation),
+│   │   │   endings.json (optional — epilogue text per "end_story:<id>", by faction standing)
+│   │   └── systems/{system_id}.json   # Station/moon placement, AI ship roster
+│   └── modules/{module}/    # Shared config kits stories opt into via story.json "modules"
+│                            # — same subtree shape; see docs/CONFIG_MODULES.md
 ├── saves/                   # Player save files (runtime-generated)
 ├── tests/                   # test_*.py, discovered by run_tests.py
 └── docs/                    # This documentation tree — see docs/README.md
@@ -107,9 +109,13 @@ conversion details, and
 
 ## Configuration Files
 
-Everything lives under `config/stories/{story}/` — nothing is shared between
-stories, so two stories can define the same key with different values. Configs
-are never modified by play. The full per-file format reference is
+Config lives under `config/stories/{story}/`; two stories can define the same
+key with different values. A story may additionally list shared **modules**
+(`config/modules/{name}/`) in its `story.json` — the resolver in
+[`game/config_source.py`](../game/config_source.py) merges those under the
+story's own files, with the story always winning. See
+[CONFIG_MODULES.md](CONFIG_MODULES.md). Configs are never modified by play.
+The full per-file format reference is
 [architecture/config-formats.md](architecture/config-formats.md); the
 story/save split is in
 [SAVE_SYSTEM.md](SAVE_SYSTEM.md#directory-structure).

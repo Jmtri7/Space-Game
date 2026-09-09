@@ -26,8 +26,16 @@ tense and describes the system as it is; history lives in git.
 
 ## Source layout
 
+Every file below is resolved through the story's shared modules: `story_assets._load()`
+checks `config/stories/<story>/graphics/<rel>` first, then each
+`config/modules/<m>/graphics/<rel>` the story lists — first hit wins, so a
+story overrides a shared kit file by dropping its own copy at the same path.
+`materials.json` is instead **merged** across story + modules. See
+[CONFIG_MODULES.md](CONFIG_MODULES.md); the `figures-human` module is the
+shared human-figure kit today.
+
 ```
-config/stories/<story>/graphics/
+config/stories/<story>/graphics/   (+ config/modules/<m>/graphics/ for shared kit files)
 ├── materials.json          — shading profiles (dark/light deltas) + scale constants
 ├── draw_order.json         — worn-figure back-to-front stack: body sections + garment tags
 ├── palettes/

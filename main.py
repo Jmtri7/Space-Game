@@ -262,6 +262,7 @@ def build_save_game_state(game_screen, previous_screen, station_interior, moon_i
         game_state["story"] = game_screen.story
         game_state["system_id"] = game_screen.system_id
         game_state["story_version"] = game_screen.story_version
+        game_state["module_versions"] = game_screen.module_versions
     return game_state, system_config_snapshot
 
 
@@ -323,6 +324,20 @@ def exit_options(option_keys, interiors, disabled_reasons):
             label = config.get("label", key.capitalize()) if isinstance(config, dict) else key.capitalize()
         out.append((key, label, disabled_reasons.get(key)))
     return out
+
+
+def warn_if_module_version_mismatch(story, saved_modules):
+    """Warn (never block) when a shared module the story now uses is at a
+    different version than the save recorded - the same staleness signal as
+    the story version, for config a story pulls in from config/modules/
+    (see docs/CONFIG_MODULES.md)."""
+    from game.config_source import module_versions
+    current = module_versions(story)
+    saved_modules = saved_modules or {}
+    for name, cur in current.items():
+        was = saved_modules.get(name)
+        if was is not None and was != cur:
+            print(f"WARNING: this save used shared module '{name}' version {was}, but it is now at version {cur} - saved state that depends on it may load differently.", file=sys.stderr)
 
 
 def warn_if_story_version_mismatch(story, saved_version):
@@ -703,6 +718,7 @@ def main():
                             game_state = save_data.get("game_state", {})
                             location = game_state.get("location", "space")
                             warn_if_story_version_mismatch(game_state.get("story", "default"), game_state.get("story_version"))
+                            warn_if_module_version_mismatch(game_state.get("story", "default"), game_state.get("module_versions"))
 
                             if location == "space":
                                 game_screen = SpaceScreen(save_data.get("system", {}), pilot_name=pilot_name, story=game_state.get("story", "default"), system_id=game_state.get("system_id"))
