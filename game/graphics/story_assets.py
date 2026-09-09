@@ -17,17 +17,17 @@ the only source of geometry, expanded at load.
 import os
 import functools
 
+from game.config_source import story_path, story_catalogue
 from game.graphics.expand import expand, expand_body, compose_worn, apply_walk
-
-
-def _gdir(story):
-    return os.path.join("config", "stories", story, "graphics")
 
 
 @functools.lru_cache(maxsize=None)
 def _load(story, *parts):
+    """One graphics-pipeline file (`graphics/<parts>`), resolved through the
+    story's shared modules (see game/config_source.py) - the story's own copy
+    wins, else the first module that provides it. None if nobody does."""
     import json
-    path = os.path.join(_gdir(story), *parts)
+    path = story_path(story, "graphics", *parts)
     try:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
@@ -36,7 +36,10 @@ def _load(story, *parts):
 
 
 def _materials(story):
-    return _load(story, "materials.json") or {}
+    """The story's material table merged over its modules' - so a story can
+    add or restyle a material a shared figure kit defines without copying the
+    whole file. (Catalogue-merged, unlike the first-hit `_load`.)"""
+    return story_catalogue(story, os.path.join("graphics", "materials.json"))
 
 
 def _draw_order(story):

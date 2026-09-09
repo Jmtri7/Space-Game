@@ -4,6 +4,7 @@ import math
 import os
 import pygame
 import game.constants as constants
+from game.config_source import story_path, story_catalogue
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
     CAMERA_ZOOM, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, SAVE_DIR, GREEN,
@@ -377,6 +378,8 @@ def clear_json_cache():
     """Drop the load_json() cache - for tests that write a config file and
     expect the next load to see it."""
     _json_file_cache.clear()
+    from game.config_source import _clear_cache
+    _clear_cache()
 
 
 def save_json(filename, data):
@@ -413,7 +416,7 @@ def get_story(story):
 
 def get_ship_type(story, ship_type_id):
     """Load ship type properties from config/stories/{story}/ship_types.json."""
-    ship_types = load_json(f"config/stories/{story}/ship_types.json") or {}
+    ship_types = story_catalogue(story, "ship_types.json")
     return ship_types.get(ship_type_id, {})
 
 
@@ -423,14 +426,14 @@ def get_asteroid_type(story, asteroid_type_id):
     a shared per-story table of visual/physical identities, while which
     types appear in a given system (and at what size/frequency) is a
     per-system choice (see systems/*.json's "asteroid_field" block)."""
-    asteroid_types = load_json(f"config/stories/{story}/asteroid_types.json") or {}
+    asteroid_types = story_catalogue(story, "asteroid_types.json")
     return asteroid_types.get(asteroid_type_id, {})
 
 
 def get_culture(story, culture_id):
     """Load culture properties (material palette, design theme) from
     config/stories/{story}/cultures.json."""
-    cultures = load_json(f"config/stories/{story}/cultures.json") or {}
+    cultures = story_catalogue(story, "cultures.json")
     return cultures.get(culture_id, {})
 
 
@@ -458,7 +461,7 @@ def _resolve_culture_palette(story, asset):
 
 def get_graphics_asset(story, asset_type, asset_id):
     """Load graphics asset from config/stories/{story}/graphics.json, with culture colors resolved."""
-    graphics = load_json(f"config/stories/{story}/graphics.json") or {}
+    graphics = story_catalogue(story, "graphics.json")
     asset_category = graphics.get(asset_type, {})
     asset = dict(asset_category.get(asset_id, {}))
     if "design" in asset:
@@ -472,7 +475,7 @@ def get_graphics_asset(story, asset_type, asset_id):
 def get_building_type(story, building_type_id):
     """Load building type properties from config/stories/{story}/building_types.json,
     with culture colors resolved."""
-    building_types = load_json(f"config/stories/{story}/building_types.json") or {}
+    building_types = story_catalogue(story, "building_types.json")
     asset = dict(building_types.get(building_type_id, {}))
     if "design" in asset:
         from game.graphics.story_assets import attach_design
@@ -483,7 +486,7 @@ def get_building_type(story, building_type_id):
 def get_pilot(story, pilot_id):
     """Load pilot properties (name, faction, role, personality) from
     config/stories/{story}/pilots.json."""
-    pilots = load_json(f"config/stories/{story}/pilots.json") or {}
+    pilots = story_catalogue(story, "pilots.json")
     return pilots.get(pilot_id, {})
 
 
@@ -491,19 +494,19 @@ def get_ship_outfit(story, outfit_id):
     """Load ship outfit properties from config/stories/{story}/ship_outfits.json.
     Distinct from graphics.json's "outfits" section (Person's cosmetic
     space-suit asset) - this is ship equipment (weapons/engines/shields/utility)."""
-    ship_outfits = load_json(f"config/stories/{story}/ship_outfits.json") or {}
+    ship_outfits = story_catalogue(story, "ship_outfits.json")
     return ship_outfits.get(outfit_id, {})
 
 
 def get_commodity(story, commodity_id):
     """Load commodity properties from config/stories/{story}/commodities.json."""
-    commodities = load_json(f"config/stories/{story}/commodities.json") or {}
+    commodities = story_catalogue(story, "commodities.json")
     return commodities.get(commodity_id, {})
 
 
 def get_item(story, item_id):
     """Load personal item properties from config/stories/{story}/items.json."""
-    items = load_json(f"config/stories/{story}/items.json") or {}
+    items = story_catalogue(story, "items.json")
     return items.get(item_id, {})
 
 
@@ -529,7 +532,7 @@ def get_endings(story):
     """Load config/stories/{story}/endings.json - {ending_id: {title,
     epilogue, faction_epilogue, ...}} rendered by the EndingScreen when an
     "end_story:<id>" dialogue action fires. {} for a story with no endings."""
-    return load_json(f"config/stories/{story}/endings.json") or {}
+    return story_catalogue(story, "endings.json")
 
 
 def resolve_ending(flags):
@@ -552,7 +555,7 @@ def get_factions(story):
     standing with each is mutable state (Possessions.reputation). Returns {}
     for a story with no factions.json, so faction-free stories are
     unaffected."""
-    raw = load_json(f"config/stories/{story}/factions.json") or {}
+    raw = story_catalogue(story, "factions.json")
     return {k: v for k, v in raw.items() if not k.startswith("_")}
 
 
@@ -584,7 +587,7 @@ def get_missions(story):
     Possessions.missions/completed_missions and
     game/world/mission.py's check_mission_progress(). Returns {} for a
     story that defines no missions.json at all."""
-    return load_json(f"config/stories/{story}/missions.json") or {}
+    return story_catalogue(story, "missions.json")
 
 
 def get_star_systems(story):
