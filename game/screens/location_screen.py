@@ -389,11 +389,8 @@ class LocationScreen(ScreenBase):
             if not self.seamless:
                 self.decorations = self._build_culture_decorations(culture) + self.decorations
         # Tessellated floor tiles (see _build_floor_pattern) - independent of a
-        # culture, driven by the interior's optional "floor_pattern" spec. Built
-        # into a cached surface at load time; the draw loop blits it rather than
-        # submitting 200+ polygons every frame.
+        # culture, driven by the interior's optional "floor_pattern" spec.
         self._floor_tiles = self._build_floor_pattern()
-        self._floor_surface = None  # built lazily on first draw
 
         # Opt-in: render the interior over the space starfield instead of a
         # flat wall fill - a station concourse open to the void, its lit decks
@@ -1055,32 +1052,6 @@ class LocationScreen(ScreenBase):
                                   (min(xs), min(ys), max(xs), max(ys))))
         return tiles
 
-    def _build_floor_surface(self):
-        """Pre-render floor tiles to a cached surface at interior load time.
-        Replaces 200+ per-frame polygon submissions with one blit, reducing the
-        bottleneck at min zoom where the entire floor is visible."""
-        if not self._floor_tiles:
-            return None
-        import pygame
-        # World-space bounds of all tiles (safe margin for camera transforms)
-        min_x = min(b[0] for w, c, b in self._floor_tiles)
-        min_y = min(b[1] for w, c, b in self._floor_tiles)
-        max_x = max(b[2] for w, c, b in self._floor_tiles)
-        max_y = max(b[3] for w, c, b in self._floor_tiles)
-        w = int(max_x - min_x) + 2
-        h = int(max_y - min_y) + 2
-        # Clamp to reasonable size (interior is ~1600x1600, tiles fill rooms within)
-        if w > 2000 or h > 2000:
-            return None  # too large; draw normally instead
-        surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        surf.fill((0, 0, 0, 0))
-        for world_pts, color, bbox in self._floor_tiles:
-            # Convert world coords to surface-local coords
-            local_pts = [(int(x - min_x + 1), int(y - min_y + 1)) for x, y in world_pts]
-            if len(local_pts) >= 3:
-                pygame.draw.polygon(surf, color, local_pts)
-        self._floor_surface = (surf, int(min_x), int(min_y))
-
     def draw(self, surface, draw_hud=True):
         """Draw location from config. draw_hud=False skips the top-left
         Controls pane and bottom status pane (e.g. "Press T to talk to
@@ -1128,15 +1099,17 @@ class LocationScreen(ScreenBase):
                         pygame.draw.polygon(surface, self.wall_trim_color, screen_pts, max(1, int(2 * scale)))
 
             # Tessellated floor tiles (interior "floor_pattern") - laid over the
-            # flat floor fill, under the line decorations and everyone. Pre-rendered
-            # to a cached surface at load time (one blit instead of 200+ polygons).
-            if self._floor_tiles:
-                if self._floor_surface is None:
-                    self._build_floor_surface()
-                if self._floor_surface:
-                    surf, min_x, min_y = self._floor_surface
-                    screen_x, screen_y = to_screen(min_x, min_y)
-                    surface.blit(surf, (screen_x, screen_y))
+            # flat floor fill, under the line decorations and everyone. Plain
+            # (non-AA) fills: the tiles abut edge-to-edge, so an AA fringe would
+            # only open hairline seams. Culled to the view rect - at interior
+            # zoom only a handful of a concourse's few-hundred tiles are ever
+            # on screen.
+            for world_pts, color, bbox in self._floor_tiles:
+                if not _bbox_visible(bbox):
+                    continue
+                tile_pts = [to_screen(px, py) for px, py in world_pts]
+                if len(tile_pts) >= 3:
+                    pygame.draw.polygon(surface, color, tile_pts)
 
             # Floor-layer decorations: on top of the floor, under everyone.
             self._draw_decorations(surface, "floor")
