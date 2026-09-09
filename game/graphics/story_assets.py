@@ -174,10 +174,43 @@ def has_pipeline_body(outfit):
     return bool(outfit) and "body" in outfit
 
 
+WALK_BUCKETS = 24  # walk-cycle poses cached per outfit (see worn_frame)
+
+
+@functools.lru_cache(maxsize=1024)
+def _worn_frame_cached(story, body_name, set_name, palette_name, extra_articles, walk_bucket):
+    """Cached flat parts list for one outfit at one walk-cycle bucket
+    (`walk_bucket` None = rest pose, else 0..WALK_BUCKETS-1). The dict objects
+    are shared - callers must treat them read-only (Person._draw_pipeline_body
+    projects and lerps into fresh dicts, never mutates these)."""
+    body, worn = _body_worn(story, body_name, set_name, palette_name, extra_articles)
+    if worn is None:
+        return ()
+    if walk_bucket is None:
+        return tuple(worn)
+    rig = _load(story, "body", (body.get("rig", {}).get("walk") or "rig_walk") + ".json")
+    if not rig:
+        return tuple(worn)
+    return tuple(apply_walk([dict(p) for p in worn], body, rig, walk_bucket / WALK_BUCKETS))
+
+
+def worn_frame(story, outfit, walk_t=None):
+    """Read-only cached parts list for a pipeline-bodied Person. `walk_t` in
+    [0, 1) is quantised to WALK_BUCKETS poses so a walking figure hits the
+    cache instead of re-running apply_walk (per-part trig) every frame. The
+    hot render path (Person._draw_pipeline_body) uses this; body_frame()
+    stays the mutable-copy API for tools/tests."""
+    bucket = None if walk_t is None else round(walk_t * WALK_BUCKETS) % WALK_BUCKETS
+    return _worn_frame_cached(story, outfit.get("body"), outfit.get("set"),
+                              outfit.get("palette", ""),
+                              tuple(outfit.get("extra_articles", ())), bucket)
+
+
 def body_frame(story, outfit, walk_t=None):
-    """A flat parts list for a pipeline-bodied Person, optionally deformed to
-    walk-cycle fraction `walk_t` in [0, 1). Coords are in body units
-    (PLAYER_H tall, feet at y=0, y negative up, facing screen-left)."""
+    """A fresh (mutable) flat parts list for a pipeline-bodied Person,
+    optionally deformed to walk-cycle fraction `walk_t` in [0, 1). Coords are
+    in body units (PLAYER_H tall, feet at y=0, y negative up, facing
+    screen-left). For the per-frame render path use worn_frame()."""
     body, worn = _body_worn(story, outfit.get("body"), outfit.get("set"),
                             outfit.get("palette", ""),
                             tuple(outfit.get("extra_articles", ())))

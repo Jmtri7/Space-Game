@@ -278,13 +278,16 @@ class Person:
         mirrors x about self.x, exactly like the baked figure."""
         from game.graphics import story_assets
         story = self.outfit.get("_story")
-        rest = story_assets.body_frame(story, self.outfit, None)
+        # worn_frame returns read-only, cache-shared part dicts (quantised walk
+        # poses) - the walking branch below lerps into fresh dicts and the
+        # non-walking branch only reads, so nothing here mutates them.
+        rest = story_assets.worn_frame(story, self.outfit, None)
         if not rest:
             return
         k = min(1.0, self.walk_intensity)
         if k > 0.02:
             t = (self.walk_phase / (2 * math.pi)) % 1.0
-            full = story_assets.body_frame(story, self.outfit, t)
+            full = story_assets.worn_frame(story, self.outfit, t)
             parts = [dict(fp, points=[[rx + (fx - rx) * k, ry + (fy - ry) * k]
                                       for (rx, ry), (fx, fy) in zip(rp["points"], fp["points"])])
                      for rp, fp in zip(rest, full)]

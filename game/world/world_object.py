@@ -57,7 +57,10 @@ def draw_parts(surface, parts, ox, oy, angle, unit, metal_color, glass_color):
         _m, _bx, _by = unit * a, ox * a + tx, oy * a + ty
 
         def project(x, y):
-            return (round(x * _m + _bx), round(y * _m + _by))
+            # floats straight through - pygame.draw.polygon/circle take them,
+            # gfxdraw mode (aa_draw) rounds internally. Saves ~2 round() per
+            # vertex over the ~100 vertices a building emits each frame.
+            return (x * _m + _bx, y * _m + _by)
     else:
         def project(x, y):
             x, y = x * unit, y * unit
