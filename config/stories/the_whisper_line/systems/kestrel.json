@@ -124,7 +124,7 @@
                   ]
                 },
                 "leaving": {
-                  "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
+                  "text": "First line's already staring at you: 'If you're reading this, you left the ring - good. Don't file a flight plan. Go to Tessellate, the old relay. Someone there kept my last packet.' That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
                   "options": [
                     { "label": "Wait -", "next": null }
                   ]
