@@ -832,8 +832,12 @@ story = r(f"{S}/story.json")
 # 0.17.0 Deepening Phase 5 - Ring Segment Four fleshed out (4 rooms, 5 NPCs,
 # Threa-kin / Choir-hand Aud react to signal:*) + flag-keyed ending epilogues
 # (endings.json "flag:<name>" keys win over the standing band;
-# game/ui/ending_screen.py). See docs/ACT2_3_DEEPENING.md.
-story["version"] = "0.17.0"
+# game/ui/ending_screen.py).
+# 0.18.0 follow-up - the Combine/Drift/Vigil patron pledge was unreachable
+# post-anchor (warm root shadowed by the <anchor>_done conditional_root); the
+# rep-gated pledge option now also lives on each completion node (Factor Tol
+# done+report, Sela done, Aramis done). See docs/ACT2_3_DEEPENING.md.
+story["version"] = "0.18.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

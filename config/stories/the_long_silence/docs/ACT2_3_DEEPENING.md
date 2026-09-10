@@ -199,10 +199,15 @@ node the player actually lands on (`start`+`briefed` / `done`+`warm` / `done`+`w
 `gen_carriers.py`'s berth builder (warm root + pledge option). Offer dispatch
 **`carrier_recon_call`** (hand, gated `dispatch:carrier_open_hand`). Tests +5.
 
-> **Note (pre-existing):** the Drift/Vigil `warm` pledge roots sit *after* their
-> `<anchor>_done` flag root in `conditional_roots`, so a post-anchor player never lands on
-> `warm` — the fork options were added to the `done` nodes too for that reason. Worth a
-> dedicated fix (reorder faction roots first) but out of this phase's scope.
+> **Fixed in `0.18.0`:** the Combine/Drift/Vigil `warm` pledge roots sit *after* their
+> `<anchor>_done` (and, for the Combine, `combine_tally_filed`) flag root in
+> `conditional_roots`, so a post-anchor player never landed on `warm`. A straight reorder
+> doesn't work — the mission-in-progress flag roots stay set forever and would hijack a
+> completed mission. Fix: the rep-gated pledge option (`requires_rep: <faction>:25` +
+> `requires_not_flag: patron:<faction>`) now also lives on each completion node —
+> Sela `done`, Aramis `done`, Factor Tol `done` + `report` (which also gained a "Leave"
+> fallback, closing a latent 0-options soft-lock once `combine_contract_reported`). The
+> `warm` faction root is kept for the pre-completion high-standing window.
 
 Carry the Kiln beacon's handshake logs, then choose who to hand them to.
 

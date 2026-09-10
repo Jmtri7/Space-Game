@@ -378,6 +378,16 @@
                       ]
                     },
                     {
+                      "label": "Pledge the Vigil your caution.",
+                      "next": "pledged",
+                      "requires_rep": "the_vigil:25",
+                      "requires_not_flag": "patron:the_vigil",
+                      "actions": [
+                        "set_exclusive_flag:patron:the_vigil",
+                        "adjust_rep:the_vigil:8"
+                      ]
+                    },
+                    {
                       "label": "Understood",
                       "next": null
                     }

@@ -752,6 +752,29 @@ class TestLongSilenceDeepening(unittest.TestCase):
                 for b in ("allied", "neutral", "hostile"):
                     self.assertIn(b, fe, f"{eid}/{fid}/{b}")
 
+    # -- follow-up: patron pledge reachable after the anchor mission ---
+    def test_patron_pledge_is_reachable_on_the_completion_node(self):
+        cases = [
+            ("kiln", "Factor Tol", {"combine_contract_done": True, "combine_tally_filed": True},
+             "ninefold_combine", "patron:ninefold_combine"),
+            ("verdance", "Sela of Highcanopy", {"assembly_done": True},
+             "the_drift", "patron:the_drift"),
+            ("ossuary", "Keeper Aramis", {"vigil_record_done": True, "vigil_read_vault": True},
+             "the_vigil", "patron:the_vigil"),
+        ]
+        for system_id, name, flags, fid, pflag in cases:
+            dlg = self._dialogue(self._station_npc(system_id, name))
+            rep = {fid: 30}
+            dlg.current_node = dlg.resolve_root(flags, rep)
+            pledge = [o for o in dlg.current_options(flags, rep)
+                      if f"set_exclusive_flag:{pflag}" in o.get("actions", [])]
+            self.assertEqual(len(pledge), 1, f"{name} on {dlg.current_node}")
+            # gone once pledged, node still has a way out
+            flags[pflag] = True
+            opts = dlg.current_options(flags, rep)
+            self.assertFalse(any(f"set_exclusive_flag:{pflag}" in o.get("actions", []) for o in opts))
+            self.assertTrue(any(o.get("next") is None for o in opts), f"{name}: no exit on {dlg.current_node}")
+
     def test_sync_conditional_ships_spawns_and_culls_the_barge(self):
         gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
         pos = gs.player.person.possessions

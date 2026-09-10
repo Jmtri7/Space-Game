@@ -382,7 +382,11 @@ HOLD_NPCS = [
         "threatened": {"text": "Then the contract is void before it is written, and so is your safe conduct. The Combine has already voted on hulls that will not leave. Clear our space.",
                        "options": [{"label": "Leave", "next": None}]},
         "done": {"text": "The manifest is logged and the seal intact. Verdance's lane is keyed - the Combine will remember you kept terms. It will also remember that you now know the way to our door.",
-                 "options": [{"label": "Understood", "next": None}]},
+                 "options": [
+                     {"label": "Pledge the Combine your word.", "next": "pledged",
+                      "requires_rep": "ninefold_combine:25", "requires_not_flag": "patron:ninefold_combine",
+                      "actions": ["set_exclusive_flag:patron:ninefold_combine", "adjust_rep:ninefold_combine:8"]},
+                     {"label": "Understood", "next": None}]},
         "warm": {"text": "You've kept every term the Combine set you. When the Span asks its question, a voice that honours a contract is one the Combine would stand behind.",
                  "options": [
                      {"label": "Pledge the Combine your word.", "next": "pledged",
@@ -618,7 +622,13 @@ for npc in hold["npcs"]:
             "text": "The carriage is closed and the seal was never touched. Verdance's lane is yours - the Combine keeps its word, and expects the same from a partner it now knows how to find.",
             "options": [
                 {"label": "Understood", "next": None, "requires_not_flag": "combine_contract_reported",
-                 "actions": ["set_flag:combine_contract_reported"]}]}
+                 "actions": ["set_flag:combine_contract_reported"]},
+                # the warm faction root is shadowed by combine_tally_filed post-carriage,
+                # so the pledge also lives here, rep-gated (see docs/ACT2_3_DEEPENING.md Phase 3 note)
+                {"label": "Pledge the Combine your word.", "next": "pledged",
+                 "requires_rep": "ninefold_combine:25", "requires_not_flag": "patron:ninefold_combine",
+                 "actions": ["set_exclusive_flag:patron:ninefold_combine", "adjust_rep:ninefold_combine:8"]},
+                {"label": "Leave", "next": None, "requires_flag": "combine_contract_reported"}]}
 w(f"{S}/systems/kiln.json", sysj)
 
 # ======================================================================

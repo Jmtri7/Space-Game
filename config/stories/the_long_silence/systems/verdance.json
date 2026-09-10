@@ -302,6 +302,16 @@
                       ]
                     },
                     {
+                      "label": "Pledge the Drift your voice.",
+                      "next": "pledged",
+                      "requires_rep": "the_drift:25",
+                      "requires_not_flag": "patron:the_drift",
+                      "actions": [
+                        "set_exclusive_flag:patron:the_drift",
+                        "adjust_rep:the_drift:8"
+                      ]
+                    },
+                    {
                       "label": "Safe assembly",
                       "next": null
                     }
