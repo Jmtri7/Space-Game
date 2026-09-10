@@ -299,11 +299,7 @@
     "stages": [
       {
         "text": "Take the run on - see the carrier off the Slip at the Highcanopy berth (Canopy Walk, by the Ferry Slip).",
-        "complete_flag": "relief_run_loaded",
-        "one_way_message": {
-          "sender": "Free carriers",
-          "text": "It's a supply load for the Vigil at Ossuary - our crews pooled it, and it's on the ground at our berth on the Canopy Walk at Highcanopy, over toward the Ferry Slip. Whoever's off the Slip has the manifest. Tie up and take it."
-        }
+        "complete_flag": "relief_run_loaded"
       },
       {
         "text": "Carry the relief load to Ossuary - jump there.",
@@ -347,11 +343,7 @@
       {
         "text": "Jump to Kiln before the Combine seals the lane.",
         "complete_flag": "jumped_to:kiln",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Free carriers",
-          "text": "There's a carrier crew still on the ground at Combine Hold - their hull's impounded and the lane's closing around them. Get in there before the patrols lock it down."
-        }
+        "reset_on_activation": true
       },
       {
         "text": "Dock at Combine Hold and get the stranded crew aboard.",
@@ -392,11 +384,7 @@
     "stages": [
       {
         "text": "Meet the barge Highcanopy-Nine over Verdance and signal ready - hail Barge-mother Sethe.",
-        "complete_flag": "hailed_pilot:Barge-mother Sethe",
-        "one_way_message": {
-          "sender": "Sela of Highcanopy",
-          "text": "Barge Highcanopy-Nine is loading now - forty families, everything they could carry. Sethe flies the moment you're alongside and hail her. Stay between her and the Combine."
-        }
+        "complete_flag": "hailed_pilot:Barge-mother Sethe"
       },
       {
         "text": "Hold escort to Ossuary - jump when the barge is with you.",
@@ -442,11 +430,7 @@
       {
         "text": "Read the front's approach at the Kiln relay - jump to Kiln.",
         "complete_flag": "jumped_to:kiln",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Relay Network",
-          "text": "The relight signal handshakes every beacon it passes and the Kiln relay logged the lot. Jump to Kiln - the record is on the ground at Combine Hold."
-        }
+        "reset_on_activation": true
       },
       {
         "text": "Pull the beacon's own handshake logs - land at Combine Hold, then talk to Assay-clerk Dorn.",

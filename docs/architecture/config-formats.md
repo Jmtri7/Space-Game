@@ -156,12 +156,16 @@ except where a story clearly needs it; code holds the default.
 the Message Log when their condition first holds, no NPC in the room needed
 (the story design's gap F). Merged from `modules` like `missions.json`.
 `game/world/dispatch.py` is the logic; `SpaceScreen._check_dispatches` runs
-it every frame (docked too), seeded silent on first call after a load. When
-several dispatches' gates open on the same frame, only the first lands then;
-the rest trickle in one per `DISPATCH_SPACING_FRAMES` (~7.5s) so a burst
-reads as separate comms rather than a wall. Gate each dispatch on the
-progress point it actually belongs to - don't hang several on one early
-flag and rely on the spacing to sort them out.
+it every frame (docked too), seeded silent on first call after a load, and
+receives at most one dispatch per frame. Visible pacing is handled by the
+shared message queue (`_post_message` / `_pump_message_queue`, ~7.5s /
+`MESSAGE_SPACING_FRAMES` between any two one-way comms). Gate each dispatch
+on the progress point it actually belongs to - don't hang several on one
+early flag and rely on the spacing to sort them out.
+
+A dispatch with a `start_mission` **is** that mission's opening comm: the
+engine does not also deliver the started mission's stage-0 `one_way_message`
+(author stage 0 without one). The dispatch `body` must name the first action.
 
 ```json
 "combine_mobilises": {

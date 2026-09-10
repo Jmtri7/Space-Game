@@ -115,3 +115,20 @@ class TestLongSilenceActTwoPlumbing(unittest.TestCase):
         self.assertNotIn("carrier_recon_call", self._pending(p))
         p.flags["relief_run_done"] = True
         self.assertIn("carrier_recon_call", self._pending(p))
+
+    def test_combine_evacuation_is_a_carrier_dispatch_not_the_combine_notice(self):
+        # combine_mobilises is a pure notice; the carriers ask for the rescue
+        self.assertNotIn("start_mission", self.d["combine_mobilises"])
+        ev = self.d["carrier_evac_call"]
+        self.assertEqual(ev["start_mission"], "combine_evacuation")
+        self.assertEqual(ev["requires_flag"], "combine_mobilised")
+
+    def test_no_dispatch_started_mission_has_a_stage_zero_message(self):
+        """The dispatch body is the opening comm; the engine never delivers a
+        dispatch-started mission's stage-0 one_way_message (npc_sync)."""
+        started = {e["start_mission"] for e in self.d.values()
+                   if isinstance(e, dict) and e.get("start_mission")}
+        self.assertTrue(started)
+        for mid in started:
+            self.assertIsNone(self.m[mid]["stages"][0].get("one_way_message"),
+                              f"{mid} stage 0 must have no one_way_message")

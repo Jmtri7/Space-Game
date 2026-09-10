@@ -7,6 +7,12 @@ generic gameplay-event flags (`jumped_to:<system>`, `landed_on_landing_site`)
 with `reset_on_activation`, the same way the induction's flight stages do -
 no bespoke dialogue flags, so no new NPCs are needed for this pass.
 
+Stage 0 of a dispatch-started mission carries NO `one_way_message`: the
+dispatch body that started it is already the opening comm, and the engine
+deliberately does not deliver a dispatch-started mission's stage-0 message
+(npc_sync._check_dispatches). So each dispatch body must name the first
+action itself; stage 0 just gives the Mission Log its line.
+
 Merges into missions.json (keeps whatever the slice generators wrote). Run
 after the slice chain + gen_carriers. Idempotent.
 """
@@ -35,9 +41,11 @@ CARRIER_RELIEF_RUN = {
     "on_end_flags": ["relief_run_done"],
     "on_end_rep": {"free_carrier": 6, "the_vigil": 3},
     "stages": [
+        # stage 0 has no one_way_message: the carrier_open_hand dispatch body
+        # *is* the opening comm (it names the berth + the contact). See the
+        # module note below and npc_sync._check_dispatches.
         {"text": "Take the run on - see the carrier off the Slip at the Highcanopy berth (Canopy Walk, by the Ferry Slip).",
-         "complete_flag": "relief_run_loaded",
-         "one_way_message": one_way("Free carriers", "It's a supply load for the Vigil at Ossuary - our crews pooled it, and it's on the ground at our berth on the Canopy Walk at Highcanopy, over toward the Ferry Slip. Whoever's off the Slip has the manifest. Tie up and take it.")},
+         "complete_flag": "relief_run_loaded"},
         {"text": "Carry the relief load to Ossuary - jump there.",
          "complete_flag": "jumped_to:ossuary", "reset_on_activation": True,
          "one_way_message": one_way("Free carriers", "Load's aboard - grain, water filters, med stock. Ossuary's the Vigil; they won't ask and they won't thank you, but they need it. Jump when you're clear.")},
@@ -55,9 +63,10 @@ COMBINE_EVACUATION = {
     "on_end_flags": ["evac_run_done"],
     "on_end_rep": {"ninefold_combine": 3, "free_carrier": 5},
     "stages": [
+        # stage 0 has no one_way_message: the carrier_evac_call dispatch body
+        # *is* the opening comm.
         {"text": "Jump to Kiln before the Combine seals the lane.",
-         "complete_flag": "jumped_to:kiln", "reset_on_activation": True,
-         "one_way_message": one_way("Free carriers", "There's a carrier crew still on the ground at Combine Hold - their hull's impounded and the lane's closing around them. Get in there before the patrols lock it down.")},
+         "complete_flag": "jumped_to:kiln", "reset_on_activation": True},
         {"text": "Dock at Combine Hold and get the stranded crew aboard.",
          "complete_flag": "landed_on_landing_site", "reset_on_activation": True,
          "one_way_message": one_way("Free carriers", "Four of them, light kit, they'll fit. The Combine won't stop a hull that's leaving - it's hulls that stay they have a problem with.")},
@@ -81,9 +90,10 @@ ESCORT_BARGE = {
     "on_start_rep": {"the_drift": 2},
     "on_end_rep": {"the_drift": 6, "free_carrier": 4},
     "stages": [
+        # stage 0 has no one_way_message: the drift_convoy_call dispatch body
+        # *is* the opening comm (it names Sethe + the hail).
         {"text": "Meet the barge Highcanopy-Nine over Verdance and signal ready - hail Barge-mother Sethe.",
-         "complete_flag": "hailed_pilot:Barge-mother Sethe",
-         "one_way_message": one_way("Sela of Highcanopy", "Barge Highcanopy-Nine is loading now - forty families, everything they could carry. Sethe flies the moment you're alongside and hail her. Stay between her and the Combine.")},
+         "complete_flag": "hailed_pilot:Barge-mother Sethe"},
         {"text": "Hold escort to Ossuary - jump when the barge is with you.",
          "complete_flag": "jumped_to:ossuary", "reset_on_activation": True,
          "one_way_message": one_way("Barge-mother Sethe", "We're slow and we're full. Match our speed, keep the blockade off our flank, and jump to Ossuary when we're clear of the Highcanopy shelf. We'll be right behind you.")},
@@ -109,9 +119,10 @@ FRONT_RECON = {
     "on_end_flags": ["front_recon_done"],
     "on_start_rep": {"free_carrier": 2},
     "stages": [
+        # stage 0 has no one_way_message: the carrier_recon_call dispatch body
+        # *is* the opening comm.
         {"text": "Read the front's approach at the Kiln relay - jump to Kiln.",
-         "complete_flag": "jumped_to:kiln", "reset_on_activation": True,
-         "one_way_message": one_way("Relay Network", "The relight signal handshakes every beacon it passes and the Kiln relay logged the lot. Jump to Kiln - the record is on the ground at Combine Hold.")},
+         "complete_flag": "jumped_to:kiln", "reset_on_activation": True},
         {"text": "Pull the beacon's own handshake logs - land at Combine Hold, then talk to Assay-clerk Dorn.",
          "complete_flag": "front_recon_have_record",
          "one_way_message": one_way("Relay Network", "Combine Hold weighs everything twice, the signal included. Assay-clerk Dorn keeps the relay tally. Ask for the front's timing - the Combine has no use for it and will part with it cheap.")},

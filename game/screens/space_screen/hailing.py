@@ -72,14 +72,32 @@ class _HailingMixin:
         self.toast_timer = TOAST_FRAMES
 
     def _post_message(self, sender, text):
-        """Show a transient hail banner and permanently log a one-way
-        message from sender (see Possessions.add_message) - shared by
-        pilot-proximity hails (_check_one_way_hails) and mission-stage-
-        entry messages (missions.json's "one_way_message" - see
-        _deliver_stage_message). The banner is skipped (but the message is
-        still logged) while a hail conversation is already open, so an
-        incoming banner can't visually collide with the dialogue box - the
-        Messages pane still shows it once the conversation closes."""
+        """Queue a one-way comm for the Message Log (plus its hail banner and
+        unread ping). EVERY path that adds a Message Log entry funnels
+        through here - story dispatches (_check_dispatches), mission stage
+        messages (_deliver_stage_message), beacon relights (_check_beacons),
+        pilot-proximity hails (_check_one_way_hails), the rescue notice.
+
+        An isolated message posts the same frame; when several land close
+        together they space out at one per MESSAGE_SPACING_FRAMES, so banners
+        don't stack and the ping doesn't stutter into a drone. See
+        _pump_message_queue (run every frame from update_physics)."""
+        self._message_queue.append((sender, text))
+        if self._message_gap == 0:
+            self._pump_message_queue()
+
+    def _pump_message_queue(self):
+        """Release the next queued one-way message (see _post_message) once
+        MESSAGE_SPACING_FRAMES have elapsed since the last one went out.
+        A no-op when the queue is empty. Nothing here is persisted beyond
+        Possessions.add_message, so a save mid-drain just loses a pending
+        banner, not a log entry."""
+        if self._message_gap > 0:
+            self._message_gap -= 1
+            return
+        if not self._message_queue:
+            return
+        sender, text = self._message_queue.pop(0)
         self.player.person.possessions.add_message(sender, text)
         # Snap the Message Log back to the newest entry and (re)start its
         # unread alert: the light blinks MESSAGE_ALERT_BLINKS times and the
@@ -88,12 +106,17 @@ class _HailingMixin:
         self.message_log_scroll = 0
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
         self._message_alert_pings_played = 0
-        if self.active_dialogue:
-            return
-        # Banner just announces the transmission - the message body itself
-        # is in the Messages pane (bottom-left) and stays there to read.
-        self.hail_banner = (f"Incoming transmission - {sender} (see Messages)", CYAN)
-        self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
+        if not self.active_dialogue:
+            # Banner just announces the transmission - the message body itself
+            # is in the Messages pane (bottom-left) and stays there to read.
+            # (Skipped mid-conversation so it can't collide with the dialogue
+            # box; the Messages pane still carries it.)
+            self.hail_banner = (f"Incoming transmission - {sender} (see Messages)", CYAN)
+            self.hail_banner_timer = ONE_WAY_HAIL_BANNER_FRAMES
+        # Always arm the gap, even with the queue now empty: a second message
+        # arriving within the window (a beacon relit + a dispatch on the same
+        # frame, say) then waits its turn instead of landing on top.
+        self._message_gap = MESSAGE_SPACING_FRAMES
 
     def _deliver_stage_message(self, advanced_stage):
         """Post the one_way_message (if any) for a stage a mission just

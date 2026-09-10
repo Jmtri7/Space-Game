@@ -60,9 +60,12 @@ question). This plan deepens both acts.
 - Dispatch gate keys (`content_gate` vocab: `requires_flag` / `requires_not_flag` / `requires_rep`
   / `requires_rep_below`) are **single-valued** — no AND of two `requires_flag` on one entry.
   Chain a sequence on `dispatch:<id>` or on story-progress flags that land in order.
-- Dispatch throttle `DISPATCH_SPACING_FRAMES = 450` (~7.5 s); first eligible dispatch on a frame
-  delivers immediately, the rest one per 450 frames; on load everything currently eligible is
-  silently marked received.
+- `_check_dispatches` receives ≤1 dispatch per frame; visible pacing is the shared message
+  queue (`_post_message` / `_pump_message_queue`, `MESSAGE_SPACING_FRAMES = 450` ~7.5 s between
+  *any* two one-way comms — dispatches, stage messages, beacon relights alike). On load
+  everything currently eligible is silently marked received.
+- A dispatch's `start_mission` mission gets **no stage-0 `one_way_message`** — the dispatch body
+  is the opening comm and the engine skips stage 0 (mirrors the NPC `start_mission:` path).
 - `ending_report` picks the faction line **only** by final standing band (`_band`: `<-25`
   hostile, `<25` neutral, else allied). No flag input until Phase 5b.
 - Missions are strictly linear (monotonic int stage index, one advance per frame, no branch/skip).
@@ -270,19 +273,30 @@ Dispatch stagger — the Act II board is doled out one thread at a time, each fo
 gated on the *previous thread's* receipt or completion, never on `act_pressure` directly
 (only `carrier_open_hand` opens on it):
 
-| Dispatch | Gate | Beat |
-|---|---|---|
-| `carrier_open_hand`  | `act_pressure`               | Act II opener (immediate) |
-| `combine_mobilises`  | `dispatch:carrier_open_hand` | +450 f after the opener |
-| `drift_convoy_call`  | `combine_mobilised`          | +450 f after the closure notice |
-| `carrier_recon_call` (`front_recon` offer) | `relief_run_done` | only after the first carrier run is flown |
-| `relay_front_verdance` | `jumped_to:ossuary`        | on arrival, not on beacon-lit |
+| Dispatch | Gate | Starts | Beat |
+|---|---|---|---|
+| `carrier_open_hand`  | `act_pressure`               | `carrier_relief_run` | Act II opener (immediate) |
+| `combine_mobilises`  | `dispatch:carrier_open_hand` | — (pure notice)      | after the opener |
+| `carrier_evac_call`  | `combine_mobilised`          | `combine_evacuation` | the carriers ask, a beat after the notice |
+| `drift_convoy_call`  | `combine_mobilised`          | `escort_barge`       | after the closure notice |
+| `carrier_recon_call` | `relief_run_done`            | `front_recon`        | only after the first carrier run is flown |
+| `relay_front_verdance` | `jumped_to:ossuary`       | — | on arrival, not on beacon-lit |
 
-> **History:** originally `combine_mobilises` sat on `act_pressure` and `carrier_recon_call` /
-> `relay_front_verdance` chained on flags that flip the same instant the assembly ends, so
-> finishing `the_drift_assembly` dumped ~10 messages (5 dispatch bodies + 4 mission-intro
-> `one_way_message`s + the Ossuary beacon post) as a 75 s trickle on undock. Re-gated so each
-> Act II thread waits on the one before it.
+Same-frame ties (`carrier_evac_call` + `drift_convoy_call` on `combine_mobilised`) are pulled
+apart by the shared message queue, not by the gates.
+
+> **History:** originally `combine_mobilises` sat on `act_pressure`, started `combine_evacuation`
+> itself, and `carrier_recon_call` / `relay_front_verdance` chained on flags that flip the same
+> instant the assembly ends — so finishing `the_drift_assembly` dumped ~10 messages (5 dispatch
+> bodies + 4 mission-intro `one_way_message`s + the Ossuary beacon post) on undock. Re-gated so
+> each thread waits on the one before it; the mission-intro echoes removed (see below).
+
+**Dispatch-started missions carry no stage-0 message (`0.19.2`).** The engine stopped delivering
+a dispatch-started mission's stage-0 `one_way_message` (`npc_sync._check_dispatches`), matching
+the NPC `start_mission:` path. Each Act II dispatch body was extended to name its own first
+action, and `carrier_relief_run` / `combine_evacuation` / `escort_barge` / `front_recon` stage 0
+lost its message. `combine_evacuation` also moved off `combine_mobilises` (a Combine liaison
+can't plausibly order a carrier rescue) onto its own `carrier_evac_call` Free-carrier dispatch.
 
 **`carrier_relief_run` pickup (`0.19.1`).** `carrier_open_hand` still `start_mission`s it (so
 it lands in the log), but the run no longer just declares a load in the hold. New stage 0

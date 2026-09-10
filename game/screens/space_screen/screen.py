@@ -163,7 +163,8 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         self.jump_message = "Too close to jump - move away from center first"
         self._lit_beacons = None  # seeded on first _check_beacons(); then tracks beacon flips
         self._dispatched = None   # seeded on first _check_dispatches(); then delivers new ones
-        self._dispatch_cooldown = 0  # frames until the next dispatch may land (spaces out a same-frame burst)
+        self._message_queue = []  # (sender, text) one-way comms awaiting posting - paced by _pump_message_queue
+        self._message_gap = 0     # frames until the next queued message may post (spaces out a burst)
         # Transient center-screen toast (see _show_toast) - jump completion,
         # mission started / stage completed / mission finished.
         self.toast_text = None
@@ -543,6 +544,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             self.hail_banner_timer -= 1
         if self.message_alert_timer > 0:
             self.message_alert_timer -= 1
+        self._pump_message_queue()
         self._check_one_way_hails()
         self._check_beacons()
         self._check_dispatches()

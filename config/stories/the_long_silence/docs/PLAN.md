@@ -279,9 +279,10 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] **Dispatch/inbox engine** — `dispatches.json` + `game/world/dispatch.py`
     + `SpaceScreen._check_dispatches` (runs docked too). A dispatch arrives
     when its content-gate first passes, posts to the Message Log, applies
-    flags/standing, and can start an attached mission. `dispatch:<id>` flags
-    chain them. A same-frame burst is spaced out one per
-    `DISPATCH_SPACING_FRAMES`.
+    flags/standing, and can start an attached mission (whose stage 0 then
+    carries no message — the dispatch body is the opening comm). `dispatch:<id>`
+    flags chain them. A same-frame burst is spaced out by the shared message
+    queue (`MESSAGE_SPACING_FRAMES`).
   - [x] Six Act I→II narrative dispatches seeded (`authority_first_orders`,
     `relay_front_kiln`, `carrier_open_hand`, `vigil_warning`,
     `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).

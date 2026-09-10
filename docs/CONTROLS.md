@@ -242,7 +242,11 @@ pointer is over it (blue `^ newer (scroll)` / `v older (scroll)` hints show
 which way there's more). A new message snaps it back to the top and blinks
 a **red dot** in the pane's top-right corner **three times**, with the UI
 **ping** sounding once per blink, then goes quiet and dark
-(`MESSAGE_ALERT_BLINKS` / `message_alert_state` in `ui_theme.py`). The
+(`MESSAGE_ALERT_BLINKS` / `message_alert_state` in `ui_theme.py`). When
+several messages would land at once (a beacon relight, a story dispatch, a
+mission step all on one frame) they queue and arrive one every ~7.5s
+(`MESSAGE_SPACING_FRAMES`) instead of stacking - see `_post_message` /
+`_pump_message_queue` and UI_FLOW.md. The
 top-right targeting/info pane scrolls the same way when a target's readout
 (e.g. a station's full location list) is longer than
 `INFO_PANEL_VISIBLE_LINES`. See `Possessions.message_log`/`add_message()`

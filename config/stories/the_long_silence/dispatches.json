@@ -1,5 +1,5 @@
 {
-  "_comment": "Story inbox comms - faction handlers giving cross-system orders without an NPC in the room (gap F / Phase 7). Each arrives the frame its content-gate first passes (game/world/dispatch.py); keys are content_gate's vocabulary (a single value each - no AND across two requires_flag). 'dispatch:<id>' is set on receipt and can gate a later one. Delivery is throttled (DISPATCH_SPACING_FRAMES) so a burst trickles in one at a time; still, gate a sequence on story-progress flags that come in order (jumped_to:/beacon_*_lit/act_*) rather than all on one flag.",
+  "_comment": "Story inbox comms - faction handlers giving cross-system orders without an NPC in the room (gap F / Phase 7). Each arrives the frame its content-gate first passes (game/world/dispatch.py); keys are content_gate's vocabulary (a single value each - no AND across two requires_flag). 'dispatch:<id>' is set on receipt and can gate a later one. Visible pacing is the shared message queue's job (~7.5s between any two one-way comms) - still, gate a sequence on story-progress flags that come in order (jumped_to:/beacon_*_lit/act_*) rather than all on one flag. A dispatch with 'start_mission' IS that mission's opening comm: the engine does not deliver the started mission's stage-0 one_way_message, so the 'body' here must name the first action and stage 0 must carry no message.",
 
   "authority_first_orders": {
     "sender": "Harbor Authority — Dispatch",
@@ -66,14 +66,22 @@
     "requires_flag": "dispatch:carrier_open_hand",
     "requires_rep_below": "ninefold_combine:15",
     "on_receive_flags": ["combine_mobilised"],
-    "on_receive_rep": {"ninefold_combine": -3},
+    "on_receive_rep": {"ninefold_combine": -3}
+  },
+
+  "carrier_evac_call": {
+    "sender": "Free carriers — open channel",
+    "subject": "One crew still on the ground",
+    "body": "The Combine's closing the Kiln lane with one of our crews still inside it - hull impounded at Combine Hold, four of them, light kit. A hull that's leaving they won't stop; it's the ones that stay they have a problem with. Jump to Kiln and get our people out before the patrols lock it down.",
+    "requires_flag": "combine_mobilised",
+    "on_receive_flags": ["evac_offered"],
     "start_mission": "combine_evacuation"
   },
 
   "carrier_recon_call": {
     "sender": "Free carriers — open channel",
     "subject": "Read the front before it reads you",
-    "body": "You have a line to us now. Here is the first ask: the relight signal handshakes every beacon it passes, and the Kiln relay logged the timings. Get that record and put it in the right hands. Whoever holds the schedule is ready for what comes; whoever doesn't is surprised by it.",
+    "body": "You have a line to us now. Here is the first ask: the relight signal handshakes every beacon it passes, and the Kiln relay logged the timings. The record's on the ground at Combine Hold - jump to Kiln for it, then put it in the right hands. Whoever holds the schedule is ready for what comes; whoever doesn't is surprised by it.",
     "requires_flag": "relief_run_done",
     "on_receive_flags": ["recon_offered"],
     "start_mission": "front_recon"
@@ -82,7 +90,7 @@
   "drift_convoy_call": {
     "sender": "The Drift — Sela of Highcanopy",
     "subject": "A convoy, if you'll fly it",
-    "body": "Forty families want out of the ring before the Combine finishes closing the lane. The barge Highcanopy-Nine is slow and it is full. Fly cover for it to Ossuary and the Drift will not forget it.",
+    "body": "Forty families want out of the ring before the Combine finishes closing the lane. The barge Highcanopy-Nine is slow and it is full. Meet Barge-mother Sethe over Verdance and hail her when you're alongside - she flies the moment you are. Fly cover for her to Ossuary and the Drift will not forget it.",
     "requires_flag": "combine_mobilised",
     "requires_rep": "the_drift:6",
     "on_receive_flags": ["drift_convoy_offered"],

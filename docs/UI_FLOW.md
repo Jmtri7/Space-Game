@@ -212,6 +212,24 @@ dialogue); the world is simply frozen (`step_world()` is a no-op for
 - G, close + slow near moon → landing-spot `ChoiceDialog` (`"select_location"`)
 - ESC → PauseMenu
 
+**One-way messages (Message Log + hail banner + unread ping).** Every path that
+posts one — story dispatches (`_check_dispatches`), mission stage messages
+(`_deliver_stage_message`), beacon relights (`_check_beacons`), pilot
+proximity hails (`_check_one_way_hails`), the rescue notice — funnels through
+`_post_message`, which **queues** rather than posts directly. `_pump_message_queue`
+(every frame from `update_physics`) releases one, then holds the rest for
+`MESSAGE_SPACING_FRAMES` (~7.5s). An isolated message lands at once; a burst
+spaces out so banners don't stack and the ping doesn't drone.
+
+Guideline for content authors: **a single player action should trigger at
+most one one-way message.** Don't emit two in the same beat and lean on the
+queue to sort them out — the queue is a safety net for genuinely independent
+events coinciding (a beacon relighting as a dispatch lands), not a spacing
+tool you design against. In particular a dispatch/NPC that `start_mission`s
+something already spoke — its body/dialogue *is* stage 0's message, so author
+stage 0 with no `one_way_message` (the engine skips it for dispatch-started
+missions; the NPC `start_mission:` path never delivered it).
+
 ### Landing Location (`ChoiceDialog`)
 **Shows:** Moon landing sub-location choices (City / Wilderness) as a button column, built from the moon's `interiors` config by `landing_location_options()` (`game/app/loop_helpers.py`)
 

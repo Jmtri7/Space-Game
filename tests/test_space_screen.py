@@ -2,6 +2,7 @@
 Shared setup (pygame mock, imports, _FakeFont) lives in tests/harness.py."""
 from tests.harness import *  # noqa: F401,F403
 from tests.harness import _FakeFont  # noqa: F401
+from game.screens.space_screen._defs import MESSAGE_SPACING_FRAMES
 
 
 class TestMultiSystemSimulation(unittest.TestCase):
@@ -619,6 +620,37 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
             pings = [c for c in mock_play.call_args_list if c.args == ("ping",)]
         self.assertEqual(len(pings), 3)
         self.assertEqual(game_screen.message_alert_timer, 0)
+
+    def test_a_burst_of_messages_spaces_out_instead_of_landing_at_once(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.ai_ships = []
+        game_screen.missions_config = {}
+        log = game_screen.player.person.possessions.message_log
+        for i in range(4):
+            game_screen._post_message("Relay", f"m{i}")
+        # only the first lands immediately; the rest are held back
+        self.assertEqual([m["text"] for m in log], ["m0"])
+        self.assertEqual(len(game_screen._message_queue), 3)
+        # half a spacing interval later: still nothing new
+        for _ in range(MESSAGE_SPACING_FRAMES // 2):
+            game_screen.update()
+        self.assertEqual(len(log), 1)
+        # run well past four intervals: all drained, in order, newest first
+        for _ in range(MESSAGE_SPACING_FRAMES * 4 + 5):
+            game_screen.update()
+        self.assertEqual([m["text"] for m in log], ["m3", "m2", "m1", "m0"])
+        self.assertEqual(game_screen._message_queue, [])
+
+    def test_an_isolated_later_message_is_not_delayed(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.ai_ships = []
+        game_screen.missions_config = {}
+        log = game_screen.player.person.possessions.message_log
+        game_screen._post_message("Relay", "first")
+        for _ in range(MESSAGE_SPACING_FRAMES + 5):
+            game_screen.update()
+        game_screen._post_message("Relay", "second")
+        self.assertEqual([m["text"] for m in log], ["second", "first"])
 
 
 if __name__ == "__main__":

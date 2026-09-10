@@ -56,8 +56,10 @@ def receive_dispatch(dispatch_id, entry, possessions, missions_config):
     `on_receive_rep`, and start its `start_mission` (if any, and not already
     active/finished). Returns `(sender, subject, body, advanced_stage)` -
     `advanced_stage` is the `(mission_id, stage_index)` pair from
-    `start_mission` (for the caller to deliver that stage's one_way_message),
-    or None."""
+    `start_mission`, or None. The Message Log caller ignores it: a dispatch
+    body *is* the started mission's opening comm, so stage 0's
+    one_way_message (if any) is deliberately not delivered - author stage 0
+    without one. (Kept in the return for callers that want the pair.)"""
     possessions.flags[received_flag(dispatch_id)] = True
     for flag in entry.get("on_receive_flags", []):
         possessions.flags[flag] = True
