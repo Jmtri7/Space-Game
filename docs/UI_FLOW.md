@@ -29,6 +29,10 @@ are unchanged.
               ┌──────▼───────┐           └──────┬──────┘
               │ PILOT NAME   │                  │
               └──────┬───────┘                  │
+              ┌──────▼───────┐                  │
+              │ INTRO        │ (if story has    │
+              │ (IntroScreen)│  an "intro")     │
+              └──────┬───────┘                  │
                      │                          │
               ┌──────▼──────────────────────────▼──┐
               │            GAME (SpaceScreen)        │◄───────────┐
@@ -147,6 +151,26 @@ menu-only action rather than something wired to `VIDEORESIZE`.
 **Transitions:**
 - RETURN → `PilotNameDialog` (remembers `selected_story`)
 - ESC → Main Menu
+
+### IntroScreen (`"intro"` state)
+**Shows:** The story's opening crawl — a `ReportMenu` subclass
+(`game/ui/intro_screen.py`) with one **Begin** button. `intro_report(story,
+pilot_name)` reads story.json's `"intro"` block (`{"title", "body": [para,
+...]}`) and substitutes `{pilot}` with the entered name. Only stories that
+define an `"intro"` block route through here (`has_intro()`); others go
+straight from `PilotNameDialog` to the world.
+
+**Trigger:** after `PilotNameDialog` confirms, `main.py` resolves the start
+screen from `story.json`'s `"start"` block as normal, then — if the story has
+an intro — stashes that screen in `intro_next_screen` and switches to
+`"intro"`. `begin_new_game()` has already run (and may have armed the tutorial
+dialogue); the world is simply frozen (`step_world()` is a no-op for
+`"intro"`) until **Begin**. Menu music keeps playing (`"intro"` is in
+`music.MENU_SCENES`).
+
+**Inputs:** click **Begin**, or ESC / Enter
+
+**Transitions:** → `intro_next_screen` (`"game"` / `"station"` / `"moon"`)
 
 ### PilotNameDialog (`DialogBase`)
 **Shows:** Text entry box for the pilot's name (30 char max) plus **Start / Cancel** buttons
@@ -455,7 +479,7 @@ completed load being abandoned - so nothing stale carries over.
 ## State Transitions & Validation
 
 **Valid transitions (`current_screen` values in `main.py`):**
-`"menu"` → `"story_select"` → `"pilot_name"` → `"station"` / `"moon"` / `"game"` per `story.json`'s `"start"` block (default story: `"station"` interior, ship-less)
+`"menu"` → `"story_select"` → `"pilot_name"` → (`"intro"`, if the story has an `"intro"` block) → `"station"` / `"moon"` / `"game"` per `story.json`'s `"start"` block (default story: `"station"` interior, ship-less)
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
 `"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)

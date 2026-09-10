@@ -275,7 +275,7 @@ INGAME_TRACK = {
 # The Settings menu ("settings" / "settings_aspect") is deliberately absent:
 # it opens from both the main menu and the in-game pause menu, so set_scene()
 # leaves whichever track is playing alone rather than forcing "menu".
-MENU_SCENES = {"menu", "story_select", "pilot_name", "load"}
+MENU_SCENES = {"menu", "story_select", "pilot_name", "intro", "load"}
 
 
 class MusicPlayer:

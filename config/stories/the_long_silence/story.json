@@ -9,8 +9,16 @@
     "common-goods",
     "story-defaults"
   ],
-  "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means. Act I plays end to end - all five systems have authored culture art, walkable stations, NPC rosters, and anchor missions; Acts II-III are in progress.",
+  "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means.",
   "difficulty": "normal",
+  "intro": {
+    "title": "The Long Silence",
+    "body": [
+      "Two hundred years ago the Relay went dark. Its jump-beacons had knit a dozen stars into a single civilisation, crossings measured in hours; then, all at once and for reasons no one alive remembers, every beacon fell silent. The linked systems drifted apart and grew strange, each keeping its own version of what had happened and who was to blame.",
+      "Now the beacons are lighting again, one by one, working outward from the old network core. Something is switching them back on. Halcyon's beacon came back first, and the Harbor Authority - the polite, faded descendants of the Relay's traffic controllers - want a pilot to fly out ahead of the signal and see what waits on the other end before it arrives on its own.",
+      "You are {pilot}, newly cleared onto Halcyon's ring with nothing to your name. The Authority will stake you a loan and a hull; in return you fly their beacons and log what you find. Every system you reach will have spent two centuries becoming foreign to the others, and each will have to decide what the Relay's return means - reunion, invasion, or a debt come due. So, in the end, will you."
+    ]
+  },
   "starting_system": "halcyon",
   "default_outfit": "carrier_flight_femme",
   "start": {

@@ -20,6 +20,7 @@ from game.audio.music import music
 from game.screens.space_screen import SpaceScreen
 from game.ui.backdrop_menu import BackdropMenu
 from game.ui.pilot_name_dialog import PilotNameDialog
+from game.ui.intro_screen import IntroScreen, intro_report, has_intro
 from game.ui.choice_dialog import ChoiceDialog
 from game.ui.report_menu import ReportMenu, possessions_report, mission_report
 from game.ui.ending_screen import EndingScreen, ending_report
@@ -314,6 +315,8 @@ def main():
         missions_return_screen = None  # "game" / "station" / "moon" - where N/ESC closes back to
         shop_menu = None
         ending_menu = None
+        intro_menu = None
+        intro_next_screen = None  # target screen once the intro's Begin is pressed
         shop_return_screen = None  # "station" / "moon" - where ESC closes back to
         pilot_name_dialog = None
         pause_menu = PauseMenu()
@@ -472,8 +475,21 @@ def main():
                         if station_interior:
                             station_interior.arrive_from("ship")
                         current_screen = "station"
+                    # Stories with an "intro" block get a scrolling opening
+                    # crawl before the world appears; Begin drops through to
+                    # the start screen resolved above.
+                    if has_intro(selected_story):
+                        intro_menu = IntroScreen(*intro_report(selected_story, pilot_name))
+                        intro_next_screen = current_screen
+                        current_screen = "intro"
                 elif result == "cancel":
                     current_screen = "menu"
+
+            elif current_screen == "intro":
+                action = intro_menu.handle_input(events)
+                if action == "begin" or _pressed_any(events, pygame.K_ESCAPE, pygame.K_RETURN):
+                    current_screen = intro_next_screen
+                    intro_menu = None
 
             elif current_screen == "load":
                 if delete_confirm_dialog:
@@ -914,6 +930,9 @@ def main():
                 story_selector.draw(dst)
             elif current_screen == "pilot_name":
                 pilot_name_dialog.draw(dst)
+            elif current_screen == "intro":
+                dst.fill((6, 8, 16))
+                intro_menu.draw(dst)
             elif current_screen == "load":
                 load_menu.draw(dst)
                 if delete_confirm_dialog:

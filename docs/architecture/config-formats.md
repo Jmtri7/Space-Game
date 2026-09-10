@@ -135,6 +135,7 @@ except where a story clearly needs it; code holds the default.
 | `starting_system` | Which `systems/*.json` a new game loads |
 | `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
 | `acts` | `[{"id", "name", "advance_flag"?}]` - the current act (last one whose predecessor's `advance_flag` is set) shows on the Space View HUD; `utils.current_act()` |
+| `intro` | Optional opening crawl shown between the pilot-name dialog and the world: `{"title", "body": [paragraph, ...]}`. `body` may be a bare string. `{pilot}` in any paragraph is replaced with the entered name. Absent → no intro screen. See `game/ui/intro_screen.py`, [UI_FLOW.md](../UI_FLOW.md) |
 | `start` | New-game state: `location` (`station`/`moon`/`space`), `interior`, `credits`, `ship`, `outfits[]`, `items{}`, `flags{}` (see `SpaceScreen._apply_start_config` / `begin_new_game`) |
 | `loan` | `lender` / `amount` / `max_active` for the `take_loan` dialogue action |
 | `jump` | `travel_frames` / `speed` / `arrival_distance` / `self_min_distance` |
