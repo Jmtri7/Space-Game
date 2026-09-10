@@ -49,9 +49,10 @@ key fires repeatedly rather than once - and deliberately excluded from the
 to the station) resolves the flown ship's actual loadout via
 `SpaceScreen._equipped_weapon_stats` - the outfit installed in its first
 weapon slot, each field falling back individually to `laser_cannon`'s value
-so a partial config still works, and falling back to `laser_cannon` entirely
-if the slot is empty (a new pilot's placeholder ship has no outfits yet, but
-should still fire *something*). `projectile_count == 1` fires one shot,
+so a partial config still works. A hull that *has* weapon slots but none
+installed fires nothing (`_equipped_weapon_stats` returns `None`, SPACE is a
+no-op); only the slot-less legacy placeholder ship falls back to
+`laser_cannon` entirely so it can still fire *something*. `projectile_count == 1` fires one shot,
 randomly offset within `inaccuracy` degrees if the weapon has any
 (`pulse_blaster`); `projectile_count > 1` fans that many pellets evenly
 across the `pellet_spread` arc, each pellet *also* independently offset by

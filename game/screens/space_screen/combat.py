@@ -6,11 +6,12 @@ class _CombatMixin:
 
     def _equipped_weapon_stats(self):
         """Full stat dict for whatever's installed in the flown ship's first
-        weapon slot, falling back to the laser cannon's own config (in case
-        nothing's actually installed - a new pilot's placeholder ship has no
-        outfits yet, but should still fire something) - so every field a
-        fired shot needs always resolves to a real weapon's config, never a
-        partial or missing one. `.get(key, laser_cannon's value)` per-field
+        weapon slot, or None when the flown hull has weapon slots but none
+        of them is filled (an unarmed ship fires nothing). The slot-less
+        legacy placeholder ship falls back to the laser cannon's own config
+        so it can still fire something. Every field falls back individually
+        to the laser cannon so a partial weapon config still resolves to a
+        real weapon's config, never a partial or missing one. `.get(key, laser_cannon's value)` per-field
         (not a whole-dict fallback) so a weapon outfit that only overrides
         some fields still inherits sane defaults for the rest.
 
@@ -28,12 +29,17 @@ class _CombatMixin:
         weapon_outfit_id = None
         if ship_type_id:
             ship_type = get_ship_type(self.story, ship_type_id)
-            for slot in ship_type.get("slots", []):
-                if slot.get("type") == "weapon":
-                    installed = possessions.installed_outfits.get(slot["id"])
-                    if installed:
-                        weapon_outfit_id = installed
-                        break
+            weapon_slots = [s for s in ship_type.get("slots", []) if s.get("type") == "weapon"]
+            for slot in weapon_slots:
+                installed = possessions.installed_outfits.get(slot["id"])
+                if installed:
+                    weapon_outfit_id = installed
+                    break
+            if weapon_slots and not weapon_outfit_id:
+                # A real hull with weapon slots but nothing installed fires
+                # nothing - only the slot-less legacy placeholder ship (below)
+                # gets the free laser_cannon.
+                return None
         baseline = get_ship_outfit(self.story, "laser_cannon")
         outfit = get_ship_outfit(self.story, weapon_outfit_id or "laser_cannon")
         return {
@@ -97,10 +103,12 @@ class _CombatMixin:
 
     def _update_weapon_fire(self):
         """Player weapon fire (SPACE held) - fires the equipped weapon if
-        its cooldown allows."""
+        its cooldown allows and the flown ship actually has one installed."""
         if self.weapon_fire_cooldown > 0 or not self.player.ship:
             return
         stats = self._equipped_weapon_stats()
+        if stats is None:
+            return
         self._fire_weapon(self.player, stats, self.player.angle, owner="player")
         self.weapon_fire_cooldown = stats["fire_rate"]
 
