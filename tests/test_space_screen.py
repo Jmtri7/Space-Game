@@ -580,16 +580,16 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
         game_screen.target_mode_index = TARGET_MODES.index("LANDING SITES")
         game_screen.current_target = 0
         ev = SimpleNamespace(type=pygame_mock.KEYDOWN, key=pygame_mock.K_f, mod=0)
-        with patch("game.screens.space_screen.sound_board") as mock_board:
+        with patch("game.audio.sound_board.sound_board.play") as mock_play:
             game_screen.handle_input([ev])
-            mock_board.play.assert_any_call("confirm")
+            mock_play.assert_any_call("confirm")
         self.assertTrue(game_screen.player.autopilot_active)
 
     def test_cycling_target_mode_plays_blip(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
-        with patch("game.screens.space_screen.sound_board") as mock_board:
+        with patch("game.audio.sound_board.sound_board.play") as mock_play:
             game_screen._cycle_target_mode()
-            mock_board.play.assert_called_once_with("blip")
+            mock_play.assert_called_once_with("blip")
 
     def test_unread_message_pings_exactly_three_times_from_update(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
@@ -597,11 +597,11 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
         # alert's own pings.
         game_screen.ai_ships = []
         game_screen.missions_config = {}
-        with patch("game.screens.space_screen.sound_board") as mock_board:
+        with patch("game.audio.sound_board.sound_board.play") as mock_play:
             game_screen._post_message("Kade Marsh", "Come in.")
             for _ in range(MESSAGE_ALERT_FRAMES + 10):
                 game_screen.update()
-            pings = [c for c in mock_board.play.call_args_list if c.args == ("ping",)]
+            pings = [c for c in mock_play.call_args_list if c.args == ("ping",)]
         self.assertEqual(len(pings), 3)
         self.assertEqual(game_screen.message_alert_timer, 0)
 

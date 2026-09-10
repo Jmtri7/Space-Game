@@ -91,10 +91,12 @@ this to sit well below the rest).
   (`_check_one_way_hails`), mission-stage messages (`_deliver_stage_message`),
   and interior-NPC lines (`_post_local_message`).
 - **Targeting / autopilot:** `_cycle_target`, `_cycle_target_mode`,
-  `_select_target_at` and the `K_SPACE` branch in
-  [`game/screens/space_screen.py`](../game/screens/space_screen.py);
+  `_select_target_at` in
+  [`game/screens/space_screen/targeting.py`](../game/screens/space_screen/targeting.py)
+  and the `K_SPACE` branch in
+  [`space_screen/screen.py`](../game/screens/space_screen/screen.py);
   `_cycle_npc_target` / `_select_person_target_at` in
-  [`game/screens/location_screen.py`](../game/screens/location_screen.py).
+  [`game/screens/location_screen/`](../game/screens/location_screen/).
 - **Weapon fire:** `SpaceScreen._update_weapon_fire()` - called every frame
   **SPACE** is held (rate-limited by `weapon_fire_cooldown`/the equipped
   weapon's own `fire_rate`, not once per keypress, so holding the key fires

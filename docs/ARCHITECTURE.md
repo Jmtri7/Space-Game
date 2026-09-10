@@ -32,7 +32,11 @@ space-game/
 │   │   ├── *_routine.py      # One Routine class per file (dock/orbit/wander/…)
 │   │   └── central_star.py, asteroid.py, asteroid_field.py, starfield.py, landing_site.py
 │   ├── screens/             # ScreenBase and the two concrete screens
-│   │   └── screen_base.py, space_screen.py, location_screen.py
+│   │   ├── screen_base.py
+│   │   ├── space_screen/     # SpaceScreen: screen.py (core) + mixins
+│   │   │   (setup/targeting/hud/hailing/npc_sync/jump/combat/mining), _defs.py
+│   │   └── location_screen/  # LocationScreen: screen.py (core) + mixins
+│   │       (portals/npcs/decor/draw/structures/movement), _defs.py
 │   ├── ui/                  # Menus/dialogs (not ScreenBase) + shared UI styling
 │   │   └── menu_base.py, dialog_base.py, ui_theme.py, save_browser.py, …
 │   └── audio/
