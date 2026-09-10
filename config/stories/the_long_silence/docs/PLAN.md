@@ -252,7 +252,17 @@ First-pass content is complete and plays end to end; these are quality passes:
 
 ## Phase 7 — Content: Act II "Pressure"
 
-- [ ] Faction-handler NPCs + dispatch comms (gap F): cargo / refugee runs, escort contracts, recon
+- [~] Faction-handler NPCs + dispatch comms (gap F): cargo / refugee runs, escort contracts, recon
+  - [x] **Dispatch/inbox engine** — `dispatches.json` + `game/world/dispatch.py`
+    + `SpaceScreen._check_dispatches` (runs docked too). A dispatch arrives
+    when its content-gate first passes, posts to the Message Log, applies
+    flags/standing, and can start an attached mission. `dispatch:<id>` flags
+    chain them.
+  - [x] Six Act I→II narrative dispatches seeded (`authority_first_orders`,
+    `relay_front_kiln`, `carrier_open_hand`, `vigil_warning`,
+    `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).
+  - [ ] Attach real cargo / refugee / escort **missions** to the dispatches
+    (needs the Act II mission content below).
 - [ ] Kiln mobilisation — conditional hostile pilots in Verdance (needs Phases C + D)
 - [ ] Reputation swings from mission choices; `set_exclusive_flag` locks in a patron faction
 - [ ] Mid-act gate: standing with ≥1 faction lights the Span beacon (`beacon_the_span_lit`); the Span currently has `act_span` set by the Ossuary anchor but stays `locked` until this gate

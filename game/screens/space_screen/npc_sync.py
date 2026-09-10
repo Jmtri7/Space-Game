@@ -1,8 +1,36 @@
 """SpaceScreen: npc sync — mixed into the class in screen.py."""
 from game.screens.space_screen._defs import *  # noqa: F401,F403
+from game.world.dispatch import pending_dispatches, receive_dispatch
 
 
 class _NpcSyncMixin:
+
+    def _check_dispatches(self):
+        """Deliver any story dispatch (dispatches.json - faction-handler
+        "inbox" comms, gap F) whose content-gate has just started passing:
+        post it to the Message Log, apply its on-receive flags/standing, and
+        start its attached mission. Runs every frame from update_physics
+        (which ticks while docked too), so a dispatch can land in a station.
+        self._dispatched is seeded on the first call so a loaded save with
+        dispatches already received stays quiet, mirroring _check_beacons."""
+        possessions = self.player.person.possessions
+        dispatches = get_dispatches(self.story)
+        if not dispatches:
+            return
+        newly = pending_dispatches(dispatches, possessions)
+        if self._dispatched is None:
+            # First call after load: mark everything currently eligible as
+            # already delivered without announcing it.
+            for did, entry in newly:
+                receive_dispatch(did, entry, possessions, self.missions_config)
+            self._dispatched = True
+            return
+        for did, entry in newly:
+            sender, subject, body, advanced = receive_dispatch(
+                did, entry, possessions, self.missions_config)
+            text = f"{subject} — {body}" if body else subject
+            self._post_message(sender, text)
+            self._deliver_stage_message(advanced)
 
     def _check_beacons(self):
         """Post a galaxy-wide "beacon relit" message the frame a locked

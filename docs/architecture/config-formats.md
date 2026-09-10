@@ -145,6 +145,34 @@ except where a story clearly needs it; code holds the default.
 | `default_outfit` | `graphics.json` `outfits` id for the player + AI pilots |
 | `ships.player_type` | Placeholder ship stats before one is owned (usually `null`) |
 
+## Story dispatches (`dispatches.json`, optional)
+
+`{dispatch_id: entry}` - "inbox" comms from faction handlers that arrive in
+the Message Log when their condition first holds, no NPC in the room needed
+(the story design's gap F). Merged from `modules` like `missions.json`.
+`game/world/dispatch.py` is the logic; `SpaceScreen._check_dispatches` runs
+it every frame (docked too), seeded silent on first call after a load.
+
+```json
+"combine_mobilises": {
+  "sender": "Ninefold Combine — liaison",
+  "subject": "Notice of closure",
+  "body": "The Kiln lane is closing...",
+  "requires_flag": "act_pressure",
+  "requires_rep_below": "ninefold_combine:15",
+  "on_receive_flags": ["combine_mobilised"],
+  "on_receive_rep": {"ninefold_combine": -3},
+  "start_mission": "combine_evacuation"
+}
+```
+
+Gate keys are `content_gate`'s (`requires_flag` / `requires_not_flag` /
+`requires_rep` / `requires_rep_below`); none = arrives on the first check.
+On receipt a `dispatch:<id>` flag is set (usable as a later dispatch's
+`requires_flag` to chain them), `on_receive_flags` / `on_receive_rep` apply,
+and `start_mission` begins (if not already active/done) with its first
+stage's `one_way_message` delivered.
+
 ## Interior geometry (`LocationScreen`)
 
 A culture-tagged interior's walkable

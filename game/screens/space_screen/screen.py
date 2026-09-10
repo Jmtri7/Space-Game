@@ -162,6 +162,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         self.jump_message_timer = 0  # Transient jump-blocked feedback (see jump_message)
         self.jump_message = "Too close to jump - move away from center first"
         self._lit_beacons = None  # seeded on first _check_beacons(); then tracks beacon flips
+        self._dispatched = None   # seeded on first _check_dispatches(); then delivers new ones
         # Transient center-screen toast (see _show_toast) - jump completion,
         # mission started / stage completed / mission finished.
         self.toast_text = None
@@ -538,6 +539,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             self.message_alert_timer -= 1
         self._check_one_way_hails()
         self._check_beacons()
+        self._check_dispatches()
         self._validate_target()
         # Mission progress before _sync_escorts() - a mission finishing
         # this exact frame clears its escort_flag (see mission.py's

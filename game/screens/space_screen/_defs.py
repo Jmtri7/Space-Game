@@ -14,7 +14,7 @@ from game.utils import (
     draw_debug_marker, draw_target_brackets, get_font, to_world,
     get_ship_type, get_graphics_asset, get_pilot, get_star_systems, get_ship_outfit,
     get_asteroid_type, get_commodity, get_missions, get_story, get_factions,
-    system_unlocked
+    get_dispatches, system_unlocked
 )
 import game.utils as utils
 from game.perf_metrics import metrics as perf

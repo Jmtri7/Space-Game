@@ -1,0 +1,54 @@
+{
+  "_comment": "Story inbox comms - faction handlers giving cross-system orders without an NPC in the room (gap F / Phase 7). Each arrives the frame its content-gate first passes (game/world/dispatch.py); keys are content_gate's vocabulary. 'dispatch:<id>' is set on receipt and can gate a later one.",
+
+  "authority_first_orders": {
+    "sender": "Harbor Authority — Dispatch",
+    "subject": "Standing orders",
+    "body": "Induction logged. The Authority underwrites every beacon you light. Fly the lane, file what you find, and remember whose network this was. We will be in contact.",
+    "requires_flag": "induction_done",
+    "on_receive_flags": ["authority_briefed"]
+  },
+
+  "relay_front_kiln": {
+    "sender": "Relay Network",
+    "subject": "Reactivation front — Kiln",
+    "body": "The relight signal has reached the Kiln beacon and moved on outward. You are still ahead of it. Barely.",
+    "requires_flag": "beacon_verdance_lit",
+    "on_receive_flags": ["relay_front_kiln_seen"]
+  },
+
+  "carrier_open_hand": {
+    "sender": "Free carriers — open channel",
+    "subject": "An open lane, or none at all",
+    "body": "You have been lighting beacons ahead of the Authority's flag. Some of us have run these lanes for six generations and would like them to stay ungoverned. Carry for us when you can. We remember it.",
+    "requires_flag": "beacon_verdance_lit",
+    "on_receive_flags": ["carrier_contact"],
+    "on_receive_rep": {"free_carrier": 3}
+  },
+
+  "vigil_warning": {
+    "sender": "The Vigil — Keeper Aramis",
+    "subject": "What the beacons were for",
+    "body": "You have read part of the wall now. Whatever turned the Relay off did it on purpose. Slow the signal if you can. Do not be the one who finishes its run without knowing what it opens.",
+    "requires_flag": "beacon_ossuary_lit",
+    "on_receive_flags": ["vigil_warned"]
+  },
+
+  "combine_mobilises": {
+    "sender": "Ninefold Combine — liaison",
+    "subject": "Notice of closure",
+    "body": "The Combine has voted. The Kiln lane is closing and its patrols are cleared to turn back any hull that will not leave. This is your notice. There will not be another.",
+    "requires_flag": "act_pressure",
+    "requires_rep_below": "ninefold_combine:15",
+    "on_receive_flags": ["combine_mobilised"],
+    "on_receive_rep": {"ninefold_combine": -3}
+  },
+
+  "span_listening": {
+    "sender": "Hub Zero — automated relay",
+    "subject": "The hub is listening",
+    "body": "The Span beacon is keyed to your transponder. Whatever is running the reactivation has acknowledged you. Come to the core when you are ready to decide what happens to the network.",
+    "requires_flag": "act_span",
+    "on_receive_flags": ["span_hailed"]
+  }
+}

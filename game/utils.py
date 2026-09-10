@@ -592,6 +592,15 @@ def get_missions(story):
     return story_catalogue(story, "missions.json")
 
 
+def get_dispatches(story):
+    """Load config/stories/{story}/dispatches.json - {dispatch_id: {sender,
+    subject, body, gate keys, on_receive_flags/rep, start_mission}}. Story
+    "inbox" comms from faction handlers that arrive when their content-gate
+    first passes, without needing an NPC in the room (gap F - see
+    game/world/dispatch.py). {} for a story with none."""
+    return story_catalogue(story, "dispatches.json")
+
+
 def get_star_systems(story):
     """Discover every star system belonging to one story, by scanning
     config/stories/{story}/systems/*.json. Systems only exist within a single
