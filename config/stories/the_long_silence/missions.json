@@ -463,5 +463,44 @@
         }
       }
     ]
+  },
+  "the_core_choir": {
+    "title": "The Core Choir",
+    "on_start_flags": [
+      "core_choir_started"
+    ],
+    "on_end_flags": [
+      "core_choir_done"
+    ],
+    "on_start_rep": {
+      "the_wardens": 3
+    },
+    "stages": [
+      {
+        "text": "Read the Hub's own account of the shutdown - the Archivist of the Choir, the Hub Archive.",
+        "complete_flag": "read_hub_archive",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "First Warden",
+          "text": "The Hub Archive is the machine's own memory of the night it went dark - three logs, and they do not agree. Read them with the Archivist. Linger on the one you believe."
+        }
+      },
+      {
+        "text": "Walk the Core Choir and hear what is relighting the beacons - the Core Voice.",
+        "complete_flag": "heard_the_signal",
+        "one_way_message": {
+          "sender": "First Warden",
+          "text": "Now the Choir. The Core Voice will give you three readings of what is out there lighting the lanes. None of them is confirmed. Take the one you can carry."
+        }
+      },
+      {
+        "text": "Return to the First Warden.",
+        "complete_flag": "core_choir_reported",
+        "one_way_message": {
+          "sender": "First Warden",
+          "text": "Come back to me when you have both. Then the choice is yours to make, and I will not make it easier than it is."
+        }
+      }
+    ]
   }
 }

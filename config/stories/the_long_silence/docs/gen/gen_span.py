@@ -306,10 +306,25 @@ HZ_STRUCTURES = [
     {"x": 1180, "y": 600, "building_type": "pipeline_bench"},
 ]
 HZ_NPCS = [
+    # Phase 4d - the ending fork is gated behind the_core_choir mission: read
+    # the Archive -> hear the Core Voice -> report here. "start" directs you
+    # through that; "choose" (the old "start") is the fork, opened on
+    # core_choir_done via conditional_roots. hold_middle keeps its gates.
     {"name": "First Warden", "x": 910, "y": 400, "role": "magistrate",
      "faction": "the_wardens", "outfit": "warden_official_femme",
-     "dialogue_tree": {"root": "start", "nodes": {
-        "start": {"text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We tend the machinery. We do not decide for it. You will. Stand at the Core Choir and choose - there is no undoing it.",
+     "dialogue_tree": {"root": "start",
+        "conditional_roots": [{"flag": "core_choir_done", "node": "choose"}],
+        "nodes": {
+        "start": {"text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We do not decide for it - and neither should you, not cold. Read the Archive: the Hub's own account of the night it went dark. Then walk the Core Choir and hear what it is that has been relighting the beacons. Then come back to me, and choose.",
+                  "options": [
+                      {"label": "Understood - I'll read the Archive first.", "next": None,
+                       "requires_not_flag": "core_choir_started",
+                       "action": "start_mission:the_core_choir"},
+                      {"label": "Tell her what you heard in the Choir.", "next": "choose",
+                       "requires_flag": "heard_the_signal", "requires_not_flag": "core_choir_done",
+                       "action": "set_flag:core_choir_reported"},
+                      {"label": "Not yet.", "next": None}]},
+        "choose": {"text": "You have read the Archive and heard the Choir. Then you know as much as anyone living, which is not enough, and it never will be. The Hub is still asking. Stand at the Core Choir and answer it - there is no undoing it.",
                   "options": [
                       {"label": "Restore the Relay - one network, run from a hub.", "next": "confirm_restore"},
                       {"label": "Sever it. Destroy the core.", "next": "confirm_sever"},
@@ -319,13 +334,53 @@ HZ_NPCS = [
                       {"label": "Not yet.", "next": None}]},
         "confirm_restore": {"text": "Then the lanes reopen, and whoever holds Halcyon holds the hub. A connected region, unequal and unstable. You are certain?",
                             "options": [{"label": "Do it.", "next": None, "action": "end_story:restore"},
-                                        {"label": "Wait.", "next": "start"}]},
+                                        {"label": "Wait.", "next": "choose"}]},
         "confirm_sever": {"text": "Then the core goes dark for good, and the systems stay islands - trade back to the slow carriers and their decade-long loops. You are certain?",
                           "options": [{"label": "Do it.", "next": None, "action": "end_story:sever"},
-                                      {"label": "Wait.", "next": "start"}]},
+                                      {"label": "Wait.", "next": "choose"}]},
         "confirm_middle": {"text": "Then the beacons stay lit and the hub breaks - no single system can dominate the network, and none can schedule it either. The hardest road to hold. You are certain?",
                            "options": [{"label": "Do it.", "next": None, "action": "end_story:hold_middle"},
-                                       {"label": "Wait.", "next": "start"}]}}}},
+                                       {"label": "Wait.", "next": "choose"}]}}}},
+
+    # Phase 4b - the Core Voice: three readings of *who* is relighting the
+    # beacons, parallel to the Archivist's three shutdown logs. Which one it
+    # leads with is keyed off the archive log the player lingered on
+    # (archive:{quarantine->ai, scorched->person, accident->script}); with no
+    # archive flag it opens flat on "start". "Enough." on any node
+    # set_exclusive_flag:signal:<x> + set_flag:heard_the_signal, so the
+    # player leaves believing exactly one.
+    {"name": "the Core Voice", "x": 950, "y": 360, "role": "clerk",
+     "faction": "the_wardens", "outfit": "warden_official_masc",
+     "dialogue_tree": {"root": "start", "conditional_roots": [
+         {"flag": "archive:quarantine", "node": "ai"},
+         {"flag": "archive:scorched", "node": "person"},
+         {"flag": "archive:accident", "node": "script"}],
+      "nodes": {
+        "start": {"text": "Stand close. The Choir does not speak for the Hub - no one can - but two hundred years listening has left us three ways to hear it, and no way to choose between them. Which do you want first?",
+                  "options": [
+                      {"label": "Who is relighting the beacons - a person?", "next": "person"},
+                      {"label": "Or the Hub itself, awake?", "next": "ai"},
+                      {"label": "Or nothing - just a routine?", "next": "script"},
+                      {"label": "Enough. I've heard enough.", "next": None,
+                       "actions": ["set_exclusive_flag:signal:script", "set_flag:heard_the_signal"]}]},
+        "person": {"text": "Someone who lived through the shutdown, or their line after them, finishing it by hand. A promise kept across two centuries, one beacon at a time. If that is who it is, they could be found, and asked why. The console will not confirm it. It will not deny it either.",
+                   "options": [
+                       {"label": "The Hub itself, then?", "next": "ai"},
+                       {"label": "Or just a routine?", "next": "script"},
+                       {"label": "Enough. It's a person, finishing something.", "next": None,
+                        "actions": ["set_exclusive_flag:signal:person", "set_flag:heard_the_signal"]}]},
+        "ai": {"text": "The Hub woke enough of its own mind to decide it should not be dark, and used the Wardens' hands to do what hands were needed for. We have felt it think. The question the Choir cannot answer is whether it is still the thing that was shut down, or something that grew in its place while we swept the floors.",
+               "options": [
+                   {"label": "A person, then?", "next": "person"},
+                   {"label": "Or just a routine?", "next": "script"},
+                   {"label": "Enough. The Hub woke itself.", "next": None,
+                    "actions": ["set_exclusive_flag:signal:ai", "set_flag:heard_the_signal"]}]},
+        "script": {"text": "A restart routine, two hundred years old, reaching its next scheduled step the way it was always going to. No mind, no promise, no meaning - every meaning is ours, laid over it after. It is the reading the Choir likes least, because there is no one in it to thank or to blame.",
+                   "options": [
+                       {"label": "A person, then?", "next": "person"},
+                       {"label": "The Hub itself?", "next": "ai"},
+                       {"label": "Enough. It's just a routine running out.", "next": None,
+                        "actions": ["set_exclusive_flag:signal:script", "set_flag:heard_the_signal"]}]}}}},
 
     {"name": "the Signal-Tender", "x": 320, "y": 700, "role": "quartermaster",
      "faction": "the_wardens", "outfit": "warden_dock_masc",
@@ -362,15 +417,18 @@ HZ_NPCS = [
         "quarantine": {"text": "First log: a containment order, priority absolute. Something crossed the Relay from outside the network and the beacons were cut to strand it between stars. If that is true, relighting them lets it finish the crossing. The log does not say what 'it' was. The field for that is blank - deliberately, the Choir thinks.",
                        "options": [{"label": "The second log.", "next": "scorched"},
                                    {"label": "The third.", "next": "accident"},
-                                   {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]},
+                                   {"label": "Enough.", "next": None,
+                                    "actions": ["set_exclusive_flag:archive:quarantine", "set_flag:read_hub_archive"]}]},
         "scorched": {"text": "Second log: a military channel, the last order of a war the histories mostly forgot. The shutdown was the final act - deny the enemy the lanes by killing them for everyone. No monster. Just people, doing the worst arithmetic there is, and two centuries since spent making it a myth so it could be survived.",
                      "options": [{"label": "The first log.", "next": "quarantine"},
                                  {"label": "The third.", "next": "accident"},
-                                 {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]},
+                                 {"label": "Enough.", "next": None,
+                                  "actions": ["set_exclusive_flag:archive:scorched", "set_flag:read_hub_archive"]}]},
         "accident": {"text": "Third log: a fault cascade. A maintenance error at the core, then another, then the network folding one beacon at a time faster than anyone could stop it. No order, no enemy - it simply broke, and everything since has been a religion built in the quiet where an explanation should be. The Choir likes this one least. It is the one with no one to forgive.",
                      "options": [{"label": "The first log.", "next": "quarantine"},
                                  {"label": "The second.", "next": "scorched"},
-                                 {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]}}}},
+                                 {"label": "Enough.", "next": None,
+                                  "actions": ["set_exclusive_flag:archive:accident", "set_flag:read_hub_archive"]}]}}}},
 
     {"name": "Choir-hand Emel", "x": 920, "y": 900, "role": "resident",
      "faction": "the_wardens", "outfit": "warden_civilian_masc",
@@ -438,6 +496,39 @@ THE_SPAN = {
     "locked": True, "unlock_flag": "beacon_the_span_lit",
 }
 w(f"{S}/systems/the_span.json", THE_SPAN)
+
+# ======================================================================
+# 4b. ACT III MISSION  "the_core_choir"  (gates the ending fork)
+# ======================================================================
+# read the Archive -> hear the Core Voice -> report to the First Warden.
+# Stage 0 resets read_hub_archive so Act III forces a fresh read (the Span
+# is locked until beacon_the_span_lit, so the archive is Act-III-only
+# anyway). start_mission from the First Warden's "start" node does NOT
+# deliver stage 0's one_way_message - her dialogue carries the instruction.
+def _say(sender, text):
+    return {"sender": sender, "text": text}
+
+
+CORE_CHOIR = {
+    "title": "The Core Choir",
+    "on_start_flags": ["core_choir_started"],
+    "on_end_flags": ["core_choir_done"],
+    "on_start_rep": {"the_wardens": 3},
+    "stages": [
+        {"text": "Read the Hub's own account of the shutdown - the Archivist of the Choir, the Hub Archive.",
+         "complete_flag": "read_hub_archive", "reset_on_activation": True,
+         "one_way_message": _say("First Warden", "The Hub Archive is the machine's own memory of the night it went dark - three logs, and they do not agree. Read them with the Archivist. Linger on the one you believe.")},
+        {"text": "Walk the Core Choir and hear what is relighting the beacons - the Core Voice.",
+         "complete_flag": "heard_the_signal",
+         "one_way_message": _say("First Warden", "Now the Choir. The Core Voice will give you three readings of what is out there lighting the lanes. None of them is confirmed. Take the one you can carry.")},
+        {"text": "Return to the First Warden.",
+         "complete_flag": "core_choir_reported",
+         "one_way_message": _say("First Warden", "Come back to me when you have both. Then the choice is yours to make, and I will not make it easier than it is.")},
+    ],
+}
+missions = r(f"{S}/missions.json")
+missions["the_core_choir"] = CORE_CHOIR
+w(f"{S}/missions.json", missions)
 
 # ======================================================================
 # 5. WARDEN PILOTS

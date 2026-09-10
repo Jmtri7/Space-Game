@@ -1,8 +1,8 @@
 # Deepening Act II & Act III — `the_long_silence`
 
-> **Status:** Phases 1–3 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`;
-> Phase 3 `0.15.0`). Phases 4–5 not started. **Next agent: start at Phase 4.** This file is
-> the canonical plan — keep the Status line and each phase's `✅ SHIPPED` marker current.
+> **Status:** Phases 1–4 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`;
+> Phase 3 `0.15.0`; Phase 4 `0.16.0`). Phase 5 not started. **Next agent: start at Phase 5.**
+> Keep the Status line and each phase's `✅ SHIPPED` marker current.
 
 ## For the implementing agent — how to work this
 
@@ -264,7 +264,30 @@ Natural dispatch stagger after this: `carrier_open_hand` (immediate on `act_pres
 
 ---
 
-## Phase 4 — Act III "Choir sequence" (`the_core_choir`)
+## Phase 4 — Act III "Choir sequence" (`the_core_choir`)  ✅ SHIPPED (`0.16.0`)
+
+Shipped as planned, all in `gen_span.py`:
+- **4a** — the Archivist's three log "Enough." leaves now
+  `set_exclusive_flag:archive:{quarantine,scorched,accident}` + `set_flag:read_hub_archive`;
+  the top-level skip keeps just `read_hub_archive` (Core Voice then opens flat).
+- **4b** — new NPC **the Core Voice** (`x:950,y:360`, `warden_official_masc`, in the Core Choir
+  disc by the First Warden). Three readings — `person` / `ai` / `script` — cross-linked; `"Enough"`
+  on any → `set_exclusive_flag:signal:<x>` + `set_flag:heard_the_signal`. `conditional_roots`
+  lead: `archive:quarantine→ai`, `archive:scorched→person`, `archive:accident→script`, none→`start`.
+- **4c** — mission **`the_core_choir`** (`missions` merge in `gen_span.py`): read Archive
+  (stage 0, `reset_on_activation`) → hear the Core (`heard_the_signal`) → report
+  (`core_choir_reported`). `on_start_flags:["core_choir_started"]`, `on_end_flags:["core_choir_done"]`,
+  `on_start_rep:{the_wardens:3}`.
+- **4d** — First Warden restructured: old `start` (the fork) → **`choose`**, keeping its
+  `hold_middle` gates; new `start` directs you to the Archive/Choir and carries the
+  `start_mission:the_core_choir` option (gated `requires_not_flag: core_choir_started`) plus a
+  "tell her what you heard" option (`requires_flag: heard_the_signal` +
+  `requires_not_flag: core_choir_done`) → `set_flag:core_choir_reported`, `next: choose`.
+  `conditional_roots: [{"flag": "core_choir_done", "node": "choose"}]` opens straight on the fork
+  after. The `confirm_*` "Wait." options now return to `choose`, not `start`.
+
+No engine change; the ending tests don't drive the tree (they check `endings.json` / `ending_report`
+only) so no retarget was needed. Tests +6.
 
 Gate the ending fork behind: read the archive → hear the Core → report to the First Warden.
 The signal origin is a mystery the game **reflects back** — the shutdown log the player lingers

@@ -650,6 +650,64 @@ class TestLongSilenceDeepening(unittest.TestCase):
                   if "set_exclusive_flag:patron:free_carrier" in o.get("actions", [])]
         self.assertEqual(len(pledge), 1)
 
+    # -- Phase 4: the Act III Choir sequence ---------------------------
+    def test_core_choir_mission_shape(self):
+        m = self.missions["the_core_choir"]
+        self.assertIn("core_choir_started", m["on_start_flags"])
+        self.assertIn("core_choir_done", m["on_end_flags"])
+        self.assertEqual([s["complete_flag"] for s in m["stages"]],
+                         ["read_hub_archive", "heard_the_signal", "core_choir_reported"])
+        self.assertTrue(m["stages"][0]["reset_on_activation"])
+
+    def test_archivist_logs_set_an_archive_reason(self):
+        arch = self._station_npc("the_span", "Archivist of the Choir")
+        nodes = arch["dialogue_tree"]["nodes"]
+        for log, reason in [("quarantine", "archive:quarantine"),
+                            ("scorched", "archive:scorched"), ("accident", "archive:accident")]:
+            enough = [o for o in nodes[log]["options"] if o["label"] == "Enough."][0]
+            self.assertIn(f"set_exclusive_flag:{reason}", enough["actions"])
+            self.assertIn("set_flag:read_hub_archive", enough["actions"])
+
+    def test_core_voice_opens_on_the_reading_keyed_to_the_lingered_log(self):
+        cv = self._dialogue(self._station_npc("the_span", "the Core Voice"))
+        self.assertEqual(cv.resolve_root({"archive:quarantine": True}), "ai")
+        self.assertEqual(cv.resolve_root({"archive:scorched": True}), "person")
+        self.assertEqual(cv.resolve_root({"archive:accident": True}), "script")
+        self.assertEqual(cv.resolve_root({}), "start")
+
+    def test_core_voice_enough_leaves_the_player_believing_exactly_one(self):
+        for node, sig in [("person", "signal:person"), ("ai", "signal:ai"), ("script", "signal:script")]:
+            cv = self._dialogue(self._station_npc("the_span", "the Core Voice"))
+            cv.current_node = node
+            enough = [o for o in cv.current_options({}) if o["label"].startswith("Enough")][0]
+            self.assertIn(f"set_exclusive_flag:{sig}", enough["actions"])
+            self.assertIn("set_flag:heard_the_signal", enough["actions"])
+
+    def test_first_warden_gates_the_fork_behind_the_choir_mission(self):
+        fw = self._dialogue(self._station_npc("the_span", "First Warden"))
+        # cold: opens on "start", which starts the mission, not the fork
+        self.assertEqual(fw.resolve_root({}), "start")
+        start_opts = fw.current_options({})
+        self.assertTrue(any(o.get("action") == "start_mission:the_core_choir" for o in start_opts))
+        self.assertFalse(any((o.get("next") or "").startswith("confirm_") for o in start_opts))
+        # after the mission: opens straight on the fork with all three endings
+        fw2 = self._dialogue(self._station_npc("the_span", "First Warden"))
+        self.assertEqual(fw2.resolve_root({"core_choir_done": True}), "choose")
+        fw2.current_node = "choose"
+        actions = []
+        for o in fw2.current_options({}, {"the_vigil": 20}):
+            nxt = o.get("next")
+            if nxt and nxt.startswith("confirm_"):
+                actions += [x["action"] for x in fw2.nodes[nxt]["options"] if x.get("action")]
+        self.assertEqual(set(actions), {"end_story:restore", "end_story:sever", "end_story:hold_middle"})
+
+    def test_first_warden_report_option_appears_after_hearing_the_signal(self):
+        fw = self._dialogue(self._station_npc("the_span", "First Warden"))
+        flags = {"core_choir_started": True, "heard_the_signal": True}
+        fw.current_node = fw.resolve_root(flags)
+        report = [o for o in fw.current_options(flags) if o.get("action") == "set_flag:core_choir_reported"]
+        self.assertEqual(len(report), 1)
+
     def test_sync_conditional_ships_spawns_and_culls_the_barge(self):
         gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
         pos = gs.player.person.possessions

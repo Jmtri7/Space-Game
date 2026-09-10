@@ -311,9 +311,37 @@
             "outfit": "warden_official_femme",
             "dialogue_tree": {
               "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "core_choir_done",
+                  "node": "choose"
+                }
+              ],
               "nodes": {
                 "start": {
-                  "text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We tend the machinery. We do not decide for it. You will. Stand at the Core Choir and choose - there is no undoing it.",
+                  "text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We do not decide for it - and neither should you, not cold. Read the Archive: the Hub's own account of the night it went dark. Then walk the Core Choir and hear what it is that has been relighting the beacons. Then come back to me, and choose.",
+                  "options": [
+                    {
+                      "label": "Understood - I'll read the Archive first.",
+                      "next": null,
+                      "requires_not_flag": "core_choir_started",
+                      "action": "start_mission:the_core_choir"
+                    },
+                    {
+                      "label": "Tell her what you heard in the Choir.",
+                      "next": "choose",
+                      "requires_flag": "heard_the_signal",
+                      "requires_not_flag": "core_choir_done",
+                      "action": "set_flag:core_choir_reported"
+                    },
+                    {
+                      "label": "Not yet.",
+                      "next": null
+                    }
+                  ]
+                },
+                "choose": {
+                  "text": "You have read the Archive and heard the Choir. Then you know as much as anyone living, which is not enough, and it never will be. The Hub is still asking. Stand at the Core Choir and answer it - there is no undoing it.",
                   "options": [
                     {
                       "label": "Restore the Relay - one network, run from a hub.",
@@ -345,7 +373,7 @@
                     },
                     {
                       "label": "Wait.",
-                      "next": "start"
+                      "next": "choose"
                     }
                   ]
                 },
@@ -359,7 +387,7 @@
                     },
                     {
                       "label": "Wait.",
-                      "next": "start"
+                      "next": "choose"
                     }
                   ]
                 },
@@ -373,7 +401,122 @@
                     },
                     {
                       "label": "Wait.",
-                      "next": "start"
+                      "next": "choose"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "the Core Voice",
+            "x": 950,
+            "y": 360,
+            "role": "clerk",
+            "faction": "the_wardens",
+            "outfit": "warden_official_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "archive:quarantine",
+                  "node": "ai"
+                },
+                {
+                  "flag": "archive:scorched",
+                  "node": "person"
+                },
+                {
+                  "flag": "archive:accident",
+                  "node": "script"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Stand close. The Choir does not speak for the Hub - no one can - but two hundred years listening has left us three ways to hear it, and no way to choose between them. Which do you want first?",
+                  "options": [
+                    {
+                      "label": "Who is relighting the beacons - a person?",
+                      "next": "person"
+                    },
+                    {
+                      "label": "Or the Hub itself, awake?",
+                      "next": "ai"
+                    },
+                    {
+                      "label": "Or nothing - just a routine?",
+                      "next": "script"
+                    },
+                    {
+                      "label": "Enough. I've heard enough.",
+                      "next": null,
+                      "actions": [
+                        "set_exclusive_flag:signal:script",
+                        "set_flag:heard_the_signal"
+                      ]
+                    }
+                  ]
+                },
+                "person": {
+                  "text": "Someone who lived through the shutdown, or their line after them, finishing it by hand. A promise kept across two centuries, one beacon at a time. If that is who it is, they could be found, and asked why. The console will not confirm it. It will not deny it either.",
+                  "options": [
+                    {
+                      "label": "The Hub itself, then?",
+                      "next": "ai"
+                    },
+                    {
+                      "label": "Or just a routine?",
+                      "next": "script"
+                    },
+                    {
+                      "label": "Enough. It's a person, finishing something.",
+                      "next": null,
+                      "actions": [
+                        "set_exclusive_flag:signal:person",
+                        "set_flag:heard_the_signal"
+                      ]
+                    }
+                  ]
+                },
+                "ai": {
+                  "text": "The Hub woke enough of its own mind to decide it should not be dark, and used the Wardens' hands to do what hands were needed for. We have felt it think. The question the Choir cannot answer is whether it is still the thing that was shut down, or something that grew in its place while we swept the floors.",
+                  "options": [
+                    {
+                      "label": "A person, then?",
+                      "next": "person"
+                    },
+                    {
+                      "label": "Or just a routine?",
+                      "next": "script"
+                    },
+                    {
+                      "label": "Enough. The Hub woke itself.",
+                      "next": null,
+                      "actions": [
+                        "set_exclusive_flag:signal:ai",
+                        "set_flag:heard_the_signal"
+                      ]
+                    }
+                  ]
+                },
+                "script": {
+                  "text": "A restart routine, two hundred years old, reaching its next scheduled step the way it was always going to. No mind, no promise, no meaning - every meaning is ours, laid over it after. It is the reading the Choir likes least, because there is no one in it to thank or to blame.",
+                  "options": [
+                    {
+                      "label": "A person, then?",
+                      "next": "person"
+                    },
+                    {
+                      "label": "The Hub itself?",
+                      "next": "ai"
+                    },
+                    {
+                      "label": "Enough. It's just a routine running out.",
+                      "next": null,
+                      "actions": [
+                        "set_exclusive_flag:signal:script",
+                        "set_flag:heard_the_signal"
+                      ]
                     }
                   ]
                 }
@@ -493,7 +636,10 @@
                     {
                       "label": "Enough.",
                       "next": null,
-                      "action": "set_flag:read_hub_archive"
+                      "actions": [
+                        "set_exclusive_flag:archive:quarantine",
+                        "set_flag:read_hub_archive"
+                      ]
                     }
                   ]
                 },
@@ -511,7 +657,10 @@
                     {
                       "label": "Enough.",
                       "next": null,
-                      "action": "set_flag:read_hub_archive"
+                      "actions": [
+                        "set_exclusive_flag:archive:scorched",
+                        "set_flag:read_hub_archive"
+                      ]
                     }
                   ]
                 },
@@ -529,7 +678,10 @@
                     {
                       "label": "Enough.",
                       "next": null,
-                      "action": "set_flag:read_hub_archive"
+                      "actions": [
+                        "set_exclusive_flag:archive:accident",
+                        "set_flag:read_hub_archive"
+                      ]
                     }
                   ]
                 }

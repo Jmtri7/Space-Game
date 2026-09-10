@@ -824,8 +824,12 @@ story = r(f"{S}/story.json")
 # 0.15.0 Deepening Phase 3 - front_recon (the reactivation-front recon run) +
 # its reputation fork (front_to_{authority,drift,vigil} delivery options on
 # Amsel / Sela / Aramis) + the fifth patron pledge (free_carrier, on the
-# Verdance carrier berth) + carrier_recon_call dispatch. See docs/ACT2_3_DEEPENING.md.
-story["version"] = "0.15.0"
+# Verdance carrier berth) + carrier_recon_call dispatch.
+# 0.16.0 Deepening Phase 4 - the Act III Choir sequence (the_core_choir mission):
+# the Archivist's logs now set archive:<reason>; a new Core Voice NPC gives three
+# readings of the signal keyed off that; the First Warden's fork moves behind the
+# mission (start -> choose, opened on core_choir_done). See docs/ACT2_3_DEEPENING.md.
+story["version"] = "0.16.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

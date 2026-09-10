@@ -291,7 +291,9 @@ have already fired, which minor dialogue consequences have happened, which
 locked star systems' jump beacons have been lit (a system's `unlock_flag` -
 see `utils.system_unlocked`, so system *reachability* is derived from saved
 flags), which act the story is in (`acts[].advance_flag`, `utils.current_act`),
-a one-time exclusive choice (`set_exclusive_flag`'s `<group>:<name>`), which
+a one-time exclusive choice (`set_exclusive_flag`'s `<group>:<name>` — e.g.
+`the_long_silence`'s `patron:<faction>` pledge, `archive:<reason>` and
+`signal:<reading>` from the Act III Choir sequence), which
 story dispatches have been delivered (`dispatch:<id>` — `game/world/dispatch.py`;
 so the inbox is derived from saved flags and never re-announces on load),
 whether the story is over (`story_over` + `ending:<id>` — a save with these
