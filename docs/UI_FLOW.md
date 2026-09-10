@@ -187,7 +187,7 @@ menu-only action rather than something wired to `VIDEORESIZE`.
 - ESC → PauseMenu
 
 ### Landing Location (`ChoiceDialog`)
-**Shows:** Moon landing sub-location choices (City / Wilderness) as a button column, built from the moon's `interiors` config by `main.py`'s `landing_location_options()`
+**Shows:** Moon landing sub-location choices (City / Wilderness) as a button column, built from the moon's `interiors` config by `landing_location_options()` (`game/app/loop_helpers.py`)
 
 **Inputs:** UP/DOWN or W/S: move between buttons · RETURN/click: pick · ESC: cancel (returns to `SpaceScreen`)
 
@@ -326,7 +326,7 @@ RETURN: buy/sell one unit of the selected item · ESC: close
 ### ShipBrowserMenu
 **Shows:** Ship-buying with a live preview - `game/ui/ship_browser_menu.py`.
 Opened the same way as `ShopMenu` (T on an NPC with a `"shop"` config), but
-for `"type": "ships"` - `main.py`'s `build_shop_menu()` dispatches to this
+for `"type": "ships"` - `build_shop_menu()` (`game/app/loop_helpers.py`) dispatches to this
 instead of `ShopMenu` based on the shop config's `type`. Left: the shop's
 stock ship-type ids. Right: a live preview (`ui_theme.draw_ship_glyph`) and
 stat readout for whichever is selected. Enter opens a `ConfirmDialog`
@@ -347,7 +347,7 @@ Y/N or ESC: confirm/cancel the pending purchase · ESC: close (no purchase pendi
 ### OutfittingMenu
 **Shows:** Buy and install ship outfits - `game/ui/outfitting_menu.py`.
 Opened like `ShopMenu`/`ShipBrowserMenu` (T on a `"shop"` NPC), for
-`"type": "outfits"` - `main.py`'s `build_shop_menu()` dispatches here,
+`"type": "outfits"` - `build_shop_menu()` (`game/app/loop_helpers.py`) dispatches here,
 passing the current ship type (`possessions.owned_ships[-1]`, or `None` if
 no ship is owned yet) and `game_screen.reapply_outfits` as the
 stats-refresh callback. Buy tab: a `ShopMenu`-style list, but purchases add

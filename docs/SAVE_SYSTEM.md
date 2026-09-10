@@ -93,8 +93,8 @@ user-facing behavior change — don't discover it after the fact.
 
 `story.json` has a `"version"` field (semver-ish, e.g. `"1.0.0"`), recorded
 into every save as `game_state["story_version"]` (`SpaceScreen.story_version`,
-set by `build_save_game_state()` in `main.py`). Loading warns (via `main.py`'s
-`warn_if_story_version_mismatch()`, **non-blocking** — it never refuses to
+set by `build_save_game_state()` in `game/app/loop_helpers.py`). Loading warns
+(via `warn_if_story_version_mismatch()`, same module, **non-blocking** — it never refuses to
 load) whenever a save's recorded version doesn't match the story's current one,
 or predates versioning entirely (no `story_version` key).
 
@@ -218,8 +218,8 @@ moon city interior is labeled "Rust Moon Settlement"). `game_state["story"]`
 and `game_state["system_id"]` record which story and which star system within
 it the save belongs to, so loading resolves config from the right place
 (`config/stories/{story}/...`) and jumps back into the right system rather
-than always the story's starting one - built by `main.py`'s
-`build_save_game_state()`, which exists specifically because both save call
+than always the story's starting one - built by
+`build_save_game_state()` (`game/app/loop_helpers.py`), which exists specifically because both save call
 sites used to set these on a dict that then got discarded (see git history
 for the "system not restored" bug).
 

@@ -20,9 +20,11 @@ station/moon interiors with NPCs, physics-based flight, full save/load.
 
 ```
 space-game/
-├── main.py                  # Game loop, screen state machine, pygame init
+├── main.py                  # Game loop, screen state machine, pygame init + video/window
 ├── run_tests.py             # Test runner (discovers tests/test_*.py)
 ├── game/
+│   ├── app/
+│   │   └── loop_helpers.py   # main()'s helpers: save-state, menu builders, step_world
 │   ├── constants.py          # Colors, dimensions, UI config (shared)
 │   ├── utils.py              # Coord conversion, render helpers, file I/O, camera (shared)
 │   ├── world/               # Physics / entities

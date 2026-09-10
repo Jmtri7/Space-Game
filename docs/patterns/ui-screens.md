@@ -214,7 +214,7 @@ NPC") never needs to know the full set of possible screens - only that
 "shop config present" means "ask the dispatcher."
 
 **Implementation:** (`LocationScreen._build_local_character`, `handle_input`;
-`main.py`'s `build_shop_menu`)
+`build_shop_menu` in `game/app/loop_helpers.py`)
 ```python
 # NPC config: a "shop" key instead of (or alongside) a dialogue_tree
 {"name": "Reeve Katic", "role": "outfitter",
