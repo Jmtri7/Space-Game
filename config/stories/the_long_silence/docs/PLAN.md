@@ -291,9 +291,9 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
     Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
     stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.
-  - [~] More Act II missions (escort/recon) as the content deepens — see the
-    Act II/III deepening plan (`~/.claude/plans/proud-meandering-biscuit.md`).
-    **Phase 1 done:** the two courier missions now carry `on_end_flags`
+  - [~] More Act II missions (escort/recon) — full plan in
+    [ACT2_3_DEEPENING.md](ACT2_3_DEEPENING.md) (5 phases, canonical).
+    **Phase 1 done** (`e85846f`): the two courier missions now carry `on_end_flags`
     (`relief_run_done` / `evac_run_done`); a self-sequencing "reactivation
     front" dispatch chain (`relay_front_verdance` → `_ossuary` → `_span`, each
     gated on the next story-progress flag); and the once-dead dispatch flags
@@ -328,12 +328,16 @@ First-pass content is complete and plays end to end; these are quality passes:
 
 ## Phase 8 — Content: Act III "The Span" + endings
 
+> The Choir sequence, the signal-source scene, the flag-gated ending fork, and
+> flag-keyed epilogues are Phases 4–5 of [ACT2_3_DEEPENING.md](ACT2_3_DEEPENING.md).
+
 - [~] Expand the Hub Zero interior — added a **Hub Archive** bay + an
   Archivist NPC: the shutdown reason (quarantine / scorched-earth / accident)
   is now a *place*, the Hub's own three conflicting logs read from the
   machine's end, setting `read_hub_archive`. Plus a Choir-hand ambient NPC
-  (Hub Zero is 7 NPCs now). More could follow (a full Choir sequence, the
-  reactivation-signal source scene).
+  (Hub Zero is 7 NPCs now). **Deepening Phase 4** adds the Choir sequence
+  mission, the Core Voice (signal-source scene), consumes `read_hub_archive`,
+  and gates the ending fork behind it.
 - [x] Three `end_story` branches wired to the First Warden fork (restore / sever / hold_middle), each with a confirm step; `requires_rep` / `requires_not_flag` gate availability — **built in 6.5**
 - [x] Reputation checks decide epilogue tone — `endings.json` has all three
   endings with `epilogue` paragraphs + a `faction_epilogue` line for every
