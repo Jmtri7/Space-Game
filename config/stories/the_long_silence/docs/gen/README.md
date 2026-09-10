@@ -5,7 +5,6 @@ The generated JSON *is* committed (per the project convention); these are the
 tools that produced it. **Run from the repo root**, in this order:
 
 ```bash
-python config/stories/the_long_silence/docs/gen/gen_assets.py     # per-culture palettes / ship+station+moon+building catalogue / outfit stubs
 python config/stories/the_long_silence/docs/gen/gen_halcyon.py    # 6.1 Halcyon slice   (owns systems/halcyon.json)
 python config/stories/the_long_silence/docs/gen/gen_kiln.py       # 6.2 Kiln slice      (owns systems/kiln.json)
 python config/stories/the_long_silence/docs/gen/gen_verdance.py   # 6.3 Verdance slice  (owns systems/verdance.json)
@@ -14,11 +13,26 @@ python config/stories/the_long_silence/docs/gen/gen_span.py       # 6.5 The Span
 python config/stories/the_long_silence/docs/gen/gen_carriers.py   # 6.6 free-carriers pass  (patches every system - MUST run last)
 ```
 
-- **`gen_assets.py`** writes the whole per-culture asset catalogue (12 palettes,
-  18 ships + `ship_types.json`, 6 stations, 6 moons, 18 buildings +
-  `building_types.json`, 60 outfit stubs in `graphics.json`). Geometry starts as
-  a borrowed placeholder copy with an `identity` brief; each slice below then
-  authors its culture's real geometry over the top.
+The chain runs clean end to end and is non-destructive **except** for the
+bespoke wardrobe `graphics/articles/*.json`: ~15 of them (authority / carrier /
+combine / drift) carry hand-tuned vertex geometry from `config/editor.html` that
+was never back-ported into the `_slice_kit.py` article builders, so a full
+re-run reverts that polish. Until the builders are updated to emit the tuned
+points (or the polish is redone after a run), `git checkout HEAD --
+config/stories/the_long_silence/graphics/articles/` after running the chain, or
+just don't run it when you only need a content change elsewhere. Everything else
+(`systems/`, `missions.json`, `graphics.json`, `building_types.json`,
+`ship_types.json`, `pilots.json`) regenerates byte-identical.
+
+- **`gen_assets.py` is retired** (deleted 2026-09-09, alongside Phase 0's
+  `gen_systems.py` / `retag_assets.py`). It was the 6.0 bootstrap that stamped
+  out placeholder per-culture stubs; slices 6.1-6.6 have since authored real
+  geometry over every one of those stubs, so re-running it would only overwrite
+  finished art with placeholders. It also broke on the config-module split
+  (`graphics/palettes/civilian.json` moved into `figures-human`). The per-culture
+  catalogue — `ship_types.json`, `building_types.json`, `graphics.json` ships/
+  stations/moons/outfits, `graphics/palettes/` — is now slice-owned + hand-
+  maintained. Its historical form is in git (commit `eb380c7` era).
 - **`_slice_kit.py`** — shared helpers the `gen_<system>.py` scripts import
   (file IO, the connected-floor-plan builder, the free-drawn wardrobe-article
   builders). Not run directly.
@@ -33,5 +47,6 @@ python config/stories/the_long_silence/docs/gen/gen_carriers.py   # 6.6 free-car
 - **`gen_carriers.py`** runs last: it authors the patchwork carrier ships +
   wardrobe, then patches a `free_carrier` AI ship + a berth NPC + dressing into
   every already-written `systems/*.json` (idempotent, keyed by name).
-- Phase 0's `gen_systems.py` + `retag_assets.py` are retired - every system is
-  now owned by a slice script.
+- Phase 0's `gen_systems.py` + `retag_assets.py` and 6.0's `gen_assets.py` are
+  retired - every system and every per-culture asset is now owned by a slice
+  script or hand-maintained.

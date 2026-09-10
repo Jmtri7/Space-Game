@@ -8,8 +8,9 @@ Produces, self-contained (run after gen_assets; see docs/gen/README.md):
   - patched graphics.json entries (thrusters / local_points / windows)
   - graphics/palettes/authority_dress.json                   navy + chrome dress
   - systems/halcyon.json      real Hub Control floor plan + full NPC roster
-  - missions.json             the "induction" anchor tutorial (replaces the borrowed file)
-  - story.json                starting_mission wired
+  - missions.json             the "induction" anchor tutorial (merged in - the
+                              other slices add their own anchor missions here)
+  - story.json                loan terms + version + description
 
 Harbor Authority style (cultures.json theme): orderly and symmetrical,
 chrome-and-navy livery, evenly ranked windows, a docking-guidance chevron
@@ -778,7 +779,15 @@ INDUCTION = {
          "one_way_message": say(IND, "Last thing. Kiln's beacon is keyed - fly well clear of the star until the drift prompt shows, open the Star Map (M), select Kiln, and press J. Log what you find there, pilot. Halcyon out.")},
     ],
 }
-missions = {"induction": INDUCTION}
+# Merge, don't overwrite - the other slices (gen_kiln / gen_verdance /
+# gen_ossuary) each add their own anchor mission to this same file, and the
+# gen chain no longer runs from a clean slate every time. "induction" stays
+# first so it reads as the entry point.
+try:
+    missions = r(f"{S}/missions.json")
+except FileNotFoundError:
+    missions = {}
+missions = {"induction": INDUCTION, **{k: v for k, v in missions.items() if k != "induction"}}
 w(f"{S}/missions.json", missions)
 
 # ======================================================================
