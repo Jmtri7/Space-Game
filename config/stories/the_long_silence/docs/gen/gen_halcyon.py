@@ -571,7 +571,6 @@ HUB_NPCS = [
 
     {"name": "Deck-hand Rusk", "x": 1240, "y": 780, "role": "dockworker",
      "faction": "harbor_authority", "outfit": "authority_dock_masc",
-     "ambient": {"range": 380, "message": "Mind the clamps on pad three - that gantry swings wide when a hull comes in."},
      "greeting": "Busiest I've seen the Berth in my life. Everyone wants out before the lanes fill up.",
      "dialogue_options": ["Understood", "Leave"]},
 

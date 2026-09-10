@@ -456,7 +456,6 @@ HOLD_NPCS = [
 
     {"name": "Rockjack Bsix", "x": 660, "y": 880, "role": "dockworker",
      "faction": "ninefold_combine", "outfit": "combine_dock_masc",
-     "ambient": {"range": 360, "message": "Mind the claw arm - it swings on the ember light, not before it."},
      "greeting": "Thirty years cutting the Ninefold Deep. The Combine fed me every one of them. I know what I owe.",
      "dialogue_options": ["Understood", "Leave"]},
 
