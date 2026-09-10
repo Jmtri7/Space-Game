@@ -329,7 +329,7 @@ NW_NPCS = [
                      "options": [{"label": "Understood", "next": None, "action": "light_beacon:the_span"}]},
         "cold": {"text": "Of course they did. Read the wall anyway, if you ever change your mind. The dead do not take sides.",
                  "options": [{"label": "Leave", "next": None}]},
-        "done": {"text": "You have read what we keep. You know the Silence was a choice, and roughly what it cost, and that the Vigil would not make it again the same way - nor unmake it carelessly. The Span's beacon is lit. Go and choose.",
+        "done": {"text": "You have read what we keep, and I passed the same warning to you by dispatch besides - the dead get no other voice, so we use every one we have. You know the Silence was a choice, roughly what it cost, and that the Vigil would neither make it again the same way nor unmake it carelessly. The Span's beacon is lit. Go and choose.",
                  "options": [{"label": "Understood", "next": None}]},
         "warm": {"text": "You carried the wall's account honestly. If the Hub asks what the dead would want, we would trust you to say it: understand a thing before you undo it.",
                  "options": [

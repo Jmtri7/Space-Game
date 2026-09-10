@@ -31,6 +31,7 @@ def one_way(sender, text):
 
 CARRIER_RELIEF_RUN = {
     "title": "Relief Down the Line",
+    "on_end_flags": ["relief_run_done"],
     "on_end_rep": {"free_carrier": 6, "the_vigil": 3},
     "stages": [
         {"text": "Carry the relief load to Ossuary - jump there.",
@@ -47,6 +48,7 @@ CARRIER_RELIEF_RUN = {
 
 COMBINE_EVACUATION = {
     "title": "Last Hull Out of Kiln",
+    "on_end_flags": ["evac_run_done"],
     "on_end_rep": {"ninefold_combine": 3, "free_carrier": 5},
     "stages": [
         {"text": "Jump to Kiln before the Combine seals the lane.",

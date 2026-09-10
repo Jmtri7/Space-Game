@@ -339,8 +339,13 @@ HZ_NPCS = [
 
     {"name": "Warden of the Fourth Segment", "x": 640, "y": 600, "role": "guard",
      "faction": "the_wardens", "outfit": "warden_security_masc",
-     "greeting": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
-     "dialogue_options": ["Understood", "Leave"]},
+     "dialogue_tree": {"root": "start",
+        "conditional_roots": [{"flag": "span_hailed", "node": "acknowledged"}],
+        "nodes": {
+        "start": {"text": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
+                  "options": [{"label": "Understood", "next": None}]},
+        "acknowledged": {"text": "The Hub keyed the beacon to your transponder before you cleared Ossuary - it has been expecting you by name for days. We do not know how it decided you were the one. We only opened the lane it asked us to open.",
+                         "options": [{"label": "Understood", "next": None}]}}}},
 
     # The Hub Archive - the shutdown reason as a *place*, not only a dialogue
     # reveal in the_vigil_record. The machine's own logs give the same three

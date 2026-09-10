@@ -26,17 +26,13 @@
       },
       "the_drift": {
         "allied": "feeds half the inner lanes now and still cannot hold a vote to noon.",
-        "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to."
+        "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to.",
+        "hostile": "was outvoted by the traffic, and says the assembly you forced was never really free."
       },
       "the_wardens": {
         "allied": "tend the Hub for the Authority now, and pray at it the same as before.",
         "neutral": "tend the Hub, and have stopped explaining it to the people who ask.",
         "hostile": "tend the Hub for a master they did not choose, and blame the pilot who handed it over."
-      },
-      "the_drift": {
-        "allied": "feeds half the inner lanes now and still cannot hold a vote to noon.",
-        "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to.",
-        "hostile": "was outvoted by the traffic, and says the assembly you forced was never really free."
       },
       "free_carrier": {
         "allied": "lost the slow lanes and the life that went with them, and toasts you anyway.",

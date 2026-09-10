@@ -291,7 +291,18 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
     Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
     stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.
-  - [ ] More Act II missions (escort/recon) as the content deepens.
+  - [~] More Act II missions (escort/recon) as the content deepens — see the
+    Act II/III deepening plan (`~/.claude/plans/proud-meandering-biscuit.md`).
+    **Phase 1 done:** the two courier missions now carry `on_end_flags`
+    (`relief_run_done` / `evac_run_done`); a self-sequencing "reactivation
+    front" dispatch chain (`relay_front_verdance` → `_ossuary` → `_span`, each
+    gated on the next story-progress flag); and the once-dead dispatch flags
+    (`authority_briefed`, `carrier_contact`, `vigil_warned`,
+    `relay_front_kiln_seen`, `span_hailed`) are wired into `conditional_roots`
+    reactions on Amsel / the Verdance & Kiln carrier berths / Keeper Aramis /
+    the Warden of the Fourth Segment. Phases 2–5 (escort mission, recon +
+    reputation fork + carrier pledge, Act III Choir sequence, Segment Four +
+    flag-keyed epilogues) still to build.
 - [x] Kiln mobilisation — a Combine blockade pair over Verdance
   (`gen_verdance.py` `ai_ships`, `requires_flag: combine_mobilised`, pilots
   corran/molt). Set by the `combine_mobilises` dispatch; hostile via the normal

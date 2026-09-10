@@ -275,6 +275,14 @@ BERTH_NPC = {
 }
 CARRIER_OUT = {"halcyon": "carrier_flight_masc", "kiln": "carrier_flight_femme", "verdance": "carrier_civilian_masc",
                "ossuary": "carrier_flight_femme", "the_span": "carrier_dock_masc"}
+# (flag, node-id, line) - a conditional_roots reaction wired into the berth NPC
+# for systems where an Act II story flag lands. The rest stay flat greetings.
+BERTH_REACT = {
+    "verdance": ("carrier_contact", "contacted",
+                 "You took the open-hand call, then. Word runs the slow lanes faster than the fast ones - whatever the Hub decides, there is a berth for you at any carrier slip in the region, and a debt owed at most of them."),
+    "kiln": ("relay_front_kiln_seen", "front_passed",
+             "You felt it come through here too - the beacon handshake, like the whole claw held its breath. The Combine logged it and said nothing. They always say nothing. Fly on, friend."),
+}
 # (berth-NPC x, y, crate x, y) - a walkable spot in each station's own plan
 BERTH_SPOT = {
     "halcyon": (980, 620, 980, 800),     # The Berth (east arm)
@@ -299,9 +307,22 @@ for sysid, ship in CARRIER_SHIP.items():
     # the berth NPC + its crate - the plans diverge, so this can't be one point
     bx, by, cx, cy = BERTH_SPOT[sysid]
     if not any(n.get("name") == bname for n in npcs):
-        npcs.append({"name": bname, "x": bx, "y": by, "role": "traveler",
-                     "faction": "free_carrier", "outfit": CARRIER_OUT[sysid],
-                     "greeting": bline, "dialogue_options": ["Fair enough", "Leave"]})
+        npc = {"name": bname, "x": bx, "y": by, "role": "traveler",
+               "faction": "free_carrier", "outfit": CARRIER_OUT[sysid]}
+        if sysid in BERTH_REACT:
+            flag, node, react = BERTH_REACT[sysid]
+            npc["dialogue_tree"] = {
+                "root": "start",
+                "conditional_roots": [{"flag": flag, "node": node}],
+                "nodes": {
+                    "start": {"text": bline, "options": [{"label": "Fair enough", "next": None}]},
+                    node: {"text": react, "options": [{"label": "Understood", "next": None}]},
+                },
+            }
+        else:
+            npc["greeting"] = bline
+            npc["dialogue_options"] = ["Fair enough", "Leave"]
+        npcs.append(npc)
     structs = interior.setdefault("structures", [])
     if not any(s.get("x") == cx and s.get("y") == cy for s in structs):
         structs.append({"x": cx, "y": cy, "building_type": "crates"})

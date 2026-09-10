@@ -457,6 +457,18 @@ class TestActsAndEndings(unittest.TestCase):
         es = EndingScreen(*ending_report("the_long_silence", "hold_middle", p))
         self.assertEqual(es.buttons()[0][0], "menu")
 
+    def test_every_ending_covers_every_faction_and_band(self):
+        # PLAN Phase 7.1b - the restore ending used to list `the_drift`
+        # twice (one block missing `hostile`); guard the full matrix.
+        endings = utils.get_endings("the_long_silence")
+        factions = list(utils.get_factions("the_long_silence"))
+        for ending_id in ("restore", "sever", "hold_middle"):
+            fe = endings[ending_id]["faction_epilogue"]
+            for fid in factions:
+                for band in ("allied", "neutral", "hostile"):
+                    self.assertIn(band, fe.get(fid, {}),
+                                  f"{ending_id}/{fid} missing {band}")
+
 
 class TestContentGate(unittest.TestCase):
     """game/world/content_gate.py - the flag / reputation visibility check

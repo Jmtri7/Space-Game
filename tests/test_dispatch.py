@@ -54,3 +54,36 @@ class TestDispatch(unittest.TestCase):
         self.assertEqual(pending_dispatches(d, p), [])  # standing 0 is not < 0
         p.adjust_reputation("ninefold_combine", -5)
         self.assertEqual([n for n, _ in pending_dispatches(d, p)], ["x"])
+
+
+class TestLongSilenceActTwoPlumbing(unittest.TestCase):
+    """Act II reactivity plumbing (PLAN Phase 7.1) against the real story
+    config: the reactivation-front dispatch chain arrives in story order, and
+    the two courier missions leave an on_end_flags trace."""
+
+    def setUp(self):
+        from game.utils import get_dispatches, get_missions
+        self.d = get_dispatches("the_long_silence")
+        self.m = get_missions("the_long_silence")
+
+    def _pending(self, p):
+        return [n for n, _ in pending_dispatches(self.d, p)]
+
+    def test_reactivation_front_chain_is_story_ordered(self):
+        p = Possessions()
+        self.assertNotIn("relay_front_kiln", self._pending(p))
+        p.flags["jumped_to:verdance"] = True
+        self.assertIn("relay_front_kiln", self._pending(p))
+        self.assertNotIn("relay_front_verdance", self._pending(p))
+        p.flags["beacon_ossuary_lit"] = True
+        self.assertIn("relay_front_verdance", self._pending(p))
+        self.assertNotIn("relay_front_ossuary", self._pending(p))
+        p.flags["act_span"] = True
+        self.assertIn("relay_front_ossuary", self._pending(p))
+        self.assertNotIn("relay_front_span", self._pending(p))
+        p.flags["jumped_to:the_span"] = True
+        self.assertIn("relay_front_span", self._pending(p))
+
+    def test_courier_missions_now_leave_a_trace(self):
+        self.assertEqual(self.m["carrier_relief_run"]["on_end_flags"], ["relief_run_done"])
+        self.assertEqual(self.m["combine_evacuation"]["on_end_flags"], ["evac_run_done"])

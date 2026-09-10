@@ -706,11 +706,35 @@
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_flight_femme",
-            "greeting": "Combine let me tie up for exactly one shift and charged me for the air. Two centuries of that. The beacon won't fix it but it might route around it.",
-            "dialogue_options": [
-              "Fair enough",
-              "Leave"
-            ]
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "relay_front_kiln_seen",
+                  "node": "front_passed"
+                }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Combine let me tie up for exactly one shift and charged me for the air. Two centuries of that. The beacon won't fix it but it might route around it.",
+                  "options": [
+                    {
+                      "label": "Fair enough",
+                      "next": null
+                    }
+                  ]
+                },
+                "front_passed": {
+                  "text": "You felt it come through here too - the beacon handshake, like the whole claw held its breath. The Combine logged it and said nothing. They always say nothing. Fly on, friend.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
           }
         ],
         "seamless": true,

@@ -1,5 +1,5 @@
 {
-  "_comment": "Story inbox comms - faction handlers giving cross-system orders without an NPC in the room (gap F / Phase 7). Each arrives the frame its content-gate first passes (game/world/dispatch.py); keys are content_gate's vocabulary. 'dispatch:<id>' is set on receipt and can gate a later one.",
+  "_comment": "Story inbox comms - faction handlers giving cross-system orders without an NPC in the room (gap F / Phase 7). Each arrives the frame its content-gate first passes (game/world/dispatch.py); keys are content_gate's vocabulary (a single value each - no AND across two requires_flag). 'dispatch:<id>' is set on receipt and can gate a later one. Delivery is throttled (DISPATCH_SPACING_FRAMES) so a burst trickles in one at a time; still, gate a sequence on story-progress flags that come in order (jumped_to:/beacon_*_lit/act_*) rather than all on one flag.",
 
   "authority_first_orders": {
     "sender": "Harbor Authority — Dispatch",
@@ -15,6 +15,30 @@
     "body": "The relight signal has reached the Kiln beacon and moved on outward. You are still ahead of it. Barely.",
     "requires_flag": "jumped_to:verdance",
     "on_receive_flags": ["relay_front_kiln_seen"]
+  },
+
+  "relay_front_verdance": {
+    "sender": "Relay Network",
+    "subject": "Reactivation front — Verdance",
+    "body": "The signal has caught Verdance behind you. The Drift's cloud-city registered the handshake this morning and is still arguing about what it means. Keep moving.",
+    "requires_flag": "beacon_ossuary_lit",
+    "on_receive_flags": ["relay_front_verdance_seen"]
+  },
+
+  "relay_front_ossuary": {
+    "sender": "Relay Network",
+    "subject": "Reactivation front — Ossuary",
+    "body": "It reached Ossuary. The Vigil's beacon lit and the Vigil went quiet - no acknowledgement, no traffic. Whatever they think is coming, they are not saying it on an open channel.",
+    "requires_flag": "act_span",
+    "on_receive_flags": ["relay_front_ossuary_seen"]
+  },
+
+  "relay_front_span": {
+    "sender": "Relay Network",
+    "subject": "Reactivation front — the Span",
+    "body": "The front caught up with you at the core. Every beacon between Halcyon and here is lit now. There is nowhere further ahead of it to be. Whatever happens to the Relay happens at the Span, and it happens with you standing in it.",
+    "requires_flag": "jumped_to:the_span",
+    "on_receive_flags": ["relay_front_span_seen"]
   },
 
   "carrier_open_hand": {

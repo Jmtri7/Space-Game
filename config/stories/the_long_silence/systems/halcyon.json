@@ -656,6 +656,12 @@
             "outfit": "authority_official_masc",
             "dialogue_tree": {
               "root": "start",
+              "conditional_roots": [
+                {
+                  "flag": "authority_briefed",
+                  "node": "briefed"
+                }
+              ],
               "nodes": {
                 "start": {
                   "text": "I keep the approach records - two hundred years of them, unbroken. It's why the Authority can run the lanes and no one else can.",
@@ -675,6 +681,19 @@
                   "options": [
                     {
                       "label": "Unsettling",
+                      "next": null
+                    }
+                  ]
+                },
+                "briefed": {
+                  "text": "You're carrying Authority standing orders now - I logged the dispatch as it came in. Whatever the outer systems tell you out there, the record here is plain: the network was ours, and it is ours to bring back. Keep that straight.",
+                  "options": [
+                    {
+                      "label": "What do the oldest records say?",
+                      "next": "old"
+                    },
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]

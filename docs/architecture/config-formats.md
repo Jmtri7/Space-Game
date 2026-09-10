@@ -178,10 +178,15 @@ flag and rely on the spacing to sort them out.
 
 Gate keys are `content_gate`'s (`requires_flag` / `requires_not_flag` /
 `requires_rep` / `requires_rep_below`); none = arrives on the first check.
+Each key takes a **single** value - there's no AND of two `requires_flag`
+on one entry, so a sequence chains on `dispatch:<id>` (see below) or on
+story-progress flags that land in order.
 On receipt a `dispatch:<id>` flag is set (usable as a later dispatch's
 `requires_flag` to chain them), `on_receive_flags` / `on_receive_rep` apply,
 and `start_mission` begins (if not already active/done) with its first
-stage's `one_way_message` delivered.
+stage's `one_way_message` delivered. The `the_long_silence` "reactivation
+front" chain (`relay_front_kiln` → `_verdance` → `_ossuary` → `_span`) is the
+worked example - each hangs on the next system's unlock/act flag.
 
 ## Interior geometry (`LocationScreen`)
 

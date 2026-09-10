@@ -593,13 +593,19 @@ HUB_NPCS = [
 
     {"name": "Records Keeper Amsel", "x": 480, "y": 650, "role": "clerk",
      "faction": "harbor_authority", "outfit": "authority_official_masc",
-     "dialogue_tree": {"root": "start", "nodes": {
+     "dialogue_tree": {"root": "start",
+        "conditional_roots": [{"flag": "authority_briefed", "node": "briefed"}],
+        "nodes": {
         "start": {"text": "I keep the approach records - two hundred years of them, unbroken. It's why the Authority can run the lanes and no one else can.",
                   "options": [
                       {"label": "What do the oldest records say?", "next": "old"},
                       {"label": "Just looking", "next": None}]},
         "old": {"text": "The last clean entries before the Silence. Then a single line, every station, same hour: BEACON NET DOWN - HOLD ALL TRAFFIC. No cause logged. The Vigil think they know why. I only know we obeyed it for two centuries.",
-                "options": [{"label": "Unsettling", "next": None}]}}}},
+                "options": [{"label": "Unsettling", "next": None}]},
+        "briefed": {"text": "You're carrying Authority standing orders now - I logged the dispatch as it came in. Whatever the outer systems tell you out there, the record here is plain: the network was ours, and it is ours to bring back. Keep that straight.",
+                    "options": [
+                        {"label": "What do the oldest records say?", "next": "old"},
+                        {"label": "Understood", "next": None}]}}}},
 
     {"name": "Displaced traveller", "x": 560, "y": 760, "role": "traveler",
      "faction": "free_carrier", "outfit": "carrier_civilian_femme",
@@ -798,9 +804,11 @@ w(f"{S}/missions.json", missions)
 # ======================================================================
 story = r(f"{S}/story.json")
 # 0.11.0 cut the starter loan to 12k; 0.12.0 adds the shield_capacitor /
-# sensor_array outfits + gives reinforced_hull a real +max_health (all from
-# the ships-core module) and the Outfitter a sell-back tab.
-story["version"] = "0.12.0"
+# sensor_array outfits + reinforced_hull +max_health + the Outfitter sell tab;
+# 0.13.0 deepens Act II/III (reactivation-front dispatch chain, courier-mission
+# on_end_flags, NPC reactions to the once-dead dispatch flags - see
+# config/stories/the_long_silence/docs/PLAN.md Phase 7).
+story["version"] = "0.13.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised
