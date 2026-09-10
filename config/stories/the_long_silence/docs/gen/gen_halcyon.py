@@ -504,14 +504,14 @@ HUB_NPCS = [
      "dialogue_tree": {"root": "start", "conditional_roots": [
          {"flag": "induction_done", "node": "done"}, {"flag": "induction_accepted", "node": "midway"}],
       "nodes": {
-        "start": {"text": "Harbor Authority induction. First time flying our beacons? I'll walk you through the ring, get you a loan and a hull, and see you off toward Kiln - the next dark lane. Every step tracks in your Mission Log (4).",
+        "start": {"text": "Harbor Authority induction. First time flying our beacons? I'll walk you through the ring, get you a loan and a hull, and see you off toward Kiln - the next dark lane. Every step tracks in your Mission Log (3).",
                   "options": [
                       {"label": "Walk me through it.", "next": "accepted",
                        "actions": ["set_flag:induction_accepted", "start_mission:induction"]},
                       {"label": "I'll manage on my own.", "next": None}]},
         "accepted": {"text": "Good. Close the comm and lead off down the approach arm - I'm right behind you.",
                      "options": [{"label": "Lead on", "next": None}]},
-        "midway": {"text": "Still on the induction - check your Mission Log (4) for the current step. Or strike out alone, your call.",
+        "midway": {"text": "Still on the induction - check your Mission Log (3) for the current step. Or strike out alone, your call.",
                    "options": [{"label": "Keep going", "next": None},
                                {"label": "I'll manage from here", "next": "declined", "action": "abandon_mission:induction"}]},
         "declined": {"text": "Understood. The Berth's the east arm - where you docked - for a hull. The Lender's Office is the south arm for the credits. Kiln's beacon lights when you're ready to leave - come back and tell me. Safe flying.",
@@ -746,7 +746,7 @@ INDUCTION = {
     "stages": [
         {"text": "Walk a lap of the Approach Concourse - WASD or the arrow keys.",
          "complete_flag": "walked_interior", "reset_on_activation": True,
-         "one_way_message": say(IND, "You're on the induction - it tracks in your Mission Log (4). Feet first: walk the length of an approach arm on WASD or the arrow keys.")},
+         "one_way_message": say(IND, "You're on the induction - it tracks in your Mission Log (3). Feet first: walk the length of an approach arm on WASD or the arrow keys.")},
         {"text": "Target someone - press Q or E to cycle a lock, or click them.",
          "complete_flag": "targeted_person", "reset_on_activation": True,
          "one_way_message": say(IND, "See everyone on the ring? Tap Q or E to cycle a target lock, or just click a person. Their name and role show top-right.")},
@@ -756,9 +756,9 @@ INDUCTION = {
         {"text": "Open your Mission Log - press 4.",
          "complete_flag": "viewed_mission_log", "reset_on_activation": True,
          "one_way_message": say(IND, "Press 4 for your Mission Log. Every step I give you is listed there.")},
-        {"text": "Open your Possessions - press 3 (check the Standing panel).",
+        {"text": "Open your Possessions - press 2 (check the Standing panel).",
          "complete_flag": "viewed_possessions", "reset_on_activation": True,
-         "one_way_message": say(IND, "Press 3 for Possessions - credits, ships, cargo, and your Standing with each faction.")},
+         "one_way_message": say(IND, "Press 2 for Possessions - credits, ships, cargo, and your Standing with each faction.")},
         {"text": "Take the Authority starter loan - Signal Officer Doss, Lender's Office (south arm).",
          "complete_flag": "took_loan",
          "one_way_message": say(IND, "The south arm - the Lender's Office. Talk to Signal Officer Doss and take the starter loan - you'll need it for a hull.")},
@@ -777,9 +777,9 @@ INDUCTION = {
         {"text": "Turn around and brake until your speed drops - S, then thrust.",
          "complete_flag": "braked_below_threshold", "reset_on_activation": True, "reset_flags": ["used_brake"],
          "one_way_message": say(IND, "Now cancel it - hold S to point retrograde, then thrust to kill your speed.")},
-        {"text": "Fly clear of the system centre, then jump to Kiln (1 to pick it, 2 to jump).",
+        {"text": "Fly clear of the system centre, then jump to Kiln (1 to pick it, V to jump).",
          "complete_flag": "jumped_to:kiln",
-         "one_way_message": say(IND, "Last thing. Kiln's beacon is keyed - fly well clear of the star until the drift prompt shows, open the Star Map (1), select Kiln, and press 2. Log what you find there, pilot. Halcyon out.")},
+         "one_way_message": say(IND, "Last thing. Kiln's beacon is keyed - fly well clear of the star until the drift prompt shows, open the Star Map (1), select Kiln, and press V. Log what you find there, pilot. Halcyon out.")},
     ],
 }
 # Merge, don't overwrite - the other slices (gen_kiln / gen_verdance /

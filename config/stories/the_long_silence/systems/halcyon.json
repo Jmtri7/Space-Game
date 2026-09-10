@@ -309,7 +309,7 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Harbor Authority induction. First time flying our beacons? I'll walk you through the ring, get you a loan and a hull, and see you off toward Kiln - the next dark lane. Every step tracks in your Mission Log (4).",
+                  "text": "Harbor Authority induction. First time flying our beacons? I'll walk you through the ring, get you a loan and a hull, and see you off toward Kiln - the next dark lane. Every step tracks in your Mission Log (3).",
                   "options": [
                     {
                       "label": "Walk me through it.",
@@ -335,7 +335,7 @@
                   ]
                 },
                 "midway": {
-                  "text": "Still on the induction - check your Mission Log (4) for the current step. Or strike out alone, your call.",
+                  "text": "Still on the induction - check your Mission Log (3) for the current step. Or strike out alone, your call.",
                   "options": [
                     {
                       "label": "Keep going",

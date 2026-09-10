@@ -561,14 +561,14 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # click an option or the X). C collapses it to a two-liner.
         controls_rect = None
         if draw_hud and not self.active_dialogue:
+            # T (talk) and G (board / exit) are left off - each shows its own
+            # bottom-status prompt ("Press T to talk to ...", "Press G to enter
+            # portal") whenever it actually applies.
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD / Arrows", "Walk"),
                 ("Q  /  E", "Cycle target"),
-                ("T", "Talk"),
-                ("G", "Board / exit"),
-                ("1", "Star map"),
-                ("3  /  4", "Gear / log"),
+                ("1  /  2  /  3", "Map / gear / log"),
                 ("Wheel", "Scroll log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale,
@@ -737,15 +737,15 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags, self.player.possessions.reputation)
                     nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags, self.player.possessions.reputation))
                     self.active_dialogue = nearest.dialogue
-            elif event.key == pygame.K_3:
+            elif event.key == pygame.K_2:
                 # Generic gameplay-event flag - lets a tutorial stage use
-                # "viewed_possessions" as its complete_flag; mirrors K_4 below.
+                # "viewed_possessions" as its complete_flag; mirrors K_3 below.
                 self.player.possessions.flags["viewed_possessions"] = True
                 return "possessions"
-            elif event.key == pygame.K_4:
+            elif event.key == pygame.K_3:
                 # Generic gameplay-event flag - lets a mission stage use
                 # "viewed_mission_log" as its complete_flag (see
-                # missions.json's first_flight); mirrors SpaceScreen's K_4.
+                # missions.json's first_flight); mirrors SpaceScreen's K_3.
                 self.player.possessions.flags["viewed_mission_log"] = True
                 return "missions"
             elif event.key == pygame.K_c:

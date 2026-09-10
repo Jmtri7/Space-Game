@@ -604,7 +604,7 @@ def main():
                 action = star_map.handle_input(events)
                 if _pressed_any(events, pygame.K_1, pygame.K_ESCAPE):
                     action = "close"
-                elif _pressed_any(events, pygame.K_2):
+                elif _pressed_any(events, pygame.K_v):
                     action = "jump"
                 if action in ("close", "jump"):
                     game_screen.selected_system_id = star_map.selected_system_id
@@ -694,7 +694,7 @@ def main():
 
             elif current_screen == "possessions":
                 action = possessions_menu.handle_input(events)
-                if _pressed_any(events, pygame.K_3, pygame.K_ESCAPE):
+                if _pressed_any(events, pygame.K_2, pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = possessions_return_screen
@@ -703,7 +703,7 @@ def main():
 
             elif current_screen == "missions":
                 action = mission_log.handle_input(events)
-                if _pressed_any(events, pygame.K_4, pygame.K_ESCAPE):
+                if _pressed_any(events, pygame.K_3, pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = missions_return_screen

@@ -251,18 +251,17 @@ class _HudMixin:
         # click an option or the X). C collapses it to a two-liner.
         controls_rect = None
         if draw_hud and not self.active_dialogue:
+            # Controls with a persistent bottom-status prompt of their own
+            # (F autopilot, G land, R hail, V jump) are deliberately left off
+            # this pane - the on-screen prompt already says how, when it applies.
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD / Arrows", "Fly"),
                 ("Z / X", "Rotate view"),
-                ("T  /  Q  E", "Target mode / target"),
-                ("Click / hover blip", "Minimap: target / name"),
+                ("T", "Target mode"),
+                ("Q / E", "Cycle target"),
                 ("Space", "Fire"),
-                ("F", "Autopilot"),
-                ("G", "Land / board"),
-                ("R", "Hail target"),
-                ("2  /  1", "Jump / map"),
-                ("3  /  4", "Gear / log"),
+                ("1  /  2  /  3", "Map / gear / log"),
                 ("Wheel", "Scroll pane"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale,
@@ -324,9 +323,9 @@ class _HudMixin:
                 # JUMP_SELF_MIN_DISTANCE), so only prompt for it once that's
                 # actually true.
                 if self.selected_system_id != self.system_id:
-                    status_lines.append(("Press 2 to Jump", GREEN))
+                    status_lines.append(("Press V to Jump", GREEN))
                 elif self._drifted_from_center():
-                    status_lines.append(("Drifting far from the system - open the Star Map (1) and jump (2) back", YELLOW))
+                    status_lines.append(("Drifting far from the system - open the Star Map (1) and jump (V) back", YELLOW))
                 if target_obj:
                     status_lines.append(("Press F for Autopilot", GREEN))
                 if isinstance(target_obj, Character):

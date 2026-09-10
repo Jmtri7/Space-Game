@@ -204,7 +204,7 @@ dialogue); the world is simply frozen (`step_world()` is a no-op for
 - F: engage autopilot toward the current target · G: land
 - R: hail the targeted ship — opens a dialogue box and fully pauses the simulation until it closes (no `update()`/`update_background_locations()` while `game_screen.active_dialogue` is set)
 - Space: fire equipped weapon · Z/X: rotate view
-- 1: star map · 2: jump · 3: possessions · 4: mission log
+- 1: star map · 2: possessions · 3: mission log · V: jump
 - ESC: pause
 
 **Transitions:**
@@ -248,7 +248,7 @@ exit may still use the flat `"entrance"` / `"connected_locations"` /
   - Exactly one destination *and it's actually usable* → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
   - More than one configured, or the only one isn't usable yet (e.g. "ship" with no ship owned) → opens the exit `ChoiceDialog`, so an unusable option is still visible with its reason instead of G doing nothing
 - T (with an NPC targeted, in range): talk - opens that NPC's `Dialogue` (see below) · Q/E: cycle target
-- 1: star map (view-and-select only while docked) · 3: possessions `ReportMenu` · 4: mission `ReportMenu`
+- 1: star map (view-and-select only while docked) · 2: possessions `ReportMenu` · 3: mission `ReportMenu`
 - ESC: pause
 
 While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
@@ -258,7 +258,7 @@ While docked, `SpaceScreen.update_physics()` still runs in the background (ships
 - G (near a portal, multiple destinations, or the only one isn't usable) → exit `ChoiceDialog`
 - T (NPC targeted, in range, no `"shop"` config) → that NPC's `Dialogue`, always restarted at its root node
 - T (NPC targeted, in range, has a `"shop"` config) → `ShopMenu` instead of `Dialogue`
-- 1 → `star_map` (returns to this interior; jump disabled while docked) · 3 → possessions `ReportMenu` · 4 → mission `ReportMenu`
+- 1 → `star_map` (returns to this interior; jump disabled while docked) · 2 → possessions `ReportMenu` · 3 → mission `ReportMenu`
 - ESC → PauseMenu
 
 ### Dialogue
@@ -303,15 +303,15 @@ getting a dialog.
 
 ### Possessions / Missions (`ReportMenu`)
 **Shows:** A read-only, one- or two-column text report. `possessions_report()`
-(3): credits, owned ships, loans, the current ship's live stats
+(2): credits, owned ships, loans, the current ship's live stats
 (thrust/max velocity/rotation/cargo usage - via the optional `ship` arg,
 `PlayerController.ship`, so it reflects installed outfits immediately),
-cargo, personal items, installed/spare outfits. `mission_report()` (4):
+cargo, personal items, installed/spare outfits. `mission_report()` (3):
 each mission's stages with `[x]` / `->` markers, hiding stages not yet
 reached. Both live in `game/ui/report_menu.py`, drawn over whichever screen
 opened them.
 
-**Inputs:** 3 (possessions) or 4 (missions) or ESC: close
+**Inputs:** 2 (possessions) or 3 (missions) or ESC: close
 
 **Transitions:**
 - close → back to whichever screen opened it (`possessions_return_screen` / `missions_return_screen` in `main.py`)
@@ -486,7 +486,7 @@ completed load being abandoned - so nothing stale carries over.
 `"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
 `"station"` / `"moon"` → `"exit_menu"` (G, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
-`"game"` / `"station"` / `"moon"` → `"possessions"` (3) → back to whichever of the three it came from
+`"game"` / `"station"` / `"moon"` → `"possessions"` (2) → back to whichever of the three it came from
 `"game"` / `"station"` / `"moon"` → `"star_map"` (1) → back to whichever of the three it came from (`star_map_return_screen`; `try_jump()` only runs when that is `"game"`)
 `"station"` / `"moon"` → `"shop"` (T, on an NPC with a `"shop"` config) → back to whichever of the two it came from
 `"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)

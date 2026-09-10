@@ -36,9 +36,9 @@ action to a modal (add a button, not a key).
 | **F** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **G** press. |
 | **G** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
 | **1** | Open the star map |
-| **2** | Jump to the selected star system (see Star Map below) |
-| **3** | Open the Possessions menu (credits, owned ships, loans) |
-| **4** | Open the Mission Log (see Mission Log below) |
+| **2** | Open the Possessions menu (credits, owned ships, loans) |
+| **3** | Open the Mission Log (see Mission Log below) |
+| **V** | Jump to the selected star system (see Star Map below) |
 | **C** | Show / hide the top-left Controls pane (starts hidden - just its title and this line) |
 | **ESC** | Pause menu |
 
@@ -48,13 +48,21 @@ second line rather than running off the panel. It's hidden entirely while a
 menu or a conversation is open. Side HUD panes (Controls, minimap, info,
 Message Log) are each capped at one fifth of the window width.
 
+**What's in the Controls pane:** only keys that have *no* on-screen prompt of
+their own. Any action that already shows a bottom-status prompt when it
+applies - **F** autopilot, **G** land / board, **R** hail, **V** jump (Space
+View), **T** talk, **G** enter portal (interiors) - is deliberately left off
+the pane, so the pane stays short and the prompt is the single source of
+truth for "how do I do this right now". Keep this split when you add a
+control: give it a status prompt *or* a pane entry, not both.
+
 ## Star Map (1)
 
 | Control | Action |
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
-| **2** | Close the map and jump to the selected system (space view only - from a station/moon interior the map is view-and-select only, and **2** just closes it) |
+| **V** | Close the map and jump to the selected system (space view only - from a station/moon interior the map is view-and-select only, and **V** just closes it) |
 | **1**, **ESC**, or the **Close Map** button (top-left) | Close the map (selection persists) |
 
 The map is otherwise mouse-only. It opens centered on your current system,
@@ -63,20 +71,20 @@ are here" tag next to it. A **Close Map** button (top-left) and the selected
 system's station/moon panel (top-right) share the space view's HUD look. The selected
 system is shown back in the space view as "Jump Target:" - it defaults to
 (and resets to, after a jump) your current system, so it's never empty.
-Pressing **2** (either on the map or back in the space view) starts the jump
+Pressing **V** (either on the map or back in the space view) starts the jump
 if the target is a different system, or the current one while far enough
 from its center (`JUMP_SELF_MIN_DISTANCE`); from too close to the center a
 self-jump just flashes a brief "too close" notice instead.
 
 The star map also opens from a station/moon interior (**1**) - handy for
-planning your next hop while docked. Jumping needs the cockpit, so **2**
+planning your next hop while docked. Jumping needs the cockpit, so **V**
 there only closes the map; the selection is kept for when you next launch.
 Completing a jump flashes a brief "arrived at ..." toast in the space view.
 Your thrusters draw as firing for the whole jump.
 
 A story can gate systems behind **jump beacons** (`systems/*.json`'s `locked` +
 `unlock_flag` - see `utils.system_unlocked`). A locked system is drawn dim on
-the map with a **NO SIGNAL** tag and can't be clicked as a target; **2** toward
+the map with a **NO SIGNAL** tag and can't be clicked as a target; **V** toward
 one just flashes a "No signal from ..." notice. Its beacon lights when the
 `unlock_flag` is set - by the `"light_beacon:<system_id>"` dialogue action, a
 mission's `on_end_flags`, or any `set_flag:` - and the space view then posts a
@@ -93,8 +101,8 @@ mission's `on_end_flags`, or any `set_flag:` - and the space view then posts a
 | **T** | Talk to the closest NPC/pilot in range - always the nearest one, regardless of any manually cycled/clicked target |
 | **G** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
 | **1** | Open the star map (view-and-select only while docked - see Star Map above) |
-| **3** | Open the Possessions menu (credits, owned ships, loans) |
-| **4** | Open the Mission Log (see Mission Log below) |
+| **2** | Open the Possessions menu (credits, owned ships, loans) |
+| **3** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane |
 | **Mouse wheel** | Over the Message Log (bottom-left) when it has more than fits: scroll it. Over open floor: zoom the view in / out, within the story's interior zoom range (separate from the Space View's) |
 | **ESC** | Pause menu |
@@ -145,8 +153,8 @@ up at a distance, not for choosing who to talk to.
 | **Mouse wheel** | Over the Message Log: scroll it. Over open ground: zoom the view in / out, within the story's interior zoom range |
 | **G** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
 | **1** | Open the star map (view-and-select only while docked) |
-| **3** | Open the Possessions menu (credits, owned ships, loans) |
-| **4** | Open the Mission Log (see Mission Log below) |
+| **2** | Open the Possessions menu (credits, owned ships, loans) |
+| **3** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane |
 | **ESC** | Pause menu |
 
@@ -240,15 +248,15 @@ and `ui_theme.draw_message_log()` / `draw_info_panel()`.
 Space View also shows a persistent hint in the bottom status pane once
 you've drifted far enough from the system's center that jumping back is
 possible ("Drifting far from the system - open the Star Map (1) and jump
-(2) back") - the same distance a self-jump back to this system already
+(V) back") - the same distance a self-jump back to this system already
 requires (`JUMP_SELF_MIN_DISTANCE`), so the hint and the mechanic it
 points at always agree.
 
-## Mission Log (4)
+## Mission Log (3)
 
 | Control | Action |
 |---------|--------|
-| **4**, **ESC**, or the **Close** button (top-right) | Close |
+| **3**, **ESC**, or the **Close** button (top-right) | Close |
 | **[** / **]**, **Left** / **Right**, or **Click** a tab | Switch between the Active and Completed tabs |
 | **Mouse wheel**, **Up** / **Down**, **PageUp** / **PageDown**, **Home** / **End** | Scroll a report longer than the panel |
 
@@ -265,7 +273,7 @@ the player to actually check it (see `first_flight`).
 
 Starting a mission, completing a stage, and finishing a mission each flash a
 brief center-screen toast in the Space View (see `SpaceScreen._show_toast`) -
-a stage-complete toast reads `Step N/M - see Mission Log (4)`. A story opts a new pilot into a mission automatically -
+a stage-complete toast reads `Step N/M - see Mission Log (3)`. A story opts a new pilot into a mission automatically -
 by default the first time they buy a ship, or at new-game start if
 `story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it). Either way it holds until the player
 next launches into space (so the opening toast and hail land in the
@@ -304,7 +312,7 @@ menu is meant to
 be self-explanatory from its buttons and labels. Every menu has a visible
 **Close** / **Cancel** / **Resume** / **Back** button. The exception to
 "keyboard does nothing" is **ESC-to-close**: the **Pause menu** (ESC), the
-**Star Map** (1), **Possessions** (3), and the **Mission Log** (4) each also
+**Star Map** (1), **Possessions** (2), and the **Mission Log** (3) each also
 close on the key that opened them, and the **Shop / Shipyard / Outfitting**
 menus (opened with T, so no opening key) close on **ESC** alone - a pending
 purchase confirmation eats the ESC as a cancel first. The pause menu
@@ -318,10 +326,11 @@ shrinks its buttons to stay inside the panel. Long reports and lists scroll
 with the **mouse wheel** (or by clicking the `^ more` / `v more`
 indicators).
 
-The keys **3** / **4** / **1** / **G** *open* menus from the space
-view or an interior (they're HUD controls, listed above). **3**, **4**, and
-**1** also *close* the overlay they opened (as does **ESC**); once any other
-menu is up, all four keys do nothing.
+The keys **1** / **2** / **3** / **G** *open* menus from the space
+view or an interior (they're HUD controls, listed above). **1**, **2**, and
+**3** also *close* the overlay they opened (as does **ESC**); once any other
+menu is up, all four keys do nothing. (**V** jump is not a menu key - it
+fires the jump directly.)
 
 Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
 
@@ -332,19 +341,19 @@ Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
   one of its buttons - Yes/No confirmations, the pilot-name entry, the
   "where to?" and landing-spot pickers.
 
-### Possessions Menu (open with 3)
+### Possessions Menu (open with 2)
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
 cargo, personal items, installed/spare ship outfits, and - only if the story
 has a `factions.json` - a **Standing** section listing the player's reputation
 with each faction (band + signed number: Hostile / Cold / Neutral / Friendly /
-Allied). Two columns; wheel to scroll if it overflows. **3**, **ESC**, or the
+Allied). Two columns; wheel to scroll if it overflows. **2**, **ESC**, or the
 **Close** button (top-right) closes it.
 
-### Mission Log (open with 4)
+### Mission Log (open with 3)
 Two tabs - **Active** and **Completed** - clicked to switch. Each mission's
 stages are **numbered** and marked `[x]` done / `->` current; unreached
-stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **4**,
+stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **3**,
 **ESC**, or the **Close** button (top-right) closes it.
 
 ### Shop Menu (T, on an NPC with a shop)

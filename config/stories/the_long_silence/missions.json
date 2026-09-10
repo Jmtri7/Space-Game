@@ -16,7 +16,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "You're on the induction - it tracks in your Mission Log (4). Feet first: walk the length of an approach arm on WASD or the arrow keys."
+          "text": "You're on the induction - it tracks in your Mission Log (3). Feet first: walk the length of an approach arm on WASD or the arrow keys."
         }
       },
       {
@@ -47,12 +47,12 @@
         }
       },
       {
-        "text": "Open your Possessions - press 3 (check the Standing panel).",
+        "text": "Open your Possessions - press 2 (check the Standing panel).",
         "complete_flag": "viewed_possessions",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "Press 3 for Possessions - credits, ships, cargo, and your Standing with each faction."
+          "text": "Press 2 for Possessions - credits, ships, cargo, and your Standing with each faction."
         }
       },
       {
@@ -114,11 +114,11 @@
         }
       },
       {
-        "text": "Fly clear of the system centre, then jump to Kiln (1 to pick it, 2 to jump).",
+        "text": "Fly clear of the system centre, then jump to Kiln (1 to pick it, V to jump).",
         "complete_flag": "jumped_to:kiln",
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "Last thing. Kiln's beacon is keyed - fly well clear of the star until the drift prompt shows, open the Star Map (1), select Kiln, and press 2. Log what you find there, pilot. Halcyon out."
+          "text": "Last thing. Kiln's beacon is keyed - fly well clear of the star until the drift prompt shows, open the Star Map (1), select Kiln, and press V. Log what you find there, pilot. Halcyon out."
         }
       }
     ]

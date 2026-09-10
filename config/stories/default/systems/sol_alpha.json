@@ -120,7 +120,7 @@
                   ]
                 },
                 "in_progress": {
-                  "text": "Still with me? Check your Mission Log (4) for the current step. Or if you'd rather strike out on your own, just say the word.",
+                  "text": "Still with me? Check your Mission Log (3) for the current step. Or if you'd rather strike out on your own, just say the word.",
                   "options": [
                     {"label": "I'll keep following.", "next": null},
                     {"label": "I'll manage on my own.", "next": "declined", "action": "abandon_mission:station_tour"}

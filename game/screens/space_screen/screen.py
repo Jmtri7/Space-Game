@@ -456,11 +456,11 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                         self.player.person.possessions.flags["used_autopilot_on_ship"] = True
             elif event.key == pygame.K_1 and not self.jump_state:
                 return "star_map"
-            elif event.key == pygame.K_2 and not self.jump_state:
+            elif event.key == pygame.K_v and not self.jump_state:
                 self.try_jump()
-            elif event.key == pygame.K_3:
+            elif event.key == pygame.K_2:
                 return "possessions"
-            elif event.key == pygame.K_4:
+            elif event.key == pygame.K_3:
                 # Generic gameplay-event flag (see K_f's comment) - a
                 # mission stage can use "viewed_mission_log" as its
                 # complete_flag (see missions.json's first_flight).
@@ -559,7 +559,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 self._deliver_stage_message(advanced_stage)
                 mission_id, stage_index = advanced_stage
                 total = len(self.missions_config.get(mission_id, {}).get("stages", []))
-                self._show_toast(f"Step {stage_index + 1}/{total} - see Mission Log (4)", GREEN)
+                self._show_toast(f"Step {stage_index + 1}/{total} - see Mission Log (3)", GREEN)
             for mission_id in possessions.completed_missions:
                 if mission_id not in completed_before:
                     title = self.missions_config.get(mission_id, {}).get("title", mission_id)
