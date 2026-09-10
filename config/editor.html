@@ -27,6 +27,12 @@
   .wsleaf:hover { background: #232833; }
   .wsleaf.active { background: #3f5a70; color: #fff; }
   .wsleaf .noed { color: #6b7280; }
+  .wsleaf .wssrc { color: #6b7280; font-size: 10px; }
+  .wsleaf .wsshadow { color: #d9a441; font-size: 10px; }
+  .wsdeps { margin-left: 22px; padding: 1px 4px 3px; font-size: 10px; color: #6b7280;
+            white-space: normal; }
+  .wsdeps a { color: #8fb3c7; cursor: pointer; }
+  .wsdeps a:hover { text-decoration: underline; }
   #startPickerRow, #startDesignRow { display: none !important; }
   body.ws-stub #side, body.ws-stub #svg, body.ws-stub #hud, body.ws-stub #mirrorPanel { display: none; }
   #wsStub { position: absolute; inset: 0; padding: 22px 28px; overflow: auto; display: none; }
@@ -3403,6 +3409,13 @@ async function _modGraphicsDirs(name, kind){   // shared-module graphics dirs a 
   const names = await _resolvedModuleNames(name, kind || 'story');
   return names.map(m => 'config/modules/' + m + '/graphics');
 }
+async function _wsDirectDeps(name, kind){   // a source's *directly declared* module list
+  return kind === 'module'
+    ? await _moduleDeps(name)
+    : (((await VFS.readJSON('config/stories/' + name + '/story.json')) || {}).modules || [])
+        .filter(x => typeof x === 'string');
+}
+function _wsModuleOfDir(dir){ const m = (dir || '').match(/\/modules\/([^/]+)\/graphics/); return m ? m[1] : null; }
 async function discoverStories(){
   if(_storyList) return _storyList;
   const out = [];
@@ -3950,6 +3963,14 @@ function wsToggle(key){
   const e = wsExpanded(); e.has(key) ? e.delete(key) : e.add(key);
   const s = wsGet(); s.expanded = [...e]; wsSet(s); renderWorkspace();
 }
+// jump to a source's own row (from a "depends on:" link) - expand and scroll it in
+async function wsRevealNode(name){
+  const e = wsExpanded(); e.add(name);
+  const s = wsGet(); s.expanded = [...e]; wsSet(s);
+  await renderWorkspace();
+  const el = document.getElementById('wsnode-' + name);
+  if(el) el.scrollIntoView({ block: 'nearest' });
+}
 const WS_CATS = [
   { id:'body',        label:'Bodies',          g:'body', ex:/^rig_/, editor:'body' },
   { id:'face',        label:'Faces',           g:'body', ex:/^rig_/, editor:'face' },
@@ -3980,7 +4001,7 @@ async function wsDiscover(){   // every story + module dir, whether or not it ha
     if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
     for(const n of dirs.slice().sort()){
       out.push({ name:n, kind, root: root + '/' + n, base: root + '/' + n + '/graphics',
-                 mods: await _modGraphicsDirs(n, kind) });
+                 mods: await _modGraphicsDirs(n, kind), deps: await _wsDirectDeps(n, kind) });
     }
   }
   _wsDisc = out;
@@ -3991,30 +4012,49 @@ async function wsResolveGfx(e, rel){
   for(const b of wsGfxDirs(e)) if(await VFS.readJSON(b + '/' + rel)) return b + '/' + rel;
   return e.base + '/' + rel;
 }
+// Every branch returns [{ name, origin, shadowed }]: origin is the module a
+// graphics file resolves from (null = the source's own dir), shadowed marks a
+// source-local file that also exists in a module (i.e. it overrides the kit).
 async function wsListCat(e, cat){
   if(cat.g){
-    const seen = new Set();
-    for(const b of wsGfxDirs(e)){
-      const { files } = await VFS.listDir(b + '/' + cat.g);
-      files.forEach(f => { if(f.endsWith('.json') && !(cat.ex && cat.ex.test(f))) seen.add(f); });
+    const dirs = wsGfxDirs(e);
+    const firstIdx = new Map(), inBase = new Set(), inMod = new Set();
+    for(let i = 0; i < dirs.length; i++){
+      const { files } = await VFS.listDir(dirs[i] + '/' + cat.g);
+      for(const f of files){
+        if(!f.endsWith('.json') || (cat.ex && cat.ex.test(f))) continue;
+        (i === 0 ? inBase : inMod).add(f);
+        if(!firstIdx.has(f)) firstIdx.set(f, i);
+      }
     }
-    return [...seen].sort();
+    return [...firstIdx.keys()].sort().map(name => ({
+      name,
+      origin: firstIdx.get(name) === 0 ? null : _wsModuleOfDir(dirs[firstIdx.get(name)]),
+      shadowed: inBase.has(name) && inMod.has(name),
+    }));
   }
   if(cat.gfiles){
-    const out = [];
-    for(const f of cat.gfiles){ for(const b of wsGfxDirs(e)) if(await VFS.readJSON(b + '/' + f)){ out.push(f); break; } }
+    const dirs = wsGfxDirs(e), out = [];
+    for(const f of cat.gfiles){
+      let idx = -1;
+      for(let i = 0; i < dirs.length; i++) if(await VFS.readJSON(dirs[i] + '/' + f)){ idx = i; break; }
+      if(idx < 0) continue;
+      let shadowed = false;
+      if(idx === 0) for(let i = 1; i < dirs.length; i++) if(await VFS.readJSON(dirs[i] + '/' + f)){ shadowed = true; break; }
+      out.push({ name:f, origin: idx === 0 ? null : _wsModuleOfDir(dirs[idx]), shadowed });
+    }
     return out;
   }
   if(cat.cats){
     const out = [];
-    for(const f of cat.cats) if(await VFS.readJSON(e.root + '/' + f)) out.push(f);
+    for(const f of cat.cats) if(await VFS.readJSON(e.root + '/' + f)) out.push({ name:f, origin:null, shadowed:false });
     return out;
   }
   if(cat.systems){
     const { files } = await VFS.listDir(e.root + '/systems');
-    return files.filter(f => f.endsWith('.json')).sort();
+    return files.filter(f => f.endsWith('.json')).sort().map(name => ({ name, origin:null, shadowed:false }));
   }
-  if(cat.manifest) return [e.kind === 'module' ? 'module.json' : 'story.json'];
+  if(cat.manifest) return [{ name: e.kind === 'module' ? 'module.json' : 'story.json', origin:null, shadowed:false }];
   return [];
 }
 async function wsLeafPath(e, cat, name){
@@ -4029,7 +4069,7 @@ async function wsOpenLeaf(e, cat, name){
   if(cat.editor === 'body'){ qs.set('file', path); location.search = qs.toString(); return; }
   if(cat.editor === 'face'){ qs.set('file', path); qs.set('edit', 'face'); location.search = qs.toString(); return; }
   if(cat.editor === 'article'){
-    const bodies = await wsListCat(e, WS_CATS[0]);
+    const bodies = (await wsListCat(e, WS_CATS[0])).map(x => x.name);
     if(!bodies.length){ alert('No body/*.json reachable from ' + e.name + ' to tailor this article against.'); return; }
     let fb; try{ fb = localStorage.getItem('gpEditorFitBody:' + e.name); }catch(e2){}
     if(!bodies.includes(fb)) fb = bodies[0];
@@ -4063,12 +4103,24 @@ async function renderWorkspace(){
   const frag = document.createDocumentFragment();
   for(const e of entries){
     const node = document.createElement('div'); node.className = 'wsnode';
+    node.id = 'wsnode-' + e.name;
     const open = exp.has(e.name);
     const hdr = document.createElement('div'); hdr.className = 'wshdr';
     hdr.innerHTML = '<span class="wstwist">' + (open ? '▾' : '▸') + '</span>' +
       '<span>' + e.name + '</span> <span class="wskind">' + e.kind + '</span>';
     hdr.onclick = () => wsToggle(e.name);
     node.appendChild(hdr);
+    if(e.deps && e.deps.length){
+      const dl = document.createElement('div'); dl.className = 'wsdeps';
+      dl.appendChild(document.createTextNode('depends on: '));
+      e.deps.forEach((d, i) => {
+        if(i) dl.appendChild(document.createTextNode(' · '));
+        const a = document.createElement('a'); a.textContent = d;
+        a.onclick = (ev) => { ev.stopPropagation(); wsRevealNode(d); };
+        dl.appendChild(a);
+      });
+      node.appendChild(dl);
+    }
     if(open){
       for(const cat of WS_CATS){
         const names = await wsListCat(e, cat);
@@ -4081,11 +4133,19 @@ async function renderWorkspace(){
         ch.onclick = () => wsToggle(ckey);
         cd.appendChild(ch);
         if(cOpen){
-          for(const nm of names){
+          for(const item of names){
+            const nm = item.name;
             const leaf = document.createElement('div'); leaf.className = 'wsleaf';
             const p = await wsLeafPath(e, cat, nm);
             leaf.textContent = nm;
             leaf.title = cat.editor ? p : p + '  (view only)';
+            if(item.origin){
+              const s = document.createElement('span'); s.className = 'wssrc';
+              s.textContent = ' · ' + item.origin; leaf.appendChild(s);
+            } else if(item.shadowed){
+              const s = document.createElement('span'); s.className = 'wsshadow';
+              s.textContent = ' · overrides module'; leaf.appendChild(s);
+            }
             if(!cat.editor){ const s = document.createElement('span'); s.className = 'noed'; s.textContent = ' ·'; leaf.appendChild(s); }
             if(p === active) leaf.classList.add('active');
             leaf.onclick = () => wsOpenLeaf(e, cat, nm);

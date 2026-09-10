@@ -98,8 +98,11 @@ criteria as bumping `story.json`'s version — see
   ([GRAPHICS_EDITOR.md](GRAPHICS_EDITOR.md)) lists every story *and* every
   module and lets you open an asset from either. Pick the module, not a
   consuming story, when the fix belongs to the shared kit — otherwise you write
-  a story-local copy that shadows the module for that one story. It also has
-  **new story… / new module…** buttons (needs the repo open read-write).
+  a story-local copy that shadows the module for that one story. Under a story,
+  each inherited asset is tagged with the module it resolves from and each
+  header carries a `depends on:` line linking to those modules, so you can jump
+  straight to the kit. It also has **new story… / new module…** buttons (needs
+  the repo open read-write).
 - `story_catalogue` returns a cached, shared dict. Callers that mutate an
   entry already `dict(...)`-copy it first (same contract as `load_json`);
   keep it that way.
