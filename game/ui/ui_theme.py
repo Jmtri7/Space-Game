@@ -385,19 +385,17 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     margin = hud_margin(ui_scale)
     box_width = side_panel_width(ui_scale)
 
-    # Every message flattened to (line, is_newest_entry, sender_prefix) -
+    # Every message flattened to (line, is_newest_entry, sender_name) -
     # each entry wraps as one "Sender: text" unit (not sender/text
     # independently, so a short message stays on one line without a lone
-    # "Sender:" above it). sender_prefix ("Sender: ") is carried on the
-    # first wrapped line of each entry only, so the draw loop can pick the
-    # sender name back out and style it (underlined, its own colour). The
-    # newest entry's lines stay bright and the rest dim, kept as a cue even
-    # after scrolling.
+    # "Sender:" above it). The sender name is carried on the first wrapped
+    # line of each entry only, so the draw loop can pick it back out and
+    # style it (underlined, its own colour). The newest entry's lines stay
+    # bright and the rest dim, kept as a cue even after scrolling.
     flat = []
     for i, (sender, text) in enumerate(messages):
-        prefix = f"{sender}: "
         for j, line in enumerate(_wrap_text(font_text, f"{sender}: {text}", box_width - pad_x * 2)):
-            flat.append((line, i == 0, prefix if j == 0 else None))
+            flat.append((line, i == 0, sender if j == 0 else None))
 
     total = len(flat)
     visible = min(total, MESSAGE_LOG_VISIBLE_LINES)
@@ -433,19 +431,22 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
         if scroll > 0:
             surface.blit(font_text.render("^ newer  (scroll)", True, SCROLL_HINT_COLOR), (rect.x + pad_x, y))
         y += hint_height
-    for line, is_newest, prefix in flat[scroll:scroll + visible]:
+    for line, is_newest, sender in flat[scroll:scroll + visible]:
         text_color = WHITE if is_newest else GRAY
         x = rect.x + pad_x
-        if prefix and line.startswith(prefix):
-            # First line of an entry: draw the sender name underlined and in
-            # the sender colour, then ": <message>" in the normal text colour.
-            name = prefix[:-2]  # drop the ": " separator
+        # The first wrapped line of an entry begins with "Sender:"; the
+        # message may wrap immediately after the colon (a long first word),
+        # so match the colon, not the "Sender: " prefix with its trailing
+        # space - _wrap_text strips that space and the styling was lost.
+        if sender and line.startswith(f"{sender}:"):
+            # Draw the sender name underlined and in the sender colour, then
+            # the ": <message>" remainder in the normal text colour.
             sender_color = MESSAGE_SENDER_COLOR if is_newest else MESSAGE_SENDER_COLOR_DIM
             font_text.set_underline(True)
-            name_surf = font_text.render(name, True, sender_color)
+            name_surf = font_text.render(sender, True, sender_color)
             font_text.set_underline(False)
             surface.blit(name_surf, (x, y))
-            surface.blit(font_text.render(": " + line[len(prefix):], True, text_color),
+            surface.blit(font_text.render(line[len(sender):], True, text_color),
                          (x + name_surf.get_width(), y))
         else:
             surface.blit(font_text.render(line, True, text_color), (x, y))
