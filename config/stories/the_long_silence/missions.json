@@ -16,7 +16,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "You're on the induction - it tracks in your Mission Log (N). Feet first: walk the length of the concourse on WASD or the arrow keys."
+          "text": "You're on the induction - it tracks in your Mission Log (N). Feet first: walk the length of an approach arm on WASD or the arrow keys."
         }
       },
       {
@@ -56,19 +56,19 @@
         }
       },
       {
-        "text": "Take the Authority starter loan - Signal Officer Doss, Lender's Office (south-west).",
+        "text": "Take the Authority starter loan - Signal Officer Doss, Lender's Office (south arm).",
         "complete_flag": "took_loan",
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "South-west bay, the Lender's Office. Talk to Signal Officer Doss and take the starter loan - you'll need it for a hull."
+          "text": "The south arm - the Lender's Office. Talk to Signal Officer Doss and take the starter loan - you'll need it for a hull."
         }
       },
       {
-        "text": "Buy a ship - Harbor-Master Crane, the Berth (north-east).",
+        "text": "Buy a ship - Harbor-Master Crane, the Berth (east arm).",
         "complete_flag": "bought_ship",
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "Now the Berth, north-east. Harbor-Master Crane has hulls for sale - the courier's an easy first ship. Buy whichever you like."
+          "text": "The Berth is the east arm - the one you docked in. Harbor-Master Crane has hulls for sale there; the courier's an easy first ship. Buy whichever you like."
         }
       },
       {
@@ -137,19 +137,19 @@
     },
     "stages": [
       {
-        "text": "Have your mark witnessed - Warden of Contract Raik, the Contract Hall (north-west).",
+        "text": "Have your mark witnessed - Warden of Contract Raik, the Contract Hall (north-west of the Hold).",
         "complete_flag": "combine_witnessed",
         "one_way_message": {
           "sender": "Factor Tol",
-          "text": "The Warden of Contract witnesses first. Contract Hall, north-west corner of the concourse. Put your hand on the seal-stone."
+          "text": "The Warden of Contract witnesses first. The Contract Hall stands on the north-west of the Hold floor. Put your hand on the seal-stone."
         }
       },
       {
-        "text": "Collect the sealed manifest from Tallykeeper Vess, the Assay Office (north).",
+        "text": "Collect the sealed manifest from Tallykeeper Vess, the Assay Office (north side of the Hold).",
         "complete_flag": "combine_manifest_taken",
         "one_way_message": {
           "sender": "Factor Tol",
-          "text": "Vess has the manifest in the Assay Office. Sealed. You carry it - you do not open it."
+          "text": "Vess has the manifest in the Assay Office, north side of the Hold. Sealed. You carry it - you do not open it."
         }
       },
       {
@@ -207,7 +207,7 @@
         "complete_flag": "assembly_view_osei",
         "one_way_message": {
           "sender": "Sela of Highcanopy",
-          "text": "Osei's at the Ferry Slip, north-east end of the Walk. He'll have an opinion - he always does."
+          "text": "Osei's at the Ferry Slip, on the north-east rim of the Walk. He'll have an opinion - he always does."
         }
       },
       {
@@ -251,7 +251,7 @@
     },
     "stages": [
       {
-        "text": "Read the First Wall with Warden of Names Vane - the Long Vault (north-west).",
+        "text": "Read the First Wall with Warden of Names Vane - the Long Vault, first niche up the east wall of the nave.",
         "complete_flag": "vigil_read_first",
         "one_way_message": {
           "sender": "Keeper Aramis",
@@ -259,7 +259,7 @@
         }
       },
       {
-        "text": "Read the middle years with Brother Sol - the Reading Cells (north).",
+        "text": "Read the middle years with Brother Sol - the Reading Cells, further up the east wall of the nave.",
         "complete_flag": "vigil_read_second",
         "one_way_message": {
           "sender": "Keeper Aramis",
@@ -267,7 +267,7 @@
         }
       },
       {
-        "text": "Enter the Vault of the First Decade with Sister Edda (north-east).",
+        "text": "Enter the Vault of the First Decade with Sister Edda, at the crowned head of the nave.",
         "complete_flag": "vigil_read_vault",
         "one_way_message": {
           "sender": "Keeper Aramis",

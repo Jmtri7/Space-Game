@@ -520,7 +520,7 @@ ASSEMBLY = {
     "stages": [
         {"text": "Hear Ferry-wright Osei's view - the Ferry Slip (north-east).",
          "complete_flag": "assembly_view_osei",
-         "one_way_message": say(SELA, "Osei's at the Ferry Slip, north-east end of the Walk. He'll have an opinion - he always does.")},
+         "one_way_message": say(SELA, "Osei's at the Ferry Slip, on the north-east rim of the Walk. He'll have an opinion - he always does.")},
         {"text": "Hear Water-keeper Tam's view - the Water Office (south-west).",
          "complete_flag": "assembly_view_tam",
          "one_way_message": say(SELA, "Tam keeps the water accounts, south-west. Hers is the cautious voice. Hear it properly.")},

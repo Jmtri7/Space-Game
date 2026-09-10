@@ -326,7 +326,7 @@
                   ]
                 },
                 "accepted": {
-                  "text": "Good. Close the comm and lead off down the concourse - I'm right behind you.",
+                  "text": "Good. Close the comm and lead off down the approach arm - I'm right behind you.",
                   "options": [
                     {
                       "label": "Lead on",
@@ -349,7 +349,7 @@
                   ]
                 },
                 "declined": {
-                  "text": "Understood. The Berth's east for a hull, the Lender's Office south-west for the credits. Kiln's beacon lights when you're ready to leave - come back and tell me. Safe flying.",
+                  "text": "Understood. The Berth's the east arm - where you docked - for a hull. The Lender's Office is the south arm for the credits. Kiln's beacon lights when you're ready to leave - come back and tell me. Safe flying.",
                   "options": [
                     {
                       "label": "Thanks",
