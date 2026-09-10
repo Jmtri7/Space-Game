@@ -26,7 +26,7 @@ import sys
 # PUT only writes files under these repo subtrees, and only `.json`. It is a
 # localhost dev tool, but this keeps a stray request from touching anything
 # outside the design data.
-WRITABLE_ROOTS = ("config/stories",)
+WRITABLE_ROOTS = ("config/stories", "config/modules")
 ALLOWED_ORIGINS = None  # set at startup to {"http://127.0.0.1:<port>", ...}
 
 

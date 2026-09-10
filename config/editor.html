@@ -527,9 +527,10 @@ let COLNAMES = _palKeys(PALETTE);
 let SHADENAMES = Object.keys(MATERIALS.shading);
 async function loadMatPal(){
   if(!GBASE) return;
-  const m = await VFS.readJSON(GBASE + '/materials.json');
+  await computeGMods();
+  const m = await gReadJSON('materials.json');
   if(m){ MATERIALS = m; SHADENAMES = Object.keys(MATERIALS.shading || {}); }
-  const p = await VFS.readJSON(GBASE + '/palettes/' + ((D && D.palette) || 'civilian') + '.json');
+  const p = await gReadJSON('palettes/' + ((D && D.palette) || 'civilian') + '.json');
   if(p){ PALETTE = p; COLNAMES = _palKeys(PALETTE); }
   await loadDrawOrder();
 }
@@ -545,7 +546,7 @@ function drawOrderDraftKey(){ return GBASE ? 'gpDraft:' + GBASE + '/draw_order.j
 async function loadDrawOrder(){
   drawOrder = []; drawOrderIdentity = '';
   if(!GBASE) return;
-  const j = await VFS.readJSON(GBASE + '/draw_order.json');
+  const j = await gReadJSON('draw_order.json');
   if(j && Array.isArray(j.order)){ drawOrder = j.order.slice(); drawOrderIdentity = j.identity || ''; }
   // an unsaved draft of the draw order wins over the on-disk copy
   try{
@@ -587,9 +588,9 @@ async function allRegionTags(refresh){
   if(_allRegionTags && !refresh) return _allRegionTags;
   const tags = new Set();
   if(GBASE) try{
-    const { files } = await VFS.listDir(GBASE + '/articles');
+    const { files } = await gListDir('articles');
     for(const f of (files || []).filter(n => /\.json$/.test(n))){
-      const j = await VFS.readJSON(GBASE + '/articles/' + f);
+      const j = await gReadJSON('articles/' + f);
       for(const r of ((j && j.regions) || [])){
         const t = r.tag || r.layer;
         if(t) tags.add(t);
@@ -867,7 +868,44 @@ function adjustFitsForSplice(sec, key, pos, del, ins){
 let D = null;            // the design object
 let D0 = null;           // the on-disk original, for the ghost overlay
 let loadedPath = null;   // repo-relative path this was fetched from (?file=)
-let GBASE = '';          // .../graphics  (for fetching sibling face slot files)
+let GBASE = '';          // .../graphics  (the loaded source's own graphics dir - all writes go here)
+// Shared-module graphics dirs the loaded *story* pulls in (config/modules/<m>/graphics,
+// see docs/CONFIG_MODULES.md). Read-only fallback + directory-listing merge only:
+// materials/palettes/draw_order and any body/article/face the story doesn't carry
+// itself resolve from here, but a save always writes GBASE (editing a story-context
+// file that lives in a module writes a story-local override, mirroring story_path()).
+// Empty when the loaded source is itself a module.
+let GMODS = [];
+async function computeGMods(){
+  GMODS = [];
+  // the *story* context wins over a module one - editing a story's outfit that
+  // happens to live in a shared module still needs that story's own palettes
+  // and faction articles on the fallback path.
+  const cands = [storyOfPath(loadedPath), storyOfPath(FITBODY)].filter(Boolean);
+  const st = cands.find(n => storyKind(n) === 'story') || cands[0];
+  if(!st || storyKind(st) === 'module') return;
+  const sj = await VFS.readJSON('config/stories/' + st + '/story.json');
+  for(const m of (sj && sj.modules) || [])
+    GMODS.push('config/modules/' + m + '/graphics');
+}
+async function gReadJSON(rel){
+  let v = await VFS.readJSON(GBASE + '/' + rel);
+  if(v) return v;
+  for(const b of GMODS){ v = await VFS.readJSON(b + '/' + rel); if(v) return v; }
+  return null;
+}
+async function gListDir(rel){
+  const files = new Set(), dirs = new Set();
+  for(const b of [GBASE, ...GMODS]){
+    const r = await VFS.listDir(b + '/' + rel);
+    r.files.forEach(f=>files.add(f)); r.dirs.forEach(d=>dirs.add(d));
+  }
+  return { files: [...files], dirs: [...dirs] };
+}
+async function gResolve(rel){   // real path for a ?file=/?fitbody= navigation target
+  for(const b of [GBASE, ...GMODS]) if(await VFS.readJSON(b + '/' + rel)) return b + '/' + rel;
+  return GBASE + '/' + rel;
+}
 const _EDIT_PARAM = new URLSearchParams(location.search).get('edit');
 const FACE_MODE = _EDIT_PARAM === 'face';
 // "outfit" mode: a body loaded on its own to preview articles worn together.
@@ -1144,7 +1182,7 @@ async function loadWalkRig(){
   const body = TAILOR_MODE ? bodyDesign : D;
   const ref = body && body.rig && body.rig.walk;
   if(!ref || !GBASE) return;
-  try{ walkRig = await VFS.readJSON(GBASE + '/body/' + ref + '.json'); }catch(e){ walkRig = null; }
+  try{ walkRig = await gReadJSON('body/' + ref + '.json'); }catch(e){ walkRig = null; }
 }
 function applyWalkJS(parts, body, rig, t){
   if(!rig) return parts;
@@ -1249,7 +1287,7 @@ async function populateHairPicker(){
   if((!OUTFIT_MODE && !TAILOR_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
-    const { files } = await VFS.listDir(GBASE + '/articles');
+    const { files } = await gListDir('articles');
     names = (files||[]).filter(n => /^hair_.*\.json$/.test(n)).map(n => n.replace(/\.json$/,'')).sort();
   }catch(e){}
   // no point previewing a hairstyle over the hairstyle you're editing
@@ -1271,7 +1309,7 @@ async function loadPreviewHair(){
   previewHair = null;
   if(previewHairName && GBASE){
     try{
-      const hj = await VFS.readJSON(GBASE + '/articles/' + previewHairName + '.json');
+      const hj = await gReadJSON('articles/' + previewHairName + '.json');
       if(hj && hj.regions) previewHair = hoistVariant(shimLook(hj), activeVariant());
     }catch(e){ previewHair = null; }
   }
@@ -1309,7 +1347,7 @@ async function populatePreviewArticles(){
   if((!TAILOR_MODE && !OUTFIT_MODE) || !GBASE){ if(row) row.style.display = 'none'; return; }
   let names = [];
   try{
-    const { files } = await VFS.listDir(GBASE + '/articles');
+    const { files } = await gListDir('articles');
     names = (files||[]).filter(n => /\.json$/.test(n) && !/^hair_/.test(n))
                        .map(n => n.replace(/\.json$/,'')).sort();
   }catch(e){}
@@ -1340,7 +1378,7 @@ async function loadPreviewArticles(names){
       const raw = localStorage.getItem('gpDraft:' + path + ':fit:' + FITBODY);
       if(raw){ const d = JSON.parse(raw); if(d && d.D && d.D.regions && allFinite(d.D)) src = d.D; }
     }catch(e){}
-    if(!src){ try{ src = await VFS.readJSON(path); }catch(e){} }
+    if(!src){ try{ src = await gReadJSON('articles/' + n + '.json'); }catch(e){} }
     if(src && src.regions) out.push({ name:n, design: hoistVariant(shimLook(src), activeVariant()) });
   }
   previewArticles = out;
@@ -1624,7 +1662,7 @@ let bodyDirNames = null;    // cached body/*.json directory listing - shared by 
 async function fetchBodyDirNames(){
   if(bodyDirNames) return bodyDirNames;
   if(!GBASE) return [];
-  const { files } = await VFS.listDir(GBASE + '/body');
+  const { files } = await gListDir('body');
   bodyDirNames = files.filter(n => n.endsWith('.json') && !n.startsWith('rig_')).sort();
   return bodyDirNames;
 }
@@ -1648,7 +1686,7 @@ async function loadFaceKitInto(body){
   const fm = head.face || {};
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
-    const fj = await VFS.readJSON(GBASE + '/faces/' + slot + '_' + fm[slot] + '.json');
+    const fj = await gReadJSON('faces/' + slot + '_' + fm[slot] + '.json');
     if(fj) (shimLook(fj).details || []).forEach(d => head.details.push(d));
   }
 }
@@ -1688,8 +1726,9 @@ async function populateMirrorSourcePicker(){
   const sel_ = document.getElementById('mirrorSrcSel'); if(!sel_ || !GBASE) return;
   const names = await fetchBodyDirNames(); if(!names.length) return;
   const cur = mirrorSourceOverride ? mirrorSourceOverride.split('/').pop() : '';
+  const paths = await Promise.all(names.map(n => gResolve('body/' + n)));
   sel_.innerHTML = `<option value="">auto — counterpart</option>` +
-    names.map(n=>`<option value="${GBASE}/body/${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+    names.map((n,i)=>`<option value="${paths[i]}" ${n===cur?'selected':''}>${n}</option>`).join('');
 }
 document.getElementById('mirrorSrcSel').onchange = e=>{
   mirrorUserPicked = true;
@@ -3217,7 +3256,7 @@ let modeArticleNames = null;
 async function fetchArticleNames(){
   if(modeArticleNames) return modeArticleNames;
   if(!GBASE) return [];
-  const { files } = await VFS.listDir(GBASE + '/articles');
+  const { files } = await gListDir('articles');
   modeArticleNames = files.filter(n => n.endsWith('.json')).sort();
   return modeArticleNames;
 }
@@ -3254,7 +3293,7 @@ function buildModeSwitch(){
     const st = storyOfPath(bodyPath);
     const last = st ? ssGet('gpLastArticle:' + st) : null;   // this tab's last-tailored article
     const pick = (last && names.includes(last)) ? last : names[0];
-    const qs = new URLSearchParams(); qs.set('file', GBASE + '/articles/' + pick); qs.set('fitbody', bodyPath); go(qs);
+    const qs = new URLSearchParams(); qs.set('file', await gResolve('articles/' + pick)); qs.set('fitbody', bodyPath); go(qs);
   };
 }
 // the single body switcher, shown in all three views: it swaps which body is
@@ -3269,10 +3308,10 @@ async function populateBodyDirectPicker(){
   sel_.innerHTML = names.map(n=>`<option value="${n}" ${n===curName?'selected':''}>${n}</option>`).join('');
   row.style.display = '';
 }
-document.getElementById('bodyDirectPicker').onchange = e=>{
+document.getElementById('bodyDirectPicker').onchange = async e=>{
   const name = e.target.value; if(!name) return;
   const qs = new URLSearchParams(location.search);
-  qs.set(TAILOR_MODE ? 'fitbody' : 'file', GBASE + '/body/' + name);
+  qs.set(TAILOR_MODE ? 'fitbody' : 'file', await gResolve('body/' + name));
   location.search = qs.toString();
 };
 // story picker: the editor is not tied to any one story. It discovers every
@@ -3284,28 +3323,60 @@ document.getElementById('bodyDirectPicker').onchange = e=>{
 // when it's not a no-op - nothing loaded yet, or the story picker points at a
 // story other than the loaded design's (a genuine cross-story hop).
 // `?story=<name>` preselects one; the last pick is remembered per browser.
+// A "source" is any dir with a graphics/ pipeline: a story
+// (config/stories/<name>/) or a shared module (config/modules/<name>/ - see
+// docs/CONFIG_MODULES.md). The picker lists both; a module row is labelled
+// "<name> · module". Everything downstream keys off the bare name, so a
+// module and a story must not share one (they don't - module names are
+// hyphenated kits like figures-human).
 const PIPELINE_STORIES = ['graphics_pipeline_test'];   // fallback if config/stories/ has no directory listing
 const STORY_LS = 'gpEditorStory';
-let _storyList = null;                                  // [{name, base}] once discovered
-function storyBase(name){ return 'config/stories/' + name + '/graphics'; }
-function storyOfPath(p){ const m = (p||'').match(/config\/stories\/([^/]+)\/graphics\//); return m ? m[1] : null; }
+let _storyList = null;                                  // [{name, base, kind}] once discovered
+const SRC_ROOTS = [['config/stories', 'story'], ['config/modules', 'module']];
+function storyBase(name){
+  const e = (_storyList || []).find(s => s.name === name);
+  return e ? e.base : 'config/stories/' + name + '/graphics';   // pre-discovery / ?story= fallback
+}
+function storyOfPath(p){ const m = (p||'').match(/config\/(?:stories|modules)\/([^/]+)\/graphics\//); return m ? m[1] : null; }
+function storyKind(name){ const e = (_storyList || []).find(s => s.name === name); return e ? e.kind : 'story'; }
+function storyEntry(name){ return (_storyList || []).find(s => s.name === name) || { name, base: storyBase(name), kind: 'story', mods: [] }; }
+async function _modGraphicsDirs(name){   // shared-module graphics dirs a STORY pulls in
+  const sj = await VFS.readJSON('config/stories/' + name + '/story.json');
+  return ((sj && sj.modules) || []).map(m => 'config/modules/' + m + '/graphics');
+}
 async function discoverStories(){
   if(_storyList) return _storyList;
-  let { dirs } = await VFS.listDir('config/stories');
-  if(!dirs.length) dirs = PIPELINE_STORIES.slice();
   const out = [];
-  for(const n of dirs){
-    if(await VFS.readJSON(storyBase(n) + '/materials.json'))
-      out.push({ name: n, base: storyBase(n) });
+  for(const [root, kind] of SRC_ROOTS){
+    let { dirs } = await VFS.listDir(root);
+    if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
+    for(const n of dirs){
+      const base = root + '/' + n + '/graphics';
+      const mods = kind === 'story' ? await _modGraphicsDirs(n) : [];
+      // qualifies if a materials.json resolves through its own dir or a module,
+      // i.e. it has a real pipeline to edit
+      let ok = !!(await VFS.readJSON(base + '/materials.json'));
+      for(const md of mods) if(!ok && await VFS.readJSON(md + '/materials.json')) ok = true;
+      if(ok) out.push({ name: n, base, kind, mods });
+    }
   }
   _storyList = out;
   return out;
 }
-async function listStoryDesigns(base, kind){
-  // kind: 'body' | 'face' (both list body/*.json) | 'outfit' (articles/*.json)
+async function listStoryDesigns(entry, kind){
+  // kind: 'body' | 'face' (both list body/*.json) | 'outfit' (articles/*.json),
+  // merged across the source's own dir and any modules it pulls in
   const dir = kind === 'outfit' ? 'articles' : 'body';
-  const { files } = await VFS.listDir(base + '/' + dir);
-  return files.filter(n => n.endsWith('.json') && !n.startsWith('rig_')).sort();
+  const seen = new Set();
+  for(const b of [entry.base, ...(entry.mods || [])]){
+    const { files } = await VFS.listDir(b + '/' + dir);
+    files.forEach(f => { if(f.endsWith('.json') && !f.startsWith('rig_')) seen.add(f); });
+  }
+  return [...seen].sort();
+}
+async function _srcResolve(entry, rel){   // real path for a design in a source (+ its modules)
+  for(const b of [entry.base, ...(entry.mods || [])]) if(await VFS.readJSON(b + '/' + rel)) return b + '/' + rel;
+  return entry.base + '/' + rel;
 }
 function currentStory(){
   return storyOfPath(loadedPath)
@@ -3322,7 +3393,7 @@ async function refreshStartDesigns(){
   // every move within it, so hide the duplicate.
   const elsewhere = !loadedPath || story !== storyOfPath(loadedPath);
   if(!story || !elsewhere){ row.style.display = 'none'; return; }
-  const names = await listStoryDesigns(storyBase(story), kind);
+  const names = await listStoryDesigns(storyEntry(story), kind);
   const label = kind === 'outfit' ? 'an article' : 'a body';
   sel_.innerHTML = `<option value="">— pick ${label} —</option>` +
     names.map(n=>`<option value="${n}">${n}</option>`).join('');
@@ -3334,7 +3405,7 @@ async function populateStartPicker(){
   if(!stories.length){ row.style.display = 'none'; document.getElementById('startDesignRow').style.display = 'none'; return; }
   const want = currentStory();
   const sel = stories.find(s=>s.name === want) ? want : stories[0].name;
-  sel_.innerHTML = stories.map(s=>`<option value="${s.name}" ${s.name===sel?'selected':''}>${s.name}</option>`).join('');
+  sel_.innerHTML = stories.map(s=>`<option value="${s.name}" ${s.name===sel?'selected':''}>${s.name}${s.kind==='module'?' · module':''}</option>`).join('');
   row.style.display = '';
   try{ localStorage.setItem(STORY_LS, sel); }catch(e){}
   await refreshStartDesigns();
@@ -3348,17 +3419,17 @@ document.getElementById('startDesign').onchange = async e=>{
   const name = (e && e.target ? e.target.value : e) || ''; if(!name) return;
   const story = document.getElementById('storyPicker').value;
   const kind  = document.getElementById('startKind').value;
-  const base  = storyBase(story);
+  const entry = storyEntry(story);
   const qs = new URLSearchParams();
   if(kind === 'outfit'){
-    const bodies = await listStoryDesigns(base, 'body');
+    const bodies = await listStoryDesigns(entry, 'body');
     let fb; try{ fb = localStorage.getItem('gpEditorFitBody:' + story); }catch(e2){}
     if(!bodies.includes(fb)) fb = bodies[0];
-    if(!fb){ alert('no body/*.json in ' + base + '/body to fit against'); return; }
-    qs.set('file', base + '/articles/' + name);
-    qs.set('fitbody', base + '/body/' + fb);
+    if(!fb){ alert('no body/*.json for ' + story + ' to fit against'); return; }
+    qs.set('file', await _srcResolve(entry, 'articles/' + name));
+    qs.set('fitbody', await _srcResolve(entry, 'body/' + fb));
   } else {
-    qs.set('file', base + '/body/' + name);
+    qs.set('file', await _srcResolve(entry, 'body/' + name));
     if(kind === 'face') qs.set('edit', 'face');
   }
   location.search = qs.toString();
@@ -3369,7 +3440,7 @@ document.getElementById('startDesign').onchange = async e=>{
 async function populateArticlePicker(){
   const row = document.getElementById('switcherRow'), sel_ = document.getElementById('articlePicker');
   if(!GBASE || !TAILOR_MODE){ row.style.display = 'none'; return; }
-  const { files } = await VFS.listDir(GBASE + '/articles');
+  const { files } = await gListDir('articles');
   let names = files.filter(n => n.endsWith('.json')).sort();
   if(!names.length) return;
   const curName = loadedPath && loadedPath.includes('/articles/') ? loadedPath.split('/').pop() : null;
@@ -3406,7 +3477,7 @@ document.getElementById('newArticle').onclick = async ()=>{
   if(!name) return;
   if(!/^[a-z0-9_]+$/.test(name)){ alert('Use lower-case letters, digits and underscores only.'); return; }
   const path = GBASE + '/articles/' + name + '.json';
-  if(await VFS.readJSON(path)){ alert(name + '.json already exists - pick another name.'); return; }
+  if(await gReadJSON('articles/' + name + '.json')){ alert(name + '.json already exists (here or in a shared module) - pick another name.'); return; }
   const src = selSec && D && D.sections && D.sections[selSec];
   const stub = {
     identity: 'TODO: describe ' + name,
@@ -3423,9 +3494,9 @@ document.getElementById('newArticle').onclick = async ()=>{
   const qs = new URLSearchParams(); qs.set('file', path); qs.set('fitbody', FITBODY);
   location.search = qs.toString();
 };
-document.getElementById('articlePicker').onchange = e=>{
+document.getElementById('articlePicker').onchange = async e=>{
   const name = e.target.value; if(!name) return;
-  const path = GBASE + '/articles/' + name;
+  const path = await gResolve('articles/' + name);
   const qs = new URLSearchParams(location.search);
   qs.set('file', path);
   qs.delete('edit');                                   // face mode is for bodies, not articles
@@ -3446,7 +3517,7 @@ async function mergeFaces(){
   for(const slot of ['brows','eyes','nose','lips']){
     if(!fm[slot]) continue;
     const ref = 'faces/' + slot + '_' + fm[slot];
-    const fj = await VFS.readJSON(GBASE + '/' + ref + '.json');
+    const fj = await gReadJSON(ref + '.json');
     if(fj) (shimLook(fj).details || []).forEach(d => { d._src = ref; head.details.push(d); });
   }
   D0 = JSON.parse(JSON.stringify(D));

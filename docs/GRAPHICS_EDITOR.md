@@ -62,7 +62,8 @@ picked automatically:
 Then: pick a story → pick a design → edit → **save** or download.
 
 Paths handed to the VFS are always repo-relative
-(`config/stories/<story>/graphics/...`). If the user grants `config/` rather
+(`config/stories/<story>/graphics/...` or `config/modules/<name>/graphics/...`).
+If the user grants `config/` rather
 than the repo root, `VFS.prefix` strips the leading `config/`; `vfsProbe()`
 detects which by looking for `config/stories/` vs `stories/`.
 
@@ -70,17 +71,31 @@ detects which by looking for `config/stories/` vs `stories/`.
 `Cache-Control: no-store` (plain `http.server` sends only `Last-Modified`, so a
 browser can silently serve a stale cached `editor.html` after an edit), and a
 `PUT` writes the request body back to the file — restricted to `.json` under
-`config/stories/`, existing files only, with an `Origin` check. Run it from the
+`config/stories/` or `config/modules/`, existing files only (or a new file in
+an existing dir), with an `Origin` check. Run it from the
 repo root: `python config/serve_nocache.py 8777`. If the page still looks stale
 (new buttons missing), Ctrl+Shift+R.
 
 **The story picker — the editor is not tied to one story.** The tool has no
 built-in story. A **story** dropdown at the top of the side panel discovers
-every `config/stories/<name>/graphics/` pipeline (it lists `config/stories/`,
-then keeps each entry that has a `graphics/materials.json`; `PIPELINE_STORIES`
-in the script is only a fallback for a backend that can't list a directory).
-This is the only way a design gets loaded (there is no hand-load / paste
-route — see below). Pick a story, then the
+every `graphics/` pipeline it can reach: each `config/stories/<name>/` **and
+each `config/modules/<name>/`** (shared kits — see
+[CONFIG_MODULES.md](CONFIG_MODULES.md)) that has a `graphics/materials.json`.
+Module rows are labelled `<name> · module`. Picking one edits the module's
+files directly — that's the place to fix a shared body, rig, or generic
+garment so every story that lists the module gets the change.
+
+When a **story** is picked, its design lists and the shading/palette/face
+fallback merge in every `config/modules/<m>/graphics/` it declares in
+`story.json` (`GMODS` in the script, `gReadJSON` / `gListDir` / `gResolve`) —
+so a story with no `materials.json` of its own still renders, and a body or
+article that lives only in a module still shows up. A **save** always writes
+the file where it physically lives: edit a design that resolved to a module
+and you're editing the module (the `src` header shows the full path). A new
+article (**+ new**) is created in the currently-picked source's own folder.
+`PIPELINE_STORIES` in the script is only a fallback for a backend that can't
+list a directory. This is the only way a design gets loaded (there is no
+hand-load / paste route — see below). Pick a source, then the
 **body / face / tailor** kind selector and the **design** dropdown beside it
 list that story's `graphics/body/*.json` (body and face) or
 `graphics/articles/*.json` (tailor). Picking one navigates through the normal
