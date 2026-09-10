@@ -156,6 +156,12 @@ class Character:
         # SpaceScreen._update_ai_weapon_fire.
         self.in_combat = False
         self.firing = False
+        # Set by DepartRoutine once a leaving local NPC reaches its exit
+        # point; LocationScreen.update_physics drops any `gone` character
+        # from self.npcs after the NPC update pass. Never set for a
+        # character without a "depart_flag" (see _sync_npc_escorts).
+        self.gone = False
+        self.departing = False
 
         routine_cls = resolve_routine_class(role, faction, routine_name)
         self.routine = routine_cls(self.route)

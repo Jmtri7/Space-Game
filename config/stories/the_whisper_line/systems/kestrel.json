@@ -76,14 +76,16 @@
         "npcs": [
           {
             "name": "The Grey Courier",
-            "x": 139, "y": 301,
+            "x": 230, "y": 150,
             "role": "resident",
             "routine": "stationary",
+            "facing": "west",
             "outfit": "ck_smuggler_masc",
             "requires_not_flag": "met_courier",
+            "depart_flag": "met_courier",
             "ambient": {
               "range": 900,
-              "message": "Someone in a grey flight coat is standing too still by the west arc, watching you. Walk over (WASD / arrows) and press T."
+              "message": "Someone in a grey flight coat is standing too still against the north-west wall, watching you. Walk over (WASD / arrows) and press T."
             },
             "dialogue_tree": {
               "root": "start",
@@ -97,7 +99,7 @@
                   ]
                 },
                 "gone": {
-                  "text": "Gone isn't dead. Elian's a long way out and can't come in - you'll understand why when you read it. The note's a trail. Each line gets you to the next one.",
+                  "text": "Gone isn't dead. Elian's a long way out and can't come in - you'll understand why when you read it. The note's a trail. Each line leads you to the next.",
                   "options": [
                     { "label": "Asked by who?", "next": "who" },
                     { "label": "Give it here.", "next": "handover" }
@@ -110,23 +112,28 @@
                   ]
                 },
                 "handover": {
-                  "text": "There. It's Elian's hand, you'll know it. Read the first line before you do anything else, and for both our sakes don't file a flight plan. I was never on this ring.",
+                  "text": "There. It's Elian's hand, you'll know it. Read it before you do anything else, and for both our sakes don't file a flight plan. I was never on this station.",
                   "options": [
                     {
                       "label": "Take the note.",
                       "next": "leaving",
                       "actions": [
                         "give_item:the_note",
-                        "set_flag:met_courier",
                         "start_mission:follow_the_note"
                       ]
                     }
                   ]
                 },
                 "leaving": {
-                  "text": "First line's already staring at you: 'If you're reading this, you left the ring - good. Don't file a flight plan. Go to Tessellate, the old relay. Someone there kept my last packet.' That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
+                  "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
                   "options": [
-                    { "label": "Wait -", "next": null }
+                    { "label": "Read the note.", "next": "note" }
+                  ]
+                },
+                "note": {
+                  "text": "'If you're reading this, you left the station - good. Don't file a flight plan. Go to Tessellate, the old relay: it still holds air, and the archivist who lives in it kept the last packet I sent back. Ask them about the survey. The archivist can key you the lane on from there, out past the last beacon to the Verge - one settled moon, and I've been living under the plaza of it. Last line, and it isn't a place: if it's still talking when you get there, it isn't me anymore. Come anyway. - Elian Marr'",
+                  "options": [
+                    { "label": "End Conversation", "next": null, "action": "set_flag:met_courier" }
                   ]
                 }
               }

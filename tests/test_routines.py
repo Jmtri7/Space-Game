@@ -541,6 +541,50 @@ class TestWanderRoutineRespectsWalls(unittest.TestCase):
             self.assertTrue(location.can_move_to(person.x, person.y))
 
 
+class TestDepartRoutine(unittest.TestCase):
+    """DepartRoutine walks a leaving local NPC to a point and then sets
+    character.gone so LocationScreen.update_physics drops it. Used for a
+    one-time character (the Grey Courier) via an NPC config's depart_flag."""
+
+    def test_walks_to_the_target_then_marks_itself_gone(self):
+        from game.world.depart_routine import DepartRoutine
+        config = {"label": "Room", "rooms": [{"label": "R", "rect": [0, 0, 400, 200]}]}
+        location = LocationScreen(config_data=config, world_width=600, world_height=400)
+        person = Person(350, 100)
+        character = Character(person, role="resident", can_move_to=location.can_move_to)
+        character.set_routine(DepartRoutine((20, 100)))
+
+        for _ in range(600):
+            character.routine.run(character)
+            if character.gone:
+                break
+        self.assertTrue(character.gone)
+        self.assertLess(person.x, 40)
+
+    def test_gives_up_and_vanishes_if_boxed_in(self):
+        from game.world.depart_routine import DepartRoutine
+        person = Person(100, 100)
+        character = Character(person, role="resident", can_move_to=lambda x, y: False)
+        character.set_routine(DepartRoutine((0, 0)))
+        character.routine.run(character)
+        self.assertTrue(character.gone)
+
+    def test_departing_npc_is_removed_from_the_interior(self):
+        config = {
+            "label": "Ring", "rooms": [{"label": "R", "rect": [0, 0, 400, 200]}],
+            "portals": [{"x": 10, "y": 100, "return_to_ship": True}],
+            "npcs": [{"name": "Leaver", "x": 350, "y": 100, "depart_flag": "leaver_done"}],
+        }
+        location = LocationScreen(config_data=config, world_width=600, world_height=400)
+        self.assertEqual([c.person.name for c in location.npcs], ["Leaver"])
+        location.player.possessions.flags["leaver_done"] = True
+        for _ in range(600):
+            location.update_physics(player_present=True)
+            if not location.npcs:
+                break
+        self.assertEqual(location.npcs, [])
+
+
 class TestPersonStepToward(unittest.TestCase):
     """Person.step_toward - the one on-foot movement primitive shared by the
     player (LocationScreen._handle_movement), WanderRoutine, and DockRoutine."""

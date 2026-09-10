@@ -66,7 +66,13 @@ or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
 `decorations` (cosmetic decals) and `structures` (solid, if they carry a
 `footprint`), and `npcs`. A `structures[]` or `npcs[]` entry may carry a
 content gate (`requires_flag` / `requires_rep` / … — see the `systems/*.json`
-note above); gated entries are (re-)evaluated on every interior entry. A
+note above); gated entries are (re-)evaluated on every interior entry. An
+`npcs[]` entry may also carry `"facing"` (`"west"`/`"east"`/`"left"`/`"right"`
+— initial facing for an NPC that stands still) and `"depart_flag"` (a
+`Possessions.flags` name that, once set, swaps the NPC into `DepartRoutine` —
+walk to the nearest portal and vanish for good; pair with
+`requires_not_flag` on the same flag — see
+[class-hierarchy.md](class-hierarchy.md)'s routine table). A
 default-story station is one such interior. See "Interior geometry" below and
 `game/screens/location_screen/` (config load + gates in `screen.py`, geometry
 helpers in `_defs.py`).

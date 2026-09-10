@@ -332,6 +332,11 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         with perf.span("sim.npcs"):
             for character in self.npcs:
                 character.update()
+        # Drop any NPC that finished walking off (DepartRoutine sets .gone
+        # once it reaches its exit point) - see an NPC config's "depart_flag".
+        if any(c.gone for c in self.npcs):
+            self.npcs = [c for c in self.npcs if not c.gone]
+            self.current_npc_target = None
 
     def draw(self, surface, draw_hud=True):
         """Draw location from config. draw_hud=False skips the top-left

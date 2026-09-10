@@ -1,5 +1,8 @@
 """LocationScreen: npcs — mixed into the class in screen.py."""
 from game.screens.location_screen._defs import *  # noqa: F401,F403
+from game.world.depart_routine import DepartRoutine
+
+_FACING = {"west": -1, "left": -1, "east": 1, "right": 1}
 
 
 class _NpcsMixin:
@@ -48,6 +51,16 @@ class _NpcsMixin:
         # counterpart to a pilot's "one_way_hail" (see _check_npc_ambient).
         # None for an NPC with nothing unprompted to say.
         person.ambient = cfg.get("ambient")
+        # Optional flag name that, once set, swaps this NPC into
+        # DepartRoutine - walk to the nearest portal and vanish for good
+        # (the interior's content gate on the same flag keeps them gone on
+        # later visits). For a one-time character who leaves the scene.
+        person.depart_flag = cfg.get("depart_flag")
+        # Optional initial facing for an NPC that stands still ("west" /
+        # "east" / "left" / "right") - otherwise a figure faces the way it
+        # last walked, defaulting to east.
+        if cfg.get("facing") in _FACING:
+            person.facing = _FACING[cfg["facing"]]
         return Character(person, role=cfg.get("role", "resident"), faction=cfg.get("faction"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _post_local_message(self, sender, text):
@@ -102,6 +115,19 @@ class _NpcsMixin:
                 normal = resolve_routine_class(character.role, character.faction, character.routine_name)
                 character.set_routine(normal(character.route))
                 character.escorting = False
+        for character in self.npcs:
+            depart_flag = getattr(character.person, "depart_flag", None)
+            if depart_flag and flags.get(depart_flag) and not character.departing:
+                character.departing = True
+                character.set_routine(DepartRoutine(self._departure_point(character.person)))
+
+    def _departure_point(self, person):
+        """Where a leaving NPC (DepartRoutine) walks to before vanishing -
+        the nearest portal, or its own spot if the interior has none."""
+        if not self.portals:
+            return (person.x, person.y)
+        nearest = min(self.portals, key=lambda p: (p["x"] - person.x) ** 2 + (p["y"] - person.y) ** 2)
+        return (nearest["x"], nearest["y"])
 
     def _check_npc_ambient(self):
         """Let an interior NPC's "ambient" line (see _build_local_character)
