@@ -651,7 +651,7 @@ class TestPersonWalkCycle(unittest.TestCase):
         self.assertEqual(p.facing, 1)
         p.step_toward(-50.0, 0.0, 4.0, lambda x, y: True)
         self.assertEqual(p.facing, -1)
-        p.step_toward(0.0, 99.0, 4.0, lambda x, y: True)      # straight up
+        p.step_toward(p.x, p.y + 99.0, 4.0, lambda x, y: True)  # straight up
         self.assertEqual(p.facing, -1)                        # unchanged
         p.step_toward(50.0, 0.0, 4.0, lambda x, y: True)
         self.assertEqual(p.facing, 1)
@@ -666,6 +666,9 @@ class TestPersonWalkCycle(unittest.TestCase):
         p.facing = 1
         p.step_toward(-50.0, 50.0, 4.0, lambda x, y: True)    # up-left, 45 degrees
         self.assertEqual(p.facing, -1)
+        p.facing = -1
+        p.step_toward(20.0, 200.0, 4.0, lambda x, y: True)    # mostly up, a little right
+        self.assertEqual(p.facing, 1)
         p.facing = -1
         p.step_toward(50.0, -50.0, 4.0, lambda x, y: True)    # down-right, 45 degrees
         self.assertEqual(p.facing, 1)

@@ -61,7 +61,8 @@ class Person:
         # is effectively immutable for a Person, so a colour only resolves once.
         self._color_cache = {}
         # Which way the body faces: +1 = right (screen +x), -1 = left. Set from
-        # the last horizontal step in step_toward and kept when standing still,
+        # the last step in step_toward that had any horizontal component (so a
+        # mostly-vertical diagonal still turns the figure), kept when standing still,
         # so the figure is always drawn facing the way it last walked. draw()
         # mirrors every figure-space x about self.x when this is -1.
         self.facing = 1
@@ -521,8 +522,8 @@ class Person:
             if (cand_x, cand_y) != (self.x, self.y) and can_move_to(cand_x, cand_y):
                 moved = math.hypot(cand_x - self.x, cand_y - self.y)
                 mvx, mvy = cand_x - self.x, cand_y - self.y
-                if abs(mvx) >= abs(mvy) and mvx:  # face the way we're walking when it's
-                    self.facing = 1 if mvx > 0 else -1   # at least as much sideways as vertical
+                if abs(mvx) > 1e-6:  # face the way we're walking whenever there's any
+                    self.facing = 1 if mvx > 0 else -1   # horizontal component to the step
                 self.x, self.y = cand_x, cand_y
                 self._advance_walk(moved)
                 return True
