@@ -17,6 +17,8 @@ music_cache/
 # Runtime logs from launching the game for manual verification
 game_stdout.log
 game_stderr.log
+game_output.txt
+debug.log
 
 # Crash dump written by main.py's top-level exception handler
 error.txt
