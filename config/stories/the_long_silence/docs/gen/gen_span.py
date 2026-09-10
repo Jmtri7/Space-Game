@@ -306,7 +306,7 @@ HZ_STRUCTURES = [
     {"x": 1180, "y": 600, "building_type": "pipeline_bench"},
 ]
 HZ_NPCS = [
-    {"name": "First Warden", "x": 910, "y": 440, "role": "magistrate",
+    {"name": "First Warden", "x": 910, "y": 400, "role": "magistrate",
      "faction": "the_wardens", "outfit": "warden_official_femme",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We tend the machinery. We do not decide for it. You will. Stand at the Core Choir and choose - there is no undoing it.",
@@ -345,7 +345,7 @@ HZ_NPCS = [
     # The Hub Archive - the shutdown reason as a *place*, not only a dialogue
     # reveal in the_vigil_record. The machine's own logs give the same three
     # explanations, from the other end. Sets read_hub_archive.
-    {"name": "Archivist of the Choir", "x": 820, "y": 780, "role": "clerk",
+    {"name": "Archivist of the Choir", "x": 700, "y": 800, "role": "clerk",
      "faction": "the_wardens", "outfit": "warden_official_masc",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "The Archive is the Hub's own memory of the night it went dark. Not the Vigil's account of it - the machine's. Three logs from that last hour, and they do not agree. The Choir has read them for two hundred years and is no closer. Read them yourself; you are the one it is asking.",

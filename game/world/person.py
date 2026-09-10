@@ -1,5 +1,6 @@
 """Base class for NPCs and other characters in the game."""
 import math
+import pygame
 import game.aa_draw as aa
 from game.utils import to_screen, get_scale, screen_affine
 from game.world.possessions import Possessions
@@ -49,6 +50,13 @@ class Person:
         self.walk_phase = 0.0
         self.walk_intensity = 0.0
         self._walked_this_frame = False
+        # One pre-rasterised sprite of this figure's *rest* pose (see
+        # _blit_idle_body). A standing NPC redraws the identical ~90-polygon
+        # body every frame; on a busy station (Hub Control: 9 idle NPCs) that
+        # was the interior frame budget at min zoom. Keyed by the view
+        # scale/facing/AA-mode/pose-identity so it rebuilds only on a zoom or
+        # a turn, and holds just the current key's entry.
+        self._idle_sprite_cache = {}
         # token -> resolved (r, g, b), filled lazily in _fig_color. The outfit
         # is effectively immutable for a Person, so a colour only resolves once.
         self._color_cache = {}
@@ -285,6 +293,16 @@ class Person:
         if not rest:
             return
         k = min(1.0, self.walk_intensity)
+        f = -self.facing
+        aff = screen_affine()
+        polygon = aa.polygon
+        if k <= 0.02 and aff:
+            # Standing still: blit a pre-rasterised sprite of the rest pose
+            # instead of re-filling ~90 polygons. Rotated views (aff is None)
+            # fall through to the direct path.
+            a, tx, ty = aff
+            self._blit_idle_body(surface, rest, a, f, self.x * a + tx, self.y * a + ty)
+            return
         if k > 0.02:
             t = (self.walk_phase / (2 * math.pi)) % 1.0
             full = story_assets.worn_frame(story, self.outfit, t)
@@ -293,9 +311,6 @@ class Person:
                      for rp, fp in zip(rest, full)]
         else:
             parts = rest
-        f = -self.facing
-        aff = screen_affine()
-        polygon = aa.polygon
         if aff:
             # Fold facing + position + camera into two multiply-adds and skip
             # the per-vertex round() - pygame.draw.polygon takes floats, and
@@ -319,6 +334,49 @@ class Person:
                 col = p["color"]
                 col = self._hex(col) if isinstance(col, str) else tuple(col)
                 polygon(surface, col, [to_screen(self.x + gx * f, self.y + gy) for gx, gy in pts])
+
+    def _blit_idle_body(self, surface, rest, scale, f, bx, by):
+        """Blit the cached rest-pose sprite for this figure at screen origin
+        (bx, by) = the projected foot position. Builds (and replaces) the
+        one-entry cache on a scale / facing / AA-mode / pose change."""
+        key = (round(scale, 3), f, id(rest), aa._gfx_active())
+        entry = self._idle_sprite_cache.get(key)
+        if entry is None:
+            entry = self._build_idle_sprite(rest, scale, f)
+            self._idle_sprite_cache = {key: entry}
+        spr, ox, oy = entry
+        if spr is not None:
+            surface.blit(spr, (round(bx + ox), round(by + oy)))
+
+    def _build_idle_sprite(self, rest, scale, f):
+        """Rasterise the rest-pose parts once into an SRCALPHA surface, in
+        pixels relative to the foot position. Returns (surface, off_x, off_y)
+        where off is the surface's top-left in that same frame, or
+        (None, 0, 0) when there is nothing to draw."""
+        polys = []
+        minx = miny = 1e18
+        maxx = maxy = -1e18
+        for p in rest:
+            pts = p.get("points")
+            if not pts or len(pts) < 3:
+                continue
+            col = p["color"]
+            col = self._hex(col) if isinstance(col, str) else tuple(col)
+            sp = [(gx * f * scale, gy * scale) for gx, gy in pts]
+            for x, y in sp:
+                minx = min(minx, x); maxx = max(maxx, x)
+                miny = min(miny, y); maxy = max(maxy, y)
+            polys.append((col, sp))
+        if not polys:
+            return (None, 0, 0)
+        pad = 2  # covers the gfxdraw AA outline that laps ~1px past the fill
+        minx -= pad; miny -= pad; maxx += pad; maxy += pad
+        w = max(1, int(math.ceil(maxx - minx)))
+        h = max(1, int(math.ceil(maxy - miny)))
+        spr = pygame.Surface((w, h), pygame.SRCALPHA)
+        for col, sp in polys:
+            aa.polygon(spr, col, [(x - minx, y - miny) for x, y in sp])
+        return (spr, minx, miny)
 
     def equip_article(self, article_name):
         """Add one more pipeline-body article (docs/GRAPHICS_PIPELINE.md) on

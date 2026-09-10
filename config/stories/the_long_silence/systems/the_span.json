@@ -305,7 +305,7 @@
           {
             "name": "First Warden",
             "x": 910,
-            "y": 440,
+            "y": 400,
             "role": "magistrate",
             "faction": "the_wardens",
             "outfit": "warden_official_femme",
@@ -425,8 +425,8 @@
           },
           {
             "name": "Archivist of the Choir",
-            "x": 820,
-            "y": 780,
+            "x": 700,
+            "y": 800,
             "role": "clerk",
             "faction": "the_wardens",
             "outfit": "warden_official_masc",

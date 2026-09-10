@@ -251,7 +251,7 @@
           {
             "name": "Factor Tol",
             "x": 800,
-            "y": 450,
+            "y": 410,
             "role": "stationmaster",
             "faction": "ninefold_combine",
             "outfit": "combine_official_masc",

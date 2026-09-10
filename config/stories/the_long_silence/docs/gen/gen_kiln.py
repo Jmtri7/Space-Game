@@ -357,7 +357,7 @@ HOLD_STRUCTURES = [
 ]
 
 HOLD_NPCS = [
-    {"name": "Factor Tol", "x": 800, "y": 450, "role": "stationmaster",
+    {"name": "Factor Tol", "x": 800, "y": 410, "role": "stationmaster",
      "faction": "ninefold_combine", "outfit": "combine_official_masc",
      "ambient": {"range": 620, "message": "New hull on Combine ground. Nothing moves here without a contract - come to me before you trade a bolt."},
      "dialogue_tree": {"root": "start", "conditional_roots": [

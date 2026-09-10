@@ -497,7 +497,7 @@ HUB_STRUCTURES = [
 ]
 
 HUB_NPCS = [
-    {"name": "Induction Officer Sella", "x": 800, "y": 600, "role": "concierge",
+    {"name": "Induction Officer Sella", "x": 880, "y": 800, "role": "concierge",
      "faction": "harbor_authority", "outfit": "authority_official_femme",
      "escort_flag": "induction_escorting",
      "ambient": {"range": 700, "message": "New pilot on the ring? I run inductions - walk over (WASD / arrows) and press T when you reach me."},

@@ -285,8 +285,8 @@
         "npcs": [
           {
             "name": "Induction Officer Sella",
-            "x": 800,
-            "y": 600,
+            "x": 880,
+            "y": 800,
             "role": "concierge",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
