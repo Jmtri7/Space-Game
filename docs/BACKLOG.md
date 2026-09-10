@@ -7,67 +7,30 @@ mention it in the commit message so this file and the commit history stay in syn
 
 Top-level split is **Bugs vs. Features**. Within each, items are grouped by the type of
 gameplay they belong to, so related work is easy to find together. A gameplay category
-only appears under a section if it currently has items there.
+only appears under a section if it currently has items there. Items specific to the
+`the_long_silence` story live in their own section at the bottom.
 
 # Bugs
 
 ## Controls & UI
 
-- [ ] Say "messages", not "comms", everywhere in the UI.
 - [ ] Make conversation menus look visually consistent with the other menus.
-- [x] Button overlapping in the shipyard menu. Fixed: `ui_theme.fit_text`
-      ellipsises any grid-cell label to its cell width (shared by Shipyard /
-      Shop / Outfitter Buy cells), so a long story-authored ship name can't
-      spill into the neighbouring cell.
-- [x] Shipyard ship-description text runs off the edge / drifts onto the Buy
-      button. Fixed: `ShipBrowserMenu` now reserves the always-shown stat rows,
-      gives the free-form description whatever vertical budget is left
-      (ellipsised, never spilling), and hard-caps the readout above the
-      fixed-position action button; compact stat labels + a smaller font.
-      `OutfittingMenu._draw_stat_panel` got the same clamp.
+- [ ] Bug: talking to a shopkeeper opens the shop after the conversation (shop
+      should not auto-open on dialogue end).
 
 ## Navigation & Flight
 
 - [ ] Jumping to system center — the mechanic and its tutorial both need work.
-- [ ] Jump-target label wraps excessively.
+- [x] Jump-target label wraps excessively. (Jump Target / Targeting Mode
+      values now start on their own line under the label - `"block"` two-tone
+      entries in `draw_info_panel`.)
+- [ ] Arrow / indicator should point at the current target when indoors.
 
 ## Missions, Dialogue & NPCs
 
 - [ ] No mission-complete message when leaving the mission area — a mission that
       completes on leaving/returning surfaces no confirmation toast.
-- [ ] Petra Voss should be positioned at the loan office desk.
 - [ ] Check the tutorial text and the autopilot popup for accuracy.
-- [~] Too many messages early in `the_long_silence` — the opening drowns the
-      player in dialogue/toasts right off the bat. Trimmed the wordiest
-      induction stage messages and cut the editorialising Standing narration
-      (`gen_halcyon.py`). The induction itself is paced one message per action
-      (`check_mission_progress` advances one stage/frame), so the remaining
-      density is the concourse NPC greetings + ambient lines — needs a
-      play-through to tune which NPCs should stay quiet until later.
-
-## Economy & Trading
-
-- [x] You can spend your loan on a laser cannon and then be stuck (no way to
-      recover/pay it back). Fixed: `OutfittingMenu` gained a **Sell** tab
-      (`SELL_MULTIPLIER` 0.5 of cost, spares only — uninstall first) backed by
-      `Possessions.sell_outfit`. Also the `the_long_silence` starter loan was
-      cut 100k → 12k.
-- [x] Loan amount is too big — fine for testing now, but needs tuning down.
-      `the_long_silence`: added a `story.json` `loan` block (lender / amount /
-      max_active — see `LocationScreen._loan_terms`) set to 12,000 (courier is
-      7,000), replacing the 100,000 engine default (`DEFAULT_LOAN_AMOUNT`).
-      Other stories still use the default.
-
-## Stations, Interiors & World Building
-
-- [x] Characters added to a story don't show up in old saves. Fixed by Phase 4:
-      NPC and AI-ship rosters are re-derived from config (filtered through
-      `content_gate.passes_content_gate`) on every interior / system entry, never
-      from the save — so a newly-added or flag-gated character appears in an old
-      save once eligible. See `LocationScreen._apply_content_gates` /
-      `SpaceScreen._sync_conditional_ships` and SAVE_SYSTEM.md. (Renaming an
-      existing pilot still orphans its save-position entry — separate, narrower.)
-- [ ] The concierge desk should sit right in front of the player on entry.
 
 ## Graphics & Rendering
 
@@ -89,29 +52,20 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Quick save.
+- [ ] Active mission selector with arrows — let the player cycle which mission is
+      the active/tracked one.
 - [ ] Make the player icon on the minimap more obvious than the others.
 - [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
       the mouse.
 - [ ] Consider mouse-based movement/control support.
-- [x] Show the active mission on the in-world HUD. (Space View status pane now
-      shows the current act — story.json `acts` / `utils.current_act` — and the
-      active mission title. Interior HUD still doesn't; low priority.)
 - [ ] Controls should be usable without moving the hand off WASD / arrow keys —
       avoid bindings that force the player to reposition their hand.
 - [ ] Allow arrow keys to change meny selections.
-- [x] `ESC` closes the NPC conversation box and the shop menus. Conversation /
-      hail box: ESC closes it (Enter picks the highlighted option), handled in
-      each screen's `handle_input`. Shop / shipyard / outfitter: ESC closes them
-      (a nested purchase confirm or spares picker eats the ESC first), handled
-      in `main.py`'s state machine like the key-opened modals. Menu classes stay
-      mouse-only. See DESIGN_PATTERNS.md's "Menu vs. Dialog" and CONTROLS.md's
-      "Menus".
 
 ## Navigation & Flight
 
 - [ ] Add a border to the edge of the star map where no systems can be.
 - [ ] Star map zoom.
-- [ ] Correct Kade Marshes grammar about "Fly it to yourself".
 
 ## Missions, Dialogue & NPCs
 
@@ -179,14 +133,6 @@ only appears under a section if it currently has items there.
 
 - [ ] Sell all button.
 - [ ] Picking up and dropping items.
-- [x] Asteroid mining. (Done - any of 4 weapon outfits (laser cannon,
-      pulse blaster, heavy cannon, scatter gun - each its own damage/fire
-      rate/spread/projectile look) damages asteroids on a health pool sized
-      off `size`; a large one breaks into smaller fragments, a small one
-      scatters its ore as drifting pickups the player has to fly over (with
-      cargo room) to collect, type-dependent via asteroid_types.json's
-      mine_yield - sold at a quartermaster like any other commodity. See
-      ARCHITECTURE.md's "Weapons & Asteroid Mining".)
 - [ ] More ways to make money.
 - [ ] Ilsa Farrow should sell things — give her a shop/merchant role.
 - [ ] Make some commodities usable for various purposes (not just tradeable).
@@ -220,17 +166,6 @@ only appears under a section if it currently has items there.
 
 ## Graphics & Visual Polish
 
-- [x] Anti-aliasing via `pygame.gfxdraw` as a second AA option in Settings →
-      Video. Done: `constants.AA_MODE` is now a 3-way `off` / `gfxdraw` /
-      `supersample` (was the `SUPERSAMPLE_AA` bool), cycled from the Settings
-      menu and saved as `settings.json` `aa_mode`. `game/aa_draw.py`'s
-      `polygon()` / `circle()` are `pygame.draw` drop-ins that add a
-      `gfxdraw` `aa*` outline in gfxdraw mode (with a plain-`pygame.draw`
-      fallback for degenerate / off-screen shapes); the world/asset draw
-      sites route their fills through them (`world_object.draw_parts` /
-      `_draw_rotated_polygon`, `ship`, `landing_site`, `central_star`,
-      `celestial_body`, `asteroid`, `person`, `location_screen` buildings /
-      decorations / furniture). UI/HUD stay aliased in gfxdraw mode.
 - [ ] Shoulder pads (character article).
 - [ ] Shoulder spikes (character article).
 - [ ] Antenna (character article).
@@ -266,13 +201,6 @@ only appears under a section if it currently has items there.
       `Get-Process python` / `Stop-Process:*`). Writing permission files is
       classifier-gated, so this needs a human (`/permissions` in an interactive
       terminal, or the `update-config` skill).
-- [x] **Agent token optimisation — split `ARCHITECTURE.md` and
-      `DESIGN_PATTERNS.md`** into a short hub + focused sub-pages. Done:
-      `ARCHITECTURE.md` is now a hub (layout + conventions) → `docs/architecture/`
-      {class-hierarchy, config-formats, combat-and-mining, extensibility}.md;
-      `DESIGN_PATTERNS.md` is a hub (working principles) → `docs/patterns/`
-      {rendering, movement, entities, ui-screens, persistence}.md. `docs/README.md`
-      route table and the `CLAUDE.md` tree updated in the same commit.
 - [ ] Story editor — a `config/editor.html`-style tool for authoring a story
       (systems, characters, missions, dialogue).
 - [ ] Rename-articles option in the graphics editor.
@@ -285,13 +213,61 @@ only appears under a section if it currently has items there.
 - [ ] Migrate the `default` story onto the design-JSON pipeline
       (docs/GRAPHICS_PIPELINE.md) so its art is regenerable again, then drop
       `person_figure.py` / `figure_signatures.py` and the old draw paths.
-- [x] Shared asset modules via a search path. Shipped as the **config-module**
-      system: `config/modules/{name}/` shared kits, opted into via `story.json`
-      `"modules": [...]`, resolved by [`game/config_source.py`](../game/config_source.py)
-      (story dir wins; modules may now depend on modules, flattened by
-      `resolved_modules()`). `the_long_silence` uses `figures-human` / `audio-core`
-      / `ships-core` / `common-goods` / `story-defaults` instead of vendoring the
-      tree. Editor has a Workspace rail + new story/module buttons. Spec:
-      [CONFIG_MODULES.md](CONFIG_MODULES.md). (Landed as `"modules"` rather than
-      the originally-proposed `"extends"`; still one level in spirit but with
-      module→module deps.)
+
+# The Long Silence (story-specific)
+
+## Structure & pacing
+
+- [~] Too many messages early — the opening drowns the player in dialogue/toasts
+      right off the bat. Trimmed the wordiest induction stage messages and cut the
+      editorialising Standing narration (`gen_halcyon.py`). The induction itself is
+      paced one message per action (`check_mission_progress` advances one
+      stage/frame), so the remaining density is the concourse NPC greetings +
+      ambient lines — needs a play-through to tune which NPCs should stay quiet
+      until later.
+- [ ] Combine the tutorial with the story (one onboarding flow, not two).
+- [ ] Story is too short — too much walking and talking, not enough activities.
+- [ ] Nobody teaches you how to land or use autopilot.
+- [ ] No message when skipping the tutorial and visiting Kiln.
+- [ ] Hub opens but the mission text still says to go back to Verdance.
+
+## Dialogue & briefing
+
+- [ ] Sella's description of jumping to Kiln is mixed with a description of
+      jumping back to system center.
+- [ ] You should be briefed on what to do when contacting the Combine.
+- [ ] Factor Tol doesn't explain where he is.
+- [ ] Factor Tol doesn't explain where to witness your mark.
+- [ ] Can you open the sealed manifest? (unclear / no affordance)
+- [ ] Highcanopy: you get a message with directions to Tam but none to get to
+      Osei.
+- [ ] Reasons to visit the undergarden aren't given.
+- [ ] Keeper Aramis messages immediately (should be delayed / triggered).
+- [ ] Dialogue can be confusing — especially the name-wall accounts and the story
+      of the beacons.
+- [ ] Too many messages after returning to Factor Tol — you get ~4 at once:
+      "Beacon relit Verdance", "Kiln relit / signal has reached Kiln",
+      "Free carriers — you have been lighting the beacons, carry for us when you
+      can", "Load's aboard to ossuary" (relief down the line may start too soon).
+- [ ] Too many messages after the vote — "Ossuary beacon relit", "Vigil keeper —
+      what the beacons were for, you have read part of the wall now", "Notice of
+      closure — the Combine has voted, the Kiln lane is closing and its patrols
+      are cleared to turn back", "There's a carrier crew still on the ground at
+      Combine Hold — their hull's impounded and the lane's closing around them".
+
+## World geography & placement
+
+- [ ] Tam is placed to the SW but should be to the NW.
+- [ ] Hit box too big on the Highcanopy lamp.
+- [ ] Make the name wall actually visible.
+
+## Missions & triggers
+
+- [ ] Visiting Ossuary without intentionally talking to the free carriers still
+      gives you a message about Sister Edda's people taking it from the hold —
+      did landing complete a mission it shouldn't have?
+
+## Art
+
+- [ ] Floor designs should differ for Authority vs. Combine. Also jaggies in the
+      floor patterns.
