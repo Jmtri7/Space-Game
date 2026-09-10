@@ -37,8 +37,13 @@ only appears under a section if it currently has items there.
       completes on leaving/returning surfaces no confirmation toast.
 - [ ] Petra Voss should be positioned at the loan office desk.
 - [ ] Check the tutorial text and the autopilot popup for accuracy.
-- [ ] Too many messages early in `the_long_silence` — the opening drowns the
-      player in dialogue/toasts right off the bat.
+- [~] Too many messages early in `the_long_silence` — the opening drowns the
+      player in dialogue/toasts right off the bat. Trimmed the wordiest
+      induction stage messages and cut the editorialising Standing narration
+      (`gen_halcyon.py`). The induction itself is paced one message per action
+      (`check_mission_progress` advances one stage/frame), so the remaining
+      density is the concourse NPC greetings + ambient lines — needs a
+      play-through to tune which NPCs should stay quiet until later.
 
 ## Economy & Trading
 

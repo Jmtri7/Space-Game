@@ -34,7 +34,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "Get in close to anyone and press T. Shopkeepers open their store; everyone else has something to say - and most of it's worth hearing right now."
+          "text": "Get in close to anyone and press T. Shopkeepers open their store; everyone else has something to say."
         }
       },
       {
@@ -52,7 +52,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Induction Officer Sella",
-          "text": "Press P for Possessions - credits, ships, cargo, and your Standing with each faction. Right now you're Friendly with the Authority and neutral everywhere else. That will change."
+          "text": "Press P for Possessions - credits, ships, cargo, and your Standing with each faction."
         }
       },
       {
