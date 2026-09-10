@@ -1,0 +1,14 @@
+{
+  "identity": "Warden everyday dress - plain alloy-grey clothes, a soft collar, the signal gorget and hub token every Warden wears from the day they are named.",
+  "articles": [
+    "tank_top",
+    "jacket_civ",
+    "pants",
+    "shoes",
+    "collar",
+    "warden_signal_gorget",
+    "warden_hub_token",
+    "hair_long"
+  ],
+  "palette": "warden_dress"
+}

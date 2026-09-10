@@ -1,0 +1,58 @@
+{
+  "identity": "Warden tender's sash - a wide alloy-grey band from shoulder to hip, hand-lettered in white with a litany of maintenance steps. Worn by the Core Choir.",
+  "tier": "person",
+  "palette": "warden_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "tag": "tender sash",
+      "note": "litany sash",
+      "color": "knit",
+      "shade": "matte",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              2.9,
+              -25.5
+            ],
+            [
+              3.5,
+              -25.1
+            ],
+            [
+              -2.7,
+              -18.6
+            ],
+            [
+              -3.3,
+              -19.2
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.6,
+              -25.6
+            ],
+            [
+              2.1,
+              -25.2
+            ],
+            [
+              -1.8,
+              -19.5
+            ],
+            [
+              -1.95,
+              -20.1
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

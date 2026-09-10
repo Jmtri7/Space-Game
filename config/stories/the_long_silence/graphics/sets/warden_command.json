@@ -1,0 +1,14 @@
+{
+  "identity": "Core Choir turn-out - a long alloy-grey coat, the signal gorget, the tender's litany sash, the hub token, dark boots.",
+  "articles": [
+    "tank_top",
+    "coat_charcoal",
+    "pants_charcoal",
+    "boots_black",
+    "warden_signal_gorget",
+    "warden_tender_sash",
+    "warden_hub_token",
+    "hair_short"
+  ],
+  "palette": "warden_dress"
+}

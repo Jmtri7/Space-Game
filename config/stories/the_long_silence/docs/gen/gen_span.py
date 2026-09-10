@@ -3,15 +3,18 @@
 Owns systems/the_span.json. Run after gen_ossuary (see docs/gen/README.md).
 The Span stays beacon-locked through Act I ("NO SIGNAL" on the star map) and
 opens mid-Act II once the player carries the signal there (act_span +
-standing). This slice authors the Warden exterior/interior art and a minimal
-Hub Zero with the ending fork; the bespoke Warden wardrobe and a full roster
-are deferred to Act II (the warden_* outfits stay palette recolours for now).
+standing). This slice authors the Warden exterior/interior art, the bespoke
+Warden wardrobe (added Phase 7 - five identity articles + five culture sets,
+composed from the shared _slice_kit shapes), and a minimal Hub Zero with the
+ending fork.
 
 Warden style (cultures.json): vast smooth Relay-era forms in dark alloy and
 teal light, patched with mismatched salvage and hand-lettered ritual markings.
 """
 import math
-from _slice_kit import S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, station_shell
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, station_shell,
+                        article, sash_region, shoulder_slab_region, far_shoulder_slab_region,
+                        pendant_region, brassard_region, gorget_region, write_wardrobe)
 
 PFX = "warden"
 
@@ -215,13 +218,58 @@ for bid, (design, fp) in BUILDINGS.items():
     bt[bid]["footprint"] = fp
 w(f"{S}/building_types.json", bt)
 
-# dress palette: keep the Act-II wardrobe deferred, but give the recolour
-# a real teal-on-alloy identity so the placeholder outfits read as Warden.
-dress = r(f"{G}/palettes/warden_dress.json")
-dress["identity"] = "Warden dress (Act I placeholder recolour - bespoke wardrobe deferred to Act II) - dark alloy-grey work cloth, salvaged leather, hand-lettered white, a teal signal-lamp accent."
+# ======================================================================
+# 3b. DRESS PALETTE + BESPOKE WARDEN WARDROBE  (Phase 7 - was deferred from 6.5)
+# ======================================================================
+DRESS = "warden_dress"
+dress = r(f"{G}/palettes/{DRESS}.json")
+dress["identity"] = "Warden dress - dark alloy-grey work cloth over salvaged leather, hand-lettered white ritual marking, a teal signal-lamp accent at the throat. Human skin/hair unchanged."
 dress.update({"cloth": "#3c4240", "denim": "#2e3432", "knit": "#4a524e", "leather": "#4a4038",
               "metal": "#9a8a5c", "glass": "#78ffdc", "lamp": "#78ffdc"})
-w(f"{G}/palettes/warden_dress.json", dress)
+w(f"{G}/palettes/{DRESS}.json", dress)
+
+# Five identity articles, composed from the shared free-drawn shapes in
+# _slice_kit (recoloured by warden_dress). The signal gorget is the mark
+# every Warden wears; the hub token is the Relay-era key they tend.
+ARTICLES = {
+    "warden_signal_gorget": article(
+        "Warden signal gorget - a stiff alloy throat collar with a lit teal bar, the sign of one who tends the hub machinery. Every Warden wears one.",
+        DRESS, [gorget_region("metal", "metal", "lamp", "signal gorget")]),
+    "warden_hub_token": article(
+        "Warden hub token - a small Relay-era key-tablet on a cord at the sternum, teal-lit. Passed down, not issued; losing yours is losing your place.",
+        DRESS, [pendant_region("glass", "glow", "hub token", "badge")]),
+    "warden_salvage_pauldrons": article(
+        "Warden salvage pauldrons - two mismatched shoulder plates cut from old hull and hand-bolted on, one bigger than the other. Salvage crews and segment-wardens both.",
+        DRESS, [shoulder_slab_region("leather", "deep", "salvage plate"),
+                far_shoulder_slab_region("metal", "metal", "salvage plate")]),
+    "warden_tender_sash": article(
+        "Warden tender's sash - a wide alloy-grey band from shoulder to hip, hand-lettered in white with a litany of maintenance steps. Worn by the Core Choir.",
+        DRESS, [sash_region("knit", "matte", "tender sash", "litany sash")]),
+    "warden_lamp_brassard": article(
+        "Warden lamp brassard - an upper-arm band with a lit teal mark, worn on watch in the segments.",
+        DRESS, [brassard_region("leather", "deep", "lamp", "lamp brassard")]),
+}
+
+SETS = {
+    "warden_command": {"identity": "Core Choir turn-out - a long alloy-grey coat, the signal gorget, the tender's litany sash, the hub token, dark boots.",
+                       "articles": ["tank_top", "coat_charcoal", "pants_charcoal", "boots_black",
+                                    "warden_signal_gorget", "warden_tender_sash", "warden_hub_token", "hair_short"]},
+    "warden_security": {"identity": "Segment-warden watch kit - work suit, salvage pauldrons, the signal gorget, a lamp brassard, a visor.",
+                        "articles": ["tank_top", "jacket_navy", "pants_navy", "boots_charcoal", "visor_ice",
+                                     "warden_salvage_pauldrons", "warden_signal_gorget", "warden_lamp_brassard"]},
+    "warden_dock": {"identity": "Warden salvage-crew kit - heavy work suit, salvage pauldrons, gloves, the signal gorget, the hub token.",
+                    "articles": ["tank_top", "jacket_dock", "pants_dock", "boots_charcoal", "gloves_dark",
+                                 "warden_salvage_pauldrons", "warden_signal_gorget", "warden_hub_token"]},
+    "warden_flight": {"identity": "Warden courier kit - work suit, flight helmet, the signal gorget, the hub token.",
+                      "articles": ["tank_top", "jacket_olive", "pants_field", "boots_charcoal", "helmet_flight",
+                                   "warden_signal_gorget", "warden_hub_token", "hair_short"]},
+    "warden_civilian": {"identity": "Warden everyday dress - plain alloy-grey clothes, a soft collar, the signal gorget and hub token every Warden wears from the day they are named.",
+                        "articles": ["tank_top", "jacket_civ", "pants", "shoes", "collar",
+                                     "warden_signal_gorget", "warden_hub_token", "hair_long"]},
+}
+ROLE_SET = {"civilian": "warden_civilian", "official": "warden_command", "flight": "warden_flight",
+            "security": "warden_security", "dock": "warden_dock"}
+write_wardrobe(gfx, PFX, DRESS, ARTICLES, SETS, ROLE_SET)
 w(f"{S}/graphics.json", gfx)
 
 # ======================================================================
@@ -353,5 +401,5 @@ pilots.update({
 })
 w(f"{S}/pilots.json", pilots)
 
-print(f"The Span (Act I stub): 3 ships, 1 station, 3 buildings, Hub Zero ({len(HZ_ROOMS)} rooms / "
-      f"{len(HZ_NPCS)} NPCs) with the ending fork, {len(pilots)} pilots. Wardrobe deferred to Act II.")
+print(f"The Span: 3 ships, 1 station, 3 buildings, dress + {len(ARTICLES)} articles / {len(SETS)} sets, "
+      f"Hub Zero ({len(HZ_ROOMS)} rooms / {len(HZ_NPCS)} NPCs) with the ending fork, {len(pilots)} pilots.")

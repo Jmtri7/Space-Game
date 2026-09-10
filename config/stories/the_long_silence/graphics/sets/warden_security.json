@@ -1,0 +1,14 @@
+{
+  "identity": "Segment-warden watch kit - work suit, salvage pauldrons, the signal gorget, a lamp brassard, a visor.",
+  "articles": [
+    "tank_top",
+    "jacket_navy",
+    "pants_navy",
+    "boots_charcoal",
+    "visor_ice",
+    "warden_salvage_pauldrons",
+    "warden_signal_gorget",
+    "warden_lamp_brassard"
+  ],
+  "palette": "warden_dress"
+}

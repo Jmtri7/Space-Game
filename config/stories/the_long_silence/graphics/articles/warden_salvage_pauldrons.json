@@ -1,0 +1,109 @@
+{
+  "identity": "Warden salvage pauldrons - two mismatched shoulder plates cut from old hull and hand-bolted on, one bigger than the other. Salvage crews and segment-wardens both.",
+  "tier": "person",
+  "palette": "warden_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "tag": "epaulette",
+      "note": "near salvage plate",
+      "color": "leather",
+      "shade": "deep",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              1.7,
+              -25.2
+            ],
+            [
+              4.9,
+              -25.0
+            ],
+            [
+              4.9,
+              -23.4
+            ],
+            [
+              1.8,
+              -23.6
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              1.2,
+              -25.0
+            ],
+            [
+              3.6,
+              -24.85
+            ],
+            [
+              3.6,
+              -23.3
+            ],
+            [
+              1.25,
+              -23.45
+            ]
+          ],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "arm_far",
+      "tag": "epaulette",
+      "note": "far salvage plate",
+      "color": "metal",
+      "shade": "metal",
+      "geometry": {
+        "masc": {
+          "points": [
+            [
+              -2.4,
+              -25.1
+            ],
+            [
+              -4.8,
+              -25.2
+            ],
+            [
+              -4.8,
+              -23.5
+            ],
+            [
+              -2.45,
+              -23.4
+            ]
+          ],
+          "fits": []
+        },
+        "femme": {
+          "points": [
+            [
+              -1.65,
+              -24.95
+            ],
+            [
+              -3.55,
+              -25.05
+            ],
+            [
+              -3.55,
+              -23.45
+            ],
+            [
+              -1.7,
+              -23.35
+            ]
+          ],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

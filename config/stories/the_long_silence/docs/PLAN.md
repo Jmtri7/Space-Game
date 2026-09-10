@@ -278,7 +278,13 @@ First-pass content is complete and plays end to end; these are quality passes:
 - [x] Act II courier missions — `carrier_relief_run` (relief to Ossuary) and
   `combine_evacuation` (pull a stranded crew out of Kiln), handed out by the
   `carrier_open_hand` / `combine_mobilises` dispatches. `gen_act2.py`.
-- [ ] **Bespoke Warden wardrobe** (deferred from 6.5): real `warden_*` articles + culture `sets` (a signal-tender's rig, a segment-warden kit, salvage-crew gear, hand-lettered civilian dress) replacing the `warden_dress` recolour, wired the same way as the other five cultures
+- [x] **Bespoke Warden wardrobe** (was deferred from 6.5) — five identity
+  articles (`warden_signal_gorget` — the mark every Warden wears; `warden_hub_token`;
+  `warden_salvage_pauldrons`; `warden_tender_sash`; `warden_lamp_brassard`) + five
+  `sets/warden_{command,security,dock,flight,civilian}.json`, composed from the
+  shared `_slice_kit` free-drawn shapes and recoloured by `warden_dress`. The ten
+  `warden_*` outfit entries repointed off the recolour. `gen_span.py`. All ten
+  expand clean.
 
 ## Phase 8 — Content: Act III "The Span" + endings
 

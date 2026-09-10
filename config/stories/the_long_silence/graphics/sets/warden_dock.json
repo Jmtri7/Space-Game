@@ -1,0 +1,14 @@
+{
+  "identity": "Warden salvage-crew kit - heavy work suit, salvage pauldrons, gloves, the signal gorget, the hub token.",
+  "articles": [
+    "tank_top",
+    "jacket_dock",
+    "pants_dock",
+    "boots_charcoal",
+    "gloves_dark",
+    "warden_salvage_pauldrons",
+    "warden_signal_gorget",
+    "warden_hub_token"
+  ],
+  "palette": "warden_dress"
+}
