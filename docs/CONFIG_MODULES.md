@@ -28,8 +28,23 @@ always wins over every module.
 Each module carries a `module.json`:
 
 ```json
-{ "name": "figures-human", "version": "1.0.0", "description": "..." }
+{ "name": "figures-human", "version": "1.0.0", "description": "...",
+  "modules": ["figures-base"] }
 ```
+
+### Modules may depend on other modules
+
+`module.json`'s own `"modules"` list works exactly like a story's.
+`config_source.resolved_modules(story)` flattens the whole tree: a depth-first,
+pre-order walk (a module, then its own dependencies, then the story's later
+modules), de-duplicated keeping the **first** occurrence. The precedence
+contract is unchanged — the story always wins, and an earlier-listed module (or
+dependency) wins over a later one. A dependency **cycle raises `ValueError`**
+naming the chain.
+
+`story_modules(story)` still returns only the story's *direct* list (it seeds
+the walk); everything else — `_search_roots`, `story_catalogue`, `story_meta`,
+`module_versions` — consumes `resolved_modules`.
 
 ## Two resolution modes
 
@@ -67,7 +82,8 @@ story key still winning.
 ## Save compatibility
 
 A save records `game_state["module_versions"]` (`{name: version}` from each
-module's `module.json`). On load, `main.py`'s
+module's `module.json`) — the **full resolved tree**, dependencies included.
+On load, `main.py`'s
 `warn_if_module_version_mismatch()` warns — non-blocking, alongside the story
 version check — when a module the story now uses has changed version since the
 save. **Bump a module's `module.json` version** whenever a change to it would
@@ -78,18 +94,20 @@ criteria as bumping `story.json`'s version — see
 
 ## Gotchas
 
-- The vertex editor ([GRAPHICS_EDITOR.md](GRAPHICS_EDITOR.md)) lists modules
-  with a `graphics/materials.json` in its source dropdown (labelled
-  `<name> · module`) and edits them in place. Pick the module, not a consuming
-  story, when the fix belongs to the shared kit — otherwise you write a
-  story-local copy that shadows the module for that one story.
+- The vertex editor's **Workspace** panel
+  ([GRAPHICS_EDITOR.md](GRAPHICS_EDITOR.md)) lists every story *and* every
+  module and lets you open an asset from either. Pick the module, not a
+  consuming story, when the fix belongs to the shared kit — otherwise you write
+  a story-local copy that shadows the module for that one story. It also has
+  **new story… / new module…** buttons (needs the repo open read-write).
 - `story_catalogue` returns a cached, shared dict. Callers that mutate an
   entry already `dict(...)`-copy it first (same contract as `load_json`);
   keep it that way.
 
 ## Adding a module / extending sharing
 
-1. `mkdir config/modules/<name>/`, add `module.json`.
+1. `mkdir config/modules/<name>/`, add `module.json` (with its own
+   `"modules": [...]` if it builds on another kit).
 2. Move the shared files in, mirroring the story subtree.
 3. Delete the now-redundant per-story copies (keep any a story deliberately
    customises — they shadow the module).

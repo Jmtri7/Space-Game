@@ -28,11 +28,44 @@ pass always shows its own before/after. "Freeze shade → editable" replaces a
 region's computed crescent with an explicit `shade_dark` / `shade_light` point
 list you can then drag.
 
-Load a design by pointing the **story** and design dropdowns at it (or with
-`?file=<repo-relative path>` in the URL directly). Either way the real
+Load a design by picking it from the **Workspace** panel (left rail, see below),
+or with `?file=<repo-relative path>` in the URL directly. Either way the real
 `materials.json` and the design's palette are read too, so tones and colours
 match the game exactly. An image can still be dropped onto the canvas as a
 tracing overlay — that's the only file-drop the editor takes now.
+
+### The Workspace panel
+
+A rail down the left edge, above the editor's own side panel and always
+present. It lists **every story and every shared module** in `config/` (each
+row labelled `story` / `module`); expand one and it lists that source's assets
+by category — Bodies, Faces, Articles, Items, Sets, Ships, Stations, Buildings,
+Decorations, Palettes, Face slots, Collision, Interiors, Graphics config, Story
+config, Systems, Manifest. Categories are discovered by scanning the source's
+actual subtree (graphics categories resolve across the source **and its
+modules**, dependencies included — same walk as
+`config_source.resolved_modules()`), so a new asset kind shows up on its own.
+
+- **Bodies / Faces / Articles** open straight into the existing editor
+  (body-edit, `edit=face`, or tailor mode against the source's first body — or
+  the one remembered in `gpEditorFitBody:<source>`). Navigation is the normal
+  full-reload `?file=` path; the rail re-renders from `localStorage`
+  (`gpEditorWorkspaceV1` — the expanded set) and marks the open asset.
+- **Every other category** opens a read-only **stub** in the canvas area
+  (`?ws-asset=<path>`): the raw JSON pretty-printed, with a "not implemented
+  yet" banner. A placeholder until each kind gets its own editor.
+- **new story… / new module…** (need the repo open read-write) write a minimal
+  skeleton — `story.json` + a bare `systems/<id>_start.json` for a story
+  (inherits the standard module list; **appears in the game's story picker but
+  is not playable** until its system has a landing site and the `start` block
+  is filled), or `module.json` (`+` an optional `graphics/materials.json` copy)
+  for a module. `serve_nocache.py`'s `PUT` now creates missing parent
+  directories under `config/stories/` and `config/modules/` for this.
+- **↻** rescans `config/`.
+
+The legacy `story` / kind / design dropdowns are gone; the Workspace panel
+replaces them. The in-editor **edit: body / face / tailor / outfit** and
+**body / switch to** rows stay — they're within-asset navigation.
 
 ### Reading and writing repo files
 
@@ -71,58 +104,27 @@ detects which by looking for `config/stories/` vs `stories/`.
 `Cache-Control: no-store` (plain `http.server` sends only `Last-Modified`, so a
 browser can silently serve a stale cached `editor.html` after an edit), and a
 `PUT` writes the request body back to the file — restricted to `.json` under
-`config/stories/` or `config/modules/`, existing files only (or a new file in
-an existing dir), with an `Origin` check. Run it from the
-repo root: `python config/serve_nocache.py 8777`. If the page still looks stale
-(new buttons missing), Ctrl+Shift+R.
+`config/stories/` or `config/modules/`, with an `Origin` check; it overwrites
+an existing file or creates a new one, **creating any missing parent
+directories** under those two roots (so `new story` / `new module` can lay down
+a fresh tree). Run it from the repo root:
+`python config/serve_nocache.py 8777`. If the page still looks stale (new
+buttons missing), Ctrl+Shift+R.
 
-**The story picker — the editor is not tied to one story.** The tool has no
-built-in story. A **story** dropdown at the top of the side panel discovers
-every `graphics/` pipeline it can reach: each `config/stories/<name>/` **and
-each `config/modules/<name>/`** (shared kits — see
-[CONFIG_MODULES.md](CONFIG_MODULES.md)) that has a `graphics/materials.json`.
-Module rows are labelled `<name> · module`. Picking one edits the module's
-files directly — that's the place to fix a shared body, rig, or generic
-garment so every story that lists the module gets the change.
+**Where a design comes from.** The **Workspace** panel (see above) is the way
+in — pick a body/face/article and it navigates the normal `?file=` boot path
+(`?file=<path>` for body, `+&edit=face` for face,
+`?file=<article>&fitbody=<body>` for tailor). `GBASE` is the loaded file's own
+`graphics` dir (every save writes there); `GMODS` is the resolved-module
+graphics dirs the loaded *story* pulls in — read-only fallback + listing merge,
+so a body or article that lives only in a module still resolves (`gReadJSON` /
+`gListDir` / `gResolve`, and `_resolvedModuleNames` for the recursive walk).
+Editing a file that resolved to a module edits the module in place (the `src`
+header shows the full path). There is still no hand-load / paste route — a
+dropped file carries no repo path.
 
-When a **story** is picked, its design lists and the shading/palette/face
-fallback merge in every `config/modules/<m>/graphics/` it declares in
-`story.json` (`GMODS` in the script, `gReadJSON` / `gListDir` / `gResolve`) —
-so a story with no `materials.json` of its own still renders, and a body or
-article that lives only in a module still shows up. A **save** always writes
-the file where it physically lives: edit a design that resolved to a module
-and you're editing the module (the `src` header shows the full path). A new
-article (**+ new**) is created in the currently-picked source's own folder.
-`PIPELINE_STORIES` in the script is only a fallback for a backend that can't
-list a directory. This is the only way a design gets loaded (there is no
-hand-load / paste route — see below). Pick a source, then the
-**body / face / tailor** kind selector and the **design** dropdown beside it
-list that story's `graphics/body/*.json` (body and face) or
-`graphics/articles/*.json` (tailor). Picking one navigates through the normal
-`?file=` boot path — `?file=<base>/body/<b>` for body, `+ &edit=face` for face,
-`?file=<base>/articles/<a>&fitbody=<base>/body/<b>` for tailor (the body is the
-one last tailored against in that story, remembered per story, else the first
-alphabetically). So `GBASE` gets set and every dependent dropdown lights up.
-(The `tailor` option's value is still `outfit` in the markup — pre-dating the
-separate outfit mode; only its label changed.)
-
-The **story** dropdown is always shown; once a design is loaded the story is
-derived from its path. The **design** dropdown beside it only appears when it
-isn't a no-op — nothing loaded yet, or the story dropdown points at a story
-*other* than the loaded design's (switch it there and the design list
-re-scopes so you can hop to another story without retyping a URL; within the
-current story the edit / body / switch-to controls below cover every move).
-`?story=<name>` preselects a story on a bare load; the last pick is remembered
-per browser (`gpEditorStory`). This is the mechanism that makes a second pipeline story
-"just work" in the editor with no code change — it only needs a `graphics/`
-directory with a `materials.json`.
-
-There is no hand-load route (a dropped file or pasted JSON carried no repo
-path, so nothing downstream — palette, save, the switchers — could work); the
-story picker is how every design comes in.
-
-Coverage today is **body designs** (`sections`); other kinds (`regions`
-articles, `silhouette` ships) are being folded in.
+Coverage today is **body designs** (`sections`), **faces**, and **articles**
+(`regions`, tailor mode); every other kind opens the read-only stub.
 
 **Face mode** — `?file=<body>&edit=face`. Loads the body, pulls in its
 `head.face` slot files (`faces/<slot>_<name>.json`), inlines their `details` on

@@ -2,6 +2,8 @@
 Shared setup (pygame mock, imports, _FakeFont) lives in tests/harness.py."""
 from tests.harness import *  # noqa: F401,F403
 from tests.harness import _FakeFont  # noqa: F401
+import json
+import shutil
 
 
 class TestStoryTuningConfig(unittest.TestCase):
@@ -163,6 +165,76 @@ class TestConfigModuleResolver(unittest.TestCase):
         gpt = config_source.story_meta("graphics_pipeline_test")
         self.assertEqual(gpt["camera_zoom"], 2.0)
         self.assertEqual(gpt["jump"]["speed"], 40)  # still inherited
+
+
+class TestRecursiveModuleResolver(unittest.TestCase):
+    """config_source.resolved_modules() - modules may declare their own
+    ``"modules"`` in module.json, resolved depth-first, first-occurrence-wins,
+    with a hard error on a cycle. Fixtures are throwaway ``zztest_*`` trees."""
+
+    def _module(self, name, deps):
+        d = os.path.join("config", "modules", name)
+        os.makedirs(d, exist_ok=True)
+        self._made.append(d)
+        with open(os.path.join(d, "module.json"), "w") as f:
+            json.dump({"name": name, "version": "1.0.0", "modules": deps}, f)
+
+    def _story(self, name, mods):
+        d = os.path.join("config", "stories", name)
+        os.makedirs(d, exist_ok=True)
+        self._made.append(d)
+        with open(os.path.join(d, "story.json"), "w") as f:
+            json.dump({"id": name, "name": name, "version": "0.1.0", "modules": mods}, f)
+
+    def setUp(self):
+        self._made = []
+        utils.clear_json_cache()
+
+    def tearDown(self):
+        for d in self._made:
+            shutil.rmtree(d, ignore_errors=True)
+        utils.clear_json_cache()
+
+    def test_linear_chain(self):
+        from game import config_source
+        self._module("zztest_c", [])
+        self._module("zztest_b", ["zztest_c"])
+        self._module("zztest_a", ["zztest_b"])
+        self._story("zztest_linear", ["zztest_a"])
+        utils.clear_json_cache()
+        self.assertEqual(
+            config_source.resolved_modules("zztest_linear"),
+            ["zztest_a", "zztest_b", "zztest_c"],
+        )
+
+    def test_diamond_dedups_keeping_first(self):
+        from game import config_source
+        self._module("zztest_c", [])
+        self._module("zztest_a", ["zztest_c"])
+        self._module("zztest_b", ["zztest_c"])
+        self._story("zztest_diamond", ["zztest_a", "zztest_b"])
+        utils.clear_json_cache()
+        self.assertEqual(
+            config_source.resolved_modules("zztest_diamond"),
+            ["zztest_a", "zztest_c", "zztest_b"],
+        )
+
+    def test_cycle_raises(self):
+        from game import config_source
+        self._module("zztest_a", ["zztest_b"])
+        self._module("zztest_b", ["zztest_a"])
+        self._story("zztest_cycle", ["zztest_a"])
+        utils.clear_json_cache()
+        with self.assertRaises(ValueError):
+            config_source.resolved_modules("zztest_cycle")
+
+    def test_module_versions_is_transitive(self):
+        from game import config_source
+        self._module("zztest_c", [])
+        self._module("zztest_a", ["zztest_c"])
+        self._story("zztest_trans", ["zztest_a"])
+        utils.clear_json_cache()
+        self.assertIn("zztest_c", config_source.module_versions("zztest_trans"))
 
 
 if __name__ == "__main__":

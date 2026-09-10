@@ -45,19 +45,64 @@ def _load_json(path, cache=True):
 
 
 def story_modules(story):
-    """The ordered list of shared-module names a story opts into
+    """The ordered list of shared-module names a story opts into *directly*
     (``story.json``'s ``"modules"``), or ``[]``. Earlier entries take
-    precedence over later ones."""
+    precedence over later ones. This is the story's own declaration only -
+    see :func:`resolved_modules` for the flattened dependency tree."""
     story_json = _load_json(os.path.join(_story_dir(story), "story.json")) or {}
     mods = story_json.get("modules") or []
     return [m for m in mods if isinstance(m, str)]
 
 
+def _module_submodules(name):
+    """A module's own ``"modules"`` list from its ``module.json`` (modules may
+    depend on other modules), or ``[]``."""
+    meta = _load_json(os.path.join(MODULES_DIR, name, "module.json")) or {}
+    mods = meta.get("modules") or []
+    return [m for m in mods if isinstance(m, str)]
+
+
+_resolved_modules_cache = {}
+
+
+def resolved_modules(story):
+    """The story's shared modules flattened through their own dependencies:
+    a depth-first, pre-order walk (a module, then its own deps, then later
+    siblings), de-duplicated keeping the first occurrence. Preserves the
+    precedence contract - the story always wins, and an earlier-listed module
+    (or dependency) wins over a later one.
+
+    Raises :class:`ValueError` naming the chain if the modules form a
+    dependency cycle."""
+    if story in _resolved_modules_cache:
+        return _resolved_modules_cache[story]
+
+    order = []
+    seen = set()
+
+    def visit(name, chain):
+        if name in chain:
+            raise ValueError(
+                "module dependency cycle: " + " -> ".join(chain + [name])
+            )
+        if name not in seen:
+            seen.add(name)
+            order.append(name)
+        for dep in _module_submodules(name):
+            visit(dep, chain + [name])
+
+    for m in story_modules(story):
+        visit(m, [])
+
+    _resolved_modules_cache[story] = order
+    return order
+
+
 def _search_roots(story):
     """Directories to look in for a story's config, most-specific first:
-    the story itself, then each declared module."""
+    the story itself, then each resolved module (dependencies included)."""
     roots = [_story_dir(story)]
-    roots += [os.path.join(MODULES_DIR, m) for m in story_modules(story)]
+    roots += [os.path.join(MODULES_DIR, m) for m in resolved_modules(story)]
     return roots
 
 
@@ -100,6 +145,7 @@ def _clear_cache():
     config file mid-run."""
     _catalogue_cache.clear()
     _story_meta_cache.clear()
+    _resolved_modules_cache.clear()
 
 
 def story_catalogue(story, filename):
@@ -136,7 +182,7 @@ def story_meta(story):
         return _story_meta_cache[story]
     own = _load_json(os.path.join(_story_dir(story), "story.json")) or {}
     merged = {}
-    for name in reversed([m for m in own.get("modules") or [] if isinstance(m, str)]):
+    for name in reversed(resolved_modules(story)):
         data = _load_json(os.path.join(MODULES_DIR, name, "story.json"))
         if isinstance(data, dict):
             merged = _deep_merge_under(merged, data)
@@ -149,9 +195,9 @@ def module_versions(story):
     """``{module_name: version}`` from each module's ``module.json``
     (``"version"`` field, default ``"0"``). Used by the save-load story
     version check so a save records what shared modules it was built
-    against."""
+    against. Covers the full resolved tree, dependencies included."""
     out = {}
-    for name in story_modules(story):
+    for name in resolved_modules(story):
         meta = _load_json(os.path.join(MODULES_DIR, name, "module.json")) or {}
         out[name] = str(meta.get("version", "0"))
     return out

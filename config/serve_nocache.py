@@ -5,11 +5,12 @@
    only `Last-Modified`, which lets a browser silently reuse a stale cached
    copy of `editor.html` (or a design JSON) after the file is edited.
 
-2. A `PUT` writes the request body to that path on disk (creating the file if
-   its parent directory already exists), so the editor's "save checked to
-   repo" and "new article" work in any browser when served (Firefox included),
-   not just the Chrome/Edge File System Access API path used when the editor
-   is opened straight from disk.
+2. A `PUT` writes the request body to that path on disk, creating any missing
+   parent directories under the writable roots, so the editor's "save checked
+   to repo", "new article", and the workspace shell's "new story / new module"
+   all work in any browser when served (Firefox included), not just the
+   Chrome/Edge File System Access API path used when the editor is opened
+   straight from disk.
 
 Run it from the repo root, like http.server:
 
@@ -59,9 +60,15 @@ class EditorHandler(http.server.SimpleHTTPRequestHandler):
         ):
             self.send_error(403, "only .json files under %s" % ", ".join(WRITABLE_ROOTS))
             return
-        if not os.path.isfile(target) and not os.path.isdir(os.path.dirname(target)):
-            self.send_error(404, "no such file or parent directory")
-            return
+        # New files are allowed anywhere under the writable roots (checked
+        # above); create any missing parent directories so "new story" /
+        # "new module" can lay down a fresh config/stories/<id>/ tree.
+        if not os.path.isfile(target):
+            try:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+            except OSError as exc:
+                self.send_error(500, str(exc))
+                return
 
         try:
             body = self.rfile.read(int(self.headers.get("Content-Length", 0)))

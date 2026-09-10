@@ -107,7 +107,9 @@ staying accurate by accident.
 A story may pull in shared config from `config/modules/{name}/` (see
 [CONFIG_MODULES.md](CONFIG_MODULES.md)). Each module has its own `version` in
 its `module.json`; a save records `game_state["module_versions"]`
-(`{name: version}`), and `main.py`'s `warn_if_module_version_mismatch()` warns
+(`{name: version}` for the **full resolved dependency tree** —
+`config_source.resolved_modules()`, since a module may now list its own
+`"modules"`), and `main.py`'s `warn_if_module_version_mismatch()` warns
 (non-blocking, next to the story-version check) when one changed since the
 save. **Bump a module's version** on any change to it that fits the "warn the
 user" criteria — and remember it hits *every* story that lists the module.

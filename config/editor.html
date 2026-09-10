@@ -10,6 +10,32 @@
          font: 13px/1.5 system-ui, sans-serif; height: 100vh; display: flex; }
   #side { width: 260px; flex: 0 0 260px; background: #1b1e24; border-right: 1px solid #2a2e37;
           padding: 12px; overflow-y: auto; }
+  #workspace { width: 232px; flex: 0 0 232px; background: #171a20; border-right: 1px solid #2a2e37;
+          padding: 10px; overflow-y: auto; font-size: 12px; }
+  #workspace h1 { font-size: 13px; margin: 0 0 8px; }
+  #workspace .wsbtns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  #workspace .wsbtns button { padding: 4px 7px; font-size: 11px; }
+  .wshdr { cursor: pointer; padding: 3px 4px; border-radius: 4px; display: flex; align-items: center;
+           gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wshdr:hover { background: #232833; }
+  .wsnode { margin: 1px 0; }
+  .wscat { margin-left: 10px; }
+  .wskind { color: #6b7280; font-size: 10px; }
+  .wstwist { width: 10px; display: inline-block; color: #8a94a6; flex: 0 0 10px; }
+  .wsleaf { margin-left: 22px; padding: 2px 4px; cursor: pointer; border-radius: 4px; color: #b9c2cc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wsleaf:hover { background: #232833; }
+  .wsleaf.active { background: #3f5a70; color: #fff; }
+  .wsleaf .noed { color: #6b7280; }
+  #startPickerRow, #startDesignRow { display: none !important; }
+  body.ws-stub #side, body.ws-stub #svg, body.ws-stub #hud, body.ws-stub #mirrorPanel { display: none; }
+  #wsStub { position: absolute; inset: 0; padding: 22px 28px; overflow: auto; display: none; }
+  body.ws-stub #wsStub { display: block; }
+  #wsStub h2 { color: #9fd0e6; word-break: break-all; }
+  #wsStub .msg { color: #ffb454; background: #3a2a12; border: 1px solid #6b4a1e; border-radius: 6px;
+                 padding: 10px 12px; margin: 10px 0; }
+  #wsStub pre { background: #12141a; border: 1px solid #2a2e37; border-radius: 6px; padding: 12px;
+                font: 11px/1.5 ui-monospace, monospace; color: #b9c2cc; overflow: auto; max-height: 68vh; }
   #stage { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; display: block; background: #0d0f13; touch-action: none; }
   h1 { font-size: 14px; margin: 0 0 10px; }
@@ -74,6 +100,15 @@
 </style>
 </head>
 <body>
+<div id="workspace">
+  <h1>Workspace</h1>
+  <div class="wsbtns">
+    <button id="wsNewStory">new story…</button>
+    <button id="wsNewModule">new module…</button>
+    <button id="wsRefresh" title="rescan config/">↻</button>
+  </div>
+  <div id="wsTree"><div class="hint">loading…</div></div>
+</div>
 <div id="side">
   <h1>Vertex editor</h1>
   <div class="row" id="fsRow" style="display:none">
@@ -84,8 +119,8 @@
   <div class="row">
     <button id="reset">Reset</button>
   </div>
-  <div class="hint">Pick a <b>story</b> then one of its designs to begin. The
-    edit stays in this browser between visits.</div>
+  <div class="hint">Pick an asset from the <b>Workspace</b> panel on the left.
+    Edits stay in this browser between visits.</div>
   <div class="row" id="startPickerRow" style="display:none">
     story <select id="storyPicker" style="flex:1"></select>
   </div>
@@ -293,6 +328,7 @@
 </div>
 <div id="stage">
   <svg id="svg"></svg>
+  <div id="wsStub"></div>
   <div id="hud"></div>
   <div id="drop">drop an image for the reference overlay</div>
   <div id="mirrorPanel">
@@ -326,9 +362,9 @@ const VFS = {
   get ready(){ return this.mode === 'http' || this.mode === 'fsapi' || this.mode === 'filelist'; },
   get canWrite(){ return this.mode === 'fsapi' || this.mode === 'http'; },   // fsapi writes files directly; http PUTs them to serve_nocache.py
   _adj(p){ p = String(p).replace(/^\/+/, ''); return (this.prefix && p.startsWith(this.prefix)) ? p.slice(this.prefix.length) : p; },
-  async _dirHandle(p){
+  async _dirHandle(p, create){
     let dir = this.root;
-    for(const seg of (p ? p.split('/') : [])) dir = await dir.getDirectoryHandle(seg);
+    for(const seg of (p ? p.split('/') : [])) dir = await dir.getDirectoryHandle(seg, { create: !!create });
     return dir;
   },
   async readText(path){
@@ -360,7 +396,7 @@ const VFS = {
     }
     if(this.mode === 'fsapi'){
       const parts = p.split('/');
-      const dir = await this._dirHandle(parts.slice(0, -1).join('/'));
+      const dir = await this._dirHandle(parts.slice(0, -1).join('/'), create);
       const fh = await dir.getFileHandle(parts[parts.length - 1], { create: !!create });
       const w = await fh.createWritable();
       await w.write(text);
@@ -884,9 +920,7 @@ async function computeGMods(){
   const cands = [storyOfPath(loadedPath), storyOfPath(FITBODY)].filter(Boolean);
   const st = cands.find(n => storyKind(n) === 'story') || cands[0];
   if(!st || storyKind(st) === 'module') return;
-  const sj = await VFS.readJSON('config/stories/' + st + '/story.json');
-  for(const m of (sj && sj.modules) || [])
-    GMODS.push('config/modules/' + m + '/graphics');
+  GMODS = await _modGraphicsDirs(st, 'story');
 }
 async function gReadJSON(rel){
   let v = await VFS.readJSON(GBASE + '/' + rel);
@@ -3340,9 +3374,34 @@ function storyBase(name){
 function storyOfPath(p){ const m = (p||'').match(/config\/(?:stories|modules)\/([^/]+)\/graphics\//); return m ? m[1] : null; }
 function storyKind(name){ const e = (_storyList || []).find(s => s.name === name); return e ? e.kind : 'story'; }
 function storyEntry(name){ return (_storyList || []).find(s => s.name === name) || { name, base: storyBase(name), kind: 'story', mods: [] }; }
-async function _modGraphicsDirs(name){   // shared-module graphics dirs a STORY pulls in
-  const sj = await VFS.readJSON('config/stories/' + name + '/story.json');
-  return ((sj && sj.modules) || []).map(m => 'config/modules/' + m + '/graphics');
+// shared-module graphics dirs a story (or a module) pulls in, flattened
+// through each module's own module.json "modules" - depth-first, first
+// occurrence wins, mirroring game/config_source.resolved_modules(). A cycle
+// just stops recursing here (the Python side hard-errors).
+async function _moduleDeps(mn){
+  const mj = await VFS.readJSON('config/modules/' + mn + '/module.json');
+  return ((mj && mj.modules) || []).filter(x => typeof x === 'string');
+}
+async function resolveModuleNames(direct, startChain){
+  const seen = new Set(), order = [];
+  async function visit(mn, chain){
+    if(chain.includes(mn)) return;
+    if(!seen.has(mn)){ seen.add(mn); order.push(mn); }
+    for(const d of await _moduleDeps(mn)) await visit(d, chain.concat(mn));
+  }
+  for(const m of (direct || [])) await visit(m, startChain || []);
+  return order;
+}
+async function _resolvedModuleNames(name, kind){
+  const direct = kind === 'module'
+    ? await _moduleDeps(name)
+    : (((await VFS.readJSON('config/stories/' + name + '/story.json')) || {}).modules || [])
+        .filter(x => typeof x === 'string');
+  return resolveModuleNames(direct, kind === 'module' ? [name] : []);
+}
+async function _modGraphicsDirs(name, kind){   // shared-module graphics dirs a source pulls in
+  const names = await _resolvedModuleNames(name, kind || 'story');
+  return names.map(m => 'config/modules/' + m + '/graphics');
 }
 async function discoverStories(){
   if(_storyList) return _storyList;
@@ -3352,7 +3411,7 @@ async function discoverStories(){
     if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
     for(const n of dirs){
       const base = root + '/' + n + '/graphics';
-      const mods = kind === 'story' ? await _modGraphicsDirs(n) : [];
+      const mods = await _modGraphicsDirs(n, kind);
       // qualifies if a materials.json resolves through its own dir or a module,
       // i.e. it has a real pipeline to edit
       let ok = !!(await VFS.readJSON(base + '/materials.json'));
@@ -3400,6 +3459,7 @@ async function refreshStartDesigns(){
   row.style.display = names.length ? '' : 'none';
 }
 async function populateStartPicker(){
+  renderWorkspace();   // the workspace rail is the real picker now; keep the legacy dropdown wiring alive but hidden
   const row = document.getElementById('startPickerRow'), sel_ = document.getElementById('storyPicker');
   const stories = await discoverStories();
   if(!stories.length){ row.style.display = 'none'; document.getElementById('startDesignRow').style.display = 'none'; return; }
@@ -3824,6 +3884,13 @@ let _booted = false;
 async function runBoot(){
   if(_booted) return;
   _booted = true;
+  const _wsAsset = new URLSearchParams(location.search).get('ws-asset');
+  if(_wsAsset && !_qFile){
+    document.getElementById('src').textContent = _wsAsset;
+    renderWorkspace();
+    showStub(_wsAsset);
+    return;
+  }
   if(_qFile){
     const _modeDraftKey = 'gpDraft:' + _qFile + (FACE_MODE ? ':face' : TAILOR_MODE ? ':fit:'+FITBODY : '');
     const _plainDraftKey = 'gpDraft:' + _qFile;
@@ -3846,7 +3913,7 @@ async function runBoot(){
     if(restored) document.getElementById('src').textContent +=
       `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
   } else {
-    svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Pick a story and one of its designs to begin.</text>`;
+    svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Pick an asset from the Workspace panel on the left to begin.</text>`;
     populateStartPicker();
   }
 }
@@ -3869,6 +3936,216 @@ async function boot(){
     : 'connect the repo folder (button, top left), then pick a story';
   svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Open the repo folder to begin — button at the top left.</text>`;
 }
+// ==== Workspace shell ====================================================
+// A rail above the vertex editor: every story and shared module in config/,
+// each expandable into its asset categories. Bodies / faces / articles open
+// straight into the existing editor; every other kind opens a read-only stub
+// ("not implemented yet"). Recursive module deps are followed the same way
+// game/config_source.resolved_modules() does. See docs/GRAPHICS_EDITOR.md.
+const WS_LS = 'gpEditorWorkspaceV1';
+function wsGet(){ try{ return JSON.parse(localStorage.getItem(WS_LS)) || {}; }catch(e){ return {}; } }
+function wsSet(s){ try{ localStorage.setItem(WS_LS, JSON.stringify(s)); }catch(e){} }
+function wsExpanded(){ const e = wsGet().expanded; return new Set(Array.isArray(e) ? e : []); }
+function wsToggle(key){
+  const e = wsExpanded(); e.has(key) ? e.delete(key) : e.add(key);
+  const s = wsGet(); s.expanded = [...e]; wsSet(s); renderWorkspace();
+}
+const WS_CATS = [
+  { id:'body',        label:'Bodies',          g:'body', ex:/^rig_/, editor:'body' },
+  { id:'face',        label:'Faces',           g:'body', ex:/^rig_/, editor:'face' },
+  { id:'articles',    label:'Articles',        g:'articles', editor:'article' },
+  { id:'items',       label:'Items',           g:'items' },
+  { id:'sets',        label:'Sets',            g:'sets' },
+  { id:'ships',       label:'Ships',           g:'ships' },
+  { id:'stations',    label:'Stations',        g:'stations' },
+  { id:'buildings',   label:'Buildings',       g:'buildings' },
+  { id:'decorations', label:'Decorations',     g:'decorations' },
+  { id:'palettes',    label:'Palettes',        g:'palettes' },
+  { id:'faceslots',   label:'Face slots',      g:'faces' },
+  { id:'collision',   label:'Collision',       g:'collision' },
+  { id:'interiors',   label:'Interiors',       g:'interiors' },
+  { id:'gfxcfg',      label:'Graphics config', gfiles:['materials.json','draw_order.json'] },
+  { id:'storycfg',    label:'Story config',    cats:['audio.json','ship_types.json','ship_outfits.json',
+        'asteroid_types.json','graphics.json','cultures.json','commodities.json','building_types.json',
+        'pilots.json','missions.json','factions.json','endings.json','items.json'] },
+  { id:'systems',     label:'Systems',         systems:true },
+  { id:'manifest',    label:'Manifest',        manifest:true },
+];
+let _wsDisc = null;
+async function wsDiscover(){   // every story + module dir, whether or not it has a graphics kit
+  if(_wsDisc) return _wsDisc;
+  const out = [];
+  for(const [root, kind] of SRC_ROOTS){
+    let { dirs } = await VFS.listDir(root);
+    if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
+    for(const n of dirs.slice().sort()){
+      out.push({ name:n, kind, root: root + '/' + n, base: root + '/' + n + '/graphics',
+                 mods: await _modGraphicsDirs(n, kind) });
+    }
+  }
+  _wsDisc = out;
+  return out;
+}
+function wsGfxDirs(e){ return [e.base, ...(e.mods || [])]; }
+async function wsResolveGfx(e, rel){
+  for(const b of wsGfxDirs(e)) if(await VFS.readJSON(b + '/' + rel)) return b + '/' + rel;
+  return e.base + '/' + rel;
+}
+async function wsListCat(e, cat){
+  if(cat.g){
+    const seen = new Set();
+    for(const b of wsGfxDirs(e)){
+      const { files } = await VFS.listDir(b + '/' + cat.g);
+      files.forEach(f => { if(f.endsWith('.json') && !(cat.ex && cat.ex.test(f))) seen.add(f); });
+    }
+    return [...seen].sort();
+  }
+  if(cat.gfiles){
+    const out = [];
+    for(const f of cat.gfiles){ for(const b of wsGfxDirs(e)) if(await VFS.readJSON(b + '/' + f)){ out.push(f); break; } }
+    return out;
+  }
+  if(cat.cats){
+    const out = [];
+    for(const f of cat.cats) if(await VFS.readJSON(e.root + '/' + f)) out.push(f);
+    return out;
+  }
+  if(cat.systems){
+    const { files } = await VFS.listDir(e.root + '/systems');
+    return files.filter(f => f.endsWith('.json')).sort();
+  }
+  if(cat.manifest) return [e.kind === 'module' ? 'module.json' : 'story.json'];
+  return [];
+}
+async function wsLeafPath(e, cat, name){
+  if(cat.g)       return await wsResolveGfx(e, cat.g + '/' + name);
+  if(cat.gfiles)  return await wsResolveGfx(e, name);
+  if(cat.systems) return e.root + '/systems/' + name;
+  return e.root + '/' + name;   // cats + manifest
+}
+async function wsOpenLeaf(e, cat, name){
+  const path = await wsLeafPath(e, cat, name);
+  const qs = new URLSearchParams();
+  if(cat.editor === 'body'){ qs.set('file', path); location.search = qs.toString(); return; }
+  if(cat.editor === 'face'){ qs.set('file', path); qs.set('edit', 'face'); location.search = qs.toString(); return; }
+  if(cat.editor === 'article'){
+    const bodies = await wsListCat(e, WS_CATS[0]);
+    if(!bodies.length){ alert('No body/*.json reachable from ' + e.name + ' to tailor this article against.'); return; }
+    let fb; try{ fb = localStorage.getItem('gpEditorFitBody:' + e.name); }catch(e2){}
+    if(!bodies.includes(fb)) fb = bodies[0];
+    qs.set('file', path);
+    qs.set('fitbody', await wsResolveGfx(e, 'body/' + fb));
+    location.search = qs.toString();
+    return;
+  }
+  qs.set('ws-asset', path);              // no editor yet - read-only stub
+  location.search = qs.toString();
+}
+async function showStub(path){
+  document.body.classList.add('ws-stub');
+  const el = document.getElementById('wsStub');
+  const cat = WS_CATS.find(c => c.g && path.includes('/' + c.g + '/'))
+    || (/\/systems\//.test(path) ? { label:'system' } : { label: path.split('/').pop(), file:true });
+  const what = cat.file ? '<code>' + cat.label + '</code>' : '<b>' + cat.label + '</b> assets';
+  const txt = await VFS.readText(path);
+  el.innerHTML = '<h2>' + path + '</h2>' +
+    '<div class="msg">The editor for ' + what + ' isn’t implemented yet — ' +
+    'showing the raw file, read-only.</div><pre></pre>';
+  el.querySelector('pre').textContent = txt == null ? '(could not read the file)'
+    : (() => { try { return JSON.stringify(JSON.parse(txt), null, 2); } catch(e){ return txt; } })();
+}
+async function renderWorkspace(){
+  const tree = document.getElementById('wsTree'); if(!tree) return;
+  if(!VFS.ready){ tree.innerHTML = '<div class="hint">connect the repo folder to browse assets</div>'; return; }
+  const entries = await wsDiscover();
+  const exp = wsExpanded();
+  const active = new URLSearchParams(location.search).get('ws-asset') || loadedPath || '';
+  const frag = document.createDocumentFragment();
+  for(const e of entries){
+    const node = document.createElement('div'); node.className = 'wsnode';
+    const open = exp.has(e.name);
+    const hdr = document.createElement('div'); hdr.className = 'wshdr';
+    hdr.innerHTML = '<span class="wstwist">' + (open ? '▾' : '▸') + '</span>' +
+      '<span>' + e.name + '</span> <span class="wskind">' + e.kind + '</span>';
+    hdr.onclick = () => wsToggle(e.name);
+    node.appendChild(hdr);
+    if(open){
+      for(const cat of WS_CATS){
+        const names = await wsListCat(e, cat);
+        if(!names.length) continue;
+        const ckey = e.name + '/' + cat.id, cOpen = exp.has(ckey);
+        const cd = document.createElement('div'); cd.className = 'wscat';
+        const ch = document.createElement('div'); ch.className = 'wshdr';
+        ch.innerHTML = '<span class="wstwist">' + (cOpen ? '▾' : '▸') + '</span>' +
+          cat.label + ' <span class="wskind">' + names.length + '</span>';
+        ch.onclick = () => wsToggle(ckey);
+        cd.appendChild(ch);
+        if(cOpen){
+          for(const nm of names){
+            const leaf = document.createElement('div'); leaf.className = 'wsleaf';
+            const p = await wsLeafPath(e, cat, nm);
+            leaf.textContent = nm;
+            leaf.title = cat.editor ? p : p + '  (view only)';
+            if(!cat.editor){ const s = document.createElement('span'); s.className = 'noed'; s.textContent = ' ·'; leaf.appendChild(s); }
+            if(p === active) leaf.classList.add('active');
+            leaf.onclick = () => wsOpenLeaf(e, cat, nm);
+            cd.appendChild(leaf);
+          }
+        }
+        node.appendChild(cd);
+      }
+    }
+    frag.appendChild(node);
+  }
+  tree.innerHTML = '';
+  tree.appendChild(frag);
+}
+document.getElementById('wsRefresh').onclick = () => { _wsDisc = null; _storyList = null; renderWorkspace(); };
+document.getElementById('wsNewModule').onclick = async () => {
+  if(!VFS.canWrite){ alert('Creating files needs the repo opened read-write — run config/serve_nocache.py, or open from disk in Chrome/Edge.'); return; }
+  const name = (prompt('New module name (lower-case letters, digits, hyphens):') || '').trim();
+  if(!name) return;
+  if(!/^[a-z0-9-]+$/.test(name)){ alert('lower-case letters, digits and hyphens only'); return; }
+  if(await VFS.readJSON('config/modules/' + name + '/module.json')){ alert(name + ' already exists'); return; }
+  const kit = confirm('Seed a graphics kit (a copy of figures-human/materials.json)?\n\nOK = graphics module   ·   Cancel = data-only module');
+  try{
+    await VFS.writeText('config/modules/' + name + '/module.json',
+      toRepoJSON({ name, version:'1.0.0', description:'', modules:[] }), true);
+    if(kit){
+      const mats = await VFS.readJSON('config/modules/figures-human/graphics/materials.json') || {};
+      await VFS.writeText('config/modules/' + name + '/graphics/materials.json', toRepoJSON(mats), true);
+    }
+  }catch(err){ alert('write failed: ' + (err.message || err)); return; }
+  _wsDisc = null; _storyList = null;
+  const s = wsGet(); s.expanded = [...wsExpanded(), name]; wsSet(s);
+  await renderWorkspace();
+};
+document.getElementById('wsNewStory').onclick = async () => {
+  if(!VFS.canWrite){ alert('Creating files needs the repo opened read-write — run config/serve_nocache.py, or open from disk in Chrome/Edge.'); return; }
+  const id = (prompt('New story id (lower-case letters, digits, underscores):') || '').trim();
+  if(!id) return;
+  if(!/^[a-z0-9_]+$/.test(id)){ alert('lower-case letters, digits and underscores only'); return; }
+  if(await VFS.readJSON('config/stories/' + id + '/story.json')){ alert(id + ' already exists'); return; }
+  const sys = id + '_start';
+  const story = {
+    id, name: id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    version:'0.1.0', description:'',
+    modules:['figures-human','audio-core','ships-core','common-goods','story-defaults'],
+    difficulty:'normal', starting_system:sys, default_outfit:'civilian_femme',
+    start:{ location:'station', interior:'default', credits:0, ship:null, items:{}, outfits:[], flags:{} },
+    ships:{ player_type:null },
+  };
+  try{
+    await VFS.writeText('config/stories/' + id + '/story.json', toRepoJSON(story), true);
+    await VFS.writeText('config/stories/' + id + '/systems/' + sys + '.json',
+      toRepoJSON({ label:id.replace(/_/g,' '), stations:[], moons:[], ai_ships:[] }), true);
+  }catch(err){ alert('write failed: ' + (err.message || err)); return; }
+  _wsDisc = null; _storyList = null;
+  const s = wsGet(); s.expanded = [...wsExpanded(), id]; wsSet(s);
+  await renderWorkspace();
+  alert('Created config/stories/' + id + '/.\n\nIt inherits the figures-human graphics kit and has a bare starting system. It will show up in the game’s story picker, but is not playable until its system has a landing site and the start block is filled in.');
+};
+
 boot();
 </script>
 </body>

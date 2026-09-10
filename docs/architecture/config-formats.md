@@ -123,7 +123,7 @@ except where a story clearly needs it; code holds the default.
 |---|---|
 | `id` / `name` / `description` / `difficulty` | Identity + story-picker card |
 | `version` | Save-compat version (see SAVE_SYSTEM.md) |
-| `modules` | Optional list of shared config kits under `config/modules/` to merge under this story's files, earlier entries winning (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)) |
+| `modules` | Optional list of shared config kits under `config/modules/` to merge under this story's files, earlier entries winning. A module's own `module.json` may carry a `"modules"` list too — the tree is flattened depth-first, first-occurrence-wins (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)) |
 | `starting_system` | Which `systems/*.json` a new game loads |
 | `starting_mission` / `starting_mission_trigger` | Auto-started mission + when (`"ship_purchase"` / `"new_game"`) |
 | `acts` | `[{"id", "name", "advance_flag"?}]` - the current act (last one whose predecessor's `advance_flag` is set) shows on the Space View HUD; `utils.current_act()` |
