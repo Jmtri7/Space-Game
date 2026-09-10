@@ -1,5 +1,5 @@
 {
   "name": "figures-human",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shared human-figure graphics kit: the walk rig, masc/femme bodies, generic wardrobe articles (coats, boots, caps, hair, tool belts...), faces, common decorations/collision/buildings, and the base materials table. A story lists this module and then only ships the art unique to it, overriding any kit file by dropping its own copy at the same graphics/<kind>/<name>.json path."
 }

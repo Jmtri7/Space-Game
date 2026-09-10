@@ -63,7 +63,7 @@ story key still winning.
 
 | Module | Provides | Used by |
 |---|---|---|
-| `figures-human` | The walk rig, masc/femme human bodies, generic wardrobe articles, faces, common decorations/collision/buildings, base `materials.json`. The `graphics_pipeline_test` and `the_long_silence` figure kits were byte-identical here; `the_long_silence` keeps ~114 faction-specific files locally (and its 10 tuned kit files, which shadow the module's). | `the_long_silence`, `graphics_pipeline_test` |
+| `figures-human` | The walk rig, masc/femme human bodies, generic wardrobe articles, faces, common decorations/collision/buildings, base `materials.json`. `the_long_silence` keeps ~114 faction-specific files locally but **no kit shadows** — its 10 hand-tuned kit files (`human_femme`, `draw_order`, `eyes_almond` / `lips_full` / `nose_soft`, `badge` / `buttons` / `hair_short` / `pants` / `stand_collar`) replaced the module copies in `1.1.0`, so both consuming stories now share them. (The old module `human_femme`/`draw_order` carried extra leg-pants fitting curves/layers that nothing referenced; recover from git if ever needed.) | `the_long_silence`, `graphics_pipeline_test` |
 | `audio-core` | The default `SoundBoard` recipes and the two ambient music loops, as data (`audio.json`). See [SOUND.md](SOUND.md). | all three stories |
 | `ships-core` | The standard ship-equipment kit — `ship_outfits.json` (weapons/engines/utility) and `asteroid_types.json` — that `default` and `the_long_silence` had entry-for-entry identical. Ship *hulls* stay per-story (no two stories share one). | all three stories |
 | `common-goods` | `items.json` — the personal inventory items every story carries (`repair_kit`, `medkit`, `star_chart`, `engraved_flask`). | all three stories |

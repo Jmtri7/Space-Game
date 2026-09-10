@@ -137,10 +137,29 @@ class TestConfigModuleResolver(unittest.TestCase):
         self.assertIn(os.path.join("modules", "figures-human"), p)
 
     def test_story_file_shadows_the_module(self):
+        # A story file at the same graphics/<kind>/<name>.json path as a
+        # module file wins. (the_long_silence's one-time human-figure
+        # shadows were folded back into figures-human 1.1.0, so this uses a
+        # throwaway fixture rather than a checked-in shadow.)
         from game import config_source
-        # the_long_silence deliberately keeps its own tuned human_femme body
-        p = config_source.story_path("the_long_silence", "graphics", "body", "human_femme.json")
-        self.assertIn(os.path.join("stories", "the_long_silence"), p)
+        story_dir = os.path.join("config", "stories", "the_long_silence", "graphics", "body")
+        shadow = os.path.join(story_dir, "rig_walk.json")
+        self.assertFalse(os.path.exists(shadow))
+        made_dir = not os.path.isdir(story_dir)
+        try:
+            os.makedirs(story_dir, exist_ok=True)
+            with open(shadow, "w") as f:
+                f.write("{}")
+            p = config_source.story_path("the_long_silence", "graphics", "body", "rig_walk.json")
+            self.assertIn(os.path.join("stories", "the_long_silence"), p)
+        finally:
+            if os.path.exists(shadow):
+                os.remove(shadow)
+            if made_dir and os.path.isdir(story_dir):
+                os.rmdir(story_dir)
+        # and with the shadow gone it falls back to the module
+        p = config_source.story_path("the_long_silence", "graphics", "body", "rig_walk.json")
+        self.assertIn(os.path.join("modules", "figures-human"), p)
 
     def test_catalogue_merge_layers_story_over_module(self):
         from game import config_source
