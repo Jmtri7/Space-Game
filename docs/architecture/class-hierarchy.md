@@ -369,7 +369,7 @@ that routine flies a ship or just moves a body around a room:
 | Routine | File | Needs a ship? | Used by |
 |---|---|---|---|
 | `DockRoutine` | `dock_routine.py` | Yes | `freighter_pilot` - fly to a stop, walk in, talk, walk out, repeat |
-| `ShuttleRoutine` | `shuttle_routine.py` | Yes | `trader_captain` - ping-pong stops, instant turnaround |
+| `ShuttleRoutine` | `shuttle_routine.py` | Yes | `trader_captain`, `courier_pilot` - ping-pong stops, instant turnaround |
 | `OrbitRoutine` | `orbit_routine.py` | Yes | `patrol_officer` - circle a fixed point forever |
 | `ExplorerRoutine` | `explorer_routine.py` | Yes | `explorer` - jump to a random *other* system, orbit something there a while, repeat |
 | `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |

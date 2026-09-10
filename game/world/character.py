@@ -43,6 +43,7 @@ ROUTINE_REGISTRY = {
 # A config "routine" key (see ROUTINE_REGISTRY) overrides this per character.
 ROLE_ROUTINES = {
     "freighter_pilot": DockRoutine,
+    "courier_pilot": ShuttleRoutine,  # fast run between stops, instant turnaround
     "trader_captain": ShuttleRoutine,
     "patrol_officer": OrbitRoutine,
     "explorer": ExplorerRoutine,
