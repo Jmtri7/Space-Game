@@ -59,16 +59,22 @@ overshoot → commit "Improve: Refine autopilot braking distance calculation".
 python run_tests.py
 ```
 
-Discovers `tests/test_*.py`. Current coverage lives in `tests/test_helpers.py`:
+Discovers `tests/test_*.py`. Coverage is split across themed modules
+(`test_flight_physics.py`, `test_routines.py`, `test_missions.py`,
+`test_location_screen.py`, `test_space_screen.py`, `test_ui.py`, `test_dialogue.py`,
+`test_possessions.py`, `test_persistence.py`, `test_graphics_audio.py`,
+`test_config.py`, `test_misc.py`); shared setup (pygame mock, imports, `_FakeFont`)
+is in `tests/harness.py`, imported by each module via `from tests.harness import *`.
+Highlights:
 
-- **Helper functions** — `_handle_scrolling_input()`, `_list_files_by_pattern()`,
-  `_center_text_x()`.
+- **Helper functions** (`test_misc.py`) — `_handle_scrolling_input()`,
+  `_list_files_by_pattern()`, `_center_text_x()`.
 - **Autopilot physics** (`TestAutopilotPhysics`) — drives a real `Ship` through
   `engage_seek()` + `ship.update()` toward a real `LandingSite`, one case per
   `ship_types.json` preset, asserting it lands, arrives close, stops, and
   doesn't oscillate. This is a **smoke test**, not a substitute for the
   [AUTOPILOT_TESTING.md](AUTOPILOT_TESTING.md) battery.
-- **Interior layout** (`TestStationInteriorLayout`) — walks a real path across
+- **Interior layout** (`test_location_screen.py`, `TestStationInteriorLayout`) — walks a real path across
   Alpha Station and fails if a furniture/structure placement pinches it shut.
 - **Story-version mismatch warning** — see SAVE_SYSTEM.md's "Save Compatibility
   Discipline".
@@ -85,8 +91,9 @@ paths. **Don't test UI rendering** or pygame drawing. Prefer testing a new pure
 physics helper as a method on the class that owns it (the way
 `TestAutopilotPhysics` does), rather than a standalone physics module.
 
-**How:** add the case to `tests/test_helpers.py` in the appropriate class, run
-`python run_tests.py`, commit the test with the feature/fix.
+**How:** add the case to the themed `tests/test_*.py` module that fits (or a new
+one — discovery picks up any `test_*.py`), run `python run_tests.py`, commit the
+test with the feature/fix.
 
 ## Commit message convention
 

@@ -55,7 +55,7 @@ NaN, no runaway) - not the full battery, which doesn't apply.
    `autopilot.py` recording *why* are there specifically so nobody re-tries them blind next time.
 6. Run `python run_tests.py` and do a live restart per the project's standing workflow before
    considering it done. The automated tests don't cover this (see "What the battery covers that
-   `test_helpers.py` doesn't" below) - they're a floor, not a substitute for the battery.
+   the unit tests don't" below) - they're a floor, not a substitute for the battery.
 
 ## Real ship stats - don't guess these
 
@@ -160,9 +160,9 @@ slow divergence would otherwise go unnoticed.
   check once speed drops below `ARRIVAL_SPEED_THRESHOLD`) is built into the current code - see
   the version-history entry below.
 
-### What the battery covers that `test_helpers.py` doesn't
+### What the battery covers that the unit tests don't
 
-`tests/test_helpers.py`'s `TestAutopilotPhysics` locks in exactly one scenario per ship type
+`tests/test_flight_physics.py`'s `TestAutopilotPhysics` locks in exactly one scenario per ship type
 (a single start distance, at rest, along one axis) as a fast regression guard for CI/pre-
 commit - useful, but nowhere near the coverage above. Treat it as a smoke test, not evidence
 that a change is safe. Extend it if a new scenario ever turns out to matter enough to guard

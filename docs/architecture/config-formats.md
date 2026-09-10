@@ -181,7 +181,7 @@ entry instead names a `"design"` and `expand()` fills `parts` at load
 flat base polygon and the `windows` dots entirely — but `shape` / dims /
 `local_points` still drive `_building_footprint` / `_structure_depth` /
 collision / target brackets regardless. Keep furniture footprints clear of NPC spawn points, portals,
-and the necks between rooms — `tests/test_helpers.py`'s
+and the necks between rooms — `tests/test_location_screen.py`'s
 `TestStationInteriorLayout` walks a real path across Alpha Station and fails if
 a placement pinches it shut. See [DESIGN_PATTERNS.md](../DESIGN_PATTERNS.md)'s
 "Walkability-oracle navigation".
