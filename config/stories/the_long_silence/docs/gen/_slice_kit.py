@@ -28,11 +28,43 @@ def rect(x0, y0, x1, y1, label):
     return {"label": label, "polygon": [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]}
 
 
+def disc(cx, cy, radius, label):
+    """A circular room (LocationScreen.normalize_room folds it to an N-gon).
+    Used by the culture floor plans that read as rings / rotundas / cells
+    rather than a rectilinear concourse."""
+    return {"label": label, "shape": "circle", "center": [cx, cy], "radius": radius}
+
+
+def octagon(cx, cy, radius, flat, label):
+    """A flat-topped octagon room. `flat` is the half-width of the top/bottom
+    edge as a fraction of `radius` (the station exteriors use ~0.42)."""
+    f = flat * radius
+    return {"label": label, "polygon": [
+        [cx - f, cy - radius], [cx + f, cy - radius],
+        [cx + radius, cy - f], [cx + radius, cy + f],
+        [cx + f, cy + radius], [cx - f, cy + radius],
+        [cx - radius, cy + f], [cx - radius, cy - f]]}
+
+
+def polar(cx, cy, radius, deg):
+    """(x, y) at `radius` and `deg` from (cx, cy); deg 0 = east, 90 = south
+    (screen y is down). For laying rooms out around a hub."""
+    import math
+    return (cx + radius * math.cos(math.radians(deg)),
+            cy + radius * math.sin(math.radians(deg)))
+
+
 def concourse_plan(spine_label, bays):
     """One connected walkable area: a west-east concourse spine (x 120..1480,
     y 560..740) plus bays that each overlap it by ~30u so the walkable union
     has no zero-width seams for the nav grid to miss. `bays` is a list of
-    (x0, y0, x1, y1, label). Mirrors gen_halcyon's HUB_ROOMS.
+    (x0, y0, x1, y1, label).
+
+    NOTE: the five finished stations no longer use this - each now has a
+    bespoke per-culture plan shaped after its exterior silhouette (a cross, a
+    two-claw octagon, a six-pod wreath, a vertical nave, a broken arc), built
+    from rect/disc/octagon in its own gen_<system>.py. Kept for scaffolding a
+    new interior quickly; `disc`/`octagon`/`polar` are the shaping helpers.
     """
     rooms = [rect(120, 560, 1480, 740, spine_label)]
     for x0, y0, x1, y1, label in bays:

@@ -54,52 +54,73 @@
         "culture": "the_wardens",
         "portals": [
           {
-            "x": 1360,
-            "y": 470,
+            "x": 1300,
+            "y": 560,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "the Approach Span",
+            "label": "the west terminus",
             "polygon": [
               [
-                120,
-                560
+                180,
+                380
               ],
               [
-                1480,
-                560
+                520,
+                380
               ],
               [
-                1480,
-                740
+                520,
+                660
               ],
               [
-                120,
-                740
+                180,
+                660
               ]
             ]
           },
           {
-            "label": "the Core Choir",
+            "label": "the Approach Span",
             "polygon": [
               [
-                440,
-                360
+                460,
+                470
               ],
               [
-                900,
-                360
+                820,
+                470
               ],
               [
-                900,
-                590
+                820,
+                710
               ],
               [
-                440,
-                590
+                460,
+                710
+              ]
+            ]
+          },
+          {
+            "label": "the Span floor",
+            "polygon": [
+              [
+                760,
+                520
+              ],
+              [
+                1080,
+                520
+              ],
+              [
+                1080,
+                790
+              ],
+              [
+                760,
+                790
               ]
             ]
           },
@@ -107,41 +128,71 @@
             "label": "the Arrival Span",
             "polygon": [
               [
-                1180,
-                360
+                980,
+                460
               ],
               [
-                1480,
-                360
+                1360,
+                460
               ],
               [
-                1480,
-                590
+                1360,
+                710
               ],
               [
-                1180,
-                590
+                980,
+                710
               ]
             ]
+          },
+          {
+            "label": "Segment Four",
+            "polygon": [
+              [
+                1300,
+                380
+              ],
+              [
+                1480,
+                380
+              ],
+              [
+                1480,
+                620
+              ],
+              [
+                1300,
+                620
+              ]
+            ]
+          },
+          {
+            "label": "the Core Choir",
+            "shape": "circle",
+            "center": [
+              910,
+              400
+            ],
+            "radius": 180
           },
           {
             "label": "the Signal-Tender's post",
             "polygon": [
               [
-                180,
-                710
+                220,
+                560
               ],
               [
-                540,
-                710
+                460,
+                560
               ],
               [
-                540,
-                980
+                460,
+                820
               ],
               [
-                180,
-                980
+                220,
+                820
               ]
             ]
           },
@@ -149,20 +200,20 @@
             "label": "the Hub Archive",
             "polygon": [
               [
-                600,
-                710
+                640,
+                690
               ],
               [
-                1020,
-                710
+                1000,
+                690
               ],
               [
-                1020,
-                980
+                1000,
+                960
               ],
               [
-                600,
-                980
+                640,
+                960
               ]
             ]
           },
@@ -170,106 +221,91 @@
             "label": "Segment Four watch",
             "polygon": [
               [
-                1080,
-                710
+                1140,
+                560
               ],
               [
-                1440,
-                710
+                1400,
+                560
               ],
               [
-                1440,
-                980
+                1400,
+                820
               ],
               [
-                1080,
-                980
+                1140,
+                820
               ]
             ]
           }
         ],
         "structures": [
           {
-            "x": 800,
-            "y": 640,
+            "x": 910,
+            "y": 335,
             "building_type": "warden_spire"
           },
           {
-            "x": 560,
-            "y": 584,
+            "x": 800,
+            "y": 500,
             "building_type": "pipeline_column"
           },
           {
-            "x": 720,
-            "y": 584,
+            "x": 910,
+            "y": 500,
             "building_type": "pipeline_column"
           },
           {
-            "x": 880,
-            "y": 584,
+            "x": 1020,
+            "y": 500,
             "building_type": "pipeline_column"
           },
           {
-            "x": 1040,
-            "y": 584,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 560,
-            "y": 716,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 720,
-            "y": 716,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 880,
-            "y": 716,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 1040,
-            "y": 716,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 810,
-            "y": 900,
+            "x": 820,
+            "y": 860,
             "building_type": "warden_housing"
           },
           {
             "x": 700,
-            "y": 820,
+            "y": 780,
             "building_type": "pipeline_column"
           },
           {
-            "x": 920,
-            "y": 820,
+            "x": 940,
+            "y": 780,
             "building_type": "pipeline_column"
           },
           {
-            "x": 360,
-            "y": 900,
+            "x": 300,
+            "y": 470,
             "building_type": "crates"
           },
           {
-            "x": 1240,
-            "y": 900,
+            "x": 1360,
+            "y": 470,
             "building_type": "crates"
           },
           {
-            "x": 1140,
-            "y": 690,
+            "x": 600,
+            "y": 600,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1180,
+            "y": 600,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1210,
+            "y": 650,
             "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "First Warden",
-            "x": 800,
-            "y": 470,
+            "x": 910,
+            "y": 440,
             "role": "magistrate",
             "faction": "the_wardens",
             "outfit": "warden_official_femme",
@@ -346,8 +382,8 @@
           },
           {
             "name": "the Signal-Tender",
-            "x": 380,
-            "y": 900,
+            "x": 320,
+            "y": 700,
             "role": "quartermaster",
             "faction": "the_wardens",
             "outfit": "warden_dock_masc",
@@ -363,8 +399,8 @@
           },
           {
             "name": "Keeper of the Hub",
-            "x": 1240,
-            "y": 900,
+            "x": 1260,
+            "y": 700,
             "role": "resident",
             "faction": "the_wardens",
             "outfit": "warden_civilian_femme",
@@ -376,8 +412,8 @@
           },
           {
             "name": "Warden of the Fourth Segment",
-            "x": 800,
-            "y": 700,
+            "x": 640,
+            "y": 600,
             "role": "guard",
             "faction": "the_wardens",
             "outfit": "warden_security_masc",
@@ -389,8 +425,8 @@
           },
           {
             "name": "Archivist of the Choir",
-            "x": 810,
-            "y": 850,
+            "x": 820,
+            "y": 780,
             "role": "clerk",
             "faction": "the_wardens",
             "outfit": "warden_official_masc",
@@ -478,8 +514,8 @@
           },
           {
             "name": "Choir-hand Emel",
-            "x": 640,
-            "y": 760,
+            "x": 920,
+            "y": 900,
             "role": "resident",
             "faction": "the_wardens",
             "outfit": "warden_civilian_masc",
@@ -491,8 +527,8 @@
           },
           {
             "name": "Parts carrier",
-            "x": 1180,
-            "y": 700,
+            "x": 1100,
+            "y": 620,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_dock_masc",

@@ -67,73 +67,47 @@
         "culture": "ninefold_combine",
         "portals": [
           {
-            "x": 1360,
-            "y": 470,
+            "x": 1380,
+            "y": 690,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Hold Concourse",
+            "label": "The Hold",
             "polygon": [
               [
-                120,
-                560
+                657.2,
+                350
               ],
               [
-                1480,
-                560
+                942.8,
+                350
               ],
               [
-                1480,
-                740
+                1140,
+                547.2
               ],
               [
-                120,
-                740
-              ]
-            ]
-          },
-          {
-            "label": "Contract Hall",
-            "polygon": [
-              [
-                240,
-                360
+                1140,
+                832.8
               ],
               [
-                560,
-                360
+                942.8,
+                1030
               ],
               [
-                560,
-                590
+                657.2,
+                1030
               ],
               [
-                240,
-                590
-              ]
-            ]
-          },
-          {
-            "label": "Assay Office",
-            "polygon": [
-              [
-                760,
-                360
+                460,
+                832.8
               ],
               [
-                1040,
-                360
-              ],
-              [
-                1040,
-                590
-              ],
-              [
-                760,
-                590
+                460,
+                547.2
               ]
             ]
           },
@@ -141,20 +115,20 @@
             "label": "The Ledger Dock",
             "polygon": [
               [
-                1180,
-                360
-              ],
-              [
-                1480,
-                360
-              ],
-              [
-                1480,
+                1060,
                 590
               ],
               [
-                1180,
+                1440,
                 590
+              ],
+              [
+                1440,
+                790
+              ],
+              [
+                1060,
+                790
               ]
             ]
           },
@@ -163,19 +137,19 @@
             "polygon": [
               [
                 160,
-                710
+                590
               ],
               [
-                460,
-                710
+                540,
+                590
               ],
               [
-                460,
-                980
+                540,
+                820
               ],
               [
                 160,
-                980
+                820
               ]
             ]
           },
@@ -183,20 +157,20 @@
             "label": "Cutters' Rest",
             "polygon": [
               [
-                1140,
-                710
+                160,
+                720
               ],
               [
-                1480,
-                710
+                420,
+                720
               ],
               [
-                1480,
-                980
+                420,
+                1000
               ],
               [
-                1140,
-                980
+                160,
+                1000
               ]
             ]
           }
@@ -204,72 +178,72 @@
         "structures": [
           {
             "x": 800,
-            "y": 650,
+            "y": 690,
             "building_type": "combine_spire"
           },
           {
-            "x": 560,
-            "y": 584,
+            "x": 990,
+            "y": 690,
             "building_type": "pipeline_column"
           },
           {
-            "x": 720,
-            "y": 584,
+            "x": 934,
+            "y": 824,
             "building_type": "pipeline_column"
           },
           {
-            "x": 880,
-            "y": 584,
+            "x": 800,
+            "y": 880,
             "building_type": "pipeline_column"
           },
           {
-            "x": 1040,
-            "y": 584,
+            "x": 666,
+            "y": 824,
             "building_type": "pipeline_column"
           },
           {
-            "x": 560,
-            "y": 716,
+            "x": 610,
+            "y": 690,
             "building_type": "pipeline_column"
           },
           {
-            "x": 720,
-            "y": 716,
+            "x": 666,
+            "y": 556,
             "building_type": "pipeline_column"
           },
           {
-            "x": 880,
-            "y": 716,
+            "x": 800,
+            "y": 500,
             "building_type": "pipeline_column"
           },
           {
-            "x": 1040,
-            "y": 716,
+            "x": 934,
+            "y": 556,
             "building_type": "pipeline_column"
           },
           {
-            "x": 360,
-            "y": 470,
+            "x": 260,
+            "y": 640,
+            "building_type": "crates"
+          },
+          {
+            "x": 260,
+            "y": 760,
             "building_type": "crates"
           },
           {
             "x": 300,
-            "y": 900,
+            "y": 920,
             "building_type": "crates"
           },
           {
-            "x": 1300,
-            "y": 470,
-            "building_type": "crates"
-          },
-          {
-            "x": 1300,
-            "y": 900,
+            "x": 1180,
+            "y": 760,
             "building_type": "pipeline_bench"
           },
           {
-            "x": 1140,
-            "y": 690,
+            "x": 200,
+            "y": 940,
             "building_type": "crates"
           }
         ],
@@ -277,7 +251,7 @@
           {
             "name": "Factor Tol",
             "x": 800,
-            "y": 660,
+            "y": 450,
             "role": "stationmaster",
             "faction": "ninefold_combine",
             "outfit": "combine_official_masc",
@@ -426,8 +400,8 @@
           },
           {
             "name": "Warden of Contract Raik",
-            "x": 470,
-            "y": 470,
+            "x": 620,
+            "y": 500,
             "role": "guard",
             "faction": "ninefold_combine",
             "outfit": "combine_security_masc",
@@ -480,8 +454,8 @@
           },
           {
             "name": "Tallykeeper Vess",
-            "x": 900,
-            "y": 470,
+            "x": 980,
+            "y": 500,
             "role": "quartermaster",
             "faction": "ninefold_combine",
             "outfit": "combine_dock_masc",
@@ -587,8 +561,8 @@
           },
           {
             "name": "Deck-chief Marn",
-            "x": 1300,
-            "y": 470,
+            "x": 1180,
+            "y": 660,
             "role": "ship_salesman",
             "faction": "ninefold_combine",
             "outfit": "combine_official_femme",
@@ -605,8 +579,8 @@
           },
           {
             "name": "Assay-clerk Dorn",
-            "x": 900,
-            "y": 540,
+            "x": 1000,
+            "y": 690,
             "role": "clerk",
             "faction": "ninefold_combine",
             "outfit": "combine_dock_femme",
@@ -618,8 +592,8 @@
           },
           {
             "name": "Approach-Warden Sesk",
-            "x": 1400,
-            "y": 480,
+            "x": 1320,
+            "y": 660,
             "role": "outfitter",
             "faction": "ninefold_combine",
             "outfit": "combine_security_femme",
@@ -639,8 +613,8 @@
           },
           {
             "name": "Cutter Sol",
-            "x": 1300,
-            "y": 900,
+            "x": 280,
+            "y": 890,
             "role": "bartender",
             "faction": "ninefold_combine",
             "outfit": "combine_civilian_masc",
@@ -687,8 +661,8 @@
           },
           {
             "name": "Deep-hand Corr",
-            "x": 300,
-            "y": 900,
+            "x": 320,
+            "y": 680,
             "role": "resident",
             "faction": "ninefold_combine",
             "outfit": "combine_civilian_femme",
@@ -700,8 +674,8 @@
           },
           {
             "name": "Rockjack Bsix",
-            "x": 640,
-            "y": 700,
+            "x": 660,
+            "y": 880,
             "role": "dockworker",
             "faction": "ninefold_combine",
             "outfit": "combine_dock_masc",
@@ -717,8 +691,8 @@
           },
           {
             "name": "Stranded carrier",
-            "x": 980,
-            "y": 700,
+            "x": 430,
+            "y": 730,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_civilian_femme",
@@ -731,8 +705,8 @@
           },
           {
             "name": "Carrier at the claw",
-            "x": 1180,
-            "y": 700,
+            "x": 360,
+            "y": 760,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_flight_femme",

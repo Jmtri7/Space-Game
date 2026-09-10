@@ -12,7 +12,7 @@ Warden style (cultures.json): vast smooth Relay-era forms in dark alloy and
 teal light, patched with mismatched salvage and hand-lettered ritual markings.
 """
 import math
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, station_shell,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, disc, polar,  station_shell,
                         article, sash_region, shoulder_slab_region, far_shoulder_slab_region,
                         pendant_region, brassard_region, gorget_region, write_wardrobe)
 
@@ -275,25 +275,38 @@ w(f"{S}/graphics.json", gfx)
 # ======================================================================
 # 4. HUB ZERO  minimal interior + the ending fork
 # ======================================================================
-HZ_ROOMS = concourse_plan("the Approach Span", [
-    BAY_N(440, 900, "the Core Choir"),
-    BAY_N(1180, 1480, "the Arrival Span"),
-    BAY_S(180, 540, "the Signal-Tender's post"),
-    BAY_S(600, 1020, "the Hub Archive"),
-    BAY_S(1080, 1440, "Segment Four watch"),
-])
+# Hub Zero's exterior (graphics/stations/warden_station.json) is a vast
+# smooth arc of the old ringworld, broken at both ends, a blinding teal
+# reactor-core suspended at its centre on three salvage-braced spokes. The
+# floor plan is that crescent: a curved five-segment Approach Span open at
+# both termini (one is where you dock), the round Core Choir cradled above
+# its low middle on three column-spokes, and the Wardens' patched habitats
+# clinging to the arc's outer edge - the scavenged priesthood in the margins.
+HZ_ROOMS = [
+    rect(180, 380, 520, 660, "the west terminus"),      # broken end (open)
+    rect(460, 470, 820, 710, "the Approach Span"),
+    rect(760, 520, 1080, 790, "the Span floor"),         # low middle, under the core
+    rect(980, 460, 1360, 710, "the Arrival Span"),      # broken end - ship portal
+    rect(1300, 380, 1480, 620, "Segment Four"),
+    disc(910, 400, 180, "the Core Choir"),               # the reactor-core chamber
+    rect(220, 560, 460, 820, "the Signal-Tender's post"),  # margin habitat
+    rect(640, 690, 1000, 960, "the Hub Archive"),          # margin habitat
+    rect(1140, 560, 1400, 820, "Segment Four watch"),      # margin habitat
+]
 HZ_STRUCTURES = [
-    {"x": 800, "y": 640, "building_type": "warden_spire"},
-    *[{"x": x, "y": 584, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
-    *[{"x": x, "y": 716, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
+    {"x": 910, "y": 335, "building_type": "warden_spire"},   # the core, at the head of its chamber
+    # the three salvage-braced spokes bridging the Span floor up to the core
+    *[{"x": x, "y": 500, "building_type": "pipeline_column"} for x in (800, 910, 1020)],
     # the Hub Archive - a stack of Relay-era log columns
-    {"x": 810, "y": 900, "building_type": "warden_housing"},
-    *[{"x": x, "y": 820, "building_type": "pipeline_column"} for x in (700, 920)],
-    {"x": 360, "y": 900, "building_type": "crates"},
-    {"x": 1240, "y": 900, "building_type": "crates"},
+    {"x": 820, "y": 860, "building_type": "warden_housing"},
+    *[{"x": x, "y": 780, "building_type": "pipeline_column"} for x in (700, 940)],
+    {"x": 300, "y": 470, "building_type": "crates"},          # west terminus
+    {"x": 1360, "y": 470, "building_type": "crates"},          # Segment Four
+    {"x": 600, "y": 600, "building_type": "pipeline_bench"},
+    {"x": 1180, "y": 600, "building_type": "pipeline_bench"},
 ]
 HZ_NPCS = [
-    {"name": "First Warden", "x": 800, "y": 470, "role": "magistrate",
+    {"name": "First Warden", "x": 910, "y": 440, "role": "magistrate",
      "faction": "the_wardens", "outfit": "warden_official_femme",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "You reached the Span. The Hub sings, and it is asking a question it has asked no one in two hundred years: what should the Relay be? We tend the machinery. We do not decide for it. You will. Stand at the Core Choir and choose - there is no undoing it.",
@@ -314,17 +327,17 @@ HZ_NPCS = [
                            "options": [{"label": "Do it.", "next": None, "action": "end_story:hold_middle"},
                                        {"label": "Wait.", "next": "start"}]}}}},
 
-    {"name": "the Signal-Tender", "x": 380, "y": 900, "role": "quartermaster",
+    {"name": "the Signal-Tender", "x": 320, "y": 700, "role": "quartermaster",
      "faction": "the_wardens", "outfit": "warden_dock_masc",
      "greeting": "We keep the machinery, not a market. A carrier who runs parts to the outer segments is always welcome - and we are always short of parts.",
      "shop": {"type": "commodities", "stock": ["hub_parts", "salvage"], "sell_multiplier": 1.1}},
 
-    {"name": "Keeper of the Hub", "x": 1240, "y": 900, "role": "resident",
+    {"name": "Keeper of the Hub", "x": 1260, "y": 700, "role": "resident",
      "faction": "the_wardens", "outfit": "warden_civilian_femme",
      "greeting": "Segment Four was dark since before my grandmother tended it. Now its lights come up one by one, and none of us set them to. The Hub is finishing something. We only keep it swept.",
      "dialogue_options": ["Understood", "Leave"]},
 
-    {"name": "Warden of the Fourth Segment", "x": 800, "y": 700, "role": "guard",
+    {"name": "Warden of the Fourth Segment", "x": 640, "y": 600, "role": "guard",
      "faction": "the_wardens", "outfit": "warden_security_masc",
      "greeting": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
      "dialogue_options": ["Understood", "Leave"]},
@@ -332,7 +345,7 @@ HZ_NPCS = [
     # The Hub Archive - the shutdown reason as a *place*, not only a dialogue
     # reveal in the_vigil_record. The machine's own logs give the same three
     # explanations, from the other end. Sets read_hub_archive.
-    {"name": "Archivist of the Choir", "x": 810, "y": 850, "role": "clerk",
+    {"name": "Archivist of the Choir", "x": 820, "y": 780, "role": "clerk",
      "faction": "the_wardens", "outfit": "warden_official_masc",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "The Archive is the Hub's own memory of the night it went dark. Not the Vigil's account of it - the machine's. Three logs from that last hour, and they do not agree. The Choir has read them for two hundred years and is no closer. Read them yourself; you are the one it is asking.",
@@ -354,13 +367,13 @@ HZ_NPCS = [
                                  {"label": "The second.", "next": "scorched"},
                                  {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]}}}},
 
-    {"name": "Choir-hand Emel", "x": 640, "y": 760, "role": "resident",
+    {"name": "Choir-hand Emel", "x": 920, "y": 900, "role": "resident",
      "faction": "the_wardens", "outfit": "warden_civilian_masc",
      "greeting": "I sweep the Archive. I have read every log in it. I could not tell you which is true and I have stopped needing to - the Hub will do what it does, and we will keep it swept either way.",
      "dialogue_options": ["Understood", "Leave"]},
 ]
 HZ_INTERIOR = {"label": "Hub Zero", "culture": "the_wardens",
-               "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
+               "portals": [{"x": 1300, "y": 560, "connected_locations": [], "return_to_ship": True}],
                "rooms": HZ_ROOMS, "structures": HZ_STRUCTURES, "npcs": HZ_NPCS,
                **station_shell(PFX, 205)}
 

@@ -539,5 +539,55 @@ class TestStationInteriorLayout(unittest.TestCase):
         self.assertTrue(interior.can_move_to(interior.player.x, interior.player.y))
 
 
+class TestLongSilenceStationLayouts(unittest.TestCase):
+    """the_long_silence's five station concourses each have a bespoke,
+    per-culture floor plan (a cross, a two-claw octagon, a six-pod wreath, a
+    vertical nave, a broken arc - authored in docs/gen/gen_<system>.py). This
+    guards them the way TestStationInteriorLayout guards the default story:
+    every NPC spawns on the walkable area and a visiting pilot can path from
+    the ship portal to each of them."""
+
+    STATIONS = ["halcyon", "kiln", "verdance", "ossuary", "the_span"]
+
+    def _interior(self, system_id):
+        system = utils.load_json(f"config/stories/the_long_silence/systems/{system_id}.json")
+        gs = SpaceScreen(system, pilot_name="Test", story="the_long_silence", system_id=system_id)
+        interior = gs.get_interior_screen(gs.station, "default")
+        interior.arrive_from("ship")
+        return interior
+
+    def test_every_station_npc_spawns_inside_the_walkable_area(self):
+        for system_id in self.STATIONS:
+            interior = self._interior(system_id)
+            for character in interior.npcs:
+                person = character.person
+                self.assertTrue(
+                    interior.can_move_to(person.x, person.y),
+                    f"{system_id}: {person.name} at ({person.x:.0f},{person.y:.0f}) is outside every room",
+                )
+
+    def test_a_pilot_can_path_from_the_ship_portal_to_every_station_npc(self):
+        for system_id in self.STATIONS:
+            interior = self._interior(system_id)
+            portal = interior.portals[0]
+            start = (portal["x"], portal["y"])
+            self.assertTrue(interior.can_move_to(*start), f"{system_id}: ship portal not walkable")
+            for character in interior.npcs:
+                person = character.person
+                goal = (person.x, person.y)
+                path = interior.plan_path(start, goal)
+                self.assertTrue(path and path[-1] == goal,
+                                f"{system_id}: no path from the ship portal to {person.name}")
+                prev = start
+                for point in path:
+                    steps = max(1, int(math.hypot(point[0] - prev[0], point[1] - prev[1]) / 6))
+                    for i in range(steps + 1):
+                        t = i / steps
+                        x, y = prev[0] + (point[0] - prev[0]) * t, prev[1] + (point[1] - prev[1]) * t
+                        self.assertTrue(interior.can_move_to(x, y),
+                                        f"{system_id}: path to {person.name} leaves the walkable area at ({x:.0f},{y:.0f})")
+                    prev = point
+
+
 if __name__ == "__main__":
     unittest.main()

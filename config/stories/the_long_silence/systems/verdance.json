@@ -54,8 +54,8 @@
         "culture": "the_drift",
         "portals": [
           {
-            "x": 1360,
-            "y": 470,
+            "x": 1240,
+            "y": 430,
             "connected_locations": [],
             "return_to_ship": true
           }
@@ -63,200 +63,141 @@
         "rooms": [
           {
             "label": "Canopy Walk",
-            "polygon": [
-              [
-                120,
-                560
-              ],
-              [
-                1480,
-                560
-              ],
-              [
-                1480,
-                740
-              ],
-              [
-                120,
-                740
-              ]
-            ]
+            "shape": "circle",
+            "center": [
+              800,
+              700
+            ],
+            "radius": 360
+          },
+          {
+            "label": "the grow-core",
+            "shape": "circle",
+            "center": [
+              800,
+              700
+            ],
+            "radius": 190
           },
           {
             "label": "The Rolling Assembly",
-            "polygon": [
-              [
-                240,
-                360
-              ],
-              [
-                620,
-                360
-              ],
-              [
-                620,
-                590
-              ],
-              [
-                240,
-                590
-              ]
-            ]
-          },
-          {
-            "label": "Seed Store",
-            "polygon": [
-              [
-                820,
-                360
-              ],
-              [
-                1100,
-                360
-              ],
-              [
-                1100,
-                590
-              ],
-              [
-                820,
-                590
-              ]
-            ]
+            "shape": "circle",
+            "center": [
+              800,
+              260
+            ],
+            "radius": 180
           },
           {
             "label": "Ferry Slip",
-            "polygon": [
-              [
-                1200,
-                360
-              ],
-              [
-                1480,
-                360
-              ],
-              [
-                1480,
-                590
-              ],
-              [
-                1200,
-                590
-              ]
-            ]
-          },
-          {
-            "label": "Water Office",
-            "polygon": [
-              [
-                160,
-                710
-              ],
-              [
-                480,
-                710
-              ],
-              [
-                480,
-                980
-              ],
-              [
-                160,
-                980
-              ]
-            ]
+            "shape": "circle",
+            "center": [
+              1181,
+              480
+            ],
+            "radius": 180
           },
           {
             "label": "Canopy Rest",
-            "polygon": [
-              [
-                1120,
-                710
-              ],
-              [
-                1480,
-                710
-              ],
-              [
-                1480,
-                980
-              ],
-              [
-                1120,
-                980
-              ]
-            ]
+            "shape": "circle",
+            "center": [
+              1181,
+              920
+            ],
+            "radius": 180
+          },
+          {
+            "label": "Seed Store",
+            "shape": "circle",
+            "center": [
+              800,
+              1140
+            ],
+            "radius": 180
+          },
+          {
+            "label": "Water Office",
+            "shape": "circle",
+            "center": [
+              419,
+              920
+            ],
+            "radius": 180
+          },
+          {
+            "label": "Under-ring",
+            "shape": "circle",
+            "center": [
+              419,
+              480
+            ],
+            "radius": 180
           }
         ],
         "structures": [
           {
             "x": 800,
-            "y": 650,
+            "y": 700,
             "building_type": "drift_spire"
           },
           {
-            "x": 560,
-            "y": 582,
+            "x": 800,
+            "y": 550,
             "building_type": "planter"
           },
           {
-            "x": 700,
-            "y": 582,
+            "x": 930,
+            "y": 625,
             "building_type": "planter"
           },
           {
-            "x": 900,
-            "y": 582,
+            "x": 930,
+            "y": 775,
             "building_type": "planter"
           },
           {
-            "x": 1040,
-            "y": 582,
+            "x": 800,
+            "y": 850,
             "building_type": "planter"
           },
           {
-            "x": 560,
-            "y": 718,
+            "x": 670,
+            "y": 775,
             "building_type": "planter"
           },
           {
-            "x": 700,
-            "y": 718,
+            "x": 670,
+            "y": 625,
             "building_type": "planter"
           },
           {
-            "x": 900,
-            "y": 718,
+            "x": 800,
+            "y": 170,
             "building_type": "planter"
           },
           {
-            "x": 1040,
-            "y": 718,
+            "x": 419,
+            "y": 360,
             "building_type": "planter"
           },
           {
-            "x": 400,
-            "y": 470,
-            "building_type": "pipeline_bench"
+            "x": 1181,
+            "y": 1030,
+            "building_type": "planter"
           },
           {
             "x": 300,
-            "y": 900,
-            "building_type": "planter"
-          },
-          {
-            "x": 1320,
-            "y": 470,
-            "building_type": "crates"
-          },
-          {
-            "x": 1300,
-            "y": 900,
+            "y": 980,
             "building_type": "pipeline_bench"
           },
           {
-            "x": 1140,
-            "y": 690,
+            "x": 1150,
+            "y": 990,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1050,
+            "y": 700,
             "building_type": "crates"
           }
         ],
@@ -264,7 +205,7 @@
           {
             "name": "Sela of Highcanopy",
             "x": 800,
-            "y": 660,
+            "y": 480,
             "role": "concierge",
             "faction": "the_drift",
             "outfit": "drift_official_femme",
@@ -399,8 +340,8 @@
           },
           {
             "name": "Ferry-wright Osei",
-            "x": 1320,
-            "y": 470,
+            "x": 1181,
+            "y": 500,
             "role": "ship_salesman",
             "faction": "the_drift",
             "outfit": "drift_official_masc",
@@ -469,8 +410,8 @@
           },
           {
             "name": "Water-keeper Tam",
-            "x": 300,
-            "y": 470,
+            "x": 419,
+            "y": 920,
             "role": "quartermaster",
             "faction": "the_drift",
             "outfit": "drift_dock_femme",
@@ -538,8 +479,8 @@
           },
           {
             "name": "Old Bevin",
-            "x": 1300,
-            "y": 900,
+            "x": 1181,
+            "y": 920,
             "role": "bartender",
             "faction": "the_drift",
             "outfit": "drift_civilian_masc",
@@ -605,8 +546,8 @@
           },
           {
             "name": "Seed-warden Nim",
-            "x": 900,
-            "y": 470,
+            "x": 800,
+            "y": 1140,
             "role": "clerk",
             "faction": "the_drift",
             "outfit": "drift_dock_masc",
@@ -618,8 +559,8 @@
           },
           {
             "name": "Canopy-warden Rue",
-            "x": 640,
-            "y": 700,
+            "x": 620,
+            "y": 560,
             "role": "guard",
             "faction": "the_drift",
             "outfit": "drift_security_femme",
@@ -631,8 +572,8 @@
           },
           {
             "name": "Trellis-hand Fen",
-            "x": 960,
-            "y": 700,
+            "x": 419,
+            "y": 480,
             "role": "outfitter",
             "faction": "the_drift",
             "outfit": "drift_security_masc",
@@ -652,8 +593,8 @@
           },
           {
             "name": "Under-ring traveller",
-            "x": 400,
-            "y": 700,
+            "x": 480,
+            "y": 560,
             "role": "resident",
             "faction": "the_drift",
             "outfit": "drift_civilian_femme",
@@ -665,8 +606,8 @@
           },
           {
             "name": "Carrier at the Slip",
-            "x": 1240,
-            "y": 700,
+            "x": 1120,
+            "y": 560,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_flight_masc",
@@ -679,8 +620,8 @@
           },
           {
             "name": "Carrier off the Slip",
-            "x": 1180,
-            "y": 700,
+            "x": 1000,
+            "y": 620,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_civilian_masc",

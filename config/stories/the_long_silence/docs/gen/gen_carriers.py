@@ -275,6 +275,14 @@ BERTH_NPC = {
 }
 CARRIER_OUT = {"halcyon": "carrier_flight_masc", "kiln": "carrier_flight_femme", "verdance": "carrier_civilian_masc",
                "ossuary": "carrier_flight_femme", "the_span": "carrier_dock_masc"}
+# (berth-NPC x, y, crate x, y) - a walkable spot in each station's own plan
+BERTH_SPOT = {
+    "halcyon": (980, 620, 980, 800),     # The Berth (east arm)
+    "kiln": (360, 760, 200, 940),        # Cutters' Rest, off the ration claw
+    "verdance": (1000, 620, 1050, 700),  # Canopy Walk, toward the Ferry Slip
+    "ossuary": (720, 1080, 900, 1080),   # the nave foot, by the dock notch
+    "the_span": (1100, 620, 1210, 650),  # the Arrival Span terminus
+}
 
 for sysid, ship in CARRIER_SHIP.items():
     fn = f"{S}/systems/{sysid}.json"
@@ -287,14 +295,16 @@ for sysid, ship in CARRIER_SHIP.items():
     interior = sj["station"]["interiors"]["default"]
     npcs = interior["npcs"]
     bname, bline = BERTH_NPC[sysid]
+    # a walkable spot inside each station's own (per-culture) floor plan for
+    # the berth NPC + its crate - the plans diverge, so this can't be one point
+    bx, by, cx, cy = BERTH_SPOT[sysid]
     if not any(n.get("name") == bname for n in npcs):
-        # tuck the berth NPC + a little dressing near the south-east of the concourse
-        npcs.append({"name": bname, "x": 1180, "y": 700, "role": "traveler",
+        npcs.append({"name": bname, "x": bx, "y": by, "role": "traveler",
                      "faction": "free_carrier", "outfit": CARRIER_OUT[sysid],
                      "greeting": bline, "dialogue_options": ["Fair enough", "Leave"]})
     structs = interior.setdefault("structures", [])
-    if not any(s.get("x") == 1140 and s.get("y") == 690 for s in structs):
-        structs.append({"x": 1140, "y": 690, "building_type": "crates"})
+    if not any(s.get("x") == cx and s.get("y") == cy for s in structs):
+        structs.append({"x": cx, "y": cy, "building_type": "crates"})
     w(fn, sj)
 
 print(f"Free carriers pass: 3 patchwork ships, 3 depot buildings, dress + {len(ARTICLES)} articles / "

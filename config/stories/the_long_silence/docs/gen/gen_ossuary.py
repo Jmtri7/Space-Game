@@ -10,7 +10,7 @@ Vigil style (cultures.json): austere and vertical - long cold halls, name-walls,
 narrow light, unpolished grey stone and violet-white glass, no decoration that
 is not a record. A library that is also a tomb.
 """
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, disc,  say, station_shell,
                         article, region, write_wardrobe, stole_region,
                         pendant_region, hood_region, sash_region, apron_region)
 
@@ -278,24 +278,34 @@ w(f"{S}/graphics.json", gfx)
 # ======================================================================
 # 5. THE NAME-WALL floor plan + roster
 # ======================================================================
-NW_ROOMS = concourse_plan("the Long Vigil", [
-    BAY_N(240, 560, "the Long Vault"),
-    BAY_N(760, 1040, "Reading Cells"),
-    BAY_N(1180, 1480, "Vault of the First Decade"),
-    BAY_S(160, 460, "Spare Stores"),
-    BAY_S(1140, 1480, "the Refectory"),
-])
+# The Name-Wall's exterior (graphics/stations/vigil_station.json) is a tall
+# narrow monolith, its face all ranked name-niches, three shallow docking
+# notches down each side, a violet crown light - and it does not rotate. The
+# floor plan is that standing stone stood on end: one long cold north-south
+# nave (every other station in the story runs east-west - the Vigil's does
+# not), the inner Vault at the crowned head, and three reading-niches off
+# each side, matching the three notches. Austere, vertical, narrow light.
+NW_ROOMS = [
+    rect(660, 200, 940, 1200, "the Long Vigil"),        # the nave, north-south
+    rect(580, 180, 1000, 380, "the inner Vault"),        # the crowned head
+    rect(820, 320, 1120, 520, "the Long Vault"),         # E niche 1
+    rect(820, 600, 1120, 800, "Reading Cells"),          # E niche 2
+    rect(820, 880, 1120, 1080, "Vault of the First Decade"),  # E niche 3
+    rect(480, 320, 780, 520, "Spare Stores"),            # W niche 1
+    rect(480, 600, 780, 800, "the Refectory"),           # W niche 2
+    rect(480, 880, 780, 1080, "the ferry cells"),        # W niche 3
+]
 NW_STRUCTURES = [
-    {"x": 800, "y": 650, "building_type": "vigil_spire"},
-    *[{"x": x, "y": 586, "building_type": "pipeline_column"} for x in (540, 680, 920, 1060)],
-    *[{"x": x, "y": 714, "building_type": "pipeline_column"} for x in (540, 680, 920, 1060)],
-    {"x": 380, "y": 470, "building_type": "pipeline_bench"},
-    {"x": 300, "y": 900, "building_type": "crates"},
-    {"x": 1320, "y": 470, "building_type": "pipeline_bench"},
-    {"x": 1300, "y": 900, "building_type": "pipeline_bench"},
+    {"x": 800, "y": 270, "building_type": "vigil_spire"},   # at the crowned head
+    # the nave is kept deliberately bare - its bare vertical length is the point.
+    # benches and stores live in the side niches.
+    {"x": 540, "y": 760, "building_type": "pipeline_bench"},   # the Refectory
+    {"x": 1060, "y": 650, "building_type": "pipeline_bench"},  # Reading Cells
+    {"x": 540, "y": 380, "building_type": "crates"},           # Spare Stores
+    {"x": 540, "y": 930, "building_type": "crates"},           # the ferry cells
 ]
 NW_NPCS = [
-    {"name": "Keeper Aramis", "x": 800, "y": 660, "role": "concierge",
+    {"name": "Keeper Aramis", "x": 800, "y": 1000, "role": "concierge",
      "faction": "the_vigil", "outfit": "vigil_official_masc",
      "ambient": {"range": 720, "message": "You came to the Name-Wall. Few do, now. Walk over - there is something the Vigil records that you should carry with you."},
      "dialogue_tree": {"root": "start", "conditional_roots": [
@@ -330,7 +340,7 @@ NW_NPCS = [
         "pledged": {"text": "Then you speak for the dead at the Hub. Choose slowly.",
                     "options": [{"label": "I will", "next": None}]}}}},
 
-    {"name": "Warden of Names Vane", "x": 400, "y": 470, "role": "quartermaster",
+    {"name": "Warden of Names Vane", "x": 1000, "y": 420, "role": "quartermaster",
      "faction": "the_vigil", "outfit": "vigil_official_femme",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "vigil_read_first", "node": "read"}], "nodes": {
         "start": {"text": "The First Wall - the names of the first year. The accounts agree: the beacons did not fail. Every station logged the same order, the same hour - HOLD ALL TRAFFIC, NET DOWN BY INSTRUCTION. Someone sent that. Read it yourself.",
@@ -344,7 +354,7 @@ NW_NPCS = [
                  "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["archive_copies", "relief_supplies"], "sell_multiplier": 1.0}},
 
-    {"name": "Brother Sol", "x": 900, "y": 470, "role": "clerk",
+    {"name": "Brother Sol", "x": 1000, "y": 700, "role": "clerk",
      "faction": "the_vigil", "outfit": "vigil_dock_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "vigil_read_second", "node": "read"}], "nodes": {
         "start": {"text": "The Reading Cells. The middle-year accounts don't agree on why - and that's the honest part. Some wrote it was a quarantine: something came through the Relay and the net was cut to trap it. Some wrote it was the last act of a war nobody won. One hand, near the end, wrote only: it broke, and we made the silence mean something. Read all three.",
@@ -357,7 +367,7 @@ NW_NPCS = [
         "read": {"text": "You've read the middle years. The inner Vault is the last of it - Sister Edda will open the door for you now.",
                  "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Sister Edda", "x": 1300, "y": 470, "role": "magistrate",
+    {"name": "Sister Edda", "x": 720, "y": 300, "role": "magistrate",
      "faction": "the_vigil", "outfit": "vigil_official_femme",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "vigil_read_vault", "node": "read"}], "nodes": {
         "start": {"text": "The Vault of the First Decade. Not for everyone - but you have read the wall, so. Inside is what the First Decade sent toward the core, in case the beacons ever woke: a warning, and an instruction. It says - whatever you find at the Span, the choice was left deliberately to whoever arrived last. That is you. Read it, and I will tell the Keeper you are ready.",
@@ -370,39 +380,39 @@ NW_NPCS = [
         "read": {"text": "You have read the Vault. The Keeper is expecting you.",
                  "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Deck-warden Oren", "x": 640, "y": 700, "role": "guard",
+    {"name": "Deck-warden Oren", "x": 600, "y": 700, "role": "guard",
      "faction": "the_vigil", "outfit": "vigil_security_masc",
      "greeting": "The Vigil keeps a distance and asks the same of visitors. Stand off the graves and we will never speak again.",
      "dialogue_options": ["Understood", "Leave"]},
 
-    {"name": "Quiet-warden Pell", "x": 960, "y": 700, "role": "outfitter",
+    {"name": "Quiet-warden Pell", "x": 1000, "y": 980, "role": "outfitter",
      "faction": "the_vigil", "outfit": "vigil_security_femme",
      "greeting": "We arm the grave-watch, nothing more. But a light-lance keeps a raider at a distance without a shot, and the Vigil approves of distance.",
      "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "reinforced_hull", "afterburner", "cargo_expansion", "shield_capacitor", "sensor_array"]}},
 
-    {"name": "Ferry-keeper Nis", "x": 1240, "y": 700, "role": "ship_salesman",
+    {"name": "Ferry-keeper Nis", "x": 600, "y": 980, "role": "ship_salesman",
      "faction": "the_vigil", "outfit": "vigil_official_masc",
      "greeting": "We keep a few stele hulls and one reliquary barge. Slow. Quiet. They carry what should be carried gently.",
      "shop": {"type": "ships", "stock": ["vigil_courier", "carrier_courier", "vigil_hauler"]}},
 
-    {"name": "the Vigil-Master", "x": 800, "y": 720, "role": "resident",
+    {"name": "the Vigil-Master", "x": 800, "y": 620, "role": "resident",
      "faction": "the_vigil", "outfit": "vigil_official_femme",
      "greeting": "Three hundred of us keep this system. When the last of us is written on the wall, someone else will have to decide who keeps the wall. I hope the Relay does not answer that for us.",
      "dialogue_options": ["I understand", "Leave"]},
 
-    {"name": "Sister of the Vigil", "x": 300, "y": 900, "role": "resident",
+    {"name": "Sister of the Vigil", "x": 600, "y": 420, "role": "resident",
      "faction": "the_vigil", "outfit": "vigil_civilian_femme",
      "greeting": "It's quiet here. We prefer it. The quiet is the point - it's the shape the grief settled into.",
      "dialogue_options": ["I see", "Leave"]},
 
-    {"name": "Authority envoy", "x": 1300, "y": 900, "role": "traveler",
+    {"name": "Authority envoy", "x": 800, "y": 1090, "role": "traveler",
      "faction": "harbor_authority", "outfit": "authority_official_femme",
      "requires_flag": "act_span",
      "greeting": "The Authority sent me to secure the archive before the Span decides anything. The Vigil won't speak to me. Perhaps they'll speak to you - tell them we only want it preserved.",
      "dialogue_options": ["I'll pass that on", "Leave"]},
 ]
 NW_INTERIOR = {"label": "the Name-Wall", "culture": "the_vigil",
-               "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
+               "portals": [{"x": 800, "y": 1140, "connected_locations": [], "return_to_ship": True}],
                "rooms": NW_ROOMS, "structures": NW_STRUCTURES, "npcs": NW_NPCS,
                **station_shell(PFX, 204)}
 

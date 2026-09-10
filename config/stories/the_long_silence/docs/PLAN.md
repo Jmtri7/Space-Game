@@ -196,35 +196,35 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 - [x] **`authority_{hall,housing,spire}`** — elevation buildings: colonnaded civic hall, ranked-window housing slab, three-tier control spire with a scan-lamp. Footprints updated.
 - [x] `authority_dress` palette tuned to pressed navy + chrome.
 - [x] **Bespoke Authority wardrobe** — five identity articles (`authority_chevron_tab` — the throat guidance chevron every kit carries; `authority_shoulder_boards` — squared chrome; `authority_service_cap` — peaked, chevron badge; `authority_brassard` — warden's arm band; `authority_duty_belt` — chevron buckle) + five culture `sets/authority_{command,security,dock,flight,civilian}.json` combining them with navy-recoloured base garments. The ten `authority_*` outfit entries now point at these sets (body still picks the masc/femme cut). Articles are free-drawn (no body fitting) — a fitting/tailoring pass is a later polish.
-- [x] **Hub Control floor plan** — a west-east Approach Concourse spine with five overlapping bays (Records Hall, Control Gallery, The Berth, Lender's Office, Quartermaster's Dock), a central `authority_spire` landmark, ranked colonnade, `deck_grid` floor. Fully walkable; all NPCs reachable from the dock.
+- [x] **Hub Control floor plan** — a rectilinear cross after the station exterior: a central Control Rotunda with the `authority_spire` signal mast at its heart and four ranked arms (Control Gallery N, Lender's Office S, Records Hall W, The Berth E — ship portal), ranked N/S colonnades, `deck_grid` floor. Fully walkable; all NPCs reachable from the dock. *(Reshaped from the shared concourse spine — see §6.6a.)*
 - [x] **Full NPC roster** (11, one flag-gated): Induction Officer Sella, Controller Vane, Signal Officer Doss (loan), Harbor-Master Crane (ships), Approach Warden Lund (outfits), Quartermaster Ellin (commodities), Deck-hand Rusk, Barkeep Ottre, Records Keeper Amsel, Deck Mechanic Prit, Displaced traveller (`requires_flag: beacon_verdance_lit`). Real dialogue trees on the key ones (Vane's `patron:` pledge, Amsel's shutdown-record hint, Ottre's faction gossip). Moon "Watch Station" gets 3 more.
 - [x] **Anchor tutorial — "Harbor Authority Induction"** (`missions.json`, 12 stages): walk / target / talk / mission-log / possessions → loan → ship → board → turn / thrust / brake → **jump to Kiln** (`jumped_to:kiln`, a new generic gameplay-event flag). Started by Sella's dialogue (her `ambient` line prompts a new pilot); `on_start_flags` lights Kiln's beacon; Vane has a fallback for players who skip it.
 - [x] **Halcyon pilots** — `ackley` (Controller Ackley, patrol), `pell` (Approach Officer Pell, courier), `lund` (Freight-Warden Lund), `voss` (Hauler Voss, relief), `rell` (Rell, free carrier) fleshed out in `pilots.json` with personality + hail lines; `halcyon.json` now flies five AI ships (2 patrol/courier, 2 hauler, 1 carrier). Other systems keep the Phase 3/4 scaffold roster until their slice.
 
 ### 6.2 — Kiln / Ninefold Combine  ✅ done — `docs/gen/gen_kiln.py`
 - [x] Combine ships (heavy iron ingots), the blast-hub "Combine Hold" station, mine-moon, 3 blast-block buildings — all authored design JSON.
-- [x] Combine Hold floor plan (concourse + Contract Hall / Assay Office / Ledger Dock / Ration Store / Cutters' Rest), 10-NPC roster + Shaft VII headworks roster, hail dialogue.
+- [x] Combine Hold floor plan (octagonal drum "The Hold" with the ember `combine_spire` ringed by vault columns, two opposed blast-door claws — the Ledger Dock E with the ship portal, the Ration Store W — and Cutters' Rest off the ration side; "two is enough"), 10-NPC roster + Shaft VII headworks roster, hail dialogue. *(Reshaped — see §6.6a.)*
 - [x] **Combine wardrobe** — `combine_{ration_plate,blast_pauldrons,hazard_bib,contract_seal,deep_hood}` + 5 `sets/combine_*.json` (command / security / dock / flight / civilian). The ration plate is the identity mark every kit carries.
 - [x] Anchor mission **"combine_contract"** (6 stages, hostile-leaning — sign a contract, carry a sealed manifest to Shaft VII and back; `on_end_flags` lights Verdance). Factor Tol's threat branch → -45 rep.
 - [x] Combine pilots (tolvic / raska / corran / molt); 4 AI ships in-system.
 
 ### 6.3 — Verdance / the Drift  ✅ done — `docs/gen/gen_verdance.py`
 - [x] Drift ships (rounded pod hulls), the "Highcanopy" leaf-ring station, cloud-moon, 3 planted buildings — authored design JSON.
-- [x] Highcanopy floor plan (Canopy Walk + Rolling Assembly / Seed Store / Ferry Slip / Water Office / Canopy Rest), 9-NPC roster + Undergarden roster, dialogue.
+- [x] Highcanopy floor plan (a six-pod wreath after the station exterior: a circular Canopy Walk around the `drift_spire` grow-core and its planter ring, six pod-rooms budding off the rim at 60° — the Rolling Assembly, Seed Store, Ferry Slip w/ portal, Water Office, Canopy Rest, Under-ring — no axis, no head of the room), 9-NPC roster + Undergarden roster, dialogue. *(Reshaped — see §6.6a.)*
 - [x] **Drift wardrobe** — `drift_{speaker_sash,leaf_mantle,grower_apron,woven_collar,militia_band}` + 5 `sets/drift_*.json`. Security is just the militia band over civilian dress (no uniform).
 - [x] Anchor mission **"the_drift_assembly"** (4 stages, welcoming — gather three neighbours' views in person to force a vote; `on_end_flags` lights Ossuary + `act_pressure`).
 - [x] Drift pilots (sella / nim / ost); 3 AI ships + the conditional Combine raider.
 
 ### 6.4 — Ossuary / the Vigil  ✅ done — `docs/gen/gen_ossuary.py`
 - [x] Vigil ships (narrow vertical spears), the "Name-Wall" monolith station, grave-moon, 3 austere name-wall buildings — authored design JSON.
-- [x] the Name-Wall floor plan (the Long Vigil + Long Vault / Reading Cells / Vault of the First Decade / Spare Stores / Refectory), 10-NPC roster + grave-yard roster.
+- [x] the Name-Wall floor plan (the monolith stood on end: one long north-south nave "the Long Vigil" — the only station in the story that doesn't run east-west — the crowned inner Vault at the head, three reading-niches off each side matching the exterior's docking notches: Long Vault / Reading Cells / Vault of the First Decade E, Spare Stores / Refectory / ferry cells W; the nave kept deliberately bare), 10-NPC roster + grave-yard roster. *(Reshaped — see §6.6a.)*
 - [x] **Vigil wardrobe** — `vigil_{mourning_stole,name_pendant,keeper_cowl,ash_sash,grave_apron}` + 5 `sets/vigil_*.json`. The stole + name-pendant are worn by every member, every day.
 - [x] Anchor mission **"the_vigil_record"** (4 stages — read three sections of the wall + the inner Vault; the reason for the Silence stays a deliberate dialogue reveal (quarantine / scorched-earth / accident); `on_end_flags` lights the Span + `act_span`).
 - [x] Vigil pilots (vane_watch / oskal / aen); 3 AI ships.
 
 ### 6.5 — The Span / the Wardens (Act I stub)  ✅ done — `docs/gen/gen_span.py`
 - [x] Warden exterior/interior art authored: monumental smooth alloy hulls + teal core + hand-bolted salvage; "Hub Zero" broken-ring-arc station; ring-segment moon; 3 monumental arch buildings.
-- [x] Minimal Hub Zero interior (5 rooms, 4 NPCs) carrying the **ending fork** (First Warden — restore / sever / hold-the-middle, each with a confirm step).
+- [x] Minimal Hub Zero interior carrying the **ending fork** (First Warden — restore / sever / hold-the-middle, each with a confirm step). Floor plan reshaped after the exterior (see §6.6a): a broken five-segment Approach Span open at both termini (one is the ship portal), the round Core Choir chamber cradled above its low middle on three column-spokes with the `warden_spire` core at its head, and the Wardens' patched habitats — the Signal-Tender's post, the Hub Archive, Segment Four watch — clinging to the arc's outer edge.
 - [x] System stays **`locked` / `beacon_the_span_lit`** through Act I (star map "NO SIGNAL"); opens mid-Act II via `act_span` + standing.
 - [x] Warden bespoke wardrobe **deferred to Act II** (the `warden_*` outfits stay a tuned `warden_dress` recolour); Warden pilots (segment_warden / threa) fleshed.
 
@@ -232,6 +232,27 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 - [x] Three patchwork carrier ship designs (`carrier_{courier,hauler,patrol}` — welded mismatched modules, cargo lashing, hand-painted name); light patched-depot buildings.
 - [x] **Carrier wardrobe** — `carrier_{patch_vest,lash_belt,name_tag,deck_bib,run_band}` + 5 `sets/carrier_*.json`. Patchwork by design — the one wardrobe meant to read as scavenged across cultures.
 - [x] A `free_carrier` AI ship + a berth NPC + berth dressing dropped into **every** system's station interior (idempotent, keyed by name); carrier pilot roster fleshed (rell/Ferro, ash, dume, sable).
+
+### 6.6a — Per-culture station floor plans  ✅ done — in each `gen_<system>.py`
+The five station concourses were all the same shape (a shared west-east
+`_slice_kit.concourse_plan` spine + five bays). Each is now a bespoke plan
+shaped after that station's **exterior silhouette** + culture theme, authored
+in its own slice script (`*_ROOMS` / `*_STRUCTURES` + repositioned NPC coords
++ the ship portal). New `_slice_kit` shaping helpers: `disc`, `octagon`,
+`polar`. `gen_carriers.BERTH_SPOT` places the carrier berth NPC + crate inside
+each new plan. `concourse_plan` / `BAY_N` / `BAY_S` are retained for
+scaffolding but no longer used by a finished station.
+
+| Station | Exterior | Floor plan |
+|---|---|---|
+| Hub Control (Authority) | rectilinear cross + mast | Control Rotunda + four ranked arms (N/S/E/W), spire-mast at the centre |
+| Combine Hold (Combine) | octagonal drum + two claws | octagonal vault ringed by columns, one blast-door claw E (portal) + one W, Cutters' Rest off the ration side |
+| Highcanopy (Drift) | rounded ring + six pods | circular Canopy Walk around a grow-core, six pod-rooms off the rim at 60° |
+| the Name-Wall (Vigil) | tall monolith, notches down each side | one long **vertical** nave, crowned head, three niches each side |
+| Hub Zero (Wardens) | broken ring-arc + core | five-segment arc open at both termini, round Core Choir cradled above on column-spokes, habitats in the margins |
+
+Guarded by `tests/test_location_screen.py::TestLongSilenceStationLayouts`
+(every NPC on the walkable area; a pilot can path from the ship portal to each).
 
 ### 6.x — remaining polish (not blocking Act II; do opportunistically)
 First-pass content is complete and plays end to end; these are quality passes:

@@ -467,33 +467,37 @@ def rect(x0, y0, x1, y1, label):
     return {"label": label, "polygon": [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]}
 
 
-# One connected walkable area: a long central concourse (spine) with five
-# bays. Each bay overlaps the concourse by ~30 u so the walkable union is
-# genuinely connected (no zero-width seams for the nav grid to miss).
+# Hub Control's exterior (graphics/stations/authority_station.json) is a
+# rectilinear cross: a squared central control block, four straight docking
+# arms, a signal mast. The floor plan is that plus - a central Control
+# Rotunda with the mast at its heart and four ranked arms radiating N/S/E/W,
+# each arm overlapping the core by ~60 u so the walkable union is one space.
+# Symmetrical and over-ranked, per the Harbor Authority theme.
 HUB_ROOMS = [
-    rect(120, 560, 1480, 740, "Approach Concourse"),   # spine, west-east
-    rect(240, 360, 560, 590, "Records Hall"),           # NW  (bar + records)
-    rect(760, 360, 1040, 590, "Control Gallery"),       # N   (stationmaster)
-    rect(1180, 360, 1480, 590, "The Berth"),            # NE  (ship dealer + outfitter)
-    rect(120, 710, 440, 980, "Lender's Office"),        # SW  (loan)
-    rect(1160, 710, 1480, 980, "Quartermaster's Dock"), # SE  (commodities + dock crew)
+    rect(620, 520, 980, 880, "Control Rotunda"),   # central control block
+    rect(670, 210, 930, 580, "Control Gallery"),    # N arm  (stationmaster)
+    rect(670, 820, 930, 1190, "Lender's Office"),   # S arm  (loan)
+    rect(180, 570, 680, 830, "Records Hall"),       # W arm  (bar + records)
+    rect(920, 570, 1420, 830, "The Berth"),         # E arm  (ship dealer + outfitter + dock, ship portal)
 ]
 
 HUB_STRUCTURES = [
-    {"x": 800, "y": 650, "building_type": "authority_spire"},   # the landmark, mid-concourse
-    # ranked colonnade down both edges of the concourse (footprints hug the walls)
-    *[{"x": x, "y": 582, "building_type": "pipeline_column"} for x in (560, 700, 900, 1040)],
-    *[{"x": x, "y": 718, "building_type": "pipeline_column"} for x in (560, 700, 900, 1040)],
-    {"x": 640, "y": 700, "building_type": "pipeline_bench"},
-    {"x": 980, "y": 700, "building_type": "pipeline_bench"},
-    {"x": 400, "y": 400, "building_type": "pipeline_bench"},     # Records Hall
-    {"x": 300, "y": 940, "building_type": "pipeline_bench"},     # Lender's Office
-    {"x": 1420, "y": 940, "building_type": "crates"},            # Quartermaster's Dock, clear of the dock portal
-    {"x": 900, "y": 400, "building_type": "crates"},             # Control Gallery
+    {"x": 800, "y": 700, "building_type": "authority_spire"},   # the signal mast, dead centre
+    # ranked colonnades down the N and S approach arms (footprints hug the walls)
+    *[{"x": x, "y": y, "building_type": "pipeline_column"}
+      for x in (700, 900) for y in (270, 370, 470)],
+    *[{"x": x, "y": y, "building_type": "pipeline_column"}
+      for x in (700, 900) for y in (930, 1030, 1130)],
+    {"x": 700, "y": 760, "building_type": "pipeline_bench"},     # rotunda
+    {"x": 900, "y": 760, "building_type": "pipeline_bench"},
+    {"x": 420, "y": 800, "building_type": "pipeline_bench"},     # Records Hall
+    {"x": 1180, "y": 800, "building_type": "pipeline_bench"},    # The Berth
+    {"x": 220, "y": 600, "building_type": "crates"},             # Records Hall corner
+    {"x": 860, "y": 1160, "building_type": "crates"},            # Lender's Office corner
 ]
 
 HUB_NPCS = [
-    {"name": "Induction Officer Sella", "x": 780, "y": 660, "role": "concierge",
+    {"name": "Induction Officer Sella", "x": 800, "y": 600, "role": "concierge",
      "faction": "harbor_authority", "outfit": "authority_official_femme",
      "escort_flag": "induction_escorting",
      "ambient": {"range": 700, "message": "New pilot on the ring? I run inductions - walk over (WASD / arrows) and press T when you reach me."},
@@ -515,7 +519,7 @@ HUB_NPCS = [
         "done": {"text": "Back on the ring? The Authority remembers a clean induction. Safe flying, pilot.",
                  "options": [{"label": "Just passing through", "next": None}]}}}},
 
-    {"name": "Controller Vane", "x": 850, "y": 460, "role": "stationmaster",
+    {"name": "Controller Vane", "x": 800, "y": 340, "role": "stationmaster",
      "faction": "harbor_authority", "outfit": "authority_official_femme",
      "dialogue_tree": {"root": "start", "conditional_roots": [
          {"faction": "harbor_authority", "min": 25, "node": "warm"}],
@@ -540,7 +544,7 @@ HUB_NPCS = [
         "pledged": {"text": "Logged, and remembered. You answer for the Authority at the Span.",
                     "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Signal Officer Doss", "x": 280, "y": 860, "role": "loan_officer",
+    {"name": "Signal Officer Doss", "x": 800, "y": 1040, "role": "loan_officer",
      "faction": "harbor_authority", "outfit": "authority_official_masc",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "Authority underwrites a starter loan for any pilot flying our beacons - 12,000 credits, enough for a hull and a little fitting-out. Interest is the reports you file.",
@@ -550,28 +554,28 @@ HUB_NPCS = [
         "loaned": {"text": "Approved. The beacons are our ledger now - don't make us come find you.",
                    "options": [{"label": "Thanks", "next": None}]}}}},
 
-    {"name": "Harbor-Master Crane", "x": 1300, "y": 430, "role": "ship_salesman",
+    {"name": "Harbor-Master Crane", "x": 1120, "y": 660, "role": "ship_salesman",
      "faction": "harbor_authority", "outfit": "authority_official_femme",
      "greeting": "The Berth. Independent hulls, mostly - carriers who couldn't pay their approach fees, cleared for sale. Take your pick.",
      "shop": {"type": "ships", "stock": ["carrier_courier", "authority_courier", "authority_hauler", "carrier_hauler", "authority_patrol"]}},
 
-    {"name": "Approach Warden Lund", "x": 1400, "y": 470, "role": "outfitter",
+    {"name": "Approach Warden Lund", "x": 1300, "y": 660, "role": "outfitter",
      "faction": "harbor_authority", "outfit": "authority_security_masc",
      "greeting": "Fitting out? Standard-issue only, but every piece is rated and logged.",
      "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull", "shield_capacitor", "sensor_array"]}},
 
-    {"name": "Quartermaster Ellin", "x": 1300, "y": 880, "role": "quartermaster",
+    {"name": "Quartermaster Ellin", "x": 1120, "y": 780, "role": "quartermaster",
      "faction": "harbor_authority", "outfit": "authority_dock_femme",
      "greeting": "Bring me goods off the outer beacons and I'll pay Hub rates. Relief supplies and salvage move fastest right now.",
      "shop": {"type": "commodities", "stock": ["relief_supplies", "salvage"], "sell_multiplier": 1.2}},
 
-    {"name": "Deck-hand Rusk", "x": 1240, "y": 900, "role": "dockworker",
+    {"name": "Deck-hand Rusk", "x": 1240, "y": 780, "role": "dockworker",
      "faction": "harbor_authority", "outfit": "authority_dock_masc",
      "ambient": {"range": 380, "message": "Mind the clamps on pad three - that gantry swings wide when a hull comes in."},
      "greeting": "Busiest I've seen the Berth in my life. Everyone wants out before the lanes fill up.",
      "dialogue_options": ["Understood", "Leave"]},
 
-    {"name": "Barkeep Ottre", "x": 460, "y": 460, "role": "bartender",
+    {"name": "Barkeep Ottre", "x": 320, "y": 690, "role": "bartender",
      "faction": "harbor_authority", "outfit": "authority_civilian_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "hub_bar_regular", "node": "regular"}], "nodes": {
         "start": {"text": "Records Hall bar. What'll it be?",
@@ -588,7 +592,7 @@ HUB_NPCS = [
         "gossip": {"text": "Combine's furious - says the beacon voids two centuries of contracts. The Vigil out at Ossuary say we shouldn't be lighting anything at all. And every carrier on the ring is drinking like the good years are over.",
                    "options": [{"label": "Noted", "next": None}]}}}},
 
-    {"name": "Records Keeper Amsel", "x": 300, "y": 470, "role": "clerk",
+    {"name": "Records Keeper Amsel", "x": 480, "y": 650, "role": "clerk",
      "faction": "harbor_authority", "outfit": "authority_official_masc",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "I keep the approach records - two hundred years of them, unbroken. It's why the Authority can run the lanes and no one else can.",
@@ -598,13 +602,13 @@ HUB_NPCS = [
         "old": {"text": "The last clean entries before the Silence. Then a single line, every station, same hour: BEACON NET DOWN - HOLD ALL TRAFFIC. No cause logged. The Vigil think they know why. I only know we obeyed it for two centuries.",
                 "options": [{"label": "Unsettling", "next": None}]}}}},
 
-    {"name": "Displaced traveller", "x": 620, "y": 700, "role": "traveler",
+    {"name": "Displaced traveller", "x": 560, "y": 760, "role": "traveler",
      "faction": "free_carrier", "outfit": "carrier_civilian_femme",
      "requires_flag": "beacon_verdance_lit",
      "greeting": "Came in on the new lane from Verdance. Half the ring's doing the same. Nobody planned for this.",
      "dialogue_options": ["Safe travels", "Leave"]},
 
-    {"name": "Deck Mechanic Prit", "x": 900, "y": 620, "role": "traveler",
+    {"name": "Deck Mechanic Prit", "x": 880, "y": 640, "role": "traveler",
      "faction": "harbor_authority", "outfit": "authority_dock_femme",
      "greeting": "If your hull rattles on the way out, that's me you come back to. I'll be here. Everyone comes back.",
      "dialogue_options": ["Good to know", "Leave"]},
@@ -612,7 +616,7 @@ HUB_NPCS = [
 
 HUB_INTERIOR = {
     "label": "Hub Control", "culture": "harbor_authority",
-    "portals": [{"x": 1360, "y": 465, "connected_locations": [], "return_to_ship": True}],
+    "portals": [{"x": 1360, "y": 700, "connected_locations": [], "return_to_ship": True}],
     "rooms": HUB_ROOMS,
     "structures": HUB_STRUCTURES,
     "npcs": HUB_NPCS,

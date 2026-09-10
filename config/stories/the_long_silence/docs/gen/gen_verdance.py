@@ -11,7 +11,7 @@ trellised grow-light, growing things worked into the structure, pale
 timber-and-canvas over a green cast. Nothing load-bearing that could be woven.
 """
 import math
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, disc, polar,  say, station_shell,
                         article, region, write_wardrobe, sash_region,
                         apron_region, brassard_region)
 
@@ -294,24 +294,39 @@ w(f"{S}/graphics.json", gfx)
 # ======================================================================
 # 5. HIGHCANOPY floor plan + roster
 # ======================================================================
-HC_ROOMS = concourse_plan("Canopy Walk", [
-    BAY_N(240, 620, "The Rolling Assembly"),
-    BAY_N(820, 1100, "Seed Store"),
-    BAY_N(1200, 1480, "Ferry Slip"),
-    BAY_S(160, 480, "Water Office"),
-    BAY_S(1120, 1480, "Canopy Rest"),
-])
+# Highcanopy's exterior (graphics/stations/drift_station.json) is a soft
+# rounded ring hung with six teardrop habitat-pods and a grow-core at the
+# hub on three woven spokes. The floor plan is that wreath: a big circular
+# Canopy Walk with the grow-core garden at its centre and six pod-rooms
+# budding off the rim at 60 deg spacing - radial, no axis, no head of the
+# room, per the Drift's leaderless-consensus theme.
+_HUB = (800, 700)
+_POD = [  # (cx, cy, label) - six pods on a circle of radius 440 about the hub
+    (800, 260, "The Rolling Assembly"),   # N
+    (1181, 480, "Ferry Slip"),            # NE  (ship dealer + ship portal)
+    (1181, 920, "Canopy Rest"),           # SE  (bar)
+    (800, 1140, "Seed Store"),            # S
+    (419, 920, "Water Office"),           # SW  (commodities)
+    (419, 480, "Under-ring"),             # NW  (outfitter + residents)
+]
+HC_ROOMS = [
+    disc(*_HUB, 360, "Canopy Walk"),
+    disc(*_HUB, 190, "the grow-core"),
+    *[disc(cx, cy, 180, label) for cx, cy, label in _POD],
+]
+_PLANTER_RING = [  # six planters ringing the grow-core spire at r=150
+    (800, 550), (930, 625), (930, 775), (800, 850), (670, 775), (670, 625)]
 HC_STRUCTURES = [
-    {"x": 800, "y": 650, "building_type": "drift_spire"},
-    *[{"x": x, "y": 582, "building_type": "planter"} for x in (560, 700, 900, 1040)],
-    *[{"x": x, "y": 718, "building_type": "planter"} for x in (560, 700, 900, 1040)],
-    {"x": 400, "y": 470, "building_type": "pipeline_bench"},
-    {"x": 300, "y": 900, "building_type": "planter"},
-    {"x": 1320, "y": 470, "building_type": "crates"},
-    {"x": 1300, "y": 900, "building_type": "pipeline_bench"},
+    {"x": 800, "y": 700, "building_type": "drift_spire"},
+    *[{"x": x, "y": y, "building_type": "planter"} for x, y in _PLANTER_RING],
+    {"x": 800, "y": 170, "building_type": "planter"},     # Assembly pod
+    {"x": 419, "y": 360, "building_type": "planter"},     # Under-ring pod
+    {"x": 1181, "y": 1030, "building_type": "planter"},   # Canopy Rest pod
+    {"x": 300, "y": 980, "building_type": "pipeline_bench"},   # Water Office
+    {"x": 1150, "y": 990, "building_type": "pipeline_bench"},  # Canopy Rest
 ]
 HC_NPCS = [
-    {"name": "Sela of Highcanopy", "x": 800, "y": 660, "role": "concierge",
+    {"name": "Sela of Highcanopy", "x": 800, "y": 480, "role": "concierge",
      "faction": "the_drift", "outfit": "drift_official_femme",
      "escort_flag": "assembly_walking",
      "ambient": {"range": 700, "message": "Oh - a new face! Welcome in. There's nobody in charge exactly, but I speak for the assembly this week. Come say hello (walk over, press T)."},
@@ -343,7 +358,7 @@ HC_NPCS = [
         "pledged": {"text": "Then you speak for us at the Hub. Keep it open. Keep it everyone's.",
                     "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Ferry-wright Osei", "x": 1320, "y": 470, "role": "ship_salesman",
+    {"name": "Ferry-wright Osei", "x": 1181, "y": 500, "role": "ship_salesman",
      "faction": "the_drift", "outfit": "drift_official_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "assembly_view_osei", "node": "heard"}], "nodes": {
         "start": {"text": "We refit liners and barges, mostly - roomy, slow, kind to fly. You're carrying views to the assembly? Mine's simple: open the lane. Trade's been a decades-long loop my whole life. Let it be a day.",
@@ -357,7 +372,7 @@ HC_NPCS = [
                   "options": [{"label": "Show me the hulls", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "ships", "stock": ["drift_hauler", "drift_courier", "carrier_hauler", "carrier_courier"]}},
 
-    {"name": "Water-keeper Tam", "x": 300, "y": 470, "role": "quartermaster",
+    {"name": "Water-keeper Tam", "x": 419, "y": 920, "role": "quartermaster",
      "faction": "the_drift", "outfit": "drift_dock_femme",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "assembly_view_tam", "node": "heard"}], "nodes": {
         "start": {"text": "I keep the ring's water accounts. My view for the assembly? Caution. If we open the lane, Kiln's next through it, and they don't send traders. But I won't stand in the way of a vote.",
@@ -370,7 +385,7 @@ HC_NPCS = [
         "heard": {"text": "You have my view. Trade, if you need to.", "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["grain", "water_credits"], "sell_multiplier": 1.1}},
 
-    {"name": "Old Bevin", "x": 1300, "y": 900, "role": "bartender",
+    {"name": "Old Bevin", "x": 1181, "y": 920, "role": "bartender",
      "faction": "the_drift", "outfit": "drift_civilian_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "assembly_view_bevin", "node": "heard"}], "nodes": {
         "start": {"text": "Canopy Rest. I've watched the Drift not-decide things for sixty years. My view? Doesn't matter which way. What matters is we choose together and mean it. Tell the room that.",
@@ -383,34 +398,34 @@ HC_NPCS = [
         "heard": {"text": "Said my piece. Have a cup.", "options": [{"label": "Thanks", "next": "drink"}, {"label": "Leave", "next": None}]},
         "drink": {"text": "Highcanopy cordial. Grown three rings over. Sl? Cheers.", "options": [{"label": "Cheers", "next": None}]}}}},
 
-    {"name": "Seed-warden Nim", "x": 900, "y": 470, "role": "clerk",
+    {"name": "Seed-warden Nim", "x": 800, "y": 1140, "role": "clerk",
      "faction": "the_drift", "outfit": "drift_dock_masc",
      "greeting": "Every habitat sends a seed-share to the store, every habitat draws one back. It's worked for two hundred years without anyone in charge of it. That frightens the Authority more than any warship.",
      "dialogue_options": ["I can see why", "Leave"]},
 
-    {"name": "Canopy-warden Rue", "x": 640, "y": 700, "role": "guard",
+    {"name": "Canopy-warden Rue", "x": 620, "y": 560, "role": "guard",
      "faction": "the_drift", "outfit": "drift_security_femme",
      "greeting": "I've the watch this week. It's just walking the Walk and being someone to shout for. Next week it's someone else. That's the whole militia.",
      "dialogue_options": ["Understood", "Leave"]},
 
-    {"name": "Trellis-hand Fen", "x": 960, "y": 700, "role": "outfitter",
+    {"name": "Trellis-hand Fen", "x": 419, "y": 480, "role": "outfitter",
      "faction": "the_drift", "outfit": "drift_security_masc",
      "greeting": "We don't really make weapons. But the light-lances off the watchboats fit a civilian hull, and a hull that carries more grain is a hull worth more to everyone.",
      "shop": {"type": "outfits", "stock": ["pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull", "laser_cannon", "shield_capacitor", "sensor_array"]}},
 
-    {"name": "Under-ring traveller", "x": 400, "y": 700, "role": "resident",
+    {"name": "Under-ring traveller", "x": 480, "y": 560, "role": "resident",
      "faction": "the_drift", "outfit": "drift_civilian_femme",
      "greeting": "The beacon relit and half of us are thrilled and half are terrified. That's Verdance for you. We'll talk about it for a month.",
      "dialogue_options": ["Ha", "Leave"]},
 
-    {"name": "Carrier at the Slip", "x": 1240, "y": 700, "role": "traveler",
+    {"name": "Carrier at the Slip", "x": 1120, "y": 560, "role": "traveler",
      "faction": "free_carrier", "outfit": "carrier_flight_masc",
      "requires_flag": "beacon_ossuary_lit",
      "greeting": "Drift's the only system that just lets us tie up and rest. Carriers won't forget that when the Hub asks who to trust.",
      "dialogue_options": ["Fly safe", "Leave"]},
 ]
 HC_INTERIOR = {"label": "Highcanopy", "culture": "the_drift",
-               "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
+               "portals": [{"x": 1240, "y": 430, "connected_locations": [], "return_to_ship": True}],
                "rooms": HC_ROOMS, "structures": HC_STRUCTURES, "npcs": HC_NPCS,
                **station_shell(PFX, 203)}
 

@@ -68,51 +68,30 @@
         "portals": [
           {
             "x": 1360,
-            "y": 465,
+            "y": 700,
             "connected_locations": [],
             "return_to_ship": true
           }
         ],
         "rooms": [
           {
-            "label": "Approach Concourse",
+            "label": "Control Rotunda",
             "polygon": [
               [
-                120,
-                560
+                620,
+                520
               ],
               [
-                1480,
-                560
+                980,
+                520
               ],
               [
-                1480,
-                740
+                980,
+                880
               ],
               [
-                120,
-                740
-              ]
-            ]
-          },
-          {
-            "label": "Records Hall",
-            "polygon": [
-              [
-                240,
-                360
-              ],
-              [
-                560,
-                360
-              ],
-              [
-                560,
-                590
-              ],
-              [
-                240,
-                590
+                620,
+                880
               ]
             ]
           },
@@ -120,41 +99,20 @@
             "label": "Control Gallery",
             "polygon": [
               [
-                760,
-                360
+                670,
+                210
               ],
               [
-                1040,
-                360
+                930,
+                210
               ],
               [
-                1040,
-                590
+                930,
+                580
               ],
               [
-                760,
-                590
-              ]
-            ]
-          },
-          {
-            "label": "The Berth",
-            "polygon": [
-              [
-                1180,
-                360
-              ],
-              [
-                1480,
-                360
-              ],
-              [
-                1480,
-                590
-              ],
-              [
-                1180,
-                590
+                670,
+                580
               ]
             ]
           },
@@ -162,41 +120,62 @@
             "label": "Lender's Office",
             "polygon": [
               [
-                120,
-                710
+                670,
+                820
               ],
               [
-                440,
-                710
+                930,
+                820
               ],
               [
-                440,
-                980
+                930,
+                1190
               ],
               [
-                120,
-                980
+                670,
+                1190
               ]
             ]
           },
           {
-            "label": "Quartermaster's Dock",
+            "label": "Records Hall",
             "polygon": [
               [
-                1160,
-                710
+                180,
+                570
               ],
               [
-                1480,
-                710
+                680,
+                570
               ],
               [
-                1480,
-                980
+                680,
+                830
               ],
               [
-                1160,
-                980
+                180,
+                830
+              ]
+            ]
+          },
+          {
+            "label": "The Berth",
+            "polygon": [
+              [
+                920,
+                570
+              ],
+              [
+                1420,
+                570
+              ],
+              [
+                1420,
+                830
+              ],
+              [
+                920,
+                830
               ]
             ]
           }
@@ -204,90 +183,110 @@
         "structures": [
           {
             "x": 800,
-            "y": 650,
+            "y": 700,
             "building_type": "authority_spire"
           },
           {
-            "x": 560,
-            "y": 582,
+            "x": 700,
+            "y": 270,
             "building_type": "pipeline_column"
           },
           {
             "x": 700,
-            "y": 582,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 900,
-            "y": 582,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 1040,
-            "y": 582,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 560,
-            "y": 718,
+            "y": 370,
             "building_type": "pipeline_column"
           },
           {
             "x": 700,
-            "y": 718,
+            "y": 470,
             "building_type": "pipeline_column"
           },
           {
             "x": 900,
-            "y": 718,
+            "y": 270,
             "building_type": "pipeline_column"
           },
           {
-            "x": 1040,
-            "y": 718,
+            "x": 900,
+            "y": 370,
             "building_type": "pipeline_column"
           },
           {
-            "x": 640,
-            "y": 700,
+            "x": 900,
+            "y": 470,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 930,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 1030,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 1130,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 900,
+            "y": 930,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 900,
+            "y": 1030,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 900,
+            "y": 1130,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 700,
+            "y": 760,
             "building_type": "pipeline_bench"
+          },
+          {
+            "x": 900,
+            "y": 760,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 420,
+            "y": 800,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 1180,
+            "y": 800,
+            "building_type": "pipeline_bench"
+          },
+          {
+            "x": 220,
+            "y": 600,
+            "building_type": "crates"
+          },
+          {
+            "x": 860,
+            "y": 1160,
+            "building_type": "crates"
           },
           {
             "x": 980,
-            "y": 700,
-            "building_type": "pipeline_bench"
-          },
-          {
-            "x": 400,
-            "y": 400,
-            "building_type": "pipeline_bench"
-          },
-          {
-            "x": 300,
-            "y": 940,
-            "building_type": "pipeline_bench"
-          },
-          {
-            "x": 1420,
-            "y": 940,
-            "building_type": "crates"
-          },
-          {
-            "x": 900,
-            "y": 400,
-            "building_type": "crates"
-          },
-          {
-            "x": 1140,
-            "y": 690,
+            "y": 800,
             "building_type": "crates"
           }
         ],
         "npcs": [
           {
             "name": "Induction Officer Sella",
-            "x": 780,
-            "y": 660,
+            "x": 800,
+            "y": 600,
             "role": "concierge",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
@@ -372,8 +371,8 @@
           },
           {
             "name": "Controller Vane",
-            "x": 850,
-            "y": 460,
+            "x": 800,
+            "y": 340,
             "role": "stationmaster",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
@@ -459,8 +458,8 @@
           },
           {
             "name": "Signal Officer Doss",
-            "x": 280,
-            "y": 860,
+            "x": 800,
+            "y": 1040,
             "role": "loan_officer",
             "faction": "harbor_authority",
             "outfit": "authority_official_masc",
@@ -495,8 +494,8 @@
           },
           {
             "name": "Harbor-Master Crane",
-            "x": 1300,
-            "y": 430,
+            "x": 1120,
+            "y": 660,
             "role": "ship_salesman",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
@@ -514,8 +513,8 @@
           },
           {
             "name": "Approach Warden Lund",
-            "x": 1400,
-            "y": 470,
+            "x": 1300,
+            "y": 660,
             "role": "outfitter",
             "faction": "harbor_authority",
             "outfit": "authority_security_masc",
@@ -535,8 +534,8 @@
           },
           {
             "name": "Quartermaster Ellin",
-            "x": 1300,
-            "y": 880,
+            "x": 1120,
+            "y": 780,
             "role": "quartermaster",
             "faction": "harbor_authority",
             "outfit": "authority_dock_femme",
@@ -553,7 +552,7 @@
           {
             "name": "Deck-hand Rusk",
             "x": 1240,
-            "y": 900,
+            "y": 780,
             "role": "dockworker",
             "faction": "harbor_authority",
             "outfit": "authority_dock_masc",
@@ -569,8 +568,8 @@
           },
           {
             "name": "Barkeep Ottre",
-            "x": 460,
-            "y": 460,
+            "x": 320,
+            "y": 690,
             "role": "bartender",
             "faction": "harbor_authority",
             "outfit": "authority_civilian_masc",
@@ -654,8 +653,8 @@
           },
           {
             "name": "Records Keeper Amsel",
-            "x": 300,
-            "y": 470,
+            "x": 480,
+            "y": 650,
             "role": "clerk",
             "faction": "harbor_authority",
             "outfit": "authority_official_masc",
@@ -689,8 +688,8 @@
           },
           {
             "name": "Displaced traveller",
-            "x": 620,
-            "y": 700,
+            "x": 560,
+            "y": 760,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_civilian_femme",
@@ -703,8 +702,8 @@
           },
           {
             "name": "Deck Mechanic Prit",
-            "x": 900,
-            "y": 620,
+            "x": 880,
+            "y": 640,
             "role": "traveler",
             "faction": "harbor_authority",
             "outfit": "authority_dock_femme",
@@ -716,8 +715,8 @@
           },
           {
             "name": "Deckhand at the Slip",
-            "x": 1180,
-            "y": 700,
+            "x": 980,
+            "y": 620,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_flight_masc",

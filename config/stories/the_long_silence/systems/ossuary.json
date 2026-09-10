@@ -54,8 +54,8 @@
         "culture": "the_vigil",
         "portals": [
           {
-            "x": 1360,
-            "y": 470,
+            "x": 800,
+            "y": 1140,
             "connected_locations": [],
             "return_to_ship": true
           }
@@ -65,20 +65,41 @@
             "label": "the Long Vigil",
             "polygon": [
               [
-                120,
-                560
+                660,
+                200
               ],
               [
-                1480,
-                560
+                940,
+                200
               ],
               [
-                1480,
-                740
+                940,
+                1200
               ],
               [
-                120,
-                740
+                660,
+                1200
+              ]
+            ]
+          },
+          {
+            "label": "the inner Vault",
+            "polygon": [
+              [
+                580,
+                180
+              ],
+              [
+                1000,
+                180
+              ],
+              [
+                1000,
+                380
+              ],
+              [
+                580,
+                380
               ]
             ]
           },
@@ -86,20 +107,20 @@
             "label": "the Long Vault",
             "polygon": [
               [
-                240,
-                360
+                820,
+                320
               ],
               [
-                560,
-                360
+                1120,
+                320
               ],
               [
-                560,
-                590
+                1120,
+                520
               ],
               [
-                240,
-                590
+                820,
+                520
               ]
             ]
           },
@@ -107,20 +128,20 @@
             "label": "Reading Cells",
             "polygon": [
               [
-                760,
-                360
+                820,
+                600
               ],
               [
-                1040,
-                360
+                1120,
+                600
               ],
               [
-                1040,
-                590
+                1120,
+                800
               ],
               [
-                760,
-                590
+                820,
+                800
               ]
             ]
           },
@@ -128,20 +149,20 @@
             "label": "Vault of the First Decade",
             "polygon": [
               [
-                1180,
-                360
+                820,
+                880
               ],
               [
-                1480,
-                360
+                1120,
+                880
               ],
               [
-                1480,
-                590
+                1120,
+                1080
               ],
               [
-                1180,
-                590
+                820,
+                1080
               ]
             ]
           },
@@ -149,20 +170,20 @@
             "label": "Spare Stores",
             "polygon": [
               [
-                160,
-                710
+                480,
+                320
               ],
               [
-                460,
-                710
+                780,
+                320
               ],
               [
-                460,
-                980
+                780,
+                520
               ],
               [
-                160,
-                980
+                480,
+                520
               ]
             ]
           },
@@ -170,20 +191,41 @@
             "label": "the Refectory",
             "polygon": [
               [
-                1140,
-                710
+                480,
+                600
               ],
               [
-                1480,
-                710
+                780,
+                600
               ],
               [
-                1480,
-                980
+                780,
+                800
               ],
               [
-                1140,
-                980
+                480,
+                800
+              ]
+            ]
+          },
+          {
+            "label": "the ferry cells",
+            "polygon": [
+              [
+                480,
+                880
+              ],
+              [
+                780,
+                880
+              ],
+              [
+                780,
+                1080
+              ],
+              [
+                480,
+                1080
               ]
             ]
           }
@@ -191,72 +233,32 @@
         "structures": [
           {
             "x": 800,
-            "y": 650,
+            "y": 270,
             "building_type": "vigil_spire"
           },
           {
             "x": 540,
-            "y": 586,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 680,
-            "y": 586,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 920,
-            "y": 586,
-            "building_type": "pipeline_column"
+            "y": 760,
+            "building_type": "pipeline_bench"
           },
           {
             "x": 1060,
-            "y": 586,
-            "building_type": "pipeline_column"
+            "y": 650,
+            "building_type": "pipeline_bench"
           },
           {
             "x": 540,
-            "y": 714,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 680,
-            "y": 714,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 920,
-            "y": 714,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 1060,
-            "y": 714,
-            "building_type": "pipeline_column"
-          },
-          {
-            "x": 380,
-            "y": 470,
-            "building_type": "pipeline_bench"
-          },
-          {
-            "x": 300,
-            "y": 900,
+            "y": 380,
             "building_type": "crates"
           },
           {
-            "x": 1320,
-            "y": 470,
-            "building_type": "pipeline_bench"
+            "x": 540,
+            "y": 930,
+            "building_type": "crates"
           },
           {
-            "x": 1300,
-            "y": 900,
-            "building_type": "pipeline_bench"
-          },
-          {
-            "x": 1140,
-            "y": 690,
+            "x": 900,
+            "y": 1080,
             "building_type": "crates"
           }
         ],
@@ -264,7 +266,7 @@
           {
             "name": "Keeper Aramis",
             "x": 800,
-            "y": 660,
+            "y": 1000,
             "role": "concierge",
             "faction": "the_vigil",
             "outfit": "vigil_official_masc",
@@ -414,8 +416,8 @@
           },
           {
             "name": "Warden of Names Vane",
-            "x": 400,
-            "y": 470,
+            "x": 1000,
+            "y": 420,
             "role": "quartermaster",
             "faction": "the_vigil",
             "outfit": "vigil_official_femme",
@@ -483,8 +485,8 @@
           },
           {
             "name": "Brother Sol",
-            "x": 900,
-            "y": 470,
+            "x": 1000,
+            "y": 700,
             "role": "clerk",
             "faction": "the_vigil",
             "outfit": "vigil_dock_masc",
@@ -537,8 +539,8 @@
           },
           {
             "name": "Sister Edda",
-            "x": 1300,
-            "y": 470,
+            "x": 720,
+            "y": 300,
             "role": "magistrate",
             "faction": "the_vigil",
             "outfit": "vigil_official_femme",
@@ -592,7 +594,7 @@
           },
           {
             "name": "Deck-warden Oren",
-            "x": 640,
+            "x": 600,
             "y": 700,
             "role": "guard",
             "faction": "the_vigil",
@@ -605,8 +607,8 @@
           },
           {
             "name": "Quiet-warden Pell",
-            "x": 960,
-            "y": 700,
+            "x": 1000,
+            "y": 980,
             "role": "outfitter",
             "faction": "the_vigil",
             "outfit": "vigil_security_femme",
@@ -626,8 +628,8 @@
           },
           {
             "name": "Ferry-keeper Nis",
-            "x": 1240,
-            "y": 700,
+            "x": 600,
+            "y": 980,
             "role": "ship_salesman",
             "faction": "the_vigil",
             "outfit": "vigil_official_masc",
@@ -644,7 +646,7 @@
           {
             "name": "the Vigil-Master",
             "x": 800,
-            "y": 720,
+            "y": 620,
             "role": "resident",
             "faction": "the_vigil",
             "outfit": "vigil_official_femme",
@@ -656,8 +658,8 @@
           },
           {
             "name": "Sister of the Vigil",
-            "x": 300,
-            "y": 900,
+            "x": 600,
+            "y": 420,
             "role": "resident",
             "faction": "the_vigil",
             "outfit": "vigil_civilian_femme",
@@ -669,8 +671,8 @@
           },
           {
             "name": "Authority envoy",
-            "x": 1300,
-            "y": 900,
+            "x": 800,
+            "y": 1090,
             "role": "traveler",
             "faction": "harbor_authority",
             "outfit": "authority_official_femme",
@@ -683,8 +685,8 @@
           },
           {
             "name": "Carrier keeping distance",
-            "x": 1180,
-            "y": 700,
+            "x": 720,
+            "y": 1080,
             "role": "traveler",
             "faction": "free_carrier",
             "outfit": "carrier_flight_femme",

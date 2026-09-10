@@ -14,7 +14,7 @@ Combine style (cultures.json): heavy dark iron banded with ember-orange hazard
 light, blast doors, riveted seams, ration-stencil numerals, built for the deep
 mines. Odd counts and ornament are waste - everything is blunt, paired, stencilled.
 """
-from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, say, station_shell,
+from _slice_kit import (S, G, w, r, rect, concourse_plan, BAY_N, BAY_S, disc, octagon,  say, station_shell,
                         article, region, down_chevron, write_wardrobe,
                         numeral_plate_region, shoulder_slab_region, far_shoulder_slab_region,
                         bib_region, hip_seal_region, brassard_region, hood_region)
@@ -331,26 +331,33 @@ w(f"{S}/graphics.json", gfx)
 # ======================================================================
 # 5. COMBINE HOLD floor plan + roster
 # ======================================================================
-HOLD_ROOMS = concourse_plan("Hold Concourse", [
-    BAY_N(240, 560, "Contract Hall"),
-    BAY_N(760, 1040, "Assay Office"),
-    BAY_N(1180, 1480, "The Ledger Dock"),
-    BAY_S(160, 460, "Ration Store"),
-    BAY_S(1140, 1480, "Cutters' Rest"),
-])
+# Combine Hold's exterior (graphics/stations/combine_station.json) is a squat
+# octagonal drum with exactly two opposed stub docking claws - "two is
+# enough", odd counts are waste. The floor plan is that drum: one heavy
+# eight-sided vault with the ember core spire at its heart, a blast-door
+# claw east (the Ledger Dock, ship portal) and west (the Ration Store), and
+# Cutters' Rest tacked onto the ration side. Low, dark, riveted.
+HOLD_ROOMS = [
+    octagon(800, 690, 340, 0.42, "The Hold"),          # the drum
+    rect(1060, 590, 1440, 790, "The Ledger Dock"),      # east claw  (ship dealer + outfitter + portal)
+    rect(160, 590, 540, 820, "Ration Store"),           # west claw  (rationed trade)
+    rect(160, 720, 420, 1000, "Cutters' Rest"),         # off the ration side  (bar)
+]
 
+_RING = [  # eight vault columns ringing the ember spire, 45 deg apart at r=190
+    (990, 690), (934, 824), (800, 880), (666, 824),
+    (610, 690), (666, 556), (800, 500), (934, 556)]
 HOLD_STRUCTURES = [
-    {"x": 800, "y": 650, "building_type": "combine_spire"},
-    *[{"x": x, "y": 584, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
-    *[{"x": x, "y": 716, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
-    {"x": 360, "y": 470, "building_type": "crates"},
-    {"x": 300, "y": 900, "building_type": "crates"},
-    {"x": 1300, "y": 470, "building_type": "crates"},
-    {"x": 1300, "y": 900, "building_type": "pipeline_bench"},
+    {"x": 800, "y": 690, "building_type": "combine_spire"},
+    *[{"x": x, "y": y, "building_type": "pipeline_column"} for x, y in _RING],
+    {"x": 260, "y": 640, "building_type": "crates"},    # Ration Store
+    {"x": 260, "y": 760, "building_type": "crates"},
+    {"x": 300, "y": 920, "building_type": "crates"},    # Cutters' Rest
+    {"x": 1180, "y": 760, "building_type": "pipeline_bench"},   # Ledger Dock
 ]
 
 HOLD_NPCS = [
-    {"name": "Factor Tol", "x": 800, "y": 660, "role": "stationmaster",
+    {"name": "Factor Tol", "x": 800, "y": 450, "role": "stationmaster",
      "faction": "ninefold_combine", "outfit": "combine_official_masc",
      "ambient": {"range": 620, "message": "New hull on Combine ground. Nothing moves here without a contract - come to me before you trade a bolt."},
      "dialogue_tree": {"root": "start", "conditional_roots": [
@@ -385,7 +392,7 @@ HOLD_NPCS = [
         "pledged": {"text": "Sealed. You answer for the Combine at the Span - and the Combine wants the beacons dark.",
                     "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Warden of Contract Raik", "x": 470, "y": 470, "role": "guard",
+    {"name": "Warden of Contract Raik", "x": 620, "y": 500, "role": "guard",
      "faction": "ninefold_combine", "outfit": "combine_security_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [{"flag": "combine_witnessed", "node": "witnessed"}], "nodes": {
         "start": {"text": "I witness marks and I enforce them. You're signing the Shaft VII carriage? Put your hand on the seal-stone and I'll log it.",
@@ -398,7 +405,7 @@ HOLD_NPCS = [
         "witnessed": {"text": "Your mark's logged. Keep the seal whole.",
                       "options": [{"label": "Understood", "next": None}]}}}},
 
-    {"name": "Tallykeeper Vess", "x": 900, "y": 470, "role": "quartermaster",
+    {"name": "Tallykeeper Vess", "x": 980, "y": 500, "role": "quartermaster",
      "faction": "ninefold_combine", "outfit": "combine_dock_masc",
      "dialogue_tree": {"root": "start", "conditional_roots": [
          {"flag": "combine_manifest_taken", "node": "taken"}], "nodes": {
@@ -415,22 +422,22 @@ HOLD_NPCS = [
                               {"label": "Trade for supplies.", "action": "open_shop", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["alloy", "ore"], "sell_multiplier": 1.15}},
 
-    {"name": "Deck-chief Marn", "x": 1300, "y": 470, "role": "ship_salesman",
+    {"name": "Deck-chief Marn", "x": 1180, "y": 660, "role": "ship_salesman",
      "faction": "ninefold_combine", "outfit": "combine_official_femme",
      "greeting": "Combine hulls. Built heavy, priced by the contract, and they come back from the deep. What's your trade need?",
      "shop": {"type": "ships", "stock": ["combine_hauler", "combine_courier", "combine_patrol", "carrier_hauler"]}},
 
-    {"name": "Assay-clerk Dorn", "x": 900, "y": 540, "role": "clerk",
+    {"name": "Assay-clerk Dorn", "x": 1000, "y": 690, "role": "clerk",
      "faction": "ninefold_combine", "outfit": "combine_dock_femme",
      "greeting": "Every gram in, every gram out, weighed twice. The Combine survived two centuries on that habit. We're not about to stop for a beacon.",
      "dialogue_options": ["Fair enough", "Leave"]},
 
-    {"name": "Approach-Warden Sesk", "x": 1400, "y": 480, "role": "outfitter",
+    {"name": "Approach-Warden Sesk", "x": 1320, "y": 660, "role": "outfitter",
      "faction": "ninefold_combine", "outfit": "combine_security_femme",
      "greeting": "Combine-issue only, and rationed. Everything's rated for the shafts - it'll take worse than you can give it.",
      "shop": {"type": "outfits", "stock": ["pulse_blaster", "laser_cannon", "reinforced_hull", "cargo_expansion", "afterburner", "shield_capacitor", "sensor_array"]}},
 
-    {"name": "Cutter Sol", "x": 1300, "y": 900, "role": "bartender",
+    {"name": "Cutter Sol", "x": 280, "y": 890, "role": "bartender",
      "faction": "ninefold_combine", "outfit": "combine_civilian_masc",
      "dialogue_tree": {"root": "start", "nodes": {
         "start": {"text": "Cutters' Rest. Ration ale, one measure. What do you want?",
@@ -442,18 +449,18 @@ HOLD_NPCS = [
         "gossip": {"text": "The Factors held a closed vote last week. Nobody'll say on what. But the patrol crews are drilling boarding actions, and the assayers are counting hull-plate like we're going to need it.",
                    "options": [{"label": "Noted", "next": None}]}}}},
 
-    {"name": "Deep-hand Corr", "x": 300, "y": 900, "role": "resident",
+    {"name": "Deep-hand Corr", "x": 320, "y": 680, "role": "resident",
      "faction": "ninefold_combine", "outfit": "combine_civilian_femme",
      "greeting": "Air's metered by the shift down here. You get used to counting breaths. A beacon doesn't change what a lungful costs.",
      "dialogue_options": ["I see", "Leave"]},
 
-    {"name": "Rockjack Bsix", "x": 640, "y": 700, "role": "dockworker",
+    {"name": "Rockjack Bsix", "x": 660, "y": 880, "role": "dockworker",
      "faction": "ninefold_combine", "outfit": "combine_dock_masc",
      "ambient": {"range": 360, "message": "Mind the claw arm - it swings on the ember light, not before it."},
      "greeting": "Thirty years cutting the Ninefold Deep. The Combine fed me every one of them. I know what I owe.",
      "dialogue_options": ["Understood", "Leave"]},
 
-    {"name": "Stranded carrier", "x": 980, "y": 700, "role": "traveler",
+    {"name": "Stranded carrier", "x": 430, "y": 730, "role": "traveler",
      "faction": "free_carrier", "outfit": "carrier_civilian_femme",
      "requires_flag": "beacon_ossuary_lit",
      "greeting": "Combine impounded my hold for an unpaid approach fee I didn't know I owed. Two centuries they set their own rules. Now the beacon's back and they still do.",
@@ -461,7 +468,7 @@ HOLD_NPCS = [
 ]
 
 HOLD_INTERIOR = {"label": "Combine Hold", "culture": "ninefold_combine",
-                 "portals": [{"x": 1360, "y": 470, "connected_locations": [], "return_to_ship": True}],
+                 "portals": [{"x": 1380, "y": 690, "connected_locations": [], "return_to_ship": True}],
                  "rooms": HOLD_ROOMS, "structures": HOLD_STRUCTURES, "npcs": HOLD_NPCS,
                  **station_shell(PFX, 202)}
 
