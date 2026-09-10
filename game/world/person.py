@@ -348,6 +348,14 @@ class Person:
         if spr is not None:
             surface.blit(spr, (round(bx + ox), round(by + oy)))
 
+    # Supersample factor for the idle sprite in gfxdraw AA mode (see
+    # _build_idle_sprite). gfxdraw's own aapolygon can't be used here - on a
+    # transparent (SRCALPHA) surface its feathered edge blends toward
+    # transparent black, baking a dark rim onto every part that then shows
+    # when the sprite is blitted. Drawing plain polygons oversized and
+    # smoothscaling down gives a clean antialiased silhouette with no rim.
+    _IDLE_SPRITE_SS = 3
+
     def _build_idle_sprite(self, rest, scale, f):
         """Rasterise the rest-pose parts once into an SRCALPHA surface, in
         pixels relative to the foot position. Returns (surface, off_x, off_y)
@@ -369,13 +377,18 @@ class Person:
             polys.append((col, sp))
         if not polys:
             return (None, 0, 0)
-        pad = 2  # covers the gfxdraw AA outline that laps ~1px past the fill
+        pad = 1
         minx -= pad; miny -= pad; maxx += pad; maxy += pad
         w = max(1, int(math.ceil(maxx - minx)))
         h = max(1, int(math.ceil(maxy - miny)))
-        spr = pygame.Surface((w, h), pygame.SRCALPHA)
+        # gfxdraw mode: draw plain polygons at SxS and smoothscale down for a
+        # clean AA edge. off / supersample modes draw plain at 1x, exactly as
+        # aa_draw.polygon falls through to for them anyway.
+        ss = self._IDLE_SPRITE_SS if aa._gfx_active() else 1
+        big = pygame.Surface((w * ss, h * ss), pygame.SRCALPHA)
         for col, sp in polys:
-            aa.polygon(spr, col, [(x - minx, y - miny) for x, y in sp])
+            pygame.draw.polygon(big, col, [((x - minx) * ss, (y - miny) * ss) for x, y in sp])
+        spr = pygame.transform.smoothscale(big, (w, h)) if ss > 1 else big
         return (spr, minx, miny)
 
     def equip_article(self, article_name):

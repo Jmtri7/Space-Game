@@ -643,7 +643,10 @@ internally so the look is unchanged. A **standing** figure (walk intensity
 ~0) skips the ~90-polygon fill entirely: `_blit_idle_body` rasterises its
 rest pose once to an SRCALPHA sprite (one-entry cache keyed by view
 scale / facing / AA mode / pose identity — rebuilt only on a zoom or a
-turn) and blits that. This is what keeps a crowded interior (Hub Control:
+turn) and blits that. In `gfxdraw` AA mode the sprite is drawn oversized
+with plain polygons and `smoothscale`d down — `gfxdraw`'s own `aapolygon`
+feathers toward transparent black on an alpha surface, baking a dark rim
+onto each part. This is what keeps a crowded interior (Hub Control:
 ~11 NPCs, mostly idle) inside the frame budget at min zoom, where nothing
 culls.
 
