@@ -212,7 +212,7 @@
   </div>
 
   <div id="secPanelSec">
-  <h2>Sections</h2>
+  <h2 id="secListH2">Sections</h2>
   <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
   <div id="secList"></div>
 
@@ -973,6 +973,8 @@ if(TAILOR_MODE){ document.getElementById('pAddR').style.display = '';
   // it down past Preview look so the region's own look controls sit next to the
   // section editor. (It already renders below Selected section in every mode.)
   document.getElementById('lookPreviewSec').after(document.getElementById('polyPanelSec')); }
+// plain body edit: the "Sections" panel is the list of body parts - call it that
+if(!TAILOR_MODE && !FACE_MODE && !OUTFIT_MODE) document.getElementById('secListH2').textContent = 'Body Parts';
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
 let previewArticles = [];    // TAILOR_MODE: [{name, design}] other articles drawn on the figure, reference-only
@@ -2518,11 +2520,12 @@ svg.addEventListener('pointerdown', e=>{
       if(arr && arr.length>3){ pushHistory(); arr.splice(i,1); adjustFitsForSplice(sec, key, i, 1, 0); sel.delete(id); sync(); }
       return;
     }
-    if(e.shiftKey && !key.startsWith('circleR')){ sel.has(id)?sel.delete(id):sel.add(id); render(); return; }
+    if(e.shiftKey && !key.startsWith('circleR')){ sel.has(id)?sel.delete(id):sel.add(id); selectSectionFromVerts(); render(); return; }
     if(key.startsWith('circleR')){                    // radius-only drag, never multi-select
       pushHistory(); drag = { radius:true, sec, key }; svg.setPointerCapture(e.pointerId); return;
     }
     if(!sel.has(id)){ sel.clear(); sel.add(id); }
+    selectSectionFromVerts();
     pushHistory();
     drag = { move:true, startW: S2W(sx,sy),
               base: selPts().map(p=> p.circle ? p.circle.slice(0,2) : p.arr[p.i].slice()) };
@@ -2555,7 +2558,7 @@ svg.addEventListener('dblclick', e=>{
     if(!e.shiftKey) sel.clear();
     if(key.startsWith('circle')) sel.add(sec+'|circle:'+key.split(':')[1]+'|0');
     else { const arr=getArr(sec,key); for(let i=0;i<arr.length;i++) sel.add(sec+'|'+key+'|'+i); }
-    render();
+    selectSectionFromVerts(); render();
   }
 });
 svg.addEventListener('pointermove', e=>{
@@ -2623,7 +2626,7 @@ svg.addEventListener('pointerup', ()=>{
     for(const h of HANDLES){ if(!h.key.startsWith('circleR') && hit(h)) sel.add(h.id); }
     marq = null; lasso = null;
   }
-  drag = null; snapTarget = null; render();
+  drag = null; snapTarget = null; selectSectionFromVerts(); render();
 });
 svg.addEventListener('contextmenu', e=>e.preventDefault());
 svg.addEventListener('wheel', e=>{
@@ -3049,8 +3052,24 @@ function sync(){
   // while dragging, say) - better to lose that one edit than restore garbage
   // that breaks rendering on the next load. And only once actually edited, so
   // opening a file without touching it leaves the drafts list alone.
-  if(k && dirty && allFinite(D)){ try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){} }
+  if(k && dirty && allFinite(D)){
+    const isNew = localStorage.getItem(k) === null;
+    try{ localStorage.setItem(k, JSON.stringify({t: Date.now(), D})); }catch(e){}
+    // the moment an edit first creates the draft, show it in the drafts panel
+    if(isNew && typeof scanDrafts === 'function') scanDrafts();
+  }
   render();
+}
+// plain body edit: selecting vertices of a single body part makes that part the
+// "Selected body part" too, so the section editor / curves follow the canvas.
+function selectSectionFromVerts(){
+  if(TAILOR_MODE || FACE_MODE || OUTFIT_MODE || !sel.size) return;
+  const secs = new Set([...sel].map(id=>id.split('|')[0]));
+  if(secs.size!==1) return;
+  const s = [...secs][0];
+  if(s===selSec || !D.sections || !(s in D.sections)) return;
+  selSec = s; shown.add(s); hidden.delete(s);
+  buildSecList(); buildSecEdit(); buildCurvesPanel();
 }
 function undo(){ if(history.length){ D = JSON.parse(history.pop()); if(TAILOR_MODE) relinkTailorSections(); sync(); buildSecList(); buildSecEdit(); buildCurvesPanel(); } }
 

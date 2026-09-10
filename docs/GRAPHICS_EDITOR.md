@@ -10,10 +10,14 @@ its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
 any handle; double-click an edge to insert a point; alt-click to delete.
 
 Side-panel order: story / design pickers, the mode + body + article switchers,
-then the mode-specific editing panels (Sections, Selected section, then
+then the mode-specific editing panels (Sections — headed **Body Parts** in
+plain body-edit mode — Selected section, then
 **Details**, then Curves in body-edit mode; Fit in tailor mode; Outfit in
 outfit mode), then the generic **View** toggles, then the lone **Undo** button
-and the drafts panel. The **Details** panel (the freestanding polygons/circles
+and the drafts panel. Selecting the vertices of a single body part (click,
+shift-click, marquee, or double-click a handle) also makes it the **Selected
+section** in plain body-edit mode, so the section editor and Curves follow the
+canvas. The **Details** panel (the freestanding polygons/circles
 layered over a region — formerly labelled "Polygons") always sits directly
 below the Sections / Selected-section selector; in tailor mode it drops one
 further, below Preview look, so the region's own look controls sit next to the
@@ -583,7 +587,9 @@ written **only once the design has actually been edited** this session (`dirty`
 latches in `sync()` when the serialised design first differs from what the first
 `sync()` saw; a restored draft, or JSON pasted/loaded in by hand, starts
 `dirty`) — opening a file and looking at it, or just selecting vertices, leaves
-the drafts list untouched; the first real edit writes the draft immediately. A
+the drafts list untouched; the first real edit writes the draft immediately —
+and that first write also refreshes the **Save / download drafts** panel so the
+new row appears without a manual **rescan**. A
 clean "save checked to repo" of the loaded design re-baselines it back to clean.
 The gotcha: **these keys are shared by every tab open on the same
 origin**, not per-tab. If the agent opens its own scratch tab on the same
