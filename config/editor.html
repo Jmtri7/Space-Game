@@ -34,7 +34,13 @@
   .wsdeps a { color: #8fb3c7; cursor: pointer; }
   .wsdeps a:hover { text-decoration: underline; }
   #startPickerRow, #startDesignRow { display: none !important; }
-  body.ws-stub #side, body.ws-stub #svg, body.ws-stub #hud, body.ws-stub #mirrorPanel { display: none; }
+  /* drag-to-resize dividers between the three columns */
+  .gutter { flex: 0 0 6px; background: #1b1e24; border-right: 1px solid #2a2e37;
+            cursor: col-resize; }
+  .gutter:hover, .gutter.drag { background: #3f5a70; }
+  body.ws-stub #side, body.ws-stub #gutterSide, body.ws-stub #svg, body.ws-stub #hud, body.ws-stub #mirrorPanel { display: none; }
+  /* nothing loaded yet: the vertex editor stays out of the way until an asset is picked */
+  body.ws-empty #side, body.ws-empty #gutterSide, body.ws-empty #hud, body.ws-empty #mirrorPanel { display: none !important; }
   #wsStub { position: absolute; inset: 0; padding: 22px 28px; overflow: auto; display: none; }
   body.ws-stub #wsStub { display: block; }
   #wsStub h2 { color: #9fd0e6; word-break: break-all; }
@@ -115,6 +121,7 @@
   </div>
   <div id="wsTree"><div class="hint">loading…</div></div>
 </div>
+<div class="gutter" id="gutterWs" title="drag to resize"></div>
 <div id="side">
   <h1>Vertex editor</h1>
   <div class="row" id="fsRow" style="display:none">
@@ -332,6 +339,7 @@
     <button id="clearDrafts" disabled>clear checked</button>
   </div>
 </div>
+<div class="gutter" id="gutterSide" title="drag to resize"></div>
 <div id="stage">
   <svg id="svg"></svg>
   <div id="wsStub"></div>
@@ -3879,6 +3887,32 @@ stage.addEventListener('drop', e=>{
 });
 window.addEventListener('resize', render);
 
+// ---- drag-to-resize the Workspace and Vertex-editor columns -------------
+// Each gutter drags the panel to its left; the new width is remembered per
+// browser. The stage (svg) is flex:1 and re-reads its own box every render,
+// so a synthetic resize event is all it needs to keep handles aligned.
+function initGutter(gutterId, panelId, lsKey, min, max){
+  const gutter = document.getElementById(gutterId), panel = document.getElementById(panelId);
+  if(!gutter || !panel) return;
+  const setW = w => { w = Math.max(min, Math.min(max, w)); panel.style.flexBasis = w + 'px'; panel.style.width = w + 'px'; };
+  let saved; try{ saved = parseInt(localStorage.getItem(lsKey), 10); }catch(e){}
+  if(saved) setW(saved);
+  gutter.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const startX = e.clientX, startW = panel.getBoundingClientRect().width;
+    gutter.classList.add('drag'); document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+    const onMove = ev => { setW(startW + (ev.clientX - startX)); window.dispatchEvent(new Event('resize')); };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp);
+      gutter.classList.remove('drag'); document.body.style.cursor = ''; document.body.style.userSelect = '';
+      try{ localStorage.setItem(lsKey, String(parseInt(panel.style.width, 10))); }catch(e){}
+    };
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+  });
+}
+initGutter('gutterWs', 'workspace', 'gpEditorWsWidth', 150, 520);
+initGutter('gutterSide', 'side', 'gpEditorSideWidth', 210, 680);
+
 // boot: ?file=<repo-relative path>, else the last edit from localStorage, else
 // a message. Reading any repo file needs VFS ready first - over http that's
 // immediate; from file:// it waits for (or prompts for) the folder grant.
@@ -3927,6 +3961,7 @@ async function runBoot(){
       `  — restored an unsaved draft from ${restored.toLocaleTimeString()} (Reset to discard and reload from disk)`;
   } else {
     svg.innerHTML = `<text x="20" y="40" fill="#6b7280" font-size="14">Pick an asset from the Workspace panel on the left to begin.</text>`;
+    document.body.classList.add('ws-empty');   // keep the vertex editor hidden until an asset is picked
     populateStartPicker();
   }
 }
@@ -4018,15 +4053,15 @@ async function wsResolveGfx(e, rel){
 async function wsListCat(e, cat){
   if(cat.g){
     const dirs = wsGfxDirs(e);
+    const listed = await Promise.all(dirs.map(d => VFS.listDir(d + '/' + cat.g)));
     const firstIdx = new Map(), inBase = new Set(), inMod = new Set();
-    for(let i = 0; i < dirs.length; i++){
-      const { files } = await VFS.listDir(dirs[i] + '/' + cat.g);
+    listed.forEach(({ files }, i) => {
       for(const f of files){
         if(!f.endsWith('.json') || (cat.ex && cat.ex.test(f))) continue;
         (i === 0 ? inBase : inMod).add(f);
         if(!firstIdx.has(f)) firstIdx.set(f, i);
       }
-    }
+    });
     return [...firstIdx.keys()].sort().map(name => ({
       name,
       origin: firstIdx.get(name) === 0 ? null : _wsModuleOfDir(dirs[firstIdx.get(name)]),
@@ -4034,21 +4069,18 @@ async function wsListCat(e, cat){
     }));
   }
   if(cat.gfiles){
-    const dirs = wsGfxDirs(e), out = [];
-    for(const f of cat.gfiles){
-      let idx = -1;
-      for(let i = 0; i < dirs.length; i++) if(await VFS.readJSON(dirs[i] + '/' + f)){ idx = i; break; }
-      if(idx < 0) continue;
-      let shadowed = false;
-      if(idx === 0) for(let i = 1; i < dirs.length; i++) if(await VFS.readJSON(dirs[i] + '/' + f)){ shadowed = true; break; }
-      out.push({ name:f, origin: idx === 0 ? null : _wsModuleOfDir(dirs[idx]), shadowed });
-    }
-    return out;
+    const dirs = wsGfxDirs(e);
+    return (await Promise.all(cat.gfiles.map(async f => {
+      const hits = await Promise.all(dirs.map(d => VFS.readJSON(d + '/' + f).then(v => !!v)));
+      const idx = hits.indexOf(true);
+      if(idx < 0) return null;
+      return { name:f, origin: idx === 0 ? null : _wsModuleOfDir(dirs[idx]),
+               shadowed: idx === 0 && hits.lastIndexOf(true) > 0 };
+    }))).filter(Boolean);
   }
   if(cat.cats){
-    const out = [];
-    for(const f of cat.cats) if(await VFS.readJSON(e.root + '/' + f)) out.push({ name:f, origin:null, shadowed:false });
-    return out;
+    const hits = await Promise.all(cat.cats.map(f => VFS.readJSON(e.root + '/' + f).then(v => !!v)));
+    return cat.cats.filter((_, i) => hits[i]).map(name => ({ name, origin:null, shadowed:false }));
   }
   if(cat.systems){
     const { files } = await VFS.listDir(e.root + '/systems');
@@ -4110,20 +4142,24 @@ async function renderWorkspace(){
       '<span>' + e.name + '</span> <span class="wskind">' + e.kind + '</span>';
     hdr.onclick = () => wsToggle(e.name);
     node.appendChild(hdr);
-    if(e.deps && e.deps.length){
-      const dl = document.createElement('div'); dl.className = 'wsdeps';
-      dl.appendChild(document.createTextNode('depends on: '));
-      e.deps.forEach((d, i) => {
-        if(i) dl.appendChild(document.createTextNode(' · '));
-        const a = document.createElement('a'); a.textContent = d;
-        a.onclick = (ev) => { ev.stopPropagation(); wsRevealNode(d); };
-        dl.appendChild(a);
-      });
-      node.appendChild(dl);
-    }
     if(open){
-      for(const cat of WS_CATS){
-        const names = await wsListCat(e, cat);
+      if(e.deps && e.deps.length){
+        const dl = document.createElement('div'); dl.className = 'wsdeps';
+        dl.appendChild(document.createTextNode('depends on: '));
+        e.deps.forEach((d, i) => {
+          if(i) dl.appendChild(document.createTextNode(' · '));
+          const a = document.createElement('a'); a.textContent = d;
+          a.onclick = (ev) => { ev.stopPropagation(); wsRevealNode(d); };
+          dl.appendChild(a);
+        });
+        node.appendChild(dl);
+      }
+      // resolve every category's listing at once - over http each wsListCat is
+      // a burst of directory fetches, and serialising all ~18 makes expanding a
+      // story crawl
+      const listings = await Promise.all(WS_CATS.map(c => wsListCat(e, c)));
+      for(let ci = 0; ci < WS_CATS.length; ci++){
+        const cat = WS_CATS[ci], names = listings[ci];
         if(!names.length) continue;
         const ckey = e.name + '/' + cat.id, cOpen = exp.has(ckey);
         const cd = document.createElement('div'); cd.className = 'wscat';
@@ -4133,10 +4169,11 @@ async function renderWorkspace(){
         ch.onclick = () => wsToggle(ckey);
         cd.appendChild(ch);
         if(cOpen){
-          for(const item of names){
-            const nm = item.name;
+          const paths = await Promise.all(names.map(it => wsLeafPath(e, cat, it.name)));
+          for(let li = 0; li < names.length; li++){
+            const item = names[li], nm = item.name;
             const leaf = document.createElement('div'); leaf.className = 'wsleaf';
-            const p = await wsLeafPath(e, cat, nm);
+            const p = paths[li];
             leaf.textContent = nm;
             leaf.title = cat.editor ? p : p + '  (view only)';
             if(item.origin){

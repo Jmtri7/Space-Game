@@ -36,8 +36,12 @@ tracing overlay — that's the only file-drop the editor takes now.
 
 ### The Workspace panel
 
-A rail down the left edge, above the editor's own side panel and always
-present. It lists **every story and every shared module** in `config/` (each
+A rail down the left edge, left of the editor's own side panel and always
+present; drag the divider between the two (or the one between the side panel
+and the canvas) to re-size either column — widths persist per browser
+(`gpEditorWsWidth` / `gpEditorSideWidth`). Until an asset is loaded the side
+panel is hidden entirely, leaving just the rail and an empty canvas. It lists
+**every story and every shared module** in `config/` (each
 row labelled `story` / `module`); expand one and it lists that source's assets
 by category — Bodies, Faces, Articles, Items, Sets, Ships, Stations, Buildings,
 Decorations, Palettes, Face slots, Collision, Interiors, Graphics config, Story
@@ -46,9 +50,9 @@ actual subtree (graphics categories resolve across the source **and its
 modules**, dependencies included — same walk as
 `config_source.resolved_modules()`), so a new asset kind shows up on its own.
 
-Under each `story` / `module` header a **`depends on:` line** lists that
-source's *directly declared* modules; each name is a link that expands and
-scrolls to that module's own row. In the graphics categories every leaf that
+When a `story` / `module` row is expanded, a **`depends on:` line** under its
+header lists that source's *directly declared* modules; each name is a link
+that expands and scrolls to that module's own row. In the graphics categories every leaf that
 doesn't resolve to the source's own dir is tagged with the module it comes
 from (`badge.json · figures-human`); a source-local file that *also* exists in
 a module — i.e. a kit override — is tagged `· overrides module` instead. Names
