@@ -639,7 +639,13 @@ bbox), and NPCs; a big concourse holds far more of each than are ever visible at
 interior zoom. Person bodies (`Person._draw_pipeline_body`) fold the camera
 transform into two multiply-adds and pass float points straight to
 `pygame.draw.polygon` (no per-vertex `round()`); `gfxdraw` mode rounds
-internally so the look is unchanged.
+internally so the look is unchanged. A **standing** figure (walk intensity
+~0) skips the ~90-polygon fill entirely: `_blit_idle_body` rasterises its
+rest pose once to an SRCALPHA sprite (one-entry cache keyed by view
+scale / facing / AA mode / pose identity — rebuilt only on a zoom or a
+turn) and blits that. This is what keeps a crowded interior (Hub Control:
+~11 NPCs, mostly idle) inside the frame budget at min zoom, where nothing
+culls.
 
 1. Toggle debug (`` ` ``), note the `frame` average and the relevant
    `sim.*` / `render.*` span.
