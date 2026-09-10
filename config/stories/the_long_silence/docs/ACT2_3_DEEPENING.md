@@ -1,8 +1,8 @@
 # Deepening Act II & Act III — `the_long_silence`
 
-> **Status:** Phases 1–2 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`).
-> Phases 3–5 not started. **Next agent: start at Phase 3.** This file is the canonical
-> plan — keep the Status line and each phase's `✅ SHIPPED` marker current as you land work.
+> **Status:** Phases 1–3 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`;
+> Phase 3 `0.15.0`). Phases 4–5 not started. **Next agent: start at Phase 4.** This file is
+> the canonical plan — keep the Status line and each phase's `✅ SHIPPED` marker current.
 
 ## For the implementing agent — how to work this
 
@@ -184,7 +184,24 @@ Gate `combine_mobilised` (not `act_pressure`) → lands ≥1 spacing interval af
 
 ---
 
-## Phase 3 — Act II recon mission + reputation fork + carrier pledge
+## Phase 3 — Act II recon mission + reputation fork + carrier pledge  ✅ SHIPPED (`0.15.0`)
+
+Shipped as planned. Mission **`front_recon`** ("Reading the Front", `gen_act2.py`) — 4 linear
+stages (jump Kiln → pull the record off **Assay-clerk Dorn** at Combine Hold → jump Verdance →
+deliver), `on_start_flags: ["front_recon_active"]` gating Dorn's hand-over option instead of the
+(latching, useless) `jumped_to:kiln`. Fork: a delivery option on **Records Keeper Amsel**
+(`front_to_authority`, +10 Authority / −4 Vigil), **Sela of Highcanopy** (`front_to_drift`, +10
+Drift / +4 carrier), **Keeper Aramis** (`front_to_vigil`, +10 Vigil / −4 Authority), each on the
+node the player actually lands on (`start`+`briefed` / `done`+`warm` / `done`+`warm`), gated
+`front_recon_have_record` + `requires_not_flag: front_recon_delivered`. Fifth pledge
+(`patron:free_carrier`) added to the **Verdance carrier berth NPC** via a `BERTH_PLEDGE` case in
+`gen_carriers.py`'s berth builder (warm root + pledge option). Offer dispatch
+**`carrier_recon_call`** (hand, gated `dispatch:carrier_open_hand`). Tests +5.
+
+> **Note (pre-existing):** the Drift/Vigil `warm` pledge roots sit *after* their
+> `<anchor>_done` flag root in `conditional_roots`, so a post-anchor player never lands on
+> `warm` — the fork options were added to the `done` nodes too for that reason. Worth a
+> dedicated fix (reorder faction roots first) but out of this phase's scope.
 
 Carry the Kiln beacon's handshake logs, then choose who to hand them to.
 

@@ -70,6 +70,15 @@
     "start_mission": "combine_evacuation"
   },
 
+  "carrier_recon_call": {
+    "sender": "Free carriers — open channel",
+    "subject": "Read the front before it reads you",
+    "body": "You have a line to us now. Here is the first ask: the relight signal handshakes every beacon it passes, and the Kiln relay logged the timings. Get that record and put it in the right hands. Whoever holds the schedule is ready for what comes; whoever doesn't is surprised by it.",
+    "requires_flag": "dispatch:carrier_open_hand",
+    "on_receive_flags": ["recon_offered"],
+    "start_mission": "front_recon"
+  },
+
   "drift_convoy_call": {
     "sender": "The Drift — Sela of Highcanopy",
     "subject": "A convoy, if you'll fly it",

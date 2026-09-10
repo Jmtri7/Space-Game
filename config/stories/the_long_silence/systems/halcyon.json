@@ -671,6 +671,18 @@
                       "next": "old"
                     },
                     {
+                      "label": "I have the reactivation front's timing. The Authority should log it.",
+                      "next": "front_delivered",
+                      "requires_flag": "front_recon_have_record",
+                      "requires_not_flag": "front_recon_delivered",
+                      "actions": [
+                        "set_flag:front_recon_delivered",
+                        "set_flag:front_to_authority",
+                        "adjust_rep:harbor_authority:10",
+                        "adjust_rep:the_vigil:-4"
+                      ]
+                    },
+                    {
                       "label": "Just looking",
                       "next": null
                     }
@@ -685,12 +697,33 @@
                     }
                   ]
                 },
+                "front_delivered": {
+                  "text": "Timing for every beacon, to the minute. This is the whole schedule of the thing. The Authority will have a plan for each system before the signal arrives at it - and it will be down as your filing. The Vigil will hear you gave it to us, and they will not thank you for it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
                 "briefed": {
                   "text": "You're carrying Authority standing orders now - I logged the dispatch as it came in. Whatever the outer systems tell you out there, the record here is plain: the network was ours, and it is ours to bring back. Keep that straight.",
                   "options": [
                     {
                       "label": "What do the oldest records say?",
                       "next": "old"
+                    },
+                    {
+                      "label": "I have the reactivation front's timing. The Authority should log it.",
+                      "next": "front_delivered",
+                      "requires_flag": "front_recon_have_record",
+                      "requires_not_flag": "front_recon_delivered",
+                      "actions": [
+                        "set_flag:front_recon_delivered",
+                        "set_flag:front_to_authority",
+                        "adjust_rep:harbor_authority:10",
+                        "adjust_rep:the_vigil:-4"
+                      ]
                     },
                     {
                       "label": "Understood",

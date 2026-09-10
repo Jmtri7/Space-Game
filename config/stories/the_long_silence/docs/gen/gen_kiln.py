@@ -429,8 +429,17 @@ HOLD_NPCS = [
 
     {"name": "Assay-clerk Dorn", "x": 1000, "y": 690, "role": "clerk",
      "faction": "ninefold_combine", "outfit": "combine_dock_femme",
-     "greeting": "Every gram in, every gram out, weighed twice. The Combine survived two centuries on that habit. We're not about to stop for a beacon.",
-     "dialogue_options": ["Fair enough", "Leave"]},
+     "dialogue_tree": {"root": "start", "conditional_roots": [
+         {"flag": "front_recon_have_record", "node": "sold"}], "nodes": {
+        "start": {"text": "Every gram in, every gram out, weighed twice. The Combine survived two centuries on that habit. We're not about to stop for a beacon.",
+                  "options": [
+                      {"label": "The relay logs the relight signal too. What did it time in at?", "next": "record",
+                       "requires_flag": "front_recon_active", "requires_not_flag": "front_recon_have_record"},
+                      {"label": "Fair enough", "next": None}]},
+        "record": {"text": "The handshake timings? The Factors said log it and forget it - it doesn't weigh anything, so it isn't worth anything to us. Here. Every beacon it's touched, to the minute. Do what you like with it.",
+                   "options": [{"label": "Take the record.", "next": None, "action": "set_flag:front_recon_have_record"}]},
+        "sold": {"text": "You've the front's timing off our tally. Combine's got no further use for it. Weigh it somewhere it matters.",
+                 "options": [{"label": "Understood", "next": None}]}}}},
 
     {"name": "Approach-Warden Sesk", "x": 1320, "y": 660, "role": "outfitter",
      "faction": "ninefold_combine", "outfit": "combine_security_femme",

@@ -92,10 +92,39 @@ ESCORT_BARGE = {
     ],
 }
 
+# Phase 3 - carry the Kiln beacon's handshake logs, then choose who acts on
+# them. Linear spine; the fork is three delivery options on existing NPCs
+# (Records Keeper Amsel / Sela of Highcanopy / Keeper Aramis), each gated
+# requires_flag: front_recon_have_record + requires_not_flag:
+# front_recon_delivered, setting one of front_to_{authority,drift,vigil}.
+# Stage 1's flag is set by a short option on Assay-clerk Dorn at Combine
+# Hold, gated on this mission's on_start_flags marker.
+FRONT_RECON = {
+    "title": "Reading the Front",
+    "on_start_flags": ["front_recon_active"],
+    "on_end_flags": ["front_recon_done"],
+    "on_start_rep": {"free_carrier": 2},
+    "stages": [
+        {"text": "Read the front's approach at the Kiln relay - jump to Kiln.",
+         "complete_flag": "jumped_to:kiln", "reset_on_activation": True,
+         "one_way_message": one_way("Relay Network", "The relight signal handshakes every beacon it passes and the Kiln relay logged the lot. Jump to Kiln - the record is on the ground at Combine Hold.")},
+        {"text": "Pull the beacon's own handshake logs - land at Combine Hold, then talk to Assay-clerk Dorn.",
+         "complete_flag": "front_recon_have_record",
+         "one_way_message": one_way("Relay Network", "Combine Hold weighs everything twice, the signal included. Assay-clerk Dorn keeps the relay tally. Ask for the front's timing - the Combine has no use for it and will part with it cheap.")},
+        {"text": "Get the record to someone who'll act on it - jump to Verdance.",
+         "complete_flag": "jumped_to:verdance", "reset_on_activation": True,
+         "one_way_message": one_way("Relay Network", "You have the front's timing. It is worth something to whoever wants to be ready for it. Verdance is the crossroads - jump there and decide who gets it.")},
+        {"text": "Deliver the intelligence - Records Keeper Amsel (Hub Control), Sela of Highcanopy, or Keeper Aramis (the Name-Wall).",
+         "complete_flag": "front_recon_delivered",
+         "one_way_message": one_way("Relay Network", "Three parties want this. The Authority at Hub Control would run the region on it. The Drift at Highcanopy would open their lanes ahead of it. The Vigil at the Name-Wall would slow it. Choose - you only get to hand it over once.")},
+    ],
+}
+
 ACT2 = {
     "carrier_relief_run": CARRIER_RELIEF_RUN,
     "combine_evacuation": COMBINE_EVACUATION,
     "escort_barge": ESCORT_BARGE,
+    "front_recon": FRONT_RECON,
 }
 
 missions = r(f"{S}/missions.json")

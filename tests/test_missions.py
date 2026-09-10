@@ -586,6 +586,70 @@ class TestLongSilenceDeepening(unittest.TestCase):
             self.assertEqual(len(barge), 1, sysid)
             self.assertEqual(barge[0]["requires_flag"], "barge_under_escort")
 
+    # -- Phase 3: front_recon + the reputation fork + carrier pledge ---
+    def _station_npc(self, system_id, npc_name):
+        sysj = utils.load_json(f"config/stories/the_long_silence/systems/{system_id}.json")
+        for n in sysj["station"]["interiors"]["default"]["npcs"]:
+            if n["name"] == npc_name:
+                return n
+        raise AssertionError(f"{npc_name} not in {system_id}")
+
+    def _dialogue(self, cfg):
+        t = cfg["dialogue_tree"]
+        return Dialogue(cfg["name"], t["nodes"], t.get("root", "start"), t.get("conditional_roots"))
+
+    def test_front_recon_mission_shape(self):
+        m = self.missions["front_recon"]
+        self.assertIn("front_recon_active", m["on_start_flags"])
+        self.assertIn("front_recon_done", m["on_end_flags"])
+        self.assertEqual([s["complete_flag"] for s in m["stages"]],
+                         ["jumped_to:kiln", "front_recon_have_record",
+                          "jumped_to:verdance", "front_recon_delivered"])
+
+    def test_carrier_recon_call_offers_front_recon_after_the_open_hand(self):
+        d = self.dispatches["carrier_recon_call"]
+        self.assertEqual(d["requires_flag"], "dispatch:carrier_open_hand")
+        self.assertEqual(d["start_mission"], "front_recon")
+
+    def test_the_pad_clerk_hands_over_the_record_only_during_the_mission(self):
+        dlg = self._dialogue(self._station_npc("kiln", "Assay-clerk Dorn"))
+        dlg.current_node = dlg.resolve_root({"front_recon_active": True})
+        labels = [o["label"] for o in dlg.current_options({"front_recon_active": True})]
+        self.assertTrue(any("timed in at" in l or "relight signal" in l.lower() for l in labels))
+        # not offered before the mission, and not after the record is taken
+        self.assertFalse(dlg.current_options({}) and
+                         any("relight" in o["label"].lower() for o in dlg.current_options({})))
+        self.assertFalse(any("relight" in o["label"].lower() for o in dlg.current_options(
+            {"front_recon_active": True, "front_recon_have_record": True})))
+
+    def test_each_fork_npc_offers_exactly_one_gated_delivery(self):
+        cases = [
+            ("halcyon", "Records Keeper Amsel", "front_to_authority"),
+            ("verdance", "Sela of Highcanopy", "front_to_drift"),
+            ("ossuary", "Keeper Aramis", "front_to_vigil"),
+        ]
+        for system_id, name, want_flag in cases:
+            dlg = self._dialogue(self._station_npc(system_id, name))
+            flags = {"front_recon_have_record": True, "authority_briefed": True,
+                     "assembly_done": True, "vigil_record_done": True}
+            dlg.current_node = dlg.resolve_root(flags)
+            delivery = [o for o in dlg.current_options(flags)
+                        if f"set_flag:{want_flag}" in o.get("actions", [])]
+            self.assertEqual(len(delivery), 1, f"{name}")
+            # gone once delivered
+            flags["front_recon_delivered"] = True
+            self.assertEqual([o for o in dlg.current_options(flags)
+                              if f"set_flag:{want_flag}" in o.get("actions", [])], [])
+
+    def test_verdance_carrier_berth_carries_the_fifth_pledge(self):
+        dlg = self._dialogue(self._station_npc("verdance", "Carrier off the Slip"))
+        rep = {"free_carrier": 30}
+        dlg.current_node = dlg.resolve_root({}, rep)
+        self.assertEqual(dlg.current_node, "warm")
+        pledge = [o for o in dlg.current_options({}, rep)
+                  if "set_exclusive_flag:patron:free_carrier" in o.get("actions", [])]
+        self.assertEqual(len(pledge), 1)
+
     def test_sync_conditional_ships_spawns_and_culls_the_barge(self):
         gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
         pos = gs.player.person.possessions

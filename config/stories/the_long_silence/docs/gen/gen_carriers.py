@@ -283,6 +283,22 @@ BERTH_REACT = {
     "kiln": ("relay_front_kiln_seen", "front_passed",
              "You felt it come through here too - the beacon handshake, like the whole claw held its breath. The Combine logged it and said nothing. They always say nothing. Fly on, friend."),
 }
+# Phase 3c - the fifth patron pledge (the other four are Vane / factor Tol /
+# Sela / Aramis). The Verdance berth NPC ("Carrier off the Slip") carries it:
+# a free_carrier warm root + a pledge option that set_exclusive_flag locks in
+# patron:free_carrier, mutually exclusive with the other four.
+BERTH_PLEDGE = {"verdance"}
+_PLEDGE_OPTION = {
+    "label": "Pledge the carriers your lane.", "next": "pledged",
+    "requires_not_flag": "patron:free_carrier",
+    "actions": ["set_exclusive_flag:patron:free_carrier", "adjust_rep:free_carrier:8"],
+}
+_PLEDGE_NODES = {
+    "warm": {"text": "You've flown for us, carried for us, and the slow lanes remember it. If the Span asks what the carriers want, we'd have you say it plain: the lanes open, and nobody's flag over them.",
+             "options": [_PLEDGE_OPTION, {"label": "I'll think on it", "next": None}]},
+    "pledged": {"text": "Then you speak for the fleet at the Hub. Keep the lanes free. That's the whole of it.",
+                "options": [{"label": "Understood", "next": None}]},
+}
 # (berth-NPC x, y, crate x, y) - a walkable spot in each station's own plan
 BERTH_SPOT = {
     "halcyon": (980, 620, 980, 800),     # The Berth (east arm)
@@ -311,14 +327,21 @@ for sysid, ship in CARRIER_SHIP.items():
                "faction": "free_carrier", "outfit": CARRIER_OUT[sysid]}
         if sysid in BERTH_REACT:
             flag, node, react = BERTH_REACT[sysid]
-            npc["dialogue_tree"] = {
-                "root": "start",
-                "conditional_roots": [{"flag": flag, "node": node}],
-                "nodes": {
-                    "start": {"text": bline, "options": [{"label": "Fair enough", "next": None}]},
-                    node: {"text": react, "options": [{"label": "Understood", "next": None}]},
-                },
+            start_opts = [{"label": "Fair enough", "next": None}]
+            react_opts = [{"label": "Understood", "next": None}]
+            croots = [{"flag": flag, "node": node}]
+            nodes = {
+                "start": {"text": bline, "options": start_opts},
+                node: {"text": react, "options": react_opts},
             }
+            if sysid in BERTH_PLEDGE:
+                croots.append({"faction": "free_carrier", "min": 25, "node": "warm"})
+                start_opts.insert(0, dict(_PLEDGE_OPTION))
+                react_opts.insert(0, dict(_PLEDGE_OPTION))
+                nodes.update({k: {"text": v["text"],
+                                  "options": [dict(o) for o in v["options"]]}
+                              for k, v in _PLEDGE_NODES.items()})
+            npc["dialogue_tree"] = {"root": "start", "conditional_roots": croots, "nodes": nodes}
         else:
             npc["greeting"] = bline
             npc["dialogue_options"] = ["Fair enough", "Leave"]

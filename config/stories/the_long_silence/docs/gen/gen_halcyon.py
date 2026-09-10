@@ -599,12 +599,22 @@ HUB_NPCS = [
         "start": {"text": "I keep the approach records - two hundred years of them, unbroken. It's why the Authority can run the lanes and no one else can.",
                   "options": [
                       {"label": "What do the oldest records say?", "next": "old"},
+                      {"label": "I have the reactivation front's timing. The Authority should log it.", "next": "front_delivered",
+                       "requires_flag": "front_recon_have_record", "requires_not_flag": "front_recon_delivered",
+                       "actions": ["set_flag:front_recon_delivered", "set_flag:front_to_authority",
+                                   "adjust_rep:harbor_authority:10", "adjust_rep:the_vigil:-4"]},
                       {"label": "Just looking", "next": None}]},
         "old": {"text": "The last clean entries before the Silence. Then a single line, every station, same hour: BEACON NET DOWN - HOLD ALL TRAFFIC. No cause logged. The Vigil think they know why. I only know we obeyed it for two centuries.",
                 "options": [{"label": "Unsettling", "next": None}]},
+        "front_delivered": {"text": "Timing for every beacon, to the minute. This is the whole schedule of the thing. The Authority will have a plan for each system before the signal arrives at it - and it will be down as your filing. The Vigil will hear you gave it to us, and they will not thank you for it.",
+                            "options": [{"label": "Understood", "next": None}]},
         "briefed": {"text": "You're carrying Authority standing orders now - I logged the dispatch as it came in. Whatever the outer systems tell you out there, the record here is plain: the network was ours, and it is ours to bring back. Keep that straight.",
                     "options": [
                         {"label": "What do the oldest records say?", "next": "old"},
+                        {"label": "I have the reactivation front's timing. The Authority should log it.", "next": "front_delivered",
+                         "requires_flag": "front_recon_have_record", "requires_not_flag": "front_recon_delivered",
+                         "actions": ["set_flag:front_recon_delivered", "set_flag:front_to_authority",
+                                     "adjust_rep:harbor_authority:10", "adjust_rep:the_vigil:-4"]},
                         {"label": "Understood", "next": None}]}}}},
 
     {"name": "Displaced traveller", "x": 560, "y": 760, "role": "traveler",
@@ -810,8 +820,12 @@ story = r(f"{S}/story.json")
 # config/stories/the_long_silence/docs/PLAN.md Phase 7).
 # 0.14.0 Deepening Phase 2 - the refugee-barge escort (escort_barge + the
 # drift_convoy_call dispatch + Barge-mother Sethe + the gated barge ai_ship
-# in Verdance and Ossuary). See docs/ACT2_3_DEEPENING.md.
-story["version"] = "0.14.0"
+# in Verdance and Ossuary).
+# 0.15.0 Deepening Phase 3 - front_recon (the reactivation-front recon run) +
+# its reputation fork (front_to_{authority,drift,vigil} delivery options on
+# Amsel / Sela / Aramis) + the fifth patron pledge (free_carrier, on the
+# Verdance carrier berth) + carrier_recon_call dispatch. See docs/ACT2_3_DEEPENING.md.
+story["version"] = "0.15.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

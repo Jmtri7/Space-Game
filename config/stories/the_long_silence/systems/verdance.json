@@ -290,7 +290,28 @@
                   "text": "The room chose - narrowly, and nobody's happy, which is how you know it was fair. Ossuary's lane is open, and we've sent word we may need friends soon. Thank you for making us sit down.",
                   "options": [
                     {
+                      "label": "I have the reactivation front's timing. The Drift should have it.",
+                      "next": "front_delivered",
+                      "requires_flag": "front_recon_have_record",
+                      "requires_not_flag": "front_recon_delivered",
+                      "actions": [
+                        "set_flag:front_recon_delivered",
+                        "set_flag:front_to_drift",
+                        "adjust_rep:the_drift:10",
+                        "adjust_rep:free_carrier:4"
+                      ]
+                    },
+                    {
                       "label": "Safe assembly",
+                      "next": null
+                    }
+                  ]
+                },
+                "front_delivered": {
+                  "text": "Every beacon, to the minute - so we know exactly how long we have at each one. The assembly will still argue, but now it argues against a clock, and that it can do. This buys the outer lanes a running start. The carriers will hear you brought it to us; that's a debt in your favour at every slip in the region.",
+                  "options": [
+                    {
+                      "label": "Understood",
                       "next": null
                     }
                   ]
@@ -305,6 +326,18 @@
                       "actions": [
                         "set_exclusive_flag:patron:the_drift",
                         "adjust_rep:the_drift:8"
+                      ]
+                    },
+                    {
+                      "label": "I have the reactivation front's timing. The Drift should have it.",
+                      "next": "front_delivered",
+                      "requires_flag": "front_recon_have_record",
+                      "requires_not_flag": "front_recon_delivered",
+                      "actions": [
+                        "set_flag:front_recon_delivered",
+                        "set_flag:front_to_drift",
+                        "adjust_rep:the_drift:10",
+                        "adjust_rep:free_carrier:4"
                       ]
                     },
                     {
@@ -631,12 +664,26 @@
                 {
                   "flag": "carrier_contact",
                   "node": "contacted"
+                },
+                {
+                  "faction": "free_carrier",
+                  "min": 25,
+                  "node": "warm"
                 }
               ],
               "nodes": {
                 "start": {
                   "text": "Drift's the only berth in the region that just says 'tie up, rest'. Carriers remember that. When the Hub asks who to trust, we'll say the Drift.",
                   "options": [
+                    {
+                      "label": "Pledge the carriers your lane.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:free_carrier",
+                      "actions": [
+                        "set_exclusive_flag:patron:free_carrier",
+                        "adjust_rep:free_carrier:8"
+                      ]
+                    },
                     {
                       "label": "Fair enough",
                       "next": null
@@ -645,6 +692,42 @@
                 },
                 "contacted": {
                   "text": "You took the open-hand call, then. Word runs the slow lanes faster than the fast ones - whatever the Hub decides, there is a berth for you at any carrier slip in the region, and a debt owed at most of them.",
+                  "options": [
+                    {
+                      "label": "Pledge the carriers your lane.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:free_carrier",
+                      "actions": [
+                        "set_exclusive_flag:patron:free_carrier",
+                        "adjust_rep:free_carrier:8"
+                      ]
+                    },
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "warm": {
+                  "text": "You've flown for us, carried for us, and the slow lanes remember it. If the Span asks what the carriers want, we'd have you say it plain: the lanes open, and nobody's flag over them.",
+                  "options": [
+                    {
+                      "label": "Pledge the carriers your lane.",
+                      "next": "pledged",
+                      "requires_not_flag": "patron:free_carrier",
+                      "actions": [
+                        "set_exclusive_flag:patron:free_carrier",
+                        "adjust_rep:free_carrier:8"
+                      ]
+                    },
+                    {
+                      "label": "I'll think on it",
+                      "next": null
+                    }
+                  ]
+                },
+                "pledged": {
+                  "text": "Then you speak for the fleet at the Hub. Keep the lanes free. That's the whole of it.",
                   "options": [
                     {
                       "label": "Understood",
