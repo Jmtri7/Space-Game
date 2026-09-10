@@ -78,6 +78,7 @@
             "name": "The Grey Courier",
             "x": 139, "y": 301,
             "role": "resident",
+            "routine": "stationary",
             "outfit": "ck_smuggler_masc",
             "requires_not_flag": "met_courier",
             "ambient": {
