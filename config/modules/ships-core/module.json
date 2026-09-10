@@ -1,0 +1,5 @@
+{
+  "name": "ships-core",
+  "version": "1.0.0",
+  "description": "The standard ship-equipment kit (weapon/engine/utility outfits) and the common asteroid types for mining. Ship hulls stay per-story - no two stories share one. A story overrides or adds an outfit/asteroid type in its own file."
+}

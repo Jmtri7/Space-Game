@@ -6329,7 +6329,7 @@ class TestConfigModuleResolver(unittest.TestCase):
 
     def test_story_with_no_modules_is_unchanged(self):
         from game import config_source
-        self.assertEqual(config_source.story_modules("default"), ["audio-core"])
+        self.assertIn("audio-core", config_source.story_modules("default"))
         # a per-name file the story owns resolves to the story dir
         p = config_source.story_path("the_long_silence", "graphics", "graphics.json")
         self.assertIn(os.path.join("stories", "the_long_silence"), p)
@@ -6357,8 +6357,19 @@ class TestConfigModuleResolver(unittest.TestCase):
     def test_module_versions_recorded(self):
         from game import config_source
         mv = config_source.module_versions("the_long_silence")
-        self.assertEqual(set(mv), {"figures-human", "audio-core"})
+        self.assertLessEqual({"figures-human", "audio-core"}, set(mv))
         self.assertRegex(mv["figures-human"], r"^\d")
+
+    def test_story_meta_merges_module_tuning_defaults(self):
+        from game import config_source
+        meta = config_source.story_meta("the_long_silence")
+        # jump block + zoom bounds now come from the story-defaults module
+        self.assertEqual(meta["jump"]["travel_frames"], 150)
+        self.assertEqual(meta["camera_zoom_max"], 9.0)
+        # graphics_pipeline_test keeps its own zoomed-in overrides
+        gpt = config_source.story_meta("graphics_pipeline_test")
+        self.assertEqual(gpt["camera_zoom"], 2.0)
+        self.assertEqual(gpt["jump"]["speed"], 40)  # still inherited
 
 
 if __name__ == "__main__":

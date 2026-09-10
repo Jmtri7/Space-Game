@@ -91,11 +91,15 @@ def _deep_merge_under(base, overlay):
 _catalogue_cache = {}
 
 
+_story_meta_cache = {}
+
+
 def _clear_cache():
-    """Drop the merged-catalogue cache - paired with
+    """Drop the merged-catalogue / story-meta caches - paired with
     ``utils.clear_json_cache()`` (which calls this) for tests that rewrite a
     config file mid-run."""
     _catalogue_cache.clear()
+    _story_meta_cache.clear()
 
 
 def story_catalogue(story, filename):
@@ -120,6 +124,25 @@ def story_catalogue(story, filename):
 
     _catalogue_cache[key] = merged
     return merged
+
+
+def story_meta(story):
+    """A story's `story.json`, with each module's own `story.json` merged
+    *under* it (story keys win). Lets a module supply defaults for the
+    tuning blocks - camera/zoom bounds, `jump` constants - that every story
+    otherwise repeats verbatim. A module without a `story.json` contributes
+    nothing."""
+    if story in _story_meta_cache:
+        return _story_meta_cache[story]
+    own = _load_json(os.path.join(_story_dir(story), "story.json")) or {}
+    merged = {}
+    for name in reversed([m for m in own.get("modules") or [] if isinstance(m, str)]):
+        data = _load_json(os.path.join(MODULES_DIR, name, "story.json"))
+        if isinstance(data, dict):
+            merged = _deep_merge_under(merged, data)
+    result = _deep_merge_under(merged, own)
+    _story_meta_cache[story] = result
+    return result
 
 
 def module_versions(story):

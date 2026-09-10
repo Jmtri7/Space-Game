@@ -1,0 +1,5 @@
+{
+  "name": "common-goods",
+  "version": "1.0.0",
+  "description": "Personal inventory items common to every story - repair kit, medkit, star chart, keepsake flask. A story overrides one or adds its own in items.json."
+}

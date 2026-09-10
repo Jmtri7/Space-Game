@@ -6,7 +6,11 @@
     "cost": 800,
     "stat_modifiers": {},
     "icon_shape": "blade",
-    "icon_color": [100, 200, 255],
+    "icon_color": [
+      100,
+      200,
+      255
+    ],
     "damage": 3,
     "fire_rate": 18,
     "projectile_speed": 15,
@@ -24,7 +28,11 @@
     "cost": 650,
     "stat_modifiers": {},
     "icon_shape": "blade",
-    "icon_color": [255, 220, 90],
+    "icon_color": [
+      255,
+      220,
+      90
+    ],
     "damage": 2,
     "fire_rate": 8,
     "projectile_speed": 19,
@@ -42,7 +50,11 @@
     "cost": 1800,
     "stat_modifiers": {},
     "icon_shape": "gem",
-    "icon_color": [255, 130, 60],
+    "icon_color": [
+      255,
+      130,
+      60
+    ],
     "damage": 9,
     "fire_rate": 40,
     "projectile_speed": 9,
@@ -60,7 +72,11 @@
     "cost": 1400,
     "stat_modifiers": {},
     "icon_shape": "star",
-    "icon_color": [140, 230, 150],
+    "icon_color": [
+      140,
+      230,
+      150
+    ],
     "damage": 2,
     "fire_rate": 30,
     "projectile_speed": 12,
@@ -76,27 +92,38 @@
     "description": "Overdriven thruster for short bursts of extra speed",
     "slot_type": "engine",
     "cost": 1500,
-    "stat_modifiers": {"max_velocity": 1.5, "max_thrust": 0.05}
+    "stat_modifiers": {
+      "max_velocity": 1.5,
+      "max_thrust": 0.05
+    }
   },
   "ion_thruster": {
     "name": "Ion Thruster",
     "description": "Efficient low-thrust engine favored by haulers",
     "slot_type": "engine",
     "cost": 1100,
-    "stat_modifiers": {"max_velocity": 0.5, "rotation_speed": 1}
+    "stat_modifiers": {
+      "max_velocity": 0.5,
+      "rotation_speed": 1
+    }
   },
   "cargo_expansion": {
     "name": "Cargo Expansion Module",
     "description": "Extra pressurized hold space, at the cost of maneuverability",
     "slot_type": "utility",
     "cost": 900,
-    "stat_modifiers": {"cargo_capacity": 20, "rotation_speed": -1}
+    "stat_modifiers": {
+      "cargo_capacity": 20,
+      "rotation_speed": -1
+    }
   },
   "reinforced_hull": {
     "name": "Reinforced Hull Plating",
     "description": "Extra armor plating - slows the ship down but hits harder",
     "slot_type": "utility",
     "cost": 700,
-    "stat_modifiers": {"max_velocity": -0.5}
+    "stat_modifiers": {
+      "max_velocity": -0.5
+    }
   }
 }

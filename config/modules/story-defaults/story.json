@@ -1,0 +1,16 @@
+{
+  "_comment": "Merged UNDER each consuming story's story.json (story wins). Camera/zoom/walk tuning + jump-drive constants that every story repeated verbatim.",
+  "camera_zoom": 3.0,
+  "camera_zoom_min": 1.75,
+  "camera_zoom_max": 9.0,
+  "interior_camera_zoom": 3.0,
+  "interior_camera_zoom_min": 2.25,
+  "interior_camera_zoom_max": 8.0,
+  "walking_speed": 2.0,
+  "jump": {
+    "travel_frames": 150,
+    "speed": 40,
+    "arrival_distance": 1400,
+    "self_min_distance": 3200
+  }
+}

@@ -38,8 +38,11 @@ Each module carries a `module.json`:
 | **Per-name pipeline files** — `graphics/<kind>/<name>.json` (ships, stations, bodies, articles, sets, palettes, faces, collision, interiors, decorations) | `config_source.story_path(story, *relparts)` | First existing of `story/<rel>`, then `modules/<m>/<rel>` in declared order. Whole-file override: a story shadows a kit file by dropping its own copy at the same path. Falls back to the story path if nobody has it, so "missing file" is unchanged. |
 | **Flat `{id: entry}` catalogues** — `graphics.json`, `cultures.json`, `commodities.json`, `items.json`, `ship_types.json`, `ship_outfits.json`, `building_types.json`, `asteroid_types.json`, `pilots.json`, `missions.json`, `factions.json`, `endings.json`, `graphics/materials.json`, `audio.json` | `config_source.story_catalogue(story, filename)` | Deep-merge: every module's dict layered under the story's, entry by entry (nested dicts merge, lists/scalars replace). A story overrides or extends one entry without copying the file. Result is cached and shared — treat read-only, exactly like `load_json`. |
 
-`story.json` itself and `systems/*.json` are **not** shared — they are
-inherently story-specific — and still load by direct path.
+`systems/*.json` is **not** shared — inherently story-specific — and loads by
+direct path. `story.json` is a special case: a module may ship a partial
+`story.json` (tuning blocks only) that `config_source.story_meta()` merges
+*under* the real story's, so `get_story()` sees module defaults with every
+story key still winning.
 
 ## Current modules
 
@@ -47,6 +50,9 @@ inherently story-specific — and still load by direct path.
 |---|---|---|
 | `figures-human` | The walk rig, masc/femme human bodies, generic wardrobe articles, faces, common decorations/collision/buildings, base `materials.json`. The `graphics_pipeline_test` and `the_long_silence` figure kits were byte-identical here; `the_long_silence` keeps ~114 faction-specific files locally (and its 10 tuned kit files, which shadow the module's). | `the_long_silence`, `graphics_pipeline_test` |
 | `audio-core` | The default `SoundBoard` recipes and the two ambient music loops, as data (`audio.json`). See [SOUND.md](SOUND.md). | all three stories |
+| `ships-core` | The standard ship-equipment kit — `ship_outfits.json` (weapons/engines/utility) and `asteroid_types.json` — that `default` and `the_long_silence` had entry-for-entry identical. Ship *hulls* stay per-story (no two stories share one). | all three stories |
+| `common-goods` | `items.json` — the personal inventory items every story carries (`repair_kit`, `medkit`, `star_chart`, `engraved_flask`). | all three stories |
+| `story-defaults` | A partial `story.json`: camera + interior zoom bounds, `walking_speed`, the `jump` drive constants. Merged under each story's own `story.json`; `graphics_pipeline_test` keeps its zoomed-in camera overrides and still inherits `jump`. | all three stories |
 
 ## How the loaders use it
 
@@ -92,7 +98,5 @@ criteria as bumping `story.json`'s version — see
 5. `python run_tests.py`, then run each consuming story in-game
    ([WORKFLOW.md](WORKFLOW.md)) and eyeball the affected art/audio.
 
-Good future candidates: a `ships-core` module (generic hulls + the four
-weapon outfits + asteroid types), a `common-goods` module (`repair_kit`,
-`medkit`, `ore` and friends), and `story.json` tuning defaults (`jump`,
-camera-zoom bounds) currently repeated verbatim per story.
+`commodities.json` is deliberately still per-story — the two real stories'
+economies barely overlap (only `ore`, and its text differs).

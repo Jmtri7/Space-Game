@@ -4,7 +4,7 @@ import math
 import os
 import pygame
 import game.constants as constants
-from game.config_source import story_path, story_catalogue
+from game.config_source import story_path, story_catalogue, story_meta
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
     CAMERA_ZOOM, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX, SAVE_DIR, GREEN,
@@ -410,8 +410,10 @@ def get_story(story):
     the "start" new-game block, "loan"/"jump" tuning blocks, ...). One
     accessor so the handful of call sites that need story metadata
     (main.py, SpaceScreen, LocationScreen) don't each hand-roll the same
-    load_json path. Returns {} for a missing/unreadable file."""
-    return load_json(f"config/stories/{story}/story.json") or {}
+    load_json path. Shared-module story.json defaults (config/modules/<m>/
+    story.json - camera/zoom/jump tuning) are merged under the story's own,
+    story wins. Returns {} for a missing/unreadable file."""
+    return story_meta(story)
 
 
 def get_ship_type(story, ship_type_id):

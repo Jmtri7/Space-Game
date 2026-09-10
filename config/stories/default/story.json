@@ -3,7 +3,10 @@
   "version": "1.14.0",
   "name": "Explorer",
   "modules": [
-    "audio-core"
+    "audio-core",
+    "ships-core",
+    "common-goods",
+    "story-defaults"
   ],
   "description": "Explore the standard star system with the mysterious moon and bustling station.",
   "difficulty": "normal",
@@ -11,13 +14,6 @@
   "starting_mission": "first_flight",
   "starting_mission_trigger": "ship_purchase",
   "default_outfit": "space_suit",
-  "camera_zoom": 3.0,
-  "camera_zoom_min": 1.75,
-  "camera_zoom_max": 9.0,
-  "interior_camera_zoom": 3.0,
-  "interior_camera_zoom_min": 2.25,
-  "interior_camera_zoom_max": 8.0,
-  "walking_speed": 2.0,
   "start": {
     "location": "station",
     "interior": "default",
@@ -31,12 +27,6 @@
     "lender": "Concord Lending",
     "amount": 100000,
     "max_active": 1
-  },
-  "jump": {
-    "travel_frames": 150,
-    "speed": 40,
-    "arrival_distance": 1400,
-    "self_min_distance": 3200
   },
   "brake_slow_threshold": 0.3,
   "ships": {

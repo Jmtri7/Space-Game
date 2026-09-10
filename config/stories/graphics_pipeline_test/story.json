@@ -4,7 +4,10 @@
   "name": "Graphics Pipeline Test",
   "modules": [
     "figures-human",
-    "audio-core"
+    "audio-core",
+    "ships-core",
+    "common-goods",
+    "story-defaults"
   ],
   "description": "A proving ground for the design-JSON graphics pipeline: one courier, one trade ring, one concourse. Not a story yet - a place to see the assets render in the engine.",
   "difficulty": "normal",
@@ -16,7 +19,6 @@
   "interior_camera_zoom": 14.0,
   "interior_camera_zoom_min": 7.0,
   "interior_camera_zoom_max": 28.0,
-  "walking_speed": 2.0,
   "start": {
     "location": "station",
     "interior": "concourse",
@@ -25,12 +27,6 @@
     "items": {},
     "outfits": [],
     "flags": {}
-  },
-  "jump": {
-    "travel_frames": 150,
-    "speed": 40,
-    "arrival_distance": 1400,
-    "self_min_distance": 3200
   },
   "ships": {
     "player_type": null

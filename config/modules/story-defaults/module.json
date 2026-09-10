@@ -1,0 +1,5 @@
+{
+  "name": "story-defaults",
+  "version": "1.0.0",
+  "description": "Default story.json tuning: camera + interior zoom bounds, walking speed, jump-drive constants. Merged under a story's own story.json - the story overrides any key it names."
+}
