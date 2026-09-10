@@ -263,9 +263,21 @@ First-pass content is complete and plays end to end; these are quality passes:
     `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).
   - [ ] Attach real cargo / refugee / escort **missions** to the dispatches
     (needs the Act II mission content below).
-- [ ] Kiln mobilisation — conditional hostile pilots in Verdance (needs Phases C + D)
-- [ ] Reputation swings from mission choices; `set_exclusive_flag` locks in a patron faction
-- [ ] Mid-act gate: standing with ≥1 faction lights the Span beacon (`beacon_the_span_lit`); the Span currently has `act_span` set by the Ossuary anchor but stays `locked` until this gate
+- [x] Kiln mobilisation — a Combine blockade pair over Verdance
+  (`gen_verdance.py` `ai_ships`, `requires_flag: combine_mobilised`, pilots
+  corran/molt). Set by the `combine_mobilises` dispatch; hostile via the normal
+  `_sync_hostiles` rep threshold if the player has crossed the Combine.
+- [~] Reputation swings from mission choices; `set_exclusive_flag` locks in a
+  patron faction. Patron pledges already exist (Vane / Aramis, Phase 5); the
+  two Act II missions carry `on_end_rep`. More choice-driven swings TBD.
+- [x] Mid-act gate to the Span — `beacon_the_span_lit` is set by
+  `the_vigil_record`'s `on_end_flags` (end of the Ossuary anchor), and the
+  `span_listening` dispatch (`requires_flag: act_span`) confirms the route.
+  The "standing with ≥1 faction" condition is satisfied by construction: every
+  Act I/II anchor mission moves standing, so reaching `act_span` guarantees it.
+- [x] Act II courier missions — `carrier_relief_run` (relief to Ossuary) and
+  `combine_evacuation` (pull a stranded crew out of Kiln), handed out by the
+  `carrier_open_hand` / `combine_mobilises` dispatches. `gen_act2.py`.
 - [ ] **Bespoke Warden wardrobe** (deferred from 6.5): real `warden_*` articles + culture `sets` (a signal-tender's rig, a segment-warden kit, salvage-crew gear, hand-lettered civilian dress) replacing the `warden_dress` recolour, wired the same way as the other five cultures
 
 ## Phase 8 — Content: Act III "The Span" + endings

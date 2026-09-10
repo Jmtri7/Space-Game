@@ -478,6 +478,17 @@ VERDANCE = {
         {"name": "Combine Raider", "x": 0.55, "y": 0.45, "ship_type": "combine_patrol", "pilot": "raska",
          "faction": "ninefold_combine", "route": ["station", "moon"],
          "requires_rep_below": "ninefold_combine:-20"},
+        # Kiln mobilisation (Act II) - the Combine's "notice of closure"
+        # dispatch (combine_mobilises -> combine_mobilised) puts a blockade
+        # pair over the Verdance lane. Hostile only if the player's Combine
+        # standing has fallen past the threshold (_sync_hostiles); otherwise
+        # a visible pressure on the region.
+        {"name": "Combine Blockade Corran", "x": 0.62, "y": 0.3, "ship_type": "combine_patrol", "pilot": "corran",
+         "faction": "ninefold_combine", "route": ["station", "moon"],
+         "requires_flag": "combine_mobilised"},
+        {"name": "Combine Blockade Molt", "x": 0.4, "y": 0.72, "ship_type": "combine_patrol", "pilot": "molt",
+         "faction": "ninefold_combine", "route": ["moon", "station"],
+         "requires_flag": "combine_mobilised"},
     ],
     "locked": True, "unlock_flag": "beacon_verdance_lit",
 }

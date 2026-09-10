@@ -10,7 +10,8 @@ python config/stories/the_long_silence/docs/gen/gen_kiln.py       # 6.2 Kiln sli
 python config/stories/the_long_silence/docs/gen/gen_verdance.py   # 6.3 Verdance slice  (owns systems/verdance.json)
 python config/stories/the_long_silence/docs/gen/gen_ossuary.py    # 6.4 Ossuary slice   (owns systems/ossuary.json)
 python config/stories/the_long_silence/docs/gen/gen_span.py       # 6.5 The Span stub   (owns systems/the_span.json)
-python config/stories/the_long_silence/docs/gen/gen_carriers.py   # 6.6 free-carriers pass  (patches every system - MUST run last)
+python config/stories/the_long_silence/docs/gen/gen_carriers.py   # 6.6 free-carriers pass  (patches every system)
+python config/stories/the_long_silence/docs/gen/gen_act2.py       # Phase 7 - Act II dispatch missions (merges into missions.json; run last)
 ```
 
 The chain runs clean end to end and is non-destructive **except** for the
@@ -44,9 +45,14 @@ just don't run it when you only need a content change elsewhere. Everything else
   `gen_span.py` is lighter: the Span is an Act I stub (stays beacon-locked, no
   anchor mission, wardrobe deferred to Act II) but its exterior/interior art is
   authored.
-- **`gen_carriers.py`** runs last: it authors the patchwork carrier ships +
-  wardrobe, then patches a `free_carrier` AI ship + a berth NPC + dressing into
-  every already-written `systems/*.json` (idempotent, keyed by name).
+- **`gen_carriers.py`**: authors the patchwork carrier ships + wardrobe, then
+  patches a `free_carrier` AI ship + a berth NPC + dressing into every
+  already-written `systems/*.json` (idempotent, keyed by name).
+- **`gen_act2.py`** (Phase 7) runs last: merges the Act II courier missions
+  (`carrier_relief_run`, `combine_evacuation`) into `missions.json`. These are
+  handed out by `dispatches.json` (the faction inbox), not an NPC, and use the
+  generic gameplay-event flags so they need no new characters. `dispatches.json`
+  itself is hand-maintained (not generated).
 - Phase 0's `gen_systems.py` + `retag_assets.py` and 6.0's `gen_assets.py` are
   retired - every system and every per-culture asset is now owned by a slice
   script or hand-maintained.
