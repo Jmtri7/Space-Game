@@ -63,9 +63,39 @@ COMBINE_EVACUATION = {
     ],
 }
 
+# Phase 2 - the refugee barge escort. Offered by the drift_convoy_call
+# dispatch (dispatches.json) once the Combine has mobilised. escort_flag
+# "barge_under_escort" gates the barge ai_ship in BOTH Verdance and Ossuary
+# (gen_verdance.py / gen_ossuary.py - escorts don't survive a jump) and is
+# auto-cleared by _on_mission_end when the mission ends or is abandoned.
+# Stage 0's "hailed_pilot:" string must exactly match the pilot's name.
+ESCORT_BARGE = {
+    "title": "Forty Families",
+    "escort_flag": "barge_under_escort",
+    "on_start_flags": ["barge_under_escort"],
+    "on_end_flags": ["escort_barge_done"],
+    "on_start_rep": {"the_drift": 2},
+    "on_end_rep": {"the_drift": 6, "free_carrier": 4},
+    "stages": [
+        {"text": "Meet the barge Highcanopy-Nine over Verdance and signal ready - hail Barge-mother Sethe.",
+         "complete_flag": "hailed_pilot:Barge-mother Sethe",
+         "one_way_message": one_way("Sela of Highcanopy", "Barge Highcanopy-Nine is loading now - forty families, everything they could carry. Sethe flies the moment you're alongside and hail her. Stay between her and the Combine.")},
+        {"text": "Hold escort to Ossuary - jump when the barge is with you.",
+         "complete_flag": "jumped_to:ossuary", "reset_on_activation": True,
+         "one_way_message": one_way("Barge-mother Sethe", "We're slow and we're full. Match our speed, keep the blockade off our flank, and jump to Ossuary when we're clear of the Highcanopy shelf. We'll be right behind you.")},
+        {"text": "See the barge down at the Name-Wall - land at the Vigil dock.",
+         "complete_flag": "landed_on_landing_site", "reset_on_activation": True,
+         "one_way_message": one_way("Barge-mother Sethe", "Ossuary. The Vigil keeps a quiet dock and asks nothing - set down at the Name-Wall and they'll take my people in. Land alongside us.")},
+        {"text": "Report back to the Drift - jump to Verdance.",
+         "complete_flag": "jumped_to:verdance", "reset_on_activation": True,
+         "one_way_message": one_way("Sela of Highcanopy", "They're down and safe - word already reached us. Come back to Highcanopy. The assembly should hear it from the pilot who flew it.")},
+    ],
+}
+
 ACT2 = {
     "carrier_relief_run": CARRIER_RELIEF_RUN,
     "combine_evacuation": COMBINE_EVACUATION,
+    "escort_barge": ESCORT_BARGE,
 }
 
 missions = r(f"{S}/missions.json")

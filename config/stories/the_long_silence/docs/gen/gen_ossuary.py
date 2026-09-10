@@ -476,6 +476,13 @@ OSSUARY = {
          "faction": "the_vigil", "route": ["moon", "station"]},
         {"name": "Stele Courier Aen", "x": 0.68, "y": 0.58, "ship_type": "vigil_courier", "pilot": "aen",
          "faction": "the_vigil", "route": ["station", "moon"]},
+        # Act II escort mission (escort_barge, gen_act2.py) - the second copy
+        # of the refugee barge, so it survives the jump from Verdance. Same
+        # flag, same pilot; only the active system's copy ticks. See the
+        # matching entry + note in gen_verdance.py.
+        {"name": "Refugee Barge Highcanopy-Nine", "x": 0.5, "y": 0.4, "ship_type": "drift_hauler",
+         "pilot": "barge_sethe", "faction": "the_drift", "route": ["station", "moon"],
+         "requires_flag": "barge_under_escort"},
     ],
     "locked": True, "unlock_flag": "beacon_ossuary_lit",
 }

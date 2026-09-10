@@ -70,6 +70,16 @@
     "start_mission": "combine_evacuation"
   },
 
+  "drift_convoy_call": {
+    "sender": "The Drift — Sela of Highcanopy",
+    "subject": "A convoy, if you'll fly it",
+    "body": "Forty families want out of the ring before the Combine finishes closing the lane. The barge Highcanopy-Nine is slow and it is full. Fly cover for it to Ossuary and the Drift will not forget it.",
+    "requires_flag": "combine_mobilised",
+    "requires_rep": "the_drift:6",
+    "on_receive_flags": ["drift_convoy_offered"],
+    "start_mission": "escort_barge"
+  },
+
   "span_listening": {
     "sender": "Hub Zero — automated relay",
     "subject": "The hub is listening",

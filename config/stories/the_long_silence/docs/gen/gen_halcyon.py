@@ -808,7 +808,10 @@ story = r(f"{S}/story.json")
 # 0.13.0 deepens Act II/III (reactivation-front dispatch chain, courier-mission
 # on_end_flags, NPC reactions to the once-dead dispatch flags - see
 # config/stories/the_long_silence/docs/PLAN.md Phase 7).
-story["version"] = "0.13.0"
+# 0.14.0 Deepening Phase 2 - the refugee-barge escort (escort_barge + the
+# drift_convoy_call dispatch + Barge-mother Sethe + the gated barge ai_ship
+# in Verdance and Ossuary). See docs/ACT2_3_DEEPENING.md.
+story["version"] = "0.14.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

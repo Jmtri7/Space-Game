@@ -929,6 +929,19 @@
       ]
     },
     {
+      "name": "Refugee Barge Highcanopy-Nine",
+      "x": 0.5,
+      "y": 0.4,
+      "ship_type": "drift_hauler",
+      "pilot": "barge_sethe",
+      "faction": "the_drift",
+      "route": [
+        "station",
+        "moon"
+      ],
+      "requires_flag": "barge_under_escort"
+    },
+    {
       "name": "Sable's Watch",
       "x": 0.66,
       "y": 0.4,

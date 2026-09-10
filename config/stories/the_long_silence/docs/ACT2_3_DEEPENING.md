@@ -1,8 +1,8 @@
 # Deepening Act II & Act III — `the_long_silence`
 
-> **Status:** Phase 1 shipped (commit `e85846f`, story `0.13.0`). Phases 2–5 not started.
-> **Next agent: start at Phase 2.** This file is the canonical plan — keep the Status line
-> and each phase's `✅ SHIPPED` marker current as you land work.
+> **Status:** Phases 1–2 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`).
+> Phases 3–5 not started. **Next agent: start at Phase 3.** This file is the canonical
+> plan — keep the Status line and each phase's `✅ SHIPPED` marker current as you land work.
 
 ## For the implementing agent — how to work this
 
@@ -100,7 +100,16 @@ What shipped:
 
 ---
 
-## Phase 2 — Act II escort mission: the refugee barge (`escort_barge`)
+## Phase 2 — Act II escort mission: the refugee barge (`escort_barge`)  ✅ SHIPPED (`0.14.0`)
+
+Shipped as planned. Mission title **"Forty Families"**; pilot **Barge-mother Sethe**
+(`barge_sethe`, `escort_flag: barge_under_escort`, `freighter_pilot` so she shuttles when not
+escorting); the gated `Refugee Barge Highcanopy-Nine` `ai_ship` (`requires_flag:
+barge_under_escort`) is appended to **both** Verdance (`gen_verdance.py`) and Ossuary
+(`gen_ossuary.py`); offer dispatch **`drift_convoy_call`** (`gen` — hand `dispatches.json`,
+gated `combine_mobilised` + `requires_rep: the_drift:6`). Stages: hail Sethe → jump to Ossuary →
+land at the Name-Wall → jump back to Verdance. `on_end_rep {the_drift: 6, free_carrier: 4}`.
+Tests +4 (`tests/test_missions.py::TestLongSilenceDeepening`).
 
 Escort a Drift refugee barge Verdance → Ossuary past the Combine blockade; offered by dispatch
 once the Combine has mobilised.

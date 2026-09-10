@@ -502,6 +502,14 @@ VERDANCE = {
         {"name": "Combine Blockade Molt", "x": 0.4, "y": 0.72, "ship_type": "combine_patrol", "pilot": "molt",
          "faction": "ninefold_combine", "route": ["moon", "station"],
          "requires_flag": "combine_mobilised"},
+        # Act II escort mission (escort_barge). Escorts do not survive a
+        # jump - the same entry is appended to the Ossuary ai_ships so the
+        # barge is present in both systems, gated on the same flag; only the
+        # active system's copy ticks. _sync_hostiles skips ship.escorting so
+        # the barge never fights and the blockade never targets it.
+        {"name": "Refugee Barge Highcanopy-Nine", "x": 0.5, "y": 0.4, "ship_type": "drift_hauler",
+         "pilot": "barge_sethe", "faction": "the_drift", "route": ["station", "moon"],
+         "requires_flag": "barge_under_escort"},
     ],
     "locked": True, "unlock_flag": "beacon_verdance_lit",
 }
@@ -567,6 +575,14 @@ pilots.update({
     "ost": {"name": "Ring-hand Ost", "faction": "the_drift", "role": "freighter_pilot",
             "personality": "Quiet, steady, has flown the same ring loop so long the barge knows the way itself.",
             "hail_greeting": "Drift barge, ring to city. No hurry. There never is."},
+    # Act II escort mission (escort_barge, gen_act2.py) - a Drift refugee
+    # barge run Verdance -> Ossuary past the Combine blockade. escort_flag
+    # puts her in OrbitPlayerRoutine for the mission; a route so she moves
+    # normally when not escorting (freighter_pilot -> ShuttleRoutine).
+    "barge_sethe": {"name": "Barge-mother Sethe", "faction": "the_drift", "role": "freighter_pilot",
+                    "escort_flag": "barge_under_escort",
+                    "personality": "Forty Drift families in the hold and no intention of arguing about it. Flies slow, flies full, and expects her escort to keep up rather than the other way round.",
+                    "hail_greeting": "Refugee barge Highcanopy-Nine, bound for Ossuary. We're slow and full. Stay close and stay between us and the Combine."},
 })
 w(f"{S}/pilots.json", pilots)
 

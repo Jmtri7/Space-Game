@@ -558,6 +558,51 @@ class TestConditionalWorldContent(unittest.TestCase):
         self.assertFalse(has_raider())
 
 
+class TestLongSilenceDeepening(unittest.TestCase):
+    """Act II/III deepening (docs/ACT2_3_DEEPENING.md) against the real
+    story config - one class per phase's plumbing."""
+
+    def setUp(self):
+        self.missions = utils.get_missions("the_long_silence")
+        self.dispatches = utils.get_dispatches("the_long_silence")
+
+    # -- Phase 2: the refugee-barge escort -----------------------------
+    def test_escort_barge_mission_shape(self):
+        m = self.missions["escort_barge"]
+        self.assertEqual(m["escort_flag"], "barge_under_escort")
+        self.assertIn("barge_under_escort", m["on_start_flags"])
+        self.assertIn("escort_barge_done", m["on_end_flags"])
+        self.assertEqual(m["stages"][0]["complete_flag"], "hailed_pilot:Barge-mother Sethe")
+
+    def test_drift_convoy_call_offers_escort_barge(self):
+        d = self.dispatches["drift_convoy_call"]
+        self.assertEqual(d["requires_flag"], "combine_mobilised")
+        self.assertEqual(d["start_mission"], "escort_barge")
+
+    def test_the_barge_ai_ship_is_gated_in_both_verdance_and_ossuary(self):
+        for sysid in ("verdance", "ossuary"):
+            sysj = utils.load_json(f"config/stories/the_long_silence/systems/{sysid}.json")
+            barge = [s for s in sysj["ai_ships"] if s.get("pilot") == "barge_sethe"]
+            self.assertEqual(len(barge), 1, sysid)
+            self.assertEqual(barge[0]["requires_flag"], "barge_under_escort")
+
+    def test_sync_conditional_ships_spawns_and_culls_the_barge(self):
+        gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
+        pos = gs.player.person.possessions
+
+        def has_barge():
+            return any(getattr(s, "_spawn_cfg", {}).get("pilot") == "barge_sethe"
+                       for s in gs.systems["verdance"].ai_ships)
+
+        self.assertFalse(has_barge())
+        pos.flags["barge_under_escort"] = True
+        gs._sync_conditional_ships()
+        self.assertTrue(has_barge())
+        pos.flags["barge_under_escort"] = False
+        gs._sync_conditional_ships()
+        self.assertFalse(has_barge())
+
+
 class TestSystemUnlocked(unittest.TestCase):
     """utils.system_unlocked - a system is reachable unless "locked" and its
     "unlock_flag" isn't set (see docs/CONTROLS.md's Star Map / the story's

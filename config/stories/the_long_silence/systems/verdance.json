@@ -932,6 +932,19 @@
       "requires_flag": "combine_mobilised"
     },
     {
+      "name": "Refugee Barge Highcanopy-Nine",
+      "x": 0.5,
+      "y": 0.4,
+      "ship_type": "drift_hauler",
+      "pilot": "barge_sethe",
+      "faction": "the_drift",
+      "route": [
+        "station",
+        "moon"
+      ],
+      "requires_flag": "barge_under_escort"
+    },
+    {
       "name": "Captain Ash",
       "x": 0.72,
       "y": 0.28,

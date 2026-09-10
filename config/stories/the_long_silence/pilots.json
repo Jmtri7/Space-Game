@@ -139,5 +139,13 @@
     "role": "patrol_officer",
     "personality": "Rides escort on the dangerous lanes for whoever pays; not a fighter by trade, just the one who stayed calm.",
     "hail_greeting": "Carrier escort, paid by the run. I'm not looking for trouble - I'm looking at you so trouble doesn't."
+  },
+  "barge_sethe": {
+    "name": "Barge-mother Sethe",
+    "faction": "the_drift",
+    "role": "freighter_pilot",
+    "escort_flag": "barge_under_escort",
+    "personality": "Forty Drift families in the hold and no intention of arguing about it. Flies slow, flies full, and expects her escort to keep up rather than the other way round.",
+    "hail_greeting": "Refugee barge Highcanopy-Nine, bound for Ossuary. We're slow and full. Stay close and stay between us and the Combine."
   }
 }
