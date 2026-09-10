@@ -261,8 +261,10 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] Six Act I→II narrative dispatches seeded (`authority_first_orders`,
     `relay_front_kiln`, `carrier_open_hand`, `vigil_warning`,
     `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).
-  - [ ] Attach real cargo / refugee / escort **missions** to the dispatches
-    (needs the Act II mission content below).
+  - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
+    Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
+    stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.
+  - [ ] More Act II missions (escort/recon) as the content deepens.
 - [x] Kiln mobilisation — a Combine blockade pair over Verdance
   (`gen_verdance.py` `ai_ships`, `requires_flag: combine_mobilised`, pilots
   corran/molt). Set by the `combine_mobilises` dispatch; hostile via the normal
@@ -288,14 +290,24 @@ First-pass content is complete and plays end to end; these are quality passes:
 
 ## Phase 8 — Content: Act III "The Span" + endings
 
-- [ ] Expand the Hub Zero interior (the 6.5 stub has 4 NPCs + the fork): more Warden NPCs, the archive terminal, and the shutdown-reason reveal as a *place* (right now it is only a dialogue reveal in `the_vigil_record` — quarantine / scorched-earth / accident)
-- [x] Three `end_story` branches wired to the First Warden fork (restore / sever / hold_middle), each with a confirm step; `requires_rep` / `requires_not_flag` gate availability — **built in 6.5**, may want re-tuning here
-- [ ] Reputation checks decide epilogue tone; `EndingScreen` epilogue text: per system, per ending (`endings.json` currently has the base three)
+- [~] Expand the Hub Zero interior — added a **Hub Archive** bay + an
+  Archivist NPC: the shutdown reason (quarantine / scorched-earth / accident)
+  is now a *place*, the Hub's own three conflicting logs read from the
+  machine's end, setting `read_hub_archive`. Plus a Choir-hand ambient NPC
+  (Hub Zero is 7 NPCs now). More could follow (a full Choir sequence, the
+  reactivation-signal source scene).
+- [x] Three `end_story` branches wired to the First Warden fork (restore / sever / hold_middle), each with a confirm step; `requires_rep` / `requires_not_flag` gate availability — **built in 6.5**
+- [x] Reputation checks decide epilogue tone — `endings.json` has all three
+  endings with `epilogue` paragraphs + a `faction_epilogue` line for every
+  faction × {allied, neutral, hostile} band (`EndingScreen._band`). The eight
+  missing hostile lines filled.
 
 ## Phase 9 — Playtest, balance, save discipline
 
 - [ ] Full playthrough of each ending path (and each Act I anchor mission — see 6.x remaining polish)
-- [ ] Economy / loan tuning (BACKLOG: loan too big; laser-cannon soft-lock)
+- [~] Economy / loan tuning — starter loan cut 100k → 12k (`story.json` `loan`
+  block); laser-cannon soft-lock fixed (Outfitter Sell tab + `sell_outfit`).
+  A fuller economy balance pass still wants a play-through.
 - [ ] Combat balance pass; autopilot battery re-run
 - [ ] Final `story.json` version bump; SAVE_SYSTEM.md worked example of an old save vs. the finished story
 - [ ] Move completed BACKLOG items to done (factions, combat, escort contracts, win state)
