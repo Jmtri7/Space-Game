@@ -10,11 +10,14 @@ its shading is a hand-port of `expand.py` and must be kept in step with it. Drag
 any handle; double-click an edge to insert a point; alt-click to delete.
 
 Side-panel order: story / design pickers, the mode + body + article switchers,
-then the mode-specific editing panels (Polygons, Sections, Selected section,
-Curves in body-edit mode; Fit in tailor mode; Outfit in outfit mode), then the
-generic **View** toggles, then the lone **Undo** button and the drafts panel. In tailor mode the
-order shifts: Sections and Selected section come first, then Preview look, then
-Polygons (it edits details on the selected region, so it reads better below it).
+then the mode-specific editing panels (Sections, Selected section, then
+**Details**, then Curves in body-edit mode; Fit in tailor mode; Outfit in
+outfit mode), then the generic **View** toggles, then the lone **Undo** button
+and the drafts panel. The **Details** panel (the freestanding polygons/circles
+layered over a region — formerly labelled "Polygons") always sits directly
+below the Sections / Selected-section selector; in tailor mode it drops one
+further, below Preview look, so the region's own look controls sit next to the
+section editor.
 
 Each
 section has an eye toggle to hide/show it (isolate a limb, or drop the far side
@@ -155,7 +158,7 @@ once. **all handles** above the list shows every piece — and toggles to
 one click instead. Each row also carries reorder arrows (↓/↑, same meaning as
 elsewhere) that move the piece within the whole merged `head.details` array —
 draw order, not just visibility, and not confined to its own file's group;
-they call the same `reorderDetail` the Polygons panel's layer buttons do.
+they call the same `reorderDetail` the Details panel's layer buttons do.
 Every merged
 detail carries a `_src` tag naming the file it came from — the serialized
 `#out` and the `.face-export.json` draft download both keep it (this is the one
@@ -258,7 +261,7 @@ preview whole outfits — no article is edited. It reuses the tailor-mode
 compose/render path (the same `compose_worn` draw order the game uses, the
 compare-body panel, the walk preview) with an empty synthetic article standing
 in for the edited one, so `FITBODY` points at the body itself. The side panel
-drops every editing section (Polygons, Sections, Output, Fit, Reference image,
+drops every editing section (Details, Sections, Output, Fit, Reference image,
 Preview look — hidden by `body.outfit-mode` CSS) and shows the **Outfit**
 section plus **View**. The **Outfit** section holds the **preview articles**
 checkbox list (outfit-mode only) and
@@ -380,7 +383,7 @@ whole piece from `D.regions`, re-aliasing `region0`/`region1`/… to match. A
 body's own sections (torso, head, …) never delete this way — they're
 structurally required, unlike an outfit's freestanding regions.
 
-**Adding a region** *(tailor mode)*. The Polygons panel's **+ region** button
+**Adding a region** *(tailor mode)*. The Details panel's **+ region** button
 pushes a new standalone region onto the article — a small placeholder quad at
 the view centre, its own `fits: []`, with `group` and `tag` copied from
 the currently-selected region. It's selected and aliased as the next `regionN`
@@ -517,7 +520,7 @@ top-level `"hides_hair": true` onto the article being tailored — at runtime
 and hair).
 
 **Colour and shade.** Every fill panel (a region's **Selected section** panel,
-a detail's **Polygons** panel, tailor mode's **Preview look**) has a **color**
+a detail's **Details** panel, tailor mode's **Preview look**) has a **color**
 dropdown (palette keys) and a **shade** dropdown (the profile names from
 `materials.json`, plus `false — flat`). The two are independent — that is the
 whole point of the split. Each option in the colour dropdown is tinted with the

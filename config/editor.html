@@ -159,18 +159,6 @@
   </div>
   <div class="row" id="hairPickerRow" style="display:none">preview hair <select id="hairPicker" style="flex:1"></select></div>
 
-  <div id="refImgSec">
-    <h2>Reference image</h2>
-    <div class="row">
-      <button id="refLoad">load image…</button>
-      <button id="refRemove">remove</button>
-    </div>
-    <input type="file" id="refFile" accept="image/*" hidden>
-    <div id="refPanel"></div>
-    <div class="hint">A tracing aid only — never saved with the design, and it
-      resets if you reload the page.</div>
-  </div>
-
   <div id="outfitSec" style="display:none">
     <h2>Outfit</h2>
     <div class="hint">Preview articles worn together on this body — pick a
@@ -223,8 +211,16 @@
     <div id="fitPanel"><div class="hint">none selected</div></div>
   </div>
 
+  <div id="secPanelSec">
+  <h2>Sections</h2>
+  <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
+  <div id="secList"></div>
+
+  <h2>Selected section</h2>
+  <div id="secEdit"><div class="hint">none</div></div>
+
   <div id="polyPanelSec">
-  <h2>Polygons</h2>
+  <h2>Details</h2>
   <div class="row" id="pTargetRow">attach new pieces to <select id="pTarget" style="flex:1"></select></div>
   <div class="row">
     <button id="pAdd">+ polygon</button>
@@ -236,7 +232,7 @@
     standalone garment piece (own group, tag, fits, shade) — it copies
     the selected region's group and tag if one is selected; set its
     name, <b>anim. group</b> and <b>draw order</b> tag in the Selected&nbsp;section
-    panel below. A
+    panel above. A
     <b>polygon</b>/<b>circle</b> is a detail on the selected region (rides its
     group, no fit).</div>
   <div class="hint">dbl-click a handle = select its whole polygon (shift = add).
@@ -248,14 +244,6 @@
     works too, once you isolate the piece in the list below to declutter it).</div>
   <div id="polyEdit"><div class="hint">select one whole polygon to edit its fill</div></div>
   </div>
-
-  <div id="secPanelSec">
-  <h2>Sections</h2>
-  <div class="hint">click a name to edit its handles only; checkbox = show handles</div>
-  <div id="secList"></div>
-
-  <h2>Selected section</h2>
-  <div id="secEdit"><div class="hint">none</div></div>
 
   <div id="lookPreviewSec" style="display:none">
     <h2>Preview look</h2>
@@ -309,6 +297,18 @@
   <div class="hint">drag empty space = box-select · <b>shift</b> = add · click+drag a
     selected dot = move the group · <b>Esc</b> clear · <b>Del</b> remove ·
     arrows nudge · middle-drag or <b>space</b>-drag = pan</div>
+  </div>
+
+  <div id="refImgSec">
+    <h2>Reference image</h2>
+    <div class="row">
+      <button id="refLoad">load image…</button>
+      <button id="refRemove">remove</button>
+    </div>
+    <input type="file" id="refFile" accept="image/*" hidden>
+    <div id="refPanel"></div>
+    <div class="hint">A tracing aid only — never saved with the design, and it
+      resets if you reload the page.</div>
   </div>
 
   <div id="outPanelSec">
@@ -969,9 +969,9 @@ if(!TAILOR_MODE) document.getElementById('fitPanelSec').style.display = 'none';
 if(TAILOR_MODE || FACE_MODE) document.getElementById('curvesPanelSec').style.display = 'none';
 if(TAILOR_MODE){ document.getElementById('pAddR').style.display = '';
   document.getElementById('pAddRHint').style.display = '';
-  // tailor mode: the Polygons panel edits details on the selected region, so
-  // sit it right under Preview look (below Selected section) rather than at its
-  // default spot above the Sections list. Body/face modes keep the default order.
+  // tailor mode: the Details panel edits details on the selected region; nudge
+  // it down past Preview look so the region's own look controls sit next to the
+  // section editor. (It already renders below Selected section in every mode.)
   document.getElementById('lookPreviewSec').after(document.getElementById('polyPanelSec')); }
 const LOCK_POINTS = FACE_MODE;   // body silhouette vertices are not movable here
 let bodyDesign = null;   // TAILOR_MODE: the (locked, reference-only) body the article is fit against
@@ -2329,7 +2329,7 @@ function addPoly(){
   // tone:'dark' so a same-material polygon still shows up as a visibly filled
   // shape against the mid-tone base instead of blending invisibly into it -
   // pick the material + tone in the fill panel once it's placed. Give it a
-  // unique name so it's tellable apart in the Sections/Polygons list.
+  // unique name so it's tellable apart in the Sections/Details list.
   const poly = { color: FACE_MODE ? 'skin' : (host.color||'skin'), shade: host.shade ?? 'matte', tone:'dark',
     note: uniqueDetailName(host, 'polygon'),
     points: [[view.x-r,view.y-r],[view.x+r,view.y-r],[view.x+r,view.y+r],[view.x-r,view.y+r]] };
@@ -2831,7 +2831,7 @@ function buildFaceList(el){
       const row = document.createElement('label');
       const on = !detPick.size || detPick.has('head:'+di);
       // draw order is this piece's position in the whole head.details array
-      // (the same array reorderDetail/the Polygons panel's layer buttons
+      // (the same array reorderDetail/the Details panel's layer buttons
       // move), not just within its own file's group - later drawn on top,
       // same as everywhere else in the pipeline.
       row.innerHTML = `<button class="eye">${on?'●':'–'}</button>
@@ -2856,7 +2856,7 @@ function buildSecEdit(){
   const el = document.getElementById('secEdit');
   if(FACE_MODE){        // this panel edits a body SECTION's own base colour
     el.innerHTML = `<div class="hint">this is the head's own skin, not a face
-      piece — use the <b>Polygons</b> fill panel above (select one whole piece)
+      piece — use the <b>Details</b> fill panel below (select one whole piece)
       to change an eye/brow/nose/lip's colour instead.</div>`;
     return;
   }
