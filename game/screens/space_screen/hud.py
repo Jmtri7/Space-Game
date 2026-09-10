@@ -254,15 +254,20 @@ class _HudMixin:
             # Controls with a persistent bottom-status prompt of their own
             # (F autopilot, G land, R hail, V jump) are deliberately left off
             # this pane - the on-screen prompt already says how, when it applies.
+            # Self-explanatory mouse actions (wheel to scroll/zoom, click/hover
+            # a blip) are left off too.
             help_items = [
                 ("ESC", "Pause"),
-                ("WASD / Arrows", "Fly"),
+                ("A / D", "Turn"),
+                ("W", "Thrust"),
+                ("S", "Reverse heading"),
                 ("Z / X", "Rotate view"),
                 ("T", "Target mode"),
                 ("Q / E", "Cycle target"),
                 ("Space", "Fire"),
-                ("1  /  2  /  3", "Map / gear / log"),
-                ("Wheel", "Scroll pane"),
+                ("1", "Star map"),
+                ("2", "Possessions"),
+                ("3", "Mission log"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale,
                                                collapsed=self.controls_collapsed)

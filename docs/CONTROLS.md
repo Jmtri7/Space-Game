@@ -24,7 +24,7 @@ action to a modal (add a button, not a key).
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
-| **Z** / **X** | Rotate the view left / right (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
+| **Z** / **X** | Rotate the view right / left (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
 | **E** | Cycle forward through targetable objects in the current target mode |
 | **Q** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star). Starts on LANDING SITES. |
@@ -55,6 +55,9 @@ View), **T** talk, **G** enter portal (interiors) - is deliberately left off
 the pane, so the pane stays short and the prompt is the single source of
 truth for "how do I do this right now". Keep this split when you add a
 control: give it a status prompt *or* a pane entry, not both.
+
+Self-explanatory mouse actions (wheel to scroll a pane or zoom the view,
+click / hover a minimap blip) are also left off the pane.
 
 ## Star Map (1)
 

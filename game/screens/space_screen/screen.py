@@ -330,9 +330,9 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # input focus, same as flight controls.
         if not self.active_dialogue:
             if keys[pygame.K_z]:
-                self.camera_angle = (self.camera_angle - CAMERA_ROTATE_SPEED) % 360
-            if keys[pygame.K_x]:
                 self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
+            if keys[pygame.K_x]:
+                self.camera_angle = (self.camera_angle - CAMERA_ROTATE_SPEED) % 360
 
         for event in events:
             # An open hail swallows all other input: hover highlights an

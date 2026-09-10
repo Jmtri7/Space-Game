@@ -563,13 +563,15 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         if draw_hud and not self.active_dialogue:
             # T (talk) and G (board / exit) are left off - each shows its own
             # bottom-status prompt ("Press T to talk to ...", "Press G to enter
-            # portal") whenever it actually applies.
+            # portal") whenever it actually applies. Self-explanatory mouse
+            # actions (wheel to scroll/zoom) are left off too.
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD / Arrows", "Walk"),
                 ("Q  /  E", "Cycle target"),
-                ("1  /  2  /  3", "Map / gear / log"),
-                ("Wheel", "Scroll log"),
+                ("1", "Star map"),
+                ("2", "Possessions"),
+                ("3", "Mission log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale,
                                                collapsed=self.controls_collapsed)
