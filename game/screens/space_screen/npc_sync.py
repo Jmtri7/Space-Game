@@ -51,7 +51,9 @@ class _NpcSyncMixin:
         The system is jumpable from that point on - see utils.system_unlocked
         and try_jump. self._lit_beacons is seeded (no announcement) on the
         first call so a loaded save with already-lit beacons stays quiet,
-        then tracks flips from there."""
+        then tracks flips from there. A system flagged "unlock_silent" (the
+        story's opening lane, keyed for the player rather than relit by them)
+        is tracked but never announced."""
         flags = self.player.person.possessions.flags
         systems = get_star_systems(self.story)
         lit_now = {sid for sid, cfg in systems.items()
@@ -60,6 +62,8 @@ class _NpcSyncMixin:
             self._lit_beacons = lit_now
             return
         for sid in lit_now - self._lit_beacons:
+            if systems.get(sid, {}).get("unlock_silent"):
+                continue
             name = systems.get(sid, {}).get("name", sid)
             self._post_message("Relay Network", f"Beacon relit: {name}. The jump lane is open.")
         self._lit_beacons = lit_now

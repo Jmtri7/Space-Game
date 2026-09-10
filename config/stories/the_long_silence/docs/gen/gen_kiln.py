@@ -544,7 +544,10 @@ KILN = {
         {"name": "Deep Freight Molt", "x": 0.66, "y": 0.66, "ship_type": "combine_hauler", "pilot": "molt",
          "faction": "ninefold_combine", "route": ["station", "moon"]},
     ],
-    "locked": True, "unlock_flag": "beacon_kiln_lit",
+    # unlock_silent: Kiln is the story's opening lane, keyed for the player by
+    # the induction (or Vane's fallback) - no galaxy-wide "Beacon relit"
+    # broadcast for it the way the outer systems get. See _check_beacons.
+    "locked": True, "unlock_flag": "beacon_kiln_lit", "unlock_silent": True,
 }
 w(f"{S}/systems/kiln.json", KILN)
 

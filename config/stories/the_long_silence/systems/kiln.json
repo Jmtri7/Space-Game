@@ -1016,5 +1016,6 @@
     }
   ],
   "locked": true,
-  "unlock_flag": "beacon_kiln_lit"
+  "unlock_flag": "beacon_kiln_lit",
+  "unlock_silent": true
 }

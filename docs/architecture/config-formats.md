@@ -50,9 +50,13 @@ from the save. `locked: true` + `unlock_flag` (a `Possessions.flags` name)
 make a system unreachable until that flag is set — beacon jump-gating, checked
 by `utils.system_unlocked()` in `SpaceScreen.try_jump` and the `StarMap`; set
 the flag with the `"light_beacon:<system_id>"` dialogue action, a mission's
-`on_end_flags`, or a plain `set_flag:`. `get_star_systems()` surfaces `name`,
-`star_map_position`, `station_name`, `moon_name`, `locked`, and `unlock_flag`
-(the star-map projection — not the full system file).
+`on_end_flags`, or a plain `set_flag:`. Add `"unlock_silent": true` to skip
+the galaxy-wide "Beacon relit" broadcast when it unlocks — for a system that
+is *keyed* for the player as a premise (the story's first lane) rather than
+relit by them out in the dark (`SpaceScreen._check_beacons`).
+`get_star_systems()` surfaces `name`, `star_map_position`, `station_name`,
+`moon_name`, `locked`, `unlock_flag`, and `unlock_silent` (the star-map
+projection — not the full system file).
 
 **Interior layout** (per key in a landing site's `interiors`): a `culture`, one
 or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":

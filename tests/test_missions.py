@@ -600,12 +600,21 @@ class TestBeaconJumpGating(unittest.TestCase):
         gs._lit_beacons = None
         gs._check_beacons()  # seed - nothing lit yet
         self.assertEqual(possessions.message_log, [])
-        possessions.flags["beacon_kiln_lit"] = True
+        possessions.flags["beacon_verdance_lit"] = True
         gs._check_beacons()
         self.assertEqual(len(possessions.message_log), 1)
-        self.assertIn("Kiln", possessions.message_log[0]["text"])
+        self.assertIn("Verdance", possessions.message_log[0]["text"])
         gs._check_beacons()  # no duplicate on the next frame
         self.assertEqual(len(possessions.message_log), 1)
+
+    def test_check_beacons_stays_silent_for_an_unlock_silent_system(self):
+        gs = SpaceScreen(pilot_name="Test", story="the_long_silence", system_id="halcyon")
+        possessions = gs.player.person.possessions
+        gs._lit_beacons = None
+        gs._check_beacons()  # seed
+        possessions.flags["beacon_kiln_lit"] = True  # Kiln is unlock_silent
+        gs._check_beacons()
+        self.assertEqual(possessions.message_log, [])
 
 
 class TestSpaceScreenMissionIntegration(unittest.TestCase):

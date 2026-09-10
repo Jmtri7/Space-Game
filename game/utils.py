@@ -631,6 +631,11 @@ def get_star_systems(story):
                 # common case) means always reachable.
                 "locked": data.get("locked", False),
                 "unlock_flag": data.get("unlock_flag"),
+                # Suppress the galaxy-wide "Beacon relit" broadcast when this
+                # one unlocks - for a system that is "keyed" for the player as
+                # a premise (the story's first lane) rather than relit by them
+                # out in the dark. See SpaceScreen._check_beacons.
+                "unlock_silent": data.get("unlock_silent", False),
             }
     return systems
 
