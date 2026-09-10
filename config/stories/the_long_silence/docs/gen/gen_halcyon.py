@@ -862,7 +862,7 @@ story = r(f"{S}/story.json")
 # geometry (editor edits) across a full gen re-run + writes a trailing newline,
 # so the `git checkout HEAD -- .../graphics/articles/` dance is retired. Also
 # restores the missing `hides_hair` on combine_deep_hood.
-story["version"] = "0.19.0"
+story["version"] = "0.19.1"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

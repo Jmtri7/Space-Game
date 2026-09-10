@@ -702,6 +702,13 @@
                   "text": "You took the open-hand call, then. Word runs the slow lanes faster than the fast ones - whatever the Hub decides, there is a berth for you at any carrier slip in the region, and a debt owed at most of them.",
                   "options": [
                     {
+                      "label": "Take the Ossuary relief run.",
+                      "next": "loaded",
+                      "requires_flag": "relief_run_active",
+                      "requires_not_flag": "relief_run_loaded",
+                      "action": "set_flag:relief_run_loaded"
+                    },
+                    {
                       "label": "Pledge the carriers your lane.",
                       "next": "pledged",
                       "requires_not_flag": "patron:free_carrier",
@@ -736,6 +743,15 @@
                 },
                 "pledged": {
                   "text": "Then you speak for the fleet at the Hub. Keep the lanes free. That's the whole of it.",
+                  "options": [
+                    {
+                      "label": "Understood",
+                      "next": null
+                    }
+                  ]
+                },
+                "loaded": {
+                  "text": "Then it's yours. Grain, water filters, med stock - pooled off six crews. The Vigil won't ask and won't thank you; they need it anyway. Jump when you're clear.",
                   "options": [
                     {
                       "label": "Understood",

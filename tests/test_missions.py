@@ -652,6 +652,20 @@ class TestLongSilenceDeepening(unittest.TestCase):
                   if "set_exclusive_flag:patron:free_carrier" in o.get("actions", [])]
         self.assertEqual(len(pledge), 1)
 
+    def test_verdance_carrier_berth_hands_over_the_relief_load(self):
+        dlg = self._dialogue(self._station_npc("verdance", "Carrier off the Slip"))
+        # after carrier_open_hand: contacted root, mission live, not yet loaded
+        flags = {"carrier_contact": True, "relief_run_active": True}
+        dlg.current_node = dlg.resolve_root(flags, {})
+        self.assertEqual(dlg.current_node, "contacted")
+        take = [o for o in dlg.current_options(flags, {})
+                if o.get("action") == "set_flag:relief_run_loaded"]
+        self.assertEqual(len(take), 1)
+        # once loaded, the option is gone
+        flags["relief_run_loaded"] = True
+        self.assertFalse([o for o in dlg.current_options(flags, {})
+                          if o.get("action") == "set_flag:relief_run_loaded"])
+
     # -- Phase 4: the Act III Choir sequence ---------------------------
     def test_core_choir_mission_shape(self):
         m = self.missions["the_core_choir"]

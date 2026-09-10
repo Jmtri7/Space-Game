@@ -286,6 +286,9 @@
   },
   "carrier_relief_run": {
     "title": "Relief Down the Line",
+    "on_start_flags": [
+      "relief_run_active"
+    ],
     "on_end_flags": [
       "relief_run_done"
     ],
@@ -294,6 +297,14 @@
       "the_vigil": 3
     },
     "stages": [
+      {
+        "text": "Take the run on - see the carrier off the Slip at the Highcanopy berth (Canopy Walk, by the Ferry Slip).",
+        "complete_flag": "relief_run_loaded",
+        "one_way_message": {
+          "sender": "Free carriers",
+          "text": "It's a supply load for the Vigil at Ossuary - our crews pooled it, and it's on the ground at our berth on the Canopy Walk at Highcanopy, over toward the Ferry Slip. Whoever's off the Slip has the manifest. Tie up and take it."
+        }
+      },
       {
         "text": "Carry the relief load to Ossuary - jump there.",
         "complete_flag": "jumped_to:ossuary",

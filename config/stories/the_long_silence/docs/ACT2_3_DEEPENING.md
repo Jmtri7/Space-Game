@@ -284,6 +284,15 @@ gated on the *previous thread's* receipt or completion, never on `act_pressure` 
 > `one_way_message`s + the Ossuary beacon post) as a 75 s trickle on undock. Re-gated so each
 > Act II thread waits on the one before it.
 
+**`carrier_relief_run` pickup (`0.19.1`).** `carrier_open_hand` still `start_mission`s it (so
+it lands in the log), but the run no longer just declares a load in the hold. New stage 0
+(`on_start_flags: ["relief_run_active"]`, completes on `relief_run_loaded`) sends you to the
+Verdance carrier berth; the "Carrier off the Slip" berth NPC's `contacted` node gains a
+*"Take the Ossuary relief run."* option (`gen_carriers.py` `BERTH_RELIEF`, gated
+`relief_run_active` + `requires_not_flag: relief_run_loaded`) that sets the flag. Only then
+does the old "Load's aboard — jump to Ossuary" stage begin. Same NPC-hands-off-the-mission
+shape as `front_recon`'s Assay-clerk Dorn stage.
+
 ---
 
 ## Phase 4 — Act III "Choir sequence" (`the_core_choir`)  ✅ SHIPPED (`0.16.0`)

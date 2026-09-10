@@ -31,9 +31,13 @@ def one_way(sender, text):
 
 CARRIER_RELIEF_RUN = {
     "title": "Relief Down the Line",
+    "on_start_flags": ["relief_run_active"],
     "on_end_flags": ["relief_run_done"],
     "on_end_rep": {"free_carrier": 6, "the_vigil": 3},
     "stages": [
+        {"text": "Take the run on - see the carrier off the Slip at the Highcanopy berth (Canopy Walk, by the Ferry Slip).",
+         "complete_flag": "relief_run_loaded",
+         "one_way_message": one_way("Free carriers", "It's a supply load for the Vigil at Ossuary - our crews pooled it, and it's on the ground at our berth on the Canopy Walk at Highcanopy, over toward the Ferry Slip. Whoever's off the Slip has the manifest. Tie up and take it.")},
         {"text": "Carry the relief load to Ossuary - jump there.",
          "complete_flag": "jumped_to:ossuary", "reset_on_activation": True,
          "one_way_message": one_way("Free carriers", "Load's aboard - grain, water filters, med stock. Ossuary's the Vigil; they won't ask and they won't thank you, but they need it. Jump when you're clear.")},

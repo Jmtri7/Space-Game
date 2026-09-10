@@ -288,6 +288,20 @@ BERTH_REACT = {
 # a free_carrier warm root + a pledge option that set_exclusive_flag locks in
 # patron:free_carrier, mutually exclusive with the other four.
 BERTH_PLEDGE = {"verdance"}
+# Phase 3d - the open-hand relief run (carrier_relief_run, gen_act2.py) is
+# handed you by the carrier_open_hand dispatch but picked up in person at
+# this berth: the mission's first stage waits on relief_run_loaded, which a
+# `contacted`-node option sets while the mission is live (relief_run_active).
+BERTH_RELIEF = {"verdance"}
+_RELIEF_OPTION = {
+    "label": "Take the Ossuary relief run.", "next": "loaded",
+    "requires_flag": "relief_run_active", "requires_not_flag": "relief_run_loaded",
+    "action": "set_flag:relief_run_loaded",
+}
+_RELIEF_NODES = {
+    "loaded": {"text": "Then it's yours. Grain, water filters, med stock - pooled off six crews. The Vigil won't ask and won't thank you; they need it anyway. Jump when you're clear.",
+               "options": [{"label": "Understood", "next": None}]},
+}
 _PLEDGE_OPTION = {
     "label": "Pledge the carriers your lane.", "next": "pledged",
     "requires_not_flag": "patron:free_carrier",
@@ -341,6 +355,12 @@ for sysid, ship in CARRIER_SHIP.items():
                 nodes.update({k: {"text": v["text"],
                                   "options": [dict(o) for o in v["options"]]}
                               for k, v in _PLEDGE_NODES.items()})
+            if sysid in BERTH_RELIEF:
+                # the reacted (`contacted`) node is where an open-hand player lands
+                react_opts.insert(0, dict(_RELIEF_OPTION))
+                nodes.update({k: {"text": v["text"],
+                                  "options": [dict(o) for o in v["options"]]}
+                              for k, v in _RELIEF_NODES.items()})
             npc["dialogue_tree"] = {"root": "start", "conditional_roots": croots, "nodes": nodes}
         else:
             npc["greeting"] = bline

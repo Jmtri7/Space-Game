@@ -44,7 +44,7 @@
   "carrier_open_hand": {
     "sender": "Free carriers — open channel",
     "subject": "An open lane, or none at all",
-    "body": "You have been lighting beacons ahead of the Authority's flag. Some of us have run these lanes for six generations and would like them to stay ungoverned. Carry for us when you can. We remember it.",
+    "body": "You have been lighting beacons ahead of the Authority's flag. Some of us have run these lanes for six generations and would like them to stay ungoverned. Carry for us when you can - and there's a run waiting now if you'll take it: a relief load for the Vigil, sitting at our berth on the Canopy Walk at Highcanopy. Ask for the carrier off the Slip. We remember who flies for us.",
     "requires_flag": "act_pressure",
     "on_receive_flags": ["carrier_contact"],
     "on_receive_rep": {"free_carrier": 3},

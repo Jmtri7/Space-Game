@@ -91,6 +91,16 @@ class TestLongSilenceActTwoPlumbing(unittest.TestCase):
         self.assertEqual(self.m["carrier_relief_run"]["on_end_flags"], ["relief_run_done"])
         self.assertEqual(self.m["combine_evacuation"]["on_end_flags"], ["evac_run_done"])
 
+    def test_relief_run_is_picked_up_in_person_at_the_verdance_berth(self):
+        """carrier_open_hand still starts the mission (it lands in the log), but
+        its first stage is a lead-in to the carrier berth NPC - no load appears
+        in the hold until relief_run_loaded is set there."""
+        rr = self.m["carrier_relief_run"]
+        self.assertIn("relief_run_active", rr.get("on_start_flags", []))
+        self.assertEqual(rr["stages"][0]["complete_flag"], "relief_run_loaded")
+        self.assertEqual(rr["stages"][1]["complete_flag"], "jumped_to:ossuary")
+        self.assertEqual(self.d["carrier_open_hand"]["start_mission"], "carrier_relief_run")
+
     def test_act_two_board_is_doled_out_one_thread_at_a_time(self):
         """Finishing the_drift_assembly sets act_pressure + beacon_ossuary_lit +
         the_drift:6 at once. Only carrier_open_hand may fire on that; every other
