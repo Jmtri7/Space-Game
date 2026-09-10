@@ -214,6 +214,12 @@ def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
                                   INFO_LABEL_COLOR, then `value` in
                                   `value_col`, so labels read distinctly
                                   from the values beside them
+      (label, value, value_col, "block")
+                                - a two-tone line whose value always
+                                  starts on its own line under the label
+                                  (a small hanging indent), for values
+                                  long enough that sharing the label's
+                                  line would wrap them awkwardly
 
     A line can carry real story content (a target's name, an interior
     label) rather than fixed UI text, so it's wrapped (see _wrap_text) to
@@ -237,7 +243,13 @@ def draw_info_panel(surface, lines, ui_scale, topright, scroll=0):
     # Flatten every entry into rows, each a list of (surface, x_offset).
     rows = []
     for entry in lines:
-        if len(entry) == 3:
+        if len(entry) == 4 and entry[3] == "block":
+            label, value, value_color, _ = entry
+            rows.append([(font.render(label, True, INFO_LABEL_COLOR), 0)])
+            indent = space_w * 2
+            for vline in _wrap_text(font, value, max(space_w, text_max_width - indent)):
+                rows.append([(font.render(vline, True, value_color), indent)])
+        elif len(entry) == 3:
             label, value, value_color = entry
             label_surf = font.render(f"{label} ", True, INFO_LABEL_COLOR)
             indent = label_surf.get_width()

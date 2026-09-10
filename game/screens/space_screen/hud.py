@@ -201,8 +201,8 @@ class _HudMixin:
         jump_value = selected_name + (" (current)" if self.selected_system_id == self.system_id else "")
 
         lines = [
-            ("Jump Target:", jump_value, CYAN),
-            ("Targeting Mode:", mode_label, WHITE),
+            ("Jump Target:", jump_value, CYAN, "block"),
+            ("Targeting Mode:", mode_label, WHITE, "block"),
         ]
         if target_obj and target_name:
             lines.append(("Target:", target_name, GREEN))
