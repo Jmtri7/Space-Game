@@ -43,8 +43,14 @@ only appears under a section if it currently has items there.
 ## Economy & Trading
 
 - [ ] You can spend your loan on a laser cannon and then be stuck (no way to
-      recover/pay it back).
-- [ ] Loan amount is too big — fine for testing now, but needs tuning down.
+      recover/pay it back). Partially mitigated in `the_long_silence` (loan cut
+      to 12k, story.json `loan` block) — the real fix is an outfit sell-back
+      path in `OutfittingMenu` (it can buy but never sell), still TODO.
+- [x] Loan amount is too big — fine for testing now, but needs tuning down.
+      `the_long_silence`: added a `story.json` `loan` block (lender / amount /
+      max_active — see `LocationScreen._loan_terms`) set to 12,000 (courier is
+      7,000), replacing the 100,000 engine default (`DEFAULT_LOAN_AMOUNT`).
+      Other stories still use the default.
 
 ## Stations, Interiors & World Building
 

@@ -468,10 +468,10 @@
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "Authority underwrites a starter loan for any pilot flying our beacons - 100,000 credits, enough for a hull and then some. Interest is the reports you file.",
+                  "text": "Authority underwrites a starter loan for any pilot flying our beacons - 12,000 credits, enough for a hull and a little fitting-out. Interest is the reports you file.",
                   "options": [
                     {
-                      "label": "Take the loan - 100000cr",
+                      "label": "Take the loan - 12,000cr",
                       "next": "loaned",
                       "action": "take_loan"
                     },

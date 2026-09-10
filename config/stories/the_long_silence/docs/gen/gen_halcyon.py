@@ -542,9 +542,9 @@ HUB_NPCS = [
     {"name": "Signal Officer Doss", "x": 280, "y": 860, "role": "loan_officer",
      "faction": "harbor_authority", "outfit": "authority_official_masc",
      "dialogue_tree": {"root": "start", "nodes": {
-        "start": {"text": "Authority underwrites a starter loan for any pilot flying our beacons - 100,000 credits, enough for a hull and then some. Interest is the reports you file.",
+        "start": {"text": "Authority underwrites a starter loan for any pilot flying our beacons - 12,000 credits, enough for a hull and a little fitting-out. Interest is the reports you file.",
                   "options": [
-                      {"label": "Take the loan - 100000cr", "next": "loaned", "action": "take_loan"},
+                      {"label": "Take the loan - 12,000cr", "next": "loaned", "action": "take_loan"},
                       {"label": "Not yet", "next": None}]},
         "loaned": {"text": "Approved. The beacons are our ledger now - don't make us come find you.",
                    "options": [{"label": "Thanks", "next": None}]}}}},
@@ -785,7 +785,12 @@ w(f"{S}/missions.json", missions)
 # 7. story.json wiring
 # ======================================================================
 story = r(f"{S}/story.json")
-story["version"] = "0.10.0"
+story["version"] = "0.11.0"
+# Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
+# carrier courier (7k) plus a weapon and a spare - deliberately not enough
+# to be careless with (was the engine default of 100k, which trivialised
+# the opening economy - see docs/BACKLOG.md).
+story["loan"] = {"lender": "Harbor Authority", "amount": 12000, "max_active": 1}
 # NOT starting_mission - that always defers to the first launch when the
 # player starts docked (see docs/ARCHITECTURE.md), which would skip every
 # station stage. The induction is started by Induction Officer Sella's
@@ -796,8 +801,8 @@ story.pop("starting_mission_trigger", None)
 story["start"]["flags"] = {}   # Kiln's beacon is lit by the induction's on_start_flags / Vane's fallback
 story["description"] = ("The Relay went dark 200 years ago and is switching itself back on, system by system. "
                         "Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what "
-                        "reconnection means. Halcyon (the start) is a first-pass finished slice - real Harbor Authority "
-                        "art, a full station, an induction tutorial; the other four systems are still per-culture stubs.")
+                        "reconnection means. Act I plays end to end - all five systems have authored culture art, "
+                        "walkable stations, NPC rosters, and anchor missions; Acts II-III are in progress.")
 w(f"{S}/story.json", story)
 
 print(f"Halcyon slice written: 3 ships, 1 station, 3 buildings, dress palette, "
