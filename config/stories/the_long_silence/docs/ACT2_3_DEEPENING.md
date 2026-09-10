@@ -89,7 +89,9 @@ What shipped:
   `["evac_run_done"]` (`gen_act2.py`).
 - **1b** — removed the duplicate `the_drift` key in `endings.json` `restore.faction_epilogue`.
 - **1c** — new dispatches `relay_front_verdance` / `relay_front_ossuary` / `relay_front_span`
-  (`dispatches.json`), each gated on the next system's unlock/act flag.
+  (`dispatches.json`), each gated on the next system's unlock/act flag. (`relay_front_verdance`
+  later moved from `beacon_ossuary_lit` to `jumped_to:ossuary` — the assembly sets the beacon
+  flag, so it was firing in the Act II open burst instead of on arrival. See Phase 3 Risk.)
 - **1d** — `conditional_roots` reactions wired for `authority_briefed` (Records Keeper Amsel,
   `gen_halcyon`), `carrier_contact` + `relay_front_kiln_seen` (the Verdance & Kiln carrier berth
   NPCs, `gen_carriers` via a new `BERTH_REACT` table), `span_hailed` (Warden of the Fourth
@@ -259,14 +261,28 @@ Verdance to emit the extra `conditional_roots` entry + `warm`/`pledged` nodes.
 
 ### Files
 `gen_act2.py`; `dispatches.json` (hand — `front_recon` offer gated
-`requires_flag: dispatch:carrier_open_hand`, NOT `act_pressure`); `gen_kiln.py` (pad-clerk
+`requires_flag: relief_run_done`, NOT `act_pressure`); `gen_kiln.py` (pad-clerk
 option); `gen_halcyon.py` (Amsel), `gen_verdance.py` (Sela), `gen_carriers.py` (Verdance berth
 NPC → full pledge tree); `gen_ossuary.py` (Aramis); `story.json` bump.
 
 ### Risk
-Natural dispatch stagger after this: `carrier_open_hand` (immediate on `act_pressure`) →
-`combine_mobilises` (+450 f) → `drift_convoy_call` (+450 f after `combine_mobilised`) →
-`front_recon` offer (+450 f after `dispatch:carrier_open_hand`).
+Dispatch stagger — the Act II board is doled out one thread at a time, each follow-up
+gated on the *previous thread's* receipt or completion, never on `act_pressure` directly
+(only `carrier_open_hand` opens on it):
+
+| Dispatch | Gate | Beat |
+|---|---|---|
+| `carrier_open_hand`  | `act_pressure`               | Act II opener (immediate) |
+| `combine_mobilises`  | `dispatch:carrier_open_hand` | +450 f after the opener |
+| `drift_convoy_call`  | `combine_mobilised`          | +450 f after the closure notice |
+| `carrier_recon_call` (`front_recon` offer) | `relief_run_done` | only after the first carrier run is flown |
+| `relay_front_verdance` | `jumped_to:ossuary`        | on arrival, not on beacon-lit |
+
+> **History:** originally `combine_mobilises` sat on `act_pressure` and `carrier_recon_call` /
+> `relay_front_verdance` chained on flags that flip the same instant the assembly ends, so
+> finishing `the_drift_assembly` dumped ~10 messages (5 dispatch bodies + 4 mission-intro
+> `one_way_message`s + the Ossuary beacon post) as a 75 s trickle on undock. Re-gated so each
+> Act II thread waits on the one before it.
 
 ---
 

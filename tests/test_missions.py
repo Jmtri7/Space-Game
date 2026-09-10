@@ -606,9 +606,11 @@ class TestLongSilenceDeepening(unittest.TestCase):
                          ["jumped_to:kiln", "front_recon_have_record",
                           "jumped_to:verdance", "front_recon_delivered"])
 
-    def test_carrier_recon_call_offers_front_recon_after_the_open_hand(self):
+    def test_carrier_recon_call_offers_front_recon_after_the_first_relief_run(self):
+        # gated on the relief run being *flown*, not just the open-hand dispatch
+        # received - keeps the Act II board from unloading all at once.
         d = self.dispatches["carrier_recon_call"]
-        self.assertEqual(d["requires_flag"], "dispatch:carrier_open_hand")
+        self.assertEqual(d["requires_flag"], "relief_run_done")
         self.assertEqual(d["start_mission"], "front_recon")
 
     def test_the_pad_clerk_hands_over_the_record_only_during_the_mission(self):

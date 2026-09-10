@@ -21,7 +21,7 @@
     "sender": "Relay Network",
     "subject": "Reactivation front — Verdance",
     "body": "The signal has caught Verdance behind you. The Drift's cloud-city registered the handshake this morning and is still arguing about what it means. Keep moving.",
-    "requires_flag": "beacon_ossuary_lit",
+    "requires_flag": "jumped_to:ossuary",
     "on_receive_flags": ["relay_front_verdance_seen"]
   },
 
@@ -63,7 +63,7 @@
     "sender": "Ninefold Combine — liaison",
     "subject": "Notice of closure",
     "body": "The Combine has voted. The Kiln lane is closing and its patrols are cleared to turn back any hull that will not leave. This is your notice. There will not be another.",
-    "requires_flag": "act_pressure",
+    "requires_flag": "dispatch:carrier_open_hand",
     "requires_rep_below": "ninefold_combine:15",
     "on_receive_flags": ["combine_mobilised"],
     "on_receive_rep": {"ninefold_combine": -3},
@@ -74,7 +74,7 @@
     "sender": "Free carriers — open channel",
     "subject": "Read the front before it reads you",
     "body": "You have a line to us now. Here is the first ask: the relight signal handshakes every beacon it passes, and the Kiln relay logged the timings. Get that record and put it in the right hands. Whoever holds the schedule is ready for what comes; whoever doesn't is surprised by it.",
-    "requires_flag": "dispatch:carrier_open_hand",
+    "requires_flag": "relief_run_done",
     "on_receive_flags": ["recon_offered"],
     "start_mission": "front_recon"
   },

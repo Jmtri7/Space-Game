@@ -76,6 +76,9 @@ class TestLongSilenceActTwoPlumbing(unittest.TestCase):
         self.assertIn("relay_front_kiln", self._pending(p))
         self.assertNotIn("relay_front_verdance", self._pending(p))
         p.flags["beacon_ossuary_lit"] = True
+        # gated on arrival, not on the beacon flag (the assembly sets that)
+        self.assertNotIn("relay_front_verdance", self._pending(p))
+        p.flags["jumped_to:ossuary"] = True
         self.assertIn("relay_front_verdance", self._pending(p))
         self.assertNotIn("relay_front_ossuary", self._pending(p))
         p.flags["act_span"] = True
@@ -87,3 +90,18 @@ class TestLongSilenceActTwoPlumbing(unittest.TestCase):
     def test_courier_missions_now_leave_a_trace(self):
         self.assertEqual(self.m["carrier_relief_run"]["on_end_flags"], ["relief_run_done"])
         self.assertEqual(self.m["combine_evacuation"]["on_end_flags"], ["evac_run_done"])
+
+    def test_act_two_board_is_doled_out_one_thread_at_a_time(self):
+        """Finishing the_drift_assembly sets act_pressure + beacon_ossuary_lit +
+        the_drift:6 at once. Only carrier_open_hand may fire on that; every other
+        Act II dispatch waits on the previous thread."""
+        p = Possessions()
+        p.flags["act_pressure"] = True
+        p.flags["beacon_ossuary_lit"] = True
+        p.adjust_reputation("the_drift", 6)
+        self.assertEqual(self._pending(p), ["carrier_open_hand"])
+        p.flags["dispatch:carrier_open_hand"] = True
+        self.assertIn("combine_mobilises", self._pending(p))
+        self.assertNotIn("carrier_recon_call", self._pending(p))
+        p.flags["relief_run_done"] = True
+        self.assertIn("carrier_recon_call", self._pending(p))
