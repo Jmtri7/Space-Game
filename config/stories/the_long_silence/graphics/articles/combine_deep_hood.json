@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "head",
-      "tag": "hood front",
+      "tag": "hood back",
       "note": "deep hood",
       "color": "cloth",
       "shade": "matte",
@@ -70,5 +70,6 @@
         }
       }
     }
-  ]
+  ],
+  "hides_hair": true
 }

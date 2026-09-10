@@ -223,12 +223,41 @@ def numeral_plate_region(color, shade, note="ration plate"):
 
 
 # ---------------------------------------------------------------- wardrobe wiring
+def write_article(aid, design):
+    """Write an article JSON, but PRESERVE any hand-tuned per-region
+    `geometry` already on disk. The `_*_region` builders below emit rough
+    placeholder vertex lists; the real shaping is done afterwards in
+    config/editor.html. Before this helper, a full gen re-run reverted that
+    polish (~13 files) and every runbook said `git checkout HEAD -- .../articles/`.
+    Now the generator owns identity / palette / colour / which regions exist,
+    and the editor owns each region's `geometry` (points, fits, details).
+    Match is by (group, note); a region the generator adds or renames starts
+    from the builder geometry until it's edited (delete the JSON to force a
+    full regen of one article)."""
+    try:
+        old = r(f"{G}/articles/{aid}.json")
+    except FileNotFoundError:
+        old = None
+    if old:
+        prev = {(reg.get("group"), reg.get("note")): reg.get("geometry")
+                for reg in old.get("regions", [])}
+        for reg in design.get("regions", []):
+            keep = prev.get((reg.get("group"), reg.get("note")))
+            if keep is not None:
+                reg["geometry"] = keep
+    # trailing newline to match config/editor.html's writer, so an
+    # editor round-trip and a gen re-run agree byte-for-byte
+    with open(f"{G}/articles/{aid}.json", "w") as f:
+        json.dump(design, f, indent=2)
+        f.write("\n")
+
+
 def write_wardrobe(gfx, pfx, dress_palette, articles, sets, role_set):
     """articles: {id: article-dict}; sets: {id: {identity, articles:[...]}};
     role_set: {outfit-role -> set-id}. Writes the article + set files and
     repoints the ten <pfx>_<role>_<cut> outfit entries at their set."""
     for aid, design in articles.items():
-        w(f"{G}/articles/{aid}.json", design)
+        write_article(aid, design)
     for sid, design in sets.items():
         design.setdefault("palette", dress_palette)
         w(f"{G}/sets/{sid}.json", design)

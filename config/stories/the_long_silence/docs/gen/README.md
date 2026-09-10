@@ -14,16 +14,17 @@ python config/stories/the_long_silence/docs/gen/gen_carriers.py   # 6.6 free-car
 python config/stories/the_long_silence/docs/gen/gen_act2.py       # Phase 7 - Act II dispatch missions (merges into missions.json; run last)
 ```
 
-The chain runs clean end to end and is non-destructive **except** for the
-bespoke wardrobe `graphics/articles/*.json`: ~15 of them (authority / carrier /
-combine / drift) carry hand-tuned vertex geometry from `config/editor.html` that
-was never back-ported into the `_slice_kit.py` article builders, so a full
-re-run reverts that polish. Until the builders are updated to emit the tuned
-points (or the polish is redone after a run), `git checkout HEAD --
-config/stories/the_long_silence/graphics/articles/` after running the chain, or
-just don't run it when you only need a content change elsewhere. Everything else
+The chain runs clean end to end and regenerates everything byte-identical
 (`systems/`, `missions.json`, `graphics.json`, `building_types.json`,
-`ship_types.json`, `pilots.json`) regenerates byte-identical.
+`ship_types.json`, `pilots.json`, `graphics/articles/`, ...). **No `git checkout`
+dance any more** — as of story `0.19.0`, `write_article()` (in `_slice_kit.py`,
+mirrored in `gen_halcyon.py`) preserves any hand-tuned per-region `geometry`
+already on disk, matching by `(group, note)`. So: edit article vertices in
+`config/editor.html`, commit the JSON, and a later full gen re-run keeps that
+geometry while still re-authoring identity / palette / colour / which regions
+exist. To force a full regen of one article's geometry, delete its JSON first.
+A region the generator *adds or renames* starts from the builder's rough
+placeholder until it's edited.
 
 - **`gen_assets.py` is retired** (deleted 2026-09-09, alongside Phase 0's
   `gen_systems.py` / `retag_assets.py`). It was the 6.0 bootstrap that stamped

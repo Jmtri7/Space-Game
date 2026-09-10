@@ -411,8 +411,29 @@ ARTICLES = {
                    ]),
         ])},
 }
+def write_article(aid, design):
+    """Write an article JSON but PRESERVE any hand-tuned per-region `geometry`
+    already on disk (the builders here emit rough placeholders; real shaping
+    is done in config/editor.html). Match by (group, note). Mirrors
+    _slice_kit.write_article - keep them in step."""
+    try:
+        old = r(f"{G}/articles/{aid}.json")
+    except FileNotFoundError:
+        old = None
+    if old:
+        prev = {(reg.get("group"), reg.get("note")): reg.get("geometry")
+                for reg in old.get("regions", [])}
+        for reg in design.get("regions", []):
+            keep = prev.get((reg.get("group"), reg.get("note")))
+            if keep is not None:
+                reg["geometry"] = keep
+    with open(f"{G}/articles/{aid}.json", "w") as f:
+        json.dump(design, f, indent=2)
+        f.write("\n")
+
+
 for aid, design in ARTICLES.items():
-    w(f"{G}/articles/{aid}.json", design)
+    write_article(aid, design)
 
 # Five culture sets. Base garments are recoloured by the set palette
 # (authority_dress); the five bespoke articles above give the silhouette.
@@ -836,8 +857,12 @@ story = r(f"{S}/story.json")
 # 0.18.0 follow-up - the Combine/Drift/Vigil patron pledge was unreachable
 # post-anchor (warm root shadowed by the <anchor>_done conditional_root); the
 # rep-gated pledge option now also lives on each completion node (Factor Tol
-# done+report, Sela done, Aramis done). See docs/ACT2_3_DEEPENING.md.
-story["version"] = "0.18.0"
+# done+report, Sela done, Aramis done).
+# 0.19.0 gen tooling - write_article() now preserves hand-tuned per-region
+# geometry (editor edits) across a full gen re-run + writes a trailing newline,
+# so the `git checkout HEAD -- .../graphics/articles/` dance is retired. Also
+# restores the missing `hides_hair` on combine_deep_hood.
+story["version"] = "0.19.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

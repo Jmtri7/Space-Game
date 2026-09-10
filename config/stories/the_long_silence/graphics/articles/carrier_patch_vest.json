@@ -5,7 +5,7 @@
   "regions": [
     {
       "group": "torso",
-      "tag": "undershirt",
+      "tag": "vest",
       "note": "patch vest",
       "color": "cloth",
       "shade": "matte",

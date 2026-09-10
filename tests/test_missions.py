@@ -752,6 +752,30 @@ class TestLongSilenceDeepening(unittest.TestCase):
                 for b in ("allied", "neutral", "hostile"):
                     self.assertIn(b, fe, f"{eid}/{fid}/{b}")
 
+    # -- follow-up: gen write_article preserves editor geometry --------
+    def test_write_article_keeps_hand_tuned_geometry_on_disk(self):
+        import importlib.util, os, tempfile, json as _json
+        path = "config/stories/the_long_silence/docs/gen/_slice_kit.py"
+        spec = importlib.util.spec_from_file_location("_slice_kit_t", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        tmp = tempfile.mkdtemp()
+        os.makedirs(f"{tmp}/graphics/articles")
+        mod.G = f"{tmp}/graphics"
+        polished = {"identity": "old", "tier": "person", "palette": "p", "regions": [
+            {"group": "torso", "note": "plate", "color": "metal", "shade": "metal",
+             "geometry": {"masc": {"points": [[9, 9]], "fits": []}}}]}
+        with open(f"{tmp}/graphics/articles/x.json", "w") as f:
+            _json.dump(polished, f)
+        regen = {"identity": "new", "tier": "person", "palette": "p2", "regions": [
+            {"group": "torso", "note": "plate", "color": "lamp", "shade": "glow",
+             "geometry": {"masc": {"points": [[0, 0]], "fits": []}}}]}
+        mod.write_article("x", regen)
+        out = _json.load(open(f"{tmp}/graphics/articles/x.json"))
+        self.assertEqual(out["identity"], "new")          # generator wins on identity
+        self.assertEqual(out["regions"][0]["color"], "lamp")
+        self.assertEqual(out["regions"][0]["geometry"]["masc"]["points"], [[9, 9]])  # editor wins on geometry
+
     # -- follow-up: patron pledge reachable after the anchor mission ---
     def test_patron_pledge_is_reachable_on_the_completion_node(self):
         cases = [

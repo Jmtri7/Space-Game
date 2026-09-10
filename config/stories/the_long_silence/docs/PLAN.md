@@ -185,7 +185,7 @@ flight rigs).
   `+max_health`, and added a Sell tab to the Outfitter. All four Act I
   outfitters stock the two new outfits. `Ship.apply_outfits` gained
   `max_health` modifier support.
-- [~] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — mostly done: the story now lists the `figures-human` / `audio-core` / `ships-core` / `common-goods` / `story-defaults` config-modules instead of vendoring the tree (`graphics/` is down to ~114 culture-specific files). Remaining: diff the leftover local `graphics/body` / `graphics/faces` / `graphics/articles` against `figures-human` and delete any byte-identical copies.
+- [x] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — the story lists the `figures-human` / `audio-core` / `ships-core` / `common-goods` / `story-defaults` config-modules instead of vendoring the tree (`graphics/` is ~114 culture-specific files). Diffed the leftover local `graphics/body` / `graphics/faces` / `graphics/articles` against `figures-human` (2026-09-10): **zero byte-identical copies** — every leftover is a bespoke culture article or an intentionally hand-tuned override (`human_femme`, `eyes_almond`, `lips_full`, `nose_soft`, `badge`, `buttons`, `hair_short`, `pants`, `stand_collar`). Nothing to prune.
 
 ### What 6.1–6.6 now is
 The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, **authors that culture's bespoke wardrobe** (real garment articles + culture `sets`, ~4 sets by role — replacing the first-pass `<pfx>_dress` palette recolors), plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
@@ -259,9 +259,11 @@ First-pass content is complete and plays end to end; these are quality passes:
 - [x] **Repair the gen chain** — `gen_assets.py` retired (6.0 bootstrap,
   superseded + crashed on the module split); `gen_halcyon.py` now merges its
   mission instead of overwriting `missions.json`. Chain runs clean end to end.
-  Remaining: back-port the ~15 hand-polished wardrobe articles' vertex geometry
-  into the `_slice_kit.py` builders so a full re-run stops reverting that polish
-  (see `docs/gen/README.md`) — folds into the "wardrobe fitting pass" below.
+  Article polish is now preserved across a full re-run: `write_article()`
+  (`_slice_kit.py` + `gen_halcyon.py`, story `0.19.0`) keeps hand-tuned
+  per-region `geometry` from `config/editor.html`, matching by `(group, note)`.
+  The `git checkout HEAD -- .../graphics/articles/` dance is retired
+  (see `docs/gen/README.md`).
 - [x] Station concourses render as one open lit deck on the Space View starfield
   with a culture-tiled floor — `LocationScreen` `seamless` / `space_backdrop` /
   `floor_pattern` (`deck_grid.tessellate`), set per-culture by `_slice_kit.station_shell`.

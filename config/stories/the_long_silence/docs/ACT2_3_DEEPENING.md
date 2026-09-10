@@ -13,9 +13,9 @@
   `gen_halcyon → gen_kiln → gen_verdance → gen_ossuary → gen_span → gen_carriers → gen_act2`
   (last). Each `gen_<system>.py` **owns** its `systems/<id>.json` outright. `dispatches.json`
   and `endings.json` are **hand-maintained** (no generator).
-- **After any `gen_*` re-run:** `git checkout HEAD -- config/stories/the_long_silence/graphics/articles/`
-  — ~15 hand-polished article files revert on a full chain run otherwise. Everything else
-  regenerates byte-identical.
+- **After a `gen_*` re-run:** nothing special — as of `0.19.0` `write_article()` preserves
+  hand-tuned article `geometry` across a full run (the old `git checkout … graphics/articles/`
+  dance is retired). Everything regenerates byte-identical.
 - **`story.json` `version`** is set by `gen_halcyon.py` — bump it once per shipped phase and note
   it in the commit. New flags are all additive; old saves default them `False`, which is the
   correct pre-Act-II / pre-fork state.
