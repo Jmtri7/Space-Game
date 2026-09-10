@@ -496,7 +496,6 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "action": "open_shop",
                       "next": null
                     }
                   ]

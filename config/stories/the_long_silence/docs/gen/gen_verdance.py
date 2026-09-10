@@ -381,7 +381,7 @@ HC_NPCS = [
                        "actions": ["set_flag:assembly_view_osei"]},
                       {"label": "Just browsing.", "action": "open_shop", "next": None}]},
         "ok": {"text": "Good. Tell Sela the Slip votes to open. And come back if you need a hull with room to sleep in.",
-               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
+               "options": [{"label": "Understood", "next": None}]},
         "heard": {"text": "You've got my view. Open the lane. Now - a barge, or just looking?",
                   "options": [{"label": "Show me the hulls", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "ships", "stock": ["drift_hauler", "drift_courier", "carrier_hauler", "carrier_courier"]}},
@@ -395,7 +395,7 @@ HC_NPCS = [
                        "actions": ["set_flag:assembly_view_tam"]},
                       {"label": "What do you trade?", "action": "open_shop", "next": None}]},
         "ok": {"text": "Thank you. Tell them the Water Office says wait - but says it, doesn't shout it.",
-               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
+               "options": [{"label": "Understood", "next": None}]},
         "heard": {"text": "You have my view. Trade, if you need to.", "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["grain", "water_credits"], "sell_multiplier": 1.1}},
 

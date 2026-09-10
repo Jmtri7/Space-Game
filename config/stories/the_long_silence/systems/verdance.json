@@ -420,7 +420,6 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "action": "open_shop",
                       "next": null
                     }
                   ]
@@ -490,7 +489,6 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "action": "open_shop",
                       "next": null
                     }
                   ]

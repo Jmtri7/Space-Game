@@ -363,7 +363,7 @@ NW_NPCS = [
                        "actions": ["set_flag:vigil_read_first"]},
                       {"label": "What can you spare to trade?", "action": "open_shop", "next": None}]},
         "ok": {"text": "Now the Reading Cells - the middle years, when they worked out why. Go to Brother Sol.",
-               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
+               "options": [{"label": "Understood", "next": None}]},
         "read": {"text": "You've read the First Wall. The Reading Cells next. I can spare archive copies if you'll carry them carefully.",
                  "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["archive_copies", "relief_supplies"], "sell_multiplier": 1.0}},
