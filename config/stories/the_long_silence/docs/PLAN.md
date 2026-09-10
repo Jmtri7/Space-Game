@@ -230,6 +230,14 @@ The stubs exist; each slice **shapes the placeholder geometry** for one culture 
 
 ### 6.x — remaining polish (not blocking Act II; do opportunistically)
 First-pass content is complete and plays end to end; these are quality passes:
+- [ ] **⚠️ Repair the gen chain** (blocks Phase 7+ content, which is authored
+  through these scripts). `gen_assets.py` crashes on
+  `graphics/palettes/civilian.json` (moved into the `figures-human` module);
+  point the generators at the resolved module paths. And make each
+  `gen_<system>.py` *merge* its missions into `missions.json` rather than
+  `w(..., {"induction": INDUCTION})` — running one slice alone currently wipes
+  the other three anchor missions. Until fixed: hand-edit the committed JSON and
+  mirror into the gen source.
 - [x] Station concourses render as one open lit deck on the Space View starfield
   with a culture-tiled floor — `LocationScreen` `seamless` / `space_backdrop` /
   `floor_pattern` (`deck_grid.tessellate`), set per-culture by `_slice_kit.station_shell`.
