@@ -312,13 +312,13 @@
   </div>
 
   <div id="outPanelSec">
-  <h2>Output</h2>
   <div class="row">
-    <button id="copy">Copy</button>
-    <button id="dl">Download</button>
     <button id="undo">Undo (Z)</button>
   </div>
-  <textarea id="out" spellcheck="false"></textarea>
+  <!-- #out is a write-only serialization sink: `sync()` fills it and the agent
+       reads it via javascript_tool for the pre-write preview. Never parsed back,
+       never shown to the user (Copy/Download were retired once drafts landed). -->
+  <textarea id="out" spellcheck="false" hidden></textarea>
   </div>
 
   <h2>Save / download drafts</h2>
@@ -3012,8 +3012,8 @@ function wireDrawRank(S){
 
 // ---- io ------------------------------------------------------------
 // `_src` (which face-kit file a merged detail came from) is kept in the
-// output on purpose: Copy/Download/#out are the hand-off to the agent for
-// the save step, and it needs `_src` to route each piece back to the file it
+// output on purpose: `#out` (and the face draft's split on save) is the
+// hand-off for the save step, and it needs `_src` to route each piece back to the file it
 // belongs in without guessing from `note` text. The agent strips `_src`
 // itself when it writes the real per-file JSON - it is never meant to reach
 // a committed design file.
@@ -3059,7 +3059,7 @@ function relinkTailorSections(){
   // alias each region as D.sections["region<i>"] (same object, by reference)
   // so all the existing section-shaped machinery (handles, multiselect,
   // scale/rotate, layer order, the fill panel) works on regions unchanged.
-  // round() strips this back out before it ever reaches #out/Copy/Download.
+  // round() strips this back out before it ever reaches #out.
   D.regions = D.regions || [];
   D.sections = {};
   D.regions.forEach((r,i)=>{ D.sections['region'+i] = r; });
@@ -3627,17 +3627,6 @@ function fitView(){
 document.getElementById('reset').onclick = ()=>{
   try{ const k=draftKey(); if(k) localStorage.removeItem(k); }catch(e){}
   location.reload();
-};
-document.getElementById('copy').onclick = ()=>navigator.clipboard.writeText(document.getElementById('out').value);
-document.getElementById('dl').onclick = ()=>{
-  // FACE_MODE downloads are a merged view (face-kit pieces inlined onto the
-  // head, tagged with _src) - name it so it's obviously not a plain body file
-  // that should be dropped straight back into config/.
-  const base = loadedPath ? loadedPath.split('/').pop().replace(/\.json$/, '')
-             : (D.variant ? 'human_'+D.variant : 'body');
-  const name = base + (FACE_MODE ? '.face-export.json' : '.json');
-  const b=new Blob([document.getElementById('out').value],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click();
 };
 document.getElementById('undo').onclick = undo;
 

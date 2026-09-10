@@ -12,7 +12,7 @@ any handle; double-click an edge to insert a point; alt-click to delete.
 Side-panel order: story / design pickers, the mode + body + article switchers,
 then the mode-specific editing panels (Polygons, Sections, Selected section,
 Curves in body-edit mode; Fit in tailor mode; Outfit in outfit mode), then the
-generic **View** toggles, then Output and the drafts panel. In tailor mode the
+generic **View** toggles, then the lone **Undo** button and the drafts panel. In tailor mode the
 order shifts: Sections and Selected section come first, then Preview look, then
 Polygons (it edits details on the selected region, so it reads better below it).
 
@@ -157,13 +157,15 @@ elsewhere) that move the piece within the whole merged `head.details` array —
 draw order, not just visibility, and not confined to its own file's group;
 they call the same `reorderDetail` the Polygons panel's layer buttons do.
 Every merged
-detail carries a `_src` tag naming the file it came from — Copy/Download/the
-Output box all keep it (this is the one field `expand()` and a real committed
-design file never see; it is stripped when the split files are written back).
+detail carries a `_src` tag naming the file it came from — the serialized
+`#out` and the `.face-export.json` draft download both keep it (this is the one
+field `expand()` and a real committed design file never see; it is stripped when
+the split files are written back).
 **save checked to repo** (see Saving) does that split mechanically — groups the
 edited details by `_src`, writes each group to the file it belongs in, `_src`
-removed. A `.face-export.json` download is the merged, `_src`-tagged view for
-handing to the agent, not a design file to drop straight into `config/`.
+removed. A `.face-export.json` download (from the drafts panel) is the merged,
+`_src`-tagged view for handing to the agent, not a design file to drop straight
+into `config/`.
 
 **Curves panel** — plain body-edit mode only (hidden in face and tailor mode).
 Below **Selected section**, it lists the selected section's `curves` by name
@@ -218,7 +220,7 @@ body, a reverse checkbox, **apply** (writes a single-point `fits` entry) and
 it doesn't jump to a stale placeholder). `D.sections` is a display-only alias
 for `D.regions` in this mode (`region0`, `region1`, …) — reused so the
 existing multiselect/scale/rotate/layer/handle machinery works on regions
-unchanged; it's stripped back out before it ever reaches `#out`/Copy/Download.
+unchanged; it's stripped back out before it ever reaches `#out`.
 Select two (same region) instead of one and the panel switches to bulk mode:
 **make all free** clears every fitted vertex in the selection at once.
 
@@ -556,7 +558,8 @@ this loop rather than hand-editing coordinates:
 2. **User edits** in the pane — drags vertices, toggles sections, freezes shade
    where auto is wrong.
 3. **Preview before writing.** When the user says they're done, the agent reads
-   the edited JSON out of the page (`#out` textarea), regenerates that asset's
+   the edited JSON out of the page (the hidden `#out` textarea, via
+   `javascript_tool`), regenerates that asset's
    atlas plate through the real `expand()` (not the editor's JS port — this is
    where any drift shows), and shows the before/after render plus a JSON diff.
 4. **Confirm, then replace.** On an explicit yes, either the user hits **save
@@ -625,7 +628,7 @@ The agent still owns the atlas-plate preview (drift only shows through the real
 `expand()`, not the editor's JS port) and the `identity` / dependent-doc
 updates — those don't happen on save.
 
-**Download.** The same panel (bottom of the side panel, below Output) lists
+**Download.** The **Save / download drafts** panel (bottom of the side panel) lists
 every `gpDraft:*` key in this browser at once — not just the design currently
 loaded — with a checkbox and an editable filename per row, defaulted from the
 draft's own path (`.face-export.json` for a face draft, the article's real
