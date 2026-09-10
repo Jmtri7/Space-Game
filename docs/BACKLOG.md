@@ -268,22 +268,13 @@ only appears under a section if it currently has items there.
 - [ ] Migrate the `default` story onto the design-JSON pipeline
       (docs/GRAPHICS_PIPELINE.md) so its art is regenerable again, then drop
       `person_figure.py` / `figure_signatures.py` and the old draw paths.
-- [ ] Shared asset modules via an `extends` search path. Today `config/stories/{story}/`
-      is fully self-contained and nothing is shared, so a new story that wants the
-      design-JSON pipeline has to vendor the whole `graphics/` tree (the
-      `the_long_silence` Phase 0 scaffold copied ~180 files from
-      `graphics_pipeline_test`). Proposal: add `config/modules/` holding
-      foundation-only packs (e.g. `pipeline_core` — bodies, faces, `rig_walk`,
-      generic articles, `materials.json`, `palettes/`, `draw_order.json`, base
-      ship stat bands, standard weapon outfits); `story.json` gets
-      `extends: ["pipeline_core"]`; asset resolution checks the story dir first,
-      then walks `extends`. Deliberately keep it one level (stories extend
-      modules, modules extend nothing), story-dir-always-wins, and error on
-      duplicate ids across modules rather than resolving by precedence. Saves stay
-      self-contained (they already snapshot the active system); the existing
-      SAVE_SYSTEM.md ⚠️ discipline still applies — a shared-module change that
-      reinterprets a stored value bumps the *story's* version. Cost: every
-      `load_json("config/stories/{story}/...")` call site goes through a resolver,
-      and the editor / atlas tooling (`config/editor.html`, `pipeline_atlas.py`)
-      plus `story_menu_rows()` must understand the search path. Pairs naturally
-      with the `default`-onto-pipeline migration above — do both in one arc.
+- [x] Shared asset modules via a search path. Shipped as the **config-module**
+      system: `config/modules/{name}/` shared kits, opted into via `story.json`
+      `"modules": [...]`, resolved by [`game/config_source.py`](../game/config_source.py)
+      (story dir wins; modules may now depend on modules, flattened by
+      `resolved_modules()`). `the_long_silence` uses `figures-human` / `audio-core`
+      / `ships-core` / `common-goods` / `story-defaults` instead of vendoring the
+      tree. Editor has a Workspace rail + new story/module buttons. Spec:
+      [CONFIG_MODULES.md](CONFIG_MODULES.md). (Landed as `"modules"` rather than
+      the originally-proposed `"extends"`; still one level in spirit but with
+      module→module deps.)

@@ -51,7 +51,8 @@ than migrating off the frozen `default` art.
 - [x] Six `cultures.json` entries — palette + `theme` + `naming` prose (Harbor Authority, Ninefold Combine, the Drift, the Vigil, the Wardens, free carriers); `orbital_std` / `regolith_std` kept as `(placeholder)` so the borrowed pipeline `building_types` resolve their culture colours
 - [x] Five stub `systems/*.json` (`halcyon`, `kiln`, `verdance`, `ossuary`, `the_span`) with `star_map_position` along the Relay spine, a culture-tagged station interior each (`trade_ring` / `regolith_moon` / `courier` art, `ck_*` outfits, `pipeline_*` furniture), a moon, 2–3 AI ships. Halcyon carries the real starter loop (loan officer + ship dealer + outfitter).
 - [x] Smoke test: story boots headless, pipeline `expand()` resolves the borrowed station/ship, all five systems build + simulate, every station & moon interior builds and ticks, portals walkable, Halcyon tutorial loop walkable, `run_tests.py` green (459)
-- [ ] Register the story in the top-level `docs/` tree (BACKLOG "new story" item) — deferred until the story is real enough to document there
+- [x] Register the story in the top-level `docs/` tree — listed in
+  `docs/architecture/config-formats.md` "Stories in this repo", pointing here.
 
 ### Known placeholder debt to clear in later phases
 - Every system uses the same borrowed `trade_ring` station, `regolith_moon` moon, `courier` hull, and grey `pipeline_*` / regolith furniture — replaced per-culture in Phase 6.1–6.6 (6.0 stands up the pipeline foundation).
@@ -179,7 +180,7 @@ flight rigs).
   - **Each design file carries a written `identity` brief** from that culture's theme + a "geometry is a placeholder copy — reshape" note
   - `systems/*.json` retagged to reference the per-culture ids — now all owned by the slice generators (Phase 0's `gen_systems.py` + `retag_assets.py` are retired)
 - [ ] Own `ship_outfits.json` (still the borrowed `default` 8 — a decent base; add a shield + scanner later)
-- [ ] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — cosmetic, do alongside a real slice
+- [~] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — mostly done: the story now lists the `figures-human` / `audio-core` / `ships-core` / `common-goods` / `story-defaults` config-modules instead of vendoring the tree (`graphics/` is down to ~114 culture-specific files). Remaining: diff the leftover local `graphics/body` / `graphics/faces` / `graphics/articles` against `figures-human` and delete any byte-identical copies.
 
 ### What 6.1–6.6 now is
 The stubs exist; each slice **shapes the placeholder geometry** for one culture (ships, station, 3 buildings) toward its `identity` brief, **authors that culture's bespoke wardrobe** (real garment articles + culture `sets`, ~4 sets by role — replacing the first-pass `<pfx>_dress` palette recolors), plus that system's real interior floor plan, NPC roster depth, hail dialogue, and an anchor mission. Each gets its own `docs/gen/gen_<system>.py` on the `gen_halcyon.py` model (see `docs/gen/README.md`).
@@ -236,7 +237,7 @@ First-pass content is complete and plays end to end; these are quality passes:
 - [ ] **Wardrobe fitting pass** — every bespoke article (all cultures) is free-drawn in body space with `fits: []`, not fitted to body curves. Give the torso/shoulder pieces real `fits` against `human_{masc,femme}` curves in `config/editor.html` so they follow a reproportioned body.
 - [ ] **Geometry shaping polish** — the authored ship / station / building silhouettes are first-pass rough (generated from the `gen_<system>.py` point lists). A pass each in the vertex editor to tighten them against the `identity` briefs. Combine courier's hazard bands read as one block; Vigil hauler's tail flare; Warden arc stations could use a cleaner inner edge.
 - [ ] Own `ship_outfits.json` (see 6.0) and prune the borrowed `graphics_pipeline_test` foundation (see 6.0).
-- [ ] Register the story in the top-level `docs/` tree (see Phase 0) — it is now real enough to document.
+- [x] Register the story in the top-level `docs/` tree — done (see Phase 0).
 
 ## Phase 7 — Content: Act II "Pressure"
 
