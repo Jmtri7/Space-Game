@@ -31,7 +31,7 @@
     "sender": "The Vigil — Keeper Aramis",
     "subject": "What the beacons were for",
     "body": "You have read part of the wall now. Whatever turned the Relay off did it on purpose. Slow the signal if you can. Do not be the one who finishes its run without knowing what it opens.",
-    "requires_flag": "beacon_ossuary_lit",
+    "requires_flag": "vigil_read_first",
     "on_receive_flags": ["vigil_warned"]
   },
 

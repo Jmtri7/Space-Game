@@ -283,9 +283,11 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] Six Act I→II narrative dispatches seeded (`authority_first_orders`,
     `relay_front_kiln`, `carrier_open_hand`, `vigil_warning`,
     `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).
-    Gated to their own beats so lighting Verdance doesn't dump the lot:
+    Gated to their own beats so no one flag dumps several at once:
     `relay_front_kiln` on `jumped_to:verdance` (front reaches Kiln behind
-    you), `carrier_open_hand` on `act_pressure` (early Act II).
+    you), `carrier_open_hand` on `act_pressure` (early Act II),
+    `vigil_warning` on `vigil_read_first` (matches "you have read part of
+    the wall now" - was on `beacon_ossuary_lit`, which lights from Verdance).
   - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
     Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
     stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.
