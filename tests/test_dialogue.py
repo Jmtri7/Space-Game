@@ -446,6 +446,16 @@ class TestStationTour(unittest.TestCase):
         self.assertLess(end_gap, start_gap - 100)
         self.assertLessEqual(end_gap, FollowPlayerRoutine.STOP_DISTANCE + 5)
 
+    def test_sela_runs_her_walk_cycle_while_following(self):
+        concourse, sela = self._concourse()
+        self._accept_tour(concourse, sela)
+        concourse.player.x, concourse.player.y = sela.person.x + 220, sela.person.y - 90
+        for _ in range(10):
+            concourse.update_physics()
+        # Following moves through step_toward, so the legs/arms animate
+        # instead of gliding along in the standing rest pose.
+        self.assertGreater(sela.person.walk_intensity, 0)
+
         # Mission ends -> escort_flag cleared -> back to a stationary routine.
         concourse.player.possessions.flags["station_guide_escorting"] = False
         concourse.update_physics()

@@ -16,9 +16,10 @@ class FollowPlayerRoutine:
     """Step toward `target` (anything with live .x/.y - the PlayerCharacter
     works fine) each frame, stopping once within STOP_DISTANCE so the guide
     trails the player instead of standing on top of them. Movement goes
-    through the character's own `can_move_to` with the same full-step /
-    each-axis wall-slide WanderRoutine uses, so the guide deflects off a
-    wall or pod doorway instead of clipping through it."""
+    through `person.step_toward` - the shared on-foot primitive - so the
+    guide wall-slides like WanderRoutine does, faces the way it is walking,
+    and drives its walk cycle (legs/arms) instead of gliding along in the
+    standing rest pose."""
 
     # A touch above the player's own walking pace (story.json "walking_speed"
     # default 2.5) so the guide can close a gap the player opened, but not so
@@ -39,16 +40,9 @@ class FollowPlayerRoutine:
         dist = math.hypot(dx, dy)
         if dist <= self.STOP_DISTANCE:
             return
-        step = min(self.follow_speed, dist - self.STOP_DISTANCE)
-        step_x, step_y = dx / dist * step, dy / dist * step
-        can_move_to = character.can_move_to
-        for candidate_x, candidate_y in (
-            (person.x + step_x, person.y + step_y),
-            (person.x + step_x, person.y),
-            (person.x, person.y + step_y),
-        ):
-            if (candidate_x, candidate_y) == (person.x, person.y):
-                continue
-            if can_move_to is None or can_move_to(candidate_x, candidate_y):
-                person.x, person.y = candidate_x, candidate_y
-                return
+        # Aim for a point STOP_DISTANCE short of the player, so step_toward's
+        # arrive-clamp holds the guide back there instead of on top of them.
+        hold = 1 - self.STOP_DISTANCE / dist
+        target_x, target_y = person.x + dx * hold, person.y + dy * hold
+        can_move_to = character.can_move_to or (lambda x, y: True)
+        person.step_toward(target_x, target_y, self.follow_speed, can_move_to)
