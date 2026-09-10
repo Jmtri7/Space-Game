@@ -1,7 +1,29 @@
 """Dialogue system for NPC interaction - a small conversation tree."""
 import pygame
+from game import constants
 from game.utils import _wrap_text, get_font
 from game.world.mission import abandon_mission, start_mission
+
+
+def _copy_to_clipboard(text):
+    """Best-effort clipboard copy for the DEBUG_MODE dialogue inspector -
+    tries pygame.scrap, then the platform clipboard command. Silent no-op
+    if none are available."""
+    try:
+        if not pygame.scrap.get_init():
+            pygame.scrap.init()
+        pygame.scrap.put_text(text)
+        return True
+    except Exception:
+        pass
+    import subprocess
+    import sys
+    cmd = {"win32": ["clip"], "darwin": ["pbcopy"]}.get(sys.platform, ["xclip", "-selection", "clipboard"])
+    try:
+        subprocess.run(cmd, input=text.encode("utf-8"), check=True)
+        return True
+    except Exception:
+        return False
 
 
 def option_actions(option):
@@ -164,6 +186,7 @@ class Dialogue:
         # leave). See LocationScreen / SpaceScreen handle_input.
         self._option_rects = []   # [(visible_index, pygame.Rect), ...]
         self._close_rect = None
+        self._debug_rect = None   # DEBUG_MODE: the clickable node-id line
 
     @classmethod
     def from_flat(cls, npc_name, greeting, options):
@@ -261,6 +284,28 @@ class Dialogue:
         """True when `pos` is on the box's ✕ close control."""
         return self._close_rect is not None and self._close_rect.collidepoint(pos)
 
+    def debug_click_at(self, pos):
+        """DEBUG_MODE only: when `pos` is on the debug node-id line drawn at
+        the bottom of the box, copy the current node (id, text, options) to
+        the clipboard and return True. Screens check this before their own
+        option/close hit-testing. Always False when DEBUG_MODE is off (the
+        rect isn't drawn)."""
+        if self._debug_rect is not None and self._debug_rect.collidepoint(pos):
+            _copy_to_clipboard(self._debug_dump())
+            return True
+        return False
+
+    def _debug_dump(self):
+        """Plain-text dump of the current node for the DEBUG_MODE inspector."""
+        node = self.nodes.get(self.current_node, {})
+        lines = [f'{self.npc_name} / node "{self.current_node}"', "", node.get("text", ""), ""]
+        for option in node.get("options", []):
+            dest = "(close)" if option.get("next") is None else f'-> {option["next"]}'
+            actions = option_actions(option)
+            tail = f"   [{', '.join(actions)}]" if actions else ""
+            lines.append(f'  - {option.get("label", "?")}  {dest}{tail}')
+        return "\n".join(lines)
+
     def choose(self, index, flags=None, reputation=None):
         """Convenience wrapper for callers with no actions to apply first
         (see the tests, and from_flat's plain closing options) - resolves
@@ -338,3 +383,12 @@ class Dialogue:
                     box_width - text_x_margin * 2, option_line_height)))
             text = font_text.render(("> " if not reason and i == self.selected_option else "  ") + label, True, color)
             surface.blit(text, (box_x + text_x_margin + int(10 * scale), row_y))
+
+        # DEBUG_MODE: a clickable line showing which node this is - click it
+        # to copy the node (id / text / options) to the clipboard.
+        self._debug_rect = None
+        if constants.DEBUG_MODE:
+            dbg = font_text.render(f"[debug] {self.npc_name} / {self.current_node}  (click to copy)", True, (110, 160, 130))
+            dbg_pos = (box_x + text_x_margin, box_y + box_height - int(24 * scale))
+            surface.blit(dbg, dbg_pos)
+            self._debug_rect = pygame.Rect(dbg_pos[0] - 4, dbg_pos[1] - 2, dbg.get_width() + 8, dbg.get_height() + 4)

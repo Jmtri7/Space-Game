@@ -518,6 +518,12 @@ Debug mode displays green X marks at the world coordinates of all entities:
 
 Use this to diagnose coordinate and positioning issues.
 
+In debug mode an open **conversation box** also shows a `[debug] <NPC> /
+<node id>  (click to copy)` line along its bottom edge - clicking it copies
+that node (id, text, and each option with its destination node and actions)
+to the clipboard. Works for both a station/moon dialogue and a ship hail.
+See `Dialogue.debug_click_at` / `_debug_dump` in `game/world/dialogue.py`.
+
 It also draws the **performance panel** in the bottom-left corner: FPS vs. the
 16.67 ms frame budget, per-phase timing for the main loop (input / sim / render
 / present), catch-up sim steps per frame, and the slowest tracked sub-sections

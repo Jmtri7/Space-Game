@@ -639,7 +639,9 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     if hovered is not None:
                         self.active_dialogue.selected_option = hovered
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if self.active_dialogue.close_at(event.pos):
+                    if self.active_dialogue.debug_click_at(event.pos):
+                        pass
+                    elif self.active_dialogue.close_at(event.pos):
                         self.active_dialogue = None
                     else:
                         picked = self.active_dialogue.option_at(event.pos)

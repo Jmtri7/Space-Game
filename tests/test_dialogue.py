@@ -43,6 +43,42 @@ class TestDialogue(unittest.TestCase):
         self.assertEqual(dialogue.current_node, "start")
 
 
+class TestDialogueDebugInspector(unittest.TestCase):
+    """DEBUG_MODE: an open box shows a clickable node-id line; clicking it
+    copies the node to the clipboard (see Dialogue.debug_click_at)."""
+
+    def test_debug_dump_lists_the_node_id_text_and_options(self):
+        dialogue = Dialogue("Courier", {
+            "note": {"text": "'read this'", "options": [
+                {"label": "Read", "next": "note"},
+                {"label": "End Conversation", "next": None, "action": "set_flag:met_courier"},
+            ]},
+        }, root="note")
+        dump = dialogue._debug_dump()
+        self.assertIn('node "note"', dump)
+        self.assertIn("'read this'", dump)
+        self.assertIn("-> note", dump)
+        self.assertIn("(close)", dump)
+        self.assertIn("set_flag:met_courier", dump)
+
+    def test_debug_click_is_a_noop_when_the_rect_was_never_drawn(self):
+        dialogue = Dialogue("Courier", {"start": {"text": "hi", "options": []}})
+        self.assertFalse(dialogue.debug_click_at((0, 0)))
+
+    def test_debug_click_on_the_rect_is_handled(self):
+        import game.world.dialogue as dmod
+        calls = []
+        original = dmod._copy_to_clipboard
+        dmod._copy_to_clipboard = lambda text: calls.append(text)
+        try:
+            dialogue = Dialogue("Courier", {"start": {"text": "hi", "options": []}})
+            dialogue._debug_rect = type("R", (), {"collidepoint": lambda self, p: True})()
+            self.assertTrue(dialogue.debug_click_at((5, 5)))
+            self.assertEqual(len(calls), 1)
+        finally:
+            dmod._copy_to_clipboard = original
+
+
 class TestDialogueConditionalOptions(unittest.TestCase):
     """requires_flag/requires_not_flag hide an option entirely (not just
     dim it, unlike an unaffordable action - see status_fn) until a
