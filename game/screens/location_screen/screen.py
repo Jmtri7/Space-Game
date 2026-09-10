@@ -286,7 +286,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             keys = pygame.key.get_pressed()
             self._handle_movement(keys)
         self.update_camera()
-        self.update_physics()
+        self.update_physics(player_present=True)
 
         # Unread-message ping: once per blink of the Message Log light,
         # exactly MESSAGE_ALERT_BLINKS times, driven only from the active
@@ -298,7 +298,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             sound_board.play("ping")
             self._message_alert_pings_played += 1
 
-    def update_physics(self):
+    def update_physics(self, player_present=False):
         """Advance just the NPCs - safe to call on a location that isn't
         the active screen. Paused while a conversation is open here
         (active_dialogue) - talking to one NPC shouldn't leave every other
@@ -309,7 +309,15 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         Message-log housekeeping runs even mid-conversation (so a message
         that lands while a dialogue is open still lights the unread light
         and is caught the moment it closes) - only NPC movement and the
-        escort/ambient checks pause."""
+        escort/ambient checks pause.
+
+        player_present is True only for the interior the player is actually
+        standing in (see update()). An NPC's proximity "ambient" line is
+        checked against the player's body position, so for a background
+        interior the player has never set foot in - which a docking AI
+        pilot can cause to be built and cached at any time - it would fire
+        against a default spawn position and wrongly post to the shared
+        Message Log. It's gated on player_present so it can't."""
         self._refresh_messages()
         if self.message_alert_timer > 0:
             self.message_alert_timer -= 1
@@ -318,7 +326,8 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         if self.active_dialogue:
             return
         self._sync_npc_escorts()
-        self._check_npc_ambient()
+        if player_present:
+            self._check_npc_ambient()
         with perf.span("sim.npcs"):
             for character in self.npcs:
                 character.update()

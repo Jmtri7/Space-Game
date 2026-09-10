@@ -348,7 +348,11 @@ mechanism behind every non-player character in the game:
   `FollowPlayerRoutine` while the flag is set) and `"ambient"`
   (`{"message", "range"}` - a line the NPC drops into the shared Message
   Log once, on proximity, via `LocationScreen._check_npc_ambient()`, the
-  on-foot counterpart to a pilot's `one_way_hail`). A dialogue option's
+  on-foot counterpart to a pilot's `one_way_hail` - only checked for the
+  interior the player is actually standing in (`update_physics(player_present=True)`,
+  set by `update()`), since a docking AI pilot can build+cache any
+  system's station interior in the background and its ambient NPCs would
+  otherwise greet the player against a default spawn position). A dialogue option's
   `"start_mission:<id>"` / `"abandon_mission:<id>"` action (see
   `apply_shared_actions`) lets an NPC kick off or drop a mission - e.g.
   Sela Cordova offering the `station_tour` walkthrough.

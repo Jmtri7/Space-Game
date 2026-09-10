@@ -531,6 +531,23 @@ class TestStationTour(unittest.TestCase):
         self.assertEqual(len(concourse.player.possessions.message_log), before + 1)
         self.assertEqual(concourse.player.possessions.message_log[0]["sender"], "Selu Vaeren")
 
+    def test_background_interior_never_fires_its_ambient_lines(self):
+        # A docking AI pilot can build+cache a station interior the player
+        # has never entered; update_background_locations then ticks it via
+        # update_physics() (player_present defaults False). The NPC ambient
+        # check must not run there - otherwise every mission-giver greets
+        # the player against a default spawn position (see the concourse's
+        # 700px ambient range).
+        concourse, sela = self._concourse()
+        concourse.player.x, concourse.player.y = sela.person.x, sela.person.y
+        before = len(concourse.player.possessions.message_log)
+        for _ in range(5):
+            concourse.update_physics()  # background tick, no player_present
+        self.assertEqual(len(concourse.player.possessions.message_log), before)
+        # ...but it does fire on the foreground tick.
+        concourse.update_physics(player_present=True)
+        self.assertEqual(len(concourse.player.possessions.message_log), before + 1)
+
     def test_walking_sets_the_walked_interior_flag(self):
         concourse, _ = self._concourse()
         keys = {k: False for k in (pygame_mock.K_LEFT, pygame_mock.K_a, pygame_mock.K_RIGHT,
