@@ -73,7 +73,7 @@
       },
       {
         "text": "Board your ship - step on the Berth portal and press L.",
-        "complete_flag": "bought_ship",
+        "complete_flag": "boarded_ship",
         "one_way_message": {
           "sender": "Induction Officer Sella",
           "text": "That's the ring done. Your ship's docked at the Berth - step on the portal and press L to board. I'll raise you once you're in the cockpit."

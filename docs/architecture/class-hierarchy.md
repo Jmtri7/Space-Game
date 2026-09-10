@@ -174,6 +174,7 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](../DESIGN_PATTERNS.md)
   | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
   | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
   | `bought_ship` / `bought_ship:<type>` | buy a ship (either purchase path) | `LocationScreen.buy_ship` |
+  | `boarded_ship` | actually launch into space (docked → flying) - use this, not `bought_ship`, for a "board your ship" step that must wait for the undock | `SpaceScreen.board_ship` |
   | `took_loan` | take a loan | `LocationScreen._apply_dialogue_action` |
 
   Dialogue can also set arbitrary flags with `"set_flag:<name>"`, so a

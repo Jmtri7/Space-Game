@@ -766,7 +766,7 @@ INDUCTION = {
          "complete_flag": "bought_ship",
          "one_way_message": say(IND, "The Berth is the east arm - the one you docked in. Harbor-Master Crane has hulls for sale there; the courier's an easy first ship. Buy whichever you like.")},
         {"text": "Board your ship - step on the Berth portal and press L.",
-         "complete_flag": "bought_ship",
+         "complete_flag": "boarded_ship",
          "one_way_message": say(IND, "That's the ring done. Your ship's docked at the Berth - step on the portal and press L to board. I'll raise you once you're in the cockpit.")},
         {"text": "Turn both ways - left (A / Left), then right (D / Right).",
          "complete_flag": "turned_both_ways", "reset_on_activation": True, "reset_flags": ["turned_left", "turned_right"],

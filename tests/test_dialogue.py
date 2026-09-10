@@ -496,7 +496,10 @@ class TestStationTour(unittest.TestCase):
         self.assertEqual(possessions.missions["station_tour"], 8)
 
         possessions.flags["bought_ship"] = True
-        check_mission_progress(missions, possessions)  # -> farewell stage
+        check_mission_progress(missions, possessions)  # -> "board your ship" stage
+        # buying doesn't complete the board step - that waits for the undock
+        self.assertEqual(possessions.missions["station_tour"], 9)
+        possessions.flags["boarded_ship"] = True
         check_mission_progress(missions, possessions)  # -> complete
         self.assertIn("station_tour", possessions.completed_missions)
         self.assertTrue(possessions.flags.get("station_tour_done"))

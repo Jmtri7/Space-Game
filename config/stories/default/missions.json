@@ -81,7 +81,7 @@
       },
       {
         "text": "You're flight-ready - board your ship through the Berth portal (L).",
-        "complete_flag": "bought_ship",
+        "complete_flag": "boarded_ship",
         "one_way_message": {
           "sender": "Selu Vaeren",
           "text": "That's everything. Your ship's docked and waiting - step on the Berth portal and press L to board when you're ready. Come find me if you're ever back this way. Good luck out there, pilot."

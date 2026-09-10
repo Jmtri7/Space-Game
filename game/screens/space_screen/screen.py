@@ -279,6 +279,11 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             # the player may have changed a flag / their standing while
             # docked. See _sync_conditional_ships.
             self._sync_conditional_ships()
+            # Generic gameplay-event flag (see K_f's comment) - the frame the
+            # player actually launches into space, for a tutorial "board your
+            # ship" step that must wait for the undock rather than reuse
+            # "bought_ship" (which is already set by the purchase).
+            self.player.person.possessions.flags["boarded_ship"] = True
         self.in_flight = True
         if self.player.person.possessions.flags.get("starting_mission_armed"):
             self.player.person.possessions.flags["starting_mission_armed"] = False
