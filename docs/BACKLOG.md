@@ -1,9 +1,12 @@
 # Backlog
 
 Known bugs and planned features that aren't fixed/implemented yet. This is a running
-list, not a spec — add to it whenever you notice something, and check an item off (or
-delete it) once it's actually fixed/shipped. If you're an agent fixing one of these,
-mention it in the commit message so this file and the commit history stay in sync.
+list, not a spec — add to it whenever you notice something. Once an item is
+*completely* done, delete it outright rather than leaving a checked-off `[x]` entry;
+the commit history is the record of what shipped. Only keep a `[~]` entry when work
+is partially done and the remaining gap is worth tracking. If you're an agent fixing
+one of these, mention it in the commit message so this file and the commit history
+stay in sync.
 
 Top-level split is **Bugs vs. Features**. Within each, items are grouped by the type of
 gameplay they belong to, so related work is easy to find together. A gameplay category
@@ -21,31 +24,7 @@ only appears under a section if it currently has items there. Items specific to 
 ## Navigation & Flight
 
 - [ ] Jumping to system center — the mechanic and its tutorial both need work.
-- [x] Jump-target label wraps excessively. (Jump Target / Targeting Mode
-      values now start on their own line under the label - `"block"` two-tone
-      entries in `draw_info_panel`.)
 - [ ] Arrow / indicator should point at the current target when indoors.
-
-## Missions, Dialogue & NPCs
-
-- [ ] No mission-complete message when leaving the mission area — a mission that
-      completes on leaving/returning surfaces no confirmation toast.
-- [ ] Check the tutorial text and the autopilot popup for accuracy.
-
-## Graphics & Rendering
-
-- [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
-      player's own model instead of a distinct sprite.
-- [ ] Pipe fence needs an outline.
-- [ ] People sometimes still walk backwards (facing direction lags travel
-      direction).
-- [ ] Faint shimmer of the world when panning (running left/right in an
-      interior, flying in space): the camera scrolls a non-integer number of
-      screen pixels per frame and `to_screen`'s pixel rounding renders it as
-      an irregular 3-3-3-4 cadence. Subtle at 60 FPS vsync'd; frame *pacing*
-      (the bigger stutter) is fixed. Real fix needs sub-pixel rendering. See
-      [PHYSICS.md](PHYSICS.md) "Frame Timing & Smooth Motion" for the
-      writeup and options.
 
 # Features
 
@@ -54,12 +33,7 @@ only appears under a section if it currently has items there. Items specific to 
 - [ ] Quick save.
 - [ ] Active mission selector with arrows — let the player cycle which mission is
       the active/tracked one.
-- [ ] Make the player icon on the minimap more obvious than the others.
-- [ ] Some selling-menu controls (like the ship menu) don't mention that you can use
-      the mouse.
 - [ ] Consider mouse-based movement/control support.
-- [ ] Controls should be usable without moving the hand off WASD / arrow keys —
-      avoid bindings that force the player to reposition their hand.
 - [ ] Allow arrow keys to change meny selections.
 
 ## Navigation & Flight
@@ -69,10 +43,6 @@ only appears under a section if it currently has items there. Items specific to 
 
 ## Missions, Dialogue & NPCs
 
-- [ ] Tutorial for turning the camera — phrasing like "Hold S until your ship
-      stops turning".
-- [ ] Tutorial for jumping to another system (see also: jumping to system center
-      needs work, under Bugs → Navigation & Flight).
 - [ ] Relationships.
 - [ ] More roles.
 - [ ] No useless NPCs — each one should reveal something about the game's features or
@@ -125,7 +95,6 @@ only appears under a section if it currently has items there. Items specific to 
       added and wired. Remaining inert/weak: afterburner vs ion_thruster
       overlap, cargo_expansion is fine. `Ship.apply_outfits` now also stacks a
       `max_health` `stat_modifier`.
-- [ ] Outfitter should explain how to install outfits and what each outfit does.
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
 - [ ] Graphic for ship thrusters so they're visible when turned off.
 
@@ -134,7 +103,6 @@ only appears under a section if it currently has items there. Items specific to 
 - [ ] Sell all button.
 - [ ] Picking up and dropping items.
 - [ ] More ways to make money.
-- [ ] Ilsa Farrow should sell things — give her a shop/merchant role.
 - [ ] Make some commodities usable for various purposes (not just tradeable).
 - [ ] Distinct buy and sell multipliers per good, dependent on various factors
       (supply/demand, faction, location, etc.).
@@ -150,9 +118,6 @@ only appears under a section if it currently has items there. Items specific to 
       cities have road decals. Room for more content.)
 - [ ] More systems with unique concepts.
 - [ ] Add more systems (more of them overall, beyond the unique-concepts item).
-- [ ] Black backgrounds on all stations? — evaluate a consistent black backdrop
-      for station interiors.
-- [ ] Improve station interior looks.
 
 ## Exploration & World Content
 
@@ -172,14 +137,6 @@ only appears under a section if it currently has items there. Items specific to 
 - [ ] Better hair.
 - [ ] Beacon lighting animation.
 - [ ] Better jumping animation.
-- [ ] Better jump graphics.
-- [ ] More texture for interior grounds and ships.
-- [ ] Render interpolation (lerp each drawable between its previous and
-      current sim state on draw). Only worth it if >60 Hz smoothness becomes
-      a real goal, or netcode arrives — the fixed-timestep loop currently
-      drops a <0.1% sliver of sim time instead, which is fine for a
-      single-player game. See [PHYSICS.md](PHYSICS.md) "Frame Timing &
-      Smooth Motion".
 
 ## Sound & Music
 
