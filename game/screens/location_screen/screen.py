@@ -207,6 +207,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         self.current_npc_target = None  # For T key targeting
         self.active_dialogue = None  # Set to an NPC's Dialogue while talking
         self.active_shop = None  # Set to an NPC's shop config when "shop" is returned from handle_input
+        self._pending_shop = None  # An NPC's shop stashed while their dialogue is open, for an "open_shop" option to hand off to
         # HUD panel rects from the most recently drawn frame - see draw()'s
         # own comment on where this is populated; empty until the first
         # draw() call (e.g. a LocationScreen used in a test without ever
@@ -635,9 +636,13 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     else:
                         picked = self.active_dialogue.option_at(event.pos)
                         if picked is not None:
-                            self._choose_dialogue_option(picked)
+                            result = self._choose_dialogue_option(picked)
+                            if result:
+                                return result
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                    self._choose_dialogue_option(self.active_dialogue.selected_option)
+                    result = self._choose_dialogue_option(self.active_dialogue.selected_option)
+                    if result:
+                        return result
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.active_dialogue = None
                 continue
@@ -711,9 +716,15 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     # Character.for_ai_pilot) never gets a .shop attribute at
                     # all, unlike a local NPC (_build_local_character) - only
                     # the latter can ever be a shop.
-                    if getattr(nearest, "shop", None):
+                    # An NPC with both a real dialogue tree and a shop
+                    # (shop_via_dialogue) opens the conversation first - the
+                    # tree carries an "open_shop" option that hands off to the
+                    # store. A shop NPC with only the flat greeting fallback
+                    # still opens its store straight away.
+                    if getattr(nearest, "shop", None) and not getattr(nearest, "shop_via_dialogue", False):
                         self.active_shop = nearest.shop
                         return "shop"
+                    self._pending_shop = getattr(nearest, "shop", None)
                     # Always start a fresh conversation at the root node -
                     # otherwise leaving mid-tree (ESC) and talking again
                     # would silently resume wherever it was left off.

@@ -351,7 +351,10 @@ stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **N**,
 | **Close** button (top-left), or **ESC** | Close |
 
 Talking to an NPC configured with a `"shop"` (see a story's `systems/*.json`)
-opens this instead of a conversation. Buy lists the shop's stock, priced from
+opens this instead of a conversation - **unless** that NPC also has a
+`dialogue_tree`, in which case T opens the conversation and an `"open_shop"`
+dialogue option is what leads into the store (a shopkeeper who is also a
+quest-giver - see `person.shop_via_dialogue`). Buy lists the shop's stock, priced from
 `commodities.json`/`items.json`; Sell lists whatever you're currently
 carrying in that category, at a fraction of its price. Both are a grid of
 icons with the item's name and price (Buy) or quantity held and sell price

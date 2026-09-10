@@ -441,7 +441,8 @@
                     },
                     {
                       "label": "What can you spare to trade?",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -450,7 +451,8 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -459,19 +461,11 @@
                   "options": [
                     {
                       "label": "Trade",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     },
                     {
                       "label": "Leave",
-                      "next": null
-                    }
-                  ]
-                },
-                "shop": {
-                  "text": "Archive copies, relief supplies. What we can spare.",
-                  "options": [
-                    {
-                      "label": "(browse)",
                       "next": null
                     }
                   ]

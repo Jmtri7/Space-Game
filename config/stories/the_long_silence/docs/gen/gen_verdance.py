@@ -350,12 +350,11 @@ HC_NPCS = [
                   "options": [
                       {"label": "I'll carry that.", "next": "ok", "requires_flag": "assembly_accepted",
                        "actions": ["set_flag:assembly_view_osei"]},
-                      {"label": "Just browsing.", "next": "shop"}]},
+                      {"label": "Just browsing.", "action": "open_shop", "next": None}]},
         "ok": {"text": "Good. Tell Sela the Slip votes to open. And come back if you need a hull with room to sleep in.",
-               "options": [{"label": "Understood", "next": "shop"}]},
+               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
         "heard": {"text": "You've got my view. Open the lane. Now - a barge, or just looking?",
-                  "options": [{"label": "Show me the hulls", "next": "shop"}, {"label": "Leave", "next": None}]},
-        "shop": {"text": "Take a look.", "options": [{"label": "(browse)", "next": None}]}},
+                  "options": [{"label": "Show me the hulls", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "ships", "stock": ["drift_hauler", "drift_courier", "carrier_hauler", "carrier_courier"]}},
 
     {"name": "Water-keeper Tam", "x": 300, "y": 470, "role": "quartermaster",
@@ -365,11 +364,10 @@ HC_NPCS = [
                   "options": [
                       {"label": "I'll carry that.", "next": "ok", "requires_flag": "assembly_accepted",
                        "actions": ["set_flag:assembly_view_tam"]},
-                      {"label": "What do you trade?", "next": "shop"}]},
+                      {"label": "What do you trade?", "action": "open_shop", "next": None}]},
         "ok": {"text": "Thank you. Tell them the Water Office says wait - but says it, doesn't shout it.",
-               "options": [{"label": "Understood", "next": "shop"}]},
-        "heard": {"text": "You have my view. Trade, if you need to.", "options": [{"label": "Trade", "next": "shop"}, {"label": "Leave", "next": None}]},
-        "shop": {"text": "Grain, fibre, water-credits.", "options": [{"label": "(browse)", "next": None}]}},
+               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
+        "heard": {"text": "You have my view. Trade, if you need to.", "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["grain", "water_credits"], "sell_multiplier": 1.1}},
 
     {"name": "Old Bevin", "x": 1300, "y": 900, "role": "bartender",

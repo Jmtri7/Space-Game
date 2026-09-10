@@ -31,6 +31,12 @@ class _NpcsMixin:
         # opens a purpose-built buy/sell screen instead of dialogue when T is
         # pressed - None for every NPC that's just flavor/dialogue.
         person.shop = cfg.get("shop")
+        # When an NPC has BOTH a real dialogue tree and a shop, T opens the
+        # conversation (which reaches the store via an "open_shop" option),
+        # not the store directly - see LocationScreen.handle_input. A shop
+        # NPC with only the flat greeting fallback opens its store straight
+        # away, as before.
+        person.shop_via_dialogue = bool(dialogue_tree) and bool(person.shop)
         # Optional flag name that puts this NPC into FollowPlayerRoutine
         # (trailing the player on foot) while it's set, and back to its
         # normal role routine once cleared - the interior mirror of a ship

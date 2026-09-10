@@ -337,12 +337,11 @@ NW_NPCS = [
                   "options": [
                       {"label": "Read the First Wall.", "next": "ok", "requires_flag": "vigil_record_accepted",
                        "actions": ["set_flag:vigil_read_first"]},
-                      {"label": "What can you spare to trade?", "next": "shop"}]},
+                      {"label": "What can you spare to trade?", "action": "open_shop", "next": None}]},
         "ok": {"text": "Now the Reading Cells - the middle years, when they worked out why. Go to Brother Sol.",
-               "options": [{"label": "Understood", "next": "shop"}]},
+               "options": [{"label": "Understood", "action": "open_shop", "next": None}]},
         "read": {"text": "You've read the First Wall. The Reading Cells next. I can spare archive copies if you'll carry them carefully.",
-                 "options": [{"label": "Trade", "next": "shop"}, {"label": "Leave", "next": None}]},
-        "shop": {"text": "Archive copies, relief supplies. What we can spare.", "options": [{"label": "(browse)", "next": None}]}},
+                 "options": [{"label": "Trade", "action": "open_shop", "next": None}, {"label": "Leave", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["archive_copies", "relief_supplies"], "sell_multiplier": 1.0}},
 
     {"name": "Brother Sol", "x": 900, "y": 470, "role": "clerk",

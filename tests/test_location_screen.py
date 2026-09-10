@@ -441,6 +441,34 @@ class TestLocationScreenEconomy(unittest.TestCase):
         screen._choose_dialogue_option(1)  # "Leave"
         self.assertIsNone(screen.active_dialogue)
 
+    def test_open_shop_option_hands_the_conversation_off_to_the_store(self):
+        """An NPC with both a dialogue tree and a shop opens the conversation
+        first (shop_via_dialogue); an "open_shop" option in the tree then
+        closes it and switches to the store - see LocationScreen.handle_input
+        and _build_local_character."""
+        screen = self._make_screen()
+        shop = {"type": "commodities", "stock": ["ore"]}
+        character = screen._build_local_character({
+            "name": "Vess", "x": 0, "y": 0, "shop": shop,
+            "dialogue_tree": {"nodes": {"start": {"text": "hi", "options": [
+                {"label": "Trade", "action": "open_shop", "next": None},
+            ]}}},
+        })
+        self.assertTrue(character.person.shop_via_dialogue)
+        screen._pending_shop = shop
+        screen.active_dialogue = character.person.dialogue
+        self.assertEqual(screen._choose_dialogue_option(0), "shop")
+        self.assertIsNone(screen.active_dialogue)
+        self.assertIs(screen.active_shop, shop)
+
+    def test_flat_greeting_shop_npc_does_not_route_through_dialogue(self):
+        screen = self._make_screen()
+        character = screen._build_local_character({
+            "name": "Marn", "x": 0, "y": 0,
+            "shop": {"type": "ships", "stock": ["shuttle"]},
+        })
+        self.assertFalse(character.person.shop_via_dialogue)
+
 
 class TestStationInteriorLayout(unittest.TestCase):
     """The default story's station interiors are each one connected polygon

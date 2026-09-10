@@ -426,7 +426,8 @@
                     },
                     {
                       "label": "Just browsing.",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -435,7 +436,8 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -444,19 +446,11 @@
                   "options": [
                     {
                       "label": "Show me the hulls",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     },
                     {
                       "label": "Leave",
-                      "next": null
-                    }
-                  ]
-                },
-                "shop": {
-                  "text": "Take a look.",
-                  "options": [
-                    {
-                      "label": "(browse)",
                       "next": null
                     }
                   ]
@@ -502,7 +496,8 @@
                     },
                     {
                       "label": "What do you trade?",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -511,7 +506,8 @@
                   "options": [
                     {
                       "label": "Understood",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     }
                   ]
                 },
@@ -520,19 +516,11 @@
                   "options": [
                     {
                       "label": "Trade",
-                      "next": "shop"
+                      "action": "open_shop",
+                      "next": null
                     },
                     {
                       "label": "Leave",
-                      "next": null
-                    }
-                  ]
-                },
-                "shop": {
-                  "text": "Grain, fibre, water-credits.",
-                  "options": [
-                    {
-                      "label": "(browse)",
                       "next": null
                     }
                   ]

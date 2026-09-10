@@ -72,7 +72,11 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](../DESIGN_PATTERNS.md)
   `"end_story:<id>"` (sets `story_over` + `ending:<id>`; `main.py` hands off to
   the `EndingScreen`) - generic, work from any screen) and/or, for a few commerce-flavored station NPCs,
   `LocationScreen._apply_dialogue_action()`'s own `"buy_ship:<id>"`/
-  `"take_loan"` against the player's `Possessions`. An option can also carry
+  `"take_loan"` against the player's `Possessions`, or `"open_shop"` (an NPC
+  that carries *both* a `dialogue_tree` and a `shop` opens the conversation on
+  T - not the store directly - and an `"open_shop"` option in the tree closes
+  it and switches to that NPC's store; see `LocationScreen.handle_input` /
+  `_choose_dialogue_option` / `person.shop_via_dialogue`). An option can also carry
   `"requires_flag"`/`"requires_not_flag"` (a `Possessions.flags` name) -
   `current_options(flags, reputation)` drops it from the list entirely until
   that condition is met, for a conversation option that shouldn't be hinted at

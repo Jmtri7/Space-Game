@@ -406,11 +406,13 @@ HOLD_NPCS = [
                   "options": [
                       {"label": "Take the sealed manifest.", "next": "handed", "requires_flag": "combine_witnessed",
                        "actions": ["set_flag:combine_manifest_taken"]},
-                      {"label": "Come back for it.", "next": None}]},
+                      {"label": "Come back for it.", "next": None},
+                      {"label": "Trade for supplies.", "action": "open_shop", "next": None}]},
         "handed": {"text": "Logged out. Shaft VII, hand it to Deepmaster Orin, bring back his tally. Don't open it.",
                    "options": [{"label": "Understood", "next": None}]},
         "taken": {"text": "You're carrying Combine cargo. Shaft VII. Orin. His tally comes back to me.",
-                  "options": [{"label": "Understood", "next": None}]}},
+                  "options": [{"label": "Understood", "next": None},
+                              {"label": "Trade for supplies.", "action": "open_shop", "next": None}]}},
       }, "shop": {"type": "commodities", "stock": ["alloy", "ore"], "sell_multiplier": 1.15}},
 
     {"name": "Deck-chief Marn", "x": 1300, "y": 470, "role": "ship_salesman",
@@ -589,7 +591,9 @@ for npc in hold["npcs"]:
                  "actions": ["set_flag:combine_tally_filed"]},
                 {"label": "In a moment.", "next": None}]}
         npc["dialogue_tree"]["nodes"]["filed"] = {
-            "text": "Filed. Tell the Factor the carriage is closed.", "options": [{"label": "Understood", "next": None}]}
+            "text": "Filed. Tell the Factor the carriage is closed.",
+            "options": [{"label": "Understood", "next": None},
+                        {"label": "Trade for supplies.", "action": "open_shop", "next": None}]}
     if npc["name"] == "Factor Tol":
         npc["dialogue_tree"]["conditional_roots"].insert(0, {"flag": "combine_tally_filed", "node": "report"})
         npc["dialogue_tree"]["nodes"]["report"] = {

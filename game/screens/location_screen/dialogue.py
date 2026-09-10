@@ -17,7 +17,9 @@ class _DialogueMixin:
     def _choose_dialogue_option(self, index):
         """Act on the visible option at `index` (a mouse click on it) - apply
         its actions, then advance/close the conversation. Shared by the click
-        handler; mirrors the old Enter path."""
+        handler; mirrors the old Enter path. Returns "shop" when the option
+        carried an "open_shop" action for an NPC that has a shop, so
+        handle_input can close the conversation and switch to the store."""
         flags = self.player.possessions.flags
         rep = self.player.possessions.reputation
         options = self.active_dialogue.current_options(flags, rep)
@@ -26,7 +28,12 @@ class _DialogueMixin:
         option = options[index]
         if self._option_blocked_reason(option):
             return
-        for action in option_actions(option):
+        actions = option_actions(option)
+        if "open_shop" in actions and getattr(self, "_pending_shop", None):
+            self.active_dialogue = None
+            self.active_shop = self._pending_shop
+            return "shop"
+        for action in actions:
             self._apply_dialogue_action(action)
         # advance(option), not choose(index, ...) - an action just applied
         # (set_flag:/adjust_rep:) can change what current_options() returns.
