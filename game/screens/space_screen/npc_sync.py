@@ -12,7 +12,12 @@ class _NpcSyncMixin:
         start its attached mission. Runs every frame from update_physics
         (which ticks while docked too), so a dispatch can land in a station.
         self._dispatched is seeded on the first call so a loaded save with
-        dispatches already received stays quiet, mirroring _check_beacons."""
+        dispatches already received stays quiet, mirroring _check_beacons.
+
+        When several dispatches' gates open on the same frame (e.g. one flag
+        that several dispatches wait on), only the first is delivered now and
+        the rest trickle in one per DISPATCH_SPACING_FRAMES, so a burst reads
+        as separate incoming comms instead of a wall of messages."""
         possessions = self.player.person.possessions
         dispatches = get_dispatches(self.story)
         if not dispatches:
@@ -25,12 +30,19 @@ class _NpcSyncMixin:
                 receive_dispatch(did, entry, possessions, self.missions_config)
             self._dispatched = True
             return
-        for did, entry in newly:
-            sender, subject, body, advanced = receive_dispatch(
-                did, entry, possessions, self.missions_config)
-            text = f"{subject} — {body}" if body else subject
-            self._post_message(sender, text)
-            self._deliver_stage_message(advanced)
+        if self._dispatch_cooldown > 0:
+            self._dispatch_cooldown -= 1
+            return
+        if not newly:
+            return
+        did, entry = newly[0]
+        sender, subject, body, advanced = receive_dispatch(
+            did, entry, possessions, self.missions_config)
+        text = f"{subject} — {body}" if body else subject
+        self._post_message(sender, text)
+        self._deliver_stage_message(advanced)
+        if len(newly) > 1:
+            self._dispatch_cooldown = DISPATCH_SPACING_FRAMES
 
     def _check_beacons(self):
         """Post a galaxy-wide "beacon relit" message the frame a locked

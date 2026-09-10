@@ -46,6 +46,7 @@ ONE_WAY_HAIL_RANGE = 500          # world units - how close an NPC-initiated hai
 ONE_WAY_HAIL_BANNER_FRAMES = 300  # ~5s at 60fps an incoming-hail banner stays up
 HAIL_BUSY_BANNER_FRAMES = 150     # ~2.5s "no response" flash when hailing a docked/ashore pilot
 HOSTILE_REP_THRESHOLD = -40       # faction standing at/below this turns its pilots hostile (see _sync_hostiles)
+DISPATCH_SPACING_FRAMES = 450     # ~7.5s at 60fps between dispatches when several gates open at once (see _check_dispatches)
 
 # How slow (units/frame) counts as "braked to a stop" for the generic
 # "braked_below_threshold" gameplay-event flag (see update_physics) - a

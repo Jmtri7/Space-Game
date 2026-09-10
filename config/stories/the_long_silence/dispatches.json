@@ -13,7 +13,7 @@
     "sender": "Relay Network",
     "subject": "Reactivation front — Kiln",
     "body": "The relight signal has reached the Kiln beacon and moved on outward. You are still ahead of it. Barely.",
-    "requires_flag": "beacon_verdance_lit",
+    "requires_flag": "jumped_to:verdance",
     "on_receive_flags": ["relay_front_kiln_seen"]
   },
 
@@ -21,7 +21,7 @@
     "sender": "Free carriers — open channel",
     "subject": "An open lane, or none at all",
     "body": "You have been lighting beacons ahead of the Authority's flag. Some of us have run these lanes for six generations and would like them to stay ungoverned. Carry for us when you can. We remember it.",
-    "requires_flag": "beacon_verdance_lit",
+    "requires_flag": "act_pressure",
     "on_receive_flags": ["carrier_contact"],
     "on_receive_rep": {"free_carrier": 3},
     "start_mission": "carrier_relief_run"

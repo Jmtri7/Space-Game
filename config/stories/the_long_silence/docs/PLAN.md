@@ -278,10 +278,14 @@ First-pass content is complete and plays end to end; these are quality passes:
     + `SpaceScreen._check_dispatches` (runs docked too). A dispatch arrives
     when its content-gate first passes, posts to the Message Log, applies
     flags/standing, and can start an attached mission. `dispatch:<id>` flags
-    chain them.
+    chain them. A same-frame burst is spaced out one per
+    `DISPATCH_SPACING_FRAMES`.
   - [x] Six Act I→II narrative dispatches seeded (`authority_first_orders`,
     `relay_front_kiln`, `carrier_open_hand`, `vigil_warning`,
     `combine_mobilises` → `combine_mobilised`, `span_listening` → `span_hailed`).
+    Gated to their own beats so lighting Verdance doesn't dump the lot:
+    `relay_front_kiln` on `jumped_to:verdance` (front reaches Kiln behind
+    you), `carrier_open_hand` on `act_pressure` (early Act II).
   - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
     Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
     stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.

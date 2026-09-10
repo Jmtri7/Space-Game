@@ -152,7 +152,12 @@ except where a story clearly needs it; code holds the default.
 the Message Log when their condition first holds, no NPC in the room needed
 (the story design's gap F). Merged from `modules` like `missions.json`.
 `game/world/dispatch.py` is the logic; `SpaceScreen._check_dispatches` runs
-it every frame (docked too), seeded silent on first call after a load.
+it every frame (docked too), seeded silent on first call after a load. When
+several dispatches' gates open on the same frame, only the first lands then;
+the rest trickle in one per `DISPATCH_SPACING_FRAMES` (~7.5s) so a burst
+reads as separate comms rather than a wall. Gate each dispatch on the
+progress point it actually belongs to - don't hang several on one early
+flag and rely on the spacing to sort them out.
 
 ```json
 "combine_mobilises": {
