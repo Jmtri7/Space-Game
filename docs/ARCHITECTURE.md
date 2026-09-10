@@ -35,8 +35,8 @@ space-game/
 │   │   ├── screen_base.py
 │   │   ├── space_screen/     # SpaceScreen: screen.py (core) + mixins
 │   │   │   (setup/targeting/hud/hailing/npc_sync/jump/combat/mining), _defs.py
-│   │   └── location_screen/  # LocationScreen: screen.py (core) + mixins
-│   │       (portals/npcs/decor/draw/structures/movement), _defs.py
+│   │   └── location_screen/  # LocationScreen: screen.py (core) + mixins (portals/
+│   │       commerce/dialogue/targeting/npcs/decor/structures/movement), _defs.py
 │   ├── ui/                  # Menus/dialogs (not ScreenBase) + shared UI styling
 │   │   └── menu_base.py, dialog_base.py, ui_theme.py, save_browser.py, …
 │   └── audio/

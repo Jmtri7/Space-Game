@@ -88,3 +88,7 @@ MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 # bodies, the central star). LANDING SITES is the default since finding and
 # landing on the station is the first thing a new pilot needs to target.
 TARGET_MODES = ["SHIPS", "LANDING SITES", "MISC"]
+
+# Export everything (including single-underscore helpers) so the sibling mixin
+# modules get it all via `from ..._defs import *`.
+__all__ = [_n for _n in dir() if not _n.startswith("__")]

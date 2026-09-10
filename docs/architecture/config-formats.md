@@ -55,7 +55,8 @@ or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
 content gate (`requires_flag` / `requires_rep` / … — see the `systems/*.json`
 note above); gated entries are (re-)evaluated on every interior entry. A
 default-story station is one such interior. See "Interior geometry" below and
-`game/screens/location_screen.py`.
+`game/screens/location_screen/` (config load + gates in `screen.py`, geometry
+helpers in `_defs.py`).
 ```json
 {
   "label": "Alpha Station", "culture": "vherathi",
