@@ -278,13 +278,17 @@ w(f"{S}/graphics.json", gfx)
 HZ_ROOMS = concourse_plan("the Approach Span", [
     BAY_N(440, 900, "the Core Choir"),
     BAY_N(1180, 1480, "the Arrival Span"),
-    BAY_S(220, 560, "the Signal-Tender's post"),
-    BAY_S(1060, 1420, "Segment Four watch"),
+    BAY_S(180, 540, "the Signal-Tender's post"),
+    BAY_S(600, 1020, "the Hub Archive"),
+    BAY_S(1080, 1440, "Segment Four watch"),
 ])
 HZ_STRUCTURES = [
     {"x": 800, "y": 640, "building_type": "warden_spire"},
     *[{"x": x, "y": 584, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
     *[{"x": x, "y": 716, "building_type": "pipeline_column"} for x in (560, 720, 880, 1040)],
+    # the Hub Archive - a stack of Relay-era log columns
+    {"x": 810, "y": 900, "building_type": "warden_housing"},
+    *[{"x": x, "y": 820, "building_type": "pipeline_column"} for x in (700, 920)],
     {"x": 360, "y": 900, "building_type": "crates"},
     {"x": 1240, "y": 900, "building_type": "crates"},
 ]
@@ -323,6 +327,36 @@ HZ_NPCS = [
     {"name": "Warden of the Fourth Segment", "x": 800, "y": 700, "role": "guard",
      "faction": "the_wardens", "outfit": "warden_security_masc",
      "greeting": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
+     "dialogue_options": ["Understood", "Leave"]},
+
+    # The Hub Archive - the shutdown reason as a *place*, not only a dialogue
+    # reveal in the_vigil_record. The machine's own logs give the same three
+    # explanations, from the other end. Sets read_hub_archive.
+    {"name": "Archivist of the Choir", "x": 810, "y": 850, "role": "clerk",
+     "faction": "the_wardens", "outfit": "warden_official_masc",
+     "dialogue_tree": {"root": "start", "nodes": {
+        "start": {"text": "The Archive is the Hub's own memory of the night it went dark. Not the Vigil's account of it - the machine's. Three logs from that last hour, and they do not agree. The Choir has read them for two hundred years and is no closer. Read them yourself; you are the one it is asking.",
+                  "options": [
+                      {"label": "Read the first log.", "next": "quarantine"},
+                      {"label": "Read the second log.", "next": "scorched"},
+                      {"label": "Read the third log.", "next": "accident"},
+                      {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]},
+        "quarantine": {"text": "First log: a containment order, priority absolute. Something crossed the Relay from outside the network and the beacons were cut to strand it between stars. If that is true, relighting them lets it finish the crossing. The log does not say what 'it' was. The field for that is blank - deliberately, the Choir thinks.",
+                       "options": [{"label": "The second log.", "next": "scorched"},
+                                   {"label": "The third.", "next": "accident"},
+                                   {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]},
+        "scorched": {"text": "Second log: a military channel, the last order of a war the histories mostly forgot. The shutdown was the final act - deny the enemy the lanes by killing them for everyone. No monster. Just people, doing the worst arithmetic there is, and two centuries since spent making it a myth so it could be survived.",
+                     "options": [{"label": "The first log.", "next": "quarantine"},
+                                 {"label": "The third.", "next": "accident"},
+                                 {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]},
+        "accident": {"text": "Third log: a fault cascade. A maintenance error at the core, then another, then the network folding one beacon at a time faster than anyone could stop it. No order, no enemy - it simply broke, and everything since has been a religion built in the quiet where an explanation should be. The Choir likes this one least. It is the one with no one to forgive.",
+                     "options": [{"label": "The first log.", "next": "quarantine"},
+                                 {"label": "The second.", "next": "scorched"},
+                                 {"label": "Enough.", "next": None, "action": "set_flag:read_hub_archive"}]}}}},
+
+    {"name": "Choir-hand Emel", "x": 640, "y": 760, "role": "resident",
+     "faction": "the_wardens", "outfit": "warden_civilian_masc",
+     "greeting": "I sweep the Archive. I have read every log in it. I could not tell you which is true and I have stopped needing to - the Hub will do what it does, and we will keep it swept either way.",
      "dialogue_options": ["Understood", "Leave"]},
 ]
 HZ_INTERIOR = {"label": "Hub Zero", "culture": "the_wardens",
@@ -402,4 +436,4 @@ pilots.update({
 w(f"{S}/pilots.json", pilots)
 
 print(f"The Span: 3 ships, 1 station, 3 buildings, dress + {len(ARTICLES)} articles / {len(SETS)} sets, "
-      f"Hub Zero ({len(HZ_ROOMS)} rooms / {len(HZ_NPCS)} NPCs) with the ending fork, {len(pilots)} pilots.")
+      f"Hub Zero ({len(HZ_ROOMS)} rooms / {len(HZ_NPCS)} NPCs, incl. the Archive) with the ending fork, {len(pilots)} pilots.")

@@ -128,19 +128,40 @@
             "label": "the Signal-Tender's post",
             "polygon": [
               [
-                220,
+                180,
                 710
               ],
               [
-                560,
+                540,
                 710
               ],
               [
-                560,
+                540,
                 980
               ],
               [
-                220,
+                180,
+                980
+              ]
+            ]
+          },
+          {
+            "label": "the Hub Archive",
+            "polygon": [
+              [
+                600,
+                710
+              ],
+              [
+                1020,
+                710
+              ],
+              [
+                1020,
+                980
+              ],
+              [
+                600,
                 980
               ]
             ]
@@ -149,19 +170,19 @@
             "label": "Segment Four watch",
             "polygon": [
               [
-                1060,
+                1080,
                 710
               ],
               [
-                1420,
+                1440,
                 710
               ],
               [
-                1420,
+                1440,
                 980
               ],
               [
-                1060,
+                1080,
                 980
               ]
             ]
@@ -211,6 +232,21 @@
           {
             "x": 1040,
             "y": 716,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 810,
+            "y": 900,
+            "building_type": "warden_housing"
+          },
+          {
+            "x": 700,
+            "y": 820,
+            "building_type": "pipeline_column"
+          },
+          {
+            "x": 920,
+            "y": 820,
             "building_type": "pipeline_column"
           },
           {
@@ -346,6 +382,108 @@
             "faction": "the_wardens",
             "outfit": "warden_security_masc",
             "greeting": "You are inside the Span. The Hub hears you. Mind that it does - it has been listening a long time, for whoever came last.",
+            "dialogue_options": [
+              "Understood",
+              "Leave"
+            ]
+          },
+          {
+            "name": "Archivist of the Choir",
+            "x": 810,
+            "y": 850,
+            "role": "clerk",
+            "faction": "the_wardens",
+            "outfit": "warden_official_masc",
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "The Archive is the Hub's own memory of the night it went dark. Not the Vigil's account of it - the machine's. Three logs from that last hour, and they do not agree. The Choir has read them for two hundred years and is no closer. Read them yourself; you are the one it is asking.",
+                  "options": [
+                    {
+                      "label": "Read the first log.",
+                      "next": "quarantine"
+                    },
+                    {
+                      "label": "Read the second log.",
+                      "next": "scorched"
+                    },
+                    {
+                      "label": "Read the third log.",
+                      "next": "accident"
+                    },
+                    {
+                      "label": "Enough.",
+                      "next": null,
+                      "action": "set_flag:read_hub_archive"
+                    }
+                  ]
+                },
+                "quarantine": {
+                  "text": "First log: a containment order, priority absolute. Something crossed the Relay from outside the network and the beacons were cut to strand it between stars. If that is true, relighting them lets it finish the crossing. The log does not say what 'it' was. The field for that is blank - deliberately, the Choir thinks.",
+                  "options": [
+                    {
+                      "label": "The second log.",
+                      "next": "scorched"
+                    },
+                    {
+                      "label": "The third.",
+                      "next": "accident"
+                    },
+                    {
+                      "label": "Enough.",
+                      "next": null,
+                      "action": "set_flag:read_hub_archive"
+                    }
+                  ]
+                },
+                "scorched": {
+                  "text": "Second log: a military channel, the last order of a war the histories mostly forgot. The shutdown was the final act - deny the enemy the lanes by killing them for everyone. No monster. Just people, doing the worst arithmetic there is, and two centuries since spent making it a myth so it could be survived.",
+                  "options": [
+                    {
+                      "label": "The first log.",
+                      "next": "quarantine"
+                    },
+                    {
+                      "label": "The third.",
+                      "next": "accident"
+                    },
+                    {
+                      "label": "Enough.",
+                      "next": null,
+                      "action": "set_flag:read_hub_archive"
+                    }
+                  ]
+                },
+                "accident": {
+                  "text": "Third log: a fault cascade. A maintenance error at the core, then another, then the network folding one beacon at a time faster than anyone could stop it. No order, no enemy - it simply broke, and everything since has been a religion built in the quiet where an explanation should be. The Choir likes this one least. It is the one with no one to forgive.",
+                  "options": [
+                    {
+                      "label": "The first log.",
+                      "next": "quarantine"
+                    },
+                    {
+                      "label": "The second.",
+                      "next": "scorched"
+                    },
+                    {
+                      "label": "Enough.",
+                      "next": null,
+                      "action": "set_flag:read_hub_archive"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Choir-hand Emel",
+            "x": 640,
+            "y": 760,
+            "role": "resident",
+            "faction": "the_wardens",
+            "outfit": "warden_civilian_masc",
+            "greeting": "I sweep the Archive. I have read every log in it. I could not tell you which is true and I have stopped needing to - the Hub will do what it does, and we will keep it swept either way.",
             "dialogue_options": [
               "Understood",
               "Leave"

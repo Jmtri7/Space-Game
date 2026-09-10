@@ -30,11 +30,18 @@
       },
       "the_wardens": {
         "allied": "tend the Hub for the Authority now, and pray at it the same as before.",
-        "neutral": "tend the Hub, and have stopped explaining it to the people who ask."
+        "neutral": "tend the Hub, and have stopped explaining it to the people who ask.",
+        "hostile": "tend the Hub for a master they did not choose, and blame the pilot who handed it over."
+      },
+      "the_drift": {
+        "allied": "feeds half the inner lanes now and still cannot hold a vote to noon.",
+        "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to.",
+        "hostile": "was outvoted by the traffic, and says the assembly you forced was never really free."
       },
       "free_carrier": {
         "allied": "lost the slow lanes and the life that went with them, and toasts you anyway.",
-        "neutral": "took contracts with the Authority because the alternative was the ground."
+        "neutral": "took contracts with the Authority because the alternative was the ground.",
+        "hostile": "watched the fast lanes reopen under someone else's flag and calls you the pilot who sold the sky."
       }
     }
   },
@@ -64,7 +71,8 @@
       },
       "the_drift": {
         "allied": "misses the traffic and admits it, at length, in a rolling assembly that has not adjourned.",
-        "neutral": "goes back to feeding only itself, and is quietly relieved."
+        "neutral": "goes back to feeding only itself, and is quietly relieved.",
+        "hostile": "lost the open lane it had barely tasted, and remembers whose hand was on the core."
       },
       "the_wardens": {
         "allied": "stood aside when you reached the core, because you had earned the walk.",
@@ -73,7 +81,8 @@
       },
       "free_carrier": {
         "allied": "got their lanes back, their life back, and the drinks are on the fleet forever.",
-        "neutral": "shrugs. The slow way always paid. It just never paid fast."
+        "neutral": "shrugs. The slow way always paid. It just never paid fast.",
+        "hostile": "keeps flying the decade-long loops and does not raise a glass to the pilot who left them there."
       }
     }
   },
@@ -103,15 +112,18 @@
       },
       "the_drift": {
         "allied": "thrives on a network no one controls, which is the only kind the Drift was ever built for.",
-        "neutral": "finds the new mess more congenial than the old order, and says so at length."
+        "neutral": "finds the new mess more congenial than the old order, and says so at length.",
+        "hostile": "distrusts any arrangement an outsider brokered, and argues, in assembly, that this one will not last."
       },
       "the_wardens": {
         "allied": "tend the broken Hub as a shrine now, and let anyone walk the Choir who comes in peace.",
-        "neutral": "tend what's left. The song is gone. They hum it themselves."
+        "neutral": "tend what's left. The song is gone. They hum it themselves.",
+        "hostile": "tend a Hub you broke without their leave, and do not speak your name in the Choir."
       },
       "free_carrier": {
         "allied": "runs the lanes free and ungoverned, exactly as promised, and named a berth after you.",
-        "neutral": "flies where it likes and pays whom it must, which is the most a carrier ever hoped for."
+        "neutral": "flies where it likes and pays whom it must, which is the most a carrier ever hoped for.",
+        "hostile": "got the ungoverned lanes it wanted and still holds the grudge from how you got there."
       }
     }
   }

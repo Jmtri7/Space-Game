@@ -1748,52 +1748,52 @@
     },
     "warden_civilian_femme": {
       "body": "human_femme",
-      "set": "ck_civilian",
+      "set": "warden_civilian",
       "palette": "warden_dress"
     },
     "warden_civilian_masc": {
       "body": "human_masc",
-      "set": "ck_civilian",
+      "set": "warden_civilian",
       "palette": "warden_dress"
     },
     "warden_official_femme": {
       "body": "human_femme",
-      "set": "civilian_officer",
+      "set": "warden_command",
       "palette": "warden_dress"
     },
     "warden_official_masc": {
       "body": "human_masc",
-      "set": "civilian_officer",
+      "set": "warden_command",
       "palette": "warden_dress"
     },
     "warden_flight_femme": {
       "body": "human_femme",
-      "set": "ck_flight",
+      "set": "warden_flight",
       "palette": "warden_dress"
     },
     "warden_flight_masc": {
       "body": "human_masc",
-      "set": "ck_flight",
+      "set": "warden_flight",
       "palette": "warden_dress"
     },
     "warden_security_femme": {
       "body": "human_femme",
-      "set": "ck_security",
+      "set": "warden_security",
       "palette": "warden_dress"
     },
     "warden_security_masc": {
       "body": "human_masc",
-      "set": "ck_security",
+      "set": "warden_security",
       "palette": "warden_dress"
     },
     "warden_dock_femme": {
       "body": "human_femme",
-      "set": "ck_dockworker",
+      "set": "warden_dock",
       "palette": "warden_dress"
     },
     "warden_dock_masc": {
       "body": "human_masc",
-      "set": "ck_dockworker",
+      "set": "warden_dock",
       "palette": "warden_dress"
     },
     "carrier_civilian_femme": {
