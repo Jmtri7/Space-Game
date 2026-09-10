@@ -113,11 +113,11 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         self.camera_zoom = self._clamp_zoom(_story_meta.get("interior_camera_zoom", constants.INTERIOR_CAMERA_ZOOM))
         self.entrance_range = 35  # How close to a portal to use it
         self.talk_range = 60  # How close to an NPC/pilot to start a conversation
-        # Cached by handle_input() when L opens the exit menu, so
+        # Cached by handle_input() when G opens the exit menu, so
         # get_exit_options()/get_available_exit_options()/
         # get_exit_disabled_reasons() (called later, from main.py, once the
         # menu is already up) act on the same portal the player actually
-        # pressed L next to - the player can't move while the menu is open,
+        # pressed G next to - the player can't move while the menu is open,
         # but this avoids relying on that indirectly.
         self._active_portal = None
 
@@ -427,7 +427,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # happen to have a lower Y (a portal at the *bottom* of a room, a
         # very common layout, would otherwise almost always win that sort
         # against anyone standing on it). Brightens once the player is
-        # close enough for L to actually use it, so proximity isn't a
+        # close enough for G to actually use it, so proximity isn't a
         # guessing game.
         active_portal = self._nearby_portal()
         font_portal_label = get_font(max(10, int(15 * scale)))
@@ -444,7 +444,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
 
             # Destination label, always visible (not just in range) - same
             # idea as room labels above - so a single-destination portal's
-            # menu-free L press is never a guess about where it leads.
+            # menu-free G press is never a guess about where it leads.
             label_surf = font_portal_label.render(self._portal_label(portal), True, ring_color)
             label_rect = label_surf.get_rect(midtop=(px, pad_rect.bottom + 2))
             surface.blit(label_surf, label_rect)
@@ -564,10 +564,11 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD / Arrows", "Walk"),
-                ("[  /  ]", "Cycle target"),
+                ("Q  /  E", "Cycle target"),
                 ("T", "Talk"),
-                ("L", "Board / exit"),
-                ("P  /  N", "Gear / log"),
+                ("G", "Board / exit"),
+                ("1", "Star map"),
+                ("3  /  4", "Gear / log"),
                 ("Wheel", "Scroll log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale,
@@ -584,7 +585,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         if draw_hud and not self.active_dialogue:
             status_lines = []
             if active_portal:
-                status_lines.append(("Press L to enter portal", GREEN))
+                status_lines.append(("Press G to enter portal", GREEN))
             if closest_npc:
                 status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
@@ -677,7 +678,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             if event.type != pygame.KEYDOWN:
                 continue
 
-            if event.key == pygame.K_l:
+            if event.key == pygame.K_g:
                 # Only allow exit if near a portal (see self.portals) -
                 # whichever one is closest, if the player somehow got two
                 # in range at once.
@@ -694,12 +695,14 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                         # More than one destination, or the only one isn't
                         # usable yet (e.g. no ship docked) - open the menu
                         # either way, so an unusable option is still visible
-                        # with its reason instead of L silently doing nothing.
+                        # with its reason instead of G silently doing nothing.
                         return "exit_menu"
-            elif event.key == pygame.K_RIGHTBRACKET:
+            elif event.key == pygame.K_e:
                 self._cycle_npc_target(1)
-            elif event.key == pygame.K_LEFTBRACKET:
+            elif event.key == pygame.K_q:
                 self._cycle_npc_target(-1)
+            elif event.key == pygame.K_1:
+                return "star_map"
             elif event.key == pygame.K_t:
                 # T always talks to whoever's closest in range (see
                 # _closest_person_in_range) - independent of any manually
@@ -734,15 +737,15 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags, self.player.possessions.reputation)
                     nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags, self.player.possessions.reputation))
                     self.active_dialogue = nearest.dialogue
-            elif event.key == pygame.K_p:
+            elif event.key == pygame.K_3:
                 # Generic gameplay-event flag - lets a tutorial stage use
-                # "viewed_possessions" as its complete_flag; mirrors K_n below.
+                # "viewed_possessions" as its complete_flag; mirrors K_4 below.
                 self.player.possessions.flags["viewed_possessions"] = True
                 return "possessions"
-            elif event.key == pygame.K_n:
+            elif event.key == pygame.K_4:
                 # Generic gameplay-event flag - lets a mission stage use
                 # "viewed_mission_log" as its complete_flag (see
-                # missions.json's first_flight); mirrors SpaceScreen's K_n.
+                # missions.json's first_flight); mirrors SpaceScreen's K_4.
                 self.player.possessions.flags["viewed_mission_log"] = True
                 return "missions"
             elif event.key == pygame.K_c:

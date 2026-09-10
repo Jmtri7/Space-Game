@@ -24,21 +24,21 @@ action to a modal (add a button, not a key).
 | **A** or **←** | Rotate left |
 | **D** or **→** | Rotate right |
 | **S** or **↓** | Turn to face opposite velocity (reverse heading) |
-| **Q** / **E** | Rotate the view left / right (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
-| **]** | Cycle forward through targetable objects in the current target mode |
-| **[** | Cycle backward through targetable objects in the current target mode |
+| **Z** / **X** | Rotate the view left / right (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
+| **E** | Cycle forward through targetable objects in the current target mode |
+| **Q** | Cycle backward through targetable objects in the current target mode |
 | **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star). Starts on LANDING SITES. |
 | **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Hover** a minimap blip | Show its name in a label by the cursor |
 | **Mouse wheel** | Over a scrollable HUD pane (Message Log bottom-left, targeting/info pane top-right): scroll it. Over open space: zoom the view in (wheel up) / out (wheel down), within the story's Space View zoom range |
-| **H** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
+| **R** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Fire the equipped weapon (hold to fire continuously, at the weapon's own fire rate) - doesn't cancel an active autopilot, so you can shoot while it flies you somewhere. Shots hit asteroids and any AI ship. Shooting a ship makes *it* fight back, and shooting up enough of one faction's ships (or its standing dropping very low, or a story flag) turns that whole faction hostile. The bottom status pane shows **Hull: N%** once your ship is damaged; landing anywhere repairs it. A destroyed ship is recovered to the current system's station, repaired, minus its cargo. |
-| **F** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **L** press. |
-| **L** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
-| **M** | Open the star map |
-| **J** | Jump to the selected star system (see Star Map below) |
-| **P** | Open the Possessions menu (credits, owned ships, loans) |
-| **N** | Open the Mission Log (see Mission Log below) |
+| **F** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **G** press. |
+| **G** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
+| **1** | Open the star map |
+| **2** | Jump to the selected star system (see Star Map below) |
+| **3** | Open the Possessions menu (credits, owned ships, loans) |
+| **4** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane (starts hidden - just its title and this line) |
 | **ESC** | Pause menu |
 
@@ -48,14 +48,14 @@ second line rather than running off the panel. It's hidden entirely while a
 menu or a conversation is open. Side HUD panes (Controls, minimap, info,
 Message Log) are each capped at one fifth of the window width.
 
-## Star Map (M)
+## Star Map (1)
 
 | Control | Action |
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
-| **J** | Close the map and jump to the selected system |
-| **M**, **ESC**, or the **Close Map** button (top-left) | Close the map (selection persists) |
+| **2** | Close the map and jump to the selected system (space view only - from a station/moon interior the map is view-and-select only, and **2** just closes it) |
+| **1**, **ESC**, or the **Close Map** button (top-left) | Close the map (selection persists) |
 
 The map is otherwise mouse-only. It opens centered on your current system,
 with a "You
@@ -63,16 +63,20 @@ are here" tag next to it. A **Close Map** button (top-left) and the selected
 system's station/moon panel (top-right) share the space view's HUD look. The selected
 system is shown back in the space view as "Jump Target:" - it defaults to
 (and resets to, after a jump) your current system, so it's never empty.
-Pressing **J** (either on the map or back in the space view) starts the jump
+Pressing **2** (either on the map or back in the space view) starts the jump
 if the target is a different system, or the current one while far enough
 from its center (`JUMP_SELF_MIN_DISTANCE`); from too close to the center a
 self-jump just flashes a brief "too close" notice instead.
+
+The star map also opens from a station/moon interior (**1**) - handy for
+planning your next hop while docked. Jumping needs the cockpit, so **2**
+there only closes the map; the selection is kept for when you next launch.
 Completing a jump flashes a brief "arrived at ..." toast in the space view.
 Your thrusters draw as firing for the whole jump.
 
 A story can gate systems behind **jump beacons** (`systems/*.json`'s `locked` +
 `unlock_flag` - see `utils.system_unlocked`). A locked system is drawn dim on
-the map with a **NO SIGNAL** tag and can't be clicked as a target; **J** toward
+the map with a **NO SIGNAL** tag and can't be clicked as a target; **2** toward
 one just flashes a "No signal from ..." notice. Its beacon lights when the
 `unlock_flag` is set - by the `"light_beacon:<system_id>"` dialogue action, a
 mission's `on_end_flags`, or any `set_flag:` - and the space view then posts a
@@ -83,19 +87,20 @@ mission's `on_end_flags`, or any `set_flag:` - and the space view then posts a
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **]** | Cycle forward through targetable NPCs (for viewing info at a distance - see below) |
-| **[** | Cycle backward through targetable NPCs |
+| **E** | Cycle forward through targetable NPCs (for viewing info at a distance - see below) |
+| **Q** | Cycle backward through targetable NPCs |
 | **Click** a person | Target them directly |
 | **T** | Talk to the closest NPC/pilot in range - always the nearest one, regardless of any manually cycled/clicked target |
-| **L** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
-| **P** | Open the Possessions menu (credits, owned ships, loans) |
-| **N** | Open the Mission Log (see Mission Log below) |
+| **G** | Use the portal you're standing on - boards your ship (or opens the Exit Menu below if the portal leads more than one place, or shows why you can't leave yet) |
+| **1** | Open the star map (view-and-select only while docked - see Star Map above) |
+| **3** | Open the Possessions menu (credits, owned ships, loans) |
+| **4** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane |
 | **Mouse wheel** | Over the Message Log (bottom-left) when it has more than fits: scroll it. Over open floor: zoom the view in / out, within the story's interior zoom range (separate from the Space View's) |
 | **ESC** | Pause menu |
 
 A default-story station is one connected interior with a single ship portal
-in the dock area - walk to the loan officer and ship dealer, then **L** at
+in the dock area - walk to the loan officer and ship dealer, then **G** at
 the dock to board. Moons still have separate `city` and `wilderness` areas
 joined by a portal. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -108,9 +113,9 @@ pointer is over it (the guided walkthrough has a step for this).
 
 **Guided walkthrough:** on a fresh game you start on Alpha Station with no
 ship. Sela Cordova, the concierge on the concourse, offers a tour that
-walks you through the interior controls (moving, targeting, talking, the
-Mission Log, Possessions, scrolling the Message Log), taking out a loan, and
-buying your first ship - accept it (**T**, then "Yes, show me around") and she
+walks you through the interior controls (moving, targeting with **Q**/**E**,
+talking, the Mission Log, Possessions, scrolling the Message Log), taking out
+a loan, and buying your first ship - accept it (**T**, then "Yes, show me around") and she
 trails you on foot, posting each step to the Message Log and Mission Log. It's the
 on-foot counterpart to Kade Marsh's flying lesson once you launch.
 
@@ -123,7 +128,7 @@ pane shows "Press T to talk to `<name>`"; that prompt disappears entirely
 when no one's close enough (there's no "approach target to talk" message
 anymore). **T always talks to that closest person.**
 
-`]`/`[`/click-targeting (see the table above) is a separate, purely
+`Q`/`E`/click-targeting (see the table above) is a separate, purely
 informational selection - it highlights whoever you've picked with bracket
 corners and shows their name/role in the top-right info panel, even from
 across the room, but has no effect on what T does. It's for looking someone
@@ -134,13 +139,14 @@ up at a distance, not for choosing who to talk to.
 | Control | Action |
 |---------|--------|
 | **W/A/S/D** or **Arrow Keys** | Move around |
-| **]** / **[** | Cycle through targetable NPCs, forward/backward (City only, for viewing info at a distance - see above) |
+| **E** / **Q** | Cycle through targetable NPCs, forward/backward (City only, for viewing info at a distance - see above) |
 | **Click** a person | Target them directly |
 | **T** | Talk to the closest NPC/pilot in range - see "NPC Targeting vs. Talking" above |
 | **Mouse wheel** | Over the Message Log: scroll it. Over open ground: zoom the view in / out, within the story's interior zoom range |
-| **L** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
-| **P** | Open the Possessions menu (credits, owned ships, loans) |
-| **N** | Open the Mission Log (see Mission Log below) |
+| **G** | Exit near the entrance - returns to space directly if that's the only option, otherwise opens the Exit Menu below |
+| **1** | Open the star map (view-and-select only while docked) |
+| **3** | Open the Possessions menu (credits, owned ships, loans) |
+| **4** | Open the Mission Log (see Mission Log below) |
 | **C** | Show / hide the top-left Controls pane |
 | **ESC** | Pause menu |
 
@@ -175,7 +181,7 @@ you've bought him a round once. See `game/world/dialogue.py`.
 
 | Control | Action |
 |---------|--------|
-| **H** (Space View) | Hail the currently targeted ship |
+| **R** (Space View) | Hail the currently targeted ship |
 | Hover / click an option, **Enter**, click the **X**, or **ESC** | Same as Dialogue above, once a hail is open |
 
 Hailing reuses the exact same conversation UI as talking to someone
@@ -186,7 +192,7 @@ ship, AI traffic, autopilot, mission timers, cached interiors) - it lifts
 the moment the conversation closes, the same as the Pause Menu or the
 jump map.
 Whenever a ship is targeted, the bottom status pane shows a
-"Press H to Hail `<name>`" prompt (it is not in the top-left Controls
+"Press R to Hail `<name>`" prompt (it is not in the top-left Controls
 pane, since it only applies with a target selected).
 A pilot answers differently depending on where they actually are: their
 **hail** conversation (this section) is a separate, ship-context
@@ -203,7 +209,7 @@ screen on its own - a brief top-centre banner in a glass pane, the same look
 as the rest of the HUD (mission toasts and the "too close to jump" warning
 share that pane style and stack below it - see `draw_glow_message`), no
 dialogue box, and it doesn't require a target - you still have to target and
-hail them back (H) to actually have the conversation. A pilot's `one_way_hail`
+hail them back (R) to actually have the conversation. A pilot's `one_way_hail`
 has a `range` gating how close you must be; the tutorial's Kade Marsh uses a
 very large range so his opening hail lands the moment you launch. The banner
 only announces the
@@ -233,16 +239,16 @@ and `ui_theme.draw_message_log()` / `draw_info_panel()`.
 
 Space View also shows a persistent hint in the bottom status pane once
 you've drifted far enough from the system's center that jumping back is
-possible ("Drifting far from the system - open the Star Map (M) and jump
-(J) back") - the same distance a self-jump back to this system already
+possible ("Drifting far from the system - open the Star Map (1) and jump
+(2) back") - the same distance a self-jump back to this system already
 requires (`JUMP_SELF_MIN_DISTANCE`), so the hint and the mechanic it
 points at always agree.
 
-## Mission Log (N)
+## Mission Log (4)
 
 | Control | Action |
 |---------|--------|
-| **N**, **ESC**, or the **Close** button (top-right) | Close |
+| **4**, **ESC**, or the **Close** button (top-right) | Close |
 | **[** / **]**, **Left** / **Right**, or **Click** a tab | Switch between the Active and Completed tabs |
 | **Mouse wheel**, **Up** / **Down**, **PageUp** / **PageDown**, **Home** / **End** | Scroll a report longer than the panel |
 
@@ -259,7 +265,7 @@ the player to actually check it (see `first_flight`).
 
 Starting a mission, completing a stage, and finishing a mission each flash a
 brief center-screen toast in the Space View (see `SpaceScreen._show_toast`) -
-a stage-complete toast reads `Step N/M - see Mission Log (N)`. A story opts a new pilot into a mission automatically -
+a stage-complete toast reads `Step N/M - see Mission Log (4)`. A story opts a new pilot into a mission automatically -
 by default the first time they buy a ship, or at new-game start if
 `story.json`'s `"starting_mission_trigger"` is `"new_game"` (`"starting_mission"` names it). Either way it holds until the player
 next launches into space (so the opening toast and hail land in the
@@ -298,7 +304,7 @@ menu is meant to
 be self-explanatory from its buttons and labels. Every menu has a visible
 **Close** / **Cancel** / **Resume** / **Back** button. The exception to
 "keyboard does nothing" is **ESC-to-close**: the **Pause menu** (ESC), the
-**Star Map** (M), **Possessions** (P), and the **Mission Log** (N) each also
+**Star Map** (1), **Possessions** (3), and the **Mission Log** (4) each also
 close on the key that opened them, and the **Shop / Shipyard / Outfitting**
 menus (opened with T, so no opening key) close on **ESC** alone - a pending
 purchase confirmation eats the ESC as a cancel first. The pause menu
@@ -312,9 +318,9 @@ shrinks its buttons to stay inside the panel. Long reports and lists scroll
 with the **mouse wheel** (or by clicking the `^ more` / `v more`
 indicators).
 
-The keys **P** / **N** / **M** / **L** *open* menus from the space
-view or an interior (they're HUD controls, listed above). **P**, **N**, and
-**M** also *close* the overlay they opened (as does **ESC**); once any other
+The keys **3** / **4** / **1** / **G** *open* menus from the space
+view or an interior (they're HUD controls, listed above). **3**, **4**, and
+**1** also *close* the overlay they opened (as does **ESC**); once any other
 menu is up, all four keys do nothing.
 
 Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
@@ -326,19 +332,19 @@ Two kinds (see DESIGN_PATTERNS.md's "Menu vs. Dialog"):
   one of its buttons - Yes/No confirmations, the pilot-name entry, the
   "where to?" and landing-spot pickers.
 
-### Possessions Menu (open with P)
+### Possessions Menu (open with 3)
 Read-only: credits, owned ships, loans, the current ship's live stats
 (thrust/velocity/rotation/cargo usage - reflecting installed outfits),
 cargo, personal items, installed/spare ship outfits, and - only if the story
 has a `factions.json` - a **Standing** section listing the player's reputation
 with each faction (band + signed number: Hostile / Cold / Neutral / Friendly /
-Allied). Two columns; wheel to scroll if it overflows. **P**, **ESC**, or the
+Allied). Two columns; wheel to scroll if it overflows. **3**, **ESC**, or the
 **Close** button (top-right) closes it.
 
-### Mission Log (open with N)
+### Mission Log (open with 4)
 Two tabs - **Active** and **Completed** - clicked to switch. Each mission's
 stages are **numbered** and marked `[x]` done / `->` current; unreached
-stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **N**,
+stages stay hidden. Wheel (or click `^ more` / `v more`) to scroll. **4**,
 **ESC**, or the **Close** button (top-right) closes it.
 
 ### Shop Menu (T, on an NPC with a shop)
@@ -513,7 +519,7 @@ averages and peaks over the last ~2 seconds. See
   (`story.json`'s `camera_zoom` / `camera_zoom_min` / `camera_zoom_max` and
   `interior_camera_zoom` / `interior_camera_zoom_min` / `interior_camera_zoom_max`,
   defaults in `constants.py`). Each level is remembered for the session and
-  **saved with the game** (unlike Q/E view rotation, which is not)
+  **saved with the game** (unlike Z/X view rotation, which is not)
 - **Arrow keys and WASD are interchangeable** for movement and navigation
 - **ESC pauses** the game from the space view and interiors, and **ESC
   again resumes** from the pause menu; in the Star Map, Possessions,

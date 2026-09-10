@@ -16,8 +16,8 @@ class _JumpMixin:
 
     def try_jump(self):
         """Validate the current star map selection/distance, then start a jump
-        if valid. Called both by K_J in the space view and by main.py when the
-        player presses J to leave the Star Map with a destination selected."""
+        if valid. Called both by the jump key (2) in the space view and by main.py when the
+        player presses 2 to leave the Star Map with a destination selected."""
         if not self.selected_system_id:
             return
         systems = get_star_systems(self.story)

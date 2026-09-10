@@ -6,7 +6,7 @@ class _PortalsMixin:
 
     def _resolve_portal(self, portal):
         """Which portal get_exit_options() and friends should act on when
-        the caller didn't pass one explicitly: whichever portal L was just
+        the caller didn't pass one explicitly: whichever portal G was just
         pressed next to (_active_portal, set by handle_input - main.py
         calls these after the fact, once ExitMenu is already up), falling
         back to whatever the player is currently standing next to (for
@@ -33,7 +33,7 @@ class _PortalsMixin:
         """Every destination reachable from this location via *any* of its
         portals (see self.portals), deduplicated but order-preserving.
         Unlike get_exit_options(), which is scoped to one specific portal
-        (the player is always standing at a particular one when L opens
+        (the player is always standing at a particular one when G opens
         the exit menu), this is for DockRoutine: an AI pilot decides where
         to go next while still talking to an NPC, nowhere near a portal
         yet, so it needs to know what's reachable at all before walking to
@@ -55,7 +55,7 @@ class _PortalsMixin:
 
     def get_available_exit_options(self, portal=None):
         """get_exit_options() minus "ship" when there's no ship to actually
-        board yet - used to decide whether L can exit immediately or needs
+        board yet - used to decide whether G can exit immediately or needs
         to open ExitMenu so the player can see *why* nothing happened."""
         options = self.get_exit_options(portal)
         if not self.ship_available:
@@ -122,7 +122,7 @@ class _PortalsMixin:
         joined with "/" for a portal that offers more than one (a menu
         still opens for those - the label is just a preview of what's in
         it, same as a single-destination portal's label is now the only
-        preview it gets since L skips straight past its menu)."""
+        preview it gets since G skips straight past its menu)."""
         names = [self._display_name(key) for key in portal["connected_locations"]]
         if portal["return_to_ship"]:
             names.append(self._display_name("ship"))

@@ -137,12 +137,12 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         self.camera_x = 0
         self.camera_y = 0
         # View rotation (degrees) applied to the whole Space View, driven by
-        # Q/E. Player-preference view state only - not saved, not game state,
+        # Z/X. Player-preference view state only - not saved, not game state,
         # and reset to north-up (0) by interiors when the player lands.
         self.camera_angle = 0
         # Star map selection, for the Jump mechanic - never None: defaults to
         # (and resets to, after a jump) the current system, so "Jump Target"
-        # always names somewhere and J is always meaningful.
+        # always names somewhere and the jump key is always meaningful.
         self.selected_system_id = self.system_id
         # True once the player is actually out flying (set by board_ship() /
         # every update() frame, cleared by park_at() and _mark_landed()).
@@ -169,7 +169,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         self.toast_text = None
         self.toast_color = CYAN
         self.toast_timer = 0
-        self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_h)
+        self.active_dialogue = None  # Set to a hailed pilot's Dialogue while a hail is open (see handle_input's K_r)
         self.hail_banner = None  # (text, color) for a transient hail-related message (see below)
         self.hail_banner_timer = 0
         # Projectiles (weapon shots) currently in flight
@@ -325,13 +325,13 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             if keys[pygame.K_SPACE]:
                 self._update_weapon_fire()
 
-        # Rotate the view (Q/E) - held, like ship turning. Allowed even
+        # Rotate the view (Z/X) - held, like ship turning. Allowed even
         # mid-jump (it's only the camera), blocked only while a hail has
         # input focus, same as flight controls.
         if not self.active_dialogue:
-            if keys[pygame.K_q]:
+            if keys[pygame.K_z]:
                 self.camera_angle = (self.camera_angle - CAMERA_ROTATE_SPEED) % 360
-            if keys[pygame.K_e]:
+            if keys[pygame.K_x]:
                 self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
 
         for event in events:
@@ -393,27 +393,27 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 continue
 
             # Cancel autopilot on any key press (except ESC which handles
-            # pause, Q/E which only rotate the view - not a flight input -
+            # pause, Z/X which only rotate the view - not a flight input -
             # and SPACE, which fires the equipped weapon rather than
             # steering, so shooting at an asteroid doesn't abort a run to
             # the station)
-            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_q, pygame.K_e, pygame.K_SPACE):
+            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_z, pygame.K_x, pygame.K_SPACE):
                 self.player.autopilot_active = False
                 self.player.autopilot_target = None
                 return None
 
             if event.key == pygame.K_ESCAPE:
                 return "pause"
-            elif event.key == pygame.K_RIGHTBRACKET:
+            elif event.key == pygame.K_e:
                 self._cycle_target(1)
-            elif event.key == pygame.K_LEFTBRACKET:
+            elif event.key == pygame.K_q:
                 self._cycle_target(-1)
             elif event.key == pygame.K_t:
                 self._cycle_target_mode()
-            elif event.key == pygame.K_h:
+            elif event.key == pygame.K_r:
                 self._start_hail()
-            elif event.key == pygame.K_l:
-                # Land only - never engages autopilot (see K_f below
+            elif event.key == pygame.K_g:
+                # Land only - never engages autopilot (see K_f/F below
                 # for that). If a landing site is targeted and already in
                 # range, land on it directly; otherwise fall back to a
                 # pure proximity check, which also covers an AI ship
@@ -454,13 +454,13 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                         # complete_flag without this class knowing about
                         # missions at all.
                         self.player.person.possessions.flags["used_autopilot_on_ship"] = True
-            elif event.key == pygame.K_m and not self.jump_state:
+            elif event.key == pygame.K_1 and not self.jump_state:
                 return "star_map"
-            elif event.key == pygame.K_j and not self.jump_state:
+            elif event.key == pygame.K_2 and not self.jump_state:
                 self.try_jump()
-            elif event.key == pygame.K_p:
+            elif event.key == pygame.K_3:
                 return "possessions"
-            elif event.key == pygame.K_n:
+            elif event.key == pygame.K_4:
                 # Generic gameplay-event flag (see K_f's comment) - a
                 # mission stage can use "viewed_mission_log" as its
                 # complete_flag (see missions.json's first_flight).
@@ -472,7 +472,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
 
     def _mark_landed(self):
         """Set the generic "landed_on_landing_site" gameplay-event flag -
-        called from every path that actually lands the ship (manual L,
+        called from every path that actually lands the ship (manual G,
         and update()'s auto-land-on-autopilot-arrival). See K_f's own
         comment above for why this lives on Possessions.flags rather than
         a SpaceScreen-only field."""
@@ -559,7 +559,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 self._deliver_stage_message(advanced_stage)
                 mission_id, stage_index = advanced_stage
                 total = len(self.missions_config.get(mission_id, {}).get("stages", []))
-                self._show_toast(f"Step {stage_index + 1}/{total} - see Mission Log (N)", GREEN)
+                self._show_toast(f"Step {stage_index + 1}/{total} - see Mission Log (4)", GREEN)
             for mission_id in possessions.completed_missions:
                 if mission_id not in completed_before:
                     title = self.missions_config.get(mission_id, {}).get("title", mission_id)
@@ -605,7 +605,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # stall-bailout inside update_physics(), which uses a looser stop than
         # has_arrived()) - if it left us stopped within landing range of the
         # landing site it was seeking, finish the landing rather than leave the
-        # ship parked-but-not-landed for the player to press L.
+        # ship parked-but-not-landed for the player to press G.
         if pending is not None and not self.player.autopilot_active:
             speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
             if self.player.get_distance(pending.x, pending.y) < pending.landing_distance and speed < 0.4:

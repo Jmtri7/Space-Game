@@ -37,18 +37,18 @@ are unchanged.
               ┌──────▼──────────────────────────▼──┐
               │            GAME (SpaceScreen)        │◄───────────┐
               └───┬───────────────────────────┬─────┘            │
-        (L: land on station)         (L: land on moon)           │
+        (G: land on station)         (G: land on moon)           │
                   │                           │                   │
           ┌───────▼────────┐        ┌─────────▼─────────┐         │
           │ STATION         │        │  LANDING LOCATION │         │
           │ (LocationScreen)│        │ ChoiceDialog      │         │
           └───────┬────────┘        └─────────┬─────────┘         │
-             (L: exit) ─────────────► GAME     │                   │
+             (G: exit) ─────────────► GAME     │                   │
                   │                  ┌─────────▼─────────┐         │
                   │                  │  MOON              │         │
                   │                  │ (LocationScreen)   │         │
                   │                  └─────────┬─────────┘         │
-                  │                       (L: exit) ────────────────┘
+                  │                       (G: exit) ────────────────┘
                   │                                                │
         ┌─────────▼────────────────────────────────────────────────▼──┐
         │                          PAUSE MENU                          │
@@ -66,10 +66,10 @@ own `ConfirmDialog` instance) for removing a save directly, independent of
 the Pause-menu save browser's delete flow shown above.
 
 The diagram above shows the simple case where a `LocationScreen`'s exit
-(`L` near a portal) leads to only one place, and so acts immediately. A
+(`G` near a portal) leads to only one place, and so acts immediately. A
 location can have more than one portal (see STATION / MOON below); when
 the one the player is standing next to has `connected_locations` and/or
-`return_to_ship` adding up to more than one destination, `L` instead opens
+`return_to_ship` adding up to more than one destination, `G` instead opens
 the exit `ChoiceDialog` - the player picks "Return to Ship" (→ GAME) or a
 connected location (→ that location's own `LocationScreen`, staying in
 `"station"`/`"moon"`).
@@ -200,14 +200,16 @@ dialogue); the world is simply frozen (`step_world()` is a no-op for
 - LEFT/RIGHT or A/D: rotate ship
 - UP or W: thrust forward
 - DOWN or S: turn to face reverse velocity
-- T: cycle target (station, moon, each AI ship)
-- L: land (or engage autopilot toward the current target if out of range)
-- H: hail the targeted ship — opens a dialogue box and fully pauses the simulation until it closes (no `update()`/`update_background_locations()` while `game_screen.active_dialogue` is set)
+- T: cycle target mode · Q/E: cycle target
+- F: engage autopilot toward the current target · G: land
+- R: hail the targeted ship — opens a dialogue box and fully pauses the simulation until it closes (no `update()`/`update_background_locations()` while `game_screen.active_dialogue` is set)
+- Space: fire equipped weapon · Z/X: rotate view
+- 1: star map · 2: jump · 3: possessions · 4: mission log
 - ESC: pause
 
 **Transitions:**
-- L, close + slow near station → `LocationScreen` (station interior)
-- L, close + slow near moon → landing-spot `ChoiceDialog` (`"select_location"`)
+- G, close + slow near station → `LocationScreen` (station interior)
+- G, close + slow near moon → landing-spot `ChoiceDialog` (`"select_location"`)
 - ESC → PauseMenu
 
 ### Landing Location (`ChoiceDialog`)
@@ -242,21 +244,21 @@ exit may still use the flat `"entrance"` / `"connected_locations"` /
 
 **Inputs:**
 - LEFT/RIGHT/UP/DOWN or WASD: move
-- L: exit (only within range of a portal) - see `get_available_exit_options()`, scoped to whichever portal is nearest:
+- G: exit (only within range of a portal) - see `get_available_exit_options()`, scoped to whichever portal is nearest:
   - Exactly one destination *and it's actually usable* → goes there immediately (`"exit"` → GAME, or `"exit_to:<key>"` → that connected location)
-  - More than one configured, or the only one isn't usable yet (e.g. "ship" with no ship owned) → opens the exit `ChoiceDialog`, so an unusable option is still visible with its reason instead of L doing nothing
-- T (with an NPC targeted, in range): talk - opens that NPC's `Dialogue` (see below)
-- P: possessions `ReportMenu` · N: mission `ReportMenu`
+  - More than one configured, or the only one isn't usable yet (e.g. "ship" with no ship owned) → opens the exit `ChoiceDialog`, so an unusable option is still visible with its reason instead of G doing nothing
+- T (with an NPC targeted, in range): talk - opens that NPC's `Dialogue` (see below) · Q/E: cycle target
+- 1: star map (view-and-select only while docked) · 3: possessions `ReportMenu` · 4: mission `ReportMenu`
 - ESC: pause
 
 While docked, `SpaceScreen.update_physics()` still runs in the background (ships keep moving), just without camera updates.
 
 **Transitions:**
-- L (near a portal, single usable destination) → GAME or a connected location's `LocationScreen`
-- L (near a portal, multiple destinations, or the only one isn't usable) → exit `ChoiceDialog`
+- G (near a portal, single usable destination) → GAME or a connected location's `LocationScreen`
+- G (near a portal, multiple destinations, or the only one isn't usable) → exit `ChoiceDialog`
 - T (NPC targeted, in range, no `"shop"` config) → that NPC's `Dialogue`, always restarted at its root node
 - T (NPC targeted, in range, has a `"shop"` config) → `ShopMenu` instead of `Dialogue`
-- P → possessions `ReportMenu` · N → mission `ReportMenu`
+- 1 → `star_map` (returns to this interior; jump disabled while docked) · 3 → possessions `ReportMenu` · 4 → mission `ReportMenu`
 - ESC → PauseMenu
 
 ### Dialogue
@@ -301,15 +303,15 @@ getting a dialog.
 
 ### Possessions / Missions (`ReportMenu`)
 **Shows:** A read-only, one- or two-column text report. `possessions_report()`
-(P): credits, owned ships, loans, the current ship's live stats
+(3): credits, owned ships, loans, the current ship's live stats
 (thrust/max velocity/rotation/cargo usage - via the optional `ship` arg,
 `PlayerController.ship`, so it reflects installed outfits immediately),
-cargo, personal items, installed/spare outfits. `mission_report()` (N):
+cargo, personal items, installed/spare outfits. `mission_report()` (4):
 each mission's stages with `[x]` / `->` markers, hiding stages not yet
 reached. Both live in `game/ui/report_menu.py`, drawn over whichever screen
 opened them.
 
-**Inputs:** P (possessions) or N (missions) or ESC: close
+**Inputs:** 3 (possessions) or 4 (missions) or ESC: close
 
 **Transitions:**
 - close → back to whichever screen opened it (`possessions_return_screen` / `missions_return_screen` in `main.py`)
@@ -483,14 +485,15 @@ completed load being abandoned - so nothing stale carries over.
 `"menu"` → `"load"` → `"game"` / `"station"` / `"moon"` (whatever `location` the save has)
 `"pause"` → `"load"` (Load Game; `load_return_screen = "pause"`) → `"game"` / `"station"` / `"moon"` on load, or back to `"pause"` on cancel
 `"game"` → `"station"` (land near station) or `"select_location"` → `"moon"` (land near moon)
-`"station"` / `"moon"` → `"exit_menu"` (L, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
-`"game"` / `"station"` / `"moon"` → `"possessions"` (P) → back to whichever of the three it came from
+`"station"` / `"moon"` → `"exit_menu"` (G, exit has multiple destinations, or its one destination isn't usable yet) → `"game"`, or back to `"station"`/`"moon"` (a different interior, or ESC/cancel)
+`"game"` / `"station"` / `"moon"` → `"possessions"` (3) → back to whichever of the three it came from
+`"game"` / `"station"` / `"moon"` → `"star_map"` (1) → back to whichever of the three it came from (`star_map_return_screen`; `try_jump()` only runs when that is `"game"`)
 `"station"` / `"moon"` → `"shop"` (T, on an NPC with a `"shop"` config) → back to whichever of the two it came from
 `"game"` / `"station"` / `"moon"` → `"pause"` (ESC) → back to `previous_screen` (Resume) or `"menu"` (Quit)
 
 **Invalid (prevented by code):**
 - PauseMenu blocks its own input while the save browser / a `ConfirmDialog` is open
-- `LocationScreen` only exits (`L`) within `entrance_range` of a portal
+- `LocationScreen` only exits (`G`) within `entrance_range` of a portal
 - The exit `ChoiceDialog` only appears when `get_exit_options()` has more than one entry, or the single entry isn't usable (`get_exit_disabled_reasons()`); with exactly one usable entry it's skipped (immediate exit)
 - Landing only triggers when both close enough (`landing_distance`) and slow enough (`speed < 0.4`)
 - A dialogue option with a blocked `"action"` (`LocationScreen._option_blocked_reason`) can't be selected - RETURN on it is a no-op

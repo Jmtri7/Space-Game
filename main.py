@@ -326,6 +326,7 @@ def main():
         load_menu = None
         load_return_screen = None  # "pause" when the Load menu was opened from the pause menu (ESC/load returns there), else None -> main menu
         star_map = None
+        star_map_return_screen = None  # "game" / "station" / "moon" - where 1/ESC closes back to (jump only works from "game")
         video_menu = None
         video_aspect = None  # aspect group being browsed in Settings -> Video
         settings_return_screen = None  # "pause" if Settings was opened from the pause menu, else -> main menu
@@ -586,6 +587,7 @@ def main():
                 elif action == "star_map":
                     star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id,
                                        flags=game_screen.player.person.possessions.flags)
+                    star_map_return_screen = "game"
                     current_screen = "star_map"
                 elif action == "possessions":
                     possessions_menu = ReportMenu(*possessions_report(game_screen.player.person.possessions, game_screen.story, game_screen.player.ship))
@@ -600,15 +602,18 @@ def main():
 
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
-                if _pressed_any(events, pygame.K_m, pygame.K_ESCAPE):
+                if _pressed_any(events, pygame.K_1, pygame.K_ESCAPE):
                     action = "close"
-                elif _pressed_any(events, pygame.K_j):
+                elif _pressed_any(events, pygame.K_2):
                     action = "jump"
                 if action in ("close", "jump"):
                     game_screen.selected_system_id = star_map.selected_system_id
-                    current_screen = "game"
-                    if action == "jump":
-                        # Same path as pressing J in the space view - validates
+                    current_screen = star_map_return_screen or "game"
+                    # Jumping only makes sense from the cockpit - from a
+                    # station/moon interior the map is view-and-select only
+                    # (the selection still persists for when you next launch).
+                    if action == "jump" and star_map_return_screen == "game":
+                        # Same path as pressing 2 in the space view - validates
                         # the selection/distance and shows "too close" feedback
                         # for a self-jump from near the system centre.
                         game_screen.try_jump()
@@ -643,6 +648,11 @@ def main():
                     mission_log = ReportMenu(*mission_report(game_screen.missions_config, station_interior.player.possessions))
                     missions_return_screen = "station"
                     current_screen = "missions"
+                elif action == "star_map":
+                    star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id,
+                                       flags=station_interior.player.possessions.flags)
+                    star_map_return_screen = "station"
+                    current_screen = "star_map"
                 elif action == "shop":
                     shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits, station_interior.switch_ship)
                     shop_return_screen = "station"
@@ -684,7 +694,7 @@ def main():
 
             elif current_screen == "possessions":
                 action = possessions_menu.handle_input(events)
-                if _pressed_any(events, pygame.K_p, pygame.K_ESCAPE):
+                if _pressed_any(events, pygame.K_3, pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = possessions_return_screen
@@ -693,7 +703,7 @@ def main():
 
             elif current_screen == "missions":
                 action = mission_log.handle_input(events)
-                if _pressed_any(events, pygame.K_n, pygame.K_ESCAPE):
+                if _pressed_any(events, pygame.K_4, pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = missions_return_screen
@@ -746,6 +756,11 @@ def main():
                     mission_log = ReportMenu(*mission_report(game_screen.missions_config, moon_interior.player.possessions))
                     missions_return_screen = "moon"
                     current_screen = "missions"
+                elif action == "star_map":
+                    star_map = StarMap(game_screen.story, game_screen.system_id, game_screen.selected_system_id,
+                                       flags=moon_interior.player.possessions.flags)
+                    star_map_return_screen = "moon"
+                    current_screen = "star_map"
                 elif action == "shop":
                     shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits, moon_interior.switch_ship)
                     shop_return_screen = "moon"

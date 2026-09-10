@@ -5,7 +5,7 @@ from game.screens.space_screen._defs import *  # noqa: F401,F403
 class _HailingMixin:
 
     def _start_hail(self):
-        """Open a hail with the currently targeted ship (K_h - see
+        """Open a hail with the currently targeted ship (K_r - see
         docs/CONTROLS.md's Hailing section). Requires a targeted AI ship
         (SHIPS target mode - see _get_target_object/_filtered_targets);
         does nothing if nothing's targeted, or the target isn't a ship at

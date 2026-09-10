@@ -254,14 +254,15 @@ class _HudMixin:
             help_items = [
                 ("ESC", "Pause"),
                 ("WASD / Arrows", "Fly"),
-                ("Q / E", "Rotate view"),
-                ("T  /  [  ]", "Target mode / target"),
+                ("Z / X", "Rotate view"),
+                ("T  /  Q  E", "Target mode / target"),
                 ("Click / hover blip", "Minimap: target / name"),
-                ("Space", "Autopilot"),
-                ("L", "Land / board"),
-                ("H", "Hail target"),
-                ("J  /  M", "Jump / map"),
-                ("P  /  N", "Gear / log"),
+                ("Space", "Fire"),
+                ("F", "Autopilot"),
+                ("G", "Land / board"),
+                ("R", "Hail target"),
+                ("2  /  1", "Jump / map"),
+                ("3  /  4", "Gear / log"),
                 ("Wheel", "Scroll pane"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale,
@@ -311,7 +312,7 @@ class _HudMixin:
             else:
                 speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
                 if self.landing_text > 0:
-                    status_lines.append(("Press L to Land", GREEN))
+                    status_lines.append(("Press G to Land", GREEN))
                 elif speed >= 0.4 and (
                     self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
                     or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
@@ -323,13 +324,13 @@ class _HudMixin:
                 # JUMP_SELF_MIN_DISTANCE), so only prompt for it once that's
                 # actually true.
                 if self.selected_system_id != self.system_id:
-                    status_lines.append(("Press J to Jump", GREEN))
+                    status_lines.append(("Press 2 to Jump", GREEN))
                 elif self._drifted_from_center():
-                    status_lines.append(("Drifting far from the system - open the Star Map (M) and jump (J) back", YELLOW))
+                    status_lines.append(("Drifting far from the system - open the Star Map (1) and jump (2) back", YELLOW))
                 if target_obj:
-                    status_lines.append(("Press Space for Autopilot", GREEN))
+                    status_lines.append(("Press F for Autopilot", GREEN))
                 if isinstance(target_obj, Character):
-                    status_lines.append((f"Press H to Hail {target_obj.person.name or 'Target'}", GREEN))
+                    status_lines.append((f"Press R to Hail {target_obj.person.name or 'Target'}", GREEN))
 
             ship = self.player.ship
             if ship and ship.health < ship.max_health:

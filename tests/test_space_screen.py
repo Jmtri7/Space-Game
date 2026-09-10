@@ -410,7 +410,7 @@ class TestSpaceScreenShipTypePersistence(unittest.TestCase):
 
 
 class TestSpaceScreenHailing(unittest.TestCase):
-    """K_h hailing (see SpaceScreen.handle_input/_start_hail) and NPC-
+    """R-key hailing (see SpaceScreen.handle_input/_start_hail) and NPC-
     initiated one-way hails (_check_one_way_hails) - exercised against the
     default story's real pilots.json/sol_alpha.json config: Kade Marsh
     (patrol_officer, OrbitRoutine - never ashore, and configured with both

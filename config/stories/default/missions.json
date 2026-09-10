@@ -15,16 +15,16 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Selu Vaeren",
-          "text": "You're on the tour - it's tracking in your Mission Log (N). Let's start with your feet: walk a lap of the concourse on WASD or the arrow keys."
+          "text": "You're on the tour - it's tracking in your Mission Log (4). Let's start with your feet: walk a lap of the concourse on WASD or the arrow keys."
         }
       },
       {
-        "text": "Target one of the people here - press [ or ] to cycle, or click them.",
+        "text": "Target one of the people here - press Q or E to cycle, or click them.",
         "complete_flag": "targeted_person",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Selu Vaeren",
-          "text": "See everyone around us? Tap [ or ] to cycle a target lock, or just click someone. Their name and role show up top-right."
+          "text": "See everyone around us? Tap Q or E to cycle a target lock, or just click someone. Their name and role show up top-right."
         }
       },
       {
@@ -37,21 +37,21 @@
         }
       },
       {
-        "text": "Open your Mission Log - press N.",
+        "text": "Open your Mission Log - press 4.",
         "complete_flag": "viewed_mission_log",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Selu Vaeren",
-          "text": "Press N for your Mission Log. Every step I give you is listed there, so you'll never have to guess what's next."
+          "text": "Press 4 for your Mission Log. Every step I give you is listed there, so you'll never have to guess what's next."
         }
       },
       {
-        "text": "Open your Possessions - press P.",
+        "text": "Open your Possessions - press 3.",
         "complete_flag": "viewed_possessions",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Selu Vaeren",
-          "text": "Now press P for your Possessions - credits, ships, cargo, outfits. Pretty bare right now. Let's fix that."
+          "text": "Now press 3 for your Possessions - credits, ships, cargo, outfits. Pretty bare right now. Let's fix that."
         }
       },
       {
@@ -80,11 +80,11 @@
         }
       },
       {
-        "text": "You're flight-ready - board your ship through the Berth portal (L).",
+        "text": "You're flight-ready - board your ship through the Berth portal (G).",
         "complete_flag": "boarded_ship",
         "one_way_message": {
           "sender": "Selu Vaeren",
-          "text": "That's everything. Your ship's docked and waiting - step on the Berth portal and press L to board when you're ready. Come find me if you're ever back this way. Good luck out there, pilot."
+          "text": "That's everything. Your ship's docked and waiting - step on the Berth portal and press G to board when you're ready. Come find me if you're ever back this way. Good luck out there, pilot."
         }
       }
     ]
@@ -99,11 +99,11 @@
         "complete_flag": "used_ships_target_mode"
       },
       {
-        "text": "Cycle your target ([ or ]) until you're targeting Kade Marsh, then hail him (H).",
+        "text": "Cycle your target (Q or E) until you're targeting Kade Marsh, then hail him (R).",
         "complete_flag": "hailed_pilot:Kade Marsh",
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "Nice, SHIPS mode. Now cycle your target with [ or ] until you're locked onto me, then hit H and let's talk."
+          "text": "Nice, SHIPS mode. Now cycle your target with Q or E until you're locked onto me, then hit R and let's talk."
         }
       },
       {
@@ -140,21 +140,21 @@
         }
       },
       {
-        "text": "Fly far from the system center, wait for the drift prompt, then jump home (J).",
+        "text": "Fly far from the system center, wait for the drift prompt, then jump home (2).",
         "complete_flag": "completed_jump",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "Nicely done. Jumping needs room - fly well clear of the system center until a prompt tells you you've drifted far enough. Your current system is already the default jump target, so from there just tap J to warp home. When you want to travel somewhere else, open the Star Map (M) first and pick your destination."
+          "text": "Nicely done. Jumping needs room - fly well clear of the system center until a prompt tells you you've drifted far enough. Your current system is already the default jump target, so from there just tap 2 to warp home. When you want to travel somewhere else, open the Star Map (1) first and pick your destination."
         }
       },
       {
-        "text": "Target the station/moon (T for LANDING SITES, then [ ]), autopilot in (Space), land (L).",
+        "text": "Target the station/moon (T for LANDING SITES, then Q E), autopilot in (F), land (G).",
         "complete_flag": "landed_on_landing_site",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Kade Marsh",
-          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDING SITES for stations and moons, MISC for the rest. Set it to LANDING SITES, then [ or ] to pick the station or moon. With it targeted, hit Space and the autopilot flies you in and sets you down - or fly it yourself and press L once you're close and slow. Good luck out there, pilot."
+          "text": "You're a fast learner. Last thing - landing. Tap T to cycle your target mode: SHIPS for ships, LANDING SITES for stations and moons, MISC for the rest. Set it to LANDING SITES, then Q or E to pick the station or moon. With it targeted, hit F and the autopilot flies you in and sets you down - or fly it yourself and press G once you're close and slow. Good luck out there, pilot."
         }
       }
     ]

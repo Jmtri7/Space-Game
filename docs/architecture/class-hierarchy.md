@@ -171,7 +171,7 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](../DESIGN_PATTERNS.md)
   | `landed_on_landing_site` | land at a station/moon | `SpaceScreen._check_landing` |
   | `completed_jump` | finish a jump (any destination, self-jump included) | `SpaceScreen._complete_jump` |
   | `jumped_to:<system_id>` | finish a jump into that specific system | `SpaceScreen._complete_jump` |
-  | `viewed_mission_log` | open the Mission Log (N) | `SpaceScreen` |
+  | `viewed_mission_log` | open the Mission Log (4) | `SpaceScreen` |
   | `hailed_pilot:<name>` | hail a specific pilot | `SpaceScreen._start_hail` |
   | `bought_ship` / `bought_ship:<type>` | buy a ship (either purchase path) | `LocationScreen.buy_ship` |
   | `boarded_ship` | actually launch into space (docked → flying) - use this, not `bought_ship`, for a "board your ship" step that must wait for the undock | `SpaceScreen.board_ship` |
