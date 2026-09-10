@@ -74,13 +74,12 @@
         ],
         "structures": [
           { "x": 350, "y": 107.5, "building_type": "pipeline_column" },
-          { "x": 350, "y": 615, "building_type": "pipeline_bench" },
-          { "x": 560, "y": 350, "building_type": "pipeline_bench" }
+          { "x": 350, "y": 615, "building_type": "pipeline_bench" }
         ],
         "npcs": [
           {
             "name": "Archivist Senna",
-            "x": 330, "y": 300,
+            "x": 236, "y": 166,
             "role": "resident",
             "outfit": "ck_researcher_femme",
             "ambient": {
@@ -136,7 +135,7 @@
           },
           {
             "name": "Drum-Hand Vek",
-            "x": 480, "y": 400,
+            "x": 561, "y": 399,
             "role": "resident",
             "outfit": "ck_civilian_masc",
             "greeting": "I move drums so Senna can read them. Eleven years. Ask me which log is which and I'll tell you; ask me what's in one and I'll tell you I don't read.",

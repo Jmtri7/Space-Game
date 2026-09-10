@@ -76,7 +76,7 @@
         "npcs": [
           {
             "name": "The Grey Courier",
-            "x": 250, "y": 320,
+            "x": 139, "y": 301,
             "role": "resident",
             "outfit": "ck_smuggler_masc",
             "requires_not_flag": "met_courier",
