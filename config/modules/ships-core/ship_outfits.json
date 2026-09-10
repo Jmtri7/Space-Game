@@ -119,11 +119,41 @@
   },
   "reinforced_hull": {
     "name": "Reinforced Hull Plating",
-    "description": "Extra armor plating - slows the ship down but hits harder",
+    "description": "Extra armour plating - soaks more damage before the hull fails, at the cost of some top speed",
     "slot_type": "utility",
     "cost": 700,
     "stat_modifiers": {
-      "max_velocity": -0.5
+      "max_velocity": -0.5,
+      "max_health": 20
     }
+  },
+  "shield_capacitor": {
+    "name": "Shield Capacitor",
+    "description": "A charged buffer field around the hull - raises the damage the ship can take before it fails. No speed penalty; fits a utility mount",
+    "slot_type": "utility",
+    "cost": 1300,
+    "stat_modifiers": {
+      "max_health": 35
+    },
+    "icon_shape": "shield",
+    "icon_color": [
+      100,
+      200,
+      180
+    ]
+  },
+  "sensor_array": {
+    "name": "Sensor Array",
+    "description": "Long-baseline scanner - reads a targeted ship's faction, standing, and hull state on the HUD so you know what you're closing on",
+    "slot_type": "utility",
+    "cost": 950,
+    "stat_modifiers": {},
+    "scan": true,
+    "icon_shape": "gem",
+    "icon_color": [
+      150,
+      210,
+      255
+    ]
   }
 }

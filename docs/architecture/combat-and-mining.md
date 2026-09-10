@@ -27,6 +27,20 @@ shots/sec, Projectile Range converted to seconds, Inaccuracy as "±n.n°" or
 "None (precise)", Pellet Spread only shown when `projectile_count > 1` -
 appears with no UI changes needed either.
 
+**Non-weapon outfits** (`slot_type` `engine` / `utility` / `shield`) act
+entirely through a `stat_modifiers` dict that `Ship.apply_outfits` stacks
+additively onto the hull's base stats, then floors: `max_thrust`,
+`max_velocity`, `rotation_speed`, `cargo_capacity`, and `max_health` (extra
+effective hull - the fraction of current health is preserved when it applies,
+so equipping mid-flight tops the bar up proportionally). `ships-core`
+(the shared outfit module) carries `afterburner` / `ion_thruster` (engine),
+`cargo_expansion` / `reinforced_hull` (utility, the latter now also `+max_health`),
+`shield_capacitor` (utility, `+35 max_health`, no speed cost), and
+`sensor_array` (utility, `"scan": true`). A `scan` outfit installed on the
+flown ship adds the target's **faction / standing / hull %** to the Space
+View targeting panel (`_HudMixin._player_has_scanner`); without one the panel
+shows just ship type + pilot.
+
 **Firing:** holding **SPACE** in the Space View
 (`SpaceScreen._update_weapon_fire`, rate-limited by
 `weapon_fire_cooldown`/the equipped weapon's own `fire_rate` so holding the

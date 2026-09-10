@@ -624,7 +624,9 @@
                 "pulse_blaster",
                 "reinforced_hull",
                 "afterburner",
-                "cargo_expansion"
+                "cargo_expansion",
+                "shield_capacitor",
+                "sensor_array"
               ]
             }
           },

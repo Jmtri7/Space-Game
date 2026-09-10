@@ -179,7 +179,12 @@ flight rigs).
   - `graphics.json` `outfits` — 60 per-culture outfit entries (5 roles × femme/masc). Slices 6.1–6.4 + 6.6 have **replaced** their culture's entries with a bespoke wardrobe (real articles + culture `sets`); the Warden (6.5) entries stay a tuned `warden_dress` recolour until Act II.
   - **Each design file carries a written `identity` brief** from that culture's theme + a "geometry is a placeholder copy — reshape" note
   - `systems/*.json` retagged to reference the per-culture ids — now all owned by the slice generators (Phase 0's `gen_systems.py` + `retag_assets.py` are retired)
-- [ ] Own `ship_outfits.json` (still the borrowed `default` 8 — a decent base; add a shield + scanner later)
+- [x] `ship_outfits.json` — the story takes the shared `ships-core` module's
+  set (no longer a borrowed copy). Added `shield_capacitor` (+hull) and
+  `sensor_array` (HUD scan) to that module, gave `reinforced_hull` a real
+  `+max_health`, and added a Sell tab to the Outfitter. All four Act I
+  outfitters stock the two new outfits. `Ship.apply_outfits` gained
+  `max_health` modifier support.
 - [~] Prune / own the borrowed `graphics_pipeline_test` foundation (bodies, faces, `rig_walk`, articles, `draw_order`, `materials`) — mostly done: the story now lists the `figures-human` / `audio-core` / `ships-core` / `common-goods` / `story-defaults` config-modules instead of vendoring the tree (`graphics/` is down to ~114 culture-specific files). Remaining: diff the leftover local `graphics/body` / `graphics/faces` / `graphics/articles` against `figures-human` and delete any byte-identical copies.
 
 ### What 6.1–6.6 now is

@@ -162,6 +162,18 @@ class Possessions:
     def add_outfit(self, outfit_id):
         self.owned_outfits.append(outfit_id)
 
+    def sell_outfit(self, outfit_id, price):
+        """Remove one spare (uninstalled) unit of outfit_id and credit
+        `price`. No-op if none is owned as a spare - installed outfits must
+        be uninstalled first (the Outfitter's Install tab does that). The
+        counterpart to a purchase, so a player who spent a starter loan on
+        the wrong gear can recover (see docs/BACKLOG.md)."""
+        if outfit_id not in self.owned_outfits:
+            return False
+        self.owned_outfits.remove(outfit_id)
+        self.earn(price)
+        return True
+
     def install_outfit(self, slot_id, outfit_id):
         """Move outfit_id from owned_outfits into slot_id. If the slot was
         already occupied, the bumped outfit goes back to owned_outfits and

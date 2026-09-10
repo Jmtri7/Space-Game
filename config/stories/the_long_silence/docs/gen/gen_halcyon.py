@@ -558,7 +558,7 @@ HUB_NPCS = [
     {"name": "Approach Warden Lund", "x": 1400, "y": 470, "role": "outfitter",
      "faction": "harbor_authority", "outfit": "authority_security_masc",
      "greeting": "Fitting out? Standard-issue only, but every piece is rated and logged.",
-     "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull"]}},
+     "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull", "shield_capacitor", "sensor_array"]}},
 
     {"name": "Quartermaster Ellin", "x": 1300, "y": 880, "role": "quartermaster",
      "faction": "harbor_authority", "outfit": "authority_dock_femme",
@@ -794,7 +794,10 @@ w(f"{S}/missions.json", missions)
 # 7. story.json wiring
 # ======================================================================
 story = r(f"{S}/story.json")
-story["version"] = "0.11.0"
+# 0.11.0 cut the starter loan to 12k; 0.12.0 adds the shield_capacitor /
+# sensor_array outfits + gives reinforced_hull a real +max_health (all from
+# the ships-core module) and the Outfitter a sell-back tab.
+story["version"] = "0.12.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

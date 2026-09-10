@@ -42,10 +42,11 @@ only appears under a section if it currently has items there.
 
 ## Economy & Trading
 
-- [ ] You can spend your loan on a laser cannon and then be stuck (no way to
-      recover/pay it back). Partially mitigated in `the_long_silence` (loan cut
-      to 12k, story.json `loan` block) — the real fix is an outfit sell-back
-      path in `OutfittingMenu` (it can buy but never sell), still TODO.
+- [x] You can spend your loan on a laser cannon and then be stuck (no way to
+      recover/pay it back). Fixed: `OutfittingMenu` gained a **Sell** tab
+      (`SELL_MULTIPLIER` 0.5 of cost, spares only — uninstall first) backed by
+      `Possessions.sell_outfit`. Also the `the_long_silence` starter loan was
+      cut 100k → 12k.
 - [x] Loan amount is too big — fine for testing now, but needs tuning down.
       `the_long_silence`: added a `story.json` `loan` block (lender / amount /
       max_active — see `LocationScreen._loan_terms`) set to 12,000 (courier is
@@ -159,7 +160,12 @@ only appears under a section if it currently has items there.
       ship" feel more personal. (Owning multiple ships and switching between
       them at the ship salesman's "Your Ships" tab now works — story `1.12.0`;
       per-ship stored outfit loadouts are still a gap, see SAVE_SYSTEM.md.)
-- [ ] Make all outfits usable (not just cosmetic/inert).
+- [~] Make all outfits usable (not just cosmetic/inert). `reinforced_hull` now
+      actually adds `+max_health` (was speed-penalty only); `shield_capacitor`
+      (+hull) and `sensor_array` (HUD scan of a target's faction/standing/hull)
+      added and wired. Remaining inert/weak: afterburner vs ion_thruster
+      overlap, cargo_expansion is fine. `Ship.apply_outfits` now also stacks a
+      `max_health` `stat_modifier`.
 - [ ] Outfitter should explain how to install outfits and what each outfit does.
 - [ ] Mounted outfit graphics (visually show equipped outfits on the ship).
 - [ ] Graphic for ship thrusters so they're visible when turned off.

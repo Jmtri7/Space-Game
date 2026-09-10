@@ -426,7 +426,7 @@ HOLD_NPCS = [
     {"name": "Approach-Warden Sesk", "x": 1400, "y": 480, "role": "outfitter",
      "faction": "ninefold_combine", "outfit": "combine_security_femme",
      "greeting": "Combine-issue only, and rationed. Everything's rated for the shafts - it'll take worse than you can give it.",
-     "shop": {"type": "outfits", "stock": ["pulse_blaster", "laser_cannon", "reinforced_hull", "cargo_expansion", "afterburner"]}},
+     "shop": {"type": "outfits", "stock": ["pulse_blaster", "laser_cannon", "reinforced_hull", "cargo_expansion", "afterburner", "shield_capacitor", "sensor_array"]}},
 
     {"name": "Cutter Sol", "x": 1300, "y": 900, "role": "bartender",
      "faction": "ninefold_combine", "outfit": "combine_civilian_masc",

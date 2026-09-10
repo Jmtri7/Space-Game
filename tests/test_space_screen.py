@@ -250,6 +250,21 @@ class TestShipHealth(unittest.TestCase):
         s.apply_ship_type({"size": 20, "max_health": 80})
         self.assertEqual(s.health, 40)     # still half
 
+    def test_apply_outfits_max_health_modifier_raises_the_hull(self):
+        s = Ship(0, 0)
+        s.apply_ship_type({"size": 20})   # max_health 50
+        s.apply_outfits([{"stat_modifiers": {"max_health": 35}}])   # shield capacitor
+        self.assertEqual(s.max_health, 85)
+        self.assertEqual(s.health, 85)    # was at full, stays at full
+
+    def test_apply_outfits_max_health_keeps_the_damage_fraction(self):
+        s = Ship(0, 0)
+        s.apply_ship_type({"size": 20})   # max_health 50
+        s.health = 25                     # half hull
+        s.apply_outfits([{"stat_modifiers": {"max_health": 50}}])
+        self.assertEqual(s.max_health, 100)
+        self.assertEqual(s.health, 50)    # still half
+
 
 class TestShipCombat(unittest.TestCase):
     """Ship-to-ship combat: _sync_hostiles swaps a low-standing pilot into

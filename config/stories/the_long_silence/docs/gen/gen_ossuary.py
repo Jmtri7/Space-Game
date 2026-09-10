@@ -379,7 +379,7 @@ NW_NPCS = [
     {"name": "Quiet-warden Pell", "x": 960, "y": 700, "role": "outfitter",
      "faction": "the_vigil", "outfit": "vigil_security_femme",
      "greeting": "We arm the grave-watch, nothing more. But a light-lance keeps a raider at a distance without a shot, and the Vigil approves of distance.",
-     "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "reinforced_hull", "afterburner", "cargo_expansion"]}},
+     "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "reinforced_hull", "afterburner", "cargo_expansion", "shield_capacitor", "sensor_array"]}},
 
     {"name": "Ferry-keeper Nis", "x": 1240, "y": 700, "role": "ship_salesman",
      "faction": "the_vigil", "outfit": "vigil_official_masc",

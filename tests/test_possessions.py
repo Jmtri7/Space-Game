@@ -230,6 +230,18 @@ class TestPossessionsInventory(unittest.TestCase):
         self.assertEqual(possessions.owned_outfits, [])
         self.assertEqual(possessions.installed_outfits, {"weapon_1": "laser_cannon"})
 
+    def test_sell_outfit_removes_a_spare_and_credits_the_price(self):
+        possessions = Possessions(credits=100, owned_outfits=["laser_cannon", "laser_cannon"])
+        self.assertTrue(possessions.sell_outfit("laser_cannon", 400))
+        self.assertEqual(possessions.owned_outfits, ["laser_cannon"])
+        self.assertEqual(possessions.credits, 500)
+
+    def test_sell_outfit_is_a_noop_when_the_outfit_is_installed_not_a_spare(self):
+        possessions = Possessions(credits=100, owned_outfits=["afterburner"])
+        possessions.install_outfit("engine_1", "afterburner")
+        self.assertFalse(possessions.sell_outfit("afterburner", 400))
+        self.assertEqual(possessions.credits, 100)
+
     def test_installing_into_an_occupied_slot_bumps_the_old_outfit_back_to_owned(self):
         possessions = Possessions(owned_outfits=["laser_cannon", "afterburner"])
         possessions.install_outfit("weapon_1", "laser_cannon")

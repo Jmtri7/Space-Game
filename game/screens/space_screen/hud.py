@@ -1,8 +1,28 @@
 """SpaceScreen: hud — mixed into the class in screen.py."""
 from game.screens.space_screen._defs import *  # noqa: F401,F403
+from game.ui.report_menu import REP_BANDS
+
+
+def _standing_band(standing):
+    """(label, color) for a numeric faction standing - the same bands the
+    Possessions "Standing" section uses (report_menu.REP_BANDS)."""
+    for ceiling, label, color in REP_BANDS:
+        if standing < ceiling:
+            return label, color
+    return f"{standing:+d}", (190, 190, 190)
 
 
 class _HudMixin:
+
+    def _player_has_scanner(self):
+        """True when a "scan": true outfit (Sensor Array) is installed on the
+        flown ship - see ships-core/ship_outfits.json. Gates the extra
+        faction / standing / hull lines in the targeting panel."""
+        possessions = self.player.person.possessions
+        return any(
+            get_ship_outfit(self.story, oid).get("scan")
+            for oid in possessions.installed_outfits.values()
+        )
 
     def _draw_target_arrow(self, surface, target):
         """Draw an arrow on an imaginary circle around the player's ship, pointing toward the target."""
@@ -194,6 +214,24 @@ class _HudMixin:
                 pilot_name = target_obj.person.name
                 if pilot_name:
                     lines.append(("  Pilot:", pilot_name, WHITE))
+                # Sensor Array (a "scan" outfit) reads the target's
+                # allegiance and condition; without one the panel stays at
+                # just type + pilot.
+                if self._player_has_scanner():
+                    possessions = self.player.person.possessions
+                    faction_id = target_obj.faction
+                    if faction_id:
+                        faction_name = get_factions(self.story).get(faction_id, {}).get("name", faction_id)
+                        band, band_color = _standing_band(possessions.reputation_with(faction_id))
+                        lines.append(("  Faction:", faction_name, WHITE))
+                        lines.append(("  Standing:", band, band_color))
+                    else:
+                        lines.append(("  Faction:", "Unaligned", GRAY))
+                    ship = getattr(target_obj, "ship", None)
+                    if ship and getattr(ship, "max_health", 0):
+                        pct = max(0, round(100 * ship.health / ship.max_health))
+                        hull_color = GREEN if pct >= 66 else (YELLOW if pct >= 33 else (235, 120, 110))
+                        lines.append(("  Hull:", f"{pct}%", hull_color))
             elif isinstance(target_obj, LandingSite):
                 lines.append(("  Locations:", GRAY))
                 for label in target_obj.get_interior_labels():

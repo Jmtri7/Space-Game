@@ -398,7 +398,7 @@ HC_NPCS = [
     {"name": "Trellis-hand Fen", "x": 960, "y": 700, "role": "outfitter",
      "faction": "the_drift", "outfit": "drift_security_masc",
      "greeting": "We don't really make weapons. But the light-lances off the watchboats fit a civilian hull, and a hull that carries more grain is a hull worth more to everyone.",
-     "shop": {"type": "outfits", "stock": ["pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull", "laser_cannon"]}},
+     "shop": {"type": "outfits", "stock": ["pulse_blaster", "afterburner", "cargo_expansion", "reinforced_hull", "laser_cannon", "shield_capacitor", "sensor_array"]}},
 
     {"name": "Under-ring traveller", "x": 400, "y": 700, "role": "resident",
      "faction": "the_drift", "outfit": "drift_civilian_femme",

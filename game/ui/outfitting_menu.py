@@ -31,6 +31,10 @@ SLOT_ICON_SHAPES = {
     "utility": "gear",
 }
 SLOT_RADIUS = 14
+# Spare outfits sell back at this fraction of their cost (matches
+# ShopMenu.DEFAULT_SELL_MULTIPLIER) - the recovery path for a player who
+# bought the wrong gear (see docs/BACKLOG.md's laser-cannon soft-lock).
+SELL_MULTIPLIER = 0.5
 # Buy tab grid: 2 columns (was 3) x 3 rows (was 2) - narrower to leave room
 # for the stats preview panel (see _draw_stat_panel) beside it, same total
 # 6-per-page count as before.
@@ -58,6 +62,9 @@ class OutfittingMenu(MenuBase):
 
         self.tab = "install" if ship_type_id else "buy"  # nothing to install without a ship
         self.buy_grid = IconGrid(self.stock, columns=GRID_COLUMNS, max_rows=GRID_ROWS)
+        # Sell tab lists spare (uninstalled) outfits - IconGrid so it reads
+        # and navigates the same as the Buy grid.
+        self.sell_grid = IconGrid(list(possessions.owned_outfits), columns=GRID_COLUMNS, max_rows=GRID_ROWS)
 
         self.slots = get_ship_type(story, ship_type_id).get("slots", []) if ship_type_id else []
         self.focus_column = "slots"  # "slots" or "owned"
@@ -85,6 +92,7 @@ class OutfittingMenu(MenuBase):
         # hit-testing.
         self._buy_tab_rect = None
         self._install_tab_rect = None
+        self._sell_tab_rect = None
         # Transient "Bought 1 X" confirmation (see draw_purchase_message) -
         # message_timer counts down once per draw() call while > 0, since
         # nothing calls an OutfittingMenu.update() each frame.
@@ -96,6 +104,16 @@ class OutfittingMenu(MenuBase):
 
     def _refresh_owned_grid(self):
         self.owned_grid.items = list(self.possessions.owned_outfits)
+        self.sell_grid.items = list(self.possessions.owned_outfits)
+
+    def _sell_price(self, outfit_id):
+        return int(self._resolve(outfit_id).get("cost", 0) * SELL_MULTIPLIER)
+
+    def _sell_outfit(self, outfit_id):
+        if self.possessions.sell_outfit(outfit_id, self._sell_price(outfit_id)):
+            self._refresh_owned_grid()
+            self.message = f"Sold {self._resolve(outfit_id).get('name', outfit_id)} - {self._sell_price(outfit_id)}cr"
+            self.message_timer = PURCHASE_MESSAGE_FRAMES
 
     def _compatible_owned_outfits(self, slot_type):
         return [oid for oid in self.possessions.owned_outfits if self._resolve(oid).get("slot_type") == slot_type]
@@ -336,11 +354,16 @@ class OutfittingMenu(MenuBase):
                 if pressed == "buy" and self.buy_grid.current():
                     self._buy_outfit(self.buy_grid.current())
                     continue
+                if pressed == "sell" and self.sell_grid.current():
+                    self._sell_outfit(self.sell_grid.current())
+                    continue
             if event.type == pygame.MOUSEWHEEL:
                 if self.picker is not None:
                     self.picker.scroll(-event.y)
                 elif self.tab == "buy":
                     self.buy_grid.scroll(-event.y)
+                elif self.tab == "sell":
+                    self.sell_grid.scroll(-event.y)
                 else:
                     self.owned_grid.scroll(-event.y)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -366,6 +389,11 @@ class OutfittingMenu(MenuBase):
             outfit_id = self.buy_grid.current()
             if outfit_id and not self._buy_disabled_reason(outfit_id):
                 self._buy_outfit(outfit_id)
+            return
+        if self.tab == "sell":
+            outfit_id = self.sell_grid.current()
+            if outfit_id:
+                self._sell_outfit(outfit_id)
             return
         if self.focus_column == "slots" and self.slots:
             slot = self.slots[self.slot_focus]
@@ -405,6 +433,9 @@ class OutfittingMenu(MenuBase):
         if self._install_tab_rect and self._install_tab_rect.collidepoint(pos):
             self.tab = "install"
             return
+        if self._sell_tab_rect and self._sell_tab_rect.collidepoint(pos):
+            self.tab = "sell"
+            return
 
         if self.tab == "buy":
             # A single click only selects (like arrow-key browsing); a
@@ -416,6 +447,15 @@ class OutfittingMenu(MenuBase):
                 self.buy_grid.selected = index
                 if double and self.buy_grid.current():
                     self._buy_outfit(self.buy_grid.current())
+            return
+
+        if self.tab == "sell":
+            index = self.sell_grid.index_at(pos)
+            if index is not None:
+                double = self._is_double_click(pos)
+                self.sell_grid.selected = index
+                if double and self.sell_grid.current():
+                    self._sell_outfit(self.sell_grid.current())
             return
 
         for i, slot in enumerate(self.slots):
@@ -488,13 +528,17 @@ class OutfittingMenu(MenuBase):
 
         buy_color = YELLOW if self.tab == "buy" else GRAY
         install_color = YELLOW if self.tab == "install" else GRAY
-        tabs_text = font_info.render("Buy", True, buy_color)
-        tabs_text2 = font_info.render(" / Install", True, install_color)
-        tabs_x = panel_rect.centerx - (tabs_text.get_width() + tabs_text2.get_width()) // 2
-        surface.blit(tabs_text, (tabs_x, y))
-        surface.blit(tabs_text2, (tabs_x + tabs_text.get_width(), y))
-        self._buy_tab_rect = pygame.Rect(tabs_x, y, tabs_text.get_width(), tabs_text.get_height())
-        self._install_tab_rect = pygame.Rect(tabs_x + tabs_text.get_width(), y, tabs_text2.get_width(), tabs_text2.get_height())
+        sell_color = YELLOW if self.tab == "sell" else GRAY
+        t_buy = font_info.render("Buy", True, buy_color)
+        t_install = font_info.render(" / Install", True, install_color)
+        t_sell = font_info.render(" / Sell", True, sell_color)
+        tabs_x = panel_rect.centerx - (t_buy.get_width() + t_install.get_width() + t_sell.get_width()) // 2
+        surface.blit(t_buy, (tabs_x, y))
+        surface.blit(t_install, (tabs_x + t_buy.get_width(), y))
+        surface.blit(t_sell, (tabs_x + t_buy.get_width() + t_install.get_width(), y))
+        self._buy_tab_rect = pygame.Rect(tabs_x, y, t_buy.get_width(), t_buy.get_height())
+        self._install_tab_rect = pygame.Rect(tabs_x + t_buy.get_width(), y, t_install.get_width(), t_install.get_height())
+        self._sell_tab_rect = pygame.Rect(tabs_x + t_buy.get_width() + t_install.get_width(), y, t_sell.get_width(), t_sell.get_height())
         y += int(36 * scale)
 
         credits_text = font_info.render(f"Credits: {self.possessions.credits}", True, (255, 220, 100))
@@ -503,6 +547,8 @@ class OutfittingMenu(MenuBase):
 
         if self.tab == "buy":
             self._draw_buy_tab(surface, panel_rect, y, scale, font_info)
+        elif self.tab == "sell":
+            self._draw_sell_tab(surface, panel_rect, y, scale, font_info)
         else:
             self._draw_install_tab(surface, panel_rect, y, scale, font_text, font_info)
 
@@ -521,6 +567,8 @@ class OutfittingMenu(MenuBase):
             outfit_id = self.buy_grid.current()
             disabled = not outfit_id or bool(self._buy_disabled_reason(outfit_id))
             return [close, ("buy", "Buy", (150, 220, 160), disabled)]
+        if self.tab == "sell" and self.picker is None:
+            return [close, ("sell", "Sell", (235, 205, 150), not self.sell_grid.current())]
         return [close]
 
     def panel_rect(self, scale):
@@ -582,6 +630,61 @@ class OutfittingMenu(MenuBase):
                 ("Fit", self._fit_status(selected_id, self._resolve(selected_id).get("slot_type"))[0]),
             ]
             self._draw_stat_panel(surface, preview_rect, selected_id, scale, extra_lines=extra_lines)
+
+    def _draw_sell_tab(self, surface, panel_rect, y, scale, font_info):
+        # Same left-grid / right-preview layout as the Buy tab, listing spare
+        # (uninstalled) outfits at their resale price. Installed outfits
+        # aren't here - uninstall on the Install tab first.
+        grid_area_width = int(panel_rect.width * 0.52)
+        grid = self.sell_grid
+
+        if not grid.items:
+            msg = font_info.render("No spare outfits to sell.", True, GRAY)
+            surface.blit(msg, (panel_rect.x + grid_area_width // 2 - msg.get_width() // 2, y + int(20 * scale)))
+            return
+
+        if grid.has_more_above:
+            up_indicator = font_info.render("^ more", True, GRAY)
+            surface.blit(up_indicator, (panel_rect.x + grid_area_width // 2 - up_indicator.get_width() // 2, y))
+        y += int(18 * scale)
+
+        gap = int(14 * scale)
+        cell_width = (grid_area_width - int(40 * scale) - gap * (GRID_COLUMNS - 1)) // GRID_COLUMNS
+        cell_height = int(84 * scale)
+        grid_left = panel_rect.x + int(30 * scale)
+
+        draw_cell = functools.partial(self._draw_sell_cell, scale=scale)
+        grid.draw(surface, (grid_left, y), cell_width, cell_height, gap, draw_cell)
+
+        grid_bottom = y + cell_height * GRID_ROWS + gap * (GRID_ROWS - 1)
+        if grid.has_more_below:
+            down_indicator = font_info.render("v more", True, GRAY)
+            surface.blit(down_indicator, (panel_rect.x + grid_area_width // 2 - down_indicator.get_width() // 2, grid_bottom + int(4 * scale)))
+
+        selected_id = grid.current()
+        if selected_id:
+            preview_rect = pygame.Rect(
+                panel_rect.x + grid_area_width + int(20 * scale), y,
+                panel_rect.width - grid_area_width - int(50 * scale), grid_bottom - y,
+            )
+            extra_lines = [("Resale", f"{self._sell_price(selected_id)}cr")]
+            self._draw_stat_panel(surface, preview_rect, selected_id, scale, extra_lines=extra_lines)
+
+    def _draw_sell_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
+        outfit = self._resolve(outfit_id)
+        icon_shape, icon_color = self._icon_for(outfit_id)
+        if is_selected:
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 250.0)
+            draw_selection_highlight(surface, rect, scale, pulse)
+        icon_cy = rect.y + int(rect.height * 0.25)
+        draw_item_icon(surface, rect.centerx, icon_cy, int(rect.height * 0.18), icon_shape, icon_color)
+        font_name = get_font(int(17 * scale))
+        font_detail = get_font(int(13 * scale))
+        label_max_w = rect.width - int(8 * scale)
+        name_text = font_name.render(fit_text(font_name, outfit.get("name", outfit_id), label_max_w), True, WHITE if is_selected else GRAY)
+        surface.blit(name_text, (rect.centerx - name_text.get_width() // 2, rect.y + int(rect.height * 0.5)))
+        price_text = font_detail.render(f"+{self._sell_price(outfit_id)}cr", True, (235, 205, 150))
+        surface.blit(price_text, (rect.centerx - price_text.get_width() // 2, rect.y + int(rect.height * 0.74)))
 
     def _draw_buy_cell(self, surface, rect, outfit_id, is_selected, reason, scale):
         """Bespoke cell layout (not the shared ui_theme.draw_shop_cell) - just

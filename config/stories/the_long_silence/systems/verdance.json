@@ -656,7 +656,9 @@
                 "afterburner",
                 "cargo_expansion",
                 "reinforced_hull",
-                "laser_cannon"
+                "laser_cannon",
+                "shield_capacitor",
+                "sensor_array"
               ]
             }
           },

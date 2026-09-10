@@ -381,9 +381,10 @@ fading "Bought 1 `<ship>`" confirmation.
 ### Outfitting Menu (T, on an NPC with a `"shop"` of type "outfits")
 | Control | Action |
 |---------|--------|
-| **Click** a Buy / Install tab label | Switch tab |
-| **Click** an outfit (Buy tab) | Select it |
+| **Click** a Buy / Install / Sell tab label | Switch tab |
+| **Click** an outfit (Buy / Sell tab) | Select it |
 | **Buy** button, **double-click** an outfit, or **Enter** (Buy tab) | Buy the selected outfit |
+| **Sell** button, **double-click** an outfit, or **Enter** (Sell tab) | Sell the selected spare (half its cost) |
 | **Mouse wheel** | Scroll the outfit grid |
 | **Drag** a spare outfit onto a slot (Install tab) | Equip it |
 | **Drag** an installed slot out to empty space (Install tab) | Unequip it |
@@ -396,7 +397,10 @@ Buy shows the shop's stock as a grid of icons; each cell shows how many you
 own, its slot type, and whether your ship can fit one. Buying adds an outfit
 to your spares (`owned_outfits`) - not equipped until installed on the
 Install tab, where installing/uninstalling takes effect immediately (thrust,
-velocity, rotation, cargo all update at once).
+velocity, rotation, cargo, **hull** all update at once). **Sell** lists your
+spare outfits and buys them back at half cost (`OutfittingMenu.SELL_MULTIPLIER`)
+- the recovery path if you spend a starter loan on the wrong gear; uninstall
+an equipped outfit first to make it a spare.
 
 ### Main Menu / Story Selector
 Each row is a button (with its story blurb under it). The Story Selector adds

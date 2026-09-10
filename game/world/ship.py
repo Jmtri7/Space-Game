@@ -110,6 +110,14 @@ class Ship(WorldObject):
                 self.rotation_speed += modifiers["rotation_speed"]
             if "cargo_capacity" in modifiers:
                 self.cargo_capacity += modifiers["cargo_capacity"]
+            if "max_health" in modifiers:
+                # Extra effective hull (shield capacitor, hull plating). Keep
+                # the current health fraction so equipping mid-flight tops the
+                # bar up proportionally rather than snapping to full or leaving
+                # a now-larger bar showing the old absolute value.
+                frac = self.health / self.max_health if self.max_health else 1.0
+                self.max_health = max(1, self.max_health + modifiers["max_health"])
+                self.health = self.max_health * frac
 
         self.acceleration_magnitude = max(self.acceleration_magnitude, MIN_ACCELERATION)
         self.max_velocity = max(self.max_velocity, MIN_VELOCITY)
