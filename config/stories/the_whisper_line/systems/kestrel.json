@@ -1,0 +1,186 @@
+{
+  "name": "Kestrel Reach",
+  "description": "A quiet parking orbit around a cooling amber star. One trade ring, half its berths dark, kept lit mostly out of habit. The kind of place you stop when no one is expecting you anywhere.",
+  "star_map_position": { "x": 0, "y": 0 },
+  "station_asset": "trade_ring",
+  "central_star": {
+    "x": 0.5, "y": 0.5, "name": "Kestrel", "size": 70,
+    "color": [255, 200, 150]
+  },
+  "player_start": { "x": 0.34, "y": 0.5 },
+  "star_seed": 7731,
+  "asteroid_field": {
+    "per_chunk_range": [0, 1],
+    "types": [
+      { "type": "gray_rock", "weight": 1, "size_range": [3, 10], "speed_range": [0.05, 0.2], "mine_yield": 8 }
+    ]
+  },
+  "moon_asset": "regolith_moon",
+  "moon": {
+    "x": 0.2, "y": 0.72, "name": "Cinder Flat",
+    "interiors": {
+      "default": {
+        "label": "Cinder Flat",
+        "description": "A ballast-mining camp on Kestrel's inner moon. Mostly shut down. One person still lives here to keep the beacon fed.",
+        "culture": "regolith_std",
+        "entrance": { "x": 320, "y": 500 },
+        "rooms": [
+          { "label": "Yard", "polygon": [[140, 140], [500, 140], [500, 440], [140, 440]] },
+          { "label": "Pad", "polygon": [[262, 440], [378, 440], [378, 520], [262, 520]] }
+        ],
+        "structures": [
+          { "x": 320, "y": 190, "building_type": "housing_block" },
+          { "x": 200, "y": 330, "building_type": "crates" },
+          { "x": 160, "y": 160, "building_type": "lamp_post" },
+          { "x": 480, "y": 160, "building_type": "lamp_post" }
+        ],
+        "npcs": [
+          {
+            "name": "Beacon-Keeper Ferrow",
+            "x": 320, "y": 300,
+            "role": "resident",
+            "outfit": "ck_miner_masc",
+            "greeting": "Camp's dead, I just feed the beacon. Saw a grey-coated hull undock hard off the ring an hour back - no plan filed, no reply to the Watch. You'd be the reason, I expect. None of my business.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "station": {
+    "x": 0.62, "y": 0.44, "name": "Kestrel Ring",
+    "interiors": {
+      "concourse": {
+        "label": "Kestrel Ring Concourse",
+        "culture": "orbital_std",
+        "space_backdrop": true,
+        "star_seed": 7731,
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "N-NE Arc", "polygon": [[350.0, 165.0], [350.0, 50.0], [562.1, 137.9], [480.8, 219.2]] },
+          { "label": "NE-E Arc", "polygon": [[480.8, 219.2], [562.1, 137.9], [650.0, 350.0], [535.0, 350.0]] },
+          { "label": "E-SE Arc", "polygon": [[535.0, 350.0], [650.0, 350.0], [562.1, 562.1], [480.8, 480.8]] },
+          { "label": "SE-S Arc", "polygon": [[480.8, 480.8], [562.1, 562.1], [350.0, 650.0], [350.0, 535.0]] },
+          { "label": "S-SW Arc", "polygon": [[350.0, 535.0], [350.0, 650.0], [137.9, 562.1], [219.2, 480.8]] },
+          { "label": "SW-W Arc", "polygon": [[219.2, 480.8], [137.9, 562.1], [50.0, 350.0], [165.0, 350.0]] },
+          { "label": "W-NW Arc", "polygon": [[165.0, 350.0], [50.0, 350.0], [137.9, 137.9], [219.2, 219.2]] },
+          { "label": "NW-N Arc", "polygon": [[219.2, 219.2], [137.9, 137.9], [350.0, 50.0], [350.0, 165.0]] },
+          { "label": "Dock", "polygon": [[-20, 310], [90, 310], [90, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 107.5, "building_type": "pipeline_column" },
+          { "x": 350, "y": 615, "building_type": "pipeline_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "The Grey Courier",
+            "x": 250, "y": 320,
+            "role": "resident",
+            "outfit": "ck_smuggler_masc",
+            "requires_not_flag": "met_courier",
+            "ambient": {
+              "range": 900,
+              "message": "Someone in a grey flight coat is standing too still by the west arc, watching you. Walk over (WASD / arrows) and press T."
+            },
+            "dialogue_tree": {
+              "root": "start",
+              "nodes": {
+                "start": {
+                  "text": "You're the courier off the dark berth. Don't - don't say the name back to me. I was asked to put this in your hand and nothing else. It's from Elian Marr.",
+                  "options": [
+                    { "label": "Elian's been gone for years.", "next": "gone" },
+                    { "label": "Asked by who?", "next": "who" },
+                    { "label": "Give it here.", "next": "handover" }
+                  ]
+                },
+                "gone": {
+                  "text": "Gone isn't dead. Elian's a long way out and can't come in - you'll understand why when you read it. The note's a trail. Each line gets you to the next one.",
+                  "options": [
+                    { "label": "Asked by who?", "next": "who" },
+                    { "label": "Give it here.", "next": "handover" }
+                  ]
+                },
+                "who": {
+                  "text": "Someone who owed Elian more than they could pay, same as me. That's the whole chain - favours, hand to hand, all the way out to you. I've done my part.",
+                  "options": [
+                    { "label": "Give it here.", "next": "handover" }
+                  ]
+                },
+                "handover": {
+                  "text": "There. It's Elian's hand, you'll know it. Read the first line before you do anything else, and for both our sakes don't file a flight plan. I was never on this ring.",
+                  "options": [
+                    {
+                      "label": "Take the note.",
+                      "next": "leaving",
+                      "actions": [
+                        "give_item:the_note",
+                        "set_flag:met_courier",
+                        "start_mission:follow_the_note"
+                      ]
+                    }
+                  ]
+                },
+                "leaving": {
+                  "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
+                  "options": [
+                    { "label": "Wait -", "next": null }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Deck Officer Aru",
+            "x": 470, "y": 150,
+            "role": "stationmaster",
+            "outfit": "ck_command_femme",
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                { "flag": "met_courier", "node": "after" }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "Kestrel Ring. Half the berths are dark and the other half wish they were. If you're not loading and not fuelling, you're just sightseeing - which is allowed, barely.",
+                  "options": [
+                    { "label": "Quiet posting.", "next": "quiet" },
+                    { "label": "Leave", "next": null }
+                  ]
+                },
+                "quiet": {
+                  "text": "Suits me. The last time this ring got interesting, a survey pilot undocked without a plan and never pinged again. We don't miss interesting.",
+                  "options": [
+                    { "label": "Leave", "next": null }
+                  ]
+                },
+                "after": {
+                  "text": "That one in the grey coat cleared the dock the second a hull came in - didn't sign out, wasn't on the manifest coming in either. You know them?",
+                  "options": [
+                    { "label": "Never seen them before.", "next": "shrug" },
+                    { "label": "Leave", "next": null }
+                  ]
+                },
+                "shrug": {
+                  "text": "Nobody has. Ring's like that lately. Keep your approach clean on the way out and we'll never speak again.",
+                  "options": [
+                    { "label": "Leave", "next": null }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Fuel Hand Bosch",
+            "x": 400, "y": 560,
+            "role": "resident",
+            "outfit": "ck_dockworker_masc",
+            "greeting": "Topped your courier off when you came in. She's light and she's honest - she'll take you a long way if you don't ask her to hurry.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "name": "Tessellate",
+  "description": "A blue-white star and the hulk of an old relay station on a slow tumble around it. The Relay-era charts still call this a junction. Nothing junctions here now except one archivist and a lot of sealed log drums.",
+  "star_map_position": { "x": 1, "y": -1 },
+  "locked": true,
+  "unlock_flag": "reach_tessellate",
+  "unlock_silent": true,
+  "station_asset": "trade_ring",
+  "central_star": {
+    "x": 0.5, "y": 0.5, "name": "Tessellate", "size": 60,
+    "color": [200, 220, 255]
+  },
+  "player_start": { "x": 0.3, "y": 0.4 },
+  "star_seed": 3140,
+  "asteroid_field": {
+    "per_chunk_range": [1, 2],
+    "types": [
+      { "type": "gray_rock", "weight": 1, "size_range": [4, 14], "speed_range": [0.05, 0.25], "mine_yield": 9 }
+    ]
+  },
+  "moon_asset": "regolith_moon",
+  "moon": {
+    "x": 0.22, "y": 0.7, "name": "Sift",
+    "interiors": {
+      "default": {
+        "label": "Sift Station Ground",
+        "description": "A survey outpost on Tessellate's one moon, kept just warm enough for the two people who catalogue what the relay's antennas pull in.",
+        "culture": "regolith_std",
+        "entrance": { "x": 320, "y": 500 },
+        "rooms": [
+          { "label": "Yard", "polygon": [[140, 140], [500, 140], [500, 440], [140, 440]] },
+          { "label": "Pad", "polygon": [[262, 440], [378, 440], [378, 520], [262, 520]] }
+        ],
+        "structures": [
+          { "x": 320, "y": 190, "building_type": "admin_office" },
+          { "x": 200, "y": 330, "building_type": "crates" },
+          { "x": 160, "y": 160, "building_type": "lamp_post" },
+          { "x": 480, "y": 160, "building_type": "lamp_post" }
+        ],
+        "npcs": [
+          {
+            "name": "Cataloguer Pim",
+            "x": 320, "y": 300,
+            "role": "resident",
+            "outfit": "ck_researcher_masc",
+            "greeting": "Senna's up on the relay, I'm down here logging what she flags. If you're carrying a note off Elian Marr - talk to her, not me. I only ever caught the edges of it, and the edges were enough.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "station": {
+    "x": 0.6, "y": 0.55, "name": "Tessellate Relay",
+    "interiors": {
+      "concourse": {
+        "label": "Tessellate Relay - Archive Ring",
+        "culture": "orbital_std",
+        "space_backdrop": true,
+        "star_seed": 3140,
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "N-NE Arc", "polygon": [[350.0, 165.0], [350.0, 50.0], [562.1, 137.9], [480.8, 219.2]] },
+          { "label": "NE-E Arc", "polygon": [[480.8, 219.2], [562.1, 137.9], [650.0, 350.0], [535.0, 350.0]] },
+          { "label": "E-SE Arc", "polygon": [[535.0, 350.0], [650.0, 350.0], [562.1, 562.1], [480.8, 480.8]] },
+          { "label": "SE-S Arc", "polygon": [[480.8, 480.8], [562.1, 562.1], [350.0, 650.0], [350.0, 535.0]] },
+          { "label": "S-SW Arc", "polygon": [[350.0, 535.0], [350.0, 650.0], [137.9, 562.1], [219.2, 480.8]] },
+          { "label": "SW-W Arc", "polygon": [[219.2, 480.8], [137.9, 562.1], [50.0, 350.0], [165.0, 350.0]] },
+          { "label": "W-NW Arc", "polygon": [[165.0, 350.0], [50.0, 350.0], [137.9, 137.9], [219.2, 219.2]] },
+          { "label": "NW-N Arc", "polygon": [[219.2, 219.2], [137.9, 137.9], [350.0, 50.0], [350.0, 165.0]] },
+          { "label": "Dock", "polygon": [[-20, 310], [90, 310], [90, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 107.5, "building_type": "pipeline_column" },
+          { "x": 350, "y": 615, "building_type": "pipeline_bench" },
+          { "x": 560, "y": 350, "building_type": "pipeline_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Archivist Senna",
+            "x": 330, "y": 300,
+            "role": "resident",
+            "outfit": "ck_researcher_femme",
+            "ambient": {
+              "range": 900,
+              "message": "A woman looks up from a wall of log drums as your boots hit the deck. 'You came in off Kestrel. Nobody comes in off Kestrel.' Walk over and press T."
+            },
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                { "flag": "met_archivist", "node": "after" }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "I keep the relay logs. Have done for eleven years, since the last of the staff rotated out and forgot to schedule a replacement. You're carrying a note in Elian Marr's hand - I can tell by how you're standing. Ask me.",
+                  "options": [
+                    { "label": "You knew Elian.", "next": "knew" }
+                  ]
+                },
+                "knew": {
+                  "text": "Elian docked here for six weeks before the last leg out. Slept in the Dock arc, talked at me for hours. Left me the survey packet and made me promise to hold it for whoever came asking with the note. That's you.",
+                  "options": [
+                    { "label": "What's in the packet?", "next": "packet" }
+                  ]
+                },
+                "packet": {
+                  "text": "A signal. Old - older than the Relay, older than the beacons. It's been repeating one structured burst on a dead band since before anyone was listening. A question, Elian was sure of it. Elian answered a fragment of it, once, and the reply started rewriting the local charts. Got scared. Went out to sit next to the array and study it instead of feeding it more.",
+                  "options": [
+                    { "label": "Where's the array?", "next": "where" }
+                  ]
+                },
+                "where": {
+                  "text": "The Verge - past the last beacon, one settled moon, Elian's been living under the plaza. I'll key you the lane; the packet unseals your nav for it. Read Elian's last line before you jump, and don't decide anything until you've stood in front of them.",
+                  "options": [
+                    {
+                      "label": "Take the packet. Key the lane.",
+                      "next": "after",
+                      "actions": [
+                        "give_item:star_chart",
+                        "set_flag:met_archivist",
+                        "set_flag:reach_verge"
+                      ]
+                    }
+                  ]
+                },
+                "after": {
+                  "text": "Lane's keyed, packet's aboard. Whatever Elian is when you get there - go anyway. That was the whole point of the note.",
+                  "options": [
+                    { "label": "Understood", "next": null }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Drum-Hand Vek",
+            "x": 480, "y": 400,
+            "role": "resident",
+            "outfit": "ck_civilian_masc",
+            "greeting": "I move drums so Senna can read them. Eleven years. Ask me which log is which and I'll tell you; ask me what's in one and I'll tell you I don't read.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

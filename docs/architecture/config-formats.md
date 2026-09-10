@@ -22,6 +22,7 @@ the story/save split.
 | `default` | The original sandbox. Frozen hand-maintained art (see [DESIGN_ATLAS.md](../DESIGN_ATLAS.md)); not on the design-JSON pipeline. |
 | `graphics_pipeline_test` | Reference story for the design-JSON art pipeline ([GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md)). |
 | `the_long_silence` | Five-system faction story — beacon jump-gating, reputation, ship combat, an ending fork. Act I plays end to end. Has its own docs tree: `config/stories/the_long_silence/docs/` (`STORY.md` narrative, `PLAN.md` build checklist, `gen/` slice generators). |
+| `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Re-uses `graphics_pipeline_test`'s art (catalogues copied) + the `figures-human` kit; no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
 
 **`systems/{system_id}.json`** — one star system's layout:
 ```json

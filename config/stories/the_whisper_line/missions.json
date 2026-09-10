@@ -1,0 +1,75 @@
+{
+  "follow_the_note": {
+    "title": "Follow the Note",
+    "on_start_flags": [
+      "note_read",
+      "reach_tessellate"
+    ],
+    "on_end_flags": [
+      "note_arc_done"
+    ],
+    "stages": [
+      {
+        "text": "Board your courier at the dock and leave Kestrel Reach.",
+        "complete_flag": "boarded_ship",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "First line: 'If you're reading this, you already left the ring. Good. Don't file a flight plan.' Step on the dock portal and press G to board."
+        }
+      },
+      {
+        "text": "The note names a dead relay in the Tessellate system - jump there.",
+        "complete_flag": "jumped_to:tessellate",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "Second line: 'Tessellate. The old relay station - it still holds air, and someone still lives in it. Ask them about the survey.' Pick Tessellate on the star map and jump (V)."
+        }
+      },
+      {
+        "text": "Dock at the Tessellate relay station.",
+        "complete_flag": "landed_on_landing_site",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "The relay's on a slow tumble but the dock still lights up. Match it and set down (L)."
+        }
+      },
+      {
+        "text": "Find the archivist who knew Elian and hear what they have.",
+        "complete_flag": "met_archivist",
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "Third line: 'Whoever's keeping the relay logs knew me. They kept the last thing I sent back. Read it before you decide anything.'"
+        }
+      },
+      {
+        "text": "The note's last line points past the edge - jump to the Verge.",
+        "complete_flag": "jumped_to:verge",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "Last line, not a place: 'If it's still talking when you get there, it isn't me anymore. Come anyway. The Verge - the moon with the settlement. I'll have left the light on.'"
+        }
+      },
+      {
+        "text": "Land at the settlement on the Verge moon.",
+        "complete_flag": "landed_on_landing_site",
+        "reset_on_activation": true,
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "There's one settled moon in the Verge and one lit pad on it. Set down."
+        }
+      },
+      {
+        "text": "Find Elian Marr.",
+        "complete_flag": "found_elian",
+        "one_way_message": {
+          "sender": "Elian's note",
+          "text": "The note ends here. Whatever's on the far side of the plaza, you came a long way to hear it out."
+        }
+      }
+    ]
+  }
+}

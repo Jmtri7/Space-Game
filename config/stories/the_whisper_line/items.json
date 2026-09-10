@@ -1,0 +1,10 @@
+{
+  "the_note": {
+    "name": "Elian's Note",
+    "description": "A folded slip in Elian Marr's cramped hand. Directions, line by line, out past the last relay - and a last line that isn't a place. Tracked in your Mission Log (3).",
+    "base_price": 0,
+    "category": "keepsake",
+    "icon_shape": "star",
+    "icon_color": [210, 200, 150]
+  }
+}

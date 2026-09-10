@@ -1,0 +1,151 @@
+{
+  "name": "The Verge",
+  "description": "Past the last beacon the charts go to guesses. One red dwarf, one cold moon with a single settlement dug into it, and - on a band nothing should be using - a signal that has been asking the same question since before the question had anyone to ask.",
+  "star_map_position": { "x": 2, "y": -2 },
+  "locked": true,
+  "unlock_flag": "reach_verge",
+  "unlock_silent": true,
+  "central_star": {
+    "x": 0.5, "y": 0.5, "name": "Verge", "size": 44,
+    "color": [255, 150, 120]
+  },
+  "player_start": { "x": 0.35, "y": 0.45 },
+  "star_seed": 9090,
+  "asteroid_field": {
+    "per_chunk_range": [0, 2],
+    "types": [
+      { "type": "gray_rock", "weight": 1, "size_range": [3, 12], "speed_range": [0.04, 0.18], "mine_yield": 8 }
+    ]
+  },
+  "station_asset": "trade_ring",
+  "station": {
+    "x": 0.3, "y": 0.28, "name": "Verge Marker",
+    "interiors": {
+      "concourse": {
+        "label": "Verge Marker - Boundary Platform",
+        "culture": "orbital_std",
+        "space_backdrop": true,
+        "star_seed": 9090,
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Ring", "polygon": [[165.0, 350.0], [137.9, 137.9], [350.0, 50.0], [562.1, 137.9], [650.0, 350.0], [562.1, 562.1], [350.0, 650.0], [137.9, 562.1]] },
+          { "label": "Dock", "polygon": [[-20, 320], [200, 320], [200, 380], [-20, 380]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 130, "building_type": "pipeline_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Watch-Hand Orel",
+            "x": 350, "y": 330,
+            "role": "resident",
+            "outfit": "ck_eva_masc",
+            "greeting": "This platform's the last thing the charts are sure of. I keep its lights on and log every hull that passes - two a year, counting yours. If you're going to the moon: they know you're coming. They've known for days.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon_asset": "regolith_moon",
+  "moon": {
+    "x": 0.62, "y": 0.55, "name": "Verge Anchorage",
+    "interiors": {
+      "default": {
+        "label": "Verge Anchorage",
+        "description": "A single settlement dug into a cold moon at the edge of the charts. A paved plaza, a handful of prefab modules, and one light left on.",
+        "culture": "regolith_std",
+        "entrance": { "x": 320, "y": 545 },
+        "rooms": [
+          { "label": "Plaza", "polygon": [[120, 120], [520, 120], [520, 470], [120, 470]] },
+          { "label": "Pad Approach", "polygon": [[262, 470], [378, 470], [378, 560], [262, 560]] }
+        ],
+        "structures": [
+          { "x": 320, "y": 172, "building_type": "market_hall" },
+          { "x": 168, "y": 300, "building_type": "housing_block" },
+          { "x": 472, "y": 300, "building_type": "housing_block" },
+          { "x": 320, "y": 428, "building_type": "admin_office" },
+          { "x": 220, "y": 250, "building_type": "planter" },
+          { "x": 420, "y": 250, "building_type": "planter" },
+          { "x": 150, "y": 150, "building_type": "lamp_post" },
+          { "x": 490, "y": 150, "building_type": "lamp_post" },
+          { "x": 150, "y": 440, "building_type": "lamp_post" },
+          { "x": 490, "y": 440, "building_type": "lamp_post" },
+          { "x": 205, "y": 402, "building_type": "crates" }
+        ],
+        "npcs": [
+          {
+            "name": "Elian Marr",
+            "x": 320, "y": 250,
+            "role": "resident",
+            "outfit": "ck_ranger_masc",
+            "ambient": {
+              "range": 1200,
+              "message": "Someone rises from a bench by the market hall and stands very still, watching you cross the plaza. You know the way they stand. Walk over and press T."
+            },
+            "dialogue_tree": {
+              "root": "start",
+              "conditional_roots": [
+                { "flag": "story_over", "node": "done" },
+                { "flag": "found_elian", "node": "choice" }
+              ],
+              "nodes": {
+                "start": {
+                  "text": "You came. I wasn't sure the chain would hold all the way to you - or that you'd still be the kind to follow it. Hello, {pilot}. It's really me. Older, and I've been talking to something that isn't people for a long time, but me.",
+                  "options": [
+                    {
+                      "label": "You've been alive out here the whole time.",
+                      "next": "alive",
+                      "actions": ["set_flag:found_elian"]
+                    }
+                  ]
+                },
+                "alive": {
+                  "text": "Alive and close to it. The array's a kilometre under this plaza - Relay-era, maybe older, and it's been broadcasting one burst on a dead band the entire time. A question. I answered a scrap of it once and watched the charts around Tessellate redraw themselves overnight. I've spent the years since learning enough of its grammar to give a full answer - and being too frightened to.",
+                  "options": [
+                    { "label": "What happens if you answer it fully?", "next": "choice" }
+                  ]
+                },
+                "choice": {
+                  "text": "It opens. Lanes folding shorter than any beacon, charts rewriting toward stars nobody's named - an invitation, or a door held for something on the other side. I've had the reply drafted for a year. I won't send it alone, and I won't send it against you. You read the note. You came. So it's yours to call, and I'll stand by it either way.",
+                  "options": [
+                    {
+                      "label": "Send the reply. We answer it - together.",
+                      "next": null,
+                      "action": "end_story:wake"
+                    },
+                    {
+                      "label": "Shut the array down. Some doors stay closed.",
+                      "next": null,
+                      "action": "end_story:let_sleep"
+                    },
+                    {
+                      "label": "I need to think.",
+                      "next": null
+                    }
+                  ]
+                },
+                "done": {
+                  "text": "It's done. Whatever we set moving out here, we set it moving together. Come on - let's not watch it happen from the ground.",
+                  "options": [
+                    { "label": "Together", "next": null }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "name": "Anchor-Keeper Ludd",
+            "x": 200, "y": 320,
+            "role": "resident",
+            "outfit": "ck_miner_femme",
+            "greeting": "Nine of us live here and one of us lives under the plaza with a headset on. We bring Elian food and don't ask. You're the first hull to land here in two years - you'll be why Elian finally comes up or why they never do.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

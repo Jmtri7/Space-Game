@@ -1,0 +1,21 @@
+{
+  "_comment": "Rendered by game/ui/ending_screen.py when an end_story:<id> dialogue action fires (Elian, on the Verge). epilogue = paragraphs. No factions in this story, so no faction_epilogue.",
+
+  "wake": {
+    "title": "You Answered It",
+    "epilogue": [
+      "Elian's survey didn't find a wreck or a world. It found something old and patient that had been broadcasting on a dead band for longer than there have been beacons - a question, repeated, waiting for anything to answer in kind.",
+      "Elian answered it, a little, years ago, and has been out here ever since, learning the grammar of it one word at a time and afraid of what a full reply would wake. You made the reply. Together.",
+      "What comes back is not a fleet and not a god. It is an opening - lanes folding shorter than any beacon ever made them, charts rewriting themselves toward stars no one has named. The region will spend a generation deciding whether that was salvation or the worst mistake anyone ever made in your name. You and Elian fly the first of the new lanes out, side by side, to go and see."
+    ]
+  },
+
+  "let_sleep": {
+    "title": "You Let It Sleep",
+    "epilogue": [
+      "Elian's survey found something old and patient, broadcasting a question into the dark and waiting for an answer. Elian spent years afraid to give it one. So did you, once you understood what a full reply would open.",
+      "You shut the array down together. Not destroyed - Elian wouldn't allow that, and neither, in the end, would you - just quieted, the antenna stowed, the log sealed under both your names.",
+      "You fly Elian back to the lit lanes for the first time in years. The region never learns how close it came, which is the point. Somewhere past the last beacon a question goes on repeating into the dark, and two people who have heard it clearly agree, without ever quite saying so, that some doors you get to leave closed."
+    ]
+  }
+}
