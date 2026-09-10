@@ -14,6 +14,7 @@ only appears under a section if it currently has items there.
 ## Controls & UI
 
 - [ ] Say "messages", not "comms", everywhere in the UI.
+- [ ] Make conversation menus look visually consistent with the other menus.
 - [x] Button overlapping in the shipyard menu. Fixed: `ui_theme.fit_text`
       ellipsises any grid-cell label to its cell width (shared by Shipyard /
       Shop / Outfitter Buy cells), so a long story-authored ship name can't
@@ -35,6 +36,9 @@ only appears under a section if it currently has items there.
 - [ ] No mission-complete message when leaving the mission area — a mission that
       completes on leaving/returning surfaces no confirmation toast.
 - [ ] Petra Voss should be positioned at the loan office desk.
+- [ ] Check the tutorial text and the autopilot popup for accuracy.
+- [ ] Too many messages early in `the_long_silence` — the opening drowns the
+      player in dialogue/toasts right off the bat.
 
 ## Economy & Trading
 
@@ -58,6 +62,8 @@ only appears under a section if it currently has items there.
 - [ ] Visiting NPCs (e.g. NPCs that walk into a station interior) render with the
       player's own model instead of a distinct sprite.
 - [ ] Pipe fence needs an outline.
+- [ ] People sometimes still walk backwards (facing direction lags travel
+      direction).
 - [ ] Faint shimmer of the world when panning (running left/right in an
       interior, flying in space): the camera scrolls a non-integer number of
       screen pixels per frame and `to_screen`'s pixel rounding renders it as
@@ -134,6 +140,12 @@ only appears under a section if it currently has items there.
 - [ ] Bounty hunting board — a station terminal listing wanted ships/NPCs with a
       reward, feeding off factions/crime once those exist.
 - [ ] AI ships flying in formations.
+- [ ] Weapon projectile variety — beams, bullets, missiles with distinct
+      behaviours (not just reskins).
+- [ ] Auto-aiming weapons / turrets — mounts that track the current target
+      instead of only firing straight ahead.
+- [ ] Only allow hitting non-hostile ships when the player has them explicitly
+      targeted, to prevent accidental fire on neutrals.
 
 ## Ships & Customization
 
@@ -177,6 +189,7 @@ only appears under a section if it currently has items there.
 - [ ] Add more systems (more of them overall, beyond the unique-concepts item).
 - [ ] Black backgrounds on all stations? — evaluate a consistent black backdrop
       for station interiors.
+- [ ] Improve station interior looks.
 
 ## Exploration & World Content
 
@@ -201,6 +214,11 @@ only appears under a section if it currently has items there.
       `_draw_rotated_polygon`, `ship`, `landing_site`, `central_star`,
       `celestial_body`, `asteroid`, `person`, `location_screen` buildings /
       decorations / furniture). UI/HUD stay aliased in gfxdraw mode.
+- [ ] Shoulder pads (character article).
+- [ ] Shoulder spikes (character article).
+- [ ] Antenna (character article).
+- [ ] Better hair.
+- [ ] Beacon lighting animation.
 - [ ] Better jumping animation.
 - [ ] Better jump graphics.
 - [ ] More texture for interior grounds and ships.
@@ -210,6 +228,13 @@ only appears under a section if it currently has items there.
       drops a <0.1% sliver of sim time instead, which is fine for a
       single-player game. See [PHYSICS.md](PHYSICS.md) "Frame Timing &
       Smooth Motion".
+
+## Sound & Music
+
+- [ ] More music tracks and more sound effects.
+- [ ] Asset modules for sounds — extend the config-module system to bundle
+      shareable SFX / music packs (pairs with the shared graphics asset-modules
+      item under Meta, Tooling & Performance).
 
 ## Meta, Tooling & Performance
 
@@ -231,6 +256,11 @@ only appears under a section if it currently has items there.
       `DESIGN_PATTERNS.md` is a hub (working principles) → `docs/patterns/`
       {rendering, movement, entities, ui-screens, persistence}.md. `docs/README.md`
       route table and the `CLAUDE.md` tree updated in the same commit.
+- [ ] Story editor — a `config/editor.html`-style tool for authoring a story
+      (systems, characters, missions, dialogue).
+- [ ] Rename-articles option in the graphics editor.
+- [ ] Colours, not materials — let the pipeline / editor pick plain colours
+      instead of named materials.
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame
       already handles that.
 - [ ] Guidance for agents on creating a new story from scratch, and on assisting a
