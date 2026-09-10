@@ -928,13 +928,21 @@ let GBASE = '';          // .../graphics  (the loaded source's own graphics dir 
 let GMODS = [];
 async function computeGMods(){
   GMODS = [];
+  if(!_storyList) try{ await discoverStories(); }catch(e){}
   // the *story* context wins over a module one - editing a story's outfit that
   // happens to live in a shared module still needs that story's own palettes
-  // and faction articles on the fallback path.
-  const cands = [storyOfPath(loadedPath), storyOfPath(FITBODY)].filter(Boolean);
+  // and faction articles on the fallback path. An explicit ?ctx= (the Workspace
+  // source the file was opened from, carried through every in-editor navigation)
+  // wins over the source that physically owns loadedPath - so a shared-module
+  // article opened from inside a story sees that story's own articles / palettes
+  // here, and the outfit "preview other articles" list offers them.
+  const cands = [EDIT_CTX, storyOfPath(loadedPath), storyOfPath(FITBODY)].filter(Boolean);
   const st = cands.find(n => storyKind(n) === 'story') || cands[0];
-  if(!st || storyKind(st) === 'module') return;
-  GMODS = await _modGraphicsDirs(st, 'story');
+  if(!st) return;
+  const kind = storyKind(st);
+  if(kind === 'module' && st !== EDIT_CTX) return;   // a bare module load: no story fallback
+  const dirs = [storyBase(st), ...await _modGraphicsDirs(st, kind)];
+  GMODS = dirs.filter(d => d && d !== GBASE);
 }
 async function gReadJSON(rel){
   let v = await VFS.readJSON(GBASE + '/' + rel);
@@ -954,6 +962,13 @@ async function gResolve(rel){   // real path for a ?file=/?fitbody= navigation t
   for(const b of [GBASE, ...GMODS]) if(await VFS.readJSON(b + '/' + rel)) return b + '/' + rel;
   return GBASE + '/' + rel;
 }
+// ?ctx=<story|module> - the Workspace source an asset was opened from. Carried
+// through every in-editor navigation (mode / body / article switch) via navQS()
+// so a shared-module asset edited from inside a story keeps resolving that
+// story's own articles / palettes (computeGMods) and offers them in the outfit
+// "preview other articles" list. See docs/GRAPHICS_EDITOR.md.
+const EDIT_CTX = new URLSearchParams(location.search).get('ctx') || '';
+function navQS(){ const q = new URLSearchParams(); if(EDIT_CTX) q.set('ctx', EDIT_CTX); return q; }
 const _EDIT_PARAM = new URLSearchParams(location.search).get('edit');
 const FACE_MODE = _EDIT_PARAM === 'face';
 // "outfit" mode: a body loaded on its own to preview articles worn together.
@@ -1385,8 +1400,11 @@ document.getElementById('tHidesHair').onchange = e=>{
 // remembered per story. Hair is excluded - the "preview hair" dropdown owns it.
 let PREVIEW_CANDIDATES = [];   // sibling article stems that can be previewed
 let PREVIEW_SELF_NAME = '';    // the edited article's stem (never in the list)
+// the outfit-preview tick list is remembered per context: the Workspace source
+// it was opened from (?ctx=), else the story/module that owns the fit body.
+function previewCtxKey(){ return EDIT_CTX || storyOfPath(FITBODY) || storyOfPath(loadedPath); }
 function savePreviewPick(){
-  const st = storyOfPath(FITBODY); if(!st) return;
+  const st = previewCtxKey(); if(!st) return;
   const names = previewArticles.map(p => p.name);
   try{ localStorage.setItem('gpEditorPreviewArt:' + st, JSON.stringify(names)); }catch(e){}
 }
@@ -1404,7 +1422,7 @@ async function populatePreviewArticles(){
   PREVIEW_SELF_NAME = (loadedPath||'').split('/').pop().replace(/\.json$/,'');
   PREVIEW_CANDIDATES = names.filter(n => n !== PREVIEW_SELF_NAME);
   if(!PREVIEW_CANDIDATES.length){ row.style.display = 'none'; previewArticles = []; return; }
-  const st = storyOfPath(FITBODY);
+  const st = previewCtxKey();
   let saved = [];
   try{ saved = JSON.parse(localStorage.getItem('gpEditorPreviewArt:' + st) || '[]'); }catch(e){}
   const want = (Array.isArray(saved) ? saved : []).filter(n => PREVIEW_CANDIDATES.includes(n));
@@ -2497,9 +2515,42 @@ function mirrorTwin(sec){
 let drag = null;
 function evtPos(e){ const r=svg.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; }
 
+// Native dblclick is unreliable here: every pointerup calls render(), which
+// rebuilds the handle/edge SVG nodes, so the browser never sees two clicks on
+// the same element. Detect the double-tap ourselves on pointerdown instead.
+let _lastTap = null;
+function handleDoubleTap(t, shift){
+  if(t.classList.contains('edge')){
+    const arr = getArr(t.dataset.sec, t.dataset.key); const i=+t.dataset.i;
+    const a=arr[i], b=arr[(i+1)%arr.length];
+    pushHistory();
+    const count = Math.max(1, +document.getElementById('insertCount')?.value || 1);
+    const newPts = [];
+    for(let k=1; k<=count; k++){ const t2 = k/(count+1);
+      newPts.push([a[0]+(b[0]-a[0])*t2, a[1]+(b[1]-a[1])*t2]); }
+    arr.splice(i+1, 0, ...newPts);
+    adjustFitsForSplice(t.dataset.sec, t.dataset.key, i+1, 0, count);
+    sel.clear(); for(let k=0;k<count;k++) sel.add(t.dataset.sec+'|'+t.dataset.key+'|'+(i+1+k));
+    sync(); return true;
+  }
+  if(t.classList.contains('handle')){                 // select the whole polygon this handle belongs to
+    const sec=t.dataset.sec, key=t.dataset.key;
+    if(!shift) sel.clear();
+    if(key.startsWith('circle')) sel.add(sec+'|circle:'+key.split(':')[1]+'|0');
+    else { const arr=getArr(sec,key); for(let i=0;i<arr.length;i++) sel.add(sec+'|'+key+'|'+i); }
+    selectSectionFromVerts(); render(); return true;
+  }
+  return false;
+}
+
 svg.addEventListener('pointerdown', e=>{
   const t = e.target;
   const [sx,sy] = evtPos(e);
+  const _now = performance.now();
+  const _dbl = _lastTap && _now-_lastTap.t < 400
+            && Math.hypot(sx-_lastTap.x, sy-_lastTap.y) < 6;
+  _lastTap = { t:_now, x:sx, y:sy };
+  if(_dbl){ _lastTap = null; if(handleDoubleTap(t, e.shiftKey)) return; }
   if(e.button===1 || spaceDown || (e.altKey && !t.classList.contains('handle'))){
     drag={pan:true, sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y}; return;
   }
@@ -2538,29 +2589,7 @@ svg.addEventListener('pointerdown', e=>{
   else { marq={x0:sx,y0:sy,x1:sx,y1:sy}; drag={marq:true, add:e.shiftKey}; }
   svg.setPointerCapture(e.pointerId);
 });
-svg.addEventListener('dblclick', e=>{
-  const t = e.target;
-  if(t.classList.contains('edge')){
-    const arr = getArr(t.dataset.sec, t.dataset.key); const i=+t.dataset.i;
-    const a=arr[i], b=arr[(i+1)%arr.length];
-    pushHistory();
-    const count = Math.max(1, +document.getElementById('insertCount')?.value || 1);
-    const newPts = [];
-    for(let k=1; k<=count; k++){ const t2 = k/(count+1);
-      newPts.push([a[0]+(b[0]-a[0])*t2, a[1]+(b[1]-a[1])*t2]); }
-    arr.splice(i+1, 0, ...newPts);
-    adjustFitsForSplice(t.dataset.sec, t.dataset.key, i+1, 0, count);
-    sel.clear(); for(let k=0;k<count;k++) sel.add(t.dataset.sec+'|'+t.dataset.key+'|'+(i+1+k));
-    sync(); return;
-  }
-  if(t.classList.contains('handle')){                 // select the whole polygon this handle belongs to
-    const sec=t.dataset.sec, key=t.dataset.key;
-    if(!e.shiftKey) sel.clear();
-    if(key.startsWith('circle')) sel.add(sec+'|circle:'+key.split(':')[1]+'|0');
-    else { const arr=getArr(sec,key); for(let i=0;i<arr.length;i++) sel.add(sec+'|'+key+'|'+i); }
-    selectSectionFromVerts(); render();
-  }
-});
+svg.addEventListener('dblclick', e=>{ handleDoubleTap(e.target, e.shiftKey); });
 svg.addEventListener('pointermove', e=>{
   const [sx,sy] = evtPos(e);
   const w = S2W(sx, sy);
@@ -3344,14 +3373,14 @@ function buildModeSwitch(){
     <button id="modeOutfit" class="${OUTFIT_MODE?'on':''}" title="preview articles worn together on this body">outfit</button>`;
   const go = qs => { location.search = qs.toString(); };
   document.getElementById('modeBody').onclick = ()=>{
-    const qs = new URLSearchParams(); qs.set('file', bodyPath); go(qs);
+    const qs = navQS(); qs.set('file', bodyPath); go(qs);
   };
   document.getElementById('modeFace').onclick = ()=>{
-    const qs = new URLSearchParams(); qs.set('file', bodyPath); qs.set('edit', 'face'); go(qs);
+    const qs = navQS(); qs.set('file', bodyPath); qs.set('edit', 'face'); go(qs);
   };
   document.getElementById('modeOutfit').onclick = ()=>{
     if(OUTFIT_MODE) return;   // already here
-    const qs = new URLSearchParams(); qs.set('file', bodyPath); qs.set('edit', 'outfit'); go(qs);
+    const qs = navQS(); qs.set('file', bodyPath); qs.set('edit', 'outfit'); go(qs);
   };
   document.getElementById('modeTailor').onclick = async ()=>{
     if(TAILOR_MODE) return;   // already here
@@ -3360,7 +3389,7 @@ function buildModeSwitch(){
     const st = storyOfPath(bodyPath);
     const last = st ? ssGet('gpLastArticle:' + st) : null;   // this tab's last-tailored article
     const pick = (last && names.includes(last)) ? last : names[0];
-    const qs = new URLSearchParams(); qs.set('file', await gResolve('articles/' + pick)); qs.set('fitbody', bodyPath); go(qs);
+    const qs = navQS(); qs.set('file', await gResolve('articles/' + pick)); qs.set('fitbody', bodyPath); go(qs);
   };
 }
 // the single body switcher, shown in all three views: it swaps which body is
@@ -3521,6 +3550,7 @@ document.getElementById('startDesign').onchange = async e=>{
   const kind  = document.getElementById('startKind').value;
   const entry = storyEntry(story);
   const qs = new URLSearchParams();
+  qs.set('ctx', story);   // the picked story is the edit context for what opens
   if(kind === 'outfit'){
     const bodies = await listStoryDesigns(entry, 'body');
     let fb; try{ fb = localStorage.getItem('gpEditorFitBody:' + story); }catch(e2){}
@@ -3556,7 +3586,7 @@ function rememberTailoredForPreview(){
   if(!TAILOR_MODE || !loadedPath || !loadedPath.includes('/articles/')) return;
   const stem = loadedPath.split('/').pop().replace(/\.json$/, '');
   if(/^hair_/.test(stem)) return;
-  const st = storyOfPath(FITBODY) || storyOfPath(loadedPath); if(!st) return;
+  const st = previewCtxKey(); if(!st) return;
   const key = 'gpEditorPreviewArt:' + st;
   let list; try{ list = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){}
   if(!Array.isArray(list)) list = [];
@@ -3591,7 +3621,7 @@ document.getElementById('newArticle').onclick = async ()=>{
   };
   try{ await VFS.writeText(path, toRepoJSON(stub), true); }
   catch(e){ alert('Could not create the file: ' + (e.message || e)); return; }
-  const qs = new URLSearchParams(); qs.set('file', path); qs.set('fitbody', FITBODY);
+  const qs = navQS(); qs.set('file', path); qs.set('fitbody', FITBODY);
   location.search = qs.toString();
 };
 document.getElementById('articlePicker').onchange = async e=>{
@@ -4106,6 +4136,7 @@ async function wsLeafPath(e, cat, name){
 async function wsOpenLeaf(e, cat, name){
   const path = await wsLeafPath(e, cat, name);
   const qs = new URLSearchParams();
+  qs.set('ctx', e.name);   // remember which story/module this was opened from
   if(cat.editor === 'body'){ qs.set('file', path); location.search = qs.toString(); return; }
   if(cat.editor === 'face'){ qs.set('file', path); qs.set('edit', 'face'); location.search = qs.toString(); return; }
   if(cat.editor === 'article'){

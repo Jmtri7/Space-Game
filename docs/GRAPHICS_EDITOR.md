@@ -142,6 +142,17 @@ Editing a file that resolved to a module edits the module in place (the `src`
 header shows the full path). There is still no hand-load / paste route — a
 dropped file carries no repo path.
 
+**`?ctx=<story|module>` — the edit context.** The Workspace rail stamps this
+with the source name you opened the asset *from*, and `navQS()` carries it
+through every in-editor navigation (the mode / body / article switchers, `new
+article`). `computeGMods` prefers it over the source that physically owns
+`loadedPath`, so a shared-module article opened from inside a story resolves
+that *story's* own articles and palettes on the fallback path — and the outfit
+**preview other articles** list (and its remembered tick list, keyed
+`gpEditorPreviewArt:<ctx>`) offers them, not just the module's common set.
+Absent (a bare `?file=` URL), behaviour is unchanged: a module load gets no
+story fallback.
+
 Coverage today is **body designs** (`sections`), **faces**, and **articles**
 (`regions`, tailor mode); every other kind opens the read-only stub.
 
@@ -286,7 +297,8 @@ as `gpLastArticle:<story>`), or the alphabetically-first `articles/*.json` fit
 against that same body (`fitbody=`) if you haven't tailored one yet — from there
 use the **switch to** dropdown below to pick a different one; **outfit** jumps to
 `?file=<body>&edit=outfit` (outfit mode, below). Hidden when the loaded design
-isn't a body-rooted one (a bare, unfit article, e.g.).
+isn't a body-rooted one (a bare, unfit article, e.g.). Every one of these jumps
+keeps the `?ctx=` edit context (see *the edit context*, above).
 
 **Hide/show state is remembered per tab.** Which body sections you've hidden
 or whose handles you've toggled (body-edit mode), and which backdrop body
