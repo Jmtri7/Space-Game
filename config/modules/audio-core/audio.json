@@ -229,6 +229,26 @@
           "delay": 0.045
         }
       ]
+    },
+    "jump_engage": {
+      "volume": 0.5,
+      "layers": [
+        { "freq": 28, "freq_end": 92, "dur": 1.1, "wave": "saw", "attack": 0.15, "decay": 3.0, "sustain": 0.9, "amp": 0.5 },
+        { "freq": 56, "freq_end": 184, "dur": 1.1, "wave": "triangle", "attack": 0.15, "decay": 3.0, "sustain": 0.9, "amp": 0.3 },
+        { "freq": 400, "freq_end": 900, "dur": 1.1, "wave": "sine", "attack": 0.2, "decay": 4.0, "sustain": 0.8, "amp": 0.12 },
+        { "freq": 92, "dur": 1.5, "wave": "saw", "attack": 0.05, "decay": 5.0, "sustain": 1.0, "amp": 0.5, "delay": 1.05 },
+        { "freq": 184, "dur": 1.5, "wave": "triangle", "attack": 0.05, "decay": 5.0, "sustain": 1.0, "amp": 0.28, "delay": 1.05 },
+        { "freq": 900, "dur": 1.5, "wave": "sine", "attack": 0.05, "decay": 6.0, "sustain": 1.0, "amp": 0.1, "delay": 1.05 }
+      ]
+    },
+    "jump_boom": {
+      "volume": 0.7,
+      "layers": [
+        { "freq": 1600, "freq_end": 200, "dur": 0.08, "wave": "square", "attack": 0.001, "decay": 0.04, "amp": 0.4 },
+        { "freq": 120, "dur": 0.42, "wave": "noise", "attack": 0.002, "decay": 0.15, "amp": 0.8 },
+        { "freq": 90, "freq_end": 28, "dur": 0.5, "wave": "triangle", "attack": 0.002, "decay": 0.22, "amp": 0.9 },
+        { "freq": 45, "dur": 0.6, "wave": "sine", "attack": 0.002, "decay": 0.3, "amp": 0.7, "delay": 0.05 }
+      ]
     }
   },
   "music": {

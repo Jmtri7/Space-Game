@@ -76,6 +76,8 @@ this to sit well below the rest).
 | `scatter` | three overlapping quick noise cracks plus a low thud | **firing the scatter gun** — echoes its multi-pellet spread |
 | `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **any weapon hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
 | `pickup` | quick two-note upward sparkle | **collecting a drifting ore chunk** — see `SpaceScreen._update_ore_pickups` |
+| `jump_engage` | drive spooling up — a low rumble + turbine whine that glides upward over ~1.1 s then holds as a steady drone (mixed `volume=0.5`) | **a jump entering its travel phase** — `SpaceScreen._update_jump` in [`space_screen/jump.py`](../game/screens/space_screen/jump.py) |
+| `jump_boom` | sonic-boom crack — fast downward square crack over a noise burst + deep pressure drop (mixed `volume=0.7`) | **a jump completing** — `SpaceScreen._complete_jump` |
 
 ## Wiring
 

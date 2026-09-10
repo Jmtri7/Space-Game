@@ -87,6 +87,7 @@ class _JumpMixin:
                 ship.angle = target_angle
                 js["phase"] = "travel"
                 js["timer"] = 0
+                sound_board.play("jump_engage")  # drive spools up over the travel phase
             else:
                 ship.angle = (ship.angle + step * (1 if diff > 0 else -1)) % 360
 
@@ -127,6 +128,7 @@ class _JumpMixin:
         ship.force_thrusters = False
 
         self.jump_state = None
+        sound_board.play("jump_boom")  # sonic-boom crack on arrival
         # Reset the jump target to wherever we just arrived (never None) -
         # matches __init__ and keeps "Jump Target" meaningful.
         self.selected_system_id = self.system_id

@@ -336,6 +336,28 @@ class SoundBoard:
             {"freq": 880.0, "dur": 0.07, "wave": "sine", "attack": 0.003, "decay": 0.05, "amp": 0.7},
             {"freq": 1318.51, "dur": 0.11, "wave": "sine", "attack": 0.003, "decay": 0.08, "amp": 0.6, "delay": 0.045},
         ], volume=0.5)
+        # "jump_engage" - the ship's drive spooling up: a low saw/triangle
+        # rumble (plus a turbine whine) that glides upward over ~1.1s and
+        # then holds as a steady drone for the rest of the jump's travel
+        # phase. Played from SpaceScreen._update_jump when it enters
+        # "travel"; "jump_boom" bookends it on arrival.
+        self.define("jump_engage", [
+            {"freq": 28, "freq_end": 92, "dur": 1.1, "wave": "saw", "attack": 0.15, "decay": 3.0, "sustain": 0.9, "amp": 0.5},
+            {"freq": 56, "freq_end": 184, "dur": 1.1, "wave": "triangle", "attack": 0.15, "decay": 3.0, "sustain": 0.9, "amp": 0.3},
+            {"freq": 400, "freq_end": 900, "dur": 1.1, "wave": "sine", "attack": 0.2, "decay": 4.0, "sustain": 0.8, "amp": 0.12},
+            {"freq": 92, "dur": 1.5, "wave": "saw", "attack": 0.05, "decay": 5.0, "sustain": 1.0, "amp": 0.5, "delay": 1.05},
+            {"freq": 184, "dur": 1.5, "wave": "triangle", "attack": 0.05, "decay": 5.0, "sustain": 1.0, "amp": 0.28, "delay": 1.05},
+            {"freq": 900, "dur": 1.5, "wave": "sine", "attack": 0.05, "decay": 6.0, "sustain": 1.0, "amp": 0.1, "delay": 1.05},
+        ], volume=0.5)
+        # "jump_boom" - a sonic-boom crack as the jump ends: a fast downward
+        # square crack over a noise burst and a deep triangle pressure drop,
+        # with a short sub-sine tail. Played from _complete_jump.
+        self.define("jump_boom", [
+            {"freq": 1600, "freq_end": 200, "dur": 0.08, "wave": "square", "attack": 0.001, "decay": 0.04, "amp": 0.4},
+            {"freq": 120, "dur": 0.42, "wave": "noise", "attack": 0.002, "decay": 0.15, "amp": 0.8},
+            {"freq": 90, "freq_end": 28, "dur": 0.5, "wave": "triangle", "attack": 0.002, "decay": 0.22, "amp": 0.9},
+            {"freq": 45, "dur": 0.6, "wave": "sine", "attack": 0.002, "decay": 0.3, "amp": 0.7, "delay": 0.05},
+        ], volume=0.7)
 
 
 # Shared instance - see module docstring.
