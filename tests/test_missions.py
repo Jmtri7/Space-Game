@@ -708,6 +708,50 @@ class TestLongSilenceDeepening(unittest.TestCase):
         report = [o for o in fw.current_options(flags) if o.get("action") == "set_flag:core_choir_reported"]
         self.assertEqual(len(report), 1)
 
+    # -- Phase 5: Ring Segment Four + flag-keyed epilogues ------------
+    def test_segment_four_npcs_are_all_reachable_from_the_entrance(self):
+        gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="the_span")
+        it = gs.get_interior_screen(gs.moon, "city")
+        it.arrive_from("ship")
+        names = [c.person.name for c in it.npcs]
+        self.assertEqual(len(names), 5)
+        self.assertIn("Choir-hand Aud", names)
+        start = it.entrance if isinstance(getattr(it, "entrance", None), tuple) else \
+            (it.npcs and (it.portals[0]["x"], it.portals[0]["y"]) if getattr(it, "portals", None) else None)
+        for c in it.npcs:
+            p = c.person
+            self.assertTrue(it.can_move_to(p.x, p.y), p.name)
+
+    def test_threa_kin_reacts_to_the_signal_reading(self):
+        it = utils.load_json("config/stories/the_long_silence/systems/the_span.json")
+        threa = [n for n in it["moon"]["interiors"]["city"]["npcs"]
+                 if n["name"] == "Segment Warden Threa-kin"][0]
+        dlg = self._dialogue(threa)
+        self.assertEqual(dlg.resolve_root({"signal:person": True}), "r_person")
+        self.assertEqual(dlg.resolve_root({"signal:ai": True}), "r_ai")
+        self.assertEqual(dlg.resolve_root({"signal:script": True}), "r_script")
+        self.assertEqual(dlg.resolve_root({}), "start")
+
+    def test_flag_keyed_epilogue_line_wins_over_the_band(self):
+        p = Possessions()
+        p.reputation = {"harbor_authority": -60}   # hostile band
+        title, columns = ending_report("the_long_silence", "restore", p)
+        text = " ".join(l for _h, lines in columns[0] for l, _c in lines)
+        self.assertIn("nearly cost them it", text)   # hostile band line
+        p.flags["front_to_authority"] = True
+        _t, columns = ending_report("the_long_silence", "restore", p)
+        text = " ".join(l for _h, lines in columns[0] for l, _c in lines)
+        self.assertIn("carried to them by hand", text)
+        self.assertNotIn("nearly cost them it", text)
+
+    def test_every_ending_still_covers_every_faction_and_band(self):
+        endings = utils.get_endings("the_long_silence")
+        for eid in ("restore", "sever", "hold_middle"):
+            for fid in utils.get_factions("the_long_silence"):
+                fe = endings[eid]["faction_epilogue"].get(fid, {})
+                for b in ("allied", "neutral", "hostile"):
+                    self.assertIn(b, fe, f"{eid}/{fid}/{b}")
+
     def test_sync_conditional_ships_spawns_and_culls_the_barge(self):
         gs = SpaceScreen(pilot_name="T", story="the_long_silence", system_id="verdance")
         pos = gs.player.person.possessions

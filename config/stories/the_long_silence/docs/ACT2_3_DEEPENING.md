@@ -1,8 +1,9 @@
 # Deepening Act II & Act III — `the_long_silence`
 
-> **Status:** Phases 1–4 shipped (Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`;
-> Phase 3 `0.15.0`; Phase 4 `0.16.0`). Phase 5 not started. **Next agent: start at Phase 5.**
-> Keep the Status line and each phase's `✅ SHIPPED` marker current.
+> **Status:** ✅ ALL PHASES SHIPPED. Phase 1 `e85846f` / `0.13.0`; Phase 2 `0.14.0`;
+> Phase 3 `0.15.0`; Phase 4 `0.16.0`; Phase 5 `0.17.0`. Act II & Act III now play through
+> with combat, an escort, a reputation fork, the gated Choir sequence, and flag-keyed
+> epilogues. Remaining work is playtest/balance (PLAN.md Phase 9).
 
 ## For the implementing agent — how to work this
 
@@ -378,7 +379,24 @@ the fork directly — retarget to the `choose` node or set `core_choir_done` fir
 
 ---
 
-## Phase 5 — Ring Segment Four + flag-keyed ending epilogues
+## Phase 5 — Ring Segment Four + flag-keyed ending epilogues  ✅ SHIPPED (`0.17.0`)
+
+- **5a** — `core_moon()` in `gen_span.py`: Segment Four is now 4 rooms (Floor / salvage bay /
+  Choir-hands' quarters / under the Signal-Mast) and 5 NPCs — Segment Warden Threa-kin (reacts
+  to `signal:person|ai|script`, and `core_choir_done`), Core-hand Vess, Salvage-hand Bree,
+  **Choir-hand Aud** (disagrees with whichever reading the player chose), Parts carrier Nend.
+  The "run `hub_parts` out here" errand is a Threa-kin line + the existing Signal-Tender shop —
+  no mission.
+- **5b** — `ending_report()` (`game/ui/ending_screen.py`): a `faction_epilogue[<f>]` may carry
+  `"flag:<name>"` keys; the first whose flag is set wins over the standing band. `endings.json`
+  gained one `flag:` line per faction/ending where it earns its place — `front_to_*` in
+  `restore`/`hold_middle`, `signal:*` for the Wardens in `sever`/`hold_middle`,
+  `front_to_vigil` for the Vigil in `sever`. The three band keys are untouched.
+- Tests +4 (Segment Four reachability, Threa-kin reactions, `flag:` line beats band, the
+  full-matrix guard still holds).
+
+---
+### (original plan below)
 
 ### 5a. Flesh Ring Segment Four (content only, `gen_span.py` `core_moon()`)
 Today: one `rect(220,260,1380,1100)` room, 2 flat NPCs (Segment Warden Threa-kin, Core-hand Vess).

@@ -828,8 +828,12 @@ story = r(f"{S}/story.json")
 # 0.16.0 Deepening Phase 4 - the Act III Choir sequence (the_core_choir mission):
 # the Archivist's logs now set archive:<reason>; a new Core Voice NPC gives three
 # readings of the signal keyed off that; the First Warden's fork moves behind the
-# mission (start -> choose, opened on core_choir_done). See docs/ACT2_3_DEEPENING.md.
-story["version"] = "0.16.0"
+# mission (start -> choose, opened on core_choir_done).
+# 0.17.0 Deepening Phase 5 - Ring Segment Four fleshed out (4 rooms, 5 NPCs,
+# Threa-kin / Choir-hand Aud react to signal:*) + flag-keyed ending epilogues
+# (endings.json "flag:<name>" keys win over the standing band;
+# game/ui/ending_screen.py). See docs/ACT2_3_DEEPENING.md.
+story["version"] = "0.17.0"
 # Starter-loan terms (see LocationScreen._loan_terms). 12k covers the
 # carrier courier (7k) plus a weapon and a spare - deliberately not enough
 # to be careless with (was the engine default of 100k, which trivialised

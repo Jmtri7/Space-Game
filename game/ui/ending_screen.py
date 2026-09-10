@@ -7,7 +7,9 @@ text frame the Possessions / Mission Log use - with one **Return to Menu**
 button instead of Close. `ending_report()` assembles the text from the
 story's `endings.json` entry plus the player's final standing with each
 faction, so the same ending reads differently depending on how the run
-went.
+went. A faction block may also carry `"flag:<name>"` lines that win over
+the standing band when that flag is set (e.g. `the_long_silence`'s
+`front_to_*` / `signal:*` choices).
 """
 from game.constants import WHITE
 from game.ui.report_menu import ReportMenu
@@ -48,7 +50,15 @@ def ending_report(story, ending_id, possessions):
     lines = []
     for faction_id, faction in get_factions(story).items():
         band = _band(possessions.reputation_with(faction_id))
-        text = faction_epilogue.get(faction_id, {}).get(band)
+        entry = faction_epilogue.get(faction_id, {})
+        # A "flag:<name>" key wins over the standing band when its flag is
+        # set (first such key in file order wins - e.g. the Phase 3/4
+        # front_to_* / signal:* choices in the_long_silence). The three
+        # band keys are always present as the fallback.
+        text = next((val for key, val in entry.items()
+                     if key.startswith("flag:") and possessions.flags.get(key[5:])), None)
+        if text is None:
+            text = entry.get(band)
         if text:
             lines.append((f"{faction.get('name', faction_id)}: {text}", FACTION_COLOR))
     if lines:

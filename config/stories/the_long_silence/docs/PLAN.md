@@ -291,25 +291,22 @@ First-pass content is complete and plays end to end; these are quality passes:
   - [x] Two dispatch missions attached: `carrier_relief_run` (relief to
     Ossuary, via `carrier_open_hand`) and `combine_evacuation` (pull a
     stranded crew out of Kiln, via `combine_mobilises`). `gen_act2.py`.
-  - [~] More Act II missions (escort/recon) — full plan in
-    [ACT2_3_DEEPENING.md](ACT2_3_DEEPENING.md) (5 phases, canonical).
-    **Phase 1 done** (`e85846f`): the two courier missions now carry `on_end_flags`
-    (`relief_run_done` / `evac_run_done`); a self-sequencing "reactivation
-    front" dispatch chain (`relay_front_verdance` → `_ossuary` → `_span`, each
-    gated on the next story-progress flag); and the once-dead dispatch flags
-    (`authority_briefed`, `carrier_contact`, `vigil_warned`,
-    `relay_front_kiln_seen`, `span_hailed`) are wired into `conditional_roots`
-    reactions on Amsel / the Verdance & Kiln carrier berths / Keeper Aramis /
-    the Warden of the Fourth Segment. Phases 2–5 (escort mission, recon +
-    reputation fork + carrier pledge, Act III Choir sequence, Segment Four +
-    flag-keyed epilogues) still to build.
+  - [x] More Act II missions (escort/recon) — all 5 phases of
+    [ACT2_3_DEEPENING.md](ACT2_3_DEEPENING.md) shipped (story `0.13.0`→`0.17.0`).
+    Phase 1 (`e85846f`) reactivity plumbing; Phase 2 the refugee-barge escort
+    (`escort_barge` + `drift_convoy_call`); Phase 3 `front_recon` + the
+    `front_to_*` reputation fork + the fifth `patron:free_carrier` pledge;
+    Phase 4 the Act III Choir sequence (`the_core_choir` mission, the Core
+    Voice NPC, `archive:*` / `signal:*`); Phase 5 Ring Segment Four fleshed
+    out + flag-keyed ending epilogues.
 - [x] Kiln mobilisation — a Combine blockade pair over Verdance
   (`gen_verdance.py` `ai_ships`, `requires_flag: combine_mobilised`, pilots
   corran/molt). Set by the `combine_mobilises` dispatch; hostile via the normal
   `_sync_hostiles` rep threshold if the player has crossed the Combine.
-- [~] Reputation swings from mission choices; `set_exclusive_flag` locks in a
-  patron faction. Patron pledges already exist (Vane / Aramis, Phase 5); the
-  two Act II missions carry `on_end_rep`. More choice-driven swings TBD.
+- [x] Reputation swings from mission choices; `set_exclusive_flag` locks in a
+  patron faction. All five patron pledges now exist (Vane / Factor Tol / Sela /
+  Aramis / the Verdance carrier berth); `escort_barge` and `front_recon`'s
+  three-way delivery fork carry the choice-driven swings (Deepening Phases 2–3).
 - [x] Mid-act gate to the Span — `beacon_the_span_lit` is set by
   `the_vigil_record`'s `on_end_flags` (end of the Ossuary anchor), and the
   `span_listening` dispatch (`requires_flag: act_span`) confirms the route.
@@ -331,18 +328,21 @@ First-pass content is complete and plays end to end; these are quality passes:
 > The Choir sequence, the signal-source scene, the flag-gated ending fork, and
 > flag-keyed epilogues are Phases 4–5 of [ACT2_3_DEEPENING.md](ACT2_3_DEEPENING.md).
 
-- [~] Expand the Hub Zero interior — added a **Hub Archive** bay + an
-  Archivist NPC: the shutdown reason (quarantine / scorched-earth / accident)
-  is now a *place*, the Hub's own three conflicting logs read from the
-  machine's end, setting `read_hub_archive`. Plus a Choir-hand ambient NPC
-  (Hub Zero is 7 NPCs now). **Deepening Phase 4** adds the Choir sequence
-  mission, the Core Voice (signal-source scene), consumes `read_hub_archive`,
-  and gates the ending fork behind it.
+- [x] Expand the Hub Zero interior — the **Hub Archive** bay + Archivist NPC
+  (the shutdown reason as a place: three conflicting machine logs, each now
+  setting `archive:<reason>` as well as `read_hub_archive`). **Deepening
+  Phase 4** landed the rest: the `the_core_choir` mission, the **Core Voice**
+  NPC (three unconfirmed readings of the signal, keyed off the archive log
+  the player lingered on), and the ending fork gated behind the sequence
+  (First Warden `start` → `choose`). Ring Segment Four fleshed out to 5 NPCs
+  in Phase 5.
 - [x] Three `end_story` branches wired to the First Warden fork (restore / sever / hold_middle), each with a confirm step; `requires_rep` / `requires_not_flag` gate availability — **built in 6.5**
 - [x] Reputation checks decide epilogue tone — `endings.json` has all three
   endings with `epilogue` paragraphs + a `faction_epilogue` line for every
-  faction × {allied, neutral, hostile} band (`EndingScreen._band`). The eight
-  missing hostile lines filled.
+  faction × {allied, neutral, hostile} band (`EndingScreen._band`).
+- [x] Flag-keyed epilogue lines (Deepening Phase 5b) — `faction_epilogue`
+  blocks may carry `"flag:<name>"` keys that win over the band when set;
+  `endings.json` keys them on the `front_to_*` and `signal:*` choices.
 
 ## Phase 9 — Playtest, balance, save discipline
 

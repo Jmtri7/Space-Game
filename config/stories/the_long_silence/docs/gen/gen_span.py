@@ -447,26 +447,84 @@ def core_moon():
         "crater_color": [60, 90, 86], "landing_distance": 34,
         "craters": [{"x": -7, "y": -3, "radius": 4}, {"x": 8, "y": 7, "radius": 4}],
         "interiors": {"city": {
+            # Phase 5a - Segment Four fleshed out: the one Segment whose
+            # lights are coming up on their own. A central hall under the
+            # warden_hall, a salvage bay off the west, Choir-hand quarters
+            # off the east. Threa-kin reacts to whichever signal reading the
+            # player left the Choir believing (signal:*); Choir-hand Aud
+            # disagrees with it. The "bring hub_parts here" errand is handled
+            # entirely by the Signal-Tender's Hub Zero shop + Threa-kin's
+            # acknowledgement line - no mission.
             "label": "Ring Segment Four", "culture": "the_wardens",
-            "connected_locations": [], "entrance": {"x": 800, "y": 840},
-            "rooms": [rect(220, 260, 1380, 1100, "Segment Four Floor")],
+            "connected_locations": [], "entrance": {"x": 800, "y": 900},
+            "rooms": [
+                rect(300, 600, 1300, 1120, "Segment Four Floor"),
+                rect(240, 380, 780, 660, "the salvage bay"),
+                rect(820, 380, 1360, 660, "the Choir-hands' quarters"),
+                rect(620, 300, 980, 640, "under the Signal-Mast"),
+            ],
             "structures": [
-                {"x": 800, "y": 520, "building_type": "warden_hall"},
-                {"x": 470, "y": 780, "building_type": "warden_housing"},
-                {"x": 1130, "y": 780, "building_type": "warden_housing"},
-                {"x": 800, "y": 330, "building_type": "warden_spire"},
-                {"x": 360, "y": 1000, "building_type": "crates"},
-                {"x": 1240, "y": 1000, "building_type": "crates"},
+                {"x": 800, "y": 470, "building_type": "warden_hall"},
+                {"x": 420, "y": 900, "building_type": "warden_housing"},
+                {"x": 1160, "y": 900, "building_type": "warden_housing"},
+                {"x": 800, "y": 300, "building_type": "warden_spire"},
+                {"x": 320, "y": 460, "building_type": "crates"},
+                {"x": 700, "y": 460, "building_type": "crates"},
+                {"x": 360, "y": 1040, "building_type": "crates"},
+                {"x": 1240, "y": 1040, "building_type": "crates"},
+                {"x": 640, "y": 780, "building_type": "pipeline_bench"},
+                {"x": 960, "y": 780, "building_type": "pipeline_bench"},
             ],
             "npcs": [
-                {"name": "Segment Warden Threa-kin", "x": 800, "y": 700, "role": "magistrate",
+                {"name": "Segment Warden Threa-kin", "x": 800, "y": 760, "role": "magistrate",
                  "faction": "the_wardens", "outfit": "warden_official_masc",
-                 "greeting": "Segment Four wakes a little more each day. We do not know what it is waking for. When you stand at the Choir, ask it gently.",
-                 "dialogue_options": ["I will", "Leave"]},
-                {"name": "Core-hand Vess", "x": 520, "y": 620, "role": "dockworker",
+                 "dialogue_tree": {"root": "start", "conditional_roots": [
+                     {"flag": "signal:person", "node": "r_person"},
+                     {"flag": "signal:ai", "node": "r_ai"},
+                     {"flag": "signal:script", "node": "r_script"},
+                     {"flag": "core_choir_done", "node": "r_heard"}],
+                  "nodes": {
+                    "start": {"text": "Segment Four wakes a little more each day and none of us set it to. We keep it swept and we do not ask it what for. If you stand at the Choir, ask it gently.",
+                              "options": [
+                                  {"label": "The Tender's shop had hub parts - I can run some out here.", "next": "parts"},
+                                  {"label": "I will", "next": None}]},
+                    "parts": {"text": "Then you would be the first outsider who ever did. Buy them off the Signal-Tender at Hub Zero and set them down at our dock - we will know what to do with them. We always do.",
+                              "options": [{"label": "Understood", "next": None}]},
+                    "r_person": {"text": "You came back from the Choir saying a person is behind it. Then Segment Four is someone's promise, kept in the dark for two centuries, and we have been the hands of it without being asked. I find I can live with that more easily than I expected.",
+                                 "options": [{"label": "Understood", "next": None}]},
+                    "r_ai": {"text": "You told the Choir it was the Hub itself, awake. Some of us knew. It is why we sweep so carefully - you do not want to be underfoot of a thing that is deciding. If you are right, Segment Four is it stretching, and we are inside the hand.",
+                             "options": [{"label": "Understood", "next": None}]},
+                    "r_script": {"text": "A routine, you said. No mind, no promise, just the next scheduled step. Half the Segment is furious with you for it and the other half is relieved. I am the second half. It is easier to tend a machine than a god.",
+                                 "options": [{"label": "Understood", "next": None}]},
+                    "r_heard": {"text": "You walked the Choir and heard it out. Then you know as much as we do, which is nearly nothing, and you still have to choose. Ask it gently when you stand there.",
+                                "options": [{"label": "I will", "next": None}]}}}},
+                {"name": "Core-hand Vess", "x": 460, "y": 520, "role": "dockworker",
                  "faction": "the_wardens", "outfit": "warden_dock_femme",
-                 "greeting": "Been patching this segment my whole life with whatever the carriers bring. It has never once told me thank you. I keep doing it.",
+                 "greeting": "Been patching this segment my whole life with whatever the carriers bring. It has never once told me thank you. I keep doing it, and now its lights come up ahead of my wrench.",
                  "dialogue_options": ["Understood", "Leave"]},
+                {"name": "Salvage-hand Bree", "x": 620, "y": 460, "role": "surface_tech",
+                 "faction": "the_wardens", "outfit": "warden_dock_masc",
+                 "greeting": "I strip the dead segments for parts to keep this one breathing. Lately I go to pull a panel and find it already lit and warm. Gives me the crawls. Good pay, though - the Wardens always need a salvage-hand.",
+                 "dialogue_options": ["I can imagine", "Leave"]},
+                {"name": "Choir-hand Aud", "x": 1120, "y": 500, "role": "resident",
+                 "faction": "the_wardens", "outfit": "warden_civilian_masc",
+                 "dialogue_tree": {"root": "start", "conditional_roots": [
+                     {"flag": "signal:person", "node": "against_person"},
+                     {"flag": "signal:ai", "node": "against_ai"},
+                     {"flag": "signal:script", "node": "against_script"}],
+                  "nodes": {
+                    "start": {"text": "I read the Archive logs every year, same as everyone in the Choir. I have never once been able to choose between them. Anyone who tells you they are sure is telling you about themselves, not the Hub.",
+                              "options": [{"label": "Fair", "next": None}]},
+                    "against_person": {"text": "So the outsider decided it was a person. Convenient - a person you can find, blame, forgive. I think you picked the reading that let you sleep. The Hub does not owe your conscience a shape it can hold.",
+                                       "options": [{"label": "Maybe", "next": None}]},
+                    "against_ai": {"text": "You've gone back saying the Hub woke itself. Grand. And unfalsifiable, which is how you can tell it is faith and not a finding. I sweep the same floor whether it is thinking or not.",
+                                   "options": [{"label": "Maybe", "next": None}]},
+                    "against_script": {"text": "A routine, you decided. The reading with nobody in it. I notice it is also the one that asks the least of you. Two centuries the Choir has sat with this and you settled it on a walk-through.",
+                                       "options": [{"label": "Maybe", "next": None}]}}}},
+                {"name": "Parts carrier Nend", "x": 1200, "y": 780, "role": "traveler",
+                 "faction": "free_carrier", "outfit": "carrier_dock_femme",
+                 "greeting": "I run hub parts and salvage out to the dark segments. Wardens pay in whatever's lying around and never haggle. Nobody else wants the route. Suits me.",
+                 "dialogue_options": ["Safe runs", "Leave"]},
             ],
         }},
     }

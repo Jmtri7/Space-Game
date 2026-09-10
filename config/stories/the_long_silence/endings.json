@@ -10,6 +10,7 @@
     ],
     "faction_epilogue": {
       "harbor_authority": {
+        "flag:front_to_authority": "runs the hub on the reactivation schedule you carried to them by hand, and names you in the founding record whatever your standing was after.",
         "allied": "runs the hub, and credits you by name in the founding record.",
         "neutral": "runs the hub, and files your part of it under 'contractors, external'.",
         "hostile": "runs the hub, and keeps a flagged file on the pilot who nearly cost them it."
@@ -20,16 +21,19 @@
         "hostile": "declared the lanes void ground and shoots first at anything flying Authority colours."
       },
       "the_vigil": {
+        "flag:front_to_vigil": "was standing at every lane the signal opened, warning in hand, because you gave them the hour it would come - and has started a new panel for the names it still cost.",
         "allied": "keeps the Name-Wall, and has started a new panel for the names this will cost.",
         "neutral": "keeps the Name-Wall, and says nothing, which from the Vigil is a verdict.",
         "hostile": "closed Ossuary to Authority traffic and will not say what they buried deeper."
       },
       "the_drift": {
+        "flag:front_to_drift": "had the front's timing early, from you, and met the fast lanes on its own terms instead of the Authority's - and still cannot hold a vote to noon.",
         "allied": "feeds half the inner lanes now and still cannot hold a vote to noon.",
         "neutral": "adapts, the way a canopy adapts to a new wind - slowly, and without agreeing to.",
         "hostile": "was outvoted by the traffic, and says the assembly you forced was never really free."
       },
       "the_wardens": {
+        "flag:signal:ai": "tend a Hub they now believe woke its own mind, run it for the Authority, and are no longer certain who they serve.",
         "allied": "tend the Hub for the Authority now, and pray at it the same as before.",
         "neutral": "tend the Hub, and have stopped explaining it to the people who ask.",
         "hostile": "tend the Hub for a master they did not choose, and blame the pilot who handed it over."
@@ -61,6 +65,7 @@
         "hostile": "still sends a raider toward where Verdance's lane used to be, out of spite."
       },
       "the_vigil": {
+        "flag:front_to_vigil": "counts the silence you kept as the wall's vindication, and has your name in the part of the record it reads aloud.",
         "allied": "opened the inner vault to you before you left. You are the only outsider who has read it.",
         "neutral": "keeps the graves, and keeps the reason, and thanks you in a letter that arrives by slow carrier.",
         "hostile": "keeps the graves. That is all the Vigil ever promised anyone."
@@ -71,6 +76,7 @@
         "hostile": "lost the open lane it had barely tasted, and remembers whose hand was on the core."
       },
       "the_wardens": {
+        "flag:signal:person": "stood aside at the core because you told them a person had lit the beacons - and a person, they reasoned, could have been asked to stop.",
         "allied": "stood aside when you reached the core, because you had earned the walk.",
         "neutral": "watched the Hub die and did not stop you, which for the Wardens is a kind of grief.",
         "hostile": "fought for the Hub to the last segment. Some of them are still in there."
@@ -92,6 +98,7 @@
     ],
     "faction_epilogue": {
       "harbor_authority": {
+        "flag:front_to_authority": "built its case for the hub on the schedule you carried them, lost the vote anyway, and has never quite forgiven you for handing it over and then splitting it.",
         "allied": "administers the Halcyon approaches and no more, and calls the restraint yours.",
         "neutral": "wanted the hub. Settled for a seat. Has not forgiven the arithmetic.",
         "hostile": "calls the arrangement a failure of nerve and files you as the cause."
@@ -112,11 +119,13 @@
         "hostile": "distrusts any arrangement an outsider brokered, and argues, in assembly, that this one will not last."
       },
       "the_wardens": {
+        "flag:signal:script": "tend a broken Hub a two-century routine woke, on no one's authority, and have stopped asking it why.",
         "allied": "tend the broken Hub as a shrine now, and let anyone walk the Choir who comes in peace.",
         "neutral": "tend what's left. The song is gone. They hum it themselves.",
         "hostile": "tend a Hub you broke without their leave, and do not speak your name in the Choir."
       },
       "free_carrier": {
+        "flag:front_to_drift": "runs the ungoverned lanes the Drift argued for on your intelligence, and every slip in the region stands the pilot who made it possible a drink.",
         "allied": "runs the lanes free and ungoverned, exactly as promised, and named a berth after you.",
         "neutral": "flies where it likes and pays whom it must, which is the most a carrier ever hoped for.",
         "hostile": "got the ungoverned lanes it wanted and still holds the grudge from how you got there."
