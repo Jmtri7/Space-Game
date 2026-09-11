@@ -174,11 +174,12 @@ class Dialogue:
     returns the first match's node, letting a conversation open on a
     different greeting (a friendlier one after a past kindness, a colder
     one for an enemy faction) without the caller needing to know why."""
-    def __init__(self, npc_name, nodes, root="start", conditional_roots=None):
+    def __init__(self, npc_name, nodes, root="start", conditional_roots=None, pilot_name="pilot"):
         self.npc_name = npc_name
         self.nodes = nodes
         self.root = root
         self.conditional_roots = conditional_roots or []
+        self.pilot_name = pilot_name or "pilot"
         self.current_node = root
         self.selected_option = 0  # the option the pointer is hovering
         # Screen-space hit rects, refreshed by draw() each frame - the
@@ -189,7 +190,7 @@ class Dialogue:
         self._debug_rect = None   # DEBUG_MODE: the clickable node-id line
 
     @classmethod
-    def from_flat(cls, npc_name, greeting, options):
+    def from_flat(cls, npc_name, greeting, options, pilot_name="pilot"):
         """Build a single-node Dialogue from the old flat greeting+options
         shape - every option just closes the conversation. Keeps every NPC
         config that only sets "greeting"/"dialogue_options" working
@@ -199,7 +200,7 @@ class Dialogue:
                 "text": greeting,
                 "options": [{"label": option, "next": None} for option in options],
             },
-        })
+        }, pilot_name=pilot_name)
 
     def resolve_root(self, flags=None, reputation=None):
         """Which node a fresh conversation should open on: the first
@@ -224,7 +225,11 @@ class Dialogue:
         return self.root
 
     def current_text(self):
-        return self.nodes[self.current_node]["text"]
+        """The current node's text, with "{pilot}" substituted for the
+        player's entered name (see __init__'s pilot_name) - lets dialogue
+        JSON address the player by name the same way story.json's intro
+        text does (game/ui/intro_screen.py)."""
+        return self.nodes[self.current_node]["text"].replace("{pilot}", self.pilot_name)
 
     def current_options(self, flags=None, reputation=None):
         """Options at the current node, minus any whose gate isn't met:

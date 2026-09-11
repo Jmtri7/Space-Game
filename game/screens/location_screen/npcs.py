@@ -27,9 +27,9 @@ class _NpcsMixin:
             person.equip_article(article_name)
         dialogue_tree = cfg.get("dialogue_tree")
         if dialogue_tree:
-            person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"), conditional_roots=dialogue_tree.get("conditional_roots"))
+            person.dialogue = Dialogue(person.name, dialogue_tree["nodes"], root=dialogue_tree.get("root", "start"), conditional_roots=dialogue_tree.get("conditional_roots"), pilot_name=self.pilot_name)
         else:
-            person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"])
+            person.dialogue = Dialogue.from_flat(person.name, cfg.get("greeting", "Hello!"), cfg.get("dialogue_options") or ["Talk", "Leave"], pilot_name=self.pilot_name)
         # A "shop" config key (see ShopMenu/ShipBrowserMenu/OutfittingMenu)
         # opens a purpose-built buy/sell screen instead of dialogue when T is
         # pressed - None for every NPC that's just flavor/dialogue.
