@@ -165,6 +165,46 @@ class _HudMixin:
         surface.blit(text, (box.x + pad, box.y + pad))
         return box
 
+    def _hovered_ore_pickup(self, mouse_pos):
+        """The drifting ore pickup (if any) under the mouse in the main
+        view - hit-tested in screen space with a generous radius since the
+        icon itself (see OrePickup.draw) is only a few pixels across."""
+        ui_scale = get_ui_scale()
+        hit_r = 14 * ui_scale
+        mx, my = mouse_pos
+        for pickup in self.ore_pickups:
+            sx, sy = utils.to_screen(pickup.x, pickup.y)
+            if (mx - sx) ** 2 + (my - sy) ** 2 <= hit_r ** 2:
+                return pickup
+        return None
+
+    def _draw_world_hover_tooltip(self, surface, ui_scale):
+        """Small label near the cursor naming whatever's floating under it
+        in the main view - the same idea as the minimap's hover tooltip
+        (_draw_minimap_tooltip) and the star map's system labels, but for
+        drifting ore pickups in the world itself rather than a fixed dot on
+        a map. Not clamped to any panel rect (there isn't one for the main
+        view) - just kept on-screen."""
+        mouse_pos = pygame.mouse.get_pos()
+        pickup = self._hovered_ore_pickup(mouse_pos)
+        if pickup is None:
+            return
+        commodity = get_commodity(self.story, pickup.commodity_id)
+        name = commodity.get("name", pickup.commodity_id)
+        font = get_font(int(18 * ui_scale))
+        text = font.render(f"{name} x{pickup.amount}", True, WHITE)
+        pad = int(5 * ui_scale)
+        mx, my = mouse_pos
+        box = pygame.Rect(0, 0, text.get_width() + pad * 2, text.get_height() + pad * 2)
+        box.topleft = (mx + int(12 * ui_scale), my + int(12 * ui_scale))
+        box.right = min(box.right, utils.screen_width - pad)
+        box.bottom = min(box.bottom, utils.screen_height - pad)
+        bg = pygame.Surface(box.size, pygame.SRCALPHA)
+        bg.fill((20, 30, 40, 225))
+        surface.blit(bg, box.topleft)
+        pygame.draw.rect(surface, (120, 140, 160), box, 1)
+        surface.blit(text, (box.x + pad, box.y + pad))
+
     def _draw_hud(self, surface, target_obj, draw_hud=True):
         """Ship status, targeting, jump-target, help, and status-message
         overlays - styled with the same glass-panel look as the menus
@@ -375,6 +415,13 @@ class _HudMixin:
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
             self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect
+
+        # Cursor hovering a drifting ore pickup in the main view - drawn
+        # over everything else in the HUD pass, same as the minimap's own
+        # hover tooltip. Skipped along with the rest of the HUD for the
+        # same reason as Controls/Messages above.
+        if draw_hud and not self.active_dialogue:
+            self._draw_world_hover_tooltip(surface, ui_scale)
 
         # Cached for handle_input()'s mouse-click targeting, so a click on
         # any of these panels doesn't also register as a click-to-target in
