@@ -82,7 +82,7 @@
             "role": "resident",
             "outfit": "ck_ranger_masc",
             "ambient": {
-              "range": 350,
+              "range": 180,
               "message": "Someone rises from a bench by the market hall and stands very still, watching you cross the plaza. You know the way they stand. Walk over and press T."
             },
             "dialogue_tree": {
