@@ -620,9 +620,14 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         message_log_rect = None
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.possessions.message_log]
+            # Fill the gap down to the screen edge below wherever the
+            # Controls pane (drawn above) currently ends - so the log grows
+            # or shrinks as that pane expands/collapses (C toggles it).
+            log_max_height = utils.screen_height - control_margin - (controls_rect.bottom + control_margin) if controls_rect else None
             message_log_rect, message_log_max_scroll = draw_message_log(
                 surface, messages, ui_scale, self.message_log_scroll,
-                alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned)
+                alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned,
+                max_height=log_max_height)
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
             self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect

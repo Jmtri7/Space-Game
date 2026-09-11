@@ -366,7 +366,7 @@ def message_alert_state(frames_remaining):
     return blink_on, pings_due
 
 
-def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False, pinned=False):
+def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False, pinned=False, max_height=None):
     """Bottom-left glass panel of received one-way messages (see
     Possessions.add_message/message_log and SpaceScreen._check_one_way_hails),
     newest entry on top - the bottom-left counterpart to draw_status_pane
@@ -374,13 +374,16 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False, pinned=
     arrived rather than the player's current status.
 
     `messages` is a list of (sender, text) tuples, already newest-first
-    (see Possessions.add_message). The panel has a **fixed maximum height**:
-    it grows to at most MESSAGE_LOG_VISIBLE_LINES wrapped text lines and
-    then stops, so a long backlog can't push up over the Controls pane. The
-    rest is reached with `scroll` - a line offset from the newest, clamped
-    here - which SpaceScreen drives from the mouse wheel while the pointer
-    is over this panel. `^ newer` / `v older` hints show when there's more
-    in either direction.
+    (see Possessions.add_message). Without `max_height` the panel caps at
+    MESSAGE_LOG_VISIBLE_LINES wrapped text lines, same as always. Pass
+    `max_height` (the pixel gap between the Controls pane above it and the
+    screen's bottom edge - see both screens' _draw_hud) to instead grow the
+    panel to fill that space: as many wrapped lines as fit, which changes
+    as the Controls pane expands/collapses (see `collapsed` on
+    draw_controls_pane). Either way the rest is reached with `scroll` - a
+    line offset from the newest, clamped here - which SpaceScreen drives
+    from the mouse wheel while the pointer is over this panel. `^ newer` /
+    `v older` hints show when there's more in either direction.
 
     `alert` is this frame's on/off state for the red "unread" light (the
     caller resolves it via message_alert_state()); pass False to leave it
@@ -418,14 +421,30 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False, pinned=
             flat.append((line, i == 0, sender if j == 0 else None))
 
     total = len(flat)
-    visible = min(total, MESSAGE_LOG_VISIBLE_LINES)
+    title_rendered = font_title.render("Message Log", True, (200, 220, 255))
+    title_height = title_rendered.get_height() + int(4 * ui_scale)
+    hint_height = font_text.get_height() + int(2 * ui_scale)
+
+    if max_height is None:
+        cap = MESSAGE_LOG_VISIBLE_LINES
+    else:
+        # How many message lines fit under max_height without scroll hints;
+        # if that's not enough for the whole backlog, two hint rows have to
+        # be carved out of the same budget instead, which can only lower the
+        # line count - so check the no-hint case first and only fall back
+        # to the hint-reserved budget when it's actually needed.
+        fixed = pad_y * 2 + title_height
+        no_scroll_cap = max(0, (max_height - fixed) // line_height)
+        if total <= no_scroll_cap:
+            cap = total
+        else:
+            cap = max(1, (max_height - fixed - hint_height * 2) // line_height)
+
+    visible = min(total, cap)
     max_scroll = max(0, total - visible)
     scroll = max(0, min(scroll, max_scroll))
     scrollable = max_scroll > 0
 
-    title_rendered = font_title.render("Message Log", True, (200, 220, 255))
-    title_height = title_rendered.get_height() + int(4 * ui_scale)
-    hint_height = font_text.get_height() + int(2 * ui_scale)
     # Both hint rows are reserved whenever the log is scrollable at all, so
     # the panel's height doesn't jump as the offset passes the ends - it
     # only changes with the message count, up to the visible-lines cap.

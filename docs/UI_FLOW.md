@@ -212,6 +212,13 @@ dialogue); the world is simply frozen (`step_world()` is a no-op for
 - G, close + slow near moon → landing-spot `ChoiceDialog` (`"select_location"`)
 - ESC → PauseMenu
 
+**The Message Log fills the gap under the Controls pane.** `draw_message_log`'s
+`max_height` (both screens' `_draw_hud`, computed from `controls_rect.bottom`
+down to the screen edge) caps the panel at however much room is actually
+left below Controls, instead of a fixed line count - so it grows when C
+collapses Controls to its two-liner and shrinks back when Controls expands.
+A backlog longer than that still scrolls (mouse wheel) same as before.
+
 **One-way messages (Message Log + hail banner + unread ping).** Every path that
 posts one — story dispatches (`_check_dispatches`), mission stage messages
 (`_deliver_stage_message`), beacon relights (`_check_beacons`), pilot

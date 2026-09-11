@@ -365,7 +365,11 @@ class _HudMixin:
         message_log_rect = None
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.person.possessions.message_log]
-            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned)
+            # Fill the gap down to the screen edge below wherever the
+            # Controls pane (drawn above) currently ends - so the log grows
+            # or shrinks as that pane expands/collapses (C toggles it).
+            log_max_height = utils.screen_height - margin - (controls_rect.bottom + margin) if controls_rect else None
+            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned, max_height=log_max_height)
             # Clamp now that the real wrapped-line count is known (window
             # resize or a shrinking log can leave the stored offset too big).
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
