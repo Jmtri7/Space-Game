@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "name": "Graphics Pipeline Test",
   "modules": [
+    "orbital-std",
     "figures-human",
     "audio-core",
     "ships-core",

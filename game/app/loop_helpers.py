@@ -176,15 +176,31 @@ def begin_landing(game_screen):
     Shared by two call sites: the L-key "land" action from
     `SpaceScreen.handle_input`, and the autopilot auto-land that
     `SpaceScreen.update()` returns "land" for from *inside* a sim step
-    (see step_world / the accumulator loop in main())."""
-    game_screen.player.park()
+    (see step_world / the accumulator loop in main()).
+
+    A system's `station`/`moon` config is optional (see
+    config-formats.md's systems/*.json note) - a system that skips one gets
+    a placeholder `LandingSite` with no `interiors` at all, just so physics/
+    targeting/drawing/save-restore never need a None check. That
+    placeholder is a legitimate thing to fly near or target, but there is
+    nothing to land *in* - checked here, before `park()`, so approaching
+    one is a silent no-op (a toast, ship keeps flying) instead of a
+    "station"/"select_location" transition into an interior that doesn't
+    exist (main.py's screen branches assume a real one)."""
     if game_screen.landing_target == "station":
+        if not game_screen.station.interiors:
+            game_screen._show_toast(f"{game_screen.station.name} - nothing to land in")
+            return "game", None, None
+        game_screen.player.park()
         ship_entry_key = game_screen.station.get_ship_entry_key()
         station_interior = game_screen.get_interior_screen(game_screen.station, ship_entry_key)
-        if station_interior:
-            station_interior.arrive_from("ship")
+        station_interior.arrive_from("ship")
         return "station", station_interior, None
     if game_screen.landing_target == "moon":
+        if not game_screen.moon.interiors:
+            game_screen._show_toast(f"{game_screen.moon.name} - nothing to land in")
+            return "game", None, None
+        game_screen.player.park()
         location_selector = ChoiceDialog(
             "Landing Location", landing_location_options(game_screen.moon.interiors))
         return "select_location", None, location_selector

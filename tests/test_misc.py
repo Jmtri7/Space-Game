@@ -265,6 +265,28 @@ class TestStepWorld(unittest.TestCase):
         self.assertIsNotNone(si)
         self.assertEqual((gs.player.ship.velocity_x, gs.player.ship.velocity_y), (0, 0))
 
+    def test_landing_on_a_site_with_no_interiors_is_a_no_op_not_a_crash(self):
+        """A system may omit its station/moon config entirely (see
+        config-formats.md's systems/*.json note) - SpaceScreen still builds
+        a placeholder LandingSite for it (so physics/targeting/drawing never
+        need a None check), but there's nothing to land IN. begin_landing()
+        used to hand back ("station"/"select_location", None, ...) for that
+        case, which crashed main.py's screen branches on a None interior."""
+        from main import begin_landing
+        gs = self._screen()
+        gs.station.interiors = {}
+        gs.landing_target = "station"
+        next_screen, station_interior, location_selector = begin_landing(gs)
+        self.assertEqual(next_screen, "game")
+        self.assertIsNone(station_interior)
+        self.assertIsNone(location_selector)
+
+        gs.moon.interiors = {}
+        gs.landing_target = "moon"
+        next_screen, station_interior, location_selector = begin_landing(gs)
+        self.assertEqual(next_screen, "game")
+        self.assertIsNone(location_selector)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ the story/save split.
 | `default` | The original sandbox. Frozen hand-maintained art (see [DESIGN_ATLAS.md](../DESIGN_ATLAS.md)); not on the design-JSON pipeline. |
 | `graphics_pipeline_test` | Reference story for the design-JSON art pipeline ([GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md)). |
 | `the_long_silence` | Five-system faction story — beacon jump-gating, reputation, ship combat, an ending fork. Act I plays end to end. Has its own docs tree: `config/stories/the_long_silence/docs/` (`STORY.md` narrative, `PLAN.md` build checklist, `gen/` slice generators). |
-| `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Re-uses `graphics_pipeline_test`'s art (catalogues copied) + the `figures-human` kit; no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
+| `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Re-uses `graphics_pipeline_test`'s art via the `orbital-std` + `figures-human` modules; no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
 
 **`systems/{system_id}.json`** — one star system's layout:
 ```json
@@ -34,6 +34,14 @@ the story/save split.
   "ai_ships": [{"x": 0.75, "y": 0.1, "ship_type": "freighter", "faction": "..."}]
 }
 ```
+Both `"station"` and `"moon"` are optional - a system that omits one still
+gets a placeholder `LandingSite` at default coordinates with no
+`interiors` (`SpaceScreen._build_system_state`), purely so physics/
+targeting/drawing/save-restore never need a None check. It's a real,
+flyable, targetable body - just nothing to land *in*: `begin_landing()`
+(`game/app/loop_helpers.py`) checks for that and turns an attempt to land
+on it into a toast instead of opening a broken interior. A system genuinely
+needs only the body/bodies its story actually uses.
 Station/AI positions are fractions of `GAME_WIDTH`/`GAME_HEIGHT`. An `ai_ships[]`
 entry (and an interior `npcs[]` / `structures[]` entry) may carry a `faction` id
 (`factions.json`) and/or a **content gate** — `requires_flag` /
