@@ -9,9 +9,10 @@ from game.screens.space_screen.npc_sync import _NpcSyncMixin
 from game.screens.space_screen.jump import _JumpMixin
 from game.screens.space_screen.combat import _CombatMixin
 from game.screens.space_screen.mining import _MiningMixin
+from game.screens.space_screen.pirates import _PiratesMixin
 
 
-class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSyncMixin, _JumpMixin, _CombatMixin, _MiningMixin, ScreenBase):
+class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSyncMixin, _JumpMixin, _CombatMixin, _MiningMixin, _PiratesMixin, ScreenBase):
     """Main space exploration screen with ships and landing."""
     def __init__(self, system_config=None, pilot_name="", story="default", system_id=None):
         super().__init__(pilot_name=pilot_name)
@@ -122,6 +123,11 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # config/stories/{story}/systems/*.json; self.system_id is added
         # explicitly in case a save/story references one that scan somehow
         # missed, so activating it below can never KeyError.
+        # The one active pirate-ambush encounter, if any - see
+        # game/screens/space_screen/pirates.py. Must exist before
+        # _activate_system() below (it may spawn one) and before self.systems
+        # even exists, since _build_system_state() runs first per system.
+        self.pirate_ambush = None
         self.systems = {}
         self.system_configs = {}
         system_ids = set(get_star_systems(self.story).keys())
@@ -222,15 +228,30 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # current alert (reset in _post_message, advanced in update()).
         self.message_alert_timer = 0
         self._message_alert_pings_played = 0
-        # True while there's an unread message (see _post_message) the
-        # player hasn't clicked away yet. Rather than the blink/ping cycle
-        # running MESSAGE_ALERT_BLINKS times and going quiet on its own,
-        # update() re-arms message_alert_timer every time it reaches 0 while
-        # this is set, looping the cycle indefinitely - draw_message_log's
-        # `pinned` flag also puts up a "CLICK TO STOP" prompt next to the
-        # light while it's set. Cleared by clicking the Messages pane (see
-        # handle_input's MOUSEBUTTONDOWN branch).
-        self._unread_alert_pinned = False
+        # `_unread_alert_pinned` (see the property below) is stored on the
+        # shared Possessions instance, not here - init happens there.
+
+    @property
+    def _unread_alert_pinned(self):
+        """True while there's an unread message (see _post_message) the
+        player hasn't clicked away yet. Rather than the blink/ping cycle
+        running MESSAGE_ALERT_BLINKS times and going quiet on its own,
+        update() re-arms message_alert_timer every time it reaches 0 while
+        this is set, looping the cycle indefinitely - draw_message_log's
+        `pinned` flag also puts up a "CLICK TO STOP" prompt next to the
+        light while it's set. Cleared by clicking the Messages pane (see
+        handle_input's MOUSEBUTTONDOWN branch).
+
+        Proxies to `possessions.unread_alert_pinned` (see its own comment)
+        rather than a plain instance attribute, so a message that arrives
+        while docked - and gets dismissed from LocationScreen, the only one
+        actually on screen at the time - reads as dismissed here too the
+        moment the player undocks, instead of independently re-arming."""
+        return self.player.person.possessions.unread_alert_pinned
+
+    @_unread_alert_pinned.setter
+    def _unread_alert_pinned(self, value):
+        self.player.person.possessions.unread_alert_pinned = value
 
     def get_interior_screen(self, landing_site, key):
         """Return the persistent LocationScreen for one of landing_site's
@@ -573,6 +594,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             self._message_alert_pings_played = 0
         self._pump_message_queue()
         self._check_one_way_hails()
+        self._update_pirate_ambush()
         self._check_beacons()
         self._check_dispatches()
         self._validate_target()

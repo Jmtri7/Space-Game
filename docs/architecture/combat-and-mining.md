@@ -170,17 +170,55 @@ still drifting simply forgets it - the same choice already made for
 **System events (`events.json`, the `system-events` module).** A story
 opts a system into rare, chance-driven content by listing entries in that
 system's config `"events"` array - see config-formats.md's "System events"
-section for the exact shape. Today the only `"kind"` is `"special_asteroid"`:
-a distinct-looking, higher-`mine_yield` `Asteroid` variant
-(`config/modules/system-events/events.json`'s `rich_ore_vein` is the one
-shipped so far) that `SpaceScreen._build_system_events`
-(`game/screens/space_screen/setup.py`) resolves into an extra
-`(type_cfg, chance)` entry on `AsteroidField.events` - rolled independently
-per chunk, on top of (not competing against) the system's normal `types`
-draws, so a rare variant stays rare regardless of `per_chunk_range`. Mined
-exactly like any other asteroid - same breakup/ore-drop path above, just a
-bigger payout. Future event kinds (wrecks, derelict ships to board,
-scannable anomalies, wormholes to disconnected systems) belong in the same
-catalogue, each adding its own resolution branch in `_build_system_events`
-and its own spawn path, since they won't all fit the per-chunk asteroid
-model this first kind reuses.
+section for the exact shape. Two kinds so far:
+
+- `"special_asteroid"`: a distinct-looking, higher-`mine_yield` `Asteroid`
+  variant (`config/modules/system-events/events.json`'s `rich_ore_vein` is
+  the one shipped so far) that `SpaceScreen._build_system_events`
+  (`game/screens/space_screen/setup.py`) resolves into an extra
+  `(type_cfg, chance)` entry on `AsteroidField.events` - rolled
+  independently per chunk, on top of (not competing against) the system's
+  normal `types` draws, so a rare variant stays rare regardless of
+  `per_chunk_range`. Mined exactly like any other asteroid - same
+  breakup/ore-drop path above, just a bigger payout.
+- `"pirate_ambush"` (`game/screens/space_screen/pirates.py`): a lone
+  hostile AI ship. `_build_pirate_ambush_configs` (setup.py) resolves a
+  system's `pirate_ambush`-kind entries into `(event_def, chance)` pairs
+  kept on `SystemState.pirate_ambush_configs`;
+  `SpaceScreen._maybe_spawn_pirate_ambush` rolls them once per system
+  **entry** (`_activate_system`, not per chunk - a different `"frequency"`
+  meaning than `special_asteroid`'s), and on a hit builds the pilot exactly
+  like `_build_ai_ship` but positioned `spawn_distance` world-units from
+  the player at a random angle rather than a fixed system-config fraction.
+  Only one ambush is ever tracked at a time (`SpaceScreen.pirate_ambush`,
+  `None` when inactive). From there the encounter runs on existing
+  machinery, not new mechanics: the pilot's own `pilots.json`
+  `"one_way_hail"` delivers the warning the moment the player's in range
+  (`_check_one_way_hails`, see the Hailing section); hailing back opens its
+  `hail_dialogue_tree`, whose "pay" option combines `spend_credits:<n>`
+  (blocked if unaffordable, same as any dialogue option) with
+  `set_flag:pirate_tribute_paid:<name>`, and whose "refuse" option sets
+  `hostile_to_player:<name>` directly; `_update_pirate_ambush` (called every
+  frame from `update_physics`) watches for the paid flag to despawn the
+  ship (`_despawn_pirate_ambush` - removed from `ai_ships`, no explosion,
+  same removal pattern as `_destroy_ship` minus the kill), and counts its
+  own `timeout` down to set that same `hostile_to_player:<name>` flag if
+  the player never hails or refuses in time. Going hostile - refusal,
+  timeout, or a story setting the flag some other way - needs no
+  pirate-specific combat code at all: it's the exact flag `_sync_hostiles`
+  already watches for any pilot, so `CombatRoutine` and
+  `_update_ai_weapon_fire` just pick it up. Jumping out of the system the
+  ambush is in also calls `_despawn_pirate_ambush` (`jump.py`'s
+  `_complete_jump`, before `_activate_system` swaps systems) - an
+  unresolved pirate doesn't linger, frozen, for a later visit to stumble
+  into; a self-jump (recentering within the same system) leaves it alone.
+  A system config additionally sets `"hazard": "pirates"` to flag itself on
+  the star map (`StarMap.draw_content`) - static flavor, independent of
+  whether an ambush has actually rolled this session (see
+  config-formats.md's `systems/*.json` field list).
+
+Future event kinds (wrecks, derelict ships to board, scannable anomalies,
+wormholes to disconnected systems) belong in the same catalogue, each
+adding its own resolution branch in setup.py and its own spawn path, since
+they won't all fit the per-chunk-asteroid or per-system-entry-ambush shapes
+these first two kinds reuse.

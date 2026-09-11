@@ -13,5 +13,15 @@
     "size_range": [5, 9],
     "speed_range": [0.02, 0.12],
     "mine_yield": 45
+  },
+  "lone_pirate": {
+    "kind": "pirate_ambush",
+    "name": "Lone Pirate",
+    "description": "A single raider shadowing traffic at the edge of scanner range, hoping to shake down anyone who strays too far from help. Demands tribute over comms before attacking - hail back to pay it off, refuse, or just outrun the clock.",
+    "pilot": "pirate_lurker",
+    "ship_type": "raider_skiff",
+    "tribute": 300,
+    "spawn_distance": 700,
+    "timeout_seconds": 25
   }
 }

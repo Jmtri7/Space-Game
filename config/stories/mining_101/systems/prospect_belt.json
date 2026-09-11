@@ -24,7 +24,7 @@
       {
         "type": "gray_rock",
         "weight": 1,
-        "size_range": [4, 11],
+        "size_range": [6, 14],
         "speed_range": [0.04, 0.18],
         "mine_yield": 8
       }

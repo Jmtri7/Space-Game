@@ -28,9 +28,11 @@ class _SetupMixin:
         """Resolve a system's top-level "events" entries (each just a
         {"event": events.json id, "frequency": chance in [0,1] per chunk})
         into (type_cfg, chance) pairs for AsteroidField's independent bonus
-        rolls - the "special_asteroid" kind only, for now; other kinds
-        (wrecks, derelicts, wormholes) will need their own spawn path when
-        they're added, so this just skips them rather than guessing. Mirrors
+        rolls - the "special_asteroid" kind only. See
+        _build_pirate_ambush_configs for the "pirate_ambush" kind's own
+        resolution/spawn path (a different "frequency" meaning - chance per
+        system entry, not per chunk - so it can't share this method); any
+        other/unknown kind is just skipped rather than guessed at. Mirrors
         _build_asteroid_types' id -> catalogue resolution, via
         get_system_event/events.json instead of get_asteroid_type/
         asteroid_types.json."""
@@ -50,6 +52,24 @@ class _SetupMixin:
                 type_cfg["speed_range"] = event["speed_range"]
             events.append((type_cfg, entry.get("frequency", 0.05)))
         return events
+
+    def _build_pirate_ambush_configs(self, config):
+        """Resolve a system's "events" entries of kind "pirate_ambush" into
+        (event_def, chance) pairs for SpaceScreen._maybe_spawn_pirate_ambush
+        (game/screens/space_screen/pirates.py) - here "frequency" is the
+        chance, rolled once per system entry (not per AsteroidField chunk -
+        see _build_system_events), that the encounter spawns. event_def is
+        passed through mostly as-is (pilot/ship_type/faction ids, tribute,
+        spawn_distance, timeout_seconds) - resolving the pilot/ship_type ids
+        themselves happens lazily at spawn time, not here, same as
+        ai_ships[] entries."""
+        configs = []
+        for entry in config.get("events", []):
+            event = get_system_event(self.story, entry.get("event", ""))
+            if event.get("kind") != "pirate_ambush":
+                continue
+            configs.append((event, entry.get("frequency", 0.05)))
+        return configs
 
     def _build_system_state(self, system_id, config):
         """Build a SystemState (station/moon/central star/celestial bodies/
@@ -87,6 +107,10 @@ class _SetupMixin:
 
         state = SystemState(station, moon, central_star, celestial_bodies, ai_ships=[], space_drag=space_drag)
         state.system_id = system_id
+        # See SpaceScreen._maybe_spawn_pirate_ambush (pirates.py) - rolled on
+        # system (re-)entry, not here (a pirate should find the player
+        # wherever they currently are, not spawn at construction time).
+        state.pirate_ambush_configs = self._build_pirate_ambush_configs(config)
         state.star_field = StarField(seed=config.get("star_seed", 0))
         # No seed passed - unlike StarField, AsteroidField is meant to look
         # different every time (see its docstring), including the very
@@ -155,6 +179,11 @@ class _SetupMixin:
         # current state before anything below reads state.ai_ships (the
         # targetable list, self.ai_ship). See _sync_conditional_ships.
         self._sync_conditional_ships()
+        # After conditional ships (so a gated ship's removal/add this same
+        # frame can't affect it) but before the aliasing below, so a newly
+        # spawned pirate is included in self.ai_ships and this frame's
+        # targetable_objects build. See pirates.py.
+        self._maybe_spawn_pirate_ambush(state)
 
         self.station = state.station
         self.moon = state.moon

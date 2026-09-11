@@ -1,0 +1,38 @@
+{
+  "pirate_lurker": {
+    "name": "Redtooth",
+    "personality": "Doesn't say much unless there's a toll to collect.",
+    "hail_dialogue_tree": {
+      "root": "demand",
+      "conditional_roots": [
+        {"flag": "pirate_tribute_paid:Redtooth", "node": "paid"},
+        {"flag": "hostile_to_player:Redtooth", "node": "hostile"}
+      ],
+      "nodes": {
+        "demand": {
+          "text": "That's far enough. This stretch of the belt is mine - pay a 300cr toll and you keep flying. Try me and find out what happens instead.",
+          "options": [
+            {"label": "Pay tribute - 300cr", "next": "paid", "actions": ["spend_credits:300", "set_flag:pirate_tribute_paid:Redtooth"]},
+            {"label": "Refuse.", "next": "hostile", "actions": ["set_flag:hostile_to_player:Redtooth"]}
+          ]
+        },
+        "paid": {
+          "text": "Pleasure doing business. Don't let me catch you out here again.",
+          "options": [
+            {"label": "...", "next": null}
+          ]
+        },
+        "hostile": {
+          "text": "Wrong answer.",
+          "options": [
+            {"label": "...", "next": null}
+          ]
+        }
+      }
+    },
+    "one_way_hail": {
+      "message": "That's close enough, hauler. This stretch of the belt costs a toll - hail me and we'll talk terms, or keep pushing your luck.",
+      "range": 700
+    }
+  }
+}

@@ -65,8 +65,13 @@ the galaxy-wide "Beacon relit" broadcast when it unlocks — for a system that
 is *keyed* for the player as a premise (the story's first lane) rather than
 relit by them out in the dark (`SpaceScreen._check_beacons`).
 `get_star_systems()` surfaces `name`, `star_map_position`, `station_name`,
-`moon_name`, `locked`, `unlock_flag`, and `unlock_silent` (the star-map
-projection — not the full system file).
+`moon_name`, `locked`, `unlock_flag`, `unlock_silent`, and `hazard` (the
+star-map projection — not the full system file). `"hazard": "pirates"` is
+static map flavor only — "this system is known to see pirate activity" —
+drawn by `StarMap.draw_content` as a "PIRATE ACTIVITY" tag next to the
+system's name; it's independent of whether a `pirate_ambush` event has
+actually rolled there this session (see "System events" below), so it
+stays displayed either way. No other `hazard` value means anything yet.
 
 **Interior layout** (per key in a landing site's `interiors`): a `culture`, one
 or more `rooms` (`{"rect": […]}`, `{"polygon": [[x,y],…]}`, or `{"shape":
@@ -131,13 +136,54 @@ them in UI:
 }
 ```
 
+The second `"kind"` is `"pirate_ambush"` - here `"frequency"` is the chance,
+rolled once per **system entry** (`SpaceScreen._activate_system`, not per
+chunk - see `_build_pirate_ambush_configs`/`_maybe_spawn_pirate_ambush` in
+`game/screens/space_screen/setup.py`/`pirates.py`), that a hostile AI ship
+spawns a configured distance from the player:
+
+```json
+"lone_pirate": {
+  "kind": "pirate_ambush",
+  "name": "Lone Pirate",
+  "pilot": "pirate_lurker",
+  "ship_type": "raider_skiff",
+  "tribute": 300,
+  "spawn_distance": 700,
+  "timeout_seconds": 25
+}
+```
+
+`"pilot"`/`"ship_type"` are ids the *story* must resolve (`pilots.json`/
+`ship_types.json`, exactly like an `ai_ships[]` entry's own `"pilot"`/
+`"ship_type"` - not shared by this module, since a pirate's identity and
+hull are as story-specific as any other pilot's). `"spawn_distance"` places
+it that many world-units from the player at a random angle;
+`"timeout_seconds"` is how long the player has, once it appears, before it
+turns hostile on its own. `"tribute"` is **documentation only** - nothing
+reads it to drive the encounter; the actual pay/refuse choice and its
+`spend_credits:`/`set_flag:` actions live in the pilot's own
+`hail_dialogue_tree` (see `config/stories/mining_101/pilots.json`'s
+`pirate_lurker` for the worked example) and must be kept in sync with it by
+hand.
+
+The rest of the mechanic needs no new machinery, deliberately - see
+[combat-and-mining.md](combat-and-mining.md)'s "System events" section:
+the pilot's own `one_way_hail` delivers the warning the moment the player's
+in range, paying or refusing is a normal hail-dialogue choice
+(`spend_credits:<n>` + `set_flag:pirate_tribute_paid:<name>`, or just
+`set_flag:hostile_to_player:<name>`), and going hostile - whether from
+refusing or the timeout expiring unanswered - is the same
+`hostile_to_player:<name>` flag `_sync_hostiles` already watches for any
+pilot, so the fight itself runs on existing `CombatRoutine`/weapon-fire code
+with nothing pirate-specific in it.
+
 Other event kinds (wrecks to salvage, derelict ships to board, scannable
 anomalies, wormholes to normally-disconnected systems) are meant to land in
 this same catalogue and the same system-level `"events"` array later, each
 with its own `"kind"` and its own resolution/spawn code - `"frequency"`
-won't necessarily mean "chance per asteroid-field chunk" for a kind that
-isn't asteroid-shaped, e.g. a wreck that should appear once per system visit
-rather than continuously while flying.
+won't necessarily mean "chance per asteroid-field chunk" or "chance per
+system entry" for a kind that fits neither shape.
 
 For `story.json`'s own fields, see the "`story.json` fields" table below.
 For `ship_types.json` / `graphics.json` and adding a ship type, see "Adding or

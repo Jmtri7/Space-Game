@@ -20,4 +20,18 @@ generic gameplay-event flags (`bought_outfit:laser_cannon`,
 
 Reuses `orbital-std` (the trade-ring station art, the courier ship) and
 `figures-human` wholesale; the only story-owned config is `story.json`,
-`missions.json`, `commodities.json` (just `"ore"`), and the one system.
+`missions.json`, `commodities.json` (just `"ore"`), and the systems below.
+
+A second system, `deep_belt`, is reachable from Prospect Belt via the star
+map once the tutorial's done (no lock - always jumpable): denser, more
+valuable rock (`per_chunk_range` [3,6] vs. Prospect Belt's [1,3];
+`mine_yield` 14/20 vs. 8) plus `rich_ore_vein` at a higher frequency
+(0.25 vs. 0.12), and the `system-events` module's other kind,
+`pirate_ambush` (`lone_pirate`, 0.35 chance per visit) - `Redtooth`
+(`pilots.json`'s `pirate_lurker`) appears at a distance, warns over comms,
+and either takes a 300cr toll and jumps out or opens fire, depending on
+whether/how the player hails back within the timeout. See
+[docs/architecture/combat-and-mining.md](../../../docs/architecture/combat-and-mining.md)'s
+"System events" section for how the encounter is wired. Deep Belt carries
+`"hazard": "pirates"` so the star map flags it before the player ever
+jumps there.

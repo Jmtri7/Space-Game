@@ -125,12 +125,22 @@ class StarMap(MenuBase):
             label = font_label.render(sysdata.get("name", system_id), True, color)
             label_x = sx + int(14 * ui_scale)
             surface.blit(label, (label_x, sy - label.get_height() // 2))
+            tag_y = sy - label.get_height() // 2 + label.get_height()
             if is_current:
                 tag = font_tag.render("You are here", True, GREEN)
-                surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
+                surface.blit(tag, (label_x, tag_y))
+                tag_y += tag.get_height()
             elif is_locked:
                 tag = font_tag.render("NO SIGNAL", True, (150, 120, 120))
-                surface.blit(tag, (label_x, sy - label.get_height() // 2 + label.get_height()))
+                surface.blit(tag, (label_x, tag_y))
+                tag_y += tag.get_height()
+            # Static map flavor (systems/*.json's "hazard": "pirates") - not
+            # tied to whether a pirate_ambush event actually rolled there
+            # this visit, see get_star_systems - so it still shows even once
+            # this session's encounter (if any) has been resolved.
+            if not is_locked and sysdata.get("hazard") == "pirates":
+                tag = font_tag.render("PIRATE ACTIVITY", True, (235, 100, 90))
+                surface.blit(tag, (label_x, tag_y))
 
         # Title top-centre (the top-left corner holds the Close button).
         title = font_title.render("Star Map", True, WHITE)

@@ -109,6 +109,12 @@ class _JumpMixin:
         destination = js["destination"]
 
         if destination != self.system_id:
+            # An unresolved pirate ambush doesn't wait around for a return
+            # visit - jumping away ends the encounter (see pirates.py's
+            # module docstring); a self-jump (recentering within the same
+            # system) leaves it alone since the player never actually left.
+            if self.pirate_ambush and self.pirate_ambush["system_id"] == self.system_id:
+                self._despawn_pirate_ambush()
             self._activate_system(destination)
 
         center_x, center_y = SYSTEM_CENTER

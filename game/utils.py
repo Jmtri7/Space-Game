@@ -648,6 +648,13 @@ def get_star_systems(story):
                 # a premise (the story's first lane) rather than relit by them
                 # out in the dark. See SpaceScreen._check_beacons.
                 "unlock_silent": data.get("unlock_silent", False),
+                # Static map flavor, not tied to whether a pirate_ambush
+                # event is currently active there (that's session state, not
+                # something the map tracks) - just "this system is known to
+                # see pirate activity". Only "pirates" means anything to the
+                # map today (StarMap.draw_content); any other value, or
+                # absence, draws no hazard tag.
+                "hazard": data.get("hazard"),
             }
     return systems
 

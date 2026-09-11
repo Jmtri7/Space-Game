@@ -1,0 +1,10 @@
+{
+  "ships": {
+    "raider_skiff": {
+      "size": 9,
+      "color": [180, 60, 60],
+      "shape": "triangle",
+      "outline_color": [40, 12, 12]
+    }
+  }
+}

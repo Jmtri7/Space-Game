@@ -1,0 +1,44 @@
+{
+  "name": "Deep Belt",
+  "description": "A dense, unpatrolled stretch of the belt - richer rock than Prospect Ring sees, and the occasional raider working the traffic for tolls.",
+  "star_map_position": {
+    "x": 240,
+    "y": -80
+  },
+  "hazard": "pirates",
+  "central_star": {
+    "x": 0.5,
+    "y": 0.5,
+    "name": "DB-1",
+    "size": 55,
+    "color": [200, 180, 220]
+  },
+  "player_start": {
+    "x": 0.35,
+    "y": 0.55
+  },
+  "star_seed": 5150,
+  "asteroid_field": {
+    "per_chunk_range": [3, 6],
+    "types": [
+      {
+        "type": "gray_rock",
+        "weight": 2,
+        "size_range": [6, 16],
+        "speed_range": [0.05, 0.22],
+        "mine_yield": 14
+      },
+      {
+        "type": "brown_rock",
+        "weight": 1,
+        "size_range": [8, 18],
+        "speed_range": [0.03, 0.16],
+        "mine_yield": 20
+      }
+    ]
+  },
+  "events": [
+    {"event": "rich_ore_vein", "frequency": 0.25},
+    {"event": "lone_pirate", "frequency": 0.35}
+  ]
+}
