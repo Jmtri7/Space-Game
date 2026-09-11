@@ -1,0 +1,17 @@
+{
+  "rich_ore_vein": {
+    "kind": "special_asteroid",
+    "name": "Rich Ore Vein",
+    "description": "A rare asteroid veined with concentrated ore - stands out from the drab rock around it with a brighter, warmer color, and pays out far more per hit than an ordinary rock.",
+    "graphics": {
+      "shape": "jagged",
+      "color": [255, 195, 60],
+      "vertex_count_range": [10, 14],
+      "jaggedness": 0.45,
+      "spin_speed_range": [-0.8, 0.8]
+    },
+    "size_range": [5, 9],
+    "speed_range": [0.02, 0.12],
+    "mine_yield": 45
+  }
+}

@@ -326,12 +326,21 @@ class OutfittingMenu(MenuBase):
         cost = self._resolve(outfit_id).get("cost", 0)
         self.possessions.spend(cost)
         self.possessions.add_outfit(outfit_id)
+        # Generic gameplay-event flags (see PlayerController's "used_turn") -
+        # a "buy an outfit" tutorial stage can use either as its complete_flag.
+        self.possessions.flags["bought_outfit"] = True
+        self.possessions.flags[f"bought_outfit:{outfit_id}"] = True
         self._refresh_owned_grid()
         self.message = f"Bought 1 {self._resolve(outfit_id).get('name', outfit_id)}"
         self.message_timer = PURCHASE_MESSAGE_FRAMES
 
     def _install(self, slot_id, outfit_id):
         self.possessions.install_outfit(slot_id, outfit_id)
+        # Generic gameplay-event flags, same pattern as _buy_outfit above -
+        # an "equip an outfit" tutorial stage can use either as its
+        # complete_flag.
+        self.possessions.flags["installed_outfit"] = True
+        self.possessions.flags[f"installed_outfit:{outfit_id}"] = True
         self._refresh_owned_grid()
         if self.on_outfits_changed:
             self.on_outfits_changed()

@@ -432,6 +432,18 @@ def get_asteroid_type(story, asteroid_type_id):
     return asteroid_types.get(asteroid_type_id, {})
 
 
+def get_system_event(story, event_id):
+    """Load a system-event definition (its "kind" plus kind-specific fields,
+    e.g. a "special_asteroid" kind's graphics/size_range/speed_range/
+    mine_yield) from config/stories/{story}/events.json. Mirrors
+    get_asteroid_type - a shared per-story catalogue of event identities,
+    while which events can occur in a given system (and how often) is a
+    per-system choice (see systems/*.json's "events" block, resolved by
+    SpaceScreen._build_system_events)."""
+    events = story_catalogue(story, "events.json")
+    return events.get(event_id, {})
+
+
 def get_culture(story, culture_id):
     """Load culture properties (material palette, design theme) from
     config/stories/{story}/cultures.json."""

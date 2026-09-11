@@ -39,32 +39,47 @@ class AsteroidField:
     (world-units and world-units-per-frame respectively; velocity direction
     is always randomized). See systems/*.json's "asteroid_field" block for
     the config format that produces this list (SpaceScreen._build_system_state
-    resolves each entry's "type" id against asteroid_types.json)."""
-    def __init__(self, types=None, per_chunk_range=DEFAULT_PER_CHUNK_RANGE, seed=None):
+    resolves each entry's "type" id against asteroid_types.json).
+
+    `events` is a separate list of (type_cfg, chance) pairs - the
+    "special_asteroid" kind of a system's "events" block (see
+    SpaceScreen._build_system_events), resolved against events.json rather
+    than asteroid_types.json. Each entry gets its own independent chance
+    roll per chunk, on top of (not competing with) the normal `types` draws,
+    so a rare variant stays rare regardless of how many ordinary asteroids a
+    system spawns per chunk."""
+    def __init__(self, types=None, per_chunk_range=DEFAULT_PER_CHUNK_RANGE, seed=None, events=None):
         self.types = types or DEFAULT_TYPES
         self.per_chunk_range = per_chunk_range
         self._rng = random.Random(seed)
         self.chunk_asteroids = {}  # (chunk_x, chunk_y) -> list of Asteroid
+        self.events = events or []
+
+    def _spawn_asteroid(self, rng, cx, cy, type_cfg):
+        x = cx * CHUNK_SIZE + rng.uniform(0, CHUNK_SIZE)
+        y = cy * CHUNK_SIZE + rng.uniform(0, CHUNK_SIZE)
+        size = rng.uniform(*type_cfg.get("size_range", DEFAULT_SIZE_RANGE))
+        speed = rng.uniform(*type_cfg.get("speed_range", DEFAULT_SPEED_RANGE))
+        heading = rng.uniform(0, 2 * math.pi)
+        velocity_x = speed * math.cos(heading)
+        velocity_y = speed * math.sin(heading)
+        return Asteroid(
+            x, y, velocity_x=velocity_x, velocity_y=velocity_y, size=size,
+            graphics=type_cfg.get("graphics"), rng=rng,
+            asteroid_type={"id": type_cfg.get("type"), "mine_yield": type_cfg.get("mine_yield", 10)}
+        )
 
     def _generate_chunk(self, cx, cy):
         rng = self._rng
         weights = [type_cfg.get("weight", 1) for type_cfg in self.types]
         count = rng.randint(*self.per_chunk_range)
-        asteroids = []
-        for _ in range(count):
-            type_cfg = rng.choices(self.types, weights=weights, k=1)[0]
-            x = cx * CHUNK_SIZE + rng.uniform(0, CHUNK_SIZE)
-            y = cy * CHUNK_SIZE + rng.uniform(0, CHUNK_SIZE)
-            size = rng.uniform(*type_cfg.get("size_range", DEFAULT_SIZE_RANGE))
-            speed = rng.uniform(*type_cfg.get("speed_range", DEFAULT_SPEED_RANGE))
-            heading = rng.uniform(0, 2 * math.pi)
-            velocity_x = speed * math.cos(heading)
-            velocity_y = speed * math.sin(heading)
-            asteroids.append(Asteroid(
-                x, y, velocity_x=velocity_x, velocity_y=velocity_y, size=size,
-                graphics=type_cfg.get("graphics"), rng=rng,
-                asteroid_type={"id": type_cfg.get("type"), "mine_yield": type_cfg.get("mine_yield", 10)}
-            ))
+        asteroids = [
+            self._spawn_asteroid(rng, cx, cy, rng.choices(self.types, weights=weights, k=1)[0])
+            for _ in range(count)
+        ]
+        for type_cfg, chance in self.events:
+            if rng.random() < chance:
+                asteroids.append(self._spawn_asteroid(rng, cx, cy, type_cfg))
         return asteroids
 
     def _visible_chunk_range(self):

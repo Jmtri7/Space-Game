@@ -24,6 +24,33 @@ class _SetupMixin:
             types.append(resolved)
         return types
 
+    def _build_system_events(self, config):
+        """Resolve a system's top-level "events" entries (each just a
+        {"event": events.json id, "frequency": chance in [0,1] per chunk})
+        into (type_cfg, chance) pairs for AsteroidField's independent bonus
+        rolls - the "special_asteroid" kind only, for now; other kinds
+        (wrecks, derelicts, wormholes) will need their own spawn path when
+        they're added, so this just skips them rather than guessing. Mirrors
+        _build_asteroid_types' id -> catalogue resolution, via
+        get_system_event/events.json instead of get_asteroid_type/
+        asteroid_types.json."""
+        events = []
+        for entry in config.get("events", []):
+            event = get_system_event(self.story, entry.get("event", ""))
+            if event.get("kind") != "special_asteroid":
+                continue
+            type_cfg = {
+                "type": entry.get("event"),
+                "graphics": event.get("graphics"),
+                "mine_yield": event.get("mine_yield", 10),
+            }
+            if "size_range" in event:
+                type_cfg["size_range"] = event["size_range"]
+            if "speed_range" in event:
+                type_cfg["speed_range"] = event["speed_range"]
+            events.append((type_cfg, entry.get("frequency", 0.05)))
+        return events
+
     def _build_system_state(self, system_id, config):
         """Build a SystemState (station/moon/central star/celestial bodies/
         AI ships) from one system's static config - called once per system
@@ -67,6 +94,7 @@ class _SetupMixin:
         state.asteroid_field = AsteroidField(
             types=self._build_asteroid_types(config),
             per_chunk_range=config.get("asteroid_field", {}).get("per_chunk_range", (1, 3)),
+            events=self._build_system_events(config),
         )
         # Registered before AI ships are built below (not after) because
         # Character.__init__ runs its routine's start() synchronously -

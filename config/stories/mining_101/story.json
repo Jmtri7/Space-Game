@@ -1,0 +1,29 @@
+{
+  "id": "mining_101",
+  "version": "0.1.0",
+  "name": "Mining 101",
+  "modules": [
+    "orbital-std",
+    "figures-human",
+    "audio-core",
+    "ships-core",
+    "system-events",
+    "story-defaults"
+  ],
+  "description": "A short standalone lesson: dock at Prospect Ring with a ship of your own, let Harlan Cobb walk you through buying and mounting a laser, then fly out to mine the belt - including the rare, richer vein that sometimes turns up - and sell your haul.",
+  "difficulty": "easy",
+  "starting_system": "prospect_belt",
+  "default_outfit": "civilian_femme",
+  "start": {
+    "location": "station",
+    "interior": "concourse",
+    "credits": 1200,
+    "ship": "courier",
+    "items": {},
+    "outfits": [],
+    "flags": {}
+  },
+  "ships": {
+    "player_type": null
+  }
+}

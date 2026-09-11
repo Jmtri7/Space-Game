@@ -23,6 +23,7 @@ the story/save split.
 | `graphics_pipeline_test` | Reference story for the design-JSON art pipeline ([GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md)). |
 | `the_long_silence` | Five-system faction story — beacon jump-gating, reputation, ship combat, an ending fork. Act I plays end to end. Has its own docs tree: `config/stories/the_long_silence/docs/` (`STORY.md` narrative, `PLAN.md` build checklist, `gen/` slice generators). |
 | `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Re-uses `graphics_pipeline_test`'s art via the `orbital-std` + `figures-human` modules; no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
+| `mining_101` | One-system, one-mission tutorial: buy and mount a laser, mine the belt (including a rare `system-events`-driven ore-rich asteroid), sell the haul. Reuses `orbital-std` + `figures-human`; no new assets. Notes in `config/stories/mining_101/docs/STORY.md`. |
 
 **`systems/{system_id}.json`** — one star system's layout:
 ```json
@@ -92,6 +93,51 @@ helpers in `_defs.py`).
   "npcs": [{"name": "…", "x": 400, "y": 100, "role": "bartender", "dialogue_options": [...]}]
 }
 ```
+
+### System events
+
+A system's config may carry an `"events"` array - entries a story opts into
+from a shared `events.json` catalogue (id -> `{"kind": ..., ...fields}`,
+resolved through modules exactly like `asteroid_types.json`/`ship_outfits.json`
+- see [CONFIG_MODULES.md](../CONFIG_MODULES.md) - so a story lists the
+`system-events` module rather than authoring its own). Each entry in a
+system's `"events"` names one catalogue id plus a `"frequency"`, whose
+meaning depends on the event's `"kind"`:
+
+```json
+"events": [
+  {"event": "rich_ore_vein", "frequency": 0.12}
+]
+```
+
+Today's only `"kind"` is `"special_asteroid"` - `"frequency"` is the
+independent chance, rolled once per `AsteroidField` chunk as the player
+travels, that one extra asteroid of that kind spawns in that chunk (on top
+of, not instead of, the system's normal `asteroid_field.types` draws - see
+[combat-and-mining.md](combat-and-mining.md)'s "System events" section for
+the resolution path). The event's own catalogue entry carries the rest of an
+`asteroid_types.json` type's fields (`graphics`, `size_range`, `speed_range`,
+`mine_yield`) plus `"name"`/`"description"` for anything that later surfaces
+them in UI:
+
+```json
+"rich_ore_vein": {
+  "kind": "special_asteroid",
+  "name": "Rich Ore Vein",
+  "graphics": {"shape": "jagged", "color": [255, 195, 60], "vertex_count_range": [10, 14], "jaggedness": 0.45, "spin_speed_range": [-0.8, 0.8]},
+  "size_range": [5, 9],
+  "speed_range": [0.02, 0.12],
+  "mine_yield": 45
+}
+```
+
+Other event kinds (wrecks to salvage, derelict ships to board, scannable
+anomalies, wormholes to normally-disconnected systems) are meant to land in
+this same catalogue and the same system-level `"events"` array later, each
+with its own `"kind"` and its own resolution/spawn code - `"frequency"`
+won't necessarily mean "chance per asteroid-field chunk" for a kind that
+isn't asteroid-shaped, e.g. a wreck that should appear once per system visit
+rather than continuously while flying.
 
 For `story.json`'s own fields, see the "`story.json` fields" table below.
 For `ship_types.json` / `graphics.json` and adding a ship type, see "Adding or

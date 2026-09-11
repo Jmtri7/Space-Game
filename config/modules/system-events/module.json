@@ -1,0 +1,5 @@
+{
+  "name": "system-events",
+  "version": "1.0.0",
+  "description": "Shared catalogue of events a story's systems/*.json can opt into via a system's \"events\" block, each with a chance-per-chunk \"frequency\" rolled as the player travels. Today's only \"kind\" is \"special_asteroid\" - a rare, distinct-looking asteroid variant (see rich_ore_vein) folded into the normal asteroid field. Other kinds (wrecks, derelict ships, scannable anomalies, wormholes) are meant to land in this same catalogue later, each adding its own spawn path in game/screens/space_screen/setup.py's _build_system_events without changing the config shape."
+}

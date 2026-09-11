@@ -166,3 +166,21 @@ SAVE_SYSTEM.md) - only the ore that's actually been collected into
 `Possessions.cargo` is. A save/load or system jump while a debris field is
 still drifting simply forgets it - the same choice already made for
 `AsteroidField` itself.
+
+**System events (`events.json`, the `system-events` module).** A story
+opts a system into rare, chance-driven content by listing entries in that
+system's config `"events"` array - see config-formats.md's "System events"
+section for the exact shape. Today the only `"kind"` is `"special_asteroid"`:
+a distinct-looking, higher-`mine_yield` `Asteroid` variant
+(`config/modules/system-events/events.json`'s `rich_ore_vein` is the one
+shipped so far) that `SpaceScreen._build_system_events`
+(`game/screens/space_screen/setup.py`) resolves into an extra
+`(type_cfg, chance)` entry on `AsteroidField.events` - rolled independently
+per chunk, on top of (not competing against) the system's normal `types`
+draws, so a rare variant stays rare regardless of `per_chunk_range`. Mined
+exactly like any other asteroid - same breakup/ore-drop path above, just a
+bigger payout. Future event kinds (wrecks, derelict ships to board,
+scannable anomalies, wormholes to disconnected systems) belong in the same
+catalogue, each adding its own resolution branch in `_build_system_events`
+and its own spawn path, since they won't all fit the per-chunk asteroid
+model this first kind reuses.

@@ -127,7 +127,13 @@ only appears under a section if it currently has items there. Items specific to 
       single expansion of explorable space beyond stations.
 - [ ] Planet descriptions (icy, rocky, gas giant, etc.).
 - [ ] Reasons to visit hazardous worlds.
-- [ ] Events and procedural generation as you travel around systems.
+- [x] Events and procedural generation as you travel around systems — first
+      slice shipped: the `system-events` module + a system's `"events"`
+      config block (see architecture/config-formats.md's "System events"),
+      with one `"special_asteroid"` kind (`rich_ore_vein`) so far. Still
+      open: wreck/derelict-ship/anomaly/wormhole event kinds, each of which
+      needs its own spawn path since they don't fit the per-chunk asteroid
+      model this first kind reuses (see combat-and-mining.md).
 
 ## Graphics & Visual Polish
 

@@ -1,0 +1,49 @@
+{
+  "mining_101": {
+    "title": "Mining 101",
+    "on_start_flags": ["started_mining_tutorial"],
+    "on_end_flags": ["mining_101_done"],
+    "stages": [
+      {
+        "text": "Find Vex Okonkwo, the outfitter, and buy a laser cannon.",
+        "complete_flag": "bought_outfit:laser_cannon",
+        "one_way_message": {
+          "sender": "Harlan Cobb",
+          "text": "First things first - you'll need a weapon to mine with. Vex runs the outfitter's stall just around the ring. A laser cannon's the standard rig; go buy one."
+        }
+      },
+      {
+        "text": "Get to your ship and mount the laser in its weapon slot.",
+        "complete_flag": "installed_outfit:laser_cannon",
+        "one_way_message": {
+          "sender": "Harlan Cobb",
+          "text": "Good pick. Now get back to your ship and mount it - open your Possessions (2) and drag it into the weapon slot, or use Vex's own fitting screen before you leave the stall."
+        }
+      },
+      {
+        "text": "Launch, find an asteroid, and shoot it until it breaks - then fly through the ore it leaves behind to collect it.",
+        "complete_flag": "collected_ore",
+        "one_way_message": {
+          "sender": "Harlan Cobb",
+          "text": "You're armed. Launch and look for asteroids - they drift all through the belt out there. Hold fire on one until it breaks apart, then fly straight through the ore it scatters to scoop it up. Watch for the odd rock with a brighter, warmer color to it - those pay a lot better than the plain gray ones."
+        }
+      },
+      {
+        "text": "Land back at the station with your ore.",
+        "complete_flag": "landed_on_landing_site",
+        "one_way_message": {
+          "sender": "Harlan Cobb",
+          "text": "Got a hold full? Head back and land - target the station, autopilot in with F, or fly it in yourself and press G once you're close and slow."
+        }
+      },
+      {
+        "text": "Sell your ore to Ilena Cross, the quartermaster.",
+        "complete_flag": "sold_commodity:ore",
+        "one_way_message": {
+          "sender": "Harlan Cobb",
+          "text": "Welcome back. Ilena buys ore just past the outfitter's stall - sell her your hold, and that's the whole loop: mine, dock, sell, repeat. You're a prospector now."
+        }
+      }
+    ]
+  }
+}

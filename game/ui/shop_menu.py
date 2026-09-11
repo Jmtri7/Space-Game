@@ -131,6 +131,11 @@ class ShopMenu(MenuBase):
             self.possessions.earn(sell_price)
             if self.category == "commodities":
                 self.possessions.remove_cargo(item_id, 1)
+                # Generic gameplay-event flags (see PlayerController's
+                # "used_turn") - a "sell your cargo" tutorial stage can use
+                # either as its complete_flag.
+                self.possessions.flags["sold_commodity"] = True
+                self.possessions.flags[f"sold_commodity:{item_id}"] = True
             else:
                 self.possessions.remove_item(item_id, 1)
 

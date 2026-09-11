@@ -143,6 +143,10 @@ class _MiningMixin:
                 capacity_remaining = ship.cargo_capacity - possessions.cargo_quantity_total()
                 if pickup.amount <= capacity_remaining:
                     possessions.add_cargo(pickup.commodity_id, pickup.amount)
+                    # Generic gameplay-event flag (see PlayerController's
+                    # "used_turn") - a "mine some ore" tutorial stage can use
+                    # this as its complete_flag.
+                    possessions.flags["collected_ore"] = True
                     self._show_toast(f"Collected {pickup.amount} ore", CYAN)
                     sound_board.play("pickup")
                     continue  # Collected - drop it, don't keep drifting
