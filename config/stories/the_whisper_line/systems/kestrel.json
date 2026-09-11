@@ -127,12 +127,6 @@
                 "leaving": {
                   "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
                   "options": [
-                    { "label": "Open the file.", "next": "note" }
-                  ]
-                },
-                "note": {
-                  "text": "'If you're reading this, you left the station - good. Don't file a flight plan. Go to Tessellate, the old relay: it still holds air, and the archivist who lives in it kept the last packet I sent back. Ask them about the survey. The archivist can key you the lane on from there, out past the last beacon to the Verge - one settled moon, and I've been living under the plaza of it. Last line, and it isn't a place: if it's still talking when you get there, it isn't me anymore. Come anyway. - Elian Marr'",
-                  "options": [
                     { "label": "End Conversation", "next": null, "action": "set_flag:met_courier" }
                   ]
                 }

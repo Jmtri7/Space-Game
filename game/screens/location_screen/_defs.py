@@ -16,6 +16,7 @@ from game.world.world_object import draw_parts
 from game.world.character import Character, resolve_routine_class
 from game.world.person import Person
 from game.world.dialogue import Dialogue, option_actions, apply_shared_actions, shared_action_blocked_reason
+from game.world.mission import start_mission
 from game.world.player_character import PlayerCharacter
 from game.world.content_gate import passes_content_gate
 from game.world.follow_player_routine import FollowPlayerRoutine

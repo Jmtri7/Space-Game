@@ -23,6 +23,16 @@ class _CommerceMixin:
         called once the option's full action list is confirmed not blocked
         (see _option_blocked_reason), right before Dialogue.choose()
         advances to the option's response node."""
+        if action.startswith("start_mission:"):
+            # apply_shared_actions' own "start_mission:" never delivers the
+            # new stage's one_way_message (an NPC's own dialogue usually
+            # covers it - see its docstring). Handled here instead so an
+            # NPC-started mission's stage 0 still reaches the Message Log,
+            # e.g. the Grey Courier's handover posting the note's first
+            # segment the moment the conversation closes.
+            started = start_mission(self.missions_config, self.player.possessions, action.split(":", 1)[1])
+            self._deliver_stage_message(started)
+            return
         if apply_shared_actions(action, self.player.possessions, self.missions_config, story=self.story):
             return
         if action.startswith("buy_ship:"):

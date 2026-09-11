@@ -70,6 +70,20 @@ class _NpcsMixin:
         arrived while flying."""
         self.player.possessions.add_message(sender, text)
 
+    def _deliver_stage_message(self, advanced_stage):
+        """Post the one_way_message (if any) for a stage a mission just
+        advanced into - the LocationScreen counterpart to
+        SpaceScreen._deliver_stage_message. advanced_stage is a
+        (mission_id, stage_index) pair (see mission.py's start_mission() /
+        check_mission_progress()), or None."""
+        if not advanced_stage:
+            return
+        mission_id, stage_index = advanced_stage
+        stage = self.missions_config[mission_id]["stages"][stage_index]
+        message = stage.get("one_way_message")
+        if message:
+            self._post_local_message(message.get("sender", "Unknown"), message.get("text", "..."))
+
     def _refresh_messages(self):
         """Notice any message that's been appended to the shared
         possessions.message_log since last frame - by a mission stage
