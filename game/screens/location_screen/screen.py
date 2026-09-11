@@ -237,12 +237,8 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # the current alert - reset in _refresh_messages, advanced in update()
         # (active screen only; the timer itself counts down in update_physics).
         self._message_alert_pings_played = 0
-        # True while there's an unread message (see _post_local_message)
-        # the player hasn't clicked away yet - see
-        # SpaceScreen._unread_alert_pinned's own comment (shared design; the
-        # two screens keep independent state since a message can arrive
-        # while either is the one on screen).
-        self._unread_alert_pinned = False
+        # `_unread_alert_pinned` (see the property below) is stored on the
+        # shared Possessions instance, not here - init happens there.
         self.message_banner = None
         self.message_banner_timer = 0
         self._message_log_rect = None
@@ -252,6 +248,19 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # "scrolled_message_log" tutorial flag when there was actually
         # something to scroll.
         self._message_log_max_scroll = 0
+
+    @property
+    def _unread_alert_pinned(self):
+        """True while there's an unread message (see _post_local_message)
+        the player hasn't clicked away yet - see
+        SpaceScreen._unread_alert_pinned's own docstring (shared design and
+        the reason both proxy to the same `possessions.unread_alert_pinned`
+        rather than keeping independent state)."""
+        return self.player.possessions.unread_alert_pinned
+
+    @_unread_alert_pinned.setter
+    def _unread_alert_pinned(self, value):
+        self.player.possessions.unread_alert_pinned = value
 
     def _apply_content_gates(self):
         """(Re)derive the flag/reputation-conditional content from the raw

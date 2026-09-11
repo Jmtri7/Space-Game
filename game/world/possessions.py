@@ -80,6 +80,22 @@ class Possessions:
         # save/load, and a standing change made in a station conversation
         # must be visible when hailing a ship in space later.
         self.reputation = reputation or {}
+        # True while there's an unread Message Log entry the player hasn't
+        # clicked away yet - see SpaceScreen/LocationScreen's own
+        # `_unread_alert_pinned` property, both of which proxy to this same
+        # attribute. It lives here (the one Possessions instance shared by
+        # reference between the two screens - see LocationScreen's own
+        # __init__) rather than as separate per-screen state, because a
+        # message posted while docked (a dispatch/beacon arriving via
+        # SpaceScreen's background simulation - see npc_sync.py's own
+        # comments on running "while docked too") used to arm SpaceScreen's
+        # copy while only LocationScreen's copy was ever on screen to
+        # dismiss; undocking would then find SpaceScreen's copy still
+        # pinned and start the alert beeping again despite the player
+        # already having silenced it. Purely transient UI state, like
+        # message_alert_timer - deliberately NOT touched by get_state()/
+        # restore_from(), so a save/load always starts quiet.
+        self.unread_alert_pinned = False
 
     REP_MIN, REP_MAX = -100, 100
 

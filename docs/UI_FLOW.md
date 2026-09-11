@@ -247,11 +247,18 @@ It's only silenced by the player actually clicking the Messages pane -
 `handle_input`'s `MOUSEBUTTONDOWN` branch checks `_message_log_rect` first
 (before minimap / world-click handling), and on a hit clears
 `_unread_alert_pinned` and zeroes `message_alert_timer` immediately.
-`SpaceScreen` and `LocationScreen` each keep independent
-`_unread_alert_pinned` state (a message can arrive while either is the one
-on screen; `LocationScreen._refresh_messages` picks it up on the shared
-`possessions.message_log` the same way it picks up any message that landed
-while the player was flying).
+`SpaceScreen._unread_alert_pinned` and `LocationScreen._unread_alert_pinned`
+are properties that both proxy to the same `possessions.unread_alert_pinned`
+(see `Possessions.__init__`'s own comment) rather than keeping independent
+state - a dispatch/beacon can post via `SpaceScreen._post_message` while
+the player is docked (`npc_sync.py`'s checks run "while docked too"), which
+only `LocationScreen` is actually on screen to show; without the shared
+flag, dismissing it there left `SpaceScreen`'s copy still pinned and the
+alert would start looping again the moment the player undocked.
+`LocationScreen._refresh_messages` still separately picks up any message
+that landed on the shared `possessions.message_log` while the player was
+flying, for its own banner/blink timing - just the "has this been
+dismissed" bit is shared now, not the whole state.
 
 The alert stays quiet while a hail (K_r) or NPC conversation (T) is open -
 in both cases the Messages pane isn't even drawn (`draw_hud and not
