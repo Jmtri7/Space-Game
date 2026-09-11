@@ -28,20 +28,11 @@
         }
       },
       {
-        "text": "Dock at the Tessellate relay station.",
-        "complete_flag": "landed_on_landing_site",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Elian's transmission",
-          "text": "The relay's on a slow tumble but the dock still lights up. Match it and set down (L)."
-        }
-      },
-      {
-        "text": "Find the archivist who knew Elian and hear what they have.",
+        "text": "Dock at the Tessellate relay station and find the archivist who knew Elian.",
         "complete_flag": "met_archivist",
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "The segment after that: 'Whoever's keeping the relay logs knew me. They kept the last thing I sent back. Read it before you decide anything.'"
+          "text": "The relay's on a slow tumble but the dock still lights up - match it and set down (L), then find whoever's keeping the logs."
         }
       },
       {
@@ -54,20 +45,11 @@
         }
       },
       {
-        "text": "Land at the settlement on the Verge moon.",
-        "complete_flag": "landed_on_landing_site",
-        "reset_on_activation": true,
-        "one_way_message": {
-          "sender": "Elian's transmission",
-          "text": "There's one settled moon in the Verge and one lit pad on it. Set down."
-        }
-      },
-      {
-        "text": "Find Elian Marr.",
+        "text": "Land at the settlement on the Verge moon and find Elian Marr.",
         "complete_flag": "found_elian",
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "The file's fully decoded now. Whatever's on the far side of the plaza, you came a long way to hear it out."
+          "text": "There's one settled moon in the Verge and one lit pad on it. Set down (L) and find Elian."
         }
       }
     ]
