@@ -165,8 +165,9 @@ only appears under a section if it currently has items there. Items specific to 
       instead of named materials.
 - [ ] Check whether rendering is skipped when not applicable, or whether pygame
       already handles that.
-- [ ] Guidance for agents on creating a new story from scratch, and on assisting a
-      user who wants help creating one.
+- [x] Guidance for agents on creating a new story from scratch, and on assisting a
+      user who wants help creating one. See [STORY_DESIGN.md](STORY_DESIGN.md)
+      (2026-09-11, distilled from building `the_whisper_line`).
 - [ ] Migrate the `default` story onto the design-JSON pipeline
       (docs/GRAPHICS_PIPELINE.md) so its art is regenerable again, then drop
       `person_figure.py` / `figure_signatures.py` and the old draw paths.
