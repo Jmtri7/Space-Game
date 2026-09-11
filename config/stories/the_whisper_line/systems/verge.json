@@ -95,7 +95,7 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "You came. I wasn't sure the chain would hold all the way to you - or that you'd still be the kind to follow it. Hello, {pilot}. It's really me. Older, and I've been talking to something that isn't people for a long time, but me.",
+                  "text": "You came. I wasn't sure the chain would hold all the way to you - or that you'd still be the kind to follow it. Hello, {pilot}. It's really me. Older, and I've been talking to something that isn't a person for a long time, but me.",
                   "options": [
                     {
                       "label": "You've been alive out here the whole time.",
@@ -105,13 +105,13 @@
                   ]
                 },
                 "alive": {
-                  "text": "Alive and close to it. The array's a kilometre under this plaza - Relay-era, maybe older, and it's been broadcasting one burst on a dead band the entire time. A question. I answered a scrap of it once and watched the charts around Tessellate redraw themselves overnight. I've spent the years since learning enough of its grammar to give a full answer - and being too frightened to.",
+                  "text": "Or close to it. The array's a kilometre under this plaza - Relay-era, maybe older, and it's been broadcasting one burst on a dead band the entire time. A question. I answered a scrap of it once and watched the charts around Tessellate redraw themselves overnight. I've spent the years since learning enough of its grammar to give a full answer - and being too frightened to.",
                   "options": [
                     { "label": "What happens if you answer it fully?", "next": "choice" }
                   ]
                 },
                 "choice": {
-                  "text": "It opens. Lanes allowing for faster travel than any beacon, charts rewriting toward stars nobody's named - an invitation, or a door held for something on the other side. I've had the reply drafted for a year. I won't send it alone, and I won't send it against you. You got the transmission. You came. So it's yours to call, and I'll stand by it either way.",
+                  "text": "It opens. Lanes allowing for faster travel than any beacon, charts rewriting toward stars nobody's named - an invitation, or a door held for something on the other side. I've had the reply drafted for a year. But, I won't send it alone. You got the transmission. You came. So it's yours to call, and I'll stand by it either way.",
                   "options": [
                     {
                       "label": "Send the reply. We answer it - together.",

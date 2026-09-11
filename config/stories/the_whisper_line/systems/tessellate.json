@@ -44,7 +44,7 @@
             "x": 320, "y": 300,
             "role": "resident",
             "outfit": "ck_researcher_masc",
-            "greeting": "Senna's up on the relay, I'm down here logging what she flags. If you're carrying a transmission off Elian Marr - talk to her, not me. I only ever caught the edges of it, and the edges were enough.",
+            "greeting": "Senna's up on the relay, I'm down here logging what she flags. Talk to her, not me. I only ever caught the edges of it, and the edges were enough.",
             "dialogue_options": ["Leave"]
           }
         ]
@@ -95,28 +95,28 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "I keep the relay logs. Have done for eleven years, since the last of the staff rotated out and forgot to schedule a replacement. You're carrying a transmission in Elian Marr's own cipher - I can tell by the way you keep checking your wrist. Ask me.",
+                  "text": "I keep the relay logs. Have for eleven years. Elian sent you, didn't he? Ask me.",
                   "options": [
                     { "label": "You knew Elian.", "next": "knew" }
                   ]
                 },
                 "knew": {
-                  "text": "Elian docked here for six weeks before the last leg out. Slept in the Dock arc, talked at me for hours. Left me the survey packet and made me promise to hold it for whoever came asking with the transmission. That's you.",
+                  "text": "Elian docked here for six weeks before the last leg out. Talked at me for hours. Left me the survey packet and made me promise to hold it for whoever came asking with the transmission. That's you.",
                   "options": [
                     { "label": "What's in the packet?", "next": "packet" }
                   ]
                 },
                 "packet": {
-                  "text": "A signal. Old - older than the Relay, older than the beacons. It's been repeating one structured burst on a dead band since before anyone was listening. A question, Elian was sure of it. Elian answered a fragment of it, once, and the reply started rewriting the local charts. Got scared. Went out to sit next to the array and study it instead of feeding it more.",
+                  "text": "A signal. Old - older than the Relay, older than the beacons. It's been repeating one structured burst on a dead band since before anyone was listening. A question, Elian was sure of it. Elian answered a fragment of it, once, and the reply started rewriting the local charts. Got scared. Went out to sit next to the array and study it.",
                   "options": [
                     { "label": "Where's the array?", "next": "where" }
                   ]
                 },
                 "where": {
-                  "text": "The Verge - past the last beacon, one settled moon, Elian's been living under the plaza. I'll activate the system jump lane in your navigation. Read Elian's last line before you jump, and don't decide anything until you've stood in front of them.",
+                  "text": "The Verge system - past the last beacon, has one settled moon, Elian's been living under the plaza. I'll activate the system jump lane in your navigation. Read Elian's last line before you jump, and don't decide anything until you've stood in front of him.",
                   "options": [
                     {
-                      "label": "Take the packet. Key the lane.",
+                      "label": "Take the packet. Activate the lane.",
                       "next": "after",
                       "actions": [
                         "give_item:star_chart",
@@ -127,7 +127,7 @@
                   ]
                 },
                 "after": {
-                  "text": "Jump lane is activated, packet's aboard. Whatever Elian is when you get there - go anyway. That was the whole point of the note.",
+                  "text": "Jump lane is activated, packet's aboard. Whatever lies ahead - go anyway. That was the whole point of the note.",
                   "options": [
                     { "label": "Understood", "next": null }
                   ]
@@ -140,7 +140,7 @@
             "x": 561, "y": 399,
             "role": "resident",
             "outfit": "ck_civilian_masc",
-            "greeting": "I move drums so Senna can read them. Eleven years. Ask me which log is which and I'll tell you; ask me what's in one and I'll tell you I don't read.",
+            "greeting": "I move drums so Senna can read them. Eleven years. Don't ask me what's in them.",
             "dialogue_options": ["Leave"]
           }
         ]

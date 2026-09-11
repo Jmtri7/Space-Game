@@ -41,7 +41,7 @@
             "x": 320, "y": 300,
             "role": "resident",
             "outfit": "ck_miner_masc",
-            "greeting": "Camp's dead, I just feed the beacon. Saw a grey-coated hull undock hard off the ring an hour back - no plan filed, no reply to the Watch. You'd be the reason, I expect. None of my business.",
+            "greeting": "Camp's dead, I just feed the beacon. Saw a grey-coated hull undock hard off the ring an hour back - no plan filed, no reply to the Watch. None of my business.",
             "dialogue_options": ["Leave"]
           }
         ]
@@ -147,7 +147,7 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Kestrel Ring. Half the docking slots are dark and the other half wish they were. If you're not loading and not fuelling, you're just sightseeing - which is allowed, barely.",
+                  "text": "Kestrel Ring. Half the docking slots are dark and the other half wish they were. If you're not loading and not fuelling, you're just sightseeing.",
                   "options": [
                     { "label": "Quiet posting.", "next": "quiet" },
                     { "label": "Leave", "next": null }

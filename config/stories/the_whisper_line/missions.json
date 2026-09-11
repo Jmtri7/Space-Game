@@ -41,7 +41,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "Final segment, and it isn't a place: 'If it's still talking when you get there, it isn't me anymore. Come anyway. The Verge - the moon with the settlement. I'll have left the light on.'"
+          "text": "Final segment: 'The Verge - the moon with the settlement. I'll have left the light on.' Open the star map (1), select the Verge, and jump (V)."
         }
       },
       {
@@ -49,7 +49,7 @@
         "complete_flag": "found_elian",
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "There's one settled moon in the Verge and one lit pad on it. Fly up to the moon and press G to land, then find Elian."
+          "text": "There's one settled moon in the Verge. Fly up to the moon and press G to land, then find me."
         }
       }
     ]
