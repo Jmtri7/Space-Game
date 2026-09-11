@@ -30,7 +30,7 @@ class _MiningMixin:
             return False
 
         self._spawn_impact_explosion(projectile.x, projectile.y)
-        sound_board.play("impact")
+        sound_board.play("explosion_small")
 
         # Damage the asteroid
         if hit_asteroid.take_damage(projectile.damage):
@@ -49,6 +49,7 @@ class _MiningMixin:
 
     def _destroy_asteroid(self, asteroid):
         """Handle asteroid destruction: spawn drifting ore debris, or fragments."""
+        sound_board.play("explosion_big")
         # Large asteroids break into smaller fragments
         if asteroid.size > 12:
             self._spawn_asteroid_fragments(asteroid)
@@ -150,6 +151,11 @@ class _MiningMixin:
                     self._show_toast(f"Collected {pickup.amount} ore", CYAN)
                     sound_board.play("pickup")
                     continue  # Collected - drop it, don't keep drifting
+                # In range but no room for this chunk - flash a warning
+                # instead of silently ignoring it. _show_toast re-arms its
+                # own timer every call, so this stays up for as long as the
+                # player sits over the ore rather than flickering.
+                self._show_toast("CARGO FULL", RED)
 
             alive_pickups.append(pickup)
         self.ore_pickups = alive_pickups

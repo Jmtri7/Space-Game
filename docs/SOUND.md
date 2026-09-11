@@ -74,7 +74,9 @@ this to sit well below the rest).
 | `blaster` | thinner, higher, shorter version of `laser` (mixed quiet, `volume=0.4`) | **firing the pulse blaster** — matches its much faster `fire_rate` |
 | `cannon` | deep triangle thud sweep plus a short noise crack | **firing the heavy cannon** — matches its slow `fire_rate` and heavy single hit |
 | `scatter` | three overlapping quick noise cracks plus a low thud | **firing the scatter gun** — echoes its multi-pellet spread |
-| `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **any weapon hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
+| `impact` | quick noise crackle over a low descending-pitch thud (mixed quiet, `volume=0.4`) | **any weapon hitting a ship**, and a ship (player or AI) being destroyed — see `SpaceScreen._check_projectile_ship_collision`/`_destroy_ship`/`_on_player_destroyed` |
+| `explosion_small` | noise crackle over a beefier low thud than `impact` (mixed quiet, `volume=0.4`) | **any weapon hitting an asteroid** — every hit, not just a destroying one, see `SpaceScreen._check_projectile_asteroid_collision` |
+| `explosion_big` | longer noise burst under a deep falling sweep, scaled up from `explosion_small` (`volume=0.65`) | **an asteroid actually breaking apart** — see `SpaceScreen._destroy_asteroid` |
 | `pickup` | quick two-note upward sparkle | **collecting a drifting ore chunk** — see `SpaceScreen._update_ore_pickups` |
 | `jump_engage` | drive spooling up — a low rumble + turbine whine that glides upward over ~1.1 s then holds as a steady drone (mixed `volume=0.5`) | **a jump entering its travel phase** — `SpaceScreen._update_jump` in [`space_screen/jump.py`](../game/screens/space_screen/jump.py) |
 | `jump_boom` | sonic-boom crack — fast downward square crack over a noise burst + deep pressure drop (mixed `volume=0.7`) | **a jump completing** — `SpaceScreen._complete_jump` |
@@ -107,10 +109,15 @@ this to sit well below the rest).
   `fire_sound`), resolved by `_equipped_weapon_stats()` alongside every
   other per-weapon stat - see docs/ARCHITECTURE.md's "Weapons & Asteroid
   Mining".
-- **Weapon impact:** `SpaceScreen._check_projectile_asteroid_collision()` -
-  every hit on an asteroid, from any weapon, alongside the spark-burst
+- **Weapon impact, ships:** `SpaceScreen._check_projectile_ship_collision()` -
+  every hit on a ship (`impact`), from any weapon, alongside the spark-burst
   visual (`game/world/explosion.py`'s `Explosion`, spawned by
-  `_spawn_impact_explosion()`).
+  `_spawn_impact_explosion()`); `_destroy_ship()`/`_on_player_destroyed()`
+  play `impact` again over their own multi-`Explosion` cluster.
+- **Weapon impact, asteroids:** `SpaceScreen._check_projectile_asteroid_collision()`
+  plays `explosion_small` on every hit (alongside the same spark-burst
+  visual); `_destroy_asteroid()` plays `explosion_big` once, the moment the
+  rock actually breaks apart.
 - **Ore pickup:** `SpaceScreen._update_ore_pickups()` - collecting a
   drifting `OrePickup` (see docs/ARCHITECTURE.md's "Ore pickups").
 

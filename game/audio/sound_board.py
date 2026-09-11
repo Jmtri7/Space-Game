@@ -20,9 +20,11 @@ The board currently defines: `ping` (message received / menu button pressed),
 `blip`, `confirm`, `deny`, `alert`, four weapon-fire sounds - `laser`
 (baseline), `blaster` (pulse_blaster), `cannon` (heavy_cannon), `scatter`
 (scatter_gun), one per ship_outfits.json weapon (see
-SpaceScreen._update_weapon_fire) - `impact` (any of them hitting an
-asteroid, see SpaceScreen._check_projectile_asteroid_collision), and
-`pickup` (collecting drifting ore, see SpaceScreen._update_ore_pickups).
+SpaceScreen._update_weapon_fire) - `impact` (a weapon hitting a ship, see
+SpaceScreen._check_projectile_ship_collision/_destroy_ship), `explosion_small`
+(a weapon hitting an asteroid) and `explosion_big` (an asteroid breaking
+apart, see SpaceScreen._check_projectile_asteroid_collision/_destroy_asteroid),
+and `pickup` (collecting drifting ore, see SpaceScreen._update_ore_pickups).
 Add more with `define()`.
 """
 import json
@@ -328,6 +330,27 @@ class SoundBoard:
             {"freq": 1500.0, "dur": 0.06, "wave": "noise", "attack": 0.001, "decay": 0.035, "amp": 0.4, "delay": 0.012},
             {"freq": 250.0, "freq_end": 90.0, "dur": 0.08, "wave": "triangle", "attack": 0.001, "decay": 0.05, "amp": 0.45},
         ], volume=0.5)
+        # "explosion_small" - a laser hitting an asteroid (see
+        # SpaceScreen._check_projectile_asteroid_collision): a sharper, beefier
+        # cousin of "impact" - more low-end thud under the same noise
+        # crackle - so a hit that's chipping away at a rock reads as a small
+        # blast rather than a metallic ping. Short and quiet (volume=0.4),
+        # same reasoning as "impact": it can fire once per laser tick
+        # against a durable asteroid.
+        self.define("explosion_small", [
+            {"freq": 2800.0, "dur": 0.07, "wave": "noise", "attack": 0.001, "decay": 0.035, "amp": 0.55},
+            {"freq": 150.0, "freq_end": 50.0, "dur": 0.1, "wave": "triangle", "attack": 0.001, "decay": 0.06, "amp": 0.6},
+        ], volume=0.4)
+        # "explosion_big" - an asteroid actually breaking apart (see
+        # SpaceScreen._destroy_asteroid): a longer, deeper noise burst under
+        # a falling triangle sweep, scaled up from "explosion_small" the
+        # same way "jump_boom" scales up from "impact" - the moment the rock
+        # is gone should read as a real blast, not just another hit.
+        self.define("explosion_big", [
+            {"freq": 2200.0, "dur": 0.12, "wave": "noise", "attack": 0.002, "decay": 0.07, "amp": 0.7},
+            {"freq": 140.0, "freq_end": 35.0, "dur": 0.35, "wave": "triangle", "attack": 0.002, "decay": 0.18, "amp": 0.85},
+            {"freq": 60.0, "dur": 0.4, "wave": "sine", "attack": 0.002, "decay": 0.2, "amp": 0.5, "delay": 0.03},
+        ], volume=0.65)
         # "pickup" - collecting a drifting ore chunk (see
         # game/world/ore_pickup.py / SpaceScreen._update_ore_pickups): a
         # quick two-note upward sparkle, distinct from "confirm"'s slower
