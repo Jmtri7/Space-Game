@@ -15,7 +15,7 @@
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "First segment decodes: 'If you're reading this, you left the station - good. Don't file a flight plan.' Board your courier at the dock (step on the portal, press G)."
+          "text": "First segment decodes: 'If you're reading this, you're at the station - good. Don't file a flight plan.' Board your courier at the dock (step on the portal, press G)."
         }
       },
       {

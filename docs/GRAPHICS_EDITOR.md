@@ -72,7 +72,9 @@ are still de-duplicated: one row per filename, showing the copy that wins.
   (`gpEditorWorkspaceV1` — the expanded set) and marks the open asset.
 - **Every other category** opens a read-only **stub** in the canvas area
   (`?ws-asset=<path>`): the raw JSON pretty-printed, with a "not implemented
-  yet" banner. A placeholder until each kind gets its own editor.
+  yet" banner. A placeholder until each kind gets its own editor. The one
+  exception is **`missions.json`** (under Story config) — it opens a real
+  form editor instead (see **Missions editor**, below).
 - **new story… / new module…** (need the repo open read-write) write a minimal
   skeleton — `story.json` + a bare `systems/<id>_start.json` for a story
   (inherits the standard module list; **appears in the game's story picker but
@@ -153,8 +155,30 @@ that *story's* own articles and palettes on the fallback path — and the outfit
 Absent (a bare `?file=` URL), behaviour is unchanged: a module load gets no
 story fallback.
 
-Coverage today is **body designs** (`sections`), **faces**, and **articles**
-(`regions`, tailor mode); every other kind opens the read-only stub.
+Coverage today is **body designs** (`sections`), **faces**, **articles**
+(`regions`, tailor mode), and **missions** (below); every other kind opens the
+read-only stub.
+
+### Missions editor
+
+Opening a story's `missions.json` from the Workspace panel (Story config)
+loads a form UI (`showMissionsEditor`, `MI` holds the working copy) instead of
+the stub — a left list of missions (**+ new mission** to add one, click a row
+to select it) and a right-hand form for the selected mission's fields:
+`title`, `on_start_flags` / `on_end_flags` (comma-separated), `escort_flag`,
+`reset_stage_flags_on_activation`, `on_start_rep` / `on_end_rep`
+(`{faction_id: delta}` rows), **delete mission**, then its `stages` — each
+with `text`, `complete_flag`, `reset_on_activation`, `reset_flags`, an
+optional `one_way_message` (sender + text), reorder (↑/↓) and delete. The
+mission id itself (the object key) is editable at the top of the form; renaming
+checks for a collision first. See `game/world/mission.py` for what each field
+does at runtime.
+
+Unlike the vertex editor's autosave-draft system, this editor keeps its
+working copy only in memory (`MI.data`) — **save to repo** (`mi_save`) writes
+the whole file straight via `VFS.writeText` + `toRepoJSON`, gated on
+`VFS.canWrite` the same as everywhere else. Reloading the page without saving
+discards in-progress edits.
 
 **Face mode** — `?file=<body>&edit=face`. Loads the body, pulls in its
 `head.face` slot files (`faces/<slot>_<name>.json`), inlines their `details` on

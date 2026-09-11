@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Graphics Pipeline - vertex editor</title>
+<title>Story Editor</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -48,6 +48,30 @@
                  padding: 10px 12px; margin: 10px 0; }
   #wsStub pre { background: #12141a; border: 1px solid #2a2e37; border-radius: 6px; padding: 12px;
                 font: 11px/1.5 ui-monospace, monospace; color: #b9c2cc; overflow: auto; max-height: 68vh; }
+  body.ws-formeditor #side, body.ws-formeditor #gutterSide, body.ws-formeditor #svg, body.ws-formeditor #hud,
+  body.ws-formeditor #mirrorPanel { display: none; }
+  #wsMissions { position: absolute; inset: 0; padding: 18px 24px; overflow: auto; display: none; }
+  body.ws-formeditor #wsMissions { display: block; }
+  #wsMissions h2 { color: #9fd0e6; word-break: break-all; }
+  #wsMissions .mList { width: 220px; flex: 0 0 220px; overflow-y: auto; }
+  #wsMissions .mList .mrow { padding: 5px 7px; border-radius: 4px; cursor: pointer; display: flex;
+                              justify-content: space-between; gap: 6px; }
+  #wsMissions .mList .mrow:hover { background: #232833; }
+  #wsMissions .mList .mrow.sel { background: #3f5a70; color: #fff; }
+  #wsMissions .mList .mid { color: #6b7280; font-size: 10px; }
+  #wsMissions .mForm { flex: 1; min-width: 0; max-width: 720px; }
+  #wsMissions label.fl { display: block; margin: 10px 0 3px; color: #8a94a6; font-size: 11px;
+                          text-transform: uppercase; letter-spacing: .04em; }
+  #wsMissions input[type=text], #wsMissions textarea { width: 100%; font: inherit; background: #12141a;
+                          color: #d9dce2; border: 1px solid #3a4150; border-radius: 4px; padding: 5px 7px; }
+  #wsMissions textarea { resize: vertical; min-height: 46px; }
+  #wsMissions .stage { border: 1px solid #2a2e37; border-radius: 6px; padding: 10px; margin: 10px 0;
+                        background: #171a20; }
+  #wsMissions .stage .shdr { display: flex; justify-content: space-between; align-items: center;
+                              margin-bottom: 6px; }
+  #wsMissions .repRow { display: flex; gap: 6px; margin: 4px 0; align-items: center; }
+  #wsMissions .repRow input[type=text] { flex: 1; }
+  #wsMissions .repRow input[type=number] { width: 80px; }
   #stage { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; display: block; background: #0d0f13; touch-action: none; }
   h1 { font-size: 14px; margin: 0 0 10px; }
@@ -343,6 +367,7 @@
 <div id="stage">
   <svg id="svg"></svg>
   <div id="wsStub"></div>
+  <div id="wsMissions"></div>
   <div id="hud"></div>
   <div id="drop">drop an image for the reference overlay</div>
   <div id="mirrorPanel">
@@ -3973,7 +3998,10 @@ async function runBoot(){
   if(_wsAsset && !_qFile){
     document.getElementById('src').textContent = _wsAsset;
     renderWorkspace();
-    showStub(_wsAsset);
+    if(/\/missions\.json$/.test(_wsAsset)) showMissionsEditor(_wsAsset);
+    else if(/\/dispatches\.json$/.test(_wsAsset)) showDispatchesEditor(_wsAsset);
+    else if(/\/story\.json$/.test(_wsAsset)) showStoryEditor(_wsAsset);
+    else showStub(_wsAsset);
     return;
   }
   if(_qFile){
@@ -4061,7 +4089,7 @@ const WS_CATS = [
   { id:'gfxcfg',      label:'Graphics config', gfiles:['materials.json','draw_order.json'] },
   { id:'storycfg',    label:'Story config',    cats:['audio.json','ship_types.json','ship_outfits.json',
         'asteroid_types.json','graphics.json','cultures.json','commodities.json','building_types.json',
-        'pilots.json','missions.json','factions.json','endings.json','items.json'] },
+        'pilots.json','missions.json','dispatches.json','factions.json','endings.json','items.json'] },
   { id:'systems',     label:'Systems',         systems:true },
   { id:'manifest',    label:'Manifest',        manifest:true },
 ];
@@ -4164,6 +4192,611 @@ async function showStub(path){
     'showing the raw file, read-only.</div><pre></pre>';
   el.querySelector('pre').textContent = txt == null ? '(could not read the file)'
     : (() => { try { return JSON.stringify(JSON.parse(txt), null, 2); } catch(e){ return txt; } })();
+}
+// ==== Missions editor =====================================================
+// A story's missions.json ({mission_id: {title, stages: [...], ...}}, see
+// game/world/mission.py) gets a real form UI instead of the generic
+// read-only stub. MI holds the working copy; every field edit mutates MI.data
+// in place and re-renders (the dataset is small, so a full re-render per
+// change is simplest and avoids cursor-tracking bugs).
+let MI = null;
+function mi_el(tag, props, ...children){
+  const e = document.createElement(tag);
+  if(props) for(const k in props){
+    if(k === 'class') e.className = props[k];
+    else if(k === 'text') e.textContent = props[k];
+    else if(k === 'style') e.setAttribute('style', props[k]);
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), props[k]);
+    else e.setAttribute(k, props[k]);
+  }
+  for(const c of children) if(c != null) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  return e;
+}
+async function showMissionsEditor(path){
+  document.body.classList.remove('ws-stub');
+  document.body.classList.add('ws-formeditor');
+  const raw = await VFS.readJSON(path);
+  MI = { path, data: raw ? JSON.parse(JSON.stringify(raw)) : {}, selected: null, dirty: false };
+  MI.selected = Object.keys(MI.data)[0] || null;
+  renderMissions();
+}
+function mi_markDirty(){ MI.dirty = true; }
+function mi_addMission(){
+  let id = prompt('New mission id (lower_snake_case):');
+  if(id == null) return;
+  id = id.trim();
+  if(!id) return;
+  if(!/^[a-z][a-z0-9_]*$/.test(id)){ alert('Use lower-case letters, digits, underscores, starting with a letter.'); return; }
+  if(MI.data[id]){ alert('A mission "' + id + '" already exists.'); return; }
+  MI.data[id] = { title: '', stages: [] };
+  MI.selected = id;
+  mi_markDirty();
+  renderMissions();
+}
+function mi_deleteMission(){
+  if(!MI.selected) return;
+  if(!confirm('Delete mission "' + MI.selected + '"? This only changes the in-memory copy until you save.')) return;
+  delete MI.data[MI.selected];
+  MI.selected = Object.keys(MI.data)[0] || null;
+  mi_markDirty();
+  renderMissions();
+}
+async function mi_save(){
+  if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  await VFS.writeText(MI.path, toRepoJSON(MI.data));
+  MI.dirty = false;
+  renderMissions();
+}
+// ---- generic field builders, shared by the missions, dispatches, and story
+// editors below. Each takes the plain-object model, the key it owns, a
+// label, and the editor's own markDirty callback (each editor keeps its
+// working copy + dirty flag in its own module-scope state object, so there's
+// no one global to close over here).
+function ed_textField(obj, key, label, markDirty, opts){
+  opts = opts || {};
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const inp = mi_el('input', { type:'text', placeholder: opts.placeholder || '' });
+  inp.value = obj[key] == null ? '' : obj[key];
+  inp.addEventListener('change', () => {
+    const v = inp.value.trim();
+    if(!v && !opts.required) delete obj[key]; else obj[key] = v;
+    markDirty();
+  });
+  wrap.appendChild(inp);
+  return wrap;
+}
+function ed_numberField(obj, key, label, markDirty, opts){
+  opts = opts || {};
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const inp = mi_el('input', { type:'number', step: opts.step || 'any' });
+  inp.value = obj[key] == null ? '' : obj[key];
+  inp.addEventListener('change', () => {
+    if(inp.value === '' && !opts.required) delete obj[key]; else obj[key] = Number(inp.value) || 0;
+    markDirty();
+  });
+  wrap.appendChild(inp);
+  return wrap;
+}
+function ed_textareaField(obj, key, label, markDirty, opts){
+  opts = opts || {};
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const ta = mi_el('textarea', {});
+  ta.value = obj[key] == null ? '' : obj[key];
+  ta.addEventListener('change', () => {
+    if(!ta.value && !opts.required) delete obj[key]; else obj[key] = ta.value;
+    markDirty();
+  });
+  wrap.appendChild(ta);
+  return wrap;
+}
+function ed_selectField(obj, key, label, options, markDirty){
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const sel = mi_el('select', {});
+  options.forEach(([v, l]) => sel.appendChild(mi_el('option', { value:v, text:l })));
+  sel.value = obj[key] != null ? obj[key] : options[0][0];
+  sel.addEventListener('change', () => {
+    if(sel.value) obj[key] = sel.value; else delete obj[key];
+    markDirty();
+  });
+  wrap.appendChild(sel);
+  return wrap;
+}
+function ed_flagsField(obj, key, label, markDirty){
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const inp = mi_el('input', { type:'text' });
+  inp.value = (obj[key] || []).join(', ');
+  inp.addEventListener('change', () => {
+    const arr = inp.value.split(',').map(s => s.trim()).filter(Boolean);
+    if(arr.length) obj[key] = arr; else delete obj[key];
+    markDirty();
+  });
+  wrap.appendChild(inp);
+  return wrap;
+}
+// A {string: number|boolean|string} dict as add/remove rows. rerender is the
+// owning editor's full render() (a key rename or row add/remove changes row
+// count, so it re-renders itself rather than patching in place).
+function ed_dictField(obj, key, label, valueType, rerender, markDirty){
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: label }));
+  const dict = obj[key] || {};
+  for(const k of Object.keys(dict)){
+    const kInp = mi_el('input', { type:'text', placeholder:'key' });
+    kInp.value = k;
+    const vInp = valueType === 'checkbox' ? mi_el('input', { type:'checkbox' })
+      : valueType === 'number' ? mi_el('input', { type:'number', step:'1' })
+      : mi_el('input', { type:'text' });
+    if(valueType === 'checkbox') vInp.checked = !!dict[k]; else vInp.value = dict[k];
+    kInp.addEventListener('change', () => {
+      const nk = kInp.value.trim();
+      if(!nk || nk === k){ kInp.value = k; return; }
+      const d = obj[key]; const v = d[k]; delete d[k]; d[nk] = v;
+      markDirty(); rerender();
+    });
+    vInp.addEventListener('change', () => {
+      const d = obj[key];
+      d[k] = valueType === 'checkbox' ? vInp.checked : valueType === 'number' ? (Number(vInp.value) || 0) : vInp.value;
+      markDirty();
+    });
+    const rm = mi_el('button', { text:'×', onclick: () => {
+      delete obj[key][k];
+      if(!Object.keys(obj[key]).length) delete obj[key];
+      markDirty(); rerender();
+    }});
+    wrap.appendChild(mi_el('div', { class:'repRow' }, kInp, vInp, rm));
+  }
+  wrap.appendChild(mi_el('button', { text:'+ add', onclick: () => {
+    const d = obj[key] || (obj[key] = {});
+    let n = 'key', i = 1; while(n in d) n = 'key' + (++i);
+    d[n] = valueType === 'checkbox' ? true : valueType === 'number' ? 0 : '';
+    markDirty(); rerender();
+  }}));
+  return wrap;
+}
+function mi_flagsField(label, key){
+  return ed_flagsField(MI.data[MI.selected], key, label + ' (comma-separated flag names)', mi_markDirty);
+}
+function mi_repField(label, key){
+  return ed_dictField(MI.data[MI.selected], key, label + ' ({faction_id: rep delta})', 'number', renderMissions, mi_markDirty);
+}
+function mi_renderStage(stages, i){
+  const st = stages[i];
+  const card = mi_el('div', { class:'stage' });
+  card.appendChild(mi_el('div', { class:'shdr' },
+    mi_el('b', { text: 'Stage ' + i }),
+    mi_el('div', { class:'row', style:'margin:0' },
+      mi_el('button', { text:'↑', onclick: () => {
+        if(i > 0){ [stages[i-1], stages[i]] = [stages[i], stages[i-1]]; mi_markDirty(); renderMissions(); }
+      }}),
+      mi_el('button', { text:'↓', onclick: () => {
+        if(i < stages.length - 1){ [stages[i+1], stages[i]] = [stages[i], stages[i+1]]; mi_markDirty(); renderMissions(); }
+      }}),
+      mi_el('button', { text:'delete stage', onclick: () => {
+        stages.splice(i, 1); mi_markDirty(); renderMissions();
+      }})
+    )
+  ));
+
+  card.appendChild(mi_el('label', { class:'fl', text:'text (shown in the mission log)' }));
+  const txt = mi_el('textarea', {}); txt.value = st.text || '';
+  txt.addEventListener('change', () => { st.text = txt.value; mi_markDirty(); });
+  card.appendChild(txt);
+
+  card.appendChild(mi_el('label', { class:'fl', text:'complete_flag' }));
+  const cf = mi_el('input', { type:'text' }); cf.value = st.complete_flag || '';
+  cf.addEventListener('change', () => {
+    if(cf.value.trim()) st.complete_flag = cf.value.trim(); else delete st.complete_flag;
+    mi_markDirty();
+  });
+  card.appendChild(cf);
+
+  const roa = mi_el('input', { type:'checkbox' }); roa.checked = !!st.reset_on_activation;
+  roa.addEventListener('change', () => {
+    if(roa.checked) st.reset_on_activation = true; else delete st.reset_on_activation;
+    mi_markDirty();
+  });
+  card.appendChild(mi_el('label', {}, roa, 'reset_on_activation'));
+
+  card.appendChild(mi_el('label', { class:'fl', text:'reset_flags (comma-separated, optional)' }));
+  const rf = mi_el('input', { type:'text' }); rf.value = (st.reset_flags || []).join(', ');
+  rf.addEventListener('change', () => {
+    const arr = rf.value.split(',').map(s => s.trim()).filter(Boolean);
+    if(arr.length) st.reset_flags = arr; else delete st.reset_flags;
+    mi_markDirty();
+  });
+  card.appendChild(rf);
+
+  const hasMsg = !!st.one_way_message;
+  const msgWrap = mi_el('div', { style: hasMsg ? '' : 'display:none' });
+  const sndInp = mi_el('input', { type:'text', placeholder:'sender' }); sndInp.value = (st.one_way_message || {}).sender || '';
+  const txtInp = mi_el('textarea', { placeholder:'message text' }); txtInp.value = (st.one_way_message || {}).text || '';
+  sndInp.addEventListener('change', () => { st.one_way_message = st.one_way_message || {}; st.one_way_message.sender = sndInp.value; mi_markDirty(); });
+  txtInp.addEventListener('change', () => { st.one_way_message = st.one_way_message || {}; st.one_way_message.text = txtInp.value; mi_markDirty(); });
+  msgWrap.appendChild(mi_el('label', { class:'fl', text:'sender' }));
+  msgWrap.appendChild(sndInp);
+  msgWrap.appendChild(mi_el('label', { class:'fl', text:'message text' }));
+  msgWrap.appendChild(txtInp);
+  const msgCb = mi_el('input', { type:'checkbox' }); msgCb.checked = hasMsg;
+  msgCb.addEventListener('change', () => {
+    if(msgCb.checked){ st.one_way_message = st.one_way_message || { sender:'', text:'' }; msgWrap.style.display = ''; }
+    else { delete st.one_way_message; msgWrap.style.display = 'none'; }
+    mi_markDirty();
+  });
+  card.appendChild(mi_el('label', {}, msgCb, 'one_way_message (delivered as a hail when this stage becomes active)'));
+  card.appendChild(msgWrap);
+
+  return card;
+}
+function mi_renderList(){
+  const list = mi_el('div', { class:'mList' });
+  list.appendChild(mi_el('div', { class:'row' }, mi_el('button', { text:'+ new mission', onclick: mi_addMission })));
+  for(const id of Object.keys(MI.data)){
+    const m = MI.data[id];
+    list.appendChild(mi_el('div',
+      { class: 'mrow' + (id === MI.selected ? ' sel' : ''), onclick: () => { MI.selected = id; renderMissions(); } },
+      mi_el('span', { text: m.title || '(untitled)' }),
+      mi_el('span', { class:'mid', text: id })
+    ));
+  }
+  return list;
+}
+function mi_renderForm(){
+  const wrap = mi_el('div', { class:'mForm' });
+  if(!MI.selected){ wrap.appendChild(mi_el('div', { class:'hint', text:'Select or create a mission.' })); return wrap; }
+  const m = MI.data[MI.selected];
+
+  wrap.appendChild(mi_el('label', { class:'fl', text:'mission id (the key other config refers to it by)' }));
+  const idInp = mi_el('input', { type:'text' }); idInp.value = MI.selected;
+  idInp.addEventListener('change', () => {
+    const nid = idInp.value.trim();
+    if(!nid || nid === MI.selected){ idInp.value = MI.selected; return; }
+    if(MI.data[nid]){ alert('A mission "' + nid + '" already exists.'); idInp.value = MI.selected; return; }
+    MI.data[nid] = MI.data[MI.selected]; delete MI.data[MI.selected]; MI.selected = nid;
+    mi_markDirty(); renderMissions();
+  });
+  wrap.appendChild(idInp);
+
+  wrap.appendChild(mi_el('label', { class:'fl', text:'title' }));
+  const tInp = mi_el('input', { type:'text' }); tInp.value = m.title || '';
+  tInp.addEventListener('change', () => { m.title = tInp.value; mi_markDirty(); renderMissions(); });
+  wrap.appendChild(tInp);
+
+  wrap.appendChild(mi_flagsField('on_start_flags', 'on_start_flags'));
+  wrap.appendChild(mi_flagsField('on_end_flags', 'on_end_flags'));
+
+  wrap.appendChild(mi_el('label', { class:'fl', text:'escort_flag (optional — cleared when the mission ends)' }));
+  const efInp = mi_el('input', { type:'text' }); efInp.value = m.escort_flag || '';
+  efInp.addEventListener('change', () => {
+    if(efInp.value.trim()) m.escort_flag = efInp.value.trim(); else delete m.escort_flag;
+    mi_markDirty();
+  });
+  wrap.appendChild(efInp);
+
+  const rscb = mi_el('input', { type:'checkbox' }); rscb.checked = !!m.reset_stage_flags_on_activation;
+  rscb.addEventListener('change', () => {
+    if(rscb.checked) m.reset_stage_flags_on_activation = true; else delete m.reset_stage_flags_on_activation;
+    mi_markDirty();
+  });
+  wrap.appendChild(mi_el('label', {}, rscb, 'reset_stage_flags_on_activation (default for every stage)'));
+
+  wrap.appendChild(mi_repField('on_start_rep', 'on_start_rep'));
+  wrap.appendChild(mi_repField('on_end_rep', 'on_end_rep'));
+
+  wrap.appendChild(mi_el('div', { class:'row' }, mi_el('button', { text:'delete mission', onclick: mi_deleteMission })));
+
+  wrap.appendChild(mi_el('h2', { text:'Stages' }));
+  const stages = m.stages || (m.stages = []);
+  stages.forEach((_, i) => wrap.appendChild(mi_renderStage(stages, i)));
+  wrap.appendChild(mi_el('button', { text:'+ add stage', onclick: () => {
+    stages.push({ text:'', complete_flag:'' }); mi_markDirty(); renderMissions();
+  }}));
+
+  return wrap;
+}
+function renderMissions(){
+  const el = document.getElementById('wsMissions');
+  el.innerHTML = '';
+  el.appendChild(mi_el('h2', { text: MI.path }));
+  el.appendChild(mi_el('div', { class:'row' },
+    mi_el('button', { id:'miSaveBtn', text: MI.dirty ? 'save to repo *' : 'save to repo', onclick: mi_save })));
+  el.appendChild(mi_el('div', { style:'display:flex; gap:16px;' }, mi_renderList(), mi_renderForm()));
+}
+// ==== Dispatches editor ===================================================
+// A story's dispatches.json ({dispatch_id: entry}, see game/world/dispatch.py
+// and content_gate.py for the gate-key vocabulary) - list + form, same shape
+// as the missions editor. A top-level key starting with "_" (the "_comment"
+// convention some stories use) is kept in DI.data and written back untouched,
+// but never shown as a row or selectable.
+let DI = null;
+async function showDispatchesEditor(path){
+  document.body.classList.remove('ws-stub');
+  document.body.classList.add('ws-formeditor');
+  const raw = await VFS.readJSON(path);
+  DI = { path, data: raw ? JSON.parse(JSON.stringify(raw)) : {}, selected: null, dirty: false, missionIds: [] };
+  DI.selected = Object.keys(DI.data).find(k => !k.startsWith('_')) || null;
+  try{   // best-effort: populate the start_mission datalist from the sibling missions.json
+    const missions = await VFS.readJSON(path.replace(/dispatches\.json$/, 'missions.json'));
+    if(missions) DI.missionIds = Object.keys(missions);
+  }catch(e){}
+  renderDispatches();
+}
+function di_markDirty(){ DI.dirty = true; }
+function di_addDispatch(){
+  let id = prompt('New dispatch id (lower_snake_case):');
+  if(id == null) return;
+  id = id.trim();
+  if(!/^[a-z][a-z0-9_]*$/.test(id)){ alert('Use lower-case letters, digits, underscores, starting with a letter.'); return; }
+  if(DI.data[id]){ alert('A dispatch "' + id + '" already exists.'); return; }
+  DI.data[id] = { sender:'', subject:'', body:'' };
+  DI.selected = id;
+  di_markDirty();
+  renderDispatches();
+}
+function di_deleteDispatch(){
+  if(!DI.selected) return;
+  if(!confirm('Delete dispatch "' + DI.selected + '"? This only changes the in-memory copy until you save.')) return;
+  delete DI.data[DI.selected];
+  DI.selected = Object.keys(DI.data).find(k => !k.startsWith('_')) || null;
+  di_markDirty();
+  renderDispatches();
+}
+async function di_save(){
+  if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  await VFS.writeText(DI.path, toRepoJSON(DI.data));
+  DI.dirty = false;
+  renderDispatches();
+}
+function di_renderList(){
+  const list = mi_el('div', { class:'mList' });
+  list.appendChild(mi_el('div', { class:'row' }, mi_el('button', { text:'+ new dispatch', onclick: di_addDispatch })));
+  for(const id of Object.keys(DI.data)){
+    if(id.startsWith('_')) continue;
+    const d = DI.data[id];
+    list.appendChild(mi_el('div',
+      { class: 'mrow' + (id === DI.selected ? ' sel' : ''), onclick: () => { DI.selected = id; renderDispatches(); } },
+      mi_el('span', { text: d.subject || '(no subject)' }),
+      mi_el('span', { class:'mid', text: id })
+    ));
+  }
+  return list;
+}
+function di_renderForm(){
+  const wrap = mi_el('div', { class:'mForm' });
+  if(!DI.selected){ wrap.appendChild(mi_el('div', { class:'hint', text:'Select or create a dispatch.' })); return wrap; }
+  const d = DI.data[DI.selected];
+
+  wrap.appendChild(mi_el('label', { class:'fl', text:'dispatch id' }));
+  const idInp = mi_el('input', { type:'text' }); idInp.value = DI.selected;
+  idInp.addEventListener('change', () => {
+    const nid = idInp.value.trim();
+    if(!nid || nid === DI.selected){ idInp.value = DI.selected; return; }
+    if(DI.data[nid]){ alert('A dispatch "' + nid + '" already exists.'); idInp.value = DI.selected; return; }
+    DI.data[nid] = DI.data[DI.selected]; delete DI.data[DI.selected]; DI.selected = nid;
+    di_markDirty(); renderDispatches();
+  });
+  wrap.appendChild(idInp);
+
+  wrap.appendChild(ed_textField(d, 'sender', 'sender', di_markDirty));
+  wrap.appendChild(ed_textField(d, 'subject', 'subject', di_markDirty));
+  wrap.appendChild(ed_textareaField(d, 'body', 'body', di_markDirty));
+
+  wrap.appendChild(ed_textField(d, 'requires_flag', 'requires_flag (optional)', di_markDirty));
+  wrap.appendChild(ed_textField(d, 'requires_not_flag', 'requires_not_flag (optional)', di_markDirty));
+  wrap.appendChild(ed_textField(d, 'requires_rep', 'requires_rep (optional, "faction_id:n")', di_markDirty));
+  wrap.appendChild(ed_textField(d, 'requires_rep_below', 'requires_rep_below (optional, "faction_id:n")', di_markDirty));
+
+  wrap.appendChild(ed_flagsField(d, 'on_receive_flags', 'on_receive_flags (comma-separated flag names)', di_markDirty));
+  wrap.appendChild(ed_dictField(d, 'on_receive_rep', 'on_receive_rep ({faction_id: rep delta})', 'number', renderDispatches, di_markDirty));
+
+  const smWrap = mi_el('div');
+  smWrap.appendChild(mi_el('label', { class:'fl', text:'start_mission (optional — mission id this dispatch kicks off)' }));
+  const smInp = mi_el('input', { type:'text', list:'diMissionIds' });
+  smInp.value = d.start_mission || '';
+  smInp.addEventListener('change', () => {
+    if(smInp.value.trim()) d.start_mission = smInp.value.trim(); else delete d.start_mission;
+    di_markDirty();
+  });
+  const smDl = mi_el('datalist', { id:'diMissionIds' });
+  DI.missionIds.forEach(mid => smDl.appendChild(mi_el('option', { value: mid })));
+  smWrap.appendChild(smInp); smWrap.appendChild(smDl);
+  wrap.appendChild(smWrap);
+
+  wrap.appendChild(mi_el('div', { class:'row' }, mi_el('button', { text:'delete dispatch', onclick: di_deleteDispatch })));
+  return wrap;
+}
+function renderDispatches(){
+  const el = document.getElementById('wsMissions');
+  el.innerHTML = '';
+  el.appendChild(mi_el('h2', { text: DI.path }));
+  el.appendChild(mi_el('div', { class:'row' },
+    mi_el('button', { id:'diSaveBtn', text: DI.dirty ? 'save to repo *' : 'save to repo', onclick: di_save })));
+  el.appendChild(mi_el('div', { style:'display:flex; gap:16px;' }, di_renderList(), di_renderForm()));
+}
+// ==== Story editor =========================================================
+// A story's own story.json (see the "story.json fields" table in
+// docs/architecture/config-formats.md) - a single object, not a keyed dict,
+// so this is one form rather than a list + form. si_optionalBlock renders the
+// handful of fields that are genuinely optional sub-objects (intro, loan,
+// jump) behind a checkbox that adds/removes the whole block.
+let SI = null;
+async function showStoryEditor(path){
+  document.body.classList.remove('ws-stub');
+  document.body.classList.add('ws-formeditor');
+  const raw = await VFS.readJSON(path);
+  SI = { path, data: raw ? JSON.parse(JSON.stringify(raw)) : {}, dirty: false, systemIds: [], missionIds: [] };
+  if(!SI.data.start) SI.data.start = {};
+  try{   // best-effort: populate the starting_system / starting_mission datalists
+    const root = path.replace(/\/story\.json$/, '');
+    const { files } = await VFS.listDir(root + '/systems');
+    SI.systemIds = (files || []).filter(f => f.endsWith('.json')).map(f => f.replace(/\.json$/, ''));
+    const missions = await VFS.readJSON(root + '/missions.json');
+    if(missions) SI.missionIds = Object.keys(missions);
+  }catch(e){}
+  renderStory();
+}
+function si_markDirty(){ SI.dirty = true; }
+async function si_save(){
+  if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  await VFS.writeText(SI.path, toRepoJSON(SI.data));
+  SI.dirty = false;
+  renderStory();
+}
+function si_optionalBlock(m, key, label, defaultObj, buildFields){
+  const wrap = mi_el('div');
+  const has = key in m;
+  const cb = mi_el('input', { type:'checkbox' }); cb.checked = has;
+  cb.addEventListener('change', () => {
+    if(cb.checked) m[key] = JSON.parse(JSON.stringify(defaultObj)); else delete m[key];
+    si_markDirty(); renderStory();
+  });
+  wrap.appendChild(mi_el('label', {}, cb, label));
+  if(has){
+    const box = mi_el('div', { class:'stage' });
+    buildFields(m[key], box);
+    wrap.appendChild(box);
+  }
+  return wrap;
+}
+function si_renderActs(){
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('h2', { text:'Acts' }));
+  const acts = SI.data.acts || (SI.data.acts = []);
+  acts.forEach((act, i) => {
+    const card = mi_el('div', { class:'stage' });
+    card.appendChild(mi_el('div', { class:'shdr' },
+      mi_el('b', { text:'Act ' + i }),
+      mi_el('div', { class:'row', style:'margin:0' },
+        mi_el('button', { text:'↑', onclick: () => {
+          if(i > 0){ [acts[i-1], acts[i]] = [acts[i], acts[i-1]]; si_markDirty(); renderStory(); }
+        }}),
+        mi_el('button', { text:'↓', onclick: () => {
+          if(i < acts.length - 1){ [acts[i+1], acts[i]] = [acts[i], acts[i+1]]; si_markDirty(); renderStory(); }
+        }}),
+        mi_el('button', { text:'delete act', onclick: () => { acts.splice(i, 1); si_markDirty(); renderStory(); } })
+      )));
+    card.appendChild(ed_textField(act, 'id', 'id', si_markDirty, { required:true }));
+    card.appendChild(ed_textField(act, 'name', 'name', si_markDirty, { required:true }));
+    card.appendChild(ed_textField(act, 'advance_flag', 'advance_flag (optional — flag that ends this act)', si_markDirty));
+    wrap.appendChild(card);
+  });
+  wrap.appendChild(mi_el('button', { text:'+ add act', onclick: () => {
+    acts.push({ id:'', name:'' }); si_markDirty(); renderStory();
+  }}));
+  return wrap;
+}
+function si_renderIntroBody(intro, box){
+  box.appendChild(ed_textField(intro, 'title', 'title', si_markDirty));
+  box.appendChild(mi_el('label', { class:'fl', text:'body paragraphs (shown one screen at a time; {pilot} is replaced with the entered name)' }));
+  const paras = Array.isArray(intro.body) ? intro.body : (intro.body ? [intro.body] : ['']);
+  intro.body = paras;
+  paras.forEach((p, i) => {
+    const ta = mi_el('textarea', {}); ta.value = p;
+    ta.addEventListener('change', () => { paras[i] = ta.value; si_markDirty(); });
+    const rm = mi_el('button', { text:'remove paragraph', onclick: () => { paras.splice(i, 1); si_markDirty(); renderStory(); } });
+    box.appendChild(mi_el('div', { style:'margin:6px 0;' }, ta, rm));
+  });
+  box.appendChild(mi_el('button', { text:'+ add paragraph', onclick: () => { paras.push(''); si_markDirty(); renderStory(); } }));
+}
+function renderStory(){
+  const el = document.getElementById('wsMissions');
+  el.innerHTML = '';
+  el.appendChild(mi_el('h2', { text: SI.path }));
+  el.appendChild(mi_el('div', { class:'row' },
+    mi_el('button', { id:'siSaveBtn', text: SI.dirty ? 'save to repo *' : 'save to repo', onclick: si_save })));
+  const m = SI.data;
+  const form = mi_el('div', { class:'mForm', style:'max-width:760px;' });
+
+  form.appendChild(mi_el('h2', { text:'Identity' }));
+  form.appendChild(ed_textField(m, 'id', 'id', si_markDirty, { required:true }));
+  form.appendChild(ed_textField(m, 'name', 'name', si_markDirty, { required:true }));
+  form.appendChild(ed_textareaField(m, 'description', 'description', si_markDirty));
+  form.appendChild(ed_textField(m, 'difficulty', 'difficulty (e.g. easy / normal / hard)', si_markDirty));
+  form.appendChild(ed_textField(m, 'version', 'version', si_markDirty));
+  form.appendChild(ed_flagsField(m, 'modules', 'modules (comma-separated config/modules/ names, earlier wins)', si_markDirty));
+
+  form.appendChild(mi_el('h2', { text:'Story flow' }));
+  const sysWrap = mi_el('div');
+  sysWrap.appendChild(mi_el('label', { class:'fl', text:'starting_system (a systems/*.json id)' }));
+  const sysInp = mi_el('input', { type:'text', list:'siSystemIds' });
+  sysInp.value = m.starting_system || '';
+  sysInp.addEventListener('change', () => {
+    if(sysInp.value.trim()) m.starting_system = sysInp.value.trim(); else delete m.starting_system;
+    si_markDirty();
+  });
+  const sysDl = mi_el('datalist', { id:'siSystemIds' });
+  SI.systemIds.forEach(s => sysDl.appendChild(mi_el('option', { value: s })));
+  sysWrap.appendChild(sysInp); sysWrap.appendChild(sysDl);
+  form.appendChild(sysWrap);
+
+  const smWrap = mi_el('div');
+  smWrap.appendChild(mi_el('label', { class:'fl', text:'starting_mission (optional — auto-started)' }));
+  const smInp = mi_el('input', { type:'text', list:'siMissionIds' });
+  smInp.value = m.starting_mission || '';
+  smInp.addEventListener('change', () => {
+    if(smInp.value.trim()) m.starting_mission = smInp.value.trim(); else delete m.starting_mission;
+    si_markDirty();
+  });
+  const smDl = mi_el('datalist', { id:'siMissionIds' });
+  SI.missionIds.forEach(s => smDl.appendChild(mi_el('option', { value: s })));
+  smWrap.appendChild(smInp); smWrap.appendChild(smDl);
+  form.appendChild(smWrap);
+
+  form.appendChild(ed_selectField(m, 'starting_mission_trigger', 'starting_mission_trigger',
+    [['', '—'], ['new_game', 'new_game'], ['ship_purchase', 'ship_purchase']], si_markDirty));
+
+  form.appendChild(si_optionalBlock(m, 'intro', 'intro (opening crawl before the world loads)',
+    { title:'', body:[''] }, si_renderIntroBody));
+
+  form.appendChild(si_renderActs());
+
+  form.appendChild(mi_el('h2', { text:'New-game start state' }));
+  const start = m.start;
+  form.appendChild(ed_selectField(start, 'location', 'location',
+    [['station', 'station'], ['moon', 'moon'], ['space', 'space']], si_markDirty));
+  form.appendChild(ed_textField(start, 'interior', 'interior', si_markDirty));
+  form.appendChild(ed_numberField(start, 'credits', 'credits', si_markDirty, { required:true }));
+  form.appendChild(ed_textField(start, 'ship', 'ship (ship_types.json id, blank = none yet)', si_markDirty));
+  form.appendChild(ed_flagsField(start, 'outfits', 'outfits (comma-separated ship_outfits.json ids)', si_markDirty));
+  form.appendChild(ed_dictField(start, 'items', 'items ({item_id: quantity})', 'number', renderStory, si_markDirty));
+  form.appendChild(ed_dictField(start, 'flags', 'flags ({flag_name: true/false})', 'checkbox', renderStory, si_markDirty));
+  form.appendChild(ed_dictField(start, 'reputation', 'reputation ({faction_id: starting standing})', 'number', renderStory, si_markDirty));
+
+  form.appendChild(mi_el('h2', { text:'Economy & pacing' }));
+  form.appendChild(si_optionalBlock(m, 'loan', 'loan (enables the take_loan dialogue action)',
+    { lender:'', amount:0, max_active:1 }, (loan, box) => {
+      box.appendChild(ed_textField(loan, 'lender', 'lender', si_markDirty));
+      box.appendChild(ed_numberField(loan, 'amount', 'amount', si_markDirty));
+      box.appendChild(ed_numberField(loan, 'max_active', 'max_active', si_markDirty));
+    }));
+  form.appendChild(si_optionalBlock(m, 'jump', 'jump (overrides the default jump timing)',
+    { travel_frames:90, speed:8, arrival_distance:400, self_min_distance:600 }, (jump, box) => {
+      box.appendChild(ed_numberField(jump, 'travel_frames', 'travel_frames', si_markDirty));
+      box.appendChild(ed_numberField(jump, 'speed', 'speed', si_markDirty));
+      box.appendChild(ed_numberField(jump, 'arrival_distance', 'arrival_distance', si_markDirty));
+      box.appendChild(ed_numberField(jump, 'self_min_distance', 'self_min_distance', si_markDirty));
+    }));
+  form.appendChild(ed_numberField(m, 'brake_slow_threshold', 'brake_slow_threshold (optional — tutorial braking-stage speed)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'walking_speed', 'walking_speed (optional — default: constants.WALKING_SPEED)', si_markDirty));
+  form.appendChild(ed_textField(m, 'default_outfit', 'default_outfit (graphics.json outfits id)', si_markDirty));
+
+  form.appendChild(mi_el('h2', { text:'Camera' }));
+  form.appendChild(ed_numberField(m, 'camera_zoom', 'camera_zoom (optional)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'camera_zoom_min', 'camera_zoom_min (optional)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'camera_zoom_max', 'camera_zoom_max (optional)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'interior_camera_zoom', 'interior_camera_zoom (optional)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'interior_camera_zoom_min', 'interior_camera_zoom_min (optional)', si_markDirty));
+  form.appendChild(ed_numberField(m, 'interior_camera_zoom_max', 'interior_camera_zoom_max (optional)', si_markDirty));
+
+  form.appendChild(mi_el('h2', { text:'Ship placeholder' }));
+  const ships = m.ships || (m.ships = {});
+  form.appendChild(ed_textField(ships, 'player_type', 'ships.player_type (ship_types.json id, blank = null)', si_markDirty));
+
+  el.appendChild(form);
 }
 async function renderWorkspace(){
   const tree = document.getElementById('wsTree'); if(!tree) return;
