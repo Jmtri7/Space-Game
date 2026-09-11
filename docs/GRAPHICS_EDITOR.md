@@ -72,9 +72,15 @@ are still de-duplicated: one row per filename, showing the copy that wins.
   (`gpEditorWorkspaceV1` — the expanded set) and marks the open asset.
 - **Every other category** opens a read-only **stub** in the canvas area
   (`?ws-asset=<path>`): the raw JSON pretty-printed, with a "not implemented
-  yet" banner. A placeholder until each kind gets its own editor. The one
-  exception is **`missions.json`** (under Story config) — it opens a real
-  form editor instead (see **Missions editor**, below).
+  yet" banner. A placeholder until each kind gets its own editor. Exceptions:
+  **`missions.json`** and **`dispatches.json`** get bespoke list+form editors,
+  **`story.json`** gets a single-object form (see below), and the flat
+  `{id: {...fields}}` Story config files (`ship_types.json`,
+  `ship_outfits.json`, `asteroid_types.json`, `building_types.json`,
+  `cultures.json`, `commodities.json`, `items.json`, `pilots.json`,
+  `factions.json`, `endings.json`) open the **generic flat-dict editor**
+  (below). `graphics.json` and `audio.json` are nested two levels deep
+  (categories of entries, not one flat dict) and stay stubs.
 - **new story… / new module…** (need the repo open read-write) write a minimal
   skeleton — `story.json` + a bare `systems/<id>_start.json` for a story
   (inherits the standard module list; **appears in the game's story picker but
@@ -156,8 +162,40 @@ Absent (a bare `?file=` URL), behaviour is unchanged: a module load gets no
 story fallback.
 
 Coverage today is **body designs** (`sections`), **faces**, **articles**
-(`regions`, tailor mode), and **missions** (below); every other kind opens the
-read-only stub.
+(`regions`, tailor mode), **missions** / **dispatches** / **story.json**
+(below), and every flat `{id: {...fields}}` Story config file via the
+**generic flat-dict editor** (below); `graphics.json` / `audio.json` and the
+remaining graphics categories (ships, stations, buildings, decorations,
+palettes, collision, interiors) still open the read-only stub.
+
+### Generic flat-dict editor
+
+Any Story config file shaped `{id: {...fields}}` — see `FLAT_DICT_FILES` for
+the current list — opens `showFlatDictEditor` (`GE` holds the working copy)
+instead of the stub: a left list of entries (**+ new entry**, click a row to
+select it; the row label uses the entry's `name`/`title` field if it has one,
+else its id) and a right-hand form for the selected entry. The form has **no
+per-file field spec** — it iterates the selected object's own keys and picks
+a widget from each value's runtime type: `string` → text input (textarea past
+60 chars), `number` → number input, `boolean` → checkbox, an array of
+non-objects → a comma-separated flags field, anything else (nested objects,
+arrays of objects — e.g. `ship_types.json`'s `slots`, `cultures.json`'s
+`interior_decoration`, a `color` triple) → an editable raw-JSON textarea,
+parsed back on change (an invalid edit is rejected with an alert and the
+field reverts). **+ add field** appends a new key (starts as an empty
+string — retype it as a number/JSON value by editing the raw-JSON fallback
+once it's non-trivial). The entry id itself is editable at the top of the
+form, same rename-with-collision-check as the missions/dispatches editors. A
+top-level key starting with `_` (the `_comment` convention several of these
+files use) is preserved in `GE.data` and written back untouched, never shown
+as a row. Because there's no per-file spec, a new field on an existing kind
+(or an entirely new flat-dict file added to `FLAT_DICT_FILES`) needs no editor
+code — only files with a genuinely nested top level (`graphics.json`,
+`audio.json`) need to stay stubs or get a bespoke editor instead.
+
+Same in-memory-only save model as missions/dispatches: **save to repo**
+(`ge_save`) writes the whole file via `VFS.writeText` + `toRepoJSON`, gated on
+`VFS.canWrite`; reloading without saving discards in-progress edits.
 
 ### Missions editor
 

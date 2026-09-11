@@ -4001,6 +4001,7 @@ async function runBoot(){
     if(/\/missions\.json$/.test(_wsAsset)) showMissionsEditor(_wsAsset);
     else if(/\/dispatches\.json$/.test(_wsAsset)) showDispatchesEditor(_wsAsset);
     else if(/\/story\.json$/.test(_wsAsset)) showStoryEditor(_wsAsset);
+    else if(FLAT_DICT_FILES.test(_wsAsset)) showFlatDictEditor(_wsAsset);
     else showStub(_wsAsset);
     return;
   }
@@ -4093,6 +4094,11 @@ const WS_CATS = [
   { id:'systems',     label:'Systems',         systems:true },
   { id:'manifest',    label:'Manifest',        manifest:true },
 ];
+// {id: {...fields}} config files with a real (generic) editor - see
+// "Generic flat-dict editor" below. graphics.json and audio.json are nested
+// two levels deep (categories of entries, not one flat id:fields dict) and
+// stay stubs; missions/dispatches/story.json have their own bespoke editors.
+const FLAT_DICT_FILES = /\/(ship_types|ship_outfits|asteroid_types|building_types|cultures|commodities|items|pilots|factions|endings)\.json$/;
 let _wsDisc = null;
 async function wsDiscover(){   // every story + module dir, whether or not it has a graphics kit
   if(_wsDisc) return _wsDisc;
@@ -4616,6 +4622,138 @@ function renderDispatches(){
   el.appendChild(mi_el('div', { class:'row' },
     mi_el('button', { id:'diSaveBtn', text: DI.dirty ? 'save to repo *' : 'save to repo', onclick: di_save })));
   el.appendChild(mi_el('div', { style:'display:flex; gap:16px;' }, di_renderList(), di_renderForm()));
+}
+// ==== Generic flat-dict editor ============================================
+// Covers every story/module config file shaped {id: {...fields}} that isn't
+// one of the bespoke editors above: ship_types.json, ship_outfits.json,
+// asteroid_types.json, building_types.json, cultures.json, commodities.json,
+// items.json, pilots.json, factions.json, endings.json. No per-file field
+// spec - each entry's own fields drive the form (string/number/boolean/
+// flat-array render as a plain widget, anything nested falls back to a raw-
+// JSON textarea), so a new field or a new flat-dict file needs no editor
+// code. A top-level key starting with "_" (the "_comment" convention) is
+// kept in GE.data and written back untouched, never shown as a row.
+let GE = null;
+async function showFlatDictEditor(path){
+  document.body.classList.remove('ws-stub');
+  document.body.classList.add('ws-formeditor');
+  const raw = await VFS.readJSON(path);
+  GE = { path, data: raw ? JSON.parse(JSON.stringify(raw)) : {}, selected: null, dirty: false };
+  GE.selected = ge_ids()[0] || null;
+  renderGE();
+}
+function ge_markDirty(){ GE.dirty = true; }
+function ge_ids(){ return Object.keys(GE.data).filter(k => !k.startsWith('_')); }
+function ge_addEntry(){
+  let id = prompt('New id (lower_snake_case):');
+  if(id == null) return;
+  id = id.trim();
+  if(!id) return;
+  if(!/^[a-z][a-z0-9_]*$/.test(id)){ alert('Use lower-case letters, digits, underscores, starting with a letter.'); return; }
+  if(GE.data[id]){ alert('"' + id + '" already exists.'); return; }
+  GE.data[id] = {};
+  GE.selected = id;
+  ge_markDirty();
+  renderGE();
+}
+function ge_deleteEntry(){
+  if(!GE.selected) return;
+  if(!confirm('Delete "' + GE.selected + '"? This only changes the in-memory copy until you save.')) return;
+  delete GE.data[GE.selected];
+  GE.selected = ge_ids()[0] || null;
+  ge_markDirty();
+  renderGE();
+}
+async function ge_save(){
+  if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  await VFS.writeText(GE.path, toRepoJSON(GE.data));
+  GE.dirty = false;
+  renderGE();
+}
+// One widget per field, inferred from the current value's runtime shape.
+// Nested objects/arrays-of-objects have no generic widget worth building -
+// they fall back to an editable raw-JSON textarea rather than a stub.
+function ge_fieldFor(obj, key){
+  const v = obj[key];
+  if(typeof v === 'boolean'){
+    const cb = mi_el('input', { type:'checkbox' });
+    cb.checked = v;
+    cb.addEventListener('change', () => { obj[key] = cb.checked; ge_markDirty(); });
+    return mi_el('label', { class:'fl', style:'display:flex; align-items:center; gap:6px;' }, cb, key);
+  }
+  if(typeof v === 'number') return ed_numberField(obj, key, key, ge_markDirty);
+  if(typeof v === 'string') return v.length > 60
+    ? ed_textareaField(obj, key, key, ge_markDirty)
+    : ed_textField(obj, key, key, ge_markDirty);
+  if(Array.isArray(v) && v.every(x => x == null || typeof x !== 'object'))
+    return ed_flagsField(obj, key, key + ' (comma-separated)', ge_markDirty);
+  return ge_jsonField(obj, key);
+}
+function ge_jsonField(obj, key){
+  const wrap = mi_el('div');
+  wrap.appendChild(mi_el('label', { class:'fl', text: key + ' (raw JSON — nested/array field)' }));
+  const ta = mi_el('textarea', { style:'min-height:80px; font-family:monospace; font-size:11px;' });
+  ta.value = JSON.stringify(obj[key], null, 2);
+  ta.addEventListener('change', () => {
+    try{ obj[key] = JSON.parse(ta.value); ge_markDirty(); }
+    catch(e){ alert('Invalid JSON for "' + key + '": ' + e.message); ta.value = JSON.stringify(obj[key], null, 2); }
+  });
+  wrap.appendChild(ta);
+  return wrap;
+}
+function ge_renderList(){
+  const list = mi_el('div', { class:'mList' });
+  list.appendChild(mi_el('div', { class:'row' }, mi_el('button', { text:'+ new entry', onclick: ge_addEntry })));
+  for(const id of ge_ids()){
+    const e = GE.data[id] || {};
+    const label = e.name || e.title || id;
+    list.appendChild(mi_el('div',
+      { class: 'mrow' + (id === GE.selected ? ' sel' : ''), onclick: () => { GE.selected = id; renderGE(); } },
+      mi_el('span', { text: label }),
+      mi_el('span', { class:'mid', text: id })
+    ));
+  }
+  return list;
+}
+function ge_renderForm(){
+  const wrap = mi_el('div', { class:'mForm' });
+  if(!GE.selected){ wrap.appendChild(mi_el('div', { class:'hint', text:'Select or create an entry.' })); return wrap; }
+  const obj = GE.data[GE.selected];
+
+  wrap.appendChild(mi_el('label', { class:'fl', text:'id (the key other config refers to it by)' }));
+  const idInp = mi_el('input', { type:'text' }); idInp.value = GE.selected;
+  idInp.addEventListener('change', () => {
+    const nid = idInp.value.trim();
+    if(!nid || nid === GE.selected){ idInp.value = GE.selected; return; }
+    if(GE.data[nid]){ alert('"' + nid + '" already exists.'); idInp.value = GE.selected; return; }
+    GE.data[nid] = GE.data[GE.selected]; delete GE.data[GE.selected]; GE.selected = nid;
+    ge_markDirty(); renderGE();
+  });
+  wrap.appendChild(idInp);
+
+  for(const key of Object.keys(obj)) wrap.appendChild(ge_fieldFor(obj, key));
+
+  wrap.appendChild(mi_el('div', { class:'row', style:'margin-top:12px; gap:8px;' },
+    mi_el('button', { text:'+ add field', onclick: () => {
+      let k = prompt('New field name:');
+      if(k == null) return;
+      k = k.trim();
+      if(!k) return;
+      if(k in obj){ alert('Field "' + k + '" already exists.'); return; }
+      obj[k] = '';
+      ge_markDirty(); renderGE();
+    }}),
+    mi_el('button', { text:'delete entry', onclick: ge_deleteEntry })
+  ));
+  return wrap;
+}
+function renderGE(){
+  const el = document.getElementById('wsMissions');
+  el.innerHTML = '';
+  el.appendChild(mi_el('h2', { text: GE.path }));
+  el.appendChild(mi_el('div', { class:'row' },
+    mi_el('button', { id:'geSaveBtn', text: GE.dirty ? 'save to repo *' : 'save to repo', onclick: ge_save })));
+  el.appendChild(mi_el('div', { style:'display:flex; gap:16px;' }, ge_renderList(), ge_renderForm()));
 }
 // ==== Story editor =========================================================
 // A story's own story.json (see the "story.json fields" table in
