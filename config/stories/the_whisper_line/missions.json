@@ -19,8 +19,8 @@
         "complete_flag": "jumped_to:tessellate",
         "reset_on_activation": true,
         "one_way_message": {
-          "sender": "Elian's note",
-          "text": "Next line, in Elian's hand: 'Tessellate. The old relay station - it still holds air, and someone still lives in it. Ask them about the survey.' Pick Tessellate on the star map and jump (V)."
+          "sender": "Elian's transmission",
+          "text": "Next segment decodes, in Elian's own words: 'Tessellate. The old relay station - it still holds air, and someone still lives in it. Ask them about the survey.' Pick Tessellate on the star map and jump (V)."
         }
       },
       {
@@ -28,7 +28,7 @@
         "complete_flag": "landed_on_landing_site",
         "reset_on_activation": true,
         "one_way_message": {
-          "sender": "Elian's note",
+          "sender": "Elian's transmission",
           "text": "The relay's on a slow tumble but the dock still lights up. Match it and set down (L)."
         }
       },
@@ -36,8 +36,8 @@
         "text": "Find the archivist who knew Elian and hear what they have.",
         "complete_flag": "met_archivist",
         "one_way_message": {
-          "sender": "Elian's note",
-          "text": "The line after that: 'Whoever's keeping the relay logs knew me. They kept the last thing I sent back. Read it before you decide anything.'"
+          "sender": "Elian's transmission",
+          "text": "The segment after that: 'Whoever's keeping the relay logs knew me. They kept the last thing I sent back. Read it before you decide anything.'"
         }
       },
       {
@@ -45,8 +45,8 @@
         "complete_flag": "jumped_to:verge",
         "reset_on_activation": true,
         "one_way_message": {
-          "sender": "Elian's note",
-          "text": "Last line, and it isn't a place: 'If it's still talking when you get there, it isn't me anymore. Come anyway. The Verge - the moon with the settlement. I'll have left the light on.'"
+          "sender": "Elian's transmission",
+          "text": "Final segment, and it isn't a place: 'If it's still talking when you get there, it isn't me anymore. Come anyway. The Verge - the moon with the settlement. I'll have left the light on.'"
         }
       },
       {
@@ -54,7 +54,7 @@
         "complete_flag": "landed_on_landing_site",
         "reset_on_activation": true,
         "one_way_message": {
-          "sender": "Elian's note",
+          "sender": "Elian's transmission",
           "text": "There's one settled moon in the Verge and one lit pad on it. Set down."
         }
       },
@@ -62,8 +62,8 @@
         "text": "Find Elian Marr.",
         "complete_flag": "found_elian",
         "one_way_message": {
-          "sender": "Elian's note",
-          "text": "The note ends here. Whatever's on the far side of the plaza, you came a long way to hear it out."
+          "sender": "Elian's transmission",
+          "text": "The file's fully decoded now. Whatever's on the far side of the plaza, you came a long way to hear it out."
         }
       }
     ]

@@ -26,7 +26,7 @@ Player starts docked at **Kestrel Reach** with a `courier` and 3000 cr
 
 | System | Gate | Key beats |
 |---|---|---|
-| `kestrel` | start | The Grey Courier NPC (NW-N arc, `facing: west`, `requires_not_flag` + `depart_flag` both `met_courier`) hands over `the_note` and `start_mission:follow_the_note`; the "End Conversation" option on the note-contents node sets `met_courier`, so they walk to the dock and vanish (`DepartRoutine`). The note's full text is read in-dialogue. Deck Officer Aru has a post-handover `conditional_root`. |
+| `kestrel` | start | The Grey Courier NPC (NW-N arc, `facing: west`, `requires_not_flag` + `depart_flag` both `met_courier`) bursts `the_note` (in-fiction: "Elian's Transmission", pressed over via a handheld relay to the player's communicator - not a paper note) to your comm and `start_mission:follow_the_note`; the "End Conversation" option on the file-contents node sets `met_courier`, so they walk to the dock and vanish (`DepartRoutine`). The file is explicitly locked stage-by-stage (Grey Courier's own line) - that's why it decodes one segment at a time as the mission advances, rather than being read whole up front. Deck Officer Aru has a post-handover `conditional_root`. |
 | `tessellate` | `unlock_flag: reach_tessellate` (set by `follow_the_note` `on_start_flags`), `unlock_silent` | Archivist Senna on the relay station gives the survey backstory, sets `met_archivist` + `reach_verge` (+ a `star_chart` item). |
 | `verge` | `unlock_flag: reach_verge` (set by Senna) | Elian Marr on the moon. First node sets `found_elian` (completes the mission). Then a 2-way fork: `end_story:wake` / `end_story:let_sleep` → `endings.json`. |
 

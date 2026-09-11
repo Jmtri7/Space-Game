@@ -91,7 +91,7 @@
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "I was asked to put this in your hand and nothing else. It's from Elian Marr.",
+                  "text": "I was asked to put this on your comm and nothing else. It's from Elian Marr.",
                   "options": [
                     { "label": "Elian's been gone for years.", "next": "gone" },
                     { "label": "Asked by who?", "next": "who" },
@@ -99,7 +99,7 @@
                   ]
                 },
                 "gone": {
-                  "text": "Gone isn't dead. Elian's a long way out and can't come in - you'll understand why when you read it. The note's a trail. Each line leads you to the next.",
+                  "text": "Gone isn't dead. Elian's a long way out and can't come in - you'll understand why once it decodes. The note's a trail. Each line leads you to the next.",
                   "options": [
                     { "label": "Asked by who?", "next": "who" },
                     { "label": "Give it here.", "next": "handover" }
@@ -112,10 +112,10 @@
                   ]
                 },
                 "handover": {
-                  "text": "There. It's Elian's hand, you'll know it. Read it before you do anything else, and for both our sakes don't file a flight plan. I was never on this station.",
+                  "text": "There. It's keyed to Elian's own cipher, you'll know it's real once it's through - and it's locked stage by stage, so it won't decode the next part until you're where the last one sent you. For both our sakes don't file a flight plan. I was never on this station.",
                   "options": [
                     {
-                      "label": "Take the note.",
+                      "label": "Take the transmission.",
                       "next": "leaving",
                       "actions": [
                         "give_item:the_note",
@@ -127,7 +127,7 @@
                 "leaving": {
                   "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
                   "options": [
-                    { "label": "Read the note.", "next": "note" }
+                    { "label": "Open the file.", "next": "note" }
                   ]
                 },
                 "note": {

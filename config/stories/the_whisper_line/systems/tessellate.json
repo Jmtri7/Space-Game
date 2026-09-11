@@ -43,7 +43,7 @@
             "x": 320, "y": 300,
             "role": "resident",
             "outfit": "ck_researcher_masc",
-            "greeting": "Senna's up on the relay, I'm down here logging what she flags. If you're carrying a note off Elian Marr - talk to her, not me. I only ever caught the edges of it, and the edges were enough.",
+            "greeting": "Senna's up on the relay, I'm down here logging what she flags. If you're carrying a transmission off Elian Marr - talk to her, not me. I only ever caught the edges of it, and the edges were enough.",
             "dialogue_options": ["Leave"]
           }
         ]
@@ -93,13 +93,13 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "I keep the relay logs. Have done for eleven years, since the last of the staff rotated out and forgot to schedule a replacement. You're carrying a note in Elian Marr's hand - I can tell by how you're standing. Ask me.",
+                  "text": "I keep the relay logs. Have done for eleven years, since the last of the staff rotated out and forgot to schedule a replacement. You're carrying a transmission in Elian Marr's own cipher - I can tell by the way you keep checking your wrist. Ask me.",
                   "options": [
                     { "label": "You knew Elian.", "next": "knew" }
                   ]
                 },
                 "knew": {
-                  "text": "Elian docked here for six weeks before the last leg out. Slept in the Dock arc, talked at me for hours. Left me the survey packet and made me promise to hold it for whoever came asking with the note. That's you.",
+                  "text": "Elian docked here for six weeks before the last leg out. Slept in the Dock arc, talked at me for hours. Left me the survey packet and made me promise to hold it for whoever came asking with the transmission. That's you.",
                   "options": [
                     { "label": "What's in the packet?", "next": "packet" }
                   ]

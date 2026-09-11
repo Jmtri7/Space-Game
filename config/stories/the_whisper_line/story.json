@@ -9,14 +9,14 @@
     "common-goods",
     "story-defaults"
   ],
-  "description": "A stranger presses a note into your hand on a quiet station ring and is gone before you can ask a question. It is from Elian Marr - a friend who flew off the edge of the charts years ago and was never logged again. The note is a trail. Follow it out past the last relay and find out what Elian found.",
+  "description": "A stranger burns a file to your communicator on a quiet station ring and is gone before you can ask a question. It is from Elian Marr - a friend who flew off the edge of the charts years ago and was never logged again. The note is a trail. Follow it out past the last relay and find out what Elian found.",
   "difficulty": "normal",
   "intro": {
     "title": "The Whisper Line",
     "body": [
       "Years ago, Elian Marr took a deep-survey contract past the last lit beacon and did not come back. No wreck, no distress loop, no final position - just a name that stopped appearing in the traffic logs. The people who knew Elian stopped asking. You told yourself you had too.",
-      "You are {pilot}, tied up at a nowhere station ring with a courier hull and no run booked. That is where the note finds you - carried by a stranger who will not give a name, who keeps one eye on the airlock the whole time they talk, and who leaves the moment your hand closes on the paper.",
-      "The note is in Elian's hand. It is a set of directions, each line pointing to the next, out toward the dark. The last line is not a place. It is a warning."
+      "You are {pilot}, tied up at a nowhere station ring with a courier hull and no run booked. That is where the note finds you - carried by a stranger who will not give a name, who keeps one eye on the airlock the whole time they talk, and who burns it to your communicator off a cracked handheld relay rather than say any of it aloud.",
+      "The note is in Elian's own cipher, unmistakably theirs once it's decoded. It is a set of directions, each line pointing to the next, out toward the dark. The last line is not a place. It is a warning."
     ]
   },
   "starting_system": "kestrel",
