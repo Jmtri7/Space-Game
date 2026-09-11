@@ -31,17 +31,7 @@
       120,
       130,
       140
-    ],
-    "interior_decoration": {
-      "generator": "deck_grid",
-      "spacing": 38,
-      "color": [
-        74,
-        81,
-        90
-      ],
-      "width": 1
-    }
+    ]
   },
   "regolith_std": {
     "name": "Regolith Standard",

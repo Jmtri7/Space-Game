@@ -53,6 +53,13 @@ def _palette(story, name):
     return _load(story, "palettes", name + ".json") or {}
 
 
+def get_floor_pattern(story, name):
+    """A named `graphics/floor_patterns/<name>.json` spec ({"pattern",
+    "tile", "gap", ["colors"]}), resolved through the story's modules like
+    any other per-name pipeline file. None if nobody has it."""
+    return _load(story, "floor_patterns", name + ".json")
+
+
 @functools.lru_cache(maxsize=None)
 def _expand_craft(story, ref, palette_name, lod, scale):
     """A ship or station design -> parts list. `scale` multiplies every

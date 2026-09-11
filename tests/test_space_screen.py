@@ -607,7 +607,7 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
             game_screen._cycle_target_mode()
             mock_play.assert_called_once_with("blip")
 
-    def test_unread_message_pings_exactly_three_times_from_update(self):
+    def test_unread_message_pings_exactly_three_times_per_loop_until_clicked(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
         # Silence the other per-frame message sources so we count only the
         # alert's own pings.
@@ -618,8 +618,12 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
             for _ in range(MESSAGE_ALERT_FRAMES + 10):
                 game_screen.update()
             pings = [c for c in mock_play.call_args_list if c.args == ("ping",)]
-        self.assertEqual(len(pings), 3)
-        self.assertEqual(game_screen.message_alert_timer, 0)
+        # Unlike a finite alert, an unread message is pinned (see
+        # _unread_alert_pinned) - the cycle re-arms instead of stopping
+        # after MESSAGE_ALERT_BLINKS, so a 4th ping has already started.
+        self.assertEqual(len(pings), 4)
+        self.assertGreater(game_screen.message_alert_timer, 0)
+        self.assertTrue(game_screen._unread_alert_pinned)
 
     def test_a_burst_of_messages_spaces_out_instead_of_landing_at_once(self):
         game_screen = SpaceScreen(pilot_name="Test", story="default")
@@ -651,6 +655,35 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
             game_screen.update()
         game_screen._post_message("Relay", "second")
         self.assertEqual([m["text"] for m in log], ["second", "first"])
+
+    def test_any_message_alert_keeps_looping_until_clicked(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.ai_ships = []
+        game_screen.missions_config = {}
+        game_screen._post_message("Relay", "Beacon relit.")
+        self.assertTrue(game_screen._unread_alert_pinned)
+        # Run well past where the old fixed 3-blink alert would have gone
+        # quiet (message_alert_state returns (False, ...) once frames_remaining
+        # hits 0) - a pinned alert re-arms instead of stopping.
+        for _ in range(MESSAGE_ALERT_FRAMES * 3):
+            game_screen.update()
+        self.assertGreater(game_screen.message_alert_timer, 0)
+        self.assertTrue(game_screen._unread_alert_pinned)
+
+    def test_clicking_the_messages_pane_silences_the_alert(self):
+        import pygame as mocked_pygame
+        game_screen = SpaceScreen(pilot_name="Test", story="default")
+        game_screen.ai_ships = []
+        game_screen.missions_config = {}
+        game_screen._post_message("Elian Marr", "Something's wrong.")
+        game_screen._message_log_rect = SimpleNamespace(collidepoint=lambda p: True)
+        event = SimpleNamespace(type=mocked_pygame.MOUSEBUTTONDOWN, button=1, pos=(10, 510))
+        game_screen.handle_input([event])
+        self.assertFalse(game_screen._unread_alert_pinned)
+        self.assertEqual(game_screen.message_alert_timer, 0)
+        for _ in range(MESSAGE_ALERT_FRAMES * 2):
+            game_screen.update()
+        self.assertEqual(game_screen.message_alert_timer, 0)
 
 
 if __name__ == "__main__":

@@ -222,6 +222,15 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # current alert (reset in _post_message, advanced in update()).
         self.message_alert_timer = 0
         self._message_alert_pings_played = 0
+        # True while there's an unread message (see _post_message) the
+        # player hasn't clicked away yet. Rather than the blink/ping cycle
+        # running MESSAGE_ALERT_BLINKS times and going quiet on its own,
+        # update() re-arms message_alert_timer every time it reaches 0 while
+        # this is set, looping the cycle indefinitely - draw_message_log's
+        # `pinned` flag also puts up a "CLICK TO STOP" prompt next to the
+        # light while it's set. Cleared by clicking the Messages pane (see
+        # handle_input's MOUSEBUTTONDOWN branch).
+        self._unread_alert_pinned = False
 
     def get_interior_screen(self, landing_site, key):
         """Return the persistent LocationScreen for one of landing_site's
@@ -323,16 +332,16 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             # below) - SPACE used to do both (a tap engaged autopilot,
             # which is why so many docstrings elsewhere still say
             # "K_SPACE" when they mean "the autopilot-engage key").
-            if keys[pygame.K_SPACE]:
+            if pressed(keys, Action.FIRE):
                 self._update_weapon_fire()
 
         # Rotate the view (Z/X) - held, like ship turning. Allowed even
         # mid-jump (it's only the camera), blocked only while a hail has
         # input focus, same as flight controls.
         if not self.active_dialogue:
-            if keys[pygame.K_z]:
+            if pressed(keys, Action.ROTATE_VIEW_RIGHT):
                 self.camera_angle = (self.camera_angle + CAMERA_ROTATE_SPEED) % 360
-            if keys[pygame.K_x]:
+            if pressed(keys, Action.ROTATE_VIEW_LEFT):
                 self.camera_angle = (self.camera_angle - CAMERA_ROTATE_SPEED) % 360
 
         for event in events:
@@ -359,6 +368,14 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # A click on the Messages pane acknowledges an unread
+                # message - see self._unread_alert_pinned's own comment -
+                # silencing the looping blink/ping immediately rather than
+                # waiting for the current cycle to finish.
+                if self._message_log_rect and self._message_log_rect.collidepoint(event.pos):
+                    self._unread_alert_pinned = False
+                    self.message_alert_timer = 0
+                    continue
                 # A click on the minimap targets the blip under the pointer
                 # (if any - a click on empty radar does nothing); a click
                 # anywhere in the world that isn't on a HUD panel targets
@@ -400,22 +417,24 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             # and SPACE, which fires the equipped weapon rather than
             # steering, so shooting at an asteroid doesn't abort a run to
             # the station)
-            if self.player.autopilot_active and event.key not in (pygame.K_ESCAPE, pygame.K_z, pygame.K_x, pygame.K_SPACE):
+            if self.player.autopilot_active and not matches_any(
+                event.key, Action.PAUSE, Action.ROTATE_VIEW_RIGHT, Action.ROTATE_VIEW_LEFT, Action.FIRE
+            ):
                 self.player.autopilot_active = False
                 self.player.autopilot_target = None
                 return None
 
-            if event.key == pygame.K_ESCAPE:
+            if is_action(event.key, Action.PAUSE):
                 return "pause"
-            elif event.key == pygame.K_e:
+            elif is_action(event.key, Action.CYCLE_TARGET_FORWARD):
                 self._cycle_target(1)
-            elif event.key == pygame.K_q:
+            elif is_action(event.key, Action.CYCLE_TARGET_BACKWARD):
                 self._cycle_target(-1)
-            elif event.key == pygame.K_t:
+            elif is_action(event.key, Action.CYCLE_TARGET_MODE):
                 self._cycle_target_mode()
-            elif event.key == pygame.K_r:
+            elif is_action(event.key, Action.HAIL):
                 self._start_hail()
-            elif event.key == pygame.K_g:
+            elif is_action(event.key, Action.LAND):
                 # Land only - never engages autopilot (see K_f/F below
                 # for that). If a landing site is targeted and already in
                 # range, land on it directly; otherwise fall back to a
@@ -439,7 +458,7 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                     self.landing_target = landing_target
                     self._mark_landed()
                     return "land"
-            elif event.key == pygame.K_f:
+            elif is_action(event.key, Action.AUTOPILOT):
                 # Engage autopilot toward the current target - follows an
                 # AI ship, or approaches a landing site from any range (L
                 # only lands once you're already close). SPACE now fires
@@ -457,19 +476,19 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                         # complete_flag without this class knowing about
                         # missions at all.
                         self.player.person.possessions.flags["used_autopilot_on_ship"] = True
-            elif event.key == pygame.K_1 and not self.jump_state:
+            elif is_action(event.key, Action.STAR_MAP) and not self.jump_state:
                 return "star_map"
-            elif event.key == pygame.K_v and not self.jump_state:
+            elif is_action(event.key, Action.JUMP) and not self.jump_state:
                 self.try_jump()
-            elif event.key == pygame.K_2:
+            elif is_action(event.key, Action.POSSESSIONS):
                 return "possessions"
-            elif event.key == pygame.K_3:
-                # Generic gameplay-event flag (see K_f's comment) - a
-                # mission stage can use "viewed_mission_log" as its
+            elif is_action(event.key, Action.MISSION_LOG):
+                # Generic gameplay-event flag (see Action.AUTOPILOT's comment
+                # above) - a mission stage can use "viewed_mission_log" as its
                 # complete_flag (see missions.json's first_flight).
                 self.player.person.possessions.flags["viewed_mission_log"] = True
                 return "missions"
-            elif event.key == pygame.K_c:
+            elif is_action(event.key, Action.TOGGLE_CONTROLS):
                 self._toggle_controls()
         return None
 
@@ -546,6 +565,12 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             self.hail_banner_timer -= 1
         if self.message_alert_timer > 0:
             self.message_alert_timer -= 1
+        elif self._unread_alert_pinned:
+            # An unread message: loop the blink/ping cycle instead of
+            # letting it go quiet - see self._unread_alert_pinned's own
+            # comment. Cleared only by clicking the Messages pane.
+            self.message_alert_timer = MESSAGE_ALERT_FRAMES
+            self._message_alert_pings_played = 0
         self._pump_message_queue()
         self._check_one_way_hails()
         self._check_beacons()

@@ -718,11 +718,7 @@
         "seamless": true,
         "space_backdrop": true,
         "star_seed": 205,
-        "floor_pattern": {
-          "pattern": "hex",
-          "tile": 76,
-          "gap": 2.5
-        }
+        "floor_pattern": "warden"
       }
     }
   },
@@ -758,6 +754,7 @@
       "city": {
         "label": "Ring Segment Four",
         "culture": "the_wardens",
+        "floor_pattern": "warden",
         "connected_locations": [],
         "entrance": {
           "x": 800,

@@ -778,11 +778,7 @@
         "seamless": true,
         "space_backdrop": true,
         "star_seed": 101,
-        "floor_pattern": {
-          "pattern": "square",
-          "tile": 64,
-          "gap": 2.0
-        }
+        "floor_pattern": "authority"
       }
     }
   },
@@ -823,6 +819,7 @@
       "city": {
         "label": "Watch Station",
         "culture": "harbor_authority",
+        "floor_pattern": "authority",
         "connected_locations": [],
         "entrance": {
           "x": 800,

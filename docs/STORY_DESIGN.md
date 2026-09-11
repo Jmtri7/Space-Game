@@ -87,6 +87,24 @@ from dialogue rather than `story.json`'s `starting_mission` actually shows
 up — it's the one message with the least direct test coverage since it's
 triggered from inside a conversation, not a gameplay event.
 
+**Don't stack multiple one-way messages on the same beat.** One player
+action should trigger at most one Message Log entry — see
+[UI_FLOW.md](UI_FLOW.md)'s "Guideline for content authors" and
+[architecture/config-formats.md](architecture/config-formats.md)'s dispatch
+section. The shared queue (`_post_message`/`_pump_message_queue`,
+`MESSAGE_SPACING_FRAMES` ≈ 7.5s) exists to space out genuinely independent
+events landing on the same frame (a beacon relighting as a dispatch
+arrives), not as a design tool for pacing a burst you wrote on purpose —
+gate each dispatch/stage message on the specific progress point it belongs
+to instead of hanging several on one early flag. This is easy to violate
+without noticing since each message reads fine in isolation in the JSON;
+it's only obvious as a pile-up in an actual playthrough. `the_long_silence`
+shipped with several of these ("~4 at once" after returning to Factor Tol,
+another after the vote — see [BACKLOG.md](BACKLOG.md)'s Structure & pacing
+section) — script the mission arc (see step 6 above) and *also* play through
+the trigger points, watching for more than one banner/ping in quick
+succession.
+
 **A generic gameplay-event flag isn't per-site.** `landed_on_landing_site`
 (and similarly generic flags — see the table in
 [architecture/class-hierarchy.md](architecture/class-hierarchy.md)) fires

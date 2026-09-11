@@ -23,6 +23,7 @@
         "label": "Cinder Flat",
         "description": "A ballast-mining camp on Kestrel's inner moon. Mostly shut down. One person still lives here to keep the beacon fed.",
         "culture": "regolith_std",
+        "floor_pattern": "authority",
         "entrance": { "x": 320, "y": 500 },
         "rooms": [
           { "label": "Yard", "polygon": [[140, 140], [500, 140], [500, 440], [140, 440]] },
@@ -55,6 +56,7 @@
         "culture": "orbital_std",
         "space_backdrop": true,
         "star_seed": 7731,
+        "floor_pattern": "authority",
         "portals": [
           { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
         ],
@@ -125,7 +127,7 @@
                   ]
                 },
                 "leaving": {
-                  "text": "That's a hull on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
+                  "text": "That's a ship on approach and I can't be here when it clamps on. Fly well. Elian said you were the one who wouldn't leave it alone.",
                   "options": [
                     { "label": "End Conversation", "next": null, "action": "set_flag:met_courier" }
                   ]
@@ -145,20 +147,20 @@
               ],
               "nodes": {
                 "start": {
-                  "text": "Kestrel Ring. Half the berths are dark and the other half wish they were. If you're not loading and not fuelling, you're just sightseeing - which is allowed, barely.",
+                  "text": "Kestrel Ring. Half the docking slots are dark and the other half wish they were. If you're not loading and not fuelling, you're just sightseeing - which is allowed, barely.",
                   "options": [
                     { "label": "Quiet posting.", "next": "quiet" },
                     { "label": "Leave", "next": null }
                   ]
                 },
                 "quiet": {
-                  "text": "Suits me. The last time this ring got interesting, a survey pilot undocked without a plan and never pinged again. We don't miss interesting.",
+                  "text": "Suits me. The last time this ring got interesting, a survey pilot undocked without a plan and never made contact again. We don't miss interesting.",
                   "options": [
                     { "label": "Leave", "next": null }
                   ]
                 },
                 "after": {
-                  "text": "That one in the grey coat cleared the dock the second a hull came in - didn't sign out, wasn't on the manifest coming in either. You know them?",
+                  "text": "That one in the grey coat cleared the dock the second a ship came in - didn't sign out, wasn't on the passenger list coming in either. You know them?",
                   "options": [
                     { "label": "Never seen them before.", "next": "shrug" },
                     { "label": "Leave", "next": null }

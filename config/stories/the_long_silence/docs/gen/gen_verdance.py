@@ -451,6 +451,7 @@ def undergarden_moon():
         "craters": [{"x": -9, "y": -3, "radius": 4}, {"x": 8, "y": 8, "radius": 5}],
         "interiors": {"city": {
             "label": "the Undergarden", "culture": "the_drift",
+            "floor_pattern": "drift",
             "connected_locations": [], "entrance": {"x": 800, "y": 840},
             "rooms": [rect(160, 220, 1440, 1140, "Undergarden Ring")],
             "structures": [

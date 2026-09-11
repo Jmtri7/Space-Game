@@ -89,7 +89,11 @@ class _NpcsMixin:
         possessions.message_log since last frame - by a mission stage
         advancing (SpaceScreen delivers those even while the player is
         docked), a hail, or an interior NPC (_post_local_message) - and
-        raise the banner + unread light for it. Compares length rather than
+        raise the banner + unread light for it. Also arms
+        self._unread_alert_pinned, which update_physics() uses to keep
+        re-arming this same blink/ping cycle on a loop instead of letting it
+        go quiet, until the player clicks the Messages pane (see
+        handle_input's MOUSEBUTTONDOWN branch). Compares length rather than
         tracking identities; once the log is at its MESSAGE_LOG_MAX cap a
         further message won't re-trigger this, which is fine for the
         early-game tutorial context this mainly serves."""
@@ -102,6 +106,7 @@ class _NpcsMixin:
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
         self._message_alert_pings_played = 0
         self.message_log_scroll = 0
+        self._unread_alert_pinned = True
         if not self.active_dialogue:
             self.message_banner = (f"Incoming message - {newest['sender']} (see Message Log)", CYAN)
             self.message_banner_timer = MESSAGE_BANNER_FRAMES

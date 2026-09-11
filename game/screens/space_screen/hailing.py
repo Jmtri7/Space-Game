@@ -78,6 +78,13 @@ class _HailingMixin:
         messages (_deliver_stage_message), beacon relights (_check_beacons),
         pilot-proximity hails (_check_one_way_hails), the rescue notice.
 
+        _pump_message_queue keeps the Message Log's unread light blinking
+        and pinging on a loop until the player actually clicks the Messages
+        pane (see handle_input's MOUSEBUTTONDOWN branch, which clears
+        self._unread_alert_pinned) - every message counts, not just
+        plot-vital ones, so nothing slips by as a banner the player glanced
+        past.
+
         An isolated message posts the same frame; when several land close
         together they space out at one per MESSAGE_SPACING_FRAMES, so banners
         don't stack and the ping doesn't stutter into a drone. See
@@ -100,12 +107,15 @@ class _HailingMixin:
         sender, text = self._message_queue.pop(0)
         self.player.person.possessions.add_message(sender, text)
         # Snap the Message Log back to the newest entry and (re)start its
-        # unread alert: the light blinks MESSAGE_ALERT_BLINKS times and the
-        # "ping" cue sounds once per blink, driven from update() so the audio
-        # stays in sync with the light (see message_alert_state).
+        # unread alert: the light blinks and pings in sync (see
+        # message_alert_state), and self._unread_alert_pinned makes update()
+        # keep re-arming that same cycle on a loop instead of letting it go
+        # quiet, until the player clicks the Messages pane to dismiss it
+        # (see handle_input's click-to-dismiss).
         self.message_log_scroll = 0
         self.message_alert_timer = MESSAGE_ALERT_FRAMES
         self._message_alert_pings_played = 0
+        self._unread_alert_pinned = True
         if not self.active_dialogue:
             # Banner just announces the transmission - the message body itself
             # is in the Messages pane (bottom-left) and stays there to read.

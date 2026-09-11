@@ -481,9 +481,6 @@ w(f"{S}/graphics.json", gfx)
 # ======================================================================
 # 5. HUB CONTROL floor plan + full NPC roster
 # ======================================================================
-DECO_GRID_NOTE = "harbor_authority culture -> deck_grid decoration auto-stamps the painted floor grid."
-
-
 def rect(x0, y0, x1, y1, label):
     return {"label": label, "polygon": [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]}
 
@@ -661,7 +658,7 @@ HUB_INTERIOR = {
     "seamless": True,
     "space_backdrop": True,
     "star_seed": 101,
-    "floor_pattern": {"pattern": "square", "tile": 64, "gap": 2.0},
+    "floor_pattern": "authority",
 }
 
 
@@ -672,6 +669,7 @@ def moon_city():
         "craters": [{"x": -8, "y": -4, "radius": 4}, {"x": 9, "y": 7, "radius": 5}, {"x": 3, "y": -9, "radius": 3}],
         "interiors": {"city": {
             "label": "Watch Station", "culture": "harbor_authority",
+            "floor_pattern": "authority",
             "connected_locations": [], "entrance": {"x": 800, "y": 820},
             "rooms": [rect(160, 200, 1440, 1160, "Watch Yard")],
             "structures": [

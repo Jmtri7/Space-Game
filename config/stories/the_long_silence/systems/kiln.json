@@ -805,11 +805,7 @@
         "seamless": true,
         "space_backdrop": true,
         "star_seed": 202,
-        "floor_pattern": {
-          "pattern": "square",
-          "tile": 92,
-          "gap": 3.0
-        }
+        "floor_pattern": "combine"
       }
     }
   },
@@ -850,6 +846,7 @@
       "city": {
         "label": "Shaft VII Headworks",
         "culture": "ninefold_combine",
+        "floor_pattern": "combine",
         "connected_locations": [],
         "entrance": {
           "x": 800,

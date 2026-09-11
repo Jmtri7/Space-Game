@@ -50,8 +50,7 @@ from game.ui.ui_theme import (
     fit_text,
 )
 from game.screens.location_screen import LocationScreen, normalize_room, normalize_decoration, point_in_polygon
-from game.graphics.deck_grid import (clip_segment_convex as _clip_segment_convex, grid_segments as _grid_segments,
-                                     clip_polygon_convex as _clip_polygon_convex, tessellate as _tessellate)
+from game.graphics.deck_grid import (clip_polygon_convex as _clip_polygon_convex, tessellate as _tessellate)
 from game.world.dock_routine import DockRoutine, ROLE_EXIT_PREFERENCE, MAX_LATERAL_HOPS
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.character import Character

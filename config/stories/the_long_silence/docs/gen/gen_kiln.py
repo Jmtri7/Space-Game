@@ -492,6 +492,7 @@ def shaft_moon():
         "craters": [{"x": -8, "y": -4, "radius": 5}, {"x": 9, "y": 7, "radius": 4}, {"x": 2, "y": -9, "radius": 3}],
         "interiors": {"city": {
             "label": "Shaft VII Headworks", "culture": "ninefold_combine",
+            "floor_pattern": "combine",
             "connected_locations": [], "entrance": {"x": 800, "y": 840},
             "rooms": [rect(160, 220, 1440, 1140, "Headworks Floor")],
             "structures": [

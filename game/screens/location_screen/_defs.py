@@ -5,6 +5,7 @@ import pygame
 import math
 import game.aa_draw as aa
 import game.constants as constants
+from game.controls import Action, pressed, is_action, label, combo, primary_label
 from game.constants import GAME_WIDTH, GAME_HEIGHT, BLACK, WHITE, YELLOW, GREEN, GRAY, CYAN, NAV_CELL
 from game.utils import get_scale, load_json, to_screen, to_world, draw_debug_marker, draw_target_brackets, get_ui_scale, get_font, set_camera_offset, set_camera_angle, set_camera_zoom, set_camera_zoom_limits, get_building_type, get_culture, get_ship_type, get_graphics_asset, get_story, get_missions
 import game.utils as utils
@@ -22,7 +23,8 @@ from game.world.content_gate import passes_content_gate
 from game.world.follow_player_routine import FollowPlayerRoutine
 from game.world.indoor_pathfinder import IndoorPathfinder, NavGrid
 from game.world.starfield import StarField
-from game.graphics.deck_grid import grid_segments as _grid_segments, tessellate as _tessellate
+from game.graphics.deck_grid import tessellate as _tessellate
+from game.graphics.story_assets import get_floor_pattern
 
 
 # Frames an interior message banner stays lit after a message arrives (see

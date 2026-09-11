@@ -132,11 +132,11 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # flat-background behavior (movement bounded by the full world rect).
         self.culture_id = self.config.get("culture")
         # "seamless": true drops everything that visually chops the floor into
-        # separate rooms - the per-room trim outline, the room-name labels, and
-        # the culture's edge-emphasising interior_decoration (edge_veins /
-        # seam_rivets / deck_grid) - so overlapping room polygons read as one
-        # open deck. Pair with "space_backdrop" + a "floor_pattern" for a
-        # concourse that floats, tiled, against the Space View starfield.
+        # separate rooms - the room-name labels and the culture's
+        # edge-emphasising interior_decoration (edge_veins / seam_rivets) - so
+        # overlapping room polygons read as one open deck. Pair with
+        # "space_backdrop" + a "floor_pattern" for a concourse that floats,
+        # tiled, against the Space View starfield.
         self.seamless = bool(self.config.get("seamless"))
         # Each room is {"polygon": [(x, y), ...], "label": str or None} in world
         # space (see normalize_room - "rect" and "circle" configs are folded to
@@ -237,6 +237,12 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         # the current alert - reset in _refresh_messages, advanced in update()
         # (active screen only; the timer itself counts down in update_physics).
         self._message_alert_pings_played = 0
+        # True while there's an unread message (see _post_local_message)
+        # the player hasn't clicked away yet - see
+        # SpaceScreen._unread_alert_pinned's own comment (shared design; the
+        # two screens keep independent state since a message can arrive
+        # while either is the one on screen).
+        self._unread_alert_pinned = False
         self.message_banner = None
         self.message_banner_timer = 0
         self._message_log_rect = None
@@ -290,14 +296,20 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         self.update_physics(player_present=True)
 
         # Unread-message ping: once per blink of the Message Log light,
-        # exactly MESSAGE_ALERT_BLINKS times, driven only from the active
-        # screen (update_physics runs for background interiors too, and just
-        # counts the timer down). The while loop catches up across a slow
-        # frame's extra sim steps.
-        _, pings_due = message_alert_state(self.message_alert_timer)
-        while self._message_alert_pings_played < pings_due:
-            sound_board.play("ping")
-            self._message_alert_pings_played += 1
+        # driven only from the active screen (update_physics runs for
+        # background interiors too, and just counts the timer down). Held
+        # while active_dialogue is open - talking to an NPC shouldn't have
+        # the Messages pane beeping over the conversation (it isn't even
+        # drawn then - see draw()'s own `not self.active_dialogue` gate);
+        # _message_alert_pings_played simply falls behind pings_due and
+        # catches back up, at most MESSAGE_ALERT_BLINKS pings, once the
+        # conversation closes. The while loop otherwise catches up across a
+        # slow frame's extra sim steps.
+        if not self.active_dialogue:
+            _, pings_due = message_alert_state(self.message_alert_timer)
+            while self._message_alert_pings_played < pings_due:
+                sound_board.play("ping")
+                self._message_alert_pings_played += 1
 
     def update_physics(self, player_present=False):
         """Advance just the NPCs - safe to call on a location that isn't
@@ -322,6 +334,12 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         self._refresh_messages()
         if self.message_alert_timer > 0:
             self.message_alert_timer -= 1
+        elif self._unread_alert_pinned:
+            # An unread message: loop the blink/ping cycle instead of
+            # letting it go quiet - see self._unread_alert_pinned's own
+            # comment. Cleared only by clicking the Messages pane.
+            self.message_alert_timer = MESSAGE_ALERT_FRAMES
+            self._message_alert_pings_played = 0
         if self.message_banner_timer > 0:
             self.message_banner_timer -= 1
         if self.active_dialogue:
@@ -376,13 +394,10 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
 
             # Walkable floor - one polygon per room in the culture's floor_color,
             # so each reads as distinct from the surrounding wall_color fill.
-            # An optional thin trim outline gives the plan crisp edges.
             for room in self.rooms:
                 screen_pts = [to_screen(px, py) for px, py in room["polygon"]]
                 if len(screen_pts) >= 3:
                     pygame.draw.polygon(surface, self.floor_color, screen_pts)
-                    if self.wall_trim_color and not self.seamless:
-                        pygame.draw.polygon(surface, self.wall_trim_color, screen_pts, max(1, int(2 * scale)))
 
             # Tessellated floor tiles (interior "floor_pattern") - laid over the
             # flat floor fill, under the line decorations and everyone. Plain
@@ -571,12 +586,12 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             # portal") whenever it actually applies. Self-explanatory mouse
             # actions (wheel to scroll/zoom) are left off too.
             help_items = [
-                ("ESC", "Pause"),
+                (primary_label(Action.PAUSE), "Pause"),
                 ("WASD / Arrows", "Walk"),
-                ("Q  /  E", "Cycle target"),
-                ("1", "Star map"),
-                ("2", "Possessions"),
-                ("3", "Mission log"),
+                (combo(Action.CYCLE_TARGET_BACKWARD, Action.CYCLE_TARGET_FORWARD), "Cycle target"),
+                (primary_label(Action.STAR_MAP), "Star map"),
+                (primary_label(Action.POSSESSIONS), "Possessions"),
+                (primary_label(Action.MISSION_LOG), "Mission log"),
             ]
             controls_rect = draw_controls_pane(surface, control_margin, control_margin, "Controls", help_items, ui_scale,
                                                collapsed=self.controls_collapsed)
@@ -592,9 +607,9 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
         if draw_hud and not self.active_dialogue:
             status_lines = []
             if active_portal:
-                status_lines.append(("Press G to enter portal", GREEN))
+                status_lines.append((f"Press {primary_label(Action.USE_PORTAL)} to enter portal", GREEN))
             if closest_npc:
-                status_lines.append((f"Press T to talk to {closest_npc.name}", GREEN))
+                status_lines.append((f"Press {primary_label(Action.TALK)} to talk to {closest_npc.name}", GREEN))
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 
         # Bottom-left Message Log - the same shared history the Space View
@@ -607,7 +622,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             messages = [(m["sender"], m["text"]) for m in self.player.possessions.message_log]
             message_log_rect, message_log_max_scroll = draw_message_log(
                 surface, messages, ui_scale, self.message_log_scroll,
-                alert=message_alert_state(self.message_alert_timer)[0])
+                alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned)
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))
             self._message_log_max_scroll = message_log_max_scroll
         self._message_log_rect = message_log_rect
@@ -658,6 +673,14 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                 continue
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # A click on the Messages pane acknowledges an unread
+                # message - see self._unread_alert_pinned's own comment -
+                # silencing the looping blink/ping immediately rather than
+                # waiting for the current cycle to finish.
+                if self._message_log_rect and self._message_log_rect.collidepoint(event.pos):
+                    self._unread_alert_pinned = False
+                    self.message_alert_timer = 0
+                    continue
                 if not any(rect.collidepoint(event.pos) for rect in self._hud_click_rects):
                     self._select_person_target_at(*to_world(*event.pos))
                 continue
@@ -687,7 +710,7 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
             if event.type != pygame.KEYDOWN:
                 continue
 
-            if event.key == pygame.K_g:
+            if is_action(event.key, Action.USE_PORTAL):
                 # Only allow exit if near a portal (see self.portals) -
                 # whichever one is closest, if the player somehow got two
                 # in range at once.
@@ -706,13 +729,13 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                         # either way, so an unusable option is still visible
                         # with its reason instead of G silently doing nothing.
                         return "exit_menu"
-            elif event.key == pygame.K_e:
+            elif is_action(event.key, Action.CYCLE_TARGET_FORWARD):
                 self._cycle_npc_target(1)
-            elif event.key == pygame.K_q:
+            elif is_action(event.key, Action.CYCLE_TARGET_BACKWARD):
                 self._cycle_npc_target(-1)
-            elif event.key == pygame.K_1:
+            elif is_action(event.key, Action.STAR_MAP):
                 return "star_map"
-            elif event.key == pygame.K_t:
+            elif is_action(event.key, Action.TALK):
                 # T always talks to whoever's closest in range (see
                 # _closest_person_in_range) - independent of any manually
                 # cycled/clicked target (current_npc_target), which is only
@@ -746,20 +769,20 @@ class LocationScreen(_PortalsMixin, _CommerceMixin, _DialogueMixin, _TargetingMi
                     nearest.dialogue.current_node = nearest.dialogue.resolve_root(self.player.possessions.flags, self.player.possessions.reputation)
                     nearest.dialogue.selected_option = self._first_selectable_option(nearest.dialogue.current_options(self.player.possessions.flags, self.player.possessions.reputation))
                     self.active_dialogue = nearest.dialogue
-            elif event.key == pygame.K_2:
+            elif is_action(event.key, Action.POSSESSIONS):
                 # Generic gameplay-event flag - lets a tutorial stage use
-                # "viewed_possessions" as its complete_flag; mirrors K_3 below.
+                # "viewed_possessions" as its complete_flag; mirrors MISSION_LOG below.
                 self.player.possessions.flags["viewed_possessions"] = True
                 return "possessions"
-            elif event.key == pygame.K_3:
+            elif is_action(event.key, Action.MISSION_LOG):
                 # Generic gameplay-event flag - lets a mission stage use
                 # "viewed_mission_log" as its complete_flag (see
-                # missions.json's first_flight); mirrors SpaceScreen's K_3.
+                # missions.json's first_flight); mirrors SpaceScreen's MISSION_LOG.
                 self.player.possessions.flags["viewed_mission_log"] = True
                 return "missions"
-            elif event.key == pygame.K_c:
+            elif is_action(event.key, Action.TOGGLE_CONTROLS):
                 self._toggle_controls()
-            elif event.key == pygame.K_ESCAPE:
+            elif is_action(event.key, Action.PAUSE):
                 return "pause"
         return None
 

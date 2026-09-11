@@ -5,6 +5,7 @@ Layout & File Conventions"."""
 import math
 import pygame
 from game.constants import YELLOW, WHITE, GRAY
+from game.controls import Action, primary_label
 from game.utils import get_font, _wrap_text, get_ui_scale
 import game.utils as utils
 from game.world.ship import Ship
@@ -142,7 +143,7 @@ def draw_glow_message(surface, text, font, center_x, top_y, color=YELLOW, shadow
     return panel
 
 
-CONTROLS_TOGGLE_KEY = "C"  # key that shows/hides the Controls pane (see the screens' handle_input)
+CONTROLS_TOGGLE_KEY = primary_label(Action.TOGGLE_CONTROLS)  # key that shows/hides the Controls pane (see the screens' handle_input)
 
 
 def draw_controls_pane(surface, x, y, title, items, ui_scale, collapsed=False):
@@ -337,12 +338,15 @@ INFO_PANEL_VISIBLE_LINES = 8  # draw_info_panel lines shown at once before it sc
 # Unread-message alert: the bottom-left Message Log's red light blinks
 # exactly MESSAGE_ALERT_BLINKS times (on for MESSAGE_ALERT_BLINK_FRAMES,
 # then off for the same) and the "ping" sound fires once at the start of
-# each blink, then it goes quiet and dark. Both screens drive this off
-# message_alert_timer counting down from MESSAGE_ALERT_FRAMES; the blink
-# state and ping schedule come from message_alert_state() so they stay in
-# sync. (Was a flat ~10s / ~14-blink wall-clock flash with a single ping.)
+# each blink. Both screens drive this off message_alert_timer counting down
+# from MESSAGE_ALERT_FRAMES; the blink state and ping schedule come from
+# message_alert_state() so they stay in sync. Every message re-arms this
+# cycle for as long as it stays unread (see SpaceScreen/LocationScreen's
+# _unread_alert_pinned) rather than it running once and going quiet - see
+# draw_message_log's `pinned` flag for the "CLICK TO STOP" prompt that goes
+# with it. (Was a flat ~10s / ~14-blink wall-clock flash with a single ping.)
 MESSAGE_ALERT_BLINKS = 3
-MESSAGE_ALERT_BLINK_FRAMES = 21  # ~0.35s at 60fps per half-cycle (matches the old blink rate)
+MESSAGE_ALERT_BLINK_FRAMES = 36  # ~0.6s at 60fps per half-cycle - a ping about every 1.2s
 MESSAGE_ALERT_FRAMES = MESSAGE_ALERT_BLINKS * 2 * MESSAGE_ALERT_BLINK_FRAMES
 
 
@@ -362,7 +366,7 @@ def message_alert_state(frames_remaining):
     return blink_on, pings_due
 
 
-def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
+def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False, pinned=False):
     """Bottom-left glass panel of received one-way messages (see
     Possessions.add_message/message_log and SpaceScreen._check_one_way_hails),
     newest entry on top - the bottom-left counterpart to draw_status_pane
@@ -380,7 +384,11 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
 
     `alert` is this frame's on/off state for the red "unread" light (the
     caller resolves it via message_alert_state()); pass False to leave it
-    dark.
+    dark. `pinned` draws a steady (non-blinking) red "CLICK TO STOP" label
+    next to the light - pass it while the caller's unread alert is looped
+    rather than self-clearing (see SpaceScreen/LocationScreen's
+    `_unread_alert_pinned`), so the player has an explicit target to click
+    instead of just watching a light blink at them indefinitely.
 
     Returns `(rect, max_scroll)` so the caller can clamp its own stored
     scroll offset; returns `(None, 0)` when there are no messages yet (a
@@ -430,12 +438,19 @@ def draw_message_log(surface, messages, ui_scale, scroll=0, alert=False):
     surface.blit(title_rendered, (rect.x + pad_x, rect.y + pad_y))
     # Red "unread" light in the panel's top-right corner. The caller passes
     # `alert` already resolved to this frame's on/off blink state (see
-    # message_alert_state / message_alert_timer) - it blinks MESSAGE_ALERT_
-    # BLINKS times in sync with the ping, then stays dark.
+    # message_alert_state / message_alert_timer) - it blinks in sync with
+    # the ping. `pinned` adds a steady "CLICK TO STOP" label just to its
+    # left, telling the player where to click to silence it (the label
+    # itself doesn't blink, so it stays readable through the light's off
+    # phase).
+    r = max(3, int(5 * ui_scale))
+    cx = rect.right - pad_x - r
+    cy = rect.y + pad_y + title_rendered.get_height() // 2
+    if pinned:
+        prompt_font = get_font(int(13 * ui_scale))
+        prompt = prompt_font.render("CLICK TO STOP", True, (255, 80, 80))
+        surface.blit(prompt, (cx - r - int(6 * ui_scale) - prompt.get_width(), cy - prompt.get_height() // 2))
     if alert:
-        r = max(3, int(5 * ui_scale))
-        cx = rect.right - pad_x - r
-        cy = rect.y + pad_y + title_rendered.get_height() // 2
         pygame.draw.circle(surface, (60, 15, 15), (cx, cy), r + max(1, int(2 * ui_scale)))
         pygame.draw.circle(surface, (255, 60, 60), (cx, cy), r)
     y = rect.y + pad_y + title_height

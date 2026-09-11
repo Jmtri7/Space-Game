@@ -456,6 +456,7 @@ def core_moon():
             # entirely by the Signal-Tender's Hub Zero shop + Threa-kin's
             # acknowledgement line - no mission.
             "label": "Ring Segment Four", "culture": "the_wardens",
+            "floor_pattern": "warden",
             "connected_locations": [], "entrance": {"x": 800, "y": 900},
             "rooms": [
                 rect(300, 600, 1300, 1120, "Segment Four Floor"),

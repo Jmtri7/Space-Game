@@ -221,6 +221,41 @@ proximity hails (`_check_one_way_hails`), the rescue notice — funnels through
 `MESSAGE_SPACING_FRAMES` (~7.5s). An isolated message lands at once; a burst
 spaces out so banners don't stack and the ping doesn't drone.
 
+**The unread alert loops until the player clicks it.** Every message (not
+just plot-vital ones - a beacon relight or a pilot's proximity hail count
+too) sets `self._unread_alert_pinned` when it posts. Normally the Message
+Log's red light blinks and pings exactly `MESSAGE_ALERT_BLINKS` times
+(`message_alert_timer` counts down to 0 and stays there - see
+`message_alert_state`). While `_unread_alert_pinned` is set,
+`update()`/`update_physics()` re-arms `message_alert_timer` back to
+`MESSAGE_ALERT_FRAMES` every time it would otherwise reach 0, looping the
+same blink/ping cycle indefinitely instead of letting it go quiet -
+`draw_message_log`'s `pinned` flag also puts up a steady (non-blinking) red
+"CLICK TO STOP" label next to the light so there's an explicit target, not
+just a light blinking at the player. `MESSAGE_ALERT_BLINK_FRAMES` (36 frames,
+~0.6s per half-cycle - a ping about every 1.2s) sets the pace for both the
+blink and the ping, whether it's mid-loop or on its first pass.
+
+It's only silenced by the player actually clicking the Messages pane -
+`handle_input`'s `MOUSEBUTTONDOWN` branch checks `_message_log_rect` first
+(before minimap / world-click handling), and on a hit clears
+`_unread_alert_pinned` and zeroes `message_alert_timer` immediately.
+`SpaceScreen` and `LocationScreen` each keep independent
+`_unread_alert_pinned` state (a message can arrive while either is the one
+on screen; `LocationScreen._refresh_messages` picks it up on the shared
+`possessions.message_log` the same way it picks up any message that landed
+while the player was flying).
+
+The alert stays quiet while a hail (K_r) or NPC conversation (T) is open -
+in both cases the Messages pane isn't even drawn (`draw_hud and not
+self.active_dialogue` gates it in both `_draw_hud`/`draw()`), so it
+shouldn't be audible either. `SpaceScreen`'s side of this falls out of
+`step_world` skipping `game_screen.update()` entirely while
+`active_dialogue` is set (a hail freezes the whole screen); `LocationScreen.
+update()` isn't frozen the same way (an NPC conversation still lets other
+NPCs' `update_physics` tick, just not movement/escort/ambient checks - see
+there), so its own ping loop holds separately on `not self.active_dialogue`.
+
 Guideline for content authors: **a single player action should trigger at
 most one one-way message.** Don't emit two in the same beat and lean on the
 queue to sort them out — the queue is a safety net for genuinely independent

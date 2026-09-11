@@ -272,21 +272,23 @@ def say(sender, text):
 
 
 # ---------------------------------------------------------------- station shell
-# Per-culture floor tessellation - the pattern each culture would lay a deck in.
+# Per-culture floor texture - each culture prefix names a
+# graphics/floor_patterns/<name>.json spec (config/modules/long-silence-floors),
+# the pattern that culture would lay a deck in.
 _STATION_STYLE = {
-    "authority": ("square", 64, 2.0),   # ranked deck panels
-    "combine": ("square", 92, 3.0),     # big riveted plates
-    "drift": ("hex", 56, 2.0),          # woven / organic
-    "vigil": ("triangle", 80, 2.0),     # austere, angular
-    "warden": ("hex", 76, 2.5),         # monumental
-    "carrier": ("rhombus", 54, 2.0),    # patchwork diamonds
+    "authority": "authority",  # ranked square deck panels
+    "combine": "combine",      # big riveted square plates
+    "drift": "drift",          # woven / organic hex
+    "vigil": "vigil",          # austere, angular triangles
+    "warden": "warden",        # monumental hex
+    "carrier": "carrier",      # patchwork diamonds
 }
 
 
 def station_shell(pfx, star_seed):
     """Interior keys shared by every finished station concourse: no room
     borders or labels (`seamless`), the Space View starfield behind it
-    (`space_backdrop`), and a culture-tiled floor (`floor_pattern`)."""
-    pattern, tile, gap = _STATION_STYLE.get(pfx, ("hex", 64, 2.0))
+    (`space_backdrop`), and a culture-tiled floor (`floor_pattern`, a name
+    resolved against `graphics/floor_patterns/<name>.json`)."""
     return {"seamless": True, "space_backdrop": True, "star_seed": star_seed,
-            "floor_pattern": {"pattern": pattern, "tile": tile, "gap": gap}}
+            "floor_pattern": _STATION_STYLE.get(pfx, "warden")}

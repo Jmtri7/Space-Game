@@ -438,6 +438,7 @@ def grave_moon():
         "craters": [{"x": -7, "y": -4, "radius": 4}, {"x": 8, "y": 6, "radius": 4}, {"x": 1, "y": -9, "radius": 3}],
         "interiors": {"city": {
             "label": "the Grave-Yard", "culture": "the_vigil",
+            "floor_pattern": "vigil",
             "connected_locations": [], "entrance": {"x": 800, "y": 840},
             "rooms": [rect(200, 240, 1400, 1120, "the Grave-Yard")],
             "structures": [

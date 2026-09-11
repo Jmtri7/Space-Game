@@ -26,6 +26,7 @@
         "culture": "orbital_std",
         "space_backdrop": true,
         "star_seed": 9090,
+        "floor_pattern": "authority",
         "portals": [
           { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
         ],
@@ -57,6 +58,7 @@
         "label": "Verge Anchorage",
         "description": "A single settlement dug into a cold moon at the edge of the charts. A paved plaza, a handful of prefab modules, and one light left on.",
         "culture": "regolith_std",
+        "floor_pattern": "authority",
         "entrance": { "x": 320, "y": 545 },
         "rooms": [
           { "label": "Plaza", "polygon": [[120, 120], [520, 120], [520, 470], [120, 470]] },
@@ -109,7 +111,7 @@
                   ]
                 },
                 "choice": {
-                  "text": "It opens. Lanes folding shorter than any beacon, charts rewriting toward stars nobody's named - an invitation, or a door held for something on the other side. I've had the reply drafted for a year. I won't send it alone, and I won't send it against you. You got the transmission. You came. So it's yours to call, and I'll stand by it either way.",
+                  "text": "It opens. Lanes allowing for faster travel than any beacon, charts rewriting toward stars nobody's named - an invitation, or a door held for something on the other side. I've had the reply drafted for a year. I won't send it alone, and I won't send it against you. You got the transmission. You came. So it's yours to call, and I'll stand by it either way.",
                   "options": [
                     {
                       "label": "Send the reply. We answer it - together.",

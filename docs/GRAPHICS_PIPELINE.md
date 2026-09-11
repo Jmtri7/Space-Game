@@ -677,8 +677,7 @@ the repo root, writes four cross-linked pages next to itself:
 - **`pipeline-bodies.html`** ("Human Bodies") — the body variants at one scale,
   the face kit, the hair grid, the walk cycle.
 - **`pipeline-structures.html`** ("Civilian Structures") — the ship, the
-  station, the station interior (floor plan + lane check, with the culture's
-  `deck_grid` pattern drawn on it), the surface settlement (`interiors/*.json`
+  station, the station interior (floor plan + lane check), the surface settlement (`interiors/*.json`
   with a `structures` list — the plaza with every building and decoration
   placed as an upright billboard, as the game draws it), each building and
   decoration as its authored **elevation** beside the player figure, plus its

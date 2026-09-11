@@ -19,24 +19,24 @@
         }
       },
       {
-        "text": "The note names a dead relay in the Tessellate system - jump there.",
+        "text": "The note names a dead relay in the Tessellate system - open the star map, select it, and jump.",
         "complete_flag": "jumped_to:tessellate",
         "reset_on_activation": true,
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "Next segment decodes, in Elian's own words: 'Tessellate. The old relay station - it still holds air, and someone still lives in it. Ask them about the survey.' Pick Tessellate on the star map and jump (V)."
+          "text": "Next segment decodes, in Elian's own words: 'Tessellate. The old relay station - it still holds air, and someone still lives in it. Ask them about the survey.' Open the star map (1), select Tessellate, and jump (V)."
         }
       },
       {
-        "text": "Dock at the Tessellate relay station and find the archivist who knew Elian.",
+        "text": "Land at the Tessellate relay station and find the archivist who knew Elian.",
         "complete_flag": "met_archivist",
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "The relay's on a slow tumble but the dock still lights up - match it and set down (L), then find whoever's keeping the logs."
+          "text": "The relay's on a slow tumble but the dock still lights up - line up on the station and press G to land, then find whoever's keeping the logs."
         }
       },
       {
-        "text": "The note's last line points past the edge - jump to the Verge.",
+        "text": "The note's last line points past the edge - open the star map, select the Verge, and jump.",
         "complete_flag": "jumped_to:verge",
         "reset_on_activation": true,
         "one_way_message": {
@@ -45,11 +45,11 @@
         }
       },
       {
-        "text": "Land at the settlement on the Verge moon and find Elian Marr.",
+        "text": "Fly to the settled moon in the Verge system, land at its pad, and find Elian Marr.",
         "complete_flag": "found_elian",
         "one_way_message": {
           "sender": "Elian's transmission",
-          "text": "There's one settled moon in the Verge and one lit pad on it. Set down (L) and find Elian."
+          "text": "There's one settled moon in the Verge and one lit pad on it. Fly up to the moon and press G to land, then find Elian."
         }
       }
     ]

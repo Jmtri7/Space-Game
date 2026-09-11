@@ -10,7 +10,6 @@
     "wall_color": [40, 52, 70],
     "floor_color": [92, 110, 135],
     "wall_trim_color": [150, 172, 205],
-    "interior_decoration": {"generator": "deck_grid", "color": [150, 180, 220], "spacing": 90, "width": 1},
     "theme": "Authority architecture is orderly, symmetrical, and over-signed: clean rectangular halls, evenly ranked windows, a painted deck grid, chrome-and-navy livery, and a docking-guidance chevron on every surface that could carry one. Pull hull/wall from metal_color, glass/light from glass_color, thrust from thrust_color. It should read as a institution that has kept its uniform pressed for 200 years with nobody left to inspect it.",
     "naming": "PLACES: Relay-era designations kept verbatim - 'Halcyon Approach', 'Beacon 1', 'Hub Control', 'Sector Green'. PEOPLE: '<given> <surname>', measured and vaguely nautical (Harbor-Master Ellis Crane, Controller Vane, Signalwoman Doss). Titles are traffic-control ranks: Controller, Harbor-Master, Signal Officer, Approach Warden."
   },
@@ -66,7 +65,6 @@
     "wall_color": [32, 40, 42],
     "floor_color": [82, 96, 96],
     "wall_trim_color": [132, 152, 142],
-    "interior_decoration": {"generator": "deck_grid", "color": [110, 220, 200], "spacing": 80, "width": 1},
     "theme": "Warden space is ancient monumental engineering with a scavenged priesthood living in its margins: vast smooth Relay-era forms in dark alloy and teal light, patched with mismatched salvage and hand-lettered ritual markings. Pull the monumental shell from metal_color and glass_color, the salvage from the free_carrier palette, thrust from thrust_color.",
     "naming": "PLACES: Relay-core designations worn into liturgy - 'the Span', 'Hub Zero', 'the Core Choir', 'Ring Segment 4'. PEOPLE: a rank-name, the given name mostly lost (First Warden, Warden of the Fourth Segment, the Signal-Tender). Titles: Warden, Signal-Tender, Keeper of the Hub."
   },
@@ -90,7 +88,6 @@
     "description": "Borrowed from graphics_pipeline_test so the pipeline station/furniture art resolves its culture colours. Remove in Phase 6.",
     "metal_color": [154, 164, 173], "glass_color": [127, 216, 200], "thrust_color": [255, 178, 87],
     "wall_color": [44, 48, 55], "floor_color": [92, 100, 109], "wall_trim_color": [120, 130, 140],
-    "interior_decoration": {"generator": "deck_grid", "spacing": 38, "color": [74, 81, 90], "width": 1},
     "theme": "placeholder", "naming": "placeholder"
   },
   "regolith_std": {

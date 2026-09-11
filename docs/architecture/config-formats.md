@@ -219,21 +219,28 @@ that area with a grid A* + string-pull (`IndoorPathfinder` / `NavGrid`, one
 cached raster per interior, `can_move_to` as its oracle). `decorations` are
 cosmetic floor/wall decals (`normalize_decoration`) with **no collision**;
 each culture's `interior_decoration` generator (`edge_veins` room-edge veins /
-`seam_rivets` edge ticks / `deck_grid` a spacing-`spacing` line grid clipped to
-each room by `_clip_segment_convex`) stamps a pack onto every room
-automatically. An interior config with `"space_backdrop": true` fills with the
-Space View's black + a `StarField` (own `star_seed` / `star_density`) instead of
-the flat wall colour, so the lit floor polygons read as decks open to the void
-(the concourse in `graphics_pipeline_test`). `"seamless": true` drops the
-per-room trim outline, the room-name labels, and the culture's edge-emphasising
-`interior_decoration` — so an interior of overlapping room polygons reads as one
-open deck rather than a set of boxes. `"floor_pattern": {"pattern": "hex" |
-"square" | "triangle" | "rhombus", "tile": <world units>, "gap": <inset>,
-"colors": [[r,g,b], …]}` fills every room with a repeating tile clipped to the
-room polygon (`deck_grid.tessellate` / `clip_polygon_convex`); with no explicit
-`colors` it cycles three shades derived from the culture's `floor_color` /
-`wall_trim_color`. `the_long_silence`'s station concourses set all three (see
-`config/stories/the_long_silence/docs/gen/_slice_kit.py` `station_shell`). `structures` that name a
+`seam_rivets` edge ticks) stamps a pack onto every room automatically. Each
+room draws as a flat `floor_color` polygon with no trim outline — rooms read
+as distinct only by contrast against the surrounding `wall_color` fill. An
+interior config with `"space_backdrop": true` fills with the Space View's
+black + a `StarField` (own `star_seed` / `star_density`) instead of the flat
+wall colour, so the lit floor polygons read as decks open to the void (the
+concourse in `graphics_pipeline_test`). `"seamless": true` drops the room-name
+labels and the culture's edge-emphasising `interior_decoration` — so an
+interior of overlapping room polygons reads as one open deck rather than a set
+of boxes. `"floor_pattern"` fills every room with a
+repeating tile clipped to the room polygon (`deck_grid.tessellate` /
+`clip_polygon_convex`) — either an inline dict `{"pattern": "hex" | "square" |
+"triangle" | "rhombus", "tile": <world units>, "gap": <inset>, "colors":
+[[r,g,b], …]}`, or a string naming a `graphics/floor_patterns/<name>.json`
+asset resolved through the story's modules (`get_floor_pattern`, see
+`game/graphics/story_assets.py`). With no explicit `colors` it cycles three
+shades derived from the culture's `floor_color` / `wall_trim_color`.
+`the_long_silence`'s station concourses set `seamless` + `space_backdrop` +
+a named `floor_pattern` (see `config/stories/the_long_silence/docs/gen/_slice_kit.py`
+`station_shell`); the six named patterns themselves live in the
+`long-silence-floors` module (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)).
+`structures` that name a
 `building_type` are solid: anything with a `footprint` block (spires, halls,
 and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,
 `*_seat_pod`, `*_crate`, `*_barrel`) contributes a ground-level collision box

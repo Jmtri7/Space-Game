@@ -26,6 +26,7 @@
         "label": "Sift Station Ground",
         "description": "A survey outpost on Tessellate's one moon, kept just warm enough for the two people who catalogue what the relay's antennas pull in.",
         "culture": "regolith_std",
+        "floor_pattern": "authority",
         "entrance": { "x": 320, "y": 500 },
         "rooms": [
           { "label": "Yard", "polygon": [[140, 140], [500, 140], [500, 440], [140, 440]] },
@@ -58,6 +59,7 @@
         "culture": "orbital_std",
         "space_backdrop": true,
         "star_seed": 3140,
+        "floor_pattern": "authority",
         "portals": [
           { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
         ],
@@ -111,7 +113,7 @@
                   ]
                 },
                 "where": {
-                  "text": "The Verge - past the last beacon, one settled moon, Elian's been living under the plaza. I'll key you the lane; the packet unseals your nav for it. Read Elian's last line before you jump, and don't decide anything until you've stood in front of them.",
+                  "text": "The Verge - past the last beacon, one settled moon, Elian's been living under the plaza. I'll activate the system jump lane in your navigation. Read Elian's last line before you jump, and don't decide anything until you've stood in front of them.",
                   "options": [
                     {
                       "label": "Take the packet. Key the lane.",
@@ -125,7 +127,7 @@
                   ]
                 },
                 "after": {
-                  "text": "Lane's keyed, packet's aboard. Whatever Elian is when you get there - go anyway. That was the whole point of the note.",
+                  "text": "Jump lane is activated, packet's aboard. Whatever Elian is when you get there - go anyway. That was the whole point of the note.",
                   "options": [
                     { "label": "Understood", "next": null }
                   ]

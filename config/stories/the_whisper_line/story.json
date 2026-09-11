@@ -8,7 +8,8 @@
     "audio-core",
     "ships-core",
     "common-goods",
-    "story-defaults"
+    "story-defaults",
+    "long-silence-floors"
   ],
   "description": "A stranger burns a file to your communicator on a quiet station ring and is gone before you can ask a question. It is from Elian Marr - a friend who flew off the edge of the charts years ago and was never logged again. The note is a trail. Follow it out past the last relay and find out what Elian found.",
   "difficulty": "normal",

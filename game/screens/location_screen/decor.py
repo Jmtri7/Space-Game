@@ -42,16 +42,14 @@ class _DecorMixin:
             for room in self.rooms:
                 for segment in _edge_ticks(room["polygon"], spacing, tick):
                     out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
-        elif generator == "deck_grid":
-            spacing, color, width = spec.get("spacing", 44), spec.get("color", [0, 0, 0]), spec.get("width", 1)
-            for room in self.rooms:
-                for segment in _grid_segments(room["polygon"], spacing):
-                    out.append(normalize_decoration({"shape": "line", "layer": "floor", "points": segment, "color": color, "width": width}))
         return out
 
     def _build_floor_pattern(self):
         """Expand the interior's optional "floor_pattern" spec into a cached
-        list of (world-space polygon, rgb) tiles that fill every room. Spec:
+        list of (world-space polygon, rgb) tiles that fill every room. Spec is
+        either an inline dict or a string naming a
+        `graphics/floor_patterns/<name>.json` asset (resolved through the
+        story's modules - see game/graphics/story_assets.py):
           {"pattern": "hex"|"square"|"triangle"|"rhombus",  # default "hex"
            "tile": <world units, default ~2x player height>,
            "gap": <shrink each tile toward its centre, default 2>,
@@ -59,6 +57,8 @@ class _DecorMixin:
         Tiles cycle through the shade list by lattice parity, so the floor
         reads as laid panels in the culture's own colours."""
         spec = self.config.get("floor_pattern")
+        if isinstance(spec, str):
+            spec = get_floor_pattern(self.story, spec)
         if not spec or not self.rooms:
             return []
         kind = spec.get("pattern", "hex")
@@ -72,10 +72,8 @@ class _DecorMixin:
             shades = [tuple(base), _mix_rgb(base, accent, 0.45), _scale_rgb(base, 0.8)]
         tiles = []
         for room in self.rooms:
-            for cell in _tessellate(room["polygon"], kind, size):
+            for cell in _tessellate(room["polygon"], kind, size, gap):
                 pts = cell["points"]
-                if gap:
-                    pts = _inset_polygon(pts, gap) or pts
                 if len(pts) >= 3:
                     wp = [(float(x), float(y)) for x, y in pts]
                     xs = [p[0] for p in wp]

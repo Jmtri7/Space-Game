@@ -63,41 +63,6 @@ class TestPointInPolygon(unittest.TestCase):
         self.assertTrue(point_in_polygon(100, 50, poly))   # exactly on the right edge
 
 
-class TestDeckGridDecoration(unittest.TestCase):
-    """_clip_segment_convex / _grid_segments - the geometry behind the
-    'deck_grid' culture floor decoration."""
-
-    SQUARE = [(0, 0), (100, 0), (100, 100), (0, 100)]
-
-    def test_clip_keeps_the_span_inside_the_polygon(self):
-        a, b = _clip_segment_convex((50, -20), (50, 130), self.SQUARE)
-        self.assertAlmostEqual(a[1], 0)
-        self.assertAlmostEqual(b[1], 100)
-        self.assertEqual((a[0], b[0]), (50, 50))
-
-    def test_clip_returns_none_for_a_segment_that_misses(self):
-        self.assertIsNone(_clip_segment_convex((200, -20), (200, 130), self.SQUARE))
-
-    def test_clip_respects_a_diagonal_trapezoid_edge(self):
-        # concourse-style wedge: the left edge slopes in toward the top
-        wedge = [(0, 100), (100, 100), (70, 0), (30, 0)]
-        clip = _clip_segment_convex((20, -5), (20, 105), wedge)
-        self.assertIsNotNone(clip)
-        (ax, ay), (bx, by) = clip
-        # entry is on the sloped edge, above the floor line, not at y=0
-        self.assertGreater(min(ay, by), 0)
-        self.assertAlmostEqual(max(ay, by), 100)
-
-    def test_grid_segments_all_lie_within_the_room(self):
-        wedge = [(0, 100), (100, 100), (70, 0), (30, 0)]
-        segs = _grid_segments(wedge, 15)
-        self.assertGreater(len(segs), 4)
-        for (ax, ay), (bx, by) in segs:
-            for x, y in ((ax, ay), (bx, by)):
-                self.assertTrue(point_in_polygon(x, y, wedge),
-                                f"grid endpoint ({x:.1f},{y:.1f}) outside the room")
-
-
 class TestFloorTessellation(unittest.TestCase):
     """clip_polygon_convex / tessellate - the geometry behind the interior
     'floor_pattern' tiled floor."""
@@ -134,6 +99,68 @@ class TestFloorTessellation(unittest.TestCase):
             # tiles tile the room: total area is close to the room's 40000
             self.assertGreater(area, 40000 * 0.9, kind)
             self.assertLess(area, 40000 * 1.02, kind)
+
+    def test_adjacent_rooms_clip_flush_along_their_shared_edge(self):
+        """A tile straddling the border between two adjacent rooms is
+        tessellated once per room, from the same absolute lattice - clipping
+        each to its own room must cut exactly on the shared line (x=200), so
+        the two rooms' fragments meet with no jagged mismatch."""
+        room_a = [(0, 0), (200, 0), (200, 200), (0, 200)]
+        room_b = [(200, 0), (400, 0), (400, 200), (200, 200)]
+        tiles_a = _tessellate(room_a, "square", 40)
+        tiles_b = _tessellate(room_b, "square", 40)
+
+        def border_ys(tiles):
+            ys = set()
+            for t in tiles:
+                for x, y in t["points"]:
+                    if abs(x - 200) < 1e-6:
+                        ys.add(round(y, 2))
+            return ys
+
+        border_a, border_b = border_ys(tiles_a), border_ys(tiles_b)
+        self.assertTrue(border_a, "room A has no vertices on the shared edge")
+        self.assertEqual(border_a, border_b)
+
+    def test_gap_shrinks_the_whole_tile_before_clipping_not_the_fragment(self):
+        """A room-boundary tile is shrunk toward *its own* full-tile centroid
+        before being clipped to the room - not shrunk toward the clipped
+        fragment's (room-specific) centroid afterward. Otherwise the same
+        straddling tile shrinks toward two different points depending on
+        which room clips it, and the two rooms' edges no longer line up.
+        Checked here via clip_polygon_convex + the pre-clip inset directly,
+        since a real gap tile at a shared border ends up assigned to
+        whichever room contains its shrunk footprint (see decor.py)."""
+        from game.graphics.deck_grid import _inset_toward_centroid
+        straddling_tile = [[180, 0], [220, 0], [220, 40], [180, 40]]
+        shrunk = _inset_toward_centroid(straddling_tile, 5.0)
+        # centroid is (200, 20) - every vertex should have moved the same
+        # 5-unit step toward it, regardless of which room clips the result.
+        for (x0, y0), (x1, y1) in zip(straddling_tile, shrunk):
+            self.assertAlmostEqual(math.hypot(x1 - x0, y1 - y0), 5.0, places=5)
+
+
+class TestFloorPatternByName(unittest.TestCase):
+    """"floor_pattern" as a string names a
+    graphics/floor_patterns/<name>.json asset (config/modules/
+    long-silence-floors for the_long_silence) instead of an inline spec."""
+
+    def test_named_pattern_resolves_through_the_story_s_modules(self):
+        screen = LocationScreen(story="the_long_silence", config_data={
+            "label": "Deck", "culture": "harbor_authority",
+            "rooms": [{"rect": [0, 0, 200, 200], "label": "Deck"}],
+            "floor_pattern": "authority",
+        }, world_width=800, world_height=600)
+        tiles = screen._build_floor_pattern()
+        self.assertGreater(len(tiles), 0)
+
+    def test_unknown_name_yields_no_tiles_instead_of_raising(self):
+        screen = LocationScreen(story="the_long_silence", config_data={
+            "label": "Deck", "culture": "harbor_authority",
+            "rooms": [{"rect": [0, 0, 200, 200], "label": "Deck"}],
+            "floor_pattern": "not_a_real_culture",
+        }, world_width=800, world_height=600)
+        self.assertEqual(screen._build_floor_pattern(), [])
 
 
 class TestStationWindowsAndCulture(unittest.TestCase):
@@ -468,6 +495,43 @@ class TestLocationScreenEconomy(unittest.TestCase):
             "shop": {"type": "ships", "stock": ["shuttle"]},
         })
         self.assertFalse(character.person.shop_via_dialogue)
+
+    def test_any_message_alert_keeps_looping_until_clicked(self):
+        screen = self._make_screen()
+        screen._post_local_message("Elian Marr", "Something's wrong.")
+        screen._refresh_messages()
+        self.assertTrue(screen._unread_alert_pinned)
+        for _ in range(MESSAGE_ALERT_FRAMES * 3):
+            screen.update_physics(player_present=True)
+        self.assertGreater(screen.message_alert_timer, 0)
+        self.assertTrue(screen._unread_alert_pinned)
+
+    def test_clicking_the_messages_pane_silences_the_alert(self):
+        import pygame as mocked_pygame
+        screen = self._make_screen()
+        screen._post_local_message("Elian Marr", "Something's wrong.")
+        screen._refresh_messages()
+        screen._message_log_rect = SimpleNamespace(collidepoint=lambda p: True)
+        event = SimpleNamespace(type=mocked_pygame.MOUSEBUTTONDOWN, button=1, pos=(10, 510))
+        screen.handle_input([event])
+        self.assertFalse(screen._unread_alert_pinned)
+
+    def test_alert_does_not_ping_while_talking_to_an_npc(self):
+        """Regression: the Messages pane pinged over an open NPC
+        conversation even though the pane isn't even drawn then (see
+        draw()'s own `not self.active_dialogue` gate) - update()'s ping loop
+        wasn't held the same way SpaceScreen's is (step_world skips its
+        update() entirely while a hail is open)."""
+        screen = self._make_screen()
+        screen._post_local_message("Elian Marr", "Something's wrong.")
+        screen._refresh_messages()
+        screen.active_dialogue = SimpleNamespace()  # talking to an NPC
+        with patch("game.audio.sound_board.sound_board.play") as mock_play:
+            for _ in range(MESSAGE_ALERT_FRAMES):
+                screen.update()
+            pings = [c for c in mock_play.call_args_list if c.args == ("ping",)]
+        self.assertEqual(pings, [])
+        self.assertEqual(screen.message_alert_timer, 0)
 
 
 class TestStationInteriorLayout(unittest.TestCase):

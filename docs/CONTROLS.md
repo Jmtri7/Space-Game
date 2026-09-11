@@ -4,13 +4,29 @@ All interactive controls and their bindings.
 
 ## Documentation trail — when you add or change ANY keyboard binding
 
-1. **Check this document first** for existing bindings, to avoid conflicts and
+Every gameplay key (Space View, interiors, dialogue/hailing, debug) is
+defined **once**, in [`game/controls.py`](../game/controls.py)'s `Action` /
+`KEYBINDS` registry - not as a scattered `pygame.K_*` literal. Code that
+checks input calls `pressed(keys, Action.X)` / `is_action(event.key,
+Action.X)`; on-screen text that names a key (the Controls pane rows, a
+bottom-status "Press X to ..." prompt) calls `primary_label(Action.X)` /
+`combo(...)` instead of hardcoding the letter. **Menus and dialogs are not
+in the registry** - see "Menus" below; their keys (Enter, ESC-to-close,
+arrow-list navigation) are UI conventions, not rebindable controls.
+
+1. **Check `game/controls.py`** for existing bindings, to avoid conflicts and
    to keep controls discoverable and consistent.
-2. **Add / update** the control here, with an action description.
-3. **Add / update** the help text in the menu or screen that shows the control
-   to players (the in-world Controls pane, a menu's button labels, etc.).
-4. **Commit** with `controls:` in the message so future agents know controls
+2. **Add / update the `Action`** there (and its `KEYBINDS` entry) rather than
+   reading a `pygame.K_*` constant directly at the call site.
+3. **Add / update** this document's table with an action description.
+4. **Build any UI text that names the key from the registry** (`primary_label`
+   / `combo`) - the Controls pane and status prompts - rather than typing the
+   letter, so a later rebind can't leave the text stale.
+5. **Commit** with `controls:` in the message so future agents know controls
    changed.
+
+Rebinding a key is then a one-line change to `KEYBINDS` - every check and
+every piece of UI text that names it follows automatically.
 
 Menus and dialogs are mouse-only — see "Menus" below and
 [patterns/ui-screens.md](patterns/ui-screens.md)'s "Menu vs. Dialog" before adding an

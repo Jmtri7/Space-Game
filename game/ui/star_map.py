@@ -5,6 +5,7 @@ from game.constants import WHITE, YELLOW, GREEN, CYAN
 from game.utils import get_ui_scale, get_star_systems, get_font, system_unlocked
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel
+from game.controls import Action, primary_label
 
 
 class StarMap(MenuBase):
@@ -153,6 +154,8 @@ class StarMap(MenuBase):
             (f"Station: {selected.get('station_name', 'Station')}", WHITE),
             (f"Moon: {selected.get('moon_name', 'Moon')}", WHITE),
         ]
+        if self.selected_system_id != self.current_system_id:
+            lines.append((f"Press {primary_label(Action.JUMP)} to jump", YELLOW))
         rendered = [font_label.render(text, True, color) for text, color in lines]
         panel_width = max(text.get_width() for text in rendered) + pad_x * 2
         panel_height = pad_y * 2 + line_height * len(rendered)

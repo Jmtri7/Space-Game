@@ -6,6 +6,7 @@ import time
 import math
 import game.constants as constants
 import game.perf_metrics as perf_metrics
+from game.controls import Action, is_action, keys_for
 from game.constants import (
     GAME_WIDTH, GAME_HEIGHT, SAVE_DIR, FPS,
     DESKTOP_WIDTH, DESKTOP_HEIGHT, VIDEO_RESOLUTIONS
@@ -376,9 +377,9 @@ def main():
             # mouse coords, so VIDEORESIZE needs no handling. The logical size
             # only changes via Settings -> Video (apply_resolution).
             for event in events:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_BACKQUOTE:
+                if event.type == pygame.KEYDOWN and is_action(event.key, Action.DEBUG_TOGGLE):
                     constants.DEBUG_MODE = not constants.DEBUG_MODE
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_m and (event.mod & pygame.KMOD_CTRL):
+                elif event.type == pygame.KEYDOWN and is_action(event.key, Action.MUTE) and (event.mod & pygame.KMOD_CTRL):
                     # Global audio mute (Ctrl+M) - works on every screen, so
                     # it's handled here next to QUIT/DEBUG rather than in any
                     # one screen. Toggles both the SFX board and the music.
@@ -602,9 +603,9 @@ def main():
 
             elif current_screen == "star_map":
                 action = star_map.handle_input(events)
-                if _pressed_any(events, pygame.K_1, pygame.K_ESCAPE):
+                if _pressed_any(events, *keys_for(Action.STAR_MAP), pygame.K_ESCAPE):
                     action = "close"
-                elif _pressed_any(events, pygame.K_v):
+                elif _pressed_any(events, *keys_for(Action.JUMP)):
                     action = "jump"
                 if action in ("close", "jump"):
                     game_screen.selected_system_id = star_map.selected_system_id
@@ -694,7 +695,7 @@ def main():
 
             elif current_screen == "possessions":
                 action = possessions_menu.handle_input(events)
-                if _pressed_any(events, pygame.K_2, pygame.K_ESCAPE):
+                if _pressed_any(events, *keys_for(Action.POSSESSIONS), pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = possessions_return_screen
@@ -703,7 +704,7 @@ def main():
 
             elif current_screen == "missions":
                 action = mission_log.handle_input(events)
-                if _pressed_any(events, pygame.K_3, pygame.K_ESCAPE):
+                if _pressed_any(events, *keys_for(Action.MISSION_LOG), pygame.K_ESCAPE):
                     action = "close"
                 if action == "close":
                     current_screen = missions_return_screen

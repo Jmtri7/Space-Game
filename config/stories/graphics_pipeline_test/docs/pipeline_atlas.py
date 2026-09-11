@@ -444,21 +444,6 @@ def interior_plate(name):
         rgb = resolve_color(room.get("color", "hull"), 0, pal)
         floor.append({"points": room["points"], "color": rgb})
 
-    # the in-game deck_grid floor pattern (culture interior_decoration), drawn
-    # on the plan so the plate shows the real floor, not the bare navmesh.
-    grid = []
-    try:
-        from game.graphics.deck_grid import grid_segments
-        dg = next((c["interior_decoration"] for c in load_story("cultures.json").values()
-                   if c.get("interior_decoration", {}).get("generator") == "deck_grid"), None)
-        if dg:
-            gc = dg.get("color", [0, 0, 0])
-            for room in design["rooms"]:
-                for a, b in grid_segments(room["points"], dg.get("spacing", 44)):
-                    grid.append({"points": [a, b], "color": gc, "width": dg.get("width", 1) * 0.6})
-    except FileNotFoundError:
-        pass
-
     raster, lane_cells, report = check_placements(design, decos, cols)
     lane_dots = []
     for c, r in lane_cells:
@@ -480,8 +465,8 @@ def interior_plate(name):
     ys = [y for room in design["rooms"] for x, y in room["points"]]
     pad = 10
     vb = (min(xs) - pad, min(ys) - pad, max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad)
-    plan = svg_specimen(floor + grid + deco_parts, vb=vb, px=520, ground=False)
-    lanes = svg_specimen(floor + grid + lane_dots + deco_parts + hitboxes, vb=vb, px=520, ground=False)
+    plan = svg_specimen(floor + deco_parts, vb=vb, px=520, ground=False)
+    lanes = svg_specimen(floor + lane_dots + deco_parts + hitboxes, vb=vb, px=520, ground=False)
 
     rows = "".join(
         f"<li>{r['decoration']} at {r['at']}: "
@@ -495,13 +480,11 @@ def interior_plate(name):
     finish = ""
     try:
         cultures = load_story("cultures.json")
-        dg = next((c["interior_decoration"] for c in cultures.values()
-                   if c.get("interior_decoration", {}).get("generator") == "deck_grid"), None)
-        if dg:
-            finish = (f"<p class='stat'>floor pattern: the culture's "
-                      f"<code>deck_grid</code> panel lines every {dg.get('spacing', 44)} u "
-                      f"(shown), over the Space View starfield where the interior "
-                      f"config sets <code>space_backdrop</code>.</p>")
+        if any(c.get("interior_decoration") for c in cultures.values()):
+            finish = ("<p class='stat'>floor decoration: the culture's "
+                      "<code>interior_decoration</code> pack is layered on top "
+                      "(not shown), over the Space View starfield where the "
+                      "interior config sets <code>space_backdrop</code>.</p>")
     except FileNotFoundError:
         pass
     return f"""

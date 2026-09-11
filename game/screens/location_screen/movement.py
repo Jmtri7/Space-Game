@@ -1,5 +1,6 @@
 """LocationScreen: movement — mixed into the class in screen.py."""
 from game.screens.location_screen._defs import *  # noqa: F401,F403
+from game.controls import Action, pressed_dir
 
 
 class _MovementMixin:
@@ -11,8 +12,8 @@ class _MovementMixin:
         pilots. step_toward normalizes the step, so a diagonal is no longer
         1.41x faster than a cardinal, and it wall-slides instead of stopping
         dead against an angled wall."""
-        dir_x = (keys[pygame.K_RIGHT] or keys[pygame.K_d]) - (keys[pygame.K_LEFT] or keys[pygame.K_a])
-        dir_y = (keys[pygame.K_DOWN] or keys[pygame.K_s]) - (keys[pygame.K_UP] or keys[pygame.K_w])
+        dir_x = pressed_dir(keys, Action.TURN_LEFT, Action.TURN_RIGHT)
+        dir_y = pressed_dir(keys, Action.THRUST, Action.REVERSE)
         if not dir_x and not dir_y:
             return
         can_move = can_move_func or self.can_move_to

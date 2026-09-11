@@ -257,17 +257,17 @@ class _HudMixin:
             # Self-explanatory mouse actions (wheel to scroll/zoom, click/hover
             # a blip) are left off too.
             help_items = [
-                ("ESC", "Pause"),
-                ("A / D", "Turn"),
-                ("W", "Thrust"),
-                ("S", "Reverse heading"),
-                ("Z / X", "Rotate view"),
-                ("T", "Target mode"),
-                ("Q / E", "Cycle target"),
-                ("Space", "Fire"),
-                ("1", "Star map"),
-                ("2", "Possessions"),
-                ("3", "Mission log"),
+                (primary_label(Action.PAUSE), "Pause"),
+                (combo(Action.TURN_LEFT, Action.TURN_RIGHT), "Turn"),
+                (primary_label(Action.THRUST), "Thrust"),
+                (primary_label(Action.REVERSE), "Reverse heading"),
+                (combo(Action.ROTATE_VIEW_RIGHT, Action.ROTATE_VIEW_LEFT), "Rotate view"),
+                (primary_label(Action.CYCLE_TARGET_MODE), "Target mode"),
+                (combo(Action.CYCLE_TARGET_BACKWARD, Action.CYCLE_TARGET_FORWARD), "Cycle target"),
+                (primary_label(Action.FIRE), "Fire"),
+                (primary_label(Action.STAR_MAP), "Star map"),
+                (primary_label(Action.POSSESSIONS), "Possessions"),
+                (primary_label(Action.MISSION_LOG), "Mission log"),
             ]
             controls_rect = draw_controls_pane(surface, margin, margin, "Controls", help_items, ui_scale,
                                                collapsed=self.controls_collapsed)
@@ -316,7 +316,7 @@ class _HudMixin:
             else:
                 speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
                 if self.landing_text > 0:
-                    status_lines.append(("Press G to Land", GREEN))
+                    status_lines.append((f"Press {primary_label(Action.LAND)} to Land", GREEN))
                 elif speed >= 0.4 and (
                     self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
                     or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance
@@ -328,13 +328,15 @@ class _HudMixin:
                 # JUMP_SELF_MIN_DISTANCE), so only prompt for it once that's
                 # actually true.
                 if self.selected_system_id != self.system_id:
-                    status_lines.append(("Press V to Jump", GREEN))
+                    status_lines.append((f"Press {primary_label(Action.JUMP)} to Jump", GREEN))
                 elif self._drifted_from_center():
-                    status_lines.append(("Drifting far from the system - open the Star Map (1) and jump (V) back", YELLOW))
+                    status_lines.append((
+                        f"Drifting far from the system - open the Star Map ({primary_label(Action.STAR_MAP)}) "
+                        f"and jump ({primary_label(Action.JUMP)}) back", YELLOW))
                 if target_obj:
-                    status_lines.append(("Press F for Autopilot", GREEN))
+                    status_lines.append((f"Press {primary_label(Action.AUTOPILOT)} for Autopilot", GREEN))
                 if isinstance(target_obj, Character):
-                    status_lines.append((f"Press R to Hail {target_obj.person.name or 'Target'}", GREEN))
+                    status_lines.append((f"Press {primary_label(Action.HAIL)} to Hail {target_obj.person.name or 'Target'}", GREEN))
 
             ship = self.player.ship
             if ship and ship.health < ship.max_health:
@@ -363,7 +365,7 @@ class _HudMixin:
         message_log_rect = None
         if draw_hud and not self.active_dialogue:
             messages = [(m["sender"], m["text"]) for m in self.player.person.possessions.message_log]
-            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=message_alert_state(self.message_alert_timer)[0])
+            message_log_rect, message_log_max_scroll = draw_message_log(surface, messages, ui_scale, self.message_log_scroll, alert=message_alert_state(self.message_alert_timer)[0], pinned=self._unread_alert_pinned)
             # Clamp now that the real wrapped-line count is known (window
             # resize or a shrinking log can leave the stored offset too big).
             self.message_log_scroll = max(0, min(self.message_log_scroll, message_log_max_scroll))

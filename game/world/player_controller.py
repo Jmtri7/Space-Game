@@ -1,6 +1,6 @@
 """Player ship controller."""
-import pygame
 from game.constants import DARK_GRAY
+from game.controls import Action, pressed
 from game.world.ship import Ship
 from game.world.person import Person
 
@@ -27,7 +27,7 @@ class PlayerController:
 
         # Rotation controls
         flags = self.person.possessions.flags
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        if pressed(keys, Action.TURN_LEFT):
             self.ship.turn_left()
             # Generic gameplay-event flags (see the "used_brake" one below) -
             # any story's missions.json can use these as a stage's
@@ -37,7 +37,7 @@ class PlayerController:
             # derived flag it completes on.
             flags["used_turn"] = True
             flags["turned_left"] = True
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        if pressed(keys, Action.TURN_RIGHT):
             self.ship.turn_right()
             flags["used_turn"] = True
             flags["turned_right"] = True
@@ -45,9 +45,9 @@ class PlayerController:
             flags["turned_both_ways"] = True
 
         # Thrust controls
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
+        if pressed(keys, Action.THRUST):
             self.ship.increase_thrust()
-        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        elif pressed(keys, Action.REVERSE):
             # Point ship toward opposite velocity (brake/reverse)
             self.ship.point_to_reverse_velocity()
             # Generic gameplay-event flag (see SpaceScreen's own "used_thrust"/
