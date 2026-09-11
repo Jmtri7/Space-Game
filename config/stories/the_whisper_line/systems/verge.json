@@ -1,7 +1,7 @@
 {
   "name": "The Verge",
   "description": "Past the last beacon the charts go to guesses. One red dwarf, one cold moon with a single settlement dug into it, and - on a band nothing should be using - a signal that has been asking the same question since before the question had anyone to ask.",
-  "star_map_position": { "x": 2, "y": -2 },
+  "star_map_position": { "x": 480, "y": -160 },
   "locked": true,
   "unlock_flag": "reach_verge",
   "unlock_silent": true,

@@ -1,7 +1,7 @@
 {
   "name": "Tessellate",
   "description": "A blue-white star and the hulk of an old relay station on a slow tumble around it. The Relay-era charts still call this a junction. Nothing junctions here now except one archivist and a lot of sealed log drums.",
-  "star_map_position": { "x": 1, "y": -1 },
+  "star_map_position": { "x": 240, "y": -60 },
   "locked": true,
   "unlock_flag": "reach_tessellate",
   "unlock_silent": true,
