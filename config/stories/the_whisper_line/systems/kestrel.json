@@ -91,7 +91,7 @@
               "root": "start",
               "nodes": {
                 "start": {
-                  "text": "You're the courier off the dark berth. Don't - don't say the name back to me. I was asked to put this in your hand and nothing else. It's from Elian Marr.",
+                  "text": "I was asked to put this in your hand and nothing else. It's from Elian Marr.",
                   "options": [
                     { "label": "Elian's been gone for years.", "next": "gone" },
                     { "label": "Asked by who?", "next": "who" },
