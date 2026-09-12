@@ -206,7 +206,7 @@ every case into one mega-menu class fights each screen's very different
 layout needs.
 
 **Solution:** Give the NPC config one key naming *what kind* of interaction
-this is (`"shop": {"type": "commodities"|"items"|"ships"|"outfits", ...}`),
+this is (`"shop": {"type": "commodities"|"items"|"ships"|"outfits"|"mission_board", ...}`),
 checked before falling back to the default interaction (`Dialogue`). A
 single small dispatcher function picks the concrete screen class from that
 `type`, so the call site (the input handler that reacts to "talk to this
@@ -237,8 +237,15 @@ def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn
     if shop_type == "outfits":
         ship_type_id = possessions.owned_ships[-1] if possessions.owned_ships else None
         return OutfittingMenu(possessions, story, shop_config, ship_type_id, on_outfits_changed=on_outfits_changed)
+    if shop_type == "mission_board":
+        return MissionBoardMenu(possessions, story, cargo_capacity, system_id)
     return ShopMenu(possessions, story, shop_config, cargo_capacity=cargo_capacity)
 ```
+A `"mission_board"` terminal (`{"name": "Terminal", "icon_shape": ..., "shop":
+{"type": "mission_board"}}`) is the one `type` with no NPC-supplied `"stock"` -
+`MissionBoardMenu` rolls its own randomized offers per visit (see
+`game/world/generated_mission.py`) rather than listing config-authored items,
+same dispatch mechanism, different content source.
 
 **Why this works:**
 - The NPC config only declares *intent* ("I sell outfits"), not *how* to

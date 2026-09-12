@@ -441,6 +441,9 @@ class _HudMixin:
                 if title:
                     status_lines.append((f"Mission: {title}", CYAN))
                 break
+            for mission in possessions.generated_missions.values():
+                status_lines.append((f"Mission: {mission['title']}", CYAN))
+                break
 
             status_rect = draw_status_pane(surface, status_lines, ui_scale)
 

@@ -50,7 +50,7 @@ class Possessions:
     def __init__(self, credits=0, owned_ships=None, loans=None,
                  owned_outfits=None, installed_outfits=None, cargo=None, items=None, flags=None,
                  missions=None, completed_missions=None, message_log=None, active_ship_index=None,
-                 reputation=None):
+                 reputation=None, generated_missions=None, completed_generated_missions=None):
         self.credits = credits
         self.owned_ships = owned_ships or []  # list of ship_type_id strings
         # Which entry of owned_ships is the hull the player currently flies
@@ -80,6 +80,20 @@ class Possessions:
         # save/load, and a standing change made in a station conversation
         # must be visible when hailing a ship in space later.
         self.reputation = reputation or {}
+        # Missions offered by a mission-computer terminal (see
+        # game/world/generated_mission.py) rather than authored in a
+        # story's missions.json - a mission computer rolls up randomized
+        # parameters (commodity/qty/destination, a system to hunt a bounty
+        # in, a coordinate to scan) at accept time, so the definition
+        # itself has to be persisted here alongside its progress rather
+        # than looked up in static config the way missions/
+        # completed_missions do (see get_missions()). generated_missions is
+        # {uid: mission_dict} for whatever's still active;
+        # completed_generated_missions is a plain list of finished mission
+        # dicts (kept whole, not just an id, since there's no static config
+        # left to look the id back up in once it's done).
+        self.generated_missions = generated_missions or {}
+        self.completed_generated_missions = completed_generated_missions or []
         # True while there's an unread Message Log entry the player hasn't
         # clicked away yet - see SpaceScreen/LocationScreen's own
         # `_unread_alert_pinned` property, both of which proxy to this same
@@ -241,6 +255,8 @@ class Possessions:
         self.completed_missions = list(state.get("completed_missions", self.completed_missions))
         self.message_log = [dict(m) for m in state.get("message_log", self.message_log)]
         self.reputation = dict(state.get("reputation", self.reputation))
+        self.generated_missions = {uid: dict(m) for uid, m in state.get("generated_missions", self.generated_missions).items()}
+        self.completed_generated_missions = [dict(m) for m in state.get("completed_generated_missions", self.completed_generated_missions)]
 
     def get_state(self):
         return {
@@ -257,6 +273,8 @@ class Possessions:
             "completed_missions": list(self.completed_missions),
             "message_log": [dict(m) for m in self.message_log],
             "reputation": dict(self.reputation),
+            "generated_missions": {uid: dict(m) for uid, m in self.generated_missions.items()},
+            "completed_generated_missions": [dict(m) for m in self.completed_generated_missions],
         }
 
     @classmethod
@@ -277,4 +295,6 @@ class Possessions:
             completed_missions=list(state.get("completed_missions", [])),
             message_log=[dict(m) for m in state.get("message_log", [])],
             reputation=dict(state.get("reputation", {})),
+            generated_missions={uid: dict(m) for uid, m in state.get("generated_missions", {}).items()},
+            completed_generated_missions=[dict(m) for m in state.get("completed_generated_missions", [])],
         )

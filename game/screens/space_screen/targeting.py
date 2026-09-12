@@ -111,6 +111,12 @@ class _TargetingMixin:
             entries = [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
         elif mode == "LANDING SITES":
             entries = [entry for entry in self.targetable_objects if isinstance(entry[1], LandingSite)]
+        elif mode == "MISSIONS":
+            # Not part of targetable_objects (nothing physically there) -
+            # built fresh each call from whatever scan missions are active
+            # in this system, so a mission accepted/completed mid-flight
+            # shows up/disappears immediately.
+            return scan_waypoints(self.player.person.possessions, self.system_id)
         else:
             entries = [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, LandingSite))]
         return [entry for entry in entries if self._in_target_range(entry[1])]

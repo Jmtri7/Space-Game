@@ -152,6 +152,15 @@
             "greeting": "Bring me ore from the belt and I'll pay fair weight for it.",
             "dialogue_options": ["Thanks", "Leave"],
             "shop": {"type": "commodities", "stock": [], "sell_multiplier": 1.0}
+          },
+          {
+            "name": "Mission Computer",
+            "x": 280,
+            "y": 560,
+            "role": "terminal",
+            "icon_shape": "gear",
+            "icon_color": [90, 200, 220],
+            "shop": {"type": "mission_board"}
           }
         ]
       }

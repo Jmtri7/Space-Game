@@ -658,7 +658,7 @@ def main():
                     star_map_return_screen = "station"
                     current_screen = "star_map"
                 elif action == "shop":
-                    shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits, station_interior.switch_ship)
+                    shop_menu = build_shop_menu(station_interior.player.possessions, game_screen.story, station_interior.active_shop, game_screen.player.ship.cargo_capacity, station_interior.buy_ship, game_screen.reapply_outfits, station_interior.switch_ship, system_id=game_screen.system_id)
                     shop_return_screen = "station"
                     current_screen = "shop"
                 # Space physics stays running while docked, and the
@@ -793,7 +793,7 @@ def main():
                     star_map_return_screen = "moon"
                     current_screen = "star_map"
                 elif action == "shop":
-                    shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits, moon_interior.switch_ship)
+                    shop_menu = build_shop_menu(moon_interior.player.possessions, game_screen.story, moon_interior.active_shop, game_screen.player.ship.cargo_capacity, moon_interior.buy_ship, game_screen.reapply_outfits, moon_interior.switch_ship, system_id=game_screen.system_id)
                     shop_return_screen = "moon"
                     current_screen = "shop"
                 # Space physics stays running while on the moon, and the

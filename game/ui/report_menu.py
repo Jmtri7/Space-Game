@@ -22,6 +22,7 @@ from game.utils import (get_ui_scale, get_font, get_ship_type, get_ship_outfit,
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel, draw_glow_title, modal_panel_rect
 from game.world.mission import mission_status_lines
+from game.world.generated_mission import mission_status_lines as generated_mission_status_lines
 
 HEADING_COLOR = (200, 220, 255)
 DIM = (150, 150, 150)
@@ -268,7 +269,7 @@ def mission_report(missions_config, possessions):
     """`(title, columns, tabs)` for a tabbed `ReportMenu` of mission
     progress - Active and Completed missions on separate tabs, each stage
     numbered and marked (moved out of the old `MissionLog.draw`)."""
-    entries = mission_status_lines(missions_config, possessions)
+    entries = mission_status_lines(missions_config, possessions) + generated_mission_status_lines(possessions)
     active = _mission_sections(entries, completed=False) or [("", [("No active missions.", DIM)])]
     done = _mission_sections(entries, completed=True) or [("", [("No completed missions yet.", DIM)])]
     tabs = [("Active", [active]), ("Completed", [done])]

@@ -223,6 +223,16 @@ class _CombatMixin:
                 character.y + random.uniform(-12, 12)))
         sound_board.play("impact")
         self._show_toast(f"{character.person.name or 'Hostile'} destroyed", (255, 180, 120))
+        # A mission-computer bounty (see game/world/generated_mission.py)
+        # completes on any hostile kill in its target system - checked
+        # before in_combat is cleared below, since that's this method's
+        # only record of the kill actually being a hostile one.
+        if character.in_combat:
+            for sid, state in self.systems.items():
+                if character in state.ai_ships:
+                    for mission in complete_bounty_on_kill(self.player.person.possessions, sid):
+                        self._show_toast(f"Mission complete: {mission['title']} (+{mission['reward']}cr)", YELLOW)
+                    break
         character.escorting = False
         character.in_combat = False
         character.firing = False

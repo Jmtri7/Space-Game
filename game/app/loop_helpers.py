@@ -17,6 +17,7 @@ from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.ui.outfitting_menu import OutfittingMenu
 from game.ui.backdrop_menu import BackdropMenu
+from game.ui.mission_board_menu import MissionBoardMenu
 
 
 def build_save_game_state(game_screen, previous_screen, station_interior, moon_interior):
@@ -65,11 +66,13 @@ def _pressed_any(events, *keys):
     return any(e.type == pygame.KEYDOWN and e.key in keys for e in events)
 
 
-def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed, switch_ship_fn=None):
+def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn, on_outfits_changed, switch_ship_fn=None, system_id=None):
     """Which menu class a "shop" config opens - ShipBrowserMenu for ships
     (needs a live preview, a purchase callback, and a switch-active-hull
     callback), OutfittingMenu for ship outfits (needs the current ship's
-    slots and a stats-refresh callback), ShopMenu for everything else
+    slots and a stats-refresh callback), MissionBoardMenu for a mission
+    computer terminal (rolls up randomized haul/bounty/scan offers - see
+    game/world/generated_mission.py), ShopMenu for everything else
     (commodities/items). Centralized here since both the station and moon
     branches in main()'s state machine need the same dispatch."""
     shop_type = shop_config.get("type")
@@ -78,6 +81,8 @@ def build_shop_menu(possessions, story, shop_config, cargo_capacity, buy_ship_fn
     if shop_type == "outfits":
         ship_type_id = possessions.active_ship()
         return OutfittingMenu(possessions, story, shop_config, ship_type_id, on_outfits_changed=on_outfits_changed)
+    if shop_type == "mission_board":
+        return MissionBoardMenu(possessions, story, cargo_capacity, system_id)
     return ShopMenu(possessions, story, shop_config, cargo_capacity=cargo_capacity)
 
 

@@ -561,6 +561,13 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 possessions.flags["hitching_passenger"] = False
                 possessions.earn(payout)
                 self._show_toast(f"Rescued passenger pays {payout}cr and departs.", GREEN)
+            # A mission-computer haul mission (see
+            # game/world/generated_mission.py) completes the moment its
+            # cargo is docked at the right destination - checked here
+            # rather than only from update_physics() since docking itself
+            # (this method) is what ends the space-screen frame.
+            for mission in complete_haul_if_delivered(possessions, self.system_id, self.landing_target):
+                self._show_toast(f"Mission complete: {mission['title']} (+{mission['reward']}cr)", YELLOW)
 
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -662,6 +669,11 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 if mission_id not in completed_before:
                     title = self.missions_config.get(mission_id, {}).get("title", mission_id)
                     self._show_toast(f"Mission complete: {title}", YELLOW)
+            # Mission-computer scan missions (see generated_mission.py) -
+            # haul/bounty complete on docking/a kill instead (see
+            # _mark_landed / combat.py._destroy_ship).
+            for mission in complete_scan_in_range(possessions, self.system_id, self.player.x, self.player.y):
+                self._show_toast(f"Mission complete: {mission['title']} (+{mission['reward']}cr)", YELLOW)
             self._sync_escorts()
 
     def update(self):
@@ -773,6 +785,25 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             self.asteroid_field.draw(surface)
             for pickup in self.ore_pickups:
                 pickup.draw(surface)
+            # Mission-computer scan-anomaly targets (see
+            # generated_mission.py) - a pulsing glow orb at each active scan
+            # mission's coordinate in this system, so the MISSIONS target
+            # mode's arrow actually has something visible to lead you to.
+            # An active mission's marker is unconditional (never disappears
+            # before it's actually scanned); a just-completed one keeps
+            # drawing until the player leaves its local chunk neighborhood
+            # (anomaly_marker_visible), the same way asteroid scenery
+            # lingers rather than vanishing the instant it's mined out.
+            ticks = pygame.time.get_ticks()
+            possessions = self.player.person.possessions
+            for mission in possessions.generated_missions.values():
+                if mission.get("kind") == "scan" and mission.get("system_id") == self.system_id:
+                    draw_anomaly_marker(surface, mission["x"], mission["y"], ticks)
+            for mission in possessions.completed_generated_missions:
+                if mission.get("kind") != "scan" or mission.get("system_id") != self.system_id:
+                    continue
+                if anomaly_marker_visible(mission["x"], mission["y"], self.player.x, self.player.y):
+                    draw_anomaly_marker(surface, mission["x"], mission["y"], ticks)
             for projectile in self.projectiles:
                 projectile.draw(surface)
             for explosion in self.explosions:

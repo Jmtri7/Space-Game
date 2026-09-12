@@ -43,7 +43,7 @@ action to a modal (add a button, not a key).
 | **Z** / **X** | Rotate the view right / left (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
 | **E** | Cycle forward through targetable objects in the current target mode |
 | **Q** | Cycle backward through targetable objects in the current target mode |
-| **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star, a discovered derelict ship). Starts on LANDING SITES. |
+| **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star, a discovered derelict ship) → MISSIONS (an active mission-computer scan waypoint in this system, if any - see "Mission computer" below). Starts on LANDING SITES. |
 | **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Hover** a minimap blip | Show its name in a label by the cursor |
 | **Hover** a drifting ore pickup in the main view | Show its commodity name and amount in a label by the cursor (`SpaceScreen._draw_world_hover_tooltip`) |
@@ -94,6 +94,36 @@ independent of E/Q/T's normal unlimited-range cycling:
   station/moon docking. The bottom status pane prompts "Press G to board
   `<name>`" once both are satisfied, and "Get closer and slow down to board
   `<name>`" while only targeted-but-not-yet-in-range.
+
+### Mission computer
+
+A "mission_board" terminal (a station/city NPC with `"shop": {"type":
+"mission_board"}` - see architecture/config-formats.md and
+patterns/ui-screens.md's Config-Driven Screen Dispatch) opens the
+**Mission Computer** menu on **T**, same as any other shop. It lists up to
+three randomly rolled offers (haul, bounty, scan-anomaly - see
+`game/world/generated_mission.py`); **Accept** commits one into the
+Mission Log (**3**).
+
+A **scan-anomaly** mission's coordinate has no real object there, but does
+draw a pulsing violet glow orb (`game/world/anomaly_marker.py`) once you're
+in its system, so it's visible from a distance same as any other body -
+simply flying within range completes the mission, but the orb itself
+doesn't blink out the instant that happens; it lingers until you fly far
+enough away to leave its local chunk neighborhood, the same
+load/unload distance the asteroid field itself uses (see
+`asteroid_field.py`'s `CHUNK_SIZE`/`CHUNK_KEEP_RADIUS`) - an *unscanned*
+anomaly's marker is never subject to this and can't disappear before the
+mission is actually complete. It can't be targeted the normal way, so it's
+only reachable through **T**'s new
+**MISSIONS** target mode, which lists any of your active scan missions
+whose coordinate is in the system you're currently in (none show while
+you're elsewhere - jump to the right system first). Target it like any
+other object: **E**/**Q** cycles it, brackets and the direction arrow point
+at it, and simply flying within range completes the mission automatically -
+there's no separate scan keypress. A **haul** mission completes on docking
+at its destination with enough cargo aboard; a **bounty** completes the
+moment any hostile ship is destroyed in its target system.
 
 ## Star Map (1)
 

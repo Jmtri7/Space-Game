@@ -35,6 +35,11 @@ from game.world.combat_routine import CombatRoutine
 from game.world.content_gate import passes_content_gate, is_gated
 from game.world.dialogue import option_actions, apply_shared_actions
 from game.world.mission import start_mission, check_mission_progress
+from game.world.generated_mission import (
+    complete_haul_if_delivered, complete_bounty_on_kill, complete_scan_in_range, scan_waypoints,
+    anomaly_marker_visible,
+)
+from game.world.anomaly_marker import draw_anomaly_marker
 from game.world.landing_site import LandingSite
 from game.world.starfield import StarField
 from game.world.central_star import CentralStar
@@ -91,7 +96,10 @@ MINIMAP_RANGE = 2600   # world units from player (center) to the minimap's edge
 # "MISC" covers everything that's neither a ship nor a landing site (celestial
 # bodies, the central star). LANDING SITES is the default since finding and
 # landing on the station is the first thing a new pilot needs to target.
-TARGET_MODES = ["SHIPS", "LANDING SITES", "MISC"]
+# "MISSIONS" targets an active mission-computer scan waypoint in this system
+# (see generated_mission.scan_waypoints) - a coordinate with nothing actually
+# there, so it can't live in MISC alongside real bodies.
+TARGET_MODES = ["SHIPS", "LANDING SITES", "MISC", "MISSIONS"]
 
 # Export everything (including single-underscore helpers) so the sibling mixin
 # modules get it all via `from ..._defs import *`.

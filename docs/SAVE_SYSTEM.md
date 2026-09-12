@@ -162,7 +162,13 @@ name is kept, the timestamp lives inside it.
       "missions": {"first_flight": 3},
       "completed_missions": ["docking_101"],
       "message_log": [{"sender": "Kade Marsh", "text": "Identify yourself or alter course."}],
-      "reputation": {"harbor_authority": 12, "ninefold_combine": -8}
+      "reputation": {"harbor_authority": 12, "ninefold_combine": -8},
+      "generated_missions": {
+        "a1b2c3d4e5": {"uid": "a1b2c3d4e5", "kind": "haul", "title": "Haul 4 Raw Ore to Deep Belt Station",
+                        "description": "...", "reward": 112, "commodity_id": "ore", "qty": 4,
+                        "dest_system_id": "deep_belt", "dest_label": "Deep Belt Station"}
+      },
+      "completed_generated_missions": []
     },
     "jump_state": {
       "phase": "travel",
@@ -369,6 +375,22 @@ safe, exactly like `flags` was. Seeded on a new game from each faction's
 unaffected end to end. Bump `story.json`'s `version` when adding factions to an
 existing story (the_long_silence went `0.1.0` -> `0.2.0` for Phase 1) so the
 load-time mismatch warning fires for an older save.
+
+`generated_missions` (`{uid: mission_dict}`) and `completed_generated_missions`
+(`[mission_dict, ...]`) are mission-computer missions - randomized haul/bounty/
+scan offers accepted at a terminal (see `game/world/generated_mission.py`,
+`game/ui/mission_board_menu.py`), as opposed to the hand-authored, fixed
+missions in `missions`/`completed_missions` above. Unlike those, a generated
+mission has **no static config to look it back up in** - its parameters
+(commodity/qty/destination, a bounty's system, a scan's coordinate) are
+rolled per-offer - so the *whole mission dict* is stored here, not just an id
+and a stage index. `completed_generated_missions` keeps the full dict too,
+for the same reason. A save made before this feature existed has no
+`"generated_missions"`/`"completed_generated_missions"` keys; both default to
+`{}`/`[]` - purely additive, same as `flags`/`reputation` before it. Bump
+`story.json`'s `version` when adding a mission computer to an existing
+story, since a pre-feature save's `Possessions` gains two new persisted
+collections it never had before.
 
 `message_log` (`[{"sender": ..., "text": ...}, ...]`, newest first) is the
 history behind the Space View's bottom-left Messages pane - one-way hails
