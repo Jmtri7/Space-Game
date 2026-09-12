@@ -1,4 +1,22 @@
 {
+  "prospector": {
+    "name": "Dez Okafor",
+    "role": "miner",
+    "personality": "Keeps to the same stretch of rock, hauls it in, does it again.",
+    "dodge_urgency": 1.0
+  },
+  "prospector_2": {
+    "name": "Iris Vandenberg",
+    "role": "miner",
+    "personality": "Cautious - gives every rock a wide berth before ever lining up a shot.",
+    "dodge_urgency": 1.3
+  },
+  "prospector_3": {
+    "name": "Boone Achebe",
+    "role": "miner",
+    "personality": "Pushes in close and doesn't back off easy.",
+    "dodge_urgency": 0.7
+  },
   "pirate_lurker": {
     "name": "Redtooth",
     "personality": "Doesn't say much unless there's a toll to collect.",
@@ -34,5 +52,10 @@
       "message": "That's close enough, hauler. This stretch of the belt costs a toll - hail me and we'll talk terms, or keep pushing your luck.",
       "range": 700
     }
+  },
+  "wreck_raider": {
+    "name": "Scrap-tooth",
+    "personality": "Was hiding in the wreck's hold the whole time, and doesn't wait to talk.",
+    "dodge_urgency": 1.0
   }
 }

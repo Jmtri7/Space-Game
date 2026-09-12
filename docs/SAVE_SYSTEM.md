@@ -300,7 +300,21 @@ whether the story is over (`story_over` + `ending:<id>` — a save with these
 loads straight into the `EndingScreen`), and whether the story's
 `starting_mission` is armed-but-not-yet-launched
 (`"starting_mission_armed"` - set when a ship is bought while docked,
-cleared when the player next launches, see `SpaceScreen.board_ship()`).
+cleared when the player next launches, see `SpaceScreen.board_ship()`), and
+whether a "derelict_ship" rescue event's stranded pilot is currently hitching
+a ride (`"hitching_passenger"` + `"rescue_payout:<event_id>"` - set by
+`SpaceScreen._resolve_derelict_rescue`, paid out and cleared at the next
+station/moon docking by `_mark_landed()` - see
+[architecture/config-formats.md](architecture/config-formats.md)'s "System
+events" section). That last one is a **deliberate exception** to the rule
+just below: the derelict wreck itself (and its whole encounter - position,
+outcome, generated loot interior) is never saved, exactly like a
+`pirate_ambush`'s spawn or an `AsteroidField`'s asteroids/`OrePickup`s -
+scenery a save simply forgets, regenerated (or not) on the next roll - but a
+rescued passenger *waiting to be paid off* is real, player-visible progress
+that would be jarring to silently lose to a save/load, so it rides on
+`Possessions.flags` instead and is covered for free by the same mechanism
+every other flag already uses.
 See `Dialogue`'s `requires_flag`/`requires_not_flag`/`conditional_roots`, the
 `"set_flag:<name>"` dialogue action in `game/world/dialogue.py`, and
 docs/CONTROLS.md's Hailing section. Lives on `Possessions` - not a separate

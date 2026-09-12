@@ -74,6 +74,19 @@ def apply_shared_actions(action, possessions, missions_config=None, story=None):
       main.py notices the flag and shows the EndingScreen (see
       utils.get_endings / game/ui/ending_screen.py), then returns to the
       main menu.
+    - "earn_credits:<n>" - hand the player a flat credit reward (the inverse
+      of "spend_credits:", kept as its own verb rather than a negative
+      spend_credits so a dialogue's intent reads clearly at a glance) - used
+      by a derelict-ship "loot" container's "Take it" option (see
+      game/screens/space_screen/derelicts.py's _build_loot_interior_config).
+    - "loot_cargo:<commodity_id>:<qty>" - add qty units of commodity_id
+      straight to the player's cargo hold (Possessions.add_cargo), no
+      capacity check - unlike a mined OrePickup (which the player must fly
+      over and which respects remaining hold space), a container's contents
+      are handed over directly the moment it's searched, the same
+      "commodity ends up in cargo one way or another" idea just skipping the
+      pickup-and-carry step since there's no drifting debris to chase inside
+      a small interior room.
     - "start_mission:<id>" - begin a mission from a dialogue choice (e.g.
       accepting a station guide's offer to walk you through the place),
       instead of it only being kick-started by story.json's
@@ -94,6 +107,13 @@ def apply_shared_actions(action, possessions, missions_config=None, story=None):
         return True
     if action.startswith("spend_credits:"):
         possessions.spend(int(action.split(":", 1)[1]))
+        return True
+    if action.startswith("earn_credits:"):
+        possessions.earn(int(action.split(":", 1)[1]))
+        return True
+    if action.startswith("loot_cargo:"):
+        _, commodity_id, qty = action.split(":", 2)
+        possessions.add_cargo(commodity_id, int(qty))
         return True
     if action.startswith("adjust_rep:"):
         _, faction_id, delta = action.split(":", 2)

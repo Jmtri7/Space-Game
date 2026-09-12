@@ -115,6 +115,10 @@ class _JumpMixin:
             # system) leaves it alone since the player never actually left.
             if self.pirate_ambush and self.pirate_ambush["system_id"] == self.system_id:
                 self._despawn_pirate_ambush()
+            # Same reasoning for an unresolved derelict - see derelicts.py's
+            # module docstring.
+            if self.derelict and self.derelict["system_id"] == self.system_id:
+                self._despawn_derelict()
             self._activate_system(destination)
 
         center_x, center_y = SYSTEM_CENTER

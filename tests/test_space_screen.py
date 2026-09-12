@@ -303,11 +303,25 @@ class TestShipCombat(unittest.TestCase):
         gs._sync_hostiles()
         self.assertTrue(hostile.in_combat)
 
-    def test_shooting_a_neutral_ship_provokes_it_and_dents_faction_standing(self):
+    def test_shooting_an_untargeted_neutral_ship_passes_through_harmlessly(self):
         from game.world.projectile import Projectile
         gs, victim = self._combat_screen()   # faction ninefold_combine, standing 0
         pos = gs.player.person.possessions
         self.assertFalse(victim.in_combat)
+        # Not hostile and not the player's current target - the shot must
+        # pass through rather than land and provoke it (see combat.py's
+        # hostility gate on _check_projectile_ship_collision).
+        gs.projectiles.append(Projectile(victim.ship.x, victim.ship.y, 0, 0, damage=3, owner="player"))
+        gs._update_projectiles()
+        self.assertFalse(pos.flags.get("hostile_to_player:Bandit"))
+        self.assertEqual(victim.ship.health, victim.ship.max_health)
+
+    def test_shooting_a_targeted_neutral_ship_provokes_it_and_dents_faction_standing(self):
+        from game.world.projectile import Projectile
+        gs, victim = self._combat_screen()   # faction ninefold_combine, standing 0
+        pos = gs.player.person.possessions
+        self.assertFalse(victim.in_combat)
+        gs._select_target(victim)  # deliberately targeted, so a shot can still land pre-hostility
         gs.projectiles.append(Projectile(victim.ship.x, victim.ship.y, 0, 0, damage=3, owner="player"))
         gs._update_projectiles()
         self.assertTrue(pos.flags.get("hostile_to_player:Bandit"))
@@ -323,6 +337,7 @@ class TestShipCombat(unittest.TestCase):
     def test_player_fired_shots_damage_and_destroy_a_hostile_ship(self):
         from game.world.projectile import Projectile
         gs, hostile = self._combat_screen()
+        hostile.in_combat = True  # already hostile - a player shot lands without needing to be targeted first
         hostile.ship.health = hostile.ship.max_health
         while hostile in gs.systems["halcyon"].ai_ships:
             gs.projectiles.append(Projectile(hostile.ship.x, hostile.ship.y, 0, 0, damage=6, owner="player"))
@@ -334,6 +349,7 @@ class TestShipCombat(unittest.TestCase):
     def test_an_ai_fired_shot_damages_the_player_and_never_its_owner(self):
         from game.world.projectile import Projectile
         gs, hostile = self._combat_screen()
+        hostile.in_combat = True  # only a hostile pilot's shots can land on the player
         full = gs.player.ship.health
         # A shot sitting on the player, fired by the AI - hits the player.
         gs.projectiles.append(Projectile(gs.player.x, gs.player.y, 0, 0, damage=5, owner=hostile))
@@ -345,15 +361,29 @@ class TestShipCombat(unittest.TestCase):
         gs._update_projectiles()
         self.assertEqual(hostile.ship.health, h0)
 
-    def test_destroyed_player_recovers_at_the_station_and_loses_cargo(self):
+    def test_destroyed_player_ends_the_run_instead_of_respawning(self):
         gs, hostile = self._combat_screen()
         gs.player.person.possessions.add_cargo("ore", 7)
         gs.player.ship.health = 1
         gs._on_player_destroyed()
-        self.assertEqual(gs.player.person.possessions.cargo, {})
-        self.assertEqual(gs.player.ship.health, gs.player.ship.max_health)
-        self.assertFalse(gs.in_flight)
-        self.assertEqual((gs.player.x, gs.player.y), (gs.station.x, gs.station.y))
+        # No Rescue Service respawn - the run just ends, flagged for
+        # main.py's SpaceScreen.update() -> "game_over" -> Game Over screen
+        # handoff (see docs/UI_FLOW.md's EndingScreen section).
+        self.assertTrue(gs.game_over)
+        self.assertEqual(gs.game_over_cargo_lost, 7)
+        self.assertEqual(gs.player.person.possessions.cargo_quantity_total(), 7)
+
+    def test_update_returns_game_over_the_frame_the_hull_fails(self):
+        from game.world.projectile import Projectile
+        gs, hostile = self._combat_screen()
+        # gs.update() runs _sync_hostiles() every frame, which would
+        # immediately flip a directly-set hostile.in_combat back off since
+        # nothing else marks this pilot hostile - set the persistent flag
+        # instead, so it survives that resync and the shot can land.
+        gs.player.person.possessions.flags["hostile_to_player:Bandit"] = True
+        gs.player.ship.health = 1
+        gs.projectiles.append(Projectile(gs.player.x, gs.player.y, 0, 0, damage=5, owner=hostile))
+        self.assertEqual(gs.update(), "game_over")
 
     def test_ai_and_player_ship_health_round_trip_through_save(self):
         gs, hostile = self._combat_screen()
@@ -684,6 +714,174 @@ class TestSpaceScreenAudioCues(unittest.TestCase):
         for _ in range(MESSAGE_ALERT_FRAMES * 2):
             game_screen.update()
         self.assertEqual(game_screen.message_alert_timer, 0)
+
+
+class TestPirateAmbushPeriodicReroll(unittest.TestCase):
+    """The lone_pirate "pirate_ambush" event (mining_101's deep_belt) rolls
+    on system entry and then again every interval_seconds while the player
+    keeps flying there - see game/screens/space_screen/pirates.py."""
+
+    def _screen(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="mining_101", system_id="deep_belt")
+        game_screen.in_flight = True
+        return game_screen
+
+    def test_entry_arms_the_recheck_timer_off_the_configured_interval(self):
+        from game import constants
+        game_screen = self._screen()
+        state = game_screen.systems["deep_belt"]
+        interval = min(e.get("interval_seconds", 60) for e, _ in state.pirate_ambush_configs)
+        self.assertEqual(game_screen.pirate_ambush_recheck_timer, int(interval * constants.FPS))
+
+    def test_periodic_recheck_rerolls_and_rearms_after_a_miss(self):
+        game_screen = self._screen()
+        # Construction itself already rolled the entry chance (unpatched,
+        # real odds) - pin the pre-recheck state so this test's own miss
+        # isn't masked by that earlier, unrelated roll.
+        game_screen.pirate_ambush = None
+        game_screen.pirate_ambush_recheck_timer = 1
+        with patch("random.random", return_value=1.0):  # guaranteed miss
+            game_screen._update_periodic_pirate_ambush()
+        self.assertIsNone(game_screen.pirate_ambush)
+        self.assertGreater(game_screen.pirate_ambush_recheck_timer, 0)  # rearmed regardless
+
+    def test_periodic_recheck_can_spawn_a_fresh_ambush_after_the_first_resolved(self):
+        game_screen = self._screen()
+        game_screen.pirate_ambush = None  # first encounter already resolved
+        game_screen.pirate_ambush_recheck_timer = 1
+        with patch("random.random", return_value=0.0):  # guaranteed hit
+            game_screen._update_periodic_pirate_ambush()
+        self.assertIsNotNone(game_screen.pirate_ambush)
+
+    def test_no_recheck_while_docked(self):
+        game_screen = self._screen()
+        game_screen.in_flight = False
+        game_screen.pirate_ambush_recheck_timer = 1
+        game_screen._update_periodic_pirate_ambush()
+        self.assertEqual(game_screen.pirate_ambush_recheck_timer, 1)  # untouched
+
+
+class TestDerelictShipEvents(unittest.TestCase):
+    """The "derelict_ship" system-event kind (mining_101's prospect_belt) -
+    see game/screens/space_screen/derelicts.py."""
+
+    def _screen(self):
+        game_screen = SpaceScreen(pilot_name="Test", story="mining_101", system_id="prospect_belt")
+        game_screen.in_flight = True
+        return game_screen
+
+    def test_entry_arms_the_recheck_timer_off_the_configured_interval(self):
+        from game import constants
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        interval = min(e.get("interval_seconds", 60) for (_, e), _ in state.derelict_configs)
+        self.assertEqual(game_screen.derelict_recheck_timer, int(interval * constants.FPS))
+
+    def test_periodic_recheck_rerolls_and_rearms_after_a_miss(self):
+        game_screen = self._screen()
+        game_screen.derelict = None
+        game_screen.derelict_recheck_timer = 1
+        with patch("random.random", return_value=1.0):  # guaranteed miss
+            game_screen._update_periodic_derelict()
+        self.assertIsNone(game_screen.derelict)
+        self.assertGreater(game_screen.derelict_recheck_timer, 0)  # rearmed regardless
+
+    def test_periodic_recheck_can_spawn_a_fresh_derelict_after_the_first_resolved(self):
+        game_screen = self._screen()
+        game_screen.derelict = None
+        game_screen.derelict_recheck_timer = 1
+        with patch("random.random", return_value=0.0):  # guaranteed hit
+            game_screen._update_periodic_derelict()
+        self.assertIsNotNone(game_screen.derelict)
+
+    def test_no_recheck_while_docked(self):
+        game_screen = self._screen()
+        game_screen.in_flight = False
+        game_screen.derelict_recheck_timer = 1
+        game_screen._update_periodic_derelict()
+        self.assertEqual(game_screen.derelict_recheck_timer, 1)  # untouched
+
+    def test_spawn_places_the_wreck_beyond_both_render_view_and_minimap_range(self):
+        """The whole point of _derelict_spawn_distance: a fresh derelict must
+        never land on-screen (even at minimum zoom) or inside minimap
+        detection range - see the module docstring's reasoning."""
+        import math
+        from game.screens.space_screen._defs import GAME_WIDTH, GAME_HEIGHT, MINIMAP_RANGE
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        game_screen.derelict = None
+        (event_id, event), _ = state.derelict_configs[0]
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, event_id, event)
+        wreck = game_screen.derelict["object"]
+        distance = math.hypot(wreck.x - game_screen.player.x, wreck.y - game_screen.player.y)
+        half_diagonal = 0.5 * math.hypot(GAME_WIDTH, GAME_HEIGHT) / game_screen.camera_zoom_min
+        self.assertGreater(distance, half_diagonal)
+        self.assertGreater(distance, MINIMAP_RANGE)
+
+    def test_derelict_is_not_selectable_until_in_target_range(self):
+        """Targeting-range gate (targeting.py._in_target_range) - a derelict
+        spawns far outside DERELICT_TARGET_RANGE, so it must not appear in
+        the MISC target-mode cycle until the player closes the distance."""
+        from game.screens.space_screen.derelicts import DERELICT_TARGET_RANGE
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        game_screen.derelict = None
+        (event_id, event), _ = state.derelict_configs[0]
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, event_id, event)
+        wreck = game_screen.derelict["object"]
+        game_screen.target_mode_index = TARGET_MODES.index("MISC")
+        self.assertNotIn(wreck, [obj for _, obj in game_screen._filtered_targets()])
+
+        # Move the wreck within range (cheaper than actually flying there) -
+        # it should now be a selectable MISC target.
+        wreck.x = game_screen.player.x + DERELICT_TARGET_RANGE * 0.5
+        wreck.y = game_screen.player.y
+        self.assertIn(wreck, [obj for _, obj in game_screen._filtered_targets()])
+
+    def test_rescue_outcome_sets_a_hitching_passenger_flag_and_despawns(self):
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        event = {"kind": "derelict_ship", "outcome": "rescue", "name": "Stranded Skiff",
+                 "ship_type": "mining_skiff", "payout_range": [200, 200]}
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, "stranded_skiff", event)
+        wreck = game_screen.derelict["object"]
+        game_screen._resolve_derelict_rescue(wreck)
+        flags = game_screen.player.person.possessions.flags
+        self.assertEqual(flags.get("hitching_passenger"), "stranded_skiff")
+        self.assertEqual(flags.get("rescue_payout:stranded_skiff"), 200)
+        self.assertIsNone(game_screen.derelict)
+
+    def test_docking_pays_out_and_clears_the_hitching_passenger(self):
+        game_screen = self._screen()
+        possessions = game_screen.player.person.possessions
+        possessions.flags["hitching_passenger"] = "stranded_skiff"
+        possessions.flags["rescue_payout:stranded_skiff"] = 250
+        credits_before = possessions.credits
+        game_screen.landing_target = "station"
+        game_screen._mark_landed()
+        self.assertEqual(possessions.credits, credits_before + 250)
+        self.assertFalse(possessions.flags.get("hitching_passenger"))
+        self.assertNotIn("rescue_payout:stranded_skiff", possessions.flags)
+
+    def test_trap_outcome_spawns_an_already_hostile_pirate(self):
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        event = {"kind": "derelict_ship", "outcome": "trap", "name": "Suspicious Wreck",
+                 "ship_type": "raider_skiff", "pirate_ship_type": "raider_skiff",
+                 "pirate_pilot": "wreck_raider", "explosion_damage": 5}
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, "suspect_wreck", event)
+        wreck = game_screen.derelict["object"]
+        health_before = game_screen.player.ship.health
+        game_screen._resolve_derelict_trap(wreck)
+        self.assertLess(game_screen.player.ship.health, health_before)
+        spawned = next((s for s in state.ai_ships if s.person.name == "Scrap-tooth"), None)
+        self.assertIsNotNone(spawned, "trap should spawn the configured pirate pilot")
+        self.assertTrue(game_screen.player.person.possessions.flags.get("hostile_to_player:Scrap-tooth"))
+        self.assertIsNone(game_screen.derelict)
 
 
 if __name__ == "__main__":

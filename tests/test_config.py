@@ -4,6 +4,7 @@ from tests.harness import *  # noqa: F401,F403
 from tests.harness import _FakeFont  # noqa: F401
 import json
 import shutil
+from game.utils import get_system_event, load_json
 
 
 class TestStoryTuningConfig(unittest.TestCase):
@@ -33,6 +34,40 @@ class TestStoryTuningConfig(unittest.TestCase):
         self.assertEqual((s.camera_zoom_min, s.camera_zoom, s.camera_zoom_max), (1.75, 3.0, 9.0))
         loc = LocationScreen(config_data={"label": "X"}, world_width=800, world_height=600, story="default")
         self.assertEqual((loc.camera_zoom_min, loc.camera_zoom, loc.camera_zoom_max), (2.25, 3.0, 8.0))
+
+
+class TestDerelictShipEventConfig(unittest.TestCase):
+    """The "derelict_ship" event kind's three-layer config shape (see
+    CONFIG_MODULES.md / config-formats.md's "System events" section): the
+    system-events module owns the mechanism only, a story's own events.json
+    defines concrete named derelict types (merged over the module's
+    events.json via story_catalogue, same as ship_outfits.json), and a
+    system's systems/*.json just references one by id."""
+
+    def test_story_scoped_derelict_types_merge_over_the_shared_module(self):
+        adrift = get_system_event("mining_101", "adrift_hauler")
+        self.assertEqual(adrift.get("kind"), "derelict_ship")
+        self.assertEqual(adrift.get("outcome"), "loot")
+        self.assertEqual(adrift.get("ship_type"), "courier")
+        # Still resolves the shared module's own entries too - the merge is
+        # additive, not a story-file-replaces-everything override.
+        rich_vein = get_system_event("mining_101", "rich_ore_vein")
+        self.assertEqual(rich_vein.get("kind"), "special_asteroid")
+
+    def test_trap_type_carries_its_own_pirate_ship_and_pilot_reference(self):
+        trap = get_system_event("mining_101", "suspect_wreck")
+        self.assertEqual(trap.get("outcome"), "trap")
+        self.assertEqual(trap.get("pirate_ship_type"), "raider_skiff")
+        self.assertEqual(trap.get("pirate_pilot"), "wreck_raider")
+
+    def test_system_config_references_derelict_types_by_id_only(self):
+        events = load_json("config/stories/mining_101/systems/prospect_belt.json")["events"]
+        derelict_ids = {e["event"] for e in events} & {"adrift_hauler", "stranded_skiff", "suspect_wreck"}
+        self.assertEqual(derelict_ids, {"adrift_hauler", "stranded_skiff", "suspect_wreck"})
+        # Just an id + frequency - no inline kind/graphics/loot data.
+        for entry in events:
+            if entry["event"] in derelict_ids:
+                self.assertEqual(set(entry.keys()), {"event", "frequency"})
 
 
 class TestVideoResolution(unittest.TestCase):
@@ -180,10 +215,10 @@ class TestConfigModuleResolver(unittest.TestCase):
         # jump block + zoom bounds now come from the story-defaults module
         self.assertEqual(meta["jump"]["travel_frames"], 150)
         self.assertEqual(meta["camera_zoom_max"], 9.0)
-        # graphics_pipeline_test keeps its own zoomed-in overrides
-        gpt = config_source.story_meta("graphics_pipeline_test")
-        self.assertEqual(gpt["camera_zoom"], 2.0)
-        self.assertEqual(gpt["jump"]["speed"], 40)  # still inherited
+        # the_whisper_line keeps its own zoomed-in overrides
+        twl = config_source.story_meta("the_whisper_line")
+        self.assertEqual(twl["camera_zoom"], 2.0)
+        self.assertEqual(twl["jump"]["speed"], 40)  # still inherited
 
 
 class TestRecursiveModuleResolver(unittest.TestCase):

@@ -110,6 +110,17 @@ class _HudMixin:
             points.append((body, (100, 160, 255), 2))
         for ai_ship in self.ai_ships:
             points.append((ai_ship, GREEN, 2))
+        # A derelict only ever plots once the player's actually closed to
+        # within MINIMAP_RANGE - it spawns well beyond that on purpose (see
+        # derelicts.py._derelict_spawn_distance) so it's never visible here
+        # the instant it appears; the loop below already drops anything
+        # whose projected point falls outside `rect` for every other kind of
+        # blip, but a wreck could otherwise still register as a hit-testable
+        # point sitting just past the panel edge - skip it outright instead.
+        if self.derelict is not None and self.derelict["system_id"] == self.system_id:
+            wreck = self.derelict["object"]
+            if math.hypot(wreck.x - self.player.x, wreck.y - self.player.y) <= MINIMAP_RANGE:
+                points.append((wreck, (210, 150, 90), 2))
 
         # Rebuilt every frame (blips move) - (screen_x, screen_y, hit_radius,
         # obj) for each on-radar point, consumed by _minimap_blip_at for
@@ -178,21 +189,48 @@ class _HudMixin:
                 return pickup
         return None
 
+    def _hovered_asteroid(self, mouse_pos):
+        """The asteroid (if any) under the mouse in the main view - hit-tested
+        against its own drawn radius (see Asteroid.draw), same idea as
+        _hovered_ore_pickup."""
+        mx, my = mouse_pos
+        for asteroid in self.asteroid_field.asteroids:
+            sx, sy = utils.to_screen(asteroid.x, asteroid.y)
+            hit_r = asteroid.size * utils.get_scale()
+            if (mx - sx) ** 2 + (my - sy) ** 2 <= hit_r ** 2:
+                return asteroid
+        return None
+
     def _draw_world_hover_tooltip(self, surface, ui_scale):
         """Small label near the cursor naming whatever's floating under it
         in the main view - the same idea as the minimap's hover tooltip
         (_draw_minimap_tooltip) and the star map's system labels, but for
         drifting ore pickups in the world itself rather than a fixed dot on
         a map. Not clamped to any panel rect (there isn't one for the main
-        view) - just kept on-screen."""
+        view) - just kept on-screen.
+
+        In debug mode (constants.DEBUG_MODE), hovering an asteroid instead
+        shows its current/max health - a diagnostic readout, not something a
+        normal player ever sees."""
         mouse_pos = pygame.mouse.get_pos()
+        if constants.DEBUG_MODE:
+            asteroid = self._hovered_asteroid(mouse_pos)
+            if asteroid is not None:
+                text_str = f"HP {max(0, asteroid.health):.0f} / {asteroid.max_health:.0f}"
+                self._draw_hover_label(surface, ui_scale, mouse_pos, text_str)
+                return
         pickup = self._hovered_ore_pickup(mouse_pos)
         if pickup is None:
             return
         commodity = get_commodity(self.story, pickup.commodity_id)
         name = commodity.get("name", pickup.commodity_id)
+        self._draw_hover_label(surface, ui_scale, mouse_pos, f"{name} x{pickup.amount}")
+
+    def _draw_hover_label(self, surface, ui_scale, mouse_pos, text_str):
+        """Shared small label box near the cursor, used by the world hover
+        tooltip for both ore pickups and (in debug mode) asteroid health."""
         font = get_font(int(18 * ui_scale))
-        text = font.render(f"{name} x{pickup.amount}", True, WHITE)
+        text = font.render(text_str, True, WHITE)
         pad = int(5 * ui_scale)
         mx, my = mouse_pos
         box = pygame.Rect(0, 0, text.get_width() + pad * 2, text.get_height() + pad * 2)
@@ -357,6 +395,15 @@ class _HudMixin:
                 speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
                 if self.landing_text > 0:
                     status_lines.append((f"Press {primary_label(Action.LAND)} to Land", GREEN))
+                elif (self.derelict is not None and isinstance(target_obj, DerelictShip)
+                      and target_obj is self.derelict["object"]):
+                    # Same "press G" prompt idiom as landing, just for a
+                    # targeted-and-in-range derelict - see derelicts.py's
+                    # _try_board_derelict/_in_derelict_board_range.
+                    if self._in_derelict_board_range(target_obj):
+                        status_lines.append((f"Press {primary_label(Action.LAND)} to board {target_obj.name}", GREEN))
+                    else:
+                        status_lines.append((f"Get closer and slow down to board {target_obj.name}", YELLOW))
                 elif speed >= 0.4 and (
                     self.station.get_distance(self.player.x, self.player.y) < self.station.landing_distance
                     or self.moon.get_distance(self.player.x, self.player.y) < self.moon.landing_distance

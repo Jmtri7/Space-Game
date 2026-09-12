@@ -10,9 +10,11 @@ from game.screens.space_screen.jump import _JumpMixin
 from game.screens.space_screen.combat import _CombatMixin
 from game.screens.space_screen.mining import _MiningMixin
 from game.screens.space_screen.pirates import _PiratesMixin
+from game.screens.space_screen.derelicts import _DerelictsMixin
+from game.world.derelict_ship import DerelictShip
 
 
-class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSyncMixin, _JumpMixin, _CombatMixin, _MiningMixin, _PiratesMixin, ScreenBase):
+class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSyncMixin, _JumpMixin, _CombatMixin, _MiningMixin, _PiratesMixin, _DerelictsMixin, ScreenBase):
     """Main space exploration screen with ships and landing."""
     def __init__(self, system_config=None, pilot_name="", story="default", system_id=None):
         super().__init__(pilot_name=pilot_name)
@@ -128,6 +130,14 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # _activate_system() below (it may spawn one) and before self.systems
         # even exists, since _build_system_state() runs first per system.
         self.pirate_ambush = None
+        # Armed for real by _maybe_spawn_pirate_ambush (called below via
+        # _activate_system) - see _update_periodic_pirate_ambush.
+        self.pirate_ambush_recheck_timer = 0
+        # The one active "derelict_ship" encounter, if any - see
+        # game/screens/space_screen/derelicts.py. Same "must exist before
+        # _activate_system()" reasoning as pirate_ambush above.
+        self.derelict = None
+        self.derelict_recheck_timer = 0
         self.systems = {}
         self.system_configs = {}
         system_ids = set(get_star_systems(self.story).keys())
@@ -158,6 +168,11 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         # one-way hail) gate on this so they don't go off mid-conversation
         # in a station bar. See _on_ship_purchased / _check_one_way_hails.
         self.in_flight = False
+        # Set by _on_player_destroyed on hull loss; update() reads it and
+        # returns "game_over" so main.py can hand off to the Game Over
+        # screen instead of respawning the player (see combat.py).
+        self.game_over = False
+        self.game_over_cargo_lost = 0
         # Set by _on_ship_purchased when the starting_mission trigger is
         # "ship_purchase": the mission is armed here but only actually
         # started once the player launches (board_ship()), so the tutorial
@@ -462,7 +477,16 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 # pure proximity check, which also covers an AI ship
                 # being targeted or nothing being targeted at all.
                 target_obj = self._get_target_object()
-                if target_obj and self.current_target is not None and not isinstance(target_obj, Character):
+                if isinstance(target_obj, DerelictShip) and self.current_target is not None:
+                    # A derelict is a Ship subclass (see derelict_ship.py) so
+                    # it would otherwise fall into the generic landing-site
+                    # branch below and blow up on target_obj.landing_distance
+                    # (which it doesn't have) - handled separately here, see
+                    # derelicts.py._try_board_derelict.
+                    result = self._try_board_derelict(target_obj)
+                    if result:
+                        return result
+                elif target_obj and self.current_target is not None and not isinstance(target_obj, Character):
                     distance = target_obj.get_distance(self.player.x, self.player.y)
                     speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
                     if distance < target_obj.landing_distance and speed < 0.4:
@@ -521,6 +545,22 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         a SpaceScreen-only field."""
         self.player.person.possessions.flags["landed_on_landing_site"] = True
         self.in_flight = False  # main.py is about to swap to the interior screen
+        # A hitched rescue passenger (see derelicts.py._resolve_derelict_rescue)
+        # pays out and leaves the moment the ship docks anywhere inhabited -
+        # station or moon, but NOT a "derelict" landing_target (boarding a
+        # second, loot-kind wreck while already carrying a passenger doesn't
+        # count as delivering them anywhere). Flag-driven, same pattern as a
+        # mission's own flag-gated completion (see mission.py) - and already
+        # covered by an ordinary save/load since it's plain Possessions.flags
+        # state (see SAVE_SYSTEM.md).
+        if self.landing_target in ("station", "moon"):
+            possessions = self.player.person.possessions
+            passenger = possessions.flags.get("hitching_passenger")
+            if passenger:
+                payout = possessions.flags.pop(f"rescue_payout:{passenger}", 0)
+                possessions.flags["hitching_passenger"] = False
+                possessions.earn(payout)
+                self._show_toast(f"Rescued passenger pays {payout}cr and departs.", GREEN)
 
     def _check_landing(self):
         speed = math.sqrt(self.player.velocity_x ** 2 + self.player.velocity_y ** 2)
@@ -570,10 +610,14 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
             for state in self.systems.values():
                 state.update_physics()
             self.asteroid_field.update()
+            self._check_ship_asteroid_collisions()
+            self._update_ai_asteroid_dodge()
+            self._update_ai_asteroid_clearing()
+            self._update_station_defense()
         with perf.span("sim.projectiles"):
             self._update_ai_weapon_fire()
             self._update_projectiles()
-            if self.player.ship and self.player.ship.health <= 0:
+            if not self.game_over and self.player.ship and self.player.ship.health <= 0:
                 self._on_player_destroyed()
             self.explosions = [e for e in self.explosions if e.update()]
             self._update_ore_pickups()
@@ -595,6 +639,9 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
         self._pump_message_queue()
         self._check_one_way_hails()
         self._update_pirate_ambush()
+        self._update_periodic_pirate_ambush()
+        self._update_derelict()
+        self._update_periodic_derelict()
         self._check_beacons()
         self._check_dispatches()
         self._validate_target()
@@ -651,6 +698,9 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 return "land"
 
         self.update_physics()
+
+        if self.game_over:
+            return "game_over"
 
         # The autopilot disengaged itself this frame (SeekMode's own arrival /
         # stall-bailout inside update_physics(), which uses a looser stop than
@@ -729,6 +779,9 @@ class SpaceScreen(_SetupMixin, _TargetingMixin, _HudMixin, _HailingMixin, _NpcSy
                 explosion.draw(surface)
             for ai_ship in self.ai_ships:
                 ai_ship.draw(surface)
+            if self.derelict is not None and self.derelict["system_id"] == self.system_id:
+                self.derelict["object"].draw(surface)
+                self.derelict["smoke"].draw(surface)
             self.player.draw(surface)
 
         # Debug markers for entity positions

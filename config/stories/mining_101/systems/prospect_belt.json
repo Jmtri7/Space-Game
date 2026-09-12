@@ -19,19 +19,46 @@
   },
   "star_seed": 8181,
   "asteroid_field": {
-    "per_chunk_range": [1, 3],
+    "per_chunk_range": [2, 6],
     "types": [
       {
         "type": "gray_rock",
         "weight": 1,
-        "size_range": [6, 14],
+        "size_range": [8, 14],
         "speed_range": [0.04, 0.18],
-        "mine_yield": 8
+        "mine_yield": 8,
+        "health_multiplier": 0.25
       }
     ]
   },
   "events": [
-    {"event": "rich_ore_vein", "frequency": 0.12}
+    {"event": "rich_ore_vein", "frequency": 0.12},
+    {"event": "adrift_hauler", "frequency": 0.08},
+    {"event": "stranded_skiff", "frequency": 0.05},
+    {"event": "suspect_wreck", "frequency": 0.03}
+  ],
+  "ai_ships": [
+    {
+      "pilot": "prospector",
+      "ship_type": "mining_skiff",
+      "x": 0.45,
+      "y": 0.55,
+      "route": ["station"]
+    },
+    {
+      "pilot": "prospector_2",
+      "ship_type": "mining_skiff",
+      "x": 0.3,
+      "y": 0.65,
+      "route": ["station"]
+    },
+    {
+      "pilot": "prospector_3",
+      "ship_type": "mining_skiff",
+      "x": 0.55,
+      "y": 0.62,
+      "route": ["station"]
+    }
   ],
   "station": {
     "x": 0.62,
@@ -114,7 +141,7 @@
             "role": "outfitter",
             "outfit": "ck_mechanic_femme",
             "greeting": "Need to fit your ship out with something new?",
-            "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "cargo_expansion", "reinforced_hull"]}
+            "shop": {"type": "outfits", "stock": ["laser_cannon", "pulse_blaster", "rapid_laser", "cargo_expansion", "reinforced_hull"]}
           },
           {
             "name": "Ilena Cross",

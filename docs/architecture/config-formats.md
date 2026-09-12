@@ -20,9 +20,8 @@ the story/save split.
 | Story | What it is |
 |---|---|
 | `default` | The original sandbox. Frozen hand-maintained art (see [DESIGN_ATLAS.md](../DESIGN_ATLAS.md)); not on the design-JSON pipeline. |
-| `graphics_pipeline_test` | Reference story for the design-JSON art pipeline ([GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md)). |
 | `the_long_silence` | Five-system faction story — beacon jump-gating, reputation, ship combat, an ending fork. Act I plays end to end. Has its own docs tree: `config/stories/the_long_silence/docs/` (`STORY.md` narrative, `PLAN.md` build checklist, `gen/` slice generators). |
-| `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Re-uses `graphics_pipeline_test`'s art via the `orbital-std` + `figures-human` modules; no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
+| `the_whisper_line` | Short linear 3-system story — a stranger's note leads the player out past the last beacon to a missing friend and a first-contact fork. Reuses the `orbital-std` + `figures-human` modules' art (see [GRAPHICS_PIPELINE.md](../GRAPHICS_PIPELINE.md)); no new assets. Notes in `config/stories/the_whisper_line/docs/STORY.md`. |
 | `mining_101` | One-system, one-mission tutorial: buy and mount a laser, mine the belt (including a rare `system-events`-driven ore-rich asteroid), sell the haul. Reuses `orbital-std` + `figures-human`; no new assets. Notes in `config/stories/mining_101/docs/STORY.md`. |
 
 **`systems/{system_id}.json`** — one star system's layout:
@@ -122,8 +121,9 @@ of, not instead of, the system's normal `asteroid_field.types` draws - see
 [combat-and-mining.md](combat-and-mining.md)'s "System events" section for
 the resolution path). The event's own catalogue entry carries the rest of an
 `asteroid_types.json` type's fields (`graphics`, `size_range`, `speed_range`,
-`mine_yield`) plus `"name"`/`"description"` for anything that later surfaces
-them in UI:
+`mine_yield`, optionally `health_multiplier` - scales the asteroid's
+size-based health, default 1.0) plus `"name"`/`"description"` for anything
+that later surfaces them in UI:
 
 ```json
 "rich_ore_vein": {
@@ -137,10 +137,13 @@ them in UI:
 ```
 
 The second `"kind"` is `"pirate_ambush"` - here `"frequency"` is the chance,
-rolled once per **system entry** (`SpaceScreen._activate_system`, not per
-chunk - see `_build_pirate_ambush_configs`/`_maybe_spawn_pirate_ambush` in
-`game/screens/space_screen/setup.py`/`pirates.py`), that a hostile AI ship
-spawns a configured distance from the player:
+rolled on **system entry** (`SpaceScreen._activate_system`) and again every
+`"interval_seconds"` thereafter as long as the player keeps flying in that
+system without leaving (not per asteroid-field chunk - see
+`_build_pirate_ambush_configs` in `game/screens/space_screen/setup.py` and
+`_maybe_spawn_pirate_ambush`/`_update_periodic_pirate_ambush` in
+`pirates.py`), that a hostile AI ship spawns a configured distance from the
+player:
 
 ```json
 "lone_pirate": {
@@ -150,7 +153,8 @@ spawns a configured distance from the player:
   "ship_type": "raider_skiff",
   "tribute": 300,
   "spawn_distance": 700,
-  "timeout_seconds": 25
+  "timeout_seconds": 25,
+  "interval_seconds": 60
 }
 ```
 
@@ -160,7 +164,13 @@ spawns a configured distance from the player:
 hull are as story-specific as any other pilot's). `"spawn_distance"` places
 it that many world-units from the player at a random angle;
 `"timeout_seconds"` is how long the player has, once it appears, before it
-turns hostile on its own. `"tribute"` is **documentation only** - nothing
+turns hostile on its own. `"interval_seconds"` (default 60, see
+`pirates.py`'s `DEFAULT_RECHECK_SECONDS`) is how often, while the player
+stays in the system, the chance gets rolled again - so parking in a belt to
+mine for a long stretch doesn't mean safety after the first roll misses (or
+after an earlier encounter resolves); with several `pirate_ambush` entries
+in one system's `"events"`, the *shortest* `interval_seconds` among them
+sets the recheck cadence. `"tribute"` is **documentation only** - nothing
 reads it to drive the encounter; the actual pay/refuse choice and its
 `spend_credits:`/`set_flag:` actions live in the pilot's own
 `hail_dialogue_tree` (see `config/stories/mining_101/pilots.json`'s
@@ -178,12 +188,115 @@ refusing or the timeout expiring unanswered - is the same
 pilot, so the fight itself runs on existing `CombatRoutine`/weapon-fire code
 with nothing pirate-specific in it.
 
-Other event kinds (wrecks to salvage, derelict ships to board, scannable
-anomalies, wormholes to normally-disconnected systems) are meant to land in
-this same catalogue and the same system-level `"events"` array later, each
-with its own `"kind"` and its own resolution/spawn code - `"frequency"`
-won't necessarily mean "chance per asteroid-field chunk" or "chance per
-system entry" for a kind that fits neither shape.
+The third `"kind"` is `"derelict_ship"` - a static, unpiloted wreck the
+player can fly to and board with **G**. `"frequency"` means exactly what it
+does for `"pirate_ambush"` (chance per system entry, rerolled every
+`"interval_seconds"` while the player lingers - see
+`_build_derelict_configs`/`_maybe_spawn_derelict`/`_update_periodic_derelict`
+in `game/screens/space_screen/derelicts.py`), but the config for this kind is
+split across **three layers**, not two, since a derelict type's definition
+carries more (and more story-specific) data than a pirate ambush's - see
+[CONFIG_MODULES.md](../CONFIG_MODULES.md) for the general module/story/system
+split this follows:
+
+1. **Module** (`config/modules/system-events/`) owns only the `derelict_ship`
+   *mechanism* - the spawn-placement math, the targeting-range gate, boarding,
+   and the three possible `"outcome"`s below. It defines no concrete derelict
+   types itself (a trap's pirate ship/pilot ids are inherently story-specific).
+2. **Story** (`config/stories/{story}/events.json`, merged over the module's
+   `events.json` via `story_catalogue` - exactly like `ship_outfits.json`)
+   defines each named derelict type in full. Every type carries `"kind":
+   "derelict_ship"`, an `"outcome"` (`"loot"` / `"rescue"` / `"trap"`), a
+   `"name"`/`"description"`, a `"ship_type"` (a `ship_types.json`/`graphics.json`
+   id - what hull renders the wreck, dimmed - see `DerelictShip`), an
+   `"interval_seconds"`, and outcome-specific fields:
+   ```json
+   "adrift_hauler": {
+     "kind": "derelict_ship", "outcome": "loot",
+     "name": "Adrift Hauler", "ship_type": "courier", "interval_seconds": 150,
+     "loot": {"credits_range": [80, 220], "cargo": [{"commodity": "ore", "qty_range": [5, 15]}], "items": ["salvaged_part"]}
+   },
+   "stranded_skiff": {
+     "kind": "derelict_ship", "outcome": "rescue",
+     "name": "Stranded Skiff", "ship_type": "mining_skiff", "interval_seconds": 180,
+     "payout_range": [150, 400]
+   },
+   "suspect_wreck": {
+     "kind": "derelict_ship", "outcome": "trap",
+     "name": "Suspicious Wreck", "ship_type": "raider_skiff", "interval_seconds": 200,
+     "explosion_damage": 15, "pirate_ship_type": "raider_skiff", "pirate_pilot": "wreck_raider"
+   }
+   ```
+   `"loot"` (loot outcome): `"credits_range"` (a random amount, one "Credit
+   Stash" container), `"cargo"` (a list of `{"commodity", "qty_range"}`, one
+   container each), `"items"` (personal `items.json` ids, one container
+   each) - see `_build_loot_interior_config`. `"payout_range"` (rescue
+   outcome) is the credit range paid when the hitched passenger is dropped
+   off. `"pirate_ship_type"`/`"pirate_pilot"` (trap outcome) are ids the
+   *story* resolves, exactly like `pirate_ambush`'s own `"pilot"`/`"ship_type"`
+   - a fresh pilot with no `hail_dialogue_tree` (there's no toll to
+   negotiate; see `mining_101/pilots.json`'s `wreck_raider`), spawned already
+   `hostile_to_player:<name>` rather than via the hail/timeout dance.
+   `"explosion_damage"` (trap outcome, default `DERELICT_TRAP_DEFAULT_DAMAGE`
+   = 12) is a flat hull-damage burst dealt to the player the instant it
+   triggers.
+3. **System** (`systems/*.json`) just references a type by id, same
+   lightweight idiom as every other event kind:
+   ```json
+   "events": [
+     {"event": "adrift_hauler", "frequency": 0.08},
+     {"event": "stranded_skiff", "frequency": 0.05},
+     {"event": "suspect_wreck", "frequency": 0.03}
+   ]
+   ```
+
+**Spawn placement.** A hit spawns the wreck at a random angle from the
+player, at a distance that's guaranteed to be both off-screen (even at this
+story's minimum zoom) and outside minimap detection range -
+`max(half the Space View's diagonal at camera_zoom_min, MINIMAP_RANGE) + 150`
+(see `_derelict_spawn_distance`) - so it's never visible the instant it
+appears; the player has to actually explore to find it. It then renders as a
+static (non-drifting, non-tumbling) `DerelictShip` plus a looping
+`SmokeTrail` particle effect (`game/world/smoke_trail.py`, distinct from the
+one-shot spark-burst `Explosion`), and can't be cycled/clicked as a target
+until the player is within `DERELICT_TARGET_RANGE` (1800 world units) of it
+(`targeting.py`'s `_in_target_range`, a general per-object `target_range`
+gate any future target type could also opt into) - once in range it also
+starts appearing on the minimap. Pressing **G** while it's the current
+target, within `DERELICT_BOARD_RANGE` (70 units) and under
+`DERELICT_BOARD_SPEED_CAP` (0.4, matching the station/moon landing gate)
+boards it, per its `"outcome"`:
+
+- `"loot"`: opens a small generated walkable interior (reusing the ordinary
+  `get_interior_screen`/`LocationScreen` machinery via a throwaway
+  `LandingSite` wrapper, not a new rendering path) - one room, a
+  `return_to_ship` portal, and one NPC "container" per loot-table entry,
+  each handing over its reward exactly once via the shared `"earn_credits:"`/
+  `"loot_cargo:"`/`"give_item:"` dialogue actions (`game/world/dialogue.py`).
+  Walking back out (`SpaceScreen.exit_derelict`) despawns the wreck
+  permanently - nothing left to find twice.
+- `"rescue"`: resolved instantly, no interior (the fiction is someone
+  boarding *your* ship) - sets a `"hitching_passenger"` flag plus that
+  passenger's own `"rescue_payout:<event_id>"` amount
+  (`Possessions.flags`, so it survives an ordinary save - see
+  [SAVE_SYSTEM.md](../SAVE_SYSTEM.md)) and despawns the wreck. Paid out
+  (and the flag cleared) the next time the player docks at the station or
+  moon (`SpaceScreen._mark_landed`).
+- `"trap"`: resolved instantly - a cosmetic `Explosion` plus the flat
+  `"explosion_damage"` hull hit, then an already-hostile pirate spawned
+  nearby exactly like `pirate_ambush`'s own hostile-spawn construction
+  (`Character.for_ai_pilot`), and the wreck despawns.
+
+A derelict (and its encounter state) is **not** persisted across save/load,
+same as a `pirate_ambush`'s own spawn - see
+[SAVE_SYSTEM.md](../SAVE_SYSTEM.md).
+
+Other event kinds (scannable anomalies, wormholes to normally-disconnected
+systems) are meant to land in this same catalogue and the same system-level
+`"events"` array later, each with its own `"kind"` and its own
+resolution/spawn code - `"frequency"` won't necessarily mean "chance per
+asteroid-field chunk" or "chance per system entry" for a kind that fits
+neither shape.
 
 For `story.json`'s own fields, see the "`story.json` fields" table below.
 For `ship_types.json` / `graphics.json` and adding a ship type, see "Adding or
@@ -316,8 +429,8 @@ room draws as a flat `floor_color` polygon with no trim outline — rooms read
 as distinct only by contrast against the surrounding `wall_color` fill. An
 interior config with `"space_backdrop": true` fills with the Space View's
 black + a `StarField` (own `star_seed` / `star_density`) instead of the flat
-wall colour, so the lit floor polygons read as decks open to the void (the
-concourse in `graphics_pipeline_test`). `"seamless": true` drops the room-name
+wall colour, so the lit floor polygons read as decks open to the void (e.g. the
+`orbital-std` module's `concourse` interior). `"seamless": true` drops the room-name
 labels and the culture's edge-emphasising `interior_decoration` — so an
 interior of overlapping room polygons reads as one open deck rather than a set
 of boxes. `"floor_pattern"` fills every room with a

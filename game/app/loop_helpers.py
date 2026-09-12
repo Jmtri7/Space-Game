@@ -204,10 +204,25 @@ def begin_landing(game_screen):
         location_selector = ChoiceDialog(
             "Landing Location", landing_location_options(game_screen.moon.interiors))
         return "select_location", None, location_selector
+    if game_screen.landing_target == "derelict":
+        # A "loot"-outcome derelict_ship event (see
+        # game/screens/space_screen/derelicts.py) - _try_board_derelict
+        # already built a throwaway LandingSite wrapper + generated interior
+        # config for this specific wreck, stashed on game_screen.derelict.
+        # Reuses the exact same get_interior_screen/LocationScreen machinery
+        # a station uses, just for one ad-hoc interior instead of a
+        # story-authored one.
+        encounter = game_screen.derelict
+        landing_site = encounter.get("landing_site") if encounter else None
+        if landing_site is None:
+            return "game", None, None
+        derelict_interior = game_screen.get_interior_screen(landing_site, "default")
+        derelict_interior.arrive_from("ship")
+        return "derelict", derelict_interior, None
     return "game", None, None
 
 
-def step_world(current_screen, game_screen, station_interior, moon_interior):
+def step_world(current_screen, game_screen, station_interior, moon_interior, derelict_interior=None):
     """Advance the simulation by exactly one fixed SIM_STEP (1/60 s) for the
     active screen, and nothing for rendering.
 
@@ -223,15 +238,16 @@ def step_world(current_screen, game_screen, station_interior, moon_interior):
     and any screen with an open conversation (`active_dialogue`) - do
     nothing here, exactly as the old loop did nothing for them.
 
-    Returns "land" when the step itself triggers a screen change (autopilot
-    auto-land from within `SpaceScreen.update()`), else None; the caller
-    applies that transition and stops draining the accumulator."""
+    Returns "land" or "game_over" when the step itself triggers a screen
+    change (autopilot auto-land, or the player's ship being destroyed -
+    both from within `SpaceScreen.update()`), else None; the caller applies
+    that transition and stops draining the accumulator."""
     if current_screen == "game":
         if game_screen and not game_screen.active_dialogue:
             transition = game_screen.update()
             update_background_locations(game_screen, None)
-            if transition == "land":
-                return "land"
+            if transition in ("land", "game_over"):
+                return transition
     elif current_screen == "station":
         talking = bool(station_interior and station_interior.active_dialogue)
         if game_screen and not talking:
@@ -248,6 +264,20 @@ def step_world(current_screen, game_screen, station_interior, moon_interior):
             moon_interior.update()
         if not talking:
             update_background_locations(game_screen, moon_interior)
+    elif current_screen == "derelict":
+        # A boarded derelict's interior is a one-off, session-local
+        # LocationScreen (see loop_helpers.begin_landing) - simulated the
+        # same way a station's is (space physics keeps running in the
+        # background, paused only while a conversation has focus), just
+        # never touched by update_background_locations (nothing else in the
+        # story references it, so there's nothing to keep simulating once
+        # the player isn't in it - it's dropped outright on exit, see
+        # SpaceScreen.exit_derelict).
+        talking = bool(derelict_interior and derelict_interior.active_dialogue)
+        if game_screen and not talking:
+            game_screen.update_physics()
+        if derelict_interior:
+            derelict_interior.update()
     return None
 
 

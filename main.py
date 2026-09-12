@@ -24,7 +24,7 @@ from game.ui.pilot_name_dialog import PilotNameDialog
 from game.ui.intro_screen import IntroScreen, intro_report, has_intro
 from game.ui.choice_dialog import ChoiceDialog
 from game.ui.report_menu import ReportMenu, possessions_report, mission_report
-from game.ui.ending_screen import EndingScreen, ending_report
+from game.ui.ending_screen import EndingScreen, ending_report, game_over_report
 from game.ui.shop_menu import ShopMenu
 from game.ui.ship_browser_menu import ShipBrowserMenu
 from game.ui.outfitting_menu import OutfittingMenu
@@ -306,6 +306,7 @@ def main():
         game_screen = None
         station_interior = None
         moon_interior = None
+        derelict_interior = None  # LocationScreen for a boarded "loot" derelict_ship wreck (see loop_helpers.begin_landing)
         location_selector = None
         exit_menu = None
         exit_menu_landing_site = None  # game_screen.station or game_screen.moon - whichever this exit_menu is for
@@ -582,6 +583,8 @@ def main():
                     next_screen, si, ls = begin_landing(game_screen)
                     if next_screen == "station":
                         station_interior = si
+                    elif next_screen == "derelict":
+                        derelict_interior = si
                     elif next_screen == "select_location":
                         location_selector = ls
                     current_screen = next_screen
@@ -661,6 +664,33 @@ def main():
                 # Space physics stays running while docked, and the
                 # "a conversation freezes the world" rule - both in
                 # step_world() (PHASE 2).
+
+            elif current_screen == "derelict":
+                # A boarded "loot"-outcome derelict_ship wreck's generated
+                # interior (see loop_helpers.begin_landing's "derelict"
+                # branch) - deliberately a much smaller action set than
+                # "station"/"moon" (no shop, no exit_menu - there's exactly
+                # one way out, the same return_to_ship portal every
+                # interior already has). Exiting resolves/despawns the
+                # wreck (see SpaceScreen.exit_derelict), unlike a normal
+                # station/moon exit which is just board_ship().
+                action = derelict_interior.handle_input(events)
+                if action == "quit":
+                    running = False
+                elif action == "pause":
+                    previous_screen = "derelict"
+                    current_screen = "pause"
+                elif action == "exit":
+                    game_screen.exit_derelict()
+                    current_screen = "game"
+                elif action == "possessions":
+                    possessions_menu = ReportMenu(*possessions_report(derelict_interior.player.possessions, game_screen.story, game_screen.player.ship))
+                    possessions_return_screen = "derelict"
+                    current_screen = "possessions"
+                elif action == "missions":
+                    mission_log = ReportMenu(*mission_report(game_screen.missions_config, derelict_interior.player.possessions))
+                    missions_return_screen = "derelict"
+                    current_screen = "missions"
 
             elif current_screen == "select_location":
                 location_key = location_selector.handle_input(events)
@@ -905,7 +935,7 @@ def main():
             # ========================================================
             sim_accumulator, n_steps = advance_accumulator(sim_accumulator, real_dt)
             for _ in range(n_steps):
-                step_transition = step_world(current_screen, game_screen, station_interior, moon_interior)
+                step_transition = step_world(current_screen, game_screen, station_interior, moon_interior, derelict_interior)
                 if step_transition == "land":
                     next_screen, si, ls = begin_landing(game_screen)
                     if next_screen == "station":
@@ -913,6 +943,14 @@ def main():
                     elif next_screen == "select_location":
                         location_selector = ls
                     current_screen = next_screen
+                    break
+                elif step_transition == "game_over":
+                    # No Rescue Service respawn - hull loss ends the run.
+                    # Reuses the "ending" screen/state wholesale (same
+                    # full-panel report + Return to Menu button) rather than
+                    # a dedicated screen - see game_over_report().
+                    ending_menu = EndingScreen(*game_over_report(game_screen.game_over_cargo_lost))
+                    current_screen = "ending"
                     break
 
             t_after_sim = time.perf_counter()
@@ -962,6 +1000,9 @@ def main():
             elif current_screen == "station":
                 if station_interior:
                     station_interior.draw(dst)
+            elif current_screen == "derelict":
+                if derelict_interior:
+                    derelict_interior.draw(dst)
             elif current_screen == "select_location":
                 location_selector.draw(dst)
             elif current_screen == "exit_menu":
@@ -982,6 +1023,8 @@ def main():
                     station_interior.draw(dst, draw_hud=False)
                 elif possessions_return_screen == "moon" and moon_interior:
                     moon_interior.draw(dst, draw_hud=False)
+                elif possessions_return_screen == "derelict" and derelict_interior:
+                    derelict_interior.draw(dst, draw_hud=False)
                 possessions_menu.draw(dst)
             elif current_screen == "missions":
                 if missions_return_screen == "game" and game_screen:
@@ -990,6 +1033,8 @@ def main():
                     station_interior.draw(dst, draw_hud=False)
                 elif missions_return_screen == "moon" and moon_interior:
                     moon_interior.draw(dst, draw_hud=False)
+                elif missions_return_screen == "derelict" and derelict_interior:
+                    derelict_interior.draw(dst, draw_hud=False)
                 mission_log.draw(dst)
             elif current_screen == "shop":
                 if shop_return_screen == "station" and station_interior:
@@ -1013,6 +1058,8 @@ def main():
                     game_screen.draw(dst, draw_hud=False)
                 elif previous_screen == "station" and station_interior:
                     station_interior.draw(dst, draw_hud=False)
+                elif previous_screen == "derelict" and derelict_interior:
+                    derelict_interior.draw(dst, draw_hud=False)
                 pause_menu.draw(dst)
                 if delete_confirm_dialog:
                     delete_confirm_dialog.draw(dst)

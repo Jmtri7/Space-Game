@@ -43,7 +43,7 @@ action to a modal (add a button, not a key).
 | **Z** / **X** | Rotate the view right / left (camera only - does not touch ship heading or physics; held, like turning). Held view rotation, reset to north-up whenever you land. Not saved. |
 | **E** | Cycle forward through targetable objects in the current target mode |
 | **Q** | Cycle backward through targetable objects in the current target mode |
-| **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star). Starts on LANDING SITES. |
+| **T** | Cycle target mode: SHIPS (AI ships only) → LANDING SITES (station/moon only) → MISC (celestial bodies, star, a discovered derelict ship). Starts on LANDING SITES. |
 | **Click** an object (in the world, or its blip on the minimap) | Target it directly - infers and switches target mode to match whatever was clicked |
 | **Hover** a minimap blip | Show its name in a label by the cursor |
 | **Hover** a drifting ore pickup in the main view | Show its commodity name and amount in a label by the cursor (`SpaceScreen._draw_world_hover_tooltip`) |
@@ -51,7 +51,7 @@ action to a modal (add a button, not a key).
 | **R** | Hail the targeted ship (requires a targeted AI ship - see Hailing below) |
 | **Space** | Fire the equipped weapon (hold to fire continuously, at the weapon's own fire rate) - doesn't cancel an active autopilot, so you can shoot while it flies you somewhere. Shots hit asteroids and any AI ship. Shooting a ship makes *it* fight back, and shooting up enough of one faction's ships (or its standing dropping very low, or a story flag) turns that whole faction hostile. The bottom status pane shows **Hull: N%** once your ship is damaged; landing anywhere repairs it. A destroyed ship is recovered to the current system's station, repaired, minus its cargo. |
 | **F** | Engage autopilot toward the targeted object (follows an AI ship, or approaches a landing site from any range) - the bottom status pane then shows "Approaching: `<name>`". Autopilot onto a station/moon docks automatically once it brings you to a stop in range - whichever way the autopilot decides it's arrived, no extra **G** press. |
-| **G** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot) |
+| **G** | Land - on the targeted landing site if already in range, otherwise on whatever's nearby (never engages autopilot). If a discovered derelict ship is targeted instead, boards it once close and slow enough (see "Derelict ships" below) rather than attempting to land. |
 | **1** | Open the star map |
 | **2** | Open the Possessions menu (credits, owned ships, loans) |
 | **3** | Open the Mission Log (see Mission Log below) |
@@ -75,6 +75,25 @@ control: give it a status prompt *or* a pane entry, not both.
 
 Self-explanatory mouse actions (wheel to scroll a pane or zoom the view,
 click / hover a minimap blip) are also left off the pane.
+
+### Derelict ships
+
+A "derelict_ship" system event (see config-formats.md's "System events"
+section, `game/screens/space_screen/derelicts.py`) spawns a static wreck far
+enough away to be off-screen and off-minimap the instant it appears - it has
+to actually be found by flying toward it. Two range gates apply, both
+independent of E/Q/T's normal unlimited-range cycling:
+
+- **Targeting range** (`DERELICT_TARGET_RANGE`, 1800 world units) - a
+  derelict can't be cycled with E/Q, switched to via T's MISC mode, or
+  clicked (in the world or on the minimap) until the player is within this
+  distance. It's otherwise an ordinary MISC-mode target once in range.
+- **Boarding range** (`DERELICT_BOARD_RANGE`, 70 units) plus a speed cap
+  (`DERELICT_BOARD_SPEED_CAP`, 0.4) - **G** only boards it once both hold,
+  the same "close and slow" gate `_check_landing()` already uses for
+  station/moon docking. The bottom status pane prompts "Press G to board
+  `<name>`" once both are satisfied, and "Get closer and slow down to board
+  `<name>`" while only targeted-but-not-yet-in-range.
 
 ## Star Map (1)
 

@@ -30,6 +30,8 @@ class _TargetingMixin:
         in the right mode for whatever they click on."""
         best_obj, best_dist = None, None
         for _, obj in self.targetable_objects:
+            if not self._in_target_range(obj):
+                continue
             radius = obj.ship.size if isinstance(obj, Character) else getattr(obj, "size", 20)
             distance = math.sqrt((obj.x - world_x) ** 2 + (obj.y - world_y) ** 2)
             if distance <= radius + 12 and (best_dist is None or distance < best_dist):
@@ -77,20 +79,41 @@ class _TargetingMixin:
                 label = f"{label} - {pilot}"
         return label
 
+    def _in_target_range(self, obj):
+        """True unless `obj` declares its own targeting-range limit (a plain
+        `target_range` duck attribute, world units - only DerelictShip sets
+        one today, see game/world/derelict_ship.py) and the player is
+        currently farther than that from it. Every other target type has no
+        such attribute (getattr defaults to None) and stays selectable from
+        any distance, unchanged from before this existed. Applied uniformly
+        by _filtered_targets (E/Q/T cycling) and by click-to-target
+        (_select_target_at) / minimap click (_minimap_blip_at) below, so all
+        three selection paths agree on what's actually in range."""
+        target_range = getattr(obj, "target_range", None)
+        if target_range is None:
+            return True
+        return obj.get_distance(self.player.x, self.player.y) <= target_range
+
     def _filtered_targets(self):
         """targetable_objects narrowed to the current target mode - SHIPS
         (AI ships only), LANDING SITES (station/moon only), or MISC (everything
-        else - celestial bodies, the central star). current_target is
-        always an index into *this* list, not the master one, so switching
-        modes changes what index 0 means. Departed AI ships are pruned from
-        targetable_objects by _validate_target every frame, so this never
-        sees a Character that's no longer in self.ai_ships."""
+        else - celestial bodies, the central star, a targetable derelict).
+        current_target is always an index into *this* list, not the master
+        one, so switching modes changes what index 0 means. Departed AI ships
+        are pruned from targetable_objects by _validate_target every frame,
+        so this never sees a Character that's no longer in self.ai_ships.
+        Also drops anything currently out of its own target_range (see
+        _in_target_range) - an out-of-range object still exists in
+        targetable_objects (so it reappears the moment the player closes the
+        distance) but simply isn't offered to E/Q/T cycling meanwhile."""
         mode = TARGET_MODES[self.target_mode_index]
         if mode == "SHIPS":
-            return [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
+            entries = [entry for entry in self.targetable_objects if isinstance(entry[1], Character)]
         elif mode == "LANDING SITES":
-            return [entry for entry in self.targetable_objects if isinstance(entry[1], LandingSite)]
-        return [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, LandingSite))]
+            entries = [entry for entry in self.targetable_objects if isinstance(entry[1], LandingSite)]
+        else:
+            entries = [entry for entry in self.targetable_objects if not isinstance(entry[1], (Character, LandingSite))]
+        return [entry for entry in entries if self._in_target_range(entry[1])]
 
     def _cycle_target(self, direction=1):
         """Cycle through targetable objects in the current target mode - direction=1 for T/], -1 for [."""

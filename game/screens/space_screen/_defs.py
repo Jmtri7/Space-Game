@@ -41,6 +41,8 @@ from game.world.central_star import CentralStar
 from game.world.celestial_body import CelestialBody
 from game.world.asteroid_field import AsteroidField
 from game.world.system_state import SystemState
+from game.world.derelict_ship import DerelictShip
+from game.world.smoke_trail import SmokeTrail
 
 # Hailing tuning
 ONE_WAY_HAIL_RANGE = 500          # world units - how close an NPC-initiated hail can trigger from

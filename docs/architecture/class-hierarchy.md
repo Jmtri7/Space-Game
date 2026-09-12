@@ -11,6 +11,10 @@ short project layout, shared helpers, and the WorldObject principle live in the
 ```
 WorldObject (base — x, y, graphics, get_distance(), _draw_rotated_polygon())
 ├── Ship (physics, rotation; owns an Autopilot via composition)
+│   └── DerelictShip (a "derelict_ship" system event's wreck — reuses Ship's
+│       graphics-driven draw() dimmed and frozen at a fixed angle; thrust
+│       always 0, no Autopilot ever engaged, no Character/routine — pure
+│       scenery until boarded. See combat-and-mining.md's "System events".)
 └── LandingSite (space station or moon — config decides which)
 
 Person (base — x, y, draw(), get_distance(), owns a Possessions)
@@ -61,6 +65,11 @@ the old `LoadMenu`/`SaveDialog`. See [DESIGN_PATTERNS.md](../DESIGN_PATTERNS.md)
 
 ### Supporting Classes
 - `StarField` — Procedural star generation with seeded randomness
+- `Explosion` (`game/world/explosion.py`) — one-shot spark-burst particle
+  effect (projectile/asteroid impact); not a `WorldObject`, self-removes
+  after `LIFETIME_FRAMES`. `SmokeTrail` (`game/world/smoke_trail.py`) is its
+  looping counterpart — continuously emits fading puffs for as long as a
+  `DerelictShip` stays unresolved, never self-expiring on its own.
 - `Dialogue` — Conversation tree used by any character with a `person.dialogue`
   (or `person.hail_dialogue` - see Character below): nodes of text + options,
   each option either advancing to another node, closing (`"next": null`), or
@@ -372,6 +381,7 @@ that routine flies a ship or just moves a body around a room:
 | `ShuttleRoutine` | `shuttle_routine.py` | Yes | `trader_captain`, `courier_pilot` - ping-pong stops, instant turnaround |
 | `OrbitRoutine` | `orbit_routine.py` | Yes | `patrol_officer` - circle a fixed point forever |
 | `ExplorerRoutine` | `explorer_routine.py` | Yes | `explorer` - jump to a random *other* system, orbit something there a while, repeat |
+| `MinerRoutine` | `miner_routine.py` | Yes | `miner` - hunt asteroids in the home system (low-level turn/thrust/fire, exactly like `CombatRoutine` below - never touches autopilot), dodging every other nearby rock while closing on its target, until cargo is full; fly home, walk in, sell to the quartermaster, walk out, repeat. See [combat-and-mining.md](combat-and-mining.md#miner-ai) |
 | `IdleRoutine` | `idle_routine.py` | No | default for any role with no entry - never moves |
 | `WanderRoutine` | `wander_routine.py` | No | `resident`/`traveler`/`roommate` - amble near spawn |
 | `StationaryRoutine` | `stationary_routine.py` | No | `bartender`/`guard`/`ship_salesman`/`loan_officer` - stand still |

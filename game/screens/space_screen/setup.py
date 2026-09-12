@@ -57,11 +57,13 @@ class _SetupMixin:
         """Resolve a system's "events" entries of kind "pirate_ambush" into
         (event_def, chance) pairs for SpaceScreen._maybe_spawn_pirate_ambush
         (game/screens/space_screen/pirates.py) - here "frequency" is the
-        chance, rolled once per system entry (not per AsteroidField chunk -
-        see _build_system_events), that the encounter spawns. event_def is
-        passed through mostly as-is (pilot/ship_type/faction ids, tribute,
-        spawn_distance, timeout_seconds) - resolving the pilot/ship_type ids
-        themselves happens lazily at spawn time, not here, same as
+        chance, rolled on system entry and again periodically thereafter
+        while the player lingers (not per AsteroidField chunk - see
+        _build_system_events and pirates.py's _update_periodic_pirate_ambush),
+        that the encounter spawns. event_def is passed through mostly as-is
+        (pilot/ship_type/faction ids, tribute, spawn_distance,
+        timeout_seconds, interval_seconds) - resolving the pilot/ship_type
+        ids themselves happens lazily at spawn time, not here, same as
         ai_ships[] entries."""
         configs = []
         for entry in config.get("events", []):
@@ -69,6 +71,26 @@ class _SetupMixin:
             if event.get("kind") != "pirate_ambush":
                 continue
             configs.append((event, entry.get("frequency", 0.05)))
+        return configs
+
+    def _build_derelict_configs(self, config):
+        """Resolve a system's "events" entries of kind "derelict_ship" into
+        (event_def, chance) pairs for SpaceScreen._maybe_spawn_derelict
+        (game/screens/space_screen/derelicts.py) - "frequency" here means
+        the same thing it does for pirate_ambush (chance per system entry,
+        rerolled periodically while the player lingers), not per
+        AsteroidField chunk. event_def is the full resolved events.json
+        entry (kind, outcome, name, ship_type, and whichever kind-specific
+        fields the outcome needs - loot table, payout range, or
+        pirate_ship_type/pirate_pilot for a trap), resolved lazily at spawn
+        time same as ai_ships[]/pirate_ambush entries."""
+        configs = []
+        for entry in config.get("events", []):
+            event_id = entry.get("event", "")
+            event = get_system_event(self.story, event_id)
+            if event.get("kind") != "derelict_ship":
+                continue
+            configs.append(((event_id, event), entry.get("frequency", 0.05)))
         return configs
 
     def _build_system_state(self, system_id, config):
@@ -111,6 +133,9 @@ class _SetupMixin:
         # system (re-)entry, not here (a pirate should find the player
         # wherever they currently are, not spawn at construction time).
         state.pirate_ambush_configs = self._build_pirate_ambush_configs(config)
+        # See SpaceScreen._maybe_spawn_derelict (derelicts.py) - same "rolled
+        # on (re-)entry, not here" reasoning as pirate_ambush_configs above.
+        state.derelict_configs = self._build_derelict_configs(config)
         state.star_field = StarField(seed=config.get("star_seed", 0))
         # No seed passed - unlike StarField, AsteroidField is meant to look
         # different every time (see its docstring), including the very
@@ -210,6 +235,12 @@ class _SetupMixin:
         # this label, so it stays just the ship type.
         for i, ship in enumerate(self.ai_ships):
             self.targetable_objects.append((self._ship_target_label(ship, i), ship))
+        # After targetable_objects is (re)built, not before - unlike a
+        # pirate ambush's Character (which rides along automatically via the
+        # self.ai_ships aliasing loop just above), _maybe_spawn_derelict adds
+        # its wreck to targetable_objects itself (see derelicts.py._spawn_derelict),
+        # which the literal list-reassignment above would otherwise wipe out.
+        self._maybe_spawn_derelict(state)
 
     def _apply_ship_type(self, ship_type_id):
         """Configure the player's real ship's stats/graphics to match
