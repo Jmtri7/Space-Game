@@ -1,0 +1,32 @@
+{
+  "vigil_hall": {
+    "culture": "the_vigil",
+    "name": "The Vigil Hall",
+    "description": "The Vigil hall - the public / trading hall - the culture's front room, seen head-on. See buildings/vigil_hall.json.",
+    "design": "buildings/vigil_hall",
+    "footprint": {
+      "width": 68,
+      "depth": 22.0
+    }
+  },
+  "vigil_housing": {
+    "culture": "the_vigil",
+    "name": "The Vigil Housing",
+    "description": "The Vigil housing - a residential block - where the culture's people actually live. See buildings/vigil_housing.json.",
+    "design": "buildings/vigil_housing",
+    "footprint": {
+      "width": 44,
+      "depth": 16.0
+    }
+  },
+  "vigil_spire": {
+    "culture": "the_vigil",
+    "name": "The Vigil Spire",
+    "description": "The Vigil spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/vigil_spire.json.",
+    "design": "buildings/vigil_spire",
+    "footprint": {
+      "width": 30,
+      "depth": 14.0
+    }
+  }
+}

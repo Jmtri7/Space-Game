@@ -70,7 +70,8 @@ class TestLongSilenceOutfitRendering(unittest.TestCase):
     expand() + compose_worn + apply_walk, not the pixels."""
 
     def _all_outfit_ids(self):
-        return list((utils.load_json("config/stories/the_long_silence/graphics.json") or {}).get("outfits", {}))
+        import game.config_source as config_source
+        return list(config_source.story_catalogue("the_long_silence", "graphics.json").get("outfits", {}))
 
     def test_every_outfit_draws_without_error(self):
         ids = self._all_outfit_ids()
@@ -85,8 +86,11 @@ class TestLongSilenceOutfitRendering(unittest.TestCase):
         # backed by real culture-specific articles, not a <pfx>_dress recolour
         # of the borrowed ck_* sets. The Wardens are the exception - their
         # wardrobe is deferred to Act II (still a palette recolour).
-        base = "config/stories/the_long_silence/graphics"
-        gfx = utils.load_json(f"{base}/../graphics.json") or {}
+        # Each culture's outfits/sets now resolve through its own ls-<pfx>
+        # module (see docs/CONFIG_MODULES.md) rather than living directly in
+        # the story's own files, so this goes through the module resolver.
+        import game.config_source as config_source
+        gfx = config_source.story_catalogue("the_long_silence", "graphics.json")
         for pfx in ("authority", "combine", "drift", "vigil", "carrier"):
             sets_seen = set()
             for role in ("civilian", "official", "flight", "security", "dock"):
@@ -97,7 +101,7 @@ class TestLongSilenceOutfitRendering(unittest.TestCase):
                     self.assertEqual(entry["body"], f"human_{cut}")
                     sets_seen.add(entry["set"])
             for sid in sets_seen:
-                sj = utils.load_json(f"{base}/sets/{sid}.json")
+                sj = utils.load_json(config_source.story_path("the_long_silence", "graphics", "sets", f"{sid}.json"))
                 self.assertTrue(sj and any(a.startswith(f"{pfx}_") for a in sj["articles"]),
                                 f"set {sid} has no bespoke {pfx}_ article")
 

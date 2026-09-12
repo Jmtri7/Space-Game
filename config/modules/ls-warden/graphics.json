@@ -1,0 +1,297 @@
+{
+  "ships": {
+    "warden_courier": {
+      "design": "ships/warden_courier",
+      "culture": "the_wardens",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.16
+        ],
+        [
+          0.4,
+          0.7
+        ],
+        [
+          0.3,
+          1.02
+        ],
+        [
+          -0.3,
+          1.02
+        ],
+        [
+          -0.4,
+          0.7
+        ]
+      ],
+      "thrusters": [
+        [
+          0.0,
+          1.06
+        ]
+      ],
+      "thruster_width": 0.08,
+      "thruster_length": 22
+    },
+    "warden_hauler": {
+      "design": "ships/warden_hauler",
+      "culture": "the_wardens",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.1
+        ],
+        [
+          0.42,
+          0.8
+        ],
+        [
+          0.32,
+          1.16
+        ],
+        [
+          -0.32,
+          1.16
+        ],
+        [
+          -0.42,
+          0.8
+        ]
+      ],
+      "thrusters": [
+        [
+          0.18,
+          1.12
+        ],
+        [
+          -0.18,
+          1.12
+        ]
+      ],
+      "thruster_width": 0.08,
+      "thruster_length": 22
+    },
+    "warden_patrol": {
+      "design": "ships/warden_patrol",
+      "culture": "the_wardens",
+      "size": 16,
+      "local_points": [
+        [
+          -0.9,
+          -0.4
+        ],
+        [
+          0.9,
+          -0.4
+        ],
+        [
+          0.6,
+          1.0
+        ],
+        [
+          -0.6,
+          1.0
+        ]
+      ],
+      "thrusters": [
+        [
+          0.5,
+          0.86
+        ],
+        [
+          -0.5,
+          0.86
+        ]
+      ],
+      "thruster_width": 0.08,
+      "thruster_length": 22
+    }
+  },
+  "space_stations": {
+    "warden_station": {
+      "design": "stations/warden_station",
+      "culture": "the_wardens",
+      "size": 50,
+      "rotation_speed": 0.05,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          -48.296,
+          -12.941
+        ],
+        [
+          -45.048,
+          -21.694
+        ],
+        [
+          -40.23,
+          -29.691
+        ],
+        [
+          -34.009,
+          -36.653
+        ],
+        [
+          -26.602,
+          -42.336
+        ],
+        [
+          -18.267,
+          -46.544
+        ],
+        [
+          -9.296,
+          -49.128
+        ],
+        [
+          0.0,
+          -50.0
+        ],
+        [
+          9.296,
+          -49.128
+        ],
+        [
+          18.267,
+          -46.544
+        ],
+        [
+          26.602,
+          -42.336
+        ],
+        [
+          34.009,
+          -36.653
+        ],
+        [
+          40.23,
+          -29.691
+        ],
+        [
+          45.048,
+          -21.694
+        ],
+        [
+          48.296,
+          -12.941
+        ],
+        [
+          31.876,
+          -8.541
+        ],
+        [
+          29.732,
+          -14.318
+        ],
+        [
+          26.552,
+          -19.596
+        ],
+        [
+          22.446,
+          -24.191
+        ],
+        [
+          17.557,
+          -27.942
+        ],
+        [
+          12.056,
+          -30.719
+        ],
+        [
+          6.135,
+          -32.425
+        ],
+        [
+          0.0,
+          -33.0
+        ],
+        [
+          -6.135,
+          -32.425
+        ],
+        [
+          -12.056,
+          -30.719
+        ],
+        [
+          -17.557,
+          -27.942
+        ],
+        [
+          -22.446,
+          -24.191
+        ],
+        [
+          -26.552,
+          -19.596
+        ],
+        [
+          -29.732,
+          -14.318
+        ],
+        [
+          -31.876,
+          -8.541
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "warden_civilian_femme": {
+      "body": "human_femme",
+      "set": "warden_civilian",
+      "palette": "warden_dress"
+    },
+    "warden_civilian_masc": {
+      "body": "human_masc",
+      "set": "warden_civilian",
+      "palette": "warden_dress"
+    },
+    "warden_official_femme": {
+      "body": "human_femme",
+      "set": "warden_command",
+      "palette": "warden_dress"
+    },
+    "warden_official_masc": {
+      "body": "human_masc",
+      "set": "warden_command",
+      "palette": "warden_dress"
+    },
+    "warden_flight_femme": {
+      "body": "human_femme",
+      "set": "warden_flight",
+      "palette": "warden_dress"
+    },
+    "warden_flight_masc": {
+      "body": "human_masc",
+      "set": "warden_flight",
+      "palette": "warden_dress"
+    },
+    "warden_security_femme": {
+      "body": "human_femme",
+      "set": "warden_security",
+      "palette": "warden_dress"
+    },
+    "warden_security_masc": {
+      "body": "human_masc",
+      "set": "warden_security",
+      "palette": "warden_dress"
+    },
+    "warden_dock_femme": {
+      "body": "human_femme",
+      "set": "warden_dock",
+      "palette": "warden_dress"
+    },
+    "warden_dock_masc": {
+      "body": "human_masc",
+      "set": "warden_dock",
+      "palette": "warden_dress"
+    }
+  }
+}

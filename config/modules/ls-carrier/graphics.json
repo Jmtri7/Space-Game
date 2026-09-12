@@ -1,0 +1,269 @@
+{
+  "ships": {
+    "carrier_courier": {
+      "design": "ships/carrier_courier",
+      "culture": "free_carrier",
+      "size": 11,
+      "local_points": [
+        [
+          -0.28,
+          -1.1
+        ],
+        [
+          0.28,
+          -1.1
+        ],
+        [
+          0.42,
+          0.4
+        ],
+        [
+          0.3,
+          0.98
+        ],
+        [
+          -0.3,
+          0.98
+        ],
+        [
+          -0.42,
+          0.4
+        ]
+      ],
+      "thrusters": [
+        [
+          0.47,
+          1.02
+        ],
+        [
+          -0.42,
+          0.94
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    },
+    "carrier_hauler": {
+      "design": "ships/carrier_hauler",
+      "culture": "free_carrier",
+      "size": 20,
+      "local_points": [
+        [
+          -0.44,
+          -0.95
+        ],
+        [
+          0.44,
+          -0.95
+        ],
+        [
+          0.44,
+          0.85
+        ],
+        [
+          0.42,
+          1.18
+        ],
+        [
+          -0.42,
+          1.18
+        ],
+        [
+          -0.44,
+          0.85
+        ]
+      ],
+      "thrusters": [
+        [
+          0.22,
+          1.14
+        ],
+        [
+          -0.22,
+          1.14
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    },
+    "carrier_patrol": {
+      "design": "ships/carrier_patrol",
+      "culture": "free_carrier",
+      "size": 16,
+      "local_points": [
+        [
+          -0.3,
+          -1.0
+        ],
+        [
+          0.3,
+          -1.0
+        ],
+        [
+          0.56,
+          0.3
+        ],
+        [
+          0.42,
+          0.8
+        ],
+        [
+          0.3,
+          1.04
+        ],
+        [
+          -0.3,
+          1.04
+        ],
+        [
+          -0.42,
+          0.8
+        ],
+        [
+          -0.42,
+          -0.5
+        ]
+      ],
+      "thrusters": [
+        [
+          0.26,
+          1.04
+        ],
+        [
+          -0.26,
+          1.04
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    }
+  },
+  "space_stations": {
+    "carrier_station": {
+      "design": "stations/carrier_station",
+      "culture": "free_carrier",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -51.52
+        ],
+        [
+          15.64,
+          -43.24
+        ],
+        [
+          35.88,
+          -35.88
+        ],
+        [
+          43.24,
+          -15.64
+        ],
+        [
+          51.52,
+          0.0
+        ],
+        [
+          43.24,
+          15.64
+        ],
+        [
+          35.88,
+          35.88
+        ],
+        [
+          15.64,
+          43.24
+        ],
+        [
+          0.0,
+          51.52
+        ],
+        [
+          -15.64,
+          43.24
+        ],
+        [
+          -35.88,
+          35.88
+        ],
+        [
+          -43.24,
+          15.64
+        ],
+        [
+          -51.52,
+          0.0
+        ],
+        [
+          -43.24,
+          -15.64
+        ],
+        [
+          -35.88,
+          -35.88
+        ],
+        [
+          -15.64,
+          -43.24
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "carrier_civilian_femme": {
+      "body": "human_femme",
+      "set": "carrier_civilian",
+      "palette": "carrier_dress"
+    },
+    "carrier_civilian_masc": {
+      "body": "human_masc",
+      "set": "carrier_civilian",
+      "palette": "carrier_dress"
+    },
+    "carrier_official_femme": {
+      "body": "human_femme",
+      "set": "carrier_command",
+      "palette": "carrier_dress"
+    },
+    "carrier_official_masc": {
+      "body": "human_masc",
+      "set": "carrier_command",
+      "palette": "carrier_dress"
+    },
+    "carrier_flight_femme": {
+      "body": "human_femme",
+      "set": "carrier_flight",
+      "palette": "carrier_dress"
+    },
+    "carrier_flight_masc": {
+      "body": "human_masc",
+      "set": "carrier_flight",
+      "palette": "carrier_dress"
+    },
+    "carrier_security_femme": {
+      "body": "human_femme",
+      "set": "carrier_security",
+      "palette": "carrier_dress"
+    },
+    "carrier_security_masc": {
+      "body": "human_masc",
+      "set": "carrier_security",
+      "palette": "carrier_dress"
+    },
+    "carrier_dock_femme": {
+      "body": "human_femme",
+      "set": "carrier_dock",
+      "palette": "carrier_dress"
+    },
+    "carrier_dock_masc": {
+      "body": "human_masc",
+      "set": "carrier_dock",
+      "palette": "carrier_dress"
+    }
+  }
+}

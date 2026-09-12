@@ -1,0 +1,265 @@
+{
+  "ships": {
+    "drift_courier": {
+      "design": "ships/drift_courier",
+      "culture": "the_drift",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.02
+        ],
+        [
+          0.42,
+          0.6
+        ],
+        [
+          0.42,
+          1.0
+        ],
+        [
+          -0.42,
+          1.0
+        ],
+        [
+          -0.42,
+          0.6
+        ]
+      ],
+      "thrusters": [
+        [
+          0.42,
+          1.0
+        ],
+        [
+          -0.42,
+          1.0
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 16
+    },
+    "drift_hauler": {
+      "design": "ships/drift_hauler",
+      "culture": "the_drift",
+      "size": 20,
+      "local_points": [
+        [
+          0.0,
+          -1.04
+        ],
+        [
+          0.46,
+          0.5
+        ],
+        [
+          0.4,
+          1.1
+        ],
+        [
+          -0.4,
+          1.1
+        ],
+        [
+          -0.46,
+          0.5
+        ]
+      ],
+      "thrusters": [
+        [
+          0.2,
+          1.08
+        ],
+        [
+          -0.2,
+          1.08
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 16
+    },
+    "drift_patrol": {
+      "design": "ships/drift_patrol",
+      "culture": "the_drift",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.06
+        ],
+        [
+          0.5,
+          0.6
+        ],
+        [
+          0.5,
+          1.02
+        ],
+        [
+          -0.5,
+          1.02
+        ],
+        [
+          -0.5,
+          0.6
+        ]
+      ],
+      "thrusters": [
+        [
+          0.5,
+          1.02
+        ],
+        [
+          -0.5,
+          1.02
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 16
+    }
+  },
+  "space_stations": {
+    "drift_station": {
+      "design": "stations/drift_station",
+      "culture": "the_drift",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          0.0,
+          -46.0
+        ],
+        [
+          14.215,
+          -43.749
+        ],
+        [
+          27.038,
+          -37.215
+        ],
+        [
+          37.215,
+          -27.038
+        ],
+        [
+          43.749,
+          -14.215
+        ],
+        [
+          46.0,
+          -0.0
+        ],
+        [
+          43.749,
+          14.215
+        ],
+        [
+          37.215,
+          27.038
+        ],
+        [
+          27.038,
+          37.215
+        ],
+        [
+          14.215,
+          43.749
+        ],
+        [
+          0.0,
+          46.0
+        ],
+        [
+          -14.215,
+          43.749
+        ],
+        [
+          -27.038,
+          37.215
+        ],
+        [
+          -37.215,
+          27.038
+        ],
+        [
+          -43.749,
+          14.215
+        ],
+        [
+          -46.0,
+          0.0
+        ],
+        [
+          -43.749,
+          -14.215
+        ],
+        [
+          -37.215,
+          -27.038
+        ],
+        [
+          -27.038,
+          -37.215
+        ],
+        [
+          -14.215,
+          -43.749
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "drift_civilian_femme": {
+      "body": "human_femme",
+      "set": "drift_civilian",
+      "palette": "drift_dress"
+    },
+    "drift_civilian_masc": {
+      "body": "human_masc",
+      "set": "drift_civilian",
+      "palette": "drift_dress"
+    },
+    "drift_official_femme": {
+      "body": "human_femme",
+      "set": "drift_command",
+      "palette": "drift_dress"
+    },
+    "drift_official_masc": {
+      "body": "human_masc",
+      "set": "drift_command",
+      "palette": "drift_dress"
+    },
+    "drift_flight_femme": {
+      "body": "human_femme",
+      "set": "drift_flight",
+      "palette": "drift_dress"
+    },
+    "drift_flight_masc": {
+      "body": "human_masc",
+      "set": "drift_flight",
+      "palette": "drift_dress"
+    },
+    "drift_security_femme": {
+      "body": "human_femme",
+      "set": "drift_security",
+      "palette": "drift_dress"
+    },
+    "drift_security_masc": {
+      "body": "human_masc",
+      "set": "drift_security",
+      "palette": "drift_dress"
+    },
+    "drift_dock_femme": {
+      "body": "human_femme",
+      "set": "drift_dock",
+      "palette": "drift_dress"
+    },
+    "drift_dock_masc": {
+      "body": "human_masc",
+      "set": "drift_dock",
+      "palette": "drift_dress"
+    }
+  }
+}

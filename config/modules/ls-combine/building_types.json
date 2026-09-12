@@ -1,0 +1,32 @@
+{
+  "combine_hall": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Hall",
+    "description": "Ninefold Combine hall - the public / trading hall - the culture's front room, seen head-on. See buildings/combine_hall.json.",
+    "design": "buildings/combine_hall",
+    "footprint": {
+      "width": 120,
+      "depth": 30.0
+    }
+  },
+  "combine_housing": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Housing",
+    "description": "Ninefold Combine housing - a residential block - where the culture's people actually live. See buildings/combine_housing.json.",
+    "design": "buildings/combine_housing",
+    "footprint": {
+      "width": 68,
+      "depth": 22.0
+    }
+  },
+  "combine_spire": {
+    "culture": "ninefold_combine",
+    "name": "Ninefold Combine Spire",
+    "description": "Ninefold Combine spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/combine_spire.json.",
+    "design": "buildings/combine_spire",
+    "footprint": {
+      "width": 56,
+      "depth": 20.0
+    }
+  }
+}

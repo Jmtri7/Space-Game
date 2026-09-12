@@ -142,8 +142,8 @@ class TestFloorTessellation(unittest.TestCase):
 
 class TestFloorPatternByName(unittest.TestCase):
     """"floor_pattern" as a string names a
-    graphics/floor_patterns/<name>.json asset (config/modules/
-    long-silence-floors for the_long_silence) instead of an inline spec."""
+    graphics/floor_patterns/<name>.json asset (config/modules/ls-<culture>
+    for the_long_silence) instead of an inline spec."""
 
     def test_named_pattern_resolves_through_the_story_s_modules(self):
         screen = LocationScreen(story="the_long_silence", config_data={

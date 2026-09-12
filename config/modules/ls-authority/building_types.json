@@ -1,0 +1,32 @@
+{
+  "authority_hall": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Hall",
+    "description": "Harbor Authority hall - the public / trading hall - the culture's front room, seen head-on. See buildings/authority_hall.json.",
+    "design": "buildings/authority_hall",
+    "footprint": {
+      "width": 116,
+      "depth": 30.0
+    }
+  },
+  "authority_housing": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Housing",
+    "description": "Harbor Authority housing - a residential block - where the culture's people actually live. See buildings/authority_housing.json.",
+    "design": "buildings/authority_housing",
+    "footprint": {
+      "width": 72,
+      "depth": 24.0
+    }
+  },
+  "authority_spire": {
+    "culture": "harbor_authority",
+    "name": "Harbor Authority Spire",
+    "description": "Harbor Authority spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/authority_spire.json.",
+    "design": "buildings/authority_spire",
+    "footprint": {
+      "width": 44,
+      "depth": 18.0
+    }
+  }
+}

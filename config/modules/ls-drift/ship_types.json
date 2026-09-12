@@ -1,0 +1,137 @@
+{
+  "drift_courier": {
+    "name": "Drift Courier",
+    "description": "The Drift courier - a small fast dispatch hull.",
+    "max_thrust": 0.17,
+    "max_velocity": 3.8,
+    "rotation_speed": 4.2,
+    "size": 11,
+    "cargo_capacity": 14,
+    "max_health": 24,
+    "cost": 7000,
+    "color": [
+      122,
+      152,
+      112
+    ],
+    "shape": "triangle",
+    "slots": [
+      {
+        "id": "weapon_1",
+        "type": "weapon",
+        "x": 0.5,
+        "y": 0.18
+      },
+      {
+        "id": "engine_1",
+        "type": "engine",
+        "x": 0.5,
+        "y": 0.88
+      },
+      {
+        "id": "utility_1",
+        "type": "utility",
+        "x": 0.5,
+        "y": 0.55
+      }
+    ]
+  },
+  "drift_hauler": {
+    "name": "Drift Hauler",
+    "description": "The Drift hauler - a mid-weight cargo hull, slow to turn.",
+    "max_thrust": 0.11,
+    "max_velocity": 2.4,
+    "rotation_speed": 2.3,
+    "size": 20,
+    "cargo_capacity": 55,
+    "max_health": 58,
+    "cost": 26000,
+    "color": [
+      122,
+      152,
+      112
+    ],
+    "shape": "triangle",
+    "slots": [
+      {
+        "id": "weapon_1",
+        "type": "weapon",
+        "x": 0.5,
+        "y": 0.18
+      },
+      {
+        "id": "engine_1",
+        "type": "engine",
+        "x": 0.5,
+        "y": 0.88
+      },
+      {
+        "id": "utility_1",
+        "type": "utility",
+        "x": 0.5,
+        "y": 0.55
+      },
+      {
+        "id": "weapon_2",
+        "type": "weapon",
+        "x": 0.5,
+        "y": 0.36
+      },
+      {
+        "id": "utility_2",
+        "type": "utility",
+        "x": 0.65,
+        "y": 0.55
+      }
+    ]
+  },
+  "drift_patrol": {
+    "name": "Drift Patrol",
+    "description": "The Drift patrol - an armed patrol / warship hull.",
+    "max_thrust": 0.3,
+    "max_velocity": 4.6,
+    "rotation_speed": 4.4,
+    "size": 16,
+    "cargo_capacity": 14,
+    "max_health": 70,
+    "cost": 52000,
+    "color": [
+      122,
+      152,
+      112
+    ],
+    "shape": "triangle",
+    "slots": [
+      {
+        "id": "weapon_1",
+        "type": "weapon",
+        "x": 0.5,
+        "y": 0.18
+      },
+      {
+        "id": "engine_1",
+        "type": "engine",
+        "x": 0.5,
+        "y": 0.88
+      },
+      {
+        "id": "utility_1",
+        "type": "utility",
+        "x": 0.5,
+        "y": 0.55
+      },
+      {
+        "id": "weapon_2",
+        "type": "weapon",
+        "x": 0.5,
+        "y": 0.36
+      },
+      {
+        "id": "utility_2",
+        "type": "utility",
+        "x": 0.65,
+        "y": 0.55
+      }
+    ]
+  }
+}

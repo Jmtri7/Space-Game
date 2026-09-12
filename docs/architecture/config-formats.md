@@ -470,8 +470,8 @@ asset resolved through the story's modules (`get_floor_pattern`, see
 shades derived from the culture's `floor_color` / `wall_trim_color`.
 `the_long_silence`'s station concourses set `seamless` + `space_backdrop` +
 a named `floor_pattern` (see `config/stories/the_long_silence/docs/gen/_slice_kit.py`
-`station_shell`); the six named patterns themselves live in the
-`long-silence-floors` module (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)).
+`station_shell`); the six named patterns themselves live one per culture in
+the `ls-<culture>` modules (see [CONFIG_MODULES.md](../CONFIG_MODULES.md)).
 `structures` that name a
 `building_type` are solid: anything with a `footprint` block (spires, halls,
 and the furniture types — `*_bench`, `*_planter`, `*_lamp`, `*_desk`,

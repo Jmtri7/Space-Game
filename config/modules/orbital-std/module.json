@@ -1,5 +1,5 @@
 {
   "name": "orbital-std",
-  "version": "1.1.0",
-  "description": "The 'standard orbital' pipeline kit: the orbital_std/regolith_std cultures, the courier ship, the trade_ring station, the regolith_moon, and the small settlement building set (market_hall, housing_block, admin_office, planter, lamp_post, crates, plus the pipeline bench/column). Extracted so any story can reuse the same look with zero new assets."
+  "version": "2.0.0",
+  "description": "The 'standard orbital' pipeline kit: the orbital_std/regolith_std cultures, the courier ship, the trade_ring station, the regolith_moon, and the small settlement building set (market_hall, housing_block, admin_office, planter, lamp_post, crates, plus the pipeline bench/column) - now with their per-name graphics files (buildings, collision, decorations, interiors, ships, stations), absorbed from figures-human in 2.0.0 since none of it is a human figure or wardrobe piece. Extracted so any story can reuse the same look with zero new assets."
 }

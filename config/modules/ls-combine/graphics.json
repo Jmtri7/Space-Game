@@ -1,0 +1,233 @@
+{
+  "ships": {
+    "combine_courier": {
+      "design": "ships/combine_courier",
+      "culture": "ninefold_combine",
+      "size": 11,
+      "local_points": [
+        [
+          -0.4,
+          -0.72
+        ],
+        [
+          0.4,
+          -0.72
+        ],
+        [
+          0.4,
+          0.86
+        ],
+        [
+          0.6,
+          1.02
+        ],
+        [
+          -0.6,
+          1.02
+        ],
+        [
+          -0.4,
+          0.86
+        ]
+      ],
+      "thrusters": [
+        [
+          0.5,
+          1.02
+        ],
+        [
+          -0.5,
+          1.02
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    },
+    "combine_hauler": {
+      "design": "ships/combine_hauler",
+      "culture": "ninefold_combine",
+      "size": 20,
+      "local_points": [
+        [
+          -0.46,
+          -0.8
+        ],
+        [
+          0.46,
+          -0.8
+        ],
+        [
+          0.46,
+          0.88
+        ],
+        [
+          0.44,
+          1.18
+        ],
+        [
+          -0.44,
+          1.18
+        ],
+        [
+          -0.46,
+          0.88
+        ]
+      ],
+      "thrusters": [
+        [
+          0.24,
+          1.1
+        ],
+        [
+          -0.24,
+          1.1
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    },
+    "combine_patrol": {
+      "design": "ships/combine_patrol",
+      "culture": "ninefold_combine",
+      "size": 16,
+      "local_points": [
+        [
+          -0.24,
+          -1.06
+        ],
+        [
+          0.24,
+          -1.06
+        ],
+        [
+          0.7,
+          0.5
+        ],
+        [
+          0.32,
+          1.1
+        ],
+        [
+          -0.32,
+          1.1
+        ],
+        [
+          -0.7,
+          0.5
+        ]
+      ],
+      "thrusters": [
+        [
+          -0.32,
+          1.05
+        ],
+        [
+          0.0,
+          1.05
+        ],
+        [
+          0.32,
+          1.05
+        ]
+      ],
+      "thruster_width": 0.07,
+      "thruster_length": 18
+    }
+  },
+  "space_stations": {
+    "combine_station": {
+      "design": "stations/combine_station",
+      "culture": "ninefold_combine",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          -19.32,
+          -46.0
+        ],
+        [
+          19.32,
+          -46.0
+        ],
+        [
+          46.0,
+          -19.32
+        ],
+        [
+          46.0,
+          19.32
+        ],
+        [
+          19.32,
+          46.0
+        ],
+        [
+          -19.32,
+          46.0
+        ],
+        [
+          -46.0,
+          19.32
+        ],
+        [
+          -46.0,
+          -19.32
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "combine_civilian_femme": {
+      "body": "human_femme",
+      "set": "combine_civilian",
+      "palette": "combine_dress"
+    },
+    "combine_civilian_masc": {
+      "body": "human_masc",
+      "set": "combine_civilian",
+      "palette": "combine_dress"
+    },
+    "combine_official_femme": {
+      "body": "human_femme",
+      "set": "combine_command",
+      "palette": "combine_dress"
+    },
+    "combine_official_masc": {
+      "body": "human_masc",
+      "set": "combine_command",
+      "palette": "combine_dress"
+    },
+    "combine_flight_femme": {
+      "body": "human_femme",
+      "set": "combine_flight",
+      "palette": "combine_dress"
+    },
+    "combine_flight_masc": {
+      "body": "human_masc",
+      "set": "combine_flight",
+      "palette": "combine_dress"
+    },
+    "combine_security_femme": {
+      "body": "human_femme",
+      "set": "combine_security",
+      "palette": "combine_dress"
+    },
+    "combine_security_masc": {
+      "body": "human_masc",
+      "set": "combine_security",
+      "palette": "combine_dress"
+    },
+    "combine_dock_femme": {
+      "body": "human_femme",
+      "set": "combine_dock",
+      "palette": "combine_dress"
+    },
+    "combine_dock_masc": {
+      "body": "human_masc",
+      "set": "combine_dock",
+      "palette": "combine_dress"
+    }
+  }
+}

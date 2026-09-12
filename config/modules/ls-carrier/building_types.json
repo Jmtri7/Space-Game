@@ -1,0 +1,32 @@
+{
+  "carrier_hall": {
+    "culture": "free_carrier",
+    "name": "The free carriers Hall",
+    "description": "The free carriers hall - the public / trading hall - the culture's front room, seen head-on. See buildings/carrier_hall.json.",
+    "design": "buildings/carrier_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 40.0
+    }
+  },
+  "carrier_housing": {
+    "culture": "free_carrier",
+    "name": "The free carriers Housing",
+    "description": "The free carriers housing - a residential block - where the culture's people actually live. See buildings/carrier_housing.json.",
+    "design": "buildings/carrier_housing",
+    "footprint": {
+      "width": 72,
+      "depth": 28.0
+    }
+  },
+  "carrier_spire": {
+    "culture": "free_carrier",
+    "name": "The free carriers Spire",
+    "description": "The free carriers spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/carrier_spire.json.",
+    "design": "buildings/carrier_spire",
+    "footprint": {
+      "width": 44,
+      "depth": 18.0
+    }
+  }
+}

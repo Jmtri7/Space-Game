@@ -1,0 +1,32 @@
+{
+  "warden_hall": {
+    "culture": "the_wardens",
+    "name": "The Wardens Hall",
+    "description": "The Wardens hall - the public / trading hall - the culture's front room, seen head-on. See buildings/warden_hall.json.",
+    "design": "buildings/warden_hall",
+    "footprint": {
+      "width": 124,
+      "depth": 36.0
+    }
+  },
+  "warden_housing": {
+    "culture": "the_wardens",
+    "name": "The Wardens Housing",
+    "description": "The Wardens housing - a residential block - where the culture's people actually live. See buildings/warden_housing.json.",
+    "design": "buildings/warden_housing",
+    "footprint": {
+      "width": 80,
+      "depth": 26.0
+    }
+  },
+  "warden_spire": {
+    "culture": "the_wardens",
+    "name": "The Wardens Spire",
+    "description": "The Wardens spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/warden_spire.json.",
+    "design": "buildings/warden_spire",
+    "footprint": {
+      "width": 48,
+      "depth": 18.0
+    }
+  }
+}

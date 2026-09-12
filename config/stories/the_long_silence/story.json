@@ -4,11 +4,17 @@
   "name": "The Long Silence",
   "modules": [
     "figures-human",
+    "orbital-std",
     "audio-core",
     "ships-core",
     "common-goods",
     "story-defaults",
-    "long-silence-floors"
+    "ls-authority",
+    "ls-combine",
+    "ls-drift",
+    "ls-vigil",
+    "ls-warden",
+    "ls-carrier"
   ],
   "description": "The Relay went dark 200 years ago and is switching itself back on, system by system. Fly ahead of the signal, re-contact cultures that grew strange in isolation, and decide what reconnection means. Act I plays end to end - all five systems have authored culture art, walkable stations, NPC rosters, and anchor missions; Acts II-III are in progress.",
   "difficulty": "normal",

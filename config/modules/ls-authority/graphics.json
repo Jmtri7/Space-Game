@@ -1,0 +1,233 @@
+{
+  "ships": {
+    "authority_courier": {
+      "design": "ships/authority_courier",
+      "culture": "harbor_authority",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.18
+        ],
+        [
+          0.36,
+          0.62
+        ],
+        [
+          0.3,
+          1.06
+        ],
+        [
+          -0.3,
+          1.06
+        ],
+        [
+          -0.36,
+          0.62
+        ]
+      ],
+      "thrusters": [
+        [
+          0.41,
+          1.02
+        ],
+        [
+          -0.41,
+          1.02
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 20
+    },
+    "authority_hauler": {
+      "design": "ships/authority_hauler",
+      "culture": "harbor_authority",
+      "size": 20,
+      "local_points": [
+        [
+          -0.42,
+          -0.9
+        ],
+        [
+          0.42,
+          -0.9
+        ],
+        [
+          0.42,
+          0.86
+        ],
+        [
+          -0.42,
+          0.86
+        ]
+      ],
+      "thrusters": [
+        [
+          0.24,
+          1.1
+        ],
+        [
+          -0.24,
+          1.1
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 20
+    },
+    "authority_patrol": {
+      "design": "ships/authority_patrol",
+      "culture": "harbor_authority",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.16
+        ],
+        [
+          0.9,
+          0.9
+        ],
+        [
+          0.3,
+          1.1
+        ],
+        [
+          -0.3,
+          1.1
+        ],
+        [
+          -0.9,
+          0.9
+        ]
+      ],
+      "thrusters": [
+        [
+          -0.34,
+          1.05
+        ],
+        [
+          0.0,
+          1.05
+        ],
+        [
+          0.34,
+          1.05
+        ]
+      ],
+      "thruster_width": 0.06,
+      "thruster_length": 20
+    }
+  },
+  "space_stations": {
+    "authority_station": {
+      "design": "stations/authority_station",
+      "culture": "harbor_authority",
+      "size": 46,
+      "rotation_speed": 0.3,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          -7.36,
+          -46.0
+        ],
+        [
+          7.36,
+          -46.0
+        ],
+        [
+          7.36,
+          -7.36
+        ],
+        [
+          46.0,
+          -7.36
+        ],
+        [
+          46.0,
+          7.36
+        ],
+        [
+          7.36,
+          7.36
+        ],
+        [
+          7.36,
+          46.0
+        ],
+        [
+          -7.36,
+          46.0
+        ],
+        [
+          -7.36,
+          7.36
+        ],
+        [
+          -46.0,
+          7.36
+        ],
+        [
+          -46.0,
+          -7.36
+        ],
+        [
+          -7.36,
+          -7.36
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "authority_civilian_femme": {
+      "body": "human_femme",
+      "set": "authority_civilian",
+      "palette": "authority_dress"
+    },
+    "authority_civilian_masc": {
+      "body": "human_masc",
+      "set": "authority_civilian",
+      "palette": "authority_dress"
+    },
+    "authority_official_femme": {
+      "body": "human_femme",
+      "set": "authority_command",
+      "palette": "authority_dress"
+    },
+    "authority_official_masc": {
+      "body": "human_masc",
+      "set": "authority_command",
+      "palette": "authority_dress"
+    },
+    "authority_flight_femme": {
+      "body": "human_femme",
+      "set": "authority_flight",
+      "palette": "authority_dress"
+    },
+    "authority_flight_masc": {
+      "body": "human_masc",
+      "set": "authority_flight",
+      "palette": "authority_dress"
+    },
+    "authority_security_femme": {
+      "body": "human_femme",
+      "set": "authority_security",
+      "palette": "authority_dress"
+    },
+    "authority_security_masc": {
+      "body": "human_masc",
+      "set": "authority_security",
+      "palette": "authority_dress"
+    },
+    "authority_dock_femme": {
+      "body": "human_femme",
+      "set": "authority_dock",
+      "palette": "authority_dress"
+    },
+    "authority_dock_masc": {
+      "body": "human_masc",
+      "set": "authority_dock",
+      "palette": "authority_dress"
+    }
+  }
+}

@@ -273,7 +273,7 @@ def say(sender, text):
 
 # ---------------------------------------------------------------- station shell
 # Per-culture floor texture - each culture prefix names a
-# graphics/floor_patterns/<name>.json spec (config/modules/long-silence-floors),
+# graphics/floor_patterns/<name>.json spec (config/modules/ls-<culture>),
 # the pattern that culture would lay a deck in.
 _STATION_STYLE = {
     "authority": "authority",  # ranked square deck panels

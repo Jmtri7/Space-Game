@@ -1,0 +1,32 @@
+{
+  "drift_hall": {
+    "culture": "the_drift",
+    "name": "The Drift Hall",
+    "description": "The Drift hall - the public / trading hall - the culture's front room, seen head-on. See buildings/drift_hall.json.",
+    "design": "buildings/drift_hall",
+    "footprint": {
+      "width": 112,
+      "depth": 34.0
+    }
+  },
+  "drift_housing": {
+    "culture": "the_drift",
+    "name": "The Drift Housing",
+    "description": "The Drift housing - a residential block - where the culture's people actually live. See buildings/drift_housing.json.",
+    "design": "buildings/drift_housing",
+    "footprint": {
+      "width": 76,
+      "depth": 26.0
+    }
+  },
+  "drift_spire": {
+    "culture": "the_drift",
+    "name": "The Drift Spire",
+    "description": "The Drift spire - the landmark - an administrative / ceremonial tower that says whose ground this is. See buildings/drift_spire.json.",
+    "design": "buildings/drift_spire",
+    "footprint": {
+      "width": 56,
+      "depth": 20.0
+    }
+  }
+}

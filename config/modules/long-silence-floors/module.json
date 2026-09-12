@@ -1,5 +1,0 @@
-{
-  "name": "long-silence-floors",
-  "version": "1.0.0",
-  "description": "Named station-floor tessellation specs (graphics/floor_patterns/<name>.json), one per the_long_silence culture prefix. Extracted from docs/gen/_slice_kit.py's station_shell() so a station's config references a floor texture by name instead of inlining the pattern/tile/gap spec."
-}

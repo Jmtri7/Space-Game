@@ -1,0 +1,209 @@
+{
+  "ships": {
+    "vigil_courier": {
+      "design": "ships/vigil_courier",
+      "culture": "the_vigil",
+      "size": 11,
+      "local_points": [
+        [
+          0.0,
+          -1.3
+        ],
+        [
+          0.2,
+          0.7
+        ],
+        [
+          0.28,
+          1.08
+        ],
+        [
+          -0.28,
+          1.08
+        ],
+        [
+          -0.2,
+          0.7
+        ]
+      ],
+      "thrusters": [
+        [
+          0.0,
+          1.06
+        ]
+      ],
+      "thruster_width": 0.09,
+      "thruster_length": 20
+    },
+    "vigil_hauler": {
+      "design": "ships/vigil_hauler",
+      "culture": "the_vigil",
+      "size": 20,
+      "local_points": [
+        [
+          -0.32,
+          -0.85
+        ],
+        [
+          0.32,
+          -0.85
+        ],
+        [
+          0.32,
+          0.9
+        ],
+        [
+          0.22,
+          1.16
+        ],
+        [
+          -0.22,
+          1.16
+        ],
+        [
+          -0.32,
+          0.9
+        ]
+      ],
+      "thrusters": [
+        [
+          0.0,
+          1.12
+        ]
+      ],
+      "thruster_width": 0.09,
+      "thruster_length": 20
+    },
+    "vigil_patrol": {
+      "design": "ships/vigil_patrol",
+      "culture": "the_vigil",
+      "size": 16,
+      "local_points": [
+        [
+          0.0,
+          -1.24
+        ],
+        [
+          0.18,
+          0.7
+        ],
+        [
+          0.26,
+          1.08
+        ],
+        [
+          -0.26,
+          1.08
+        ],
+        [
+          -0.18,
+          0.7
+        ]
+      ],
+      "thrusters": [
+        [
+          0.0,
+          1.04
+        ]
+      ],
+      "thruster_width": 0.09,
+      "thruster_length": 20
+    }
+  },
+  "space_stations": {
+    "vigil_station": {
+      "design": "stations/vigil_station",
+      "culture": "the_vigil",
+      "size": 46,
+      "rotation_speed": 0.0,
+      "landing_distance": 150,
+      "local_points": [
+        [
+          -15.64,
+          -59.800000000000004
+        ],
+        [
+          15.64,
+          -59.800000000000004
+        ],
+        [
+          18.400000000000002,
+          -50.6
+        ],
+        [
+          18.400000000000002,
+          50.6
+        ],
+        [
+          13.799999999999999,
+          59.800000000000004
+        ],
+        [
+          -13.799999999999999,
+          59.800000000000004
+        ],
+        [
+          -18.400000000000002,
+          50.6
+        ],
+        [
+          -18.400000000000002,
+          -50.6
+        ]
+      ],
+      "windows": []
+    }
+  },
+  "outfits": {
+    "vigil_civilian_femme": {
+      "body": "human_femme",
+      "set": "vigil_civilian",
+      "palette": "vigil_dress"
+    },
+    "vigil_civilian_masc": {
+      "body": "human_masc",
+      "set": "vigil_civilian",
+      "palette": "vigil_dress"
+    },
+    "vigil_official_femme": {
+      "body": "human_femme",
+      "set": "vigil_command",
+      "palette": "vigil_dress"
+    },
+    "vigil_official_masc": {
+      "body": "human_masc",
+      "set": "vigil_command",
+      "palette": "vigil_dress"
+    },
+    "vigil_flight_femme": {
+      "body": "human_femme",
+      "set": "vigil_flight",
+      "palette": "vigil_dress"
+    },
+    "vigil_flight_masc": {
+      "body": "human_masc",
+      "set": "vigil_flight",
+      "palette": "vigil_dress"
+    },
+    "vigil_security_femme": {
+      "body": "human_femme",
+      "set": "vigil_security",
+      "palette": "vigil_dress"
+    },
+    "vigil_security_masc": {
+      "body": "human_masc",
+      "set": "vigil_security",
+      "palette": "vigil_dress"
+    },
+    "vigil_dock_femme": {
+      "body": "human_femme",
+      "set": "vigil_dock",
+      "palette": "vigil_dress"
+    },
+    "vigil_dock_masc": {
+      "body": "human_masc",
+      "set": "vigil_dock",
+      "palette": "vigil_dress"
+    }
+  }
+}
