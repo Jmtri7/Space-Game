@@ -607,9 +607,9 @@ player:
 | `person` | ~1× player | body section | as needed; face kit exempt |
 | `decoration` | 0.3–2× player | furniture, props | ~16 |
 
-The `graphics_pipeline_test` settlement's buildings are deliberately **~2–3×
-player tall** (below the `building` row's 4× nominal) — it's a low prefab
-outpost, not a city block. Each design's `scale_note` states its real size.
+A low prefab outpost's buildings can sit well below the `building` row's 4×
+nominal — e.g. ~2–3× player tall — and that's fine; it's not a city block.
+Each design's `scale_note` states its real size.
 
 ## In the game
 
@@ -671,23 +671,8 @@ A design atlas is a generated page: one plate per asset, the specimen drawn by
 notes, and a spec block naming the design file's real keys. The atlas is a
 viewer — it holds no geometry and no copy of anything.
 
-`config/stories/graphics_pipeline_test/docs/pipeline_atlas.py`, run by hand from
-the repo root, writes four cross-linked pages next to itself:
-
-- **`pipeline-bodies.html`** ("Human Bodies") — the body variants at one scale,
-  the face kit, the hair grid, the walk cycle.
-- **`pipeline-structures.html`** ("Civilian Structures") — the ship, the
-  station, the station interior (floor plan + lane check), the surface settlement (`interiors/*.json`
-  with a `structures` list — the plaza with every building and decoration
-  placed as an upright billboard, as the game draws it), each building and
-  decoration as its authored **elevation** beside the player figure, plus its
-  top-down collision footprint.
-- **`pipeline-articles.html`** ("Civilian Articles") — every `articles/*.json`
-  rendered once in its authored colour, as a card grid. No sets, no recolours.
-- **`pipeline-outfits.html`** ("Civilian Outfits") — every `sets/*.json`
-  assembled outfit, as a card grid.
-
-Nothing regenerates them automatically; re-run the script after an asset change.
+There is no maintained atlas-generator script. Use the vertex editor below, or
+the running game, to check a design's render.
 
 ## Vertex editor
 
@@ -761,16 +746,17 @@ mechanism on the **smallest asset that exercises it**.
 | **E — animation** ✅ | the rig: per-group pivot swing, clothing follows, torso bob | `civilian_work` on the walk-cycle frame strip |
 | **F — world scale + LOD + collision** ✅ | size vs. player, detail culls, hitbox overlay | `courier` — near / far / hitbox / beside-the-figure plates |
 | **G — interior** ✅ | floor plan sized to the player, generated navmesh, lane check | `concourse` — plan + generated lanes + `column` (declared) / `bench` (clear) |
-| **H — in game** ✅ | the story boots and the renderer draws all of the above | `graphics_pipeline_test` story: courier + trade ring in space, concourse + bench + column + pipeline-bodied walkers in the interior |
+| **H — in game** ✅ | a story boots and the renderer draws all of the above | courier + trade ring in space, concourse + bench + column + pipeline-bodied walkers in the interior |
 
 Gates are sequential: B needs A, D needs B and C, E needs D, H needs everything.
 Move a gate or add one when the work shows a seam that needs sign-off.
 
 ## Minimal asset set (pipeline test)
 
-All eight gates pass. The `graphics_pipeline_test` story carries only what the
-gates needed and no more, and is a bootable story (`story.json` + one system +
-`concourse` interior; starts docked at the trade ring with a courier):
+All eight gates pass. The set below is what the gates needed and no more, and
+is enough for a bootable story (a `story.json` + one system + a `concourse`
+interior; docked at a trade ring with a courier) — it now lives in the
+`figures-human` / `orbital-std` shared modules rather than a standalone story:
 
 - 2 bodies (`human_masc` / `human_femme`), 1 palette (`civilian`),
   `materials.json`, `rig_walk.json`

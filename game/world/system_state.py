@@ -27,6 +27,18 @@ class SystemState:
         # only the ships eligible right now.
         self.system_id = None
         self.ai_ship_configs = []
+        # Countdown to this system's station's next point-defense shot (see
+        # SpaceScreen._update_station_defense) - lives here, not on
+        # SpaceScreen, so each system's station keeps its own independent
+        # cooldown/timing.
+        self.station_defense_cooldown = 0
+        # Which live Asteroid objects a MinerRoutine pilot in this system
+        # has already picked as its hunting target (see miner_routine.py's
+        # _claim/_release_claim) - lets several miners in the same belt
+        # split up instead of dogpiling the same rock. A plain set of
+        # Asteroid references, not persisted (asteroids themselves aren't
+        # saveable scenery either - see SAVE_SYSTEM.md).
+        self.claimed_asteroids = set()
 
     def update_physics(self):
         """Advance this system's station/moon rotation, celestial bodies,

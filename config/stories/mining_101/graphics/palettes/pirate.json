@@ -1,0 +1,11 @@
+{
+  "identity": "Pirate recolor of the standard civilian ship palette: rust-red hull, near-black structural plating, a sickly amber canopy, and a hot red running light.",
+  "hull": "#7a2a2a",
+  "hull_dk": "#2a1010",
+  "engine": "#2e2626",
+  "metal": "#6b4f4f",
+  "glass": "#c98a3a",
+  "lamp": "#ff4444",
+  "thrust": "#ff5a33",
+  "leaf": "#5f8a52"
+}

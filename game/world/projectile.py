@@ -43,9 +43,13 @@ class Projectile(WorldObject):
         self.size = size
         self.lifetime = lifetime
         self.damage = damage
-        # Who fired this - the string "player", or an AI Character. Used by
+        # Who fired this - the string "player", an AI Character, or the
+        # string "station" (a station's point-defense laser - see
+        # SpaceScreen._update_station_defense). Used by
         # SpaceScreen._check_projectile_ship_collision so a shot never hits
-        # its own shooter and player/AI shots hit the right targets.
+        # its own shooter and player/AI shots hit the right targets; a bare
+        # string owner has no `.in_combat`, so a "station" shot can never
+        # register as a ship hit at all - only asteroids.
         self.owner = owner
 
     def update(self):

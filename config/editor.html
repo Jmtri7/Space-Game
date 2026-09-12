@@ -72,6 +72,9 @@
   #wsMissions .repRow { display: flex; gap: 6px; margin: 4px 0; align-items: center; }
   #wsMissions .repRow input[type=text] { flex: 1; }
   #wsMissions .repRow input[type=number] { width: 80px; }
+  #wsMissions select, #wsMissions input[type=number] { font: inherit; background: #12141a; color: #d9dce2;
+                          border: 1px solid #3a4150; border-radius: 4px; padding: 5px 7px; }
+  #wsMissions input[type=range] { accent-color: #7fd8c8; }
   #stage { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; display: block; background: #0d0f13; touch-action: none; }
   h1 { font-size: 14px; margin: 0 0 10px; }
@@ -3450,7 +3453,6 @@ document.getElementById('bodyDirectPicker').onchange = async e=>{
 // "<name> · module". Everything downstream keys off the bare name, so a
 // module and a story must not share one (they don't - module names are
 // hyphenated kits like figures-human).
-const PIPELINE_STORIES = ['graphics_pipeline_test'];   // fallback if config/stories/ has no directory listing
 const STORY_LS = 'gpEditorStory';
 let _storyList = null;                                  // [{name, base, kind}] once discovered
 const SRC_ROOTS = [['config/stories', 'story'], ['config/modules', 'module']];
@@ -3501,8 +3503,7 @@ async function discoverStories(){
   if(_storyList) return _storyList;
   const out = [];
   for(const [root, kind] of SRC_ROOTS){
-    let { dirs } = await VFS.listDir(root);
-    if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
+    const { dirs } = await VFS.listDir(root);
     for(const n of dirs){
       const base = root + '/' + n + '/graphics';
       const mods = await _modGraphicsDirs(n, kind);
@@ -4001,6 +4002,7 @@ async function runBoot(){
     if(/\/missions\.json$/.test(_wsAsset)) showMissionsEditor(_wsAsset);
     else if(/\/dispatches\.json$/.test(_wsAsset)) showDispatchesEditor(_wsAsset);
     else if(/\/story\.json$/.test(_wsAsset)) showStoryEditor(_wsAsset);
+    else if(/\/audio\.json$/.test(_wsAsset)) showSoundEditor(_wsAsset);
     else if(FLAT_DICT_FILES.test(_wsAsset)) showFlatDictEditor(_wsAsset);
     else showStub(_wsAsset);
     return;
@@ -4095,17 +4097,19 @@ const WS_CATS = [
   { id:'manifest',    label:'Manifest',        manifest:true },
 ];
 // {id: {...fields}} config files with a real (generic) editor - see
-// "Generic flat-dict editor" below. graphics.json and audio.json are nested
-// two levels deep (categories of entries, not one flat id:fields dict) and
-// stay stubs; missions/dispatches/story.json have their own bespoke editors.
+// "Generic flat-dict editor" below. graphics.json is nested two levels deep
+// (categories of entries, not one flat id:fields dict) and stays a stub;
+// missions/dispatches/story.json/audio.json have their own bespoke editors
+// (audio.json's is showSoundEditor, below - also nested, {"sounds": {id:
+// {layers, volume}}, "music": {...}}, but small/uniform enough for a
+// dedicated waveform-editing UI instead of a stub).
 const FLAT_DICT_FILES = /\/(ship_types|ship_outfits|asteroid_types|building_types|cultures|commodities|items|pilots|factions|endings)\.json$/;
 let _wsDisc = null;
 async function wsDiscover(){   // every story + module dir, whether or not it has a graphics kit
   if(_wsDisc) return _wsDisc;
   const out = [];
   for(const [root, kind] of SRC_ROOTS){
-    let { dirs } = await VFS.listDir(root);
-    if(!dirs.length && kind === 'story') dirs = PIPELINE_STORIES.slice();
+    const { dirs } = await VFS.listDir(root);
     for(const n of dirs.slice().sort()){
       out.push({ name:n, kind, root: root + '/' + n, base: root + '/' + n + '/graphics',
                  mods: await _modGraphicsDirs(n, kind), deps: await _wsDirectDeps(n, kind) });
@@ -5008,6 +5012,338 @@ async function renderWorkspace(){
   tree.appendChild(frag);
 }
 document.getElementById('wsRefresh').onclick = () => { _wsDisc = null; _storyList = null; renderWorkspace(); };
+// ==== Sound editor =========================================================
+// A story's or module's audio.json ({"sounds": {id: {layers:[...], volume?},
+// ...}, "music": {...}}, see game/audio/sound_board.py's _overlay_recipes/
+// apply_story) - list + form like the missions/dispatches editors, but each
+// sound also gets a live waveform canvas and a play button. so_renderWaveform
+// is a hand-port of render_waveform() (game/audio/sound_board.py) - same
+// layer semantics (freq/freq_end sweep, wave shape, attack/decay/sustain
+// envelope, delay, per-sound peak normalization, anti-click fade) - so what's
+// drawn/played here matches what sound_board.play() actually renders in game,
+// not an approximation. Only "sounds" is edited; "music" (a separate, more
+// free-form synthesis system - see game/audio/music.py) round-trips untouched
+// since SO.data keeps the whole parsed file, not just the sounds dict.
+let SO = null;
+async function showSoundEditor(path){
+  document.body.classList.remove('ws-stub');
+  document.body.classList.add('ws-formeditor');
+  const raw = await VFS.readJSON(path);
+  SO = { path, data: raw ? JSON.parse(JSON.stringify(raw)) : {}, selected: null, dirty: false, audioCtx: null, playToken: 0 };
+  if(!SO.data.sounds || typeof SO.data.sounds !== 'object') SO.data.sounds = {};
+  SO.selected = so_ids()[0] || null;
+  renderSound();
+}
+function so_ids(){ return Object.keys(SO.data.sounds); }
+function so_markDirty(){ SO.dirty = true; }
+function so_addSound(){
+  let id = prompt('New sound name (lower_snake_case) - the name game code calls sound_board.play() with:');
+  if(id == null) return;
+  id = id.trim();
+  if(!id) return;
+  if(!/^[a-z][a-z0-9_]*$/.test(id)){ alert('Use lower-case letters, digits, underscores, starting with a letter.'); return; }
+  if(SO.data.sounds[id]){ alert('"' + id + '" already exists.'); return; }
+  SO.data.sounds[id] = { layers: [{ freq: 440, dur: 0.1, wave: 'sine' }], volume: 1 };
+  SO.selected = id;
+  so_markDirty();
+  renderSound();
+}
+function so_deleteSound(){
+  if(!SO.selected) return;
+  if(!confirm('Delete sound "' + SO.selected + '"? This only changes the in-memory copy until you save.')) return;
+  delete SO.data.sounds[SO.selected];
+  SO.selected = so_ids()[0] || null;
+  so_markDirty();
+  renderSound();
+}
+async function so_save(){
+  if(!VFS.canWrite){ alert('Saving needs the repo opened read-write (Chrome/Edge from disk, or run config/serve_nocache.py).'); return; }
+  await VFS.writeText(SO.path, toRepoJSON(SO.data));
+  SO.dirty = false;
+  renderSound();
+}
+// ---- DSP: a hand-port of render_waveform() / _wave_sample() /
+// _layer_envelope() (game/audio/sound_board.py) - kept numerically in step
+// with that module so the preview matches the real in-game render. Mono
+// (the Python side just duplicates the same samples across channels), pure
+// JS/Float32, no Web Audio node graph involved in the math itself.
+function so_waveSample(wave, phase){
+  if(wave === 'square') return Math.sin(phase) >= 0 ? 1 : -1;
+  if(wave === 'saw'){ const f = ((phase / (2 * Math.PI)) % 1 + 1) % 1; return 2 * f - 1; }
+  if(wave === 'triangle'){ const f = ((phase / (2 * Math.PI)) % 1 + 1) % 1; return 4 * Math.abs(f - 0.5) - 1; }
+  if(wave === 'noise') return Math.random() * 2 - 1;
+  return Math.sin(phase);   // "sine" and anything unrecognized
+}
+function so_envelope(t, attack, decay, sustain){
+  if(t < attack) return t / attack;
+  return sustain + (1 - sustain) * Math.exp(-(t - attack) / decay);
+}
+function so_renderWaveform(layers, sampleRate){
+  sampleRate = sampleRate || 44100;
+  // Matches render_waveform()'s own int()/`//` truncation exactly (not
+  // round()) at every sample-count boundary below - otherwise this can
+  // land one sample off from the real Python render at each layer's start/
+  // length/overall duration, compounding over several overlapping layers.
+  let total = 0;
+  for(const l of layers) total = Math.max(total, Number(l.delay || 0) + Number(l.dur || 0));
+  const n = Math.max(1, Math.trunc(sampleRate * total));
+  const buf = new Float64Array(n);
+  for(const layer of layers){
+    const freqStart = Number(layer.freq) || 0;
+    const freqEnd = layer.freq_end != null ? Number(layer.freq_end) : freqStart;
+    const wave = layer.wave || 'sine';
+    const amp = layer.amp != null ? Number(layer.amp) : 1;
+    const attack = Math.max(Number(layer.attack != null ? layer.attack : 0.004), 1e-5);
+    const decay = Math.max(Number(layer.decay != null ? layer.decay : 0.09), 1e-5);
+    const sustain = Math.max(0, Math.min(1, Number(layer.sustain || 0)));
+    const start = Math.trunc(sampleRate * Number(layer.delay || 0));
+    const length = Math.max(1, Math.trunc(sampleRate * (Number(layer.dur) || 0)));
+    let phase = 0;
+    for(let i = 0; i < length; i++){
+      const idx = start + i;
+      if(idx >= n) break;
+      const frac = i / length;
+      const instFreq = freqStart + (freqEnd - freqStart) * frac;
+      phase += 2 * Math.PI * instFreq / sampleRate;
+      const env = so_envelope(i / sampleRate, attack, decay, sustain);
+      buf[idx] += amp * env * so_waveSample(wave, phase);
+    }
+  }
+  let peak = 0;
+  for(let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(buf[i]));
+  const norm = peak > 1e-9 ? (0.85 / peak) : 0;
+  const fade = Math.min(Math.floor(n / 2), Math.max(1, Math.trunc(sampleRate * 0.003)));
+  const out = new Float32Array(n);
+  for(let i = 0; i < n; i++){
+    let s = buf[i] * norm;
+    if(i < fade) s *= i / fade;
+    else if(i > n - 1 - fade) s *= (n - 1 - i) / fade;
+    out[i] = Math.max(-1, Math.min(1, s));
+  }
+  return out;
+}
+// ---- waveform canvas + playback -------------------------------------------
+function so_drawWaveform(canvas, samples, sampleRate, playheadT){
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  try{
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'butt';
+    ctx.fillStyle = '#0b0d12'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#2a2e37'; ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+    const n = samples.length;
+    ctx.strokeStyle = '#7fd8c8'; ctx.beginPath();
+    for(let x = 0; x < w; x++){
+      const i0 = Math.floor(x / w * n), i1 = Math.max(i0 + 1, Math.floor((x + 1) / w * n));
+      let mn = 0, mx = 0;
+      for(let i = i0; i < i1 && i < n; i++){ const v = samples[i]; if(v < mn) mn = v; if(v > mx) mx = v; }
+      const y0 = h / 2 - mx * h / 2 * 0.9, y1 = h / 2 - mn * h / 2 * 0.9;
+      ctx.moveTo(x + 0.5, y0); ctx.lineTo(x + 0.5, y1);
+    }
+    ctx.stroke();
+    if(playheadT != null && n){
+      const dur = n / sampleRate;
+      const x = Math.max(0, Math.min(w, (playheadT / dur) * w));
+      ctx.strokeStyle = '#ffd98a'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+  }catch(err){
+    // Surface a drawing failure on the canvas itself (as text, drawn with
+    // plain fillText rather than anything this catch block itself could
+    // fail on) instead of leaving a silent, unexplained blank/solid box -
+    // whatever broke, the user sees why instead of nothing.
+    try{
+      ctx.fillStyle = '#0b0d12'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#e06b6b'; ctx.font = '11px monospace';
+      ctx.fillText('waveform draw failed: ' + (err.message || err), 8, 20);
+    }catch(err2){}
+  }
+}
+// Recompute + redraw the selected sound's waveform with no playhead - called
+// on every layer-field edit. Bumps playToken so any in-flight play()'s
+// animation loop (a stale closure over the previous samples) stops drawing
+// over this redraw instead of racing it.
+function so_redrawWaveform(){
+  if(!SO.selected) return;
+  SO.playToken++;
+  const canvas = document.getElementById('soWaveCanvas');
+  if(!canvas) return;
+  const layers = SO.data.sounds[SO.selected].layers || [];
+  const samples = so_renderWaveform(layers, 44100);
+  so_drawWaveform(canvas, samples, 44100, null);
+}
+function so_ensureCtx(){
+  if(!SO.audioCtx) SO.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return SO.audioCtx;
+}
+// Plays the given sound through Web Audio (not sound_board.play() - this
+// editor has no Python process behind it) and animates a playhead across
+// the waveform canvas in step with actual playback time, exactly the
+// picture-with-a-moving-slider a hand-tuning pass wants.
+function so_play(id){
+  const rec = SO.data.sounds[id];
+  const layers = rec && rec.layers || [];
+  if(!layers.length) return;
+  const ctx = so_ensureCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+  const samples = so_renderWaveform(layers, ctx.sampleRate);
+  const vol = rec.volume != null ? Number(rec.volume) : 1;
+  const buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+  const chan = buffer.getChannelData(0);
+  for(let i = 0; i < samples.length; i++) chan[i] = samples[i] * vol;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(ctx.destination);
+  const myToken = ++SO.playToken;
+  const canvas = document.getElementById('soWaveCanvas');
+  const startTime = ctx.currentTime;
+  const dur = buffer.duration;
+  src.start();
+  function tick(){
+    if(SO.playToken !== myToken) return;   // superseded by an edit or a newer play
+    const t = ctx.currentTime - startTime;
+    so_drawWaveform(canvas, samples, ctx.sampleRate, Math.min(t, dur));
+    if(t < dur) requestAnimationFrame(tick);
+    else so_drawWaveform(canvas, samples, ctx.sampleRate, null);
+  }
+  requestAnimationFrame(tick);
+}
+// ---- form ------------------------------------------------------------
+// A synced range+number pair for one numeric layer field - 'input' (not
+// 'change') so dragging the slider redraws the waveform live rather than
+// only on release.
+function so_sliderField(obj, key, label, opts, onLive){
+  opts = opts || {};
+  const min = opts.min != null ? opts.min : 0;
+  const max = opts.max != null ? opts.max : 1;
+  const step = opts.step != null ? opts.step : 0.01;
+  const dflt = opts.dflt != null ? opts.dflt : 0;
+  const wrap = mi_el('div', { class: 'row', style: 'align-items:center; gap:8px; margin:6px 0;' });
+  wrap.appendChild(mi_el('label', { class: 'fl', style: 'min-width:80px; margin:0;', text: label }));
+  const val = obj[key] != null ? Number(obj[key]) : dflt;
+  const range = mi_el('input', { type: 'range', min, max, step, style: 'flex:1;' });
+  range.value = val;
+  const num = mi_el('input', { type: 'number', min, max, step, style: 'width:76px;' });
+  num.value = val;
+  function commit(v){
+    obj[key] = v;
+    so_markDirty();
+    if(onLive) onLive();
+  }
+  range.addEventListener('input', () => { num.value = range.value; commit(Number(range.value)); });
+  num.addEventListener('input', () => { if(num.value === '') return; range.value = num.value; commit(Number(num.value)); });
+  wrap.appendChild(range);
+  wrap.appendChild(num);
+  return wrap;
+}
+function so_renderLayer(layers, i){
+  const layer = layers[i];
+  const card = mi_el('div', { class: 'stage' });
+  card.appendChild(mi_el('div', { class: 'shdr' },
+    mi_el('b', { text: 'Layer ' + i + ' — ' + (layer.wave || 'sine') }),
+    mi_el('div', { class: 'row', style: 'margin:0; gap:4px;' },
+      mi_el('button', { text: '↑', onclick: () => {
+        if(i > 0){ [layers[i - 1], layers[i]] = [layers[i], layers[i - 1]]; so_markDirty(); renderSound(); }
+      }}),
+      mi_el('button', { text: '↓', onclick: () => {
+        if(i < layers.length - 1){ [layers[i + 1], layers[i]] = [layers[i], layers[i + 1]]; so_markDirty(); renderSound(); }
+      }}),
+      mi_el('button', { text: 'delete layer', onclick: () => { layers.splice(i, 1); so_markDirty(); renderSound(); } })
+    )
+  ));
+  card.appendChild(ed_selectField(layer, 'wave',
+    'wave', [['sine', 'sine'], ['square', 'square'], ['saw', 'saw'], ['triangle', 'triangle'], ['noise', 'noise']],
+    () => { so_markDirty(); so_redrawWaveform(); renderSound(); }));
+  card.appendChild(so_sliderField(layer, 'freq', 'freq (Hz)', { min: 20, max: 4000, step: 1, dflt: 440 }, so_redrawWaveform));
+
+  const sweepOn = layer.freq_end != null;
+  const sweepSlider = so_sliderField(layer, 'freq_end', 'freq_end (Hz)',
+    { min: 20, max: 4000, step: 1, dflt: layer.freq || 440 }, so_redrawWaveform);
+  sweepSlider.style.display = sweepOn ? '' : 'none';
+  const sweepCb = mi_el('input', { type: 'checkbox' });
+  sweepCb.checked = sweepOn;
+  sweepCb.addEventListener('change', () => {
+    if(sweepCb.checked){ layer.freq_end = layer.freq || 440; sweepSlider.style.display = ''; }
+    else { delete layer.freq_end; sweepSlider.style.display = 'none'; }
+    so_markDirty(); so_redrawWaveform();
+  });
+  card.appendChild(mi_el('label', { style: 'display:flex; align-items:center; gap:6px; margin-top:8px;' },
+    sweepCb, 'sweep to a different end frequency'));
+  card.appendChild(sweepSlider);
+
+  card.appendChild(so_sliderField(layer, 'dur', 'dur (s)', { min: 0.01, max: 1, step: 0.01, dflt: 0.1 }, so_redrawWaveform));
+  card.appendChild(so_sliderField(layer, 'amp', 'amp', { min: 0, max: 1, step: 0.01, dflt: 1 }, so_redrawWaveform));
+  card.appendChild(so_sliderField(layer, 'attack', 'attack (s)', { min: 0.0001, max: 0.2, step: 0.001, dflt: 0.004 }, so_redrawWaveform));
+  card.appendChild(so_sliderField(layer, 'decay', 'decay (s)', { min: 0.001, max: 0.5, step: 0.001, dflt: 0.09 }, so_redrawWaveform));
+  card.appendChild(so_sliderField(layer, 'sustain', 'sustain', { min: 0, max: 1, step: 0.01, dflt: 0 }, so_redrawWaveform));
+  card.appendChild(so_sliderField(layer, 'delay', 'delay (s)', { min: 0, max: 0.5, step: 0.001, dflt: 0 }, so_redrawWaveform));
+  return card;
+}
+function so_renderList(){
+  const list = mi_el('div', { class: 'mList' });
+  list.appendChild(mi_el('div', { class: 'row' }, mi_el('button', { text: '+ new sound', onclick: so_addSound })));
+  for(const id of so_ids()){
+    list.appendChild(mi_el('div',
+      { class: 'mrow' + (id === SO.selected ? ' sel' : ''), onclick: () => { SO.selected = id; renderSound(); } },
+      mi_el('span', { text: id })
+    ));
+  }
+  return list;
+}
+function so_renderForm(){
+  const wrap = mi_el('div', { class: 'mForm' });
+  if(!SO.selected){ wrap.appendChild(mi_el('div', { class: 'hint', text: 'Select or create a sound.' })); return wrap; }
+  const rec = SO.data.sounds[SO.selected];
+  if(!Array.isArray(rec.layers)) rec.layers = [];
+
+  wrap.appendChild(mi_el('label', { class: 'fl', text: 'sound name (the key sound_board.play() is called with)' }));
+  const idInp = mi_el('input', { type: 'text' });
+  idInp.value = SO.selected;
+  idInp.addEventListener('change', () => {
+    const nid = idInp.value.trim();
+    if(!nid || nid === SO.selected){ idInp.value = SO.selected; return; }
+    if(SO.data.sounds[nid]){ alert('"' + nid + '" already exists.'); idInp.value = SO.selected; return; }
+    SO.data.sounds[nid] = SO.data.sounds[SO.selected];
+    delete SO.data.sounds[SO.selected];
+    SO.selected = nid;
+    so_markDirty(); renderSound();
+  });
+  wrap.appendChild(idInp);
+
+  wrap.appendChild(so_sliderField(rec, 'volume', 'volume (baseline gain, 0–1)', { min: 0, max: 1, step: 0.01, dflt: 1 }, () => {}));
+
+  const canvas = mi_el('canvas', { id: 'soWaveCanvas', width: '640', height: '140',
+    style: 'width:100%; max-width:640px; display:block; border:1px solid #3a4150; border-radius:4px; margin:10px 0;' });
+  wrap.appendChild(canvas);
+
+  wrap.appendChild(mi_el('div', { class: 'row', style: 'gap:8px;' },
+    mi_el('button', { text: '▶ play', onclick: () => so_play(SO.selected) }),
+    mi_el('button', { text: '+ add layer', onclick: () => {
+      rec.layers.push({ freq: 440, dur: 0.1, wave: 'sine' }); so_markDirty(); renderSound();
+    }}),
+    mi_el('button', { text: 'delete sound', onclick: so_deleteSound })
+  ));
+
+  rec.layers.forEach((_, i) => wrap.appendChild(so_renderLayer(rec.layers, i)));
+
+  // Draw straight onto the element reference we already hold, rather than
+  // waiting a requestAnimationFrame tick and re-finding it by id - this
+  // fragment (and the canvas in it) isn't attached to the live document yet
+  // at this point (renderSound() appends `wrap` right after this function
+  // returns), but a canvas's 2D context works and can be drawn to before
+  // it's ever inserted into the document, so there's no need to wait for
+  // attachment (or a paint) at all for this first draw.
+  so_drawWaveform(canvas, so_renderWaveform(rec.layers, 44100), 44100, null);
+  return wrap;
+}
+function renderSound(){
+  const el = document.getElementById('wsMissions');
+  el.innerHTML = '';
+  el.appendChild(mi_el('h2', { text: SO.path }));
+  el.appendChild(mi_el('div', { class: 'row' },
+    mi_el('button', { id: 'soSaveBtn', text: SO.dirty ? 'save to repo *' : 'save to repo', onclick: so_save })));
+  el.appendChild(mi_el('div', { style: 'display:flex; gap:16px;' }, so_renderList(), so_renderForm()));
+}
 document.getElementById('wsNewModule').onclick = async () => {
   if(!VFS.canWrite){ alert('Creating files needs the repo opened read-write — run config/serve_nocache.py, or open from disk in Chrome/Edge.'); return; }
   const name = (prompt('New module name (lower-case letters, digits, hyphens):') || '').trim();

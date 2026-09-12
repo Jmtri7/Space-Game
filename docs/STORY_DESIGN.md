@@ -13,8 +13,9 @@ the process doc + the pitfall list, distilled from building
    config shape) and [architecture/extensibility.md](architecture/extensibility.md)
    (if the story needs new Python, not just JSON — it usually doesn't).
 2. **Pick a reference story to build from**, don't start blank:
-   - `graphics_pipeline_test` — the minimal skeleton (one system, one
-     station, one moon). Good starting point for a short, small-cast story.
+   - `mining_101` or `the_whisper_line` — a minimal skeleton (one or a
+     few systems, reusing the shared modules' art wholesale). Good starting
+     point for a short, small-cast story.
    - `the_long_silence` — the full-featured example (factions, reputation,
      dispatches, an ending fork, per-culture art). Good reference for any
      mechanic you're about to reach for the first time.
@@ -47,10 +48,9 @@ the process doc + the pitfall list, distilled from building
 ## Pitfalls
 
 **An NPC can spawn in a non-walkable spot.** A "ring" interior (the
-octagonal concourse shape both `graphics_pipeline_test` and
-`the_whisper_line` use) is a thin walkable band around a hollow, unreachable
-center — a coordinate that looks reasonable on paper can land inside that
-hole. Check any NPC position you didn't copy from a proven layout against
+octagonal concourse shape the `orbital-std` module provides) is a thin
+walkable band around a hollow, unreachable center — a coordinate that looks
+reasonable on paper can land inside that hole. Check any NPC position you didn't copy from a proven layout against
 `LocationScreen.can_move_to(x, y)` before you're done.
 
 **An NPC wanders by default.** Role `"resident"` (the usual fallback) gets

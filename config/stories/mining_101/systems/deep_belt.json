@@ -24,21 +24,23 @@
       {
         "type": "gray_rock",
         "weight": 2,
-        "size_range": [6, 16],
+        "size_range": [8, 16],
         "speed_range": [0.05, 0.22],
-        "mine_yield": 14
+        "mine_yield": 14,
+        "health_multiplier": 0.25
       },
       {
         "type": "brown_rock",
         "weight": 1,
-        "size_range": [8, 18],
+        "size_range": [10, 18],
         "speed_range": [0.03, 0.16],
-        "mine_yield": 20
+        "mine_yield": 20,
+        "health_multiplier": 0.25
       }
     ]
   },
   "events": [
     {"event": "rich_ore_vein", "frequency": 0.25},
-    {"event": "lone_pirate", "frequency": 0.35}
+    {"event": "lone_pirate", "frequency": 0.5}
   ]
 }

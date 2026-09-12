@@ -5,6 +5,47 @@ import game.aa_draw as aa
 from game.utils import to_screen, get_scale, screen_affine
 
 
+def _longest_circular_run(mask):
+    """Indices of the longest contiguous True stretch in a circular boolean
+    list, in ring order - used to pick which arc of an asteroid's silhouette
+    a light/dark shading band should hug."""
+    n = len(mask)
+    if all(mask):
+        return list(range(n))
+    if not any(mask):
+        return []
+    start = mask.index(False)
+    order = [(start + i) % n for i in range(n)]
+    best, cur = [], []
+    for i in order:
+        if mask[i]:
+            cur.append(i)
+            if len(cur) > len(best):
+                best = cur[:]
+        else:
+            cur = []
+    return best
+
+
+def _chaikin_open(chain, iters=1):
+    """Corner-cutting subdivision of an open polyline; the two endpoints stay
+    put, every interior corner is rounded off - same idea as expand.py's
+    `_chaikin_open`, duplicated here to keep world_object shading
+    independent of the design-JSON pipeline."""
+    for _ in range(iters):
+        if len(chain) < 3:
+            break
+        out = [chain[0]]
+        for i in range(len(chain) - 1):
+            ax, ay = chain[i]
+            bx, by = chain[i + 1]
+            out.append((0.75 * ax + 0.25 * bx, 0.75 * ay + 0.25 * by))
+            out.append((0.25 * ax + 0.75 * bx, 0.25 * ay + 0.75 * by))
+        out.append(chain[-1])
+        chain = out
+    return chain
+
+
 def _ring_quads(center, r, band, segs):
     """A torus as `segs` radial quads - hole stays genuinely transparent
     (nothing is painted in the centre), matching the plates' ring_strip."""
@@ -171,6 +212,56 @@ class WorldObject:
 
         aa.polygon(surface, color, points)
         return points
+
+    def _draw_shaded_polygon(self, surface, local_points, angle, color, light_dir=(-0.6, -0.75)):
+        """Base fill plus a light and a dark crescent - the same "silhouette
+        edge pulled inward by a tapered, corner-cut depth profile" technique
+        person/article shading uses (`expand.py`'s `_crescent`), simplified
+        for an asteroid's near-convex ring (no interior ray-casting needed):
+        each band hugs whichever stretch of `local_points` faces toward/away
+        from a fixed world-space `light_dir` (so the shading stays put as the
+        shape spins - a rock, not a searchlight), swells at the stretch's
+        middle and tapers to nothing at both ends, with its inner edge
+        corner-cut (Chaikin) so a coarse ring does not facet the shade. Reads
+        as a smoothly lit curved rock rather than flat center->edge facets."""
+        rad = math.radians(angle)
+        cos_a, sin_a = math.cos(rad), math.sin(rad)
+        lx, ly = light_dir
+        l_len = math.hypot(lx, ly) or 1
+        lx, ly = lx / l_len, ly / l_len
+
+        rotated = [(lpx * cos_a - lpy * sin_a, lpx * sin_a + lpy * cos_a) for lpx, lpy in local_points]
+        n = len(rotated)
+        if n < 3:
+            return
+        cx = sum(p[0] for p in rotated) / n
+        cy = sum(p[1] for p in rotated) / n
+        radius = sum(math.hypot(px - cx, py - cy) for px, py in rotated) / n or 1.0
+
+        screen_pts = [to_screen(self.x + rx, self.y + ry) for rx, ry in rotated]
+        aa.polygon(surface, color, screen_pts)
+
+        max_depth = radius * 0.55
+        for sign, tint in ((1, 45), (-1, -45)):
+            run = _longest_circular_run([
+                ((rx - cx) / (math.hypot(rx - cx, ry - cy) or 1)) * lx * sign
+                + ((ry - cy) / (math.hypot(rx - cx, ry - cy) or 1)) * ly * sign > 0.05
+                for rx, ry in rotated
+            ])
+            if len(run) < 2:
+                continue
+            m = len(run)
+            inner = []
+            for k, i in enumerate(run):
+                rx, ry = rotated[i]
+                onx, ony = (rx - cx) / radius, (ry - cy) / radius
+                taper = math.sin(math.pi * (k + 0.5) / m)
+                depth = max_depth * taper
+                inner.append((rx - onx * depth, ry - ony * depth))
+            inner = _chaikin_open(inner, 2)
+            band = [screen_pts[i] for i in run] + [to_screen(self.x + px, self.y + py) for px, py in reversed(inner)]
+            shaded = tuple(max(0, min(255, c + tint)) for c in color)
+            aa.polygon(surface, shaded, band)
 
     def _draw_parts(self, surface, parts, angle, unit, metal_color, glass_color):
         """Composite "parts" detail about this object's own (x, y) - see the

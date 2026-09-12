@@ -16,6 +16,7 @@ from game.world.explorer_routine import ExplorerRoutine
 from game.world.idle_routine import IdleRoutine
 from game.world.wander_routine import WanderRoutine
 from game.world.stationary_routine import StationaryRoutine
+from game.world.miner_routine import MinerRoutine
 
 # Starting credits for an AI pilot's Possessions - flavor/future-proofing
 # (nothing spends this yet), not tuned gameplay balance.
@@ -34,6 +35,7 @@ ROUTINE_REGISTRY = {
     "idle": IdleRoutine,
     "wander": WanderRoutine,
     "stationary": StationaryRoutine,
+    "miner": MinerRoutine,
 }
 
 # Default routine per role - which Routine strategy a character runs each
@@ -47,6 +49,7 @@ ROLE_ROUTINES = {
     "trader_captain": ShuttleRoutine,
     "patrol_officer": OrbitRoutine,
     "explorer": ExplorerRoutine,
+    "miner": MinerRoutine,  # hunt asteroids, sell ore at the home station, repeat - see miner_routine.py
     "bartender": StationaryRoutine,
     "guard": StationaryRoutine,
     "ship_salesman": StationaryRoutine,
@@ -229,7 +232,14 @@ class Character:
         # who never escorts.
         person.escort_flag = pilot.get("escort_flag")
 
-        return cls(person, ship=ship, role=pilot.get("role"), faction=faction or pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id, routine_name=pilot.get("routine"))
+        character = cls(person, ship=ship, role=pilot.get("role"), faction=faction or pilot.get("faction"), route=route, get_interior_screen=get_interior_screen, ship_type_id=ship_type_id, systems=systems, system_id=system_id, routine_name=pilot.get("routine"))
+        # How hard this pilot reacts to a nearby asteroid on a collision
+        # course (see game/world/asteroid_avoidance.py) - 0..1, default 1.0
+        # (dodges readily). A pilots.json entry can tune this per
+        # personality (a cautious hauler dodges early and hard; a reckless
+        # one barely bothers) without any code change.
+        character.dodge_urgency = pilot.get("dodge_urgency", 1.0)
+        return character
 
     def update(self):
         """Let the role's routine advance, then run standard ship autopilot/

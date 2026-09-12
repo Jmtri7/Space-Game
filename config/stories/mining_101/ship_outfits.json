@@ -1,0 +1,20 @@
+{
+  "rapid_laser": {
+    "name": "Rapid Laser",
+    "description": "A quick-cycling green laser with a long beam - fires fast but wanders badly off-target",
+    "slot_type": "weapon",
+    "cost": 950,
+    "stat_modifiers": {},
+    "icon_shape": "blade",
+    "icon_color": [80, 255, 120],
+    "damage": 2,
+    "fire_rate": 6,
+    "projectile_speed": 16,
+    "projectile_size": 5,
+    "projectile_lifetime": 260,
+    "inaccuracy": 20,
+    "pellet_spread": 0,
+    "projectile_count": 1,
+    "fire_sound": "laser"
+  }
+}

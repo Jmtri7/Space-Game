@@ -37,7 +37,8 @@ class AsteroidField:
     "graphics" (an asteroid_types.json entry - shape/color/jaggedness/spin),
     "weight" (relative frequency), and optionally "size_range"/"speed_range"
     (world-units and world-units-per-frame respectively; velocity direction
-    is always randomized). See systems/*.json's "asteroid_field" block for
+    is always randomized) and "health_multiplier" (scales the asteroid's
+    default size-based health, default 1.0). See systems/*.json's "asteroid_field" block for
     the config format that produces this list (SpaceScreen._build_system_state
     resolves each entry's "type" id against asteroid_types.json).
 
@@ -66,7 +67,11 @@ class AsteroidField:
         return Asteroid(
             x, y, velocity_x=velocity_x, velocity_y=velocity_y, size=size,
             graphics=type_cfg.get("graphics"), rng=rng,
-            asteroid_type={"id": type_cfg.get("type"), "mine_yield": type_cfg.get("mine_yield", 10)}
+            asteroid_type={
+                "id": type_cfg.get("type"),
+                "mine_yield": type_cfg.get("mine_yield", 10),
+                "health_multiplier": type_cfg.get("health_multiplier", 1.0),
+            }
         )
 
     def _generate_chunk(self, cx, cy):

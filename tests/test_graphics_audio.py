@@ -255,6 +255,34 @@ class TestSoundBoard(unittest.TestCase):
             self.assertEqual(MenuBase()._button_pressed("resume"), "resume")
             mock_board.play.assert_called_once_with("ping")
 
+    def test_audio_core_json_stays_in_sync_with_the_python_defaults(self):
+        """config/modules/audio-core/audio.json is documented (SOUND.md) as
+        a data mirror of _register_default_board()'s recipes, "kept in
+        sync" by hand - and it's also what config/editor.html's sound
+        editor reads, so a recipe added only in Python (as explosion_small/
+        explosion_big once were - see git history) is invisible there even
+        though it plays fine in game. Catch that drift here instead of by
+        someone noticing a sound missing from the editor."""
+        import json
+        from game.audio.sound_board import SoundBoard
+        board = SoundBoard.__new__(SoundBoard)
+        board._recipes = {}
+        board._recipe_volumes = {}
+        board._rendered = {}
+        board._freq = 44100
+        board._channels = 2
+        SoundBoard._register_default_board(board)
+
+        with open("config/modules/audio-core/audio.json", encoding="utf-8") as f:
+            mirrored = json.load(f).get("sounds", {})
+
+        missing = set(board._recipes) - set(mirrored)
+        self.assertFalse(missing, f"defined in Python but missing from audio-core/audio.json: {missing}")
+        for name, layers in board._recipes.items():
+            self.assertEqual(mirrored[name].get("layers"), layers, f"{name}: layers out of sync")
+            self.assertEqual(mirrored[name].get("volume", 1.0), board._recipe_volumes.get(name, 1.0),
+                              f"{name}: volume out of sync")
+
 
 class TestBackgroundMusic(unittest.TestCase):
     """Procedural ambient loop synthesis (game/audio/music.py) and the
@@ -734,13 +762,14 @@ class TestComposeWorn(unittest.TestCase):
 
 
 class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
-    """The graphics_pipeline_test story is on the decoupled color/shade model:
+    """The design-JSON pipeline is on the decoupled color/shade model:
     materials.json carries only `shading` profiles, and every design part names
-    a `color` + a real `shade` (or `shade: false`). Its figure kit now lives in
-    the shared `figures-human` module, so these walk every resolved graphics
-    root (story + modules), not one hardcoded directory."""
+    a `color` + a real `shade` (or `shade: false`). The figure kit lives in
+    the shared `figures-human` module (and the ship/station/building set in
+    `orbital-std`), so these walk every resolved graphics root (story +
+    modules) of a story that pulls both in, not one hardcoded directory."""
 
-    STORY = "graphics_pipeline_test"
+    STORY = "the_whisper_line"
 
     def _graphics_roots(self):
         from game import config_source
@@ -825,7 +854,7 @@ class TestPipelineStoryMaterialsMigrated(unittest.TestCase):
             name = os.path.basename(f)[:-5]
             for body in ("human_masc", "human_femme"):
                 _, worn = story_assets._body_worn(
-                    "graphics_pipeline_test", body, name, "civilian")
+                    self.STORY, body, name, "civilian")
                 self.assertTrue(worn, f"{name} on {body} expanded to nothing")
 
 

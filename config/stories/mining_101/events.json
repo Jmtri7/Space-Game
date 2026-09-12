@@ -5,7 +5,7 @@
     "name": "Adrift Hauler",
     "description": "A dead trade hull, drive cold, hatch popped - somebody's cargo run that never made it home. Worth a look, and it can't fight back.",
     "ship_type": "courier",
-    "interval_seconds": 150,
+    "interval_seconds": 100,
     "loot": {
       "credits_range": [80, 220],
       "cargo": [{"commodity": "ore", "qty_range": [5, 15]}],
@@ -18,7 +18,7 @@
     "name": "Stranded Skiff",
     "description": "A dark mining hull venting the last of its air - whoever's aboard is still alive, for now, and hailing anything that flies close enough to notice.",
     "ship_type": "mining_skiff",
-    "interval_seconds": 180,
+    "interval_seconds": 120,
     "payout_range": [150, 400]
   },
   "suspect_wreck": {
@@ -27,7 +27,7 @@
     "name": "Suspicious Wreck",
     "description": "Too intact for how dead it looks. Anyone fool enough to board finds out why the hard way.",
     "ship_type": "raider_skiff",
-    "interval_seconds": 200,
+    "interval_seconds": 140,
     "explosion_damage": 15,
     "pirate_ship_type": "raider_skiff",
     "pirate_pilot": "wreck_raider"

@@ -85,14 +85,14 @@
 
   "orbital_std": {
     "name": "(placeholder) Standard Orbital",
-    "description": "Borrowed from graphics_pipeline_test so the pipeline station/furniture art resolves its culture colours. Remove in Phase 6.",
+    "description": "Placeholder so the orbital-std module's station/furniture art resolves its culture colours. Remove in Phase 6.",
     "metal_color": [154, 164, 173], "glass_color": [127, 216, 200], "thrust_color": [255, 178, 87],
     "wall_color": [44, 48, 55], "floor_color": [92, 100, 109], "wall_trim_color": [120, 130, 140],
     "theme": "placeholder", "naming": "placeholder"
   },
   "regolith_std": {
     "name": "(placeholder) Regolith Standard",
-    "description": "Borrowed from graphics_pipeline_test for the moon-settlement building art. Remove in Phase 6.",
+    "description": "Placeholder for the orbital-std module's moon-settlement building art. Remove in Phase 6.",
     "metal_color": [154, 164, 173], "glass_color": [127, 216, 200], "thrust_color": [255, 178, 87],
     "wall_color": [92, 87, 78], "floor_color": [96, 104, 113], "wall_trim_color": [120, 130, 140],
     "theme": "placeholder", "naming": "placeholder"

@@ -331,26 +331,35 @@ class SoundBoard:
             {"freq": 250.0, "freq_end": 90.0, "dur": 0.08, "wave": "triangle", "attack": 0.001, "decay": 0.05, "amp": 0.45},
         ], volume=0.5)
         # "explosion_small" - a laser hitting an asteroid (see
-        # SpaceScreen._check_projectile_asteroid_collision): a sharper, beefier
-        # cousin of "impact" - more low-end thud under the same noise
-        # crackle - so a hit that's chipping away at a rock reads as a small
-        # blast rather than a metallic ping. Short and quiet (volume=0.4),
-        # same reasoning as "impact": it can fire once per laser tick
-        # against a durable asteroid.
+        # SpaceScreen._check_projectile_asteroid_collision): short and
+        # punchy, like a single projectile impact, but still a real boom -
+        # a brief noise crackle for the transient, then a fast downward
+        # triangle sweep and a sine sub-thump that both hold a little
+        # `sustain` floor rather than decaying straight to silence, so the
+        # ~0.15s it lasts still reads as weight hitting something instead of
+        # a metallic tick. Quiet (volume=0.4), same reasoning as "impact":
+        # it can fire once per laser tick against a durable asteroid.
         self.define("explosion_small", [
-            {"freq": 2800.0, "dur": 0.07, "wave": "noise", "attack": 0.001, "decay": 0.035, "amp": 0.55},
-            {"freq": 150.0, "freq_end": 50.0, "dur": 0.1, "wave": "triangle", "attack": 0.001, "decay": 0.06, "amp": 0.6},
+            {"freq": 3000.0, "dur": 0.06, "wave": "noise", "attack": 0.001, "decay": 0.03, "amp": 0.45},
+            {"freq": 130.0, "freq_end": 35.0, "dur": 0.14, "wave": "triangle", "attack": 0.001, "decay": 0.07, "sustain": 0.05, "amp": 0.9},
+            {"freq": 38.0, "dur": 0.16, "wave": "sine", "attack": 0.002, "decay": 0.08, "sustain": 0.05, "amp": 0.55, "delay": 0.01},
         ], volume=0.4)
         # "explosion_big" - an asteroid actually breaking apart (see
-        # SpaceScreen._destroy_asteroid): a longer, deeper noise burst under
-        # a falling triangle sweep, scaled up from "explosion_small" the
-        # same way "jump_boom" scales up from "impact" - the moment the rock
-        # is gone should read as a real blast, not just another hit.
+        # SpaceScreen._destroy_asteroid): a real ~1-second boom, not just a
+        # longer "explosion_small" - four layers: a sharp noise crackle for
+        # the initial crack, a triangle sweep from 150->25 Hz carrying most
+        # of the perceived "blast" that holds a `sustain` floor instead of
+        # decaying to silence, a long sine sub-thump (42 Hz, held via its
+        # own sustain) for the chest-thump low end, and a second, quieter
+        # sine sweep delayed a quarter-second in for a rolling
+        # aftershock rather than one clean hit - together the whole thing
+        # runs just over a second (see each layer's own dur/delay).
         self.define("explosion_big", [
-            {"freq": 2200.0, "dur": 0.12, "wave": "noise", "attack": 0.002, "decay": 0.07, "amp": 0.7},
-            {"freq": 140.0, "freq_end": 35.0, "dur": 0.35, "wave": "triangle", "attack": 0.002, "decay": 0.18, "amp": 0.85},
-            {"freq": 60.0, "dur": 0.4, "wave": "sine", "attack": 0.002, "decay": 0.2, "amp": 0.5, "delay": 0.03},
-        ], volume=0.65)
+            {"freq": 2200.0, "dur": 0.15, "wave": "noise", "attack": 0.002, "decay": 0.09, "amp": 0.6},
+            {"freq": 150.0, "freq_end": 25.0, "dur": 0.9, "wave": "triangle", "attack": 0.002, "decay": 0.35, "sustain": 0.12, "amp": 0.9},
+            {"freq": 42.0, "dur": 1.0, "wave": "sine", "attack": 0.004, "decay": 0.5, "sustain": 0.15, "amp": 0.85, "delay": 0.04},
+            {"freq": 55.0, "freq_end": 20.0, "dur": 0.6, "wave": "sine", "attack": 0.01, "decay": 0.3, "sustain": 0.1, "amp": 0.5, "delay": 0.25},
+        ], volume=0.7)
         # "pickup" - collecting a drifting ore chunk (see
         # game/world/ore_pickup.py / SpaceScreen._update_ore_pickups): a
         # quick two-note upward sparkle, distinct from "confirm"'s slower

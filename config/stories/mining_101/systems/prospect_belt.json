@@ -33,9 +33,9 @@
   },
   "events": [
     {"event": "rich_ore_vein", "frequency": 0.12},
-    {"event": "adrift_hauler", "frequency": 0.08},
-    {"event": "stranded_skiff", "frequency": 0.05},
-    {"event": "suspect_wreck", "frequency": 0.03}
+    {"event": "adrift_hauler", "frequency": 0.18},
+    {"event": "stranded_skiff", "frequency": 0.12},
+    {"event": "suspect_wreck", "frequency": 0.08}
   ],
   "ai_ships": [
     {

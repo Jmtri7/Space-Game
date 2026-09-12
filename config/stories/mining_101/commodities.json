@@ -2,7 +2,7 @@
   "ore": {
     "name": "Raw Ore",
     "description": "Unrefined metal ore, sold by weight",
-    "base_price": 12,
+    "base_price": 22,
     "mass_per_unit": 1,
     "icon_shape": "crate",
     "icon_color": [150, 110, 80]

@@ -395,6 +395,15 @@ after the game/station/moon input phase and switches `current_screen` to
 `"ending"` (a full modal - `step_world()` does nothing for it). A loaded save
 whose `story_over` flag is already set drops straight into it.
 
+**Game Over reuses this same state.** The player's hull hitting zero
+(`SpaceScreen._on_player_destroyed`, `game/screens/space_screen/combat.py`) is
+final, not a Rescue Service respawn: it sets `SpaceScreen.game_over`, which
+`update()` reads and returns `"game_over"` for; `step_world()`
+(`game/app/loop_helpers.py`) propagates that, and `main.py`'s PHASE 2 handler
+builds `EndingScreen(*game_over_report(...))` (`game/ui/ending_screen.py`) and
+switches to `"ending"` exactly as the story-epilogue path does - same report
+frame and **Return to Menu** button, just not driven by `endings.json`.
+
 **Inputs:** click **Return to Menu**, or ESC / Enter
 
 **Transitions:** → `"menu"` (rebuilds `main_menu()`)

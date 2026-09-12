@@ -165,13 +165,26 @@ per-weapon.
   point, each inheriting the parent's `asteroid_type` (so a fragment is
   still minable/breakable in its own right, recursively, down to the small
   case below).
-- **size ≤ 12** (a "small" asteroid): destroyed outright, scattering
-  `asteroid_type["mine_yield"]` units of `"ore"` as 1-3 drifting
-  `OrePickup` chunks (`game/world/ore_pickup.py`,
-  `SpaceScreen._spawn_ore_debris`) rather than crediting cargo directly -
-  see "Ore pickups" below. `mine_yield` is per-type config
-  (`asteroid_types.json`, alongside `shape`/`color`/jaggedness), so
-  different rock types can be worth different amounts.
+- **size ≤ 12** (a "small" asteroid): destroyed outright, dropping
+  `asteroid_type["mine_yield"]` units of `"ore"` - **but only who destroyed
+  it decides whether that ore ever exists** (`_destroy_asteroid`'s
+  `destroyer` param, passed through from whichever projectile/collision hit
+  killed it):
+  - the **player**: scatters as 1-3 drifting `OrePickup` chunks
+    (`game/world/ore_pickup.py`, `SpaceScreen._spawn_ore_debris`) rather
+    than crediting cargo directly - see "Ore pickups" below.
+  - an AI **miner** (`MinerRoutine`): credited straight into that miner's
+    own cargo hold (capacity-capped), no pickup spawned at all - see the
+    Miner AI section's "Selling" note.
+  - **anyone/anything else** - a non-miner AI's opportunistic clearing shot
+    (`_update_ai_asteroid_clearing`), or the station's own point-defense
+    (`_update_station_defense`) - **drops no ore whatsoever**. Letting an
+    NPC or the station's own gun hand the player free-floating ore would
+    undercut mining as something the player actually has to do themselves.
+
+  `mine_yield` is per-type config (`asteroid_types.json`, alongside
+  `shape`/`color`/jaggedness), so different rock types can be worth
+  different amounts.
 
 **Ore pickups:** an `OrePickup` drifts at a slow constant velocity (plus a
 share of the destroyed asteroid's own velocity) and slowly tumbles, purely
@@ -280,10 +293,17 @@ section for the exact shape. Two kinds so far:
   entry and periodically thereafter, same per-system-entry cadence as
   `pirate_ambush` (`_maybe_spawn_derelict`/`_update_periodic_derelict`
   mirror `_maybe_spawn_pirate_ambush`/`_update_periodic_pirate_ambush`
-  exactly). Spawned at a random angle, far enough out to be guaranteed
-  off-screen (even at minimum zoom) and outside minimap range -
-  `_derelict_spawn_distance()` - so the player has to actually explore
-  toward it rather than have it appear in view. Renders as a `DerelictShip`
+  exactly). Spawned far enough out to be guaranteed off-screen (even at
+  minimum zoom) and outside minimap range - `_derelict_spawn_distance()` -
+  so the player has to actually explore toward it rather than have it
+  appear in view. The bearing itself (`_derelict_spawn_angle()`) is biased
+  toward the player's current direction of travel - a cone
+  `DERELICT_SPAWN_BIAS_CONE_DEG` wide either side of the velocity heading -
+  rather than uniformly random, so flying in a straight line has a real
+  chance of running into one instead of every bearing being equally likely
+  regardless of where the player's actually headed; falls back to a fully
+  random bearing below `DERELICT_SPAWN_BIAS_MIN_SPEED` (sitting still has no
+  "direction of travel" to bias toward). Renders as a `DerelictShip`
   (`game/world/derelict_ship.py` - a `Ship` subclass reusing its
   graphics-driven draw, just dimmed and frozen at a fixed angle: no
   Character, no routine, no `ai_fire`, invisible to every existing NPC/AI/

@@ -1,24 +1,26 @@
 """Small drifting asteroid with constant velocity; round or jagged-polygon shape."""
 import math
 import random
-import game.aa_draw as aa
 from game.constants import GRAY
-from game.utils import get_scale, to_screen
 from game.world.world_object import WorldObject
 
 DEFAULT_VERTEX_COUNT_RANGE = (7, 11)
 DEFAULT_JAGGEDNESS = 0.35
 DEFAULT_SPIN_SPEED_RANGE = (-1.5, 1.5)
+ROUND_VERTEX_COUNT = 28  # ring samples for a "round" asteroid's shaded circle silhouette - enough for the smooth-band shading to read as a curve, not facets
 
 
 class Asteroid(WorldObject):
     """An asteroid that drifts at a constant velocity. "round" asteroids
-    (the default, if graphics omits "shape") draw as a plain circle; "jagged"
-    ones get an irregular polygon silhouette, generated once from `rng` at
-    construction (regenerating it every frame would make them visibly writhe
-    instead of looking like a solid rock), that spins in place at a fixed
-    per-instance rate. Asteroids can be damaged by projectiles; when health
-    is depleted, small asteroids are destroyed, large ones break into fragments."""
+    (the default, if graphics omits "shape") draw as a shaded regular-polygon
+    circle; "jagged" ones get an irregular polygon silhouette, generated once
+    from `rng` at construction (regenerating it every frame would make them
+    visibly writhe instead of looking like a solid rock), that spins in place
+    at a fixed per-instance rate. Both shapes draw through the same faceted,
+    lit fan (`_draw_shaded_polygon`) so every asteroid reads as a shaded rock
+    rather than a flat silhouette. Asteroids can be damaged by projectiles;
+    when health is depleted, small asteroids are destroyed, large ones break
+    into fragments."""
     def __init__(self, x, y, velocity_x=0, velocity_y=0, size=4, graphics=None, rng=None, asteroid_type=None):
         super().__init__(x, y, graphics=graphics)
         self.velocity_x = velocity_x
@@ -28,9 +30,10 @@ class Asteroid(WorldObject):
         self.shape = self.graphics.get("shape", "round")
         self.angle = 0
         self.spin_speed = 0
-        self.local_points = None  # (x, y) fractions of size, unrotated - jagged only
+        self.local_points = None  # (x, y) fractions of size, unrotated silhouette ring
         self.asteroid_type = asteroid_type
-        self.health = max(5, size * 2)  # Health scales with size
+        health_multiplier = (asteroid_type or {}).get("health_multiplier", 1.0)
+        self.health = max(3, size * 1.1 * health_multiplier)  # Health scales with size - lowered so asteroids break up faster under fire
         self.max_health = self.health
         self.rng = rng or random.Random()
 
@@ -46,6 +49,13 @@ class Asteroid(WorldObject):
                 theta = (2 * math.pi * i) / vertex_count
                 radius_fraction = 1 + rng.uniform(-jaggedness, jaggedness)
                 self.local_points.append((radius_fraction * math.cos(theta), radius_fraction * math.sin(theta)))
+        else:
+            # a regular polygon ring stands in for a perfect circle so the
+            # same shaded-facet fan draws both shapes.
+            self.local_points = [
+                (math.cos(2 * math.pi * i / ROUND_VERTEX_COUNT), math.sin(2 * math.pi * i / ROUND_VERTEX_COUNT))
+                for i in range(ROUND_VERTEX_COUNT)
+            ]
 
     def take_damage(self, amount):
         """Reduce health; returns True if destroyed."""
@@ -60,11 +70,5 @@ class Asteroid(WorldObject):
             self.angle = (self.angle + self.spin_speed) % 360
 
     def draw(self, surface):
-        if self.shape == "jagged" and self.local_points:
-            scaled_points = [(lx * self.size, ly * self.size) for lx, ly in self.local_points]
-            self._draw_rotated_polygon(surface, scaled_points, self.angle, self.color)
-            return
-
-        scale = get_scale()
-        radius = max(1, int(round(self.size * scale)))
-        aa.circle(surface, self.color, to_screen(self.x, self.y), radius)
+        scaled_points = [(lx * self.size, ly * self.size) for lx, ly in self.local_points]
+        self._draw_shaded_polygon(surface, scaled_points, self.angle, self.color)

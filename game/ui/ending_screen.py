@@ -71,3 +71,15 @@ class EndingScreen(ReportMenu):
     """A `ReportMenu` whose only action returns to the main menu."""
     def buttons(self):
         return [("menu", "Return to Menu", WHITE, False)]
+
+
+def game_over_report(cargo_lost):
+    """`(title, columns)` for the Game Over screen shown by main.py when
+    SpaceScreen.update() returns "game_over" (see
+    SpaceScreen._on_player_destroyed). Same one-column `ReportMenu` shape as
+    `ending_report()`, just not story/endings.json-driven - the run ends on
+    hull loss, no faction epilogue to show."""
+    lines = [("Your ship was destroyed.", BODY_COLOR)]
+    if cargo_lost:
+        lines.append((f"Cargo lost: {cargo_lost}.", BODY_COLOR))
+    return "Game Over", [[("", lines)]]

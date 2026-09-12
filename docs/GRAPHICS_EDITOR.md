@@ -74,13 +74,14 @@ are still de-duplicated: one row per filename, showing the copy that wins.
   (`?ws-asset=<path>`): the raw JSON pretty-printed, with a "not implemented
   yet" banner. A placeholder until each kind gets its own editor. Exceptions:
   **`missions.json`** and **`dispatches.json`** get bespoke list+form editors,
-  **`story.json`** gets a single-object form (see below), and the flat
+  **`story.json`** gets a single-object form (see below), **`audio.json`**
+  gets a bespoke sound editor (see Sound editor, below), and the flat
   `{id: {...fields}}` Story config files (`ship_types.json`,
   `ship_outfits.json`, `asteroid_types.json`, `building_types.json`,
   `cultures.json`, `commodities.json`, `items.json`, `pilots.json`,
   `factions.json`, `endings.json`) open the **generic flat-dict editor**
-  (below). `graphics.json` and `audio.json` are nested two levels deep
-  (categories of entries, not one flat dict) and stay stubs.
+  (below). `graphics.json` is nested two levels deep (categories of entries,
+  not one flat dict) and stays a stub.
 - **new story… / new module…** (need the repo open read-write) write a minimal
   skeleton — `story.json` + a bare `systems/<id>_start.json` for a story
   (inherits the standard module list; **appears in the game's story picker but
@@ -162,9 +163,9 @@ Absent (a bare `?file=` URL), behaviour is unchanged: a module load gets no
 story fallback.
 
 Coverage today is **body designs** (`sections`), **faces**, **articles**
-(`regions`, tailor mode), **missions** / **dispatches** / **story.json**
-(below), and every flat `{id: {...fields}}` Story config file via the
-**generic flat-dict editor** (below); `graphics.json` / `audio.json` and the
+(`regions`, tailor mode), **missions** / **dispatches** / **story.json** /
+**audio.json** (below), and every flat `{id: {...fields}}` Story config file
+via the **generic flat-dict editor** (below); `graphics.json` and the
 remaining graphics categories (ships, stations, buildings, decorations,
 palettes, collision, interiors) still open the read-only stub.
 
@@ -190,8 +191,9 @@ top-level key starting with `_` (the `_comment` convention several of these
 files use) is preserved in `GE.data` and written back untouched, never shown
 as a row. Because there's no per-file spec, a new field on an existing kind
 (or an entirely new flat-dict file added to `FLAT_DICT_FILES`) needs no editor
-code — only files with a genuinely nested top level (`graphics.json`,
-`audio.json`) need to stay stubs or get a bespoke editor instead.
+code — only files with a genuinely nested top level (`graphics.json`, still
+a stub; `audio.json`, which got a bespoke editor instead — see below) need
+different treatment.
 
 Same in-memory-only save model as missions/dispatches: **save to repo**
 (`ge_save`) writes the whole file via `VFS.writeText` + `toRepoJSON`, gated on
@@ -620,6 +622,67 @@ face** (Fit panel) is a one-click shortcut for hiding the head part — shape
 where hair sits without the face competing for attention; it's the same
 underlying toggle as unchecking "head" in the body-parts list below it, kept
 in sync either way.
+
+### Sound editor
+
+Opening a story's or module's `audio.json` from the Workspace panel (Story
+config) loads a form UI (`showSoundEditor`, `SO` holds the working copy)
+instead of the stub — the same left-list/right-form shape as the missions
+editor, but built around `game/audio/sound_board.py`'s recipe format
+(`{"sounds": {id: {"layers": [...], "volume"?: 0..1}}, "music": {...}}` —
+see [SOUND.md](SOUND.md)) rather than mission stages. The `"music"` block
+round-trips untouched (`SO.data` keeps the whole parsed file, not just
+`.sounds`); this editor only edits sound recipes.
+
+**Left list** — every sound name (**+ new sound** to add one, prompting for a
+`lower_snake_case` id exactly like a new mission). **Right form**, for the
+selected sound: its id (rename with collision check, same pattern as
+everywhere else), an overall **volume** slider (the recipe's baseline gain,
+under `master_volume` at play time), a **waveform canvas**, a **▶ play**
+button, **+ add layer** / **delete sound**, then a card per layer with:
+**wave** (sine / square / saw / triangle / noise), **freq**, an optional
+**sweep to a different end frequency** checkbox that reveals a **freq_end**
+slider when checked (absent entirely when unchecked, matching
+`render_waveform`'s own "no sweep" default), **dur**, **amp**, **attack**,
+**decay**, **sustain**, **delay**, reorder (↑/↓ — layer order only matters
+for their audible sum, but keeping a sweep's setup layer before/after a
+percussive one legible is nice) and **delete layer**. Every field is a
+synced range+number pair (`so_sliderField`) firing on `input`, not `change`,
+so dragging the slider redraws the waveform live rather than only on release.
+
+**The waveform canvas is not an approximation.** `so_renderWaveform` /
+`so_waveSample` / `so_envelope` are a line-for-line hand-port of
+`render_waveform()` / `_wave_sample()` / `_layer_envelope()`
+(`game/audio/sound_board.py`) — same per-layer envelope math, the same
+per-sound peak normalization (`NORMALIZE_PEAK`), the same anti-click
+fade-in/out at the buffer's edges, and critically the same `int()`/`//`
+**truncation** (not rounding) at every sample-count boundary (a layer's
+`start`, its `length`, the buffer's total `n`, the fade width) — using
+`Math.round` there instead is close but can drift a sample off from the real
+Python render at each boundary, compounding across several overlapping
+layers. What's drawn and played here is bit-for-bit what `sound_board.play()`
+would render in game (`"noise"` layers aside, which redraw differently every
+call on both sides — they're seeded from each runtime's own RNG, not a
+fixed sequence).
+
+**Playback** uses the Web Audio API (`AudioContext.createBuffer` +
+`AudioBufferSourceNode`) since there's no Python process behind the editor to
+call `sound_board.play()` on — a fresh `so_renderWaveform` render becomes the
+buffer's single channel, scaled by the sound's `volume` before it's copied in
+(the master-volume scaling `sound_board.play()` also applies has no
+equivalent here, since the editor has no "board" to mix against). **▶ play**
+starts the buffer and drives a `requestAnimationFrame` loop
+(`SO.playToken` guards it — an edit or a second play bumps the token so a
+stale loop stops drawing over a newer render instead of racing it) that
+redraws the canvas every frame with a playhead line at the buffer's current
+`AudioContext.currentTime` offset, i.e. the slider-over-the-waveform moves in
+real sync with what's audibly playing, not on a fixed timer guessing at it.
+
+Same in-memory-only save model as missions/dispatches: **save to repo**
+(`so_save`) writes the whole file straight via `VFS.writeText` + `toRepoJSON`,
+gated on `VFS.canWrite`. Reloading the page without saving discards
+in-progress edits — there is no autosave-draft system here, same as
+missions/dispatches/the flat-dict editor.
 
 ### Editing a design with the agent
 

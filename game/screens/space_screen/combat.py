@@ -164,14 +164,24 @@ class _CombatMixin:
         self.projectiles = alive_projectiles
 
     def _check_projectile_ship_collision(self, projectile):
-        """A player-fired shot hits any AI ship in the active system; an
-        AI-fired shot hits the player. A shot never hits its own owner.
-        Returns True (and applies damage / destruction) if it connected."""
+        """A player-fired shot only hits an AI ship that's already hostile
+        (`ship.in_combat`) or is the player's current target (`_get_target_object`)
+        - a shot that grazes some other, un-targeted, non-hostile ship (a
+        miner, a passing freighter) passes harmlessly through instead of
+        provoking it by accident. An AI-fired shot only hits the player if
+        its own owner is actually hostile (`in_combat`) - a belt-and-braces
+        check alongside CombatRoutine already being the only thing that sets
+        `character.firing`, in case a shot is still in flight the instant its
+        owner stops being hostile. A shot never hits its own owner. Returns
+        True (and applies damage / destruction) if it connected."""
         if projectile.owner == "player":
             hit = None
             best = -1
+            target = self._get_target_object()
             for ship in self.ai_ships:
                 if ship.ashore or not ship.ship:
+                    continue
+                if not (ship.in_combat or ship is target):
                     continue
                 r = ship.ship.size + projectile.size
                 pen = r - math.hypot(projectile.x - ship.x, projectile.y - ship.y)
@@ -186,8 +196,9 @@ class _CombatMixin:
                 self._destroy_ship(hit)
             return True
         elif projectile.owner is not None:
-            # AI-fired: only the player is a target.
-            if not self.in_flight or not self.player.ship:
+            # AI-fired: only the player is a target, and only while the
+            # firing pilot is actually hostile.
+            if not self.in_flight or not self.player.ship or not getattr(projectile.owner, "in_combat", False):
                 return False
             r = self.player.ship.size + projectile.size
             if math.hypot(projectile.x - self.player.x, projectile.y - self.player.y) > r:
@@ -224,21 +235,19 @@ class _CombatMixin:
         # ship disappearing.
 
     def _on_player_destroyed(self):
-        """The player's hull hit zero. Blow up in place, then recover to
-        this system's station: full repair, zero velocity, cargo lost."""
+        """The player's hull hit zero: explode in place and end the run -
+        no Rescue Service respawn. Sets `self.game_over` (with the cargo
+        that went down with the ship, for the Game Over screen's summary);
+        `SpaceScreen.update()` reads it next frame and returns "game_over",
+        which main.py hands off to the Game Over screen and then the main
+        menu (see docs/UI_FLOW.md, game/ui/ending_screen.py's
+        `game_over_report`)."""
         for _ in range(4):
             self.explosions.append(Explosion(
                 self.player.x + random.uniform(-14, 14),
                 self.player.y + random.uniform(-14, 14)))
         sound_board.play("impact")
-        possessions = self.player.person.possessions
-        lost = possessions.cargo_quantity_total()
-        possessions.cargo = {}
-        self.projectiles = [p for p in self.projectiles if p.owner == "player"]
+        self.game_over_cargo_lost = self.player.person.possessions.cargo_quantity_total()
         self.player.ship.autopilot.disengage()
         self.jump_state = None
-        self.park_at(self.station)
-        self.player.ship.health = self.player.ship.max_health
-        station_name = getattr(self.station, "name", "the station")
-        extra = f" Cargo lost ({lost})." if lost else ""
-        self._post_message("Rescue Service", f"Your ship was destroyed. Hull recovered and repaired at {station_name}.{extra}")
+        self.game_over = True

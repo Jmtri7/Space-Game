@@ -1,0 +1,28 @@
+{
+  "id": "test_story",
+  "name": "Test Story",
+  "version": "0.1.0",
+  "description": "",
+  "modules": [
+    "figures-human",
+    "audio-core",
+    "ships-core",
+    "common-goods",
+    "story-defaults"
+  ],
+  "difficulty": "normal",
+  "starting_system": "test_story_start",
+  "default_outfit": "civilian_femme",
+  "start": {
+    "location": "station",
+    "interior": "default",
+    "credits": 0,
+    "ship": null,
+    "items": {},
+    "outfits": [],
+    "flags": {}
+  },
+  "ships": {
+    "player_type": null
+  }
+}

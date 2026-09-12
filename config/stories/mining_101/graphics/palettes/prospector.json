@@ -1,0 +1,11 @@
+{
+  "identity": "Belt-runner recolor: ochre-brown hull plating, dark rust structural panels, a gunmetal drill bit, pale cyan canopy glass, and a warm amber running light.",
+  "hull": "#a8895a",
+  "hull_dk": "#5a4326",
+  "engine": "#3a3228",
+  "metal": "#6b6660",
+  "glass": "#bee1ff",
+  "lamp": "#ffc45a",
+  "thrust": "#ffc45a",
+  "leaf": "#5f8a52"
+}
