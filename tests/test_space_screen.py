@@ -883,6 +883,65 @@ class TestDerelictShipEvents(unittest.TestCase):
         self.assertTrue(game_screen.player.person.possessions.flags.get("hostile_to_player:Scrap-tooth"))
         self.assertIsNone(game_screen.derelict)
 
+    def test_loot_interior_has_a_culture_so_its_room_actually_renders(self):
+        """Regression: a "rooms" list with no "culture" is silently dropped
+        by LocationScreen (self.rooms stays [] and self.floor_color stays
+        None - see game/screens/location_screen/screen.py) - the generated
+        interior looked like open space with nothing to stand on until a
+        culture was added. See config/modules/system-events/cultures.json's
+        "derelict_hull"."""
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        event = {"kind": "derelict_ship", "outcome": "loot", "name": "Adrift Hauler",
+                 "ship_type": "courier", "loot": {"credits_range": [100, 100]}}
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, "adrift_hauler", event)
+        wreck = game_screen.derelict["object"]
+        interior_config = game_screen._build_loot_interior_config(wreck)
+        self.assertEqual(interior_config.get("culture"), "derelict_hull")
+        self.assertTrue(interior_config.get("rooms"))
+
+        # Actually building a LocationScreen from it should resolve a real
+        # floor_color and a non-empty walkable room, not the None/[] that a
+        # culture-less config left it with.
+        location_screen = game_screen.get_interior_screen(
+            LandingSite(wreck.x, wreck.y, graphics={"size": wreck.size},
+                        interiors={"default": interior_config}, name=wreck.name),
+            "default",
+        )
+        self.assertIsNotNone(location_screen.floor_color)
+        self.assertTrue(location_screen.rooms)
+
+    def test_loot_containers_render_as_item_icons_not_walking_figures(self):
+        """A loot container is an ordinary NPC/Character (dialogue and
+        T-to-talk range keep working) but must look like an object, not a
+        person - see Person.icon_shape/_draw_icon."""
+        game_screen = self._screen()
+        state = game_screen.systems["prospect_belt"]
+        event = {"kind": "derelict_ship", "outcome": "loot", "name": "Adrift Hauler",
+                 "ship_type": "courier",
+                 "loot": {"credits_range": [50, 50], "cargo": [{"commodity": "ore", "qty_range": [5, 5]}],
+                          "items": ["salvaged_part"]}}
+        with patch("random.random", return_value=0.0):
+            game_screen._spawn_derelict(state, "adrift_hauler", event)
+        wreck = game_screen.derelict["object"]
+        interior_config = game_screen._build_loot_interior_config(wreck)
+        npcs_cfg = interior_config["npcs"]
+        self.assertEqual(len(npcs_cfg), 3)  # credit stash + one cargo crate + one item
+        for npc_cfg in npcs_cfg:
+            self.assertTrue(npc_cfg.get("icon_shape"), f"{npc_cfg['name']} should have an icon_shape")
+            self.assertTrue(npc_cfg.get("icon_color"), f"{npc_cfg['name']} should have an icon_color")
+
+        location_screen = game_screen.get_interior_screen(
+            LandingSite(wreck.x, wreck.y, graphics={"size": wreck.size},
+                        interiors={"default": interior_config}, name=wreck.name),
+            "default",
+        )
+        self.assertEqual(len(location_screen.npcs), 3)
+        for character in location_screen.npcs:
+            self.assertEqual(character.person.icon_shape, character.person.icon_shape)  # sanity: attr exists
+            self.assertIsNotNone(character.person.icon_shape)
+
 
 if __name__ == "__main__":
     unittest.main()

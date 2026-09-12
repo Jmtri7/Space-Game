@@ -6,6 +6,7 @@ from game.utils import to_screen, get_scale, screen_affine
 from game.world.possessions import Possessions
 from game.world import person_figure as fig
 from game.world.figure_signatures import SIGNATURE
+from game.ui.ui_theme import draw_item_icon
 
 
 def _face_cy(parts):
@@ -66,6 +67,19 @@ class Person:
         # so the figure is always drawn facing the way it last walked. draw()
         # mirrors every figure-space x about self.x when this is -1.
         self.facing = 1
+        # Optional static-icon override (an npc config's "icon_shape"/
+        # "icon_color" - see _build_local_character and config-formats.md's
+        # "Interior geometry" section): when icon_shape is set, draw() draws
+        # a small procedural item glyph (ui_theme.draw_item_icon - the same
+        # one shop items/ore pickups/projectiles use) at this Person's
+        # position instead of the walking human figure, via _draw_icon().
+        # Everything else about a Person with this set - dialogue, T-to-talk
+        # range, position, being an ordinary Character - is unchanged; it's
+        # for an NPC that's really an inanimate object (a derelict loot
+        # container is the first user - see derelicts.py's
+        # _build_loot_interior_config) rather than someone to talk to.
+        self.icon_shape = None
+        self.icon_color = None
 
     # self.x/self.y is the ground position a character stands at (matches
     # where collision / arrival-distance checks treat them as being), not
@@ -414,7 +428,21 @@ class Person:
         if extra and article_name in extra:
             self.outfit["extra_articles"] = [a for a in extra if a != article_name]
 
+    def _draw_icon(self, surface):
+        """Static item-glyph body for a Person opted into "icon_shape" (see
+        __init__) - draws in place of the whole walk-cycle figure, at this
+        Person's world position, scaled like every other world icon (ore
+        pickups, projectiles)."""
+        scale = get_scale()
+        screen_x, screen_y = to_screen(self.x, self.y)
+        size = max(4, int(round(14 * scale)))
+        draw_item_icon(surface, screen_x, screen_y, size, self.icon_shape, self.icon_color)
+
     def draw(self, surface):
+        if self.icon_shape:
+            self._draw_icon(surface)
+            return
+
         scale = get_scale()
 
         if self.outfit.get("body"):

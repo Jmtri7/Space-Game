@@ -98,6 +98,18 @@ helpers in `_defs.py`).
 }
 ```
 
+An npc entry's optional `"icon_shape"`/`"icon_color"` swap its whole walking
+figure for a small static item glyph at its position (`Person.icon_shape` /
+`_draw_icon`, drawn with `ui_theme.draw_item_icon` - the same procedural
+glyphs shop items/ore pickups/projectiles already use, `icon_shape` one of
+its recognised names or any other value for its plain-crate fallback). Use
+it for an NPC that's really an inanimate object with dialogue rather than
+someone to talk to - a derelict-ship loot container
+(`derelicts.py`'s `_build_loot_interior_config`) is the first user. Nothing
+else about the NPC changes: dialogue, T-to-talk range, `role`/routine, and
+position all work exactly as they do for a normal figure - only `draw()`
+takes the icon branch instead of the walk-cycle body.
+
 ### System events
 
 A system's config may carry an `"events"` array - entries a story opts into
@@ -237,6 +249,21 @@ split this follows:
    - a fresh pilot with no `hail_dialogue_tree` (there's no toll to
    negotiate; see `mining_101/pilots.json`'s `wreck_raider`), spawned already
    `hostile_to_player:<name>` rather than via the hail/timeout dance.
+
+   A "loot" outcome's generated interior (`_build_loot_interior_config`)
+   uses the module's own `"derelict_hull"` culture
+   (`config/modules/system-events/cultures.json`) - a dim, damaged-metal
+   `floor_color`/`wall_color`, combined with `"space_backdrop": true` for a
+   hull breached to the void beyond its one lit room (see this file's
+   "Interior geometry" section on the two needing each other, and
+   `orbital-std`'s `concourse` interior for another `space_backdrop` +
+   culture pairing). A `"rooms"` list with no `"culture"` is silently
+   dropped by `LocationScreen` - always give a generated interior a culture
+   if it sets `"rooms"`. Each loot container is an ordinary NPC (its
+   dialogue keeps working exactly like any other) but rendered as a static
+   item glyph via `"icon_shape"`/`"icon_color"` (see "Interior geometry"'s
+   NPC icon override) rather than the walking figure, so it reads as an
+   object to search, not a person.
    `"explosion_damage"` (trap outcome, default `DERELICT_TRAP_DEFAULT_DAMAGE`
    = 12) is a flat hull-damage burst dealt to the player the instant it
    triggers.

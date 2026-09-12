@@ -321,6 +321,16 @@ face band that replaces the eyes. An absent key just skips that piece, so a
 bare `Person` shows plain body colors and **a new decorated outfit is still
 only a `graphics.json` entry — no drawing-code changes.**
 
+A `Person` opted into `icon_shape`/`icon_color` (npc config keys — see
+[config-formats.md](config-formats.md)'s "Interior geometry") skips the
+whole figure: `draw()` branches to `_draw_icon()`, a small static
+`ui_theme.draw_item_icon` glyph at its position instead of the walk-cycle
+body. Everything else about it — `Possessions`, dialogue, `get_distance()`,
+being an ordinary `Character` — is untouched; it's for an NPC that's really
+an inanimate object with dialogue (a derelict-ship loot container is the
+first user, see `game/screens/space_screen/derelicts.py`) rather than
+someone to talk to.
+
 `Person` itself has no behavior/role concept - that lives on `Character`
 (see below), which owns a `Person` rather than subclassing it. Local NPCs
 are built by `LocationScreen._build_local_character()`: a `Person` (with a

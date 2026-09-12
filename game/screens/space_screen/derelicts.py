@@ -44,6 +44,19 @@ from game.world.smoke_trail import SmokeTrail
 
 DEFAULT_DERELICT_RECHECK_SECONDS = 60  # matches pirates.py's DEFAULT_RECHECK_SECONDS
 
+# Spawn-direction bias: a derelict tends to spawn roughly ahead of the
+# player's current heading of travel rather than at a uniformly random
+# bearing, so flying in a straight line has a real chance of running into
+# one instead of it always being equally likely to be spawned behind you.
+# Only applies while actually moving faster than DERELICT_SPAWN_BIAS_MIN_SPEED
+# (a ship sitting still/drifting has no "direction of travel" to bias
+# toward, so falls back to a fully random bearing). The bias is a cone, not
+# a fixed line dead ahead - DERELICT_SPAWN_BIAS_CONE_DEG either side of the
+# player's velocity heading - so it still feels like "out there somewhere
+# ahead", not a scripted beacon glued to the exact heading.
+DERELICT_SPAWN_BIAS_MIN_SPEED = 0.3
+DERELICT_SPAWN_BIAS_CONE_DEG = 35
+
 # Targeting range: a derelict can't be cycled/clicked as a target until the
 # player is within this many world units of it (see targeting.py's
 # _in_target_range) - large enough to matter tactically (spot it and close
@@ -88,6 +101,21 @@ class _DerelictsMixin:
         half_diagonal = 0.5 * math.hypot(GAME_WIDTH, GAME_HEIGHT) / self.camera_zoom_min
         return max(half_diagonal, MINIMAP_RANGE) + 150
 
+    def _derelict_spawn_angle(self):
+        """The bearing (radians) a freshly-rolled derelict spawns at - biased
+        toward the player's current direction of travel (see
+        DERELICT_SPAWN_BIAS_CONE_DEG's comment) so flying in a straight line
+        tends to actually run into one, rather than every bearing being
+        equally likely regardless of where the player's headed. Falls back
+        to a fully random bearing while too slow for "direction of travel"
+        to mean anything (sitting still, drifting near zero speed)."""
+        speed = math.hypot(self.player.velocity_x, self.player.velocity_y)
+        if speed < DERELICT_SPAWN_BIAS_MIN_SPEED:
+            return random.uniform(0, 2 * math.pi)
+        travel_angle = math.atan2(self.player.velocity_y, self.player.velocity_x)
+        cone = math.radians(DERELICT_SPAWN_BIAS_CONE_DEG)
+        return travel_angle + random.uniform(-cone, cone)
+
     def _maybe_spawn_derelict(self, state):
         """Roll a system's "derelict_ship" event configs (see
         setup.py._build_derelict_configs) - called on system (re-)entry and
@@ -130,7 +158,7 @@ class _DerelictsMixin:
         ship_type_id = event.get("ship_type", "courier")
         graphics = get_graphics_asset(self.story, "ships", ship_type_id)
         distance = self._derelict_spawn_distance()
-        angle = random.uniform(0, 2 * math.pi)
+        angle = self._derelict_spawn_angle()
         x = self.player.x + math.cos(angle) * distance
         y = self.player.y + math.sin(angle) * distance
         wreck = DerelictShip(x, y, event_id, event, graphics=graphics)
@@ -293,25 +321,35 @@ class _DerelictsMixin:
         credits_lo, credits_hi = loot.get("credits_range", [0, 0])
         credits = random.randint(int(credits_lo), int(credits_hi)) if credits_hi > 0 else 0
 
+        # Each container is an ordinary NPC (dialogue/T-to-talk keeps working
+        # unchanged) but rendered as a static item glyph instead of a walking
+        # figure - see Person._draw_icon / "icon_shape"+"icon_color" on an
+        # npc config entry (config-formats.md's "Interior geometry" section).
+        # Shape/color are just flavor per container kind, reusing the same
+        # procedural glyphs shop items/ore pickups already draw with
+        # ui_theme.draw_item_icon - "gem" (gold) for the credit stash, "crate"
+        # (its default) for a cargo drop, "vial" for a personal effect.
         npcs = []
         containers = []
         if credits > 0:
-            containers.append(("Credit Stash", [f"earn_credits:{credits}"], f"A hidden stash - {credits} credits, still good."))
+            containers.append(("Credit Stash", [f"earn_credits:{credits}"], f"A hidden stash - {credits} credits, still good.", "gem", (235, 200, 90)))
         for drop in loot.get("cargo", []):
             qty_lo, qty_hi = drop.get("qty_range", [1, 1])
             qty = random.randint(int(qty_lo), int(qty_hi))
             commodity = drop.get("commodity", "ore")
-            containers.append((f"{commodity.title()} Crate", [f"loot_cargo:{commodity}:{qty}"], f"{qty} units of {commodity}, still sealed."))
+            containers.append((f"{commodity.title()} Crate", [f"loot_cargo:{commodity}:{qty}"], f"{qty} units of {commodity}, still sealed.", "crate", (150, 110, 80)))
         for item_id in loot.get("items", []):
-            containers.append((item_id.replace("_", " ").title(), [f"give_item:{item_id}"], "A salvaged personal effect."))
+            containers.append((item_id.replace("_", " ").title(), [f"give_item:{item_id}"], "A salvaged personal effect.", "vial", (140, 200, 190)))
 
-        for i, (label, actions, text) in enumerate(containers):
+        for i, (label, actions, text, icon_shape, icon_color) in enumerate(containers):
             flag = f"derelict_{wreck.event_id}_searched_{i}"
             npcs.append({
                 "name": label,
                 "x": 300 + (i % 3) * 120,
                 "y": 260 + (i // 3) * 120,
                 "role": "loot_point",
+                "icon_shape": icon_shape,
+                "icon_color": icon_color,
                 "dialogue_tree": {
                     "root": "start",
                     "conditional_roots": [{"flag": flag, "node": "empty"}],
@@ -333,7 +371,20 @@ class _DerelictsMixin:
 
         return {
             "label": wreck.name,
+            # "derelict_hull" (config/modules/system-events/cultures.json) is
+            # what actually makes this read as a hull interior rather than
+            # open space: a "culture" is what makes LocationScreen honour the
+            # "rooms" list at all and paint a floor_color polygon for it (see
+            # config-formats.md's "Interior geometry" section) - with no
+            # culture the room polygon below is silently dropped and the
+            # walkable area falls back to the flat-background bounds, so the
+            # player and every container NPC appeared to stand in the
+            # starfield with nothing under them. space_backdrop stays on
+            # (dead hull breached to the void beyond this one lit deck), now
+            # combined with a visible dim/damaged-metal floor underneath it,
+            # matching how the orbital-std "concourse" interior pairs the two.
             "space_backdrop": True,
+            "culture": "derelict_hull",
             "portals": [{"x": -20, "y": 310, "connected_locations": [], "return_to_ship": True}],
             "rooms": [{"label": "Hold", "polygon": [[-20, 200], [420, 200], [420, 500], [-20, 500]]}],
             "npcs": npcs,

@@ -1,0 +1,21 @@
+{
+  "derelict_hull": {
+    "name": "Derelict Hull",
+    "description": "Dead trade-hull interior for a boarded \"loot\" derelict_ship (see game/screens/space_screen/derelicts.py's _build_loot_interior_config) - a dim, damaged metal deck with cold, unlit walls, no dock-lamp warmth. Paired with \"space_backdrop\": true so the wreck reads as breached to the void beyond its one lit room, not a healthy station.",
+    "wall_color": [
+      18,
+      19,
+      22
+    ],
+    "floor_color": [
+      58,
+      60,
+      64
+    ],
+    "wall_trim_color": [
+      40,
+      42,
+      46
+    ]
+  }
+}

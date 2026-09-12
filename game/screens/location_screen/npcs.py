@@ -61,6 +61,13 @@ class _NpcsMixin:
         # last walked, defaulting to east.
         if cfg.get("facing") in _FACING:
             person.facing = _FACING[cfg["facing"]]
+        # Optional static-icon override (see Person.__init__/_draw_icon) - an
+        # NPC that's really an inanimate object (a derelict loot container;
+        # see derelicts.py's _build_loot_interior_config) draws as a small
+        # item glyph instead of the walking human figure. None/absent means
+        # the ordinary figure, unchanged.
+        person.icon_shape = cfg.get("icon_shape")
+        person.icon_color = cfg.get("icon_color")
         return Character(person, role=cfg.get("role", "resident"), faction=cfg.get("faction"), can_move_to=self.can_move_to, routine_name=cfg.get("routine"))
 
     def _post_local_message(self, sender, text):
