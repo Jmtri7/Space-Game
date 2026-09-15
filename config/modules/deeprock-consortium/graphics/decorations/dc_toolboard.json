@@ -1,0 +1,15 @@
+{
+  "identity": "A tool board from the side: a plain riveted panel with three tool-hook silhouettes.",
+  "tier": "decoration",
+  "palette": "deeprock",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "panel", "points": [[-10, 0], [10, 0], [10, -24], [-10, -24]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "tool hook 1", "circle": [-5, -18, 1.2], "min_px": 6 },
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "tool hook 2", "circle": [0, -18, 1.2], "min_px": 6 },
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "tool hook 3", "circle": [5, -18, 1.2], "min_px": 6 }
+  ]
+}

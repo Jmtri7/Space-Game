@@ -1,0 +1,66 @@
+{
+  "identity": "Deeprock Carrier - a broad ore barge: a narrow core swollen into one large cargo bulge to starboard and a smaller counter-bulge to port. Wide and lopsided, unlike the Scout's front-heavy taper.",
+  "tier": "ship_near",
+  "palette": "deeprock",
+  "size": 16,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "narrow core",
+      "points": [[-0.2, -0.7], [0.2, -0.7], [0.2, 0.3], [-0.2, 0.3]]
+    },
+    {
+      "group": "bulge_big",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "large cargo bulge, starboard",
+      "points": [[0.2, -0.1], [0.66, -0.22], [0.72, 0.28], [0.2, 0.35]]
+    },
+    {
+      "group": "bulge_small",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "smaller counter-bulge, port - deliberately unequal",
+      "points": [[-0.2, 0.0], [-0.46, -0.05], [-0.43, 0.25], [-0.2, 0.28]]
+    },
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tail",
+      "points": [[-0.12, 0.3], [0.12, 0.3], [0.08, 0.55], [-0.08, 0.55]]
+    }
+  ],
+  "details": [
+    {
+      "group": "core",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window",
+      "points": [[-0.1, -0.55], [0.1, -0.55], [0.1, -0.3], [-0.1, -0.3]],
+      "min_px": 8
+    },
+    {
+      "group": "bulge_big",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "hazard stripe, big bulge",
+      "points": [[0.28, 0.0], [0.58, -0.08], [0.6, 0.02], [0.3, 0.1]],
+      "min_px": 8
+    },
+    {
+      "group": "core",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "thruster glow",
+      "circle": [0.0, 0.52, 0.06],
+      "min_px": 6
+    }
+  ]
+}

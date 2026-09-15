@@ -1,0 +1,44 @@
+{
+  "vp_hall": {
+    "culture": "vherathi_pilot",
+    "name": "Reefwright's Hall",
+    "description": "A grown communal hall - the largest structure in a Vherathi settlement, its roofline rising sharpest over the entry.",
+    "design": "buildings/vp_hall",
+    "footprint": { "width": 116, "depth": 40.0 }
+  },
+  "vp_spire": {
+    "culture": "vherathi_pilot",
+    "name": "Vein-Warden Spire",
+    "description": "A tall tapering housing spire, leaning very slightly off vertical, climbed by a single line of bioluminescent veins.",
+    "design": "buildings/vp_spire",
+    "footprint": { "width": 42, "depth": 24.0 }
+  },
+  "vp_bloompod": {
+    "culture": "vherathi_pilot",
+    "name": "Bloompod Dwelling",
+    "description": "The smallest unit of Vherathi housing - a single rounded resin growth with one asymmetric window.",
+    "design": "buildings/vp_bloompod",
+    "footprint": { "width": 34, "depth": 20.0 }
+  },
+  "vp_bench": {
+    "culture": "vherathi_pilot",
+    "name": "Grown Bench",
+    "description": "A resin bench, thickened toward one end, standing on two uneven legs.",
+    "design": "decorations/vp_bench",
+    "footprint": { "width": 22, "depth": 9.0 }
+  },
+  "vp_planter": {
+    "culture": "vherathi_pilot",
+    "name": "Planter Pod",
+    "description": "A lopsided resin basin holding a single tall leaning frond.",
+    "design": "decorations/vp_planter",
+    "footprint": { "width": 16, "depth": 9.0 }
+  },
+  "vp_lantern_post": {
+    "culture": "vherathi_pilot",
+    "name": "Lantern Stalk",
+    "description": "A thin curved resin stalk ending in a single bioluminescent bloom.",
+    "design": "decorations/vp_lantern_post",
+    "footprint": { "width": 5.2, "depth": 5.0 }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "identity": "Drossholt bunk shed from the front: the smallest unit of Company housing - a plain riveted box, one centered window, flat roof.",
+  "tier": "building",
+  "palette": "drossholt",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~1.5x PLAYER_H tall, ~1.1x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "plain box, square corners",
+      "points": [[-17, 0], [17, 0], [17, -36], [-17, -36]],
+      "flatten_px": 20
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, centered",
+      "points": [[-8, -14], [8, -14], [8, 0], [-8, 0]],
+      "flatten_px": 10
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "single centered window",
+      "points": [[-5, -28], [5, -28], [5, -20], [-5, -20]],
+      "min_px": 8
+    }
+  ]
+}

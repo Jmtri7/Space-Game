@@ -1,0 +1,13 @@
+{
+  "identity": "Tide-pilot's flight rig: medium coverage - a jacket and gloves, the fitted flight hood with its dorsal crest, the chest harness panel, and vent pads on both shoulders. Hair is dropped since the hood covers the crown.",
+  "palette": "vherathi_pilot_dress",
+  "articles": [
+    "tank_top",
+    "pants",
+    "jacket",
+    "gloves",
+    "vp_pilot_flight_harness",
+    "vp_pilot_vent_pad",
+    "vp_pilot_crest"
+  ]
+}

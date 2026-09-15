@@ -1,0 +1,23 @@
+{
+  "identity": "SF Octagon concourse: a regular octagonal ring hall matching the station's own shape, a straight central spine corridor, identical rounded rooms - prefab and repeatable.",
+  "tier": "interior",
+  "palette": "standard_issue",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down).",
+  "rooms": [
+    { "id": "ring", "color": "hull", "points": [[165.0, 350.0], [219.2, 219.2], [350.0, 165.0], [480.8, 219.2], [535.0, 350.0], [480.8, 480.8], [350.0, 535.0], [219.2, 480.8]] },
+    { "id": "dock", "color": "hull_dk", "points": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+  ],
+  "portals": [
+    { "id": "airlock", "to": "outside", "points": [[-27, 330], [-17, 330], [-17, 370], [-27, 370]] }
+  ],
+  "structures": [
+    { "building": "si_hall", "at": [350, 200] }
+  ],
+  "placements": [
+    { "decoration": "si_lamp", "at": [280, 470] },
+    { "decoration": "si_lamp", "at": [420, 470] },
+    { "decoration": "si_bench", "at": [350, 500], "angle": 0 },
+    { "decoration": "si_bollard", "at": [300, 400] },
+    { "decoration": "si_bollard", "at": [400, 400] }
+  ]
+}

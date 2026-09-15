@@ -1,0 +1,15 @@
+{
+  "identity": "A prefab lamp post from the side: a perfectly straight rounded pole, no lean, a stripe down its length.",
+  "tier": "decoration",
+  "palette": "standard_issue",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "straight pole", "points": [[-1.4, 0], [1.4, 0], [1.4, -32], [-1.4, -32]] },
+    { "group": "body", "color": "hull", "shade": "matte", "note": "rounded lamp head", "points": [[-3, -32], [3, -32], [2.4, -37], [-2.4, -37]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "glow", "role": "detail", "note": "lamp glow", "circle": [0, -34.5, 2.2], "min_px": 6 },
+    { "group": "body", "color": "stripe", "shade": "flat", "role": "detail", "note": "pole stripe", "points": [[-0.4, -30], [0.4, -30], [0.4, -2], [-0.4, -2]], "min_px": 4 }
+  ]
+}

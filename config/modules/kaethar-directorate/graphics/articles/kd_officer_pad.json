@@ -1,0 +1,55 @@
+{
+  "identity": "Line Officer's shoulder guard: an angular gunmetal guard wider than the Line Crew's tab, identical both sides, red chevron trim. Medium coverage.",
+  "tier": "person",
+  "palette": "kaethar_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "metal",
+      "shade": "metal",
+      "note": "near guard",
+      "outset": 0.05,
+      "tag": "kd_officer_pad",
+      "geometry": {
+        "masc": { "points": [[1.4, -25.7], [4.9, -25.7], [4.9, -23.0], [1.4, -23.0]], "fits": [] },
+        "femme": { "points": [[1.3, -24.3], [4.5, -24.3], [4.5, -21.7], [1.3, -21.7]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "chevron corner, near",
+      "outset": 0.07,
+      "tag": "kd_officer_pad",
+      "geometry": {
+        "masc": { "points": [[4.2, -25.7], [4.9, -25.7], [4.9, -24.6]], "fits": [] },
+        "femme": { "points": [[3.8, -24.3], [4.5, -24.3], [4.5, -23.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far guard - exact mirror, full symmetric coverage",
+      "outset": 0.05,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.4, -25.7], [-4.9, -25.7], [-4.9, -23.0], [-1.4, -23.0]], "fits": [] },
+        "femme": { "points": [[-1.3, -24.3], [-4.5, -24.3], [-4.5, -21.7], [-1.3, -21.7]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "chevron corner, far",
+      "outset": 0.07,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-4.2, -25.7], [-4.9, -25.7], [-4.9, -24.6]], "fits": [] },
+        "femme": { "points": [[-3.8, -24.3], [-4.5, -24.3], [-4.5, -23.2]], "fits": [] }
+      }
+    }
+  ]
+}

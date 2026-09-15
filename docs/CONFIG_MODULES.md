@@ -145,6 +145,13 @@ criteria as bumping `story.json`'s version — see
   entry already `dict(...)`-copy it first (same contract as `load_json`);
   keep it that way.
 
+## Designing a new per-culture module
+
+Building one of these (`ls-authority` and friends, or a new one) from an art
+brief — an atlas, a description, or nothing but a pitch — instead of just
+editing an existing module's files has its own process and approval gates:
+see [CULTURE_DESIGN.md](CULTURE_DESIGN.md).
+
 ## Adding a module / extending sharing
 
 1. `mkdir config/modules/<name>/`, add `module.json` (with its own

@@ -1,0 +1,43 @@
+{
+  "identity": "Steward's circlet: a thin resin band wrapping from ear to ear across the brow, tapering thinner at the temples, with a small vein-gem set at the center. A mark of office, not a helmet.",
+  "tier": "person",
+  "palette": "vherathi_pilot_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "leather",
+      "shade": "matte",
+      "note": "band wrapping ear to ear",
+      "outset": 0.03,
+      "tag": "vp_steward_circlet",
+      "geometry": {
+        "masc": {
+          "points": [[-2.1, -28.6], [-0.3, -29.9], [1.6, -28.7], [1.5, -28.2], [-0.3, -29.3], [-2.0, -28.1]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-2.0, -27.1], [-0.3, -28.4], [1.5, -27.2], [1.4, -26.7], [-0.3, -27.8], [-1.9, -26.6]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "head",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "center vein-gem",
+      "outset": 0.05,
+      "tag": "vp_steward_circlet",
+      "geometry": {
+        "masc": {
+          "points": [[-0.55, -29.5], [-0.05, -29.7], [0.15, -29.3], [-0.35, -29.1]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-0.55, -28.0], [-0.05, -28.2], [0.15, -27.8], [-0.35, -27.6]],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

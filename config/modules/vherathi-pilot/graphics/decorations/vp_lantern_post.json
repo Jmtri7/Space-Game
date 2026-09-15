@@ -1,0 +1,28 @@
+{
+  "identity": "A grown lantern post from the side: a thin curved resin stalk ending in a single bioluminescent bloom, no crossbar or symmetric fixture.",
+  "tier": "decoration",
+  "palette": "vherathi_pilot",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "scale_note": "~1.4x PLAYER_H tall, very thin",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "curved stalk",
+      "points": [[-1.4, 0], [1.4, 0], [2.6, -30], [0.4, -32]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "bioluminescent bloom at the tip",
+      "circle": [1.4, -33, 3.0],
+      "min_px": 6
+    }
+  ]
+}

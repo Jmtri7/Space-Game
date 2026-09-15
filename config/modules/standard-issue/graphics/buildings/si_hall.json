@@ -1,0 +1,71 @@
+{
+  "identity": "SF Administration Hall from the front: a rounded-corner block, an even window grid, a white centerline stripe and amber hazard chevrons at every edge - prefab and painted.",
+  "tier": "building",
+  "palette": "standard_issue",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~2.6x PLAYER_H tall, ~3.6x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "rounded-corner wall",
+      "points": [[-54, 0], [54, 0], [54, -72], [46, -80], [-46, -80], [-54, -72]],
+      "flatten_px": 60
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, centered",
+      "points": [[-12, -32], [12, -32], [12, 0], [-12, 0]],
+      "flatten_px": 20
+    },
+    {
+      "group": "body",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "centerline stripe",
+      "points": [[-3, -80], [3, -80], [3, 0], [-3, 0]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window row, left",
+      "points": [[-44, -60], [-28, -60], [-28, -46], [-44, -46]],
+      "min_px": 12
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window row, right - mirrored pair",
+      "points": [[28, -60], [44, -60], [44, -46], [28, -46]],
+      "min_px": 12
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "hazard chevron, left edge",
+      "points": [[-54, -20], [-48, -20], [-48, -10], [-54, -10]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "hazard chevron, right edge - mirrored",
+      "points": [[54, -20], [48, -20], [48, -10], [54, -10]],
+      "min_px": 10
+    }
+  ]
+}

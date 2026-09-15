@@ -1,0 +1,98 @@
+{
+  "name": "Standard Issue Home",
+  "description": "Preview system: the SF Spine Ring and Octagon stations, all three ships flying named roles between them.",
+  "star_map_position": { "x": 260, "y": -260 },
+  "station_asset": "si_spine_ring",
+  "moon_asset": "si_octagon",
+  "central_star": { "x": 0.5, "y": 0.5, "name": "SF-1", "size": 60, "color": [200, 220, 255] },
+  "player_start": { "x": 0.3, "y": 0.5 },
+  "star_seed": 6262,
+  "asteroid_field": { "per_chunk_range": [0, 1], "types": [] },
+  "ai_ships": [
+    { "pilot": "si_shuttle_pilot", "ship_type": "si_shuttle", "x": 0.45, "y": 0.35, "route": ["station", "moon"] },
+    { "pilot": "si_cutter_pilot", "ship_type": "si_cutter", "x": 0.55, "y": 0.6, "route": ["station", "moon"] },
+    { "pilot": "si_transport_pilot", "ship_type": "si_transport", "x": 0.35, "y": 0.6, "route": ["station"] }
+  ],
+  "station": {
+    "x": 0.5, "y": 0.35, "name": "SF Spine Ring",
+    "interiors": {
+      "si_concourse": {
+        "label": "SF Spine Ring - Concourse",
+        "culture": "standard_issue",
+        "space_backdrop": true,
+        "floor_pattern": "standard_issue",
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Ring", "polygon": [[165.0, 350.0], [219.2, 219.2], [350.0, 165.0], [480.8, 219.2], [535.0, 350.0], [480.8, 480.8], [350.0, 535.0], [219.2, 480.8]] },
+          { "label": "Dock", "polygon": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 200, "building_type": "si_hall" },
+          { "x": 280, "y": 470, "building_type": "si_lamp" },
+          { "x": 420, "y": 470, "building_type": "si_lamp" },
+          { "x": 350, "y": 500, "building_type": "si_bench" },
+          { "x": 300, "y": 400, "building_type": "si_bollard" },
+          { "x": 400, "y": 400, "building_type": "si_bollard" }
+        ],
+        "npcs": [
+          {
+            "name": "Deckhand Priya Osei",
+            "x": 350, "y": 300,
+            "role": "resident",
+            "outfit": "si_deckhand_femme",
+            "greeting": "Welcome aboard the Ring. Mind the stripe - it marks the walkway, not a suggestion.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.65, "y": 0.65, "name": "SF Octagon",
+    "interiors": {
+      "si_settlement": {
+        "label": "SF Octagon - Outpost",
+        "culture": "standard_issue",
+        "floor_pattern": "standard_issue",
+        "entrance": { "x": 320, "y": 545 },
+        "portals": [
+          { "x": 320, "y": 556, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Yard", "polygon": [[160, 140], [480, 140], [480, 460], [160, 460]] },
+          { "label": "Pad Approach", "polygon": [[280, 460], [360, 460], [360, 560], [280, 560]] }
+        ],
+        "structures": [
+          { "x": 230, "y": 200, "building_type": "si_hall" },
+          { "x": 410, "y": 220, "building_type": "si_tower" },
+          { "x": 420, "y": 380, "building_type": "si_bunk" },
+          { "x": 200, "y": 400, "building_type": "si_lamp" },
+          { "x": 440, "y": 400, "building_type": "si_lamp" },
+          { "x": 320, "y": 400, "building_type": "si_bollard" },
+          { "x": 320, "y": 430, "building_type": "si_bollard" },
+          { "x": 320, "y": 300, "building_type": "si_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Flight Officer Marsh",
+            "x": 320, "y": 250,
+            "role": "resident",
+            "outfit": "si_flightofficer_masc",
+            "greeting": "Every bay's interchangeable out here. Keeps the paperwork simple.",
+            "dialogue_options": ["Leave"]
+          },
+          {
+            "name": "Marshal Voss",
+            "x": 380, "y": 320,
+            "role": "resident",
+            "outfit": "si_marshal_femme",
+            "greeting": "State your business.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

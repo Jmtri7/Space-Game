@@ -1,0 +1,68 @@
+{
+  "identity": "Kaethar Spearhead - a long arrow nose feeding into a wide rectangular aft flight-deck slab. The carrier silhouette, unlike the Picket's pure point or the Bastion's hex.",
+  "tier": "ship_near",
+  "palette": "kaethar",
+  "size": 22,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "nose",
+      "color": "hull",
+      "shade": "matte",
+      "note": "arrow nose",
+      "points": [[0.0, -0.95], [0.22, -0.4], [0.22, 0.05], [-0.22, 0.05], [-0.22, -0.4]]
+    },
+    {
+      "group": "deck",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "wide rectangular flight deck, aft - overlaps well into the nose",
+      "points": [[-0.5, -0.05], [0.5, -0.05], [0.5, 0.6], [-0.5, 0.6]]
+    },
+    {
+      "group": "nose",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "canopy",
+      "points": [[-0.09, -0.55], [0.09, -0.55], [0.09, -0.2], [-0.09, -0.2]]
+    }
+  ],
+  "details": [
+    {
+      "group": "nose",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "nose chevron",
+      "points": [[-0.1, -0.9], [0.1, -0.9], [0.0, -0.75]],
+      "min_px": 6
+    },
+    {
+      "group": "deck",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "flight deck window band",
+      "points": [[-0.3, 0.1], [0.3, 0.1], [0.3, 0.25], [-0.3, 0.25]],
+      "min_px": 10
+    },
+    {
+      "group": "deck",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard thruster",
+      "circle": [0.3, 0.55, 0.06],
+      "min_px": 6
+    },
+    {
+      "group": "deck",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port thruster - mirrored",
+      "circle": [-0.3, 0.55, 0.06],
+      "min_px": 6
+    }
+  ]
+}

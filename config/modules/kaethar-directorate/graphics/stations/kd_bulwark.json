@@ -1,0 +1,17 @@
+{
+  "identity": "Kaethar Bulwark - a single elongated diamond hull, no arms at all, red chevron trim at each point. The blunt opposite of the Redoubt's four-spur cross.",
+  "tier": "station",
+  "palette": "kaethar",
+  "size": 46,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "hull", "color": "hull", "shade": "matte", "note": "elongated diamond", "points": [[0.0, -0.95], [0.4, -0.3], [0.4, 0.3], [0.0, 0.95], [-0.4, 0.3], [-0.4, -0.3]] },
+    { "group": "hull", "color": "hull_dk", "shade": "deep", "note": "core band", "points": [[-0.2, -0.15], [0.2, -0.15], [0.2, 0.15], [-0.2, 0.15]] }
+  ],
+  "details": [
+    { "group": "hull", "color": "lamp", "shade": "flat", "role": "detail", "note": "nose chevron", "points": [[-0.1, -0.9], [0.1, -0.9], [0.0, -0.78]], "min_px": 8 },
+    { "group": "hull", "color": "lamp", "shade": "flat", "role": "detail", "note": "tail chevron - mirrored", "points": [[-0.1, 0.9], [0.1, 0.9], [0.0, 0.78]], "min_px": 8 },
+    { "group": "hull", "color": "glass", "shade": "sheen", "role": "detail", "note": "starboard window", "points": [[0.2, -0.1], [0.35, -0.05], [0.32, 0.1], [0.2, 0.1]], "min_px": 8 },
+    { "group": "hull", "color": "glass", "shade": "sheen", "role": "detail", "note": "port window - mirrored", "points": [[-0.2, -0.1], [-0.35, -0.05], [-0.32, 0.1], [-0.2, 0.1]], "min_px": 8 }
+  ]
+}

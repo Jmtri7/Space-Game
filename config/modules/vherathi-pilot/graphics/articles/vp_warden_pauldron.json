@@ -1,0 +1,61 @@
+{
+  "identity": "Warden's pauldrons: a bulky hard-edged cap draping from the neck-shoulder seam fully over both shoulders, identical in size - the near one carries an inset plate seam the far one doesn't, which is the asymmetry (and reads as the bulkier-looking side). Heavy coverage.",
+  "tier": "person",
+  "palette": "vherathi_pilot_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "metal",
+      "shade": "metal",
+      "note": "bulky cap, near shoulder - reaches medially to the neck seam",
+      "outset": 0.05,
+      "tag": "vp_warden_pauldron",
+      "geometry": {
+        "masc": {
+          "points": [[1.3, -25.8], [2.4, -27.0], [3.9, -27.0], [5.2, -25.7], [5.6, -23.4], [4.4, -21.4], [2.0, -21.9], [1.3, -23.5]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[1.15, -24.3], [2.1, -25.5], [3.5, -25.5], [4.7, -24.2], [5.1, -21.9], [3.9, -20.1], [1.7, -20.6], [1.15, -22.0]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "denim",
+      "shade": "deep",
+      "note": "inset plate seam, near",
+      "outset": 0.06,
+      "tag": "vp_warden_pauldron",
+      "geometry": {
+        "masc": {
+          "points": [[2.0, -25.5], [3.8, -26.0], [4.9, -24.6], [4.2, -22.2], [2.4, -22.6]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[1.85, -24.0], [3.5, -24.5], [4.5, -23.2], [3.8, -20.8], [2.2, -21.2]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far cap - exact mirror of the near cap, full coverage over the top of the far shoulder. The near cap carries an inset plate seam the far one doesn't, which is the asymmetry.",
+      "outset": 0.05,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": {
+          "points": [[-1.3, -25.8], [-2.4, -27.0], [-3.9, -27.0], [-5.2, -25.7], [-5.6, -23.4], [-4.4, -21.4], [-2.0, -21.9], [-1.3, -23.5]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-1.15, -24.3], [-2.1, -25.5], [-3.5, -25.5], [-4.7, -24.2], [-5.1, -21.9], [-3.9, -20.1], [-1.7, -20.6], [-1.15, -22.0]],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

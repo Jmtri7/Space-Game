@@ -1,0 +1,15 @@
+{
+  "identity": "Steward's dress: lightest coverage in the culture - a closed long coat over a knit tank and trousers, the sash, subtle epaulettes on both shoulders, and the brow circlet. Hair stays visible under the thin circlet.",
+  "palette": "vherathi_pilot_dress",
+  "articles": [
+    "tank_top",
+    "pants",
+    "shoes",
+    "long_coat_closed",
+    "stand_collar",
+    "hair_long",
+    "vp_reef_mantle",
+    "vp_steward_epaulette",
+    "vp_steward_circlet"
+  ]
+}

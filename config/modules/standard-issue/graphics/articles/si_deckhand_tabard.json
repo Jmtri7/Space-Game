@@ -1,0 +1,31 @@
+{
+  "identity": "Deckhand's tabard: a rounded-corner chest panel with the Federation centerline stripe - light coverage, the panel narrow, the stripe the real identity marker.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "chest panel, rounded corners",
+      "outset": 0.03,
+      "tag": "si_deckhand_tabard",
+      "geometry": {
+        "masc": { "points": [[-1.6, -25.2], [1.6, -25.2], [1.8, -25.0], [1.8, -18.2], [1.6, -18.0], [-1.6, -18.0], [-1.8, -18.2], [-1.8, -25.0]], "fits": [] },
+        "femme": { "points": [[-1.5, -23.7], [1.5, -23.7], [1.7, -23.5], [1.7, -17.0], [1.5, -16.8], [-1.5, -16.8], [-1.7, -17.0], [-1.7, -23.5]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "centerline stripe",
+      "outset": 0.05,
+      "tag": "si_deckhand_tabard",
+      "geometry": {
+        "masc": { "points": [[-0.35, -25.0], [0.35, -25.0], [0.35, -18.2], [-0.35, -18.2]], "fits": [] },
+        "femme": { "points": [[-0.35, -23.5], [0.35, -23.5], [0.35, -17.0], [-0.35, -17.0]], "fits": [] }
+      }
+    }
+  ]
+}

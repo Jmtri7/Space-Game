@@ -1,0 +1,31 @@
+{
+  "identity": "Deckhand's garrison cap: a low flat cap with rounded ends across the crown, wearing the same amber-on-blue livery as the ship hulls. Light coverage.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "flat cap, ear to ear, rounded ends",
+      "outset": 0.04,
+      "tag": "si_deckhand_cap",
+      "geometry": {
+        "masc": { "points": [[-1.9, -29.1], [-2.2, -29.5], [1.5, -29.7], [1.8, -29.3], [1.7, -28.6], [-2.0, -28.4]], "fits": [] },
+        "femme": { "points": [[-1.8, -27.6], [-2.1, -28.0], [1.4, -28.2], [1.7, -27.8], [1.6, -27.1], [-1.9, -26.9]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "center white stripe",
+      "outset": 0.06,
+      "tag": "si_deckhand_cap",
+      "geometry": {
+        "masc": { "points": [[-0.5, -29.6], [0.1, -29.6], [0.1, -28.5], [-0.5, -28.5]], "fits": [] },
+        "femme": { "points": [[-0.5, -28.1], [0.1, -28.1], [0.1, -27.0], [-0.5, -27.0]], "fits": [] }
+      }
+    }
+  ]
+}

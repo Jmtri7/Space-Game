@@ -1,0 +1,31 @@
+{
+  "identity": "Flight Officer's fitted cap: a rounded-corner shell covering the crown down to ear level, face open - medium coverage, more than the Deckhand's flat cap, less than the Marshal's full helm.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "metal",
+      "shade": "metal",
+      "note": "fitted shell, crown to ear level, rounded corners",
+      "outset": 0.05,
+      "tag": "si_flightofficer_cap",
+      "geometry": {
+        "masc": { "points": [[-2.1, -28.6], [-2.3, -29.5], [-1.6, -30.6], [-0.3, -31.0], [1.2, -30.6], [1.8, -29.5], [1.6, -28.6], [-0.3, -28.9]], "fits": [] },
+        "femme": { "points": [[-2.0, -27.1], [-2.2, -28.0], [-1.5, -29.1], [-0.3, -29.5], [1.1, -29.1], [1.7, -28.0], [1.5, -27.1], [-0.3, -27.4]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "center stripe",
+      "outset": 0.07,
+      "tag": "si_flightofficer_cap",
+      "geometry": {
+        "masc": { "points": [[-0.5, -30.8], [0.1, -30.8], [0.1, -29.0], [-0.5, -29.0]], "fits": [] },
+        "femme": { "points": [[-0.5, -29.3], [0.1, -29.3], [0.1, -27.5], [-0.5, -27.5]], "fits": [] }
+      }
+    }
+  ]
+}

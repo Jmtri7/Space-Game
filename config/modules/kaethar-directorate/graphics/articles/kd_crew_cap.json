@@ -1,0 +1,31 @@
+{
+  "identity": "Line Crew's field cap: a low angular band across the crown with a red chevron. Light coverage.",
+  "tier": "person",
+  "palette": "kaethar_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "flat band, ear to ear",
+      "outset": 0.04,
+      "tag": "kd_crew_cap",
+      "geometry": {
+        "masc": { "points": [[-2.1, -29.0], [1.6, -29.2], [1.7, -30.4], [-2.2, -30.2]], "fits": [] },
+        "femme": { "points": [[-2.0, -27.5], [1.5, -27.7], [1.6, -28.9], [-2.1, -28.7]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "red chevron",
+      "outset": 0.06,
+      "tag": "kd_crew_cap",
+      "geometry": {
+        "masc": { "points": [[-0.5, -30.3], [0.1, -30.3], [0.1, -29.6], [-0.5, -29.6]], "fits": [] },
+        "femme": { "points": [[-0.5, -28.8], [0.1, -28.8], [0.1, -28.1], [-0.5, -28.1]], "fits": [] }
+      }
+    }
+  ]
+}

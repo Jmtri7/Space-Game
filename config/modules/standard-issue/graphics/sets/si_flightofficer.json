@@ -1,0 +1,5 @@
+{
+  "identity": "Flight Officer's rig: medium coverage - coveralls, duty boots, the fitted cap, shoulder guards, and the chest harness. Hair dropped since the cap covers the crown.",
+  "palette": "standard_issue_dress",
+  "articles": ["tank_top", "pants", "duty_boots", "si_flightofficer_harness", "si_flightofficer_pad", "si_flightofficer_cap"]
+}

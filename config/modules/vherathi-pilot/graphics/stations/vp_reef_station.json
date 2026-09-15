@@ -1,0 +1,91 @@
+{
+  "identity": "The Reef Ring - a grown station built around three docking blooms rather than four or six, each a different length, tapering off the core the way a reef grows arms toward the light.",
+  "tier": "station",
+  "palette": "vherathi_pilot",
+  "size": 52,
+  "units": "fractions of size, roughly centred at 0,0. NOTE: this design's own \"size\" is the actual scale multiplier _expand_craft applies (LandingSite draws stations at unit=1) - the graphics.json catalogue \"size\" alongside rotation_speed/landing_distance is metadata only.",
+  "silhouette": [
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "central body, slightly off-round",
+      "points": [[-0.22, -0.28], [0.2, -0.32], [0.3, 0.0], [0.18, 0.3], [-0.24, 0.26], [-0.32, -0.02]]
+    },
+    {
+      "group": "lit",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "core glow, flat - no crescent shading (glow shade is already emissive/flat)",
+      "points": [[-0.1, -0.1], [0.1, -0.12], [0.12, 0.1], [-0.12, 0.1]]
+    },
+    {
+      "group": "arm_long",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "longest docking bloom",
+      "points": [[0.28, -0.08], [0.75, -0.14], [0.78, 0.02], [0.3, 0.1]]
+    },
+    {
+      "group": "arm_mid",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "mid-length docking bloom",
+      "points": [[-0.15, 0.25], [-0.2, 0.62], [-0.04, 0.65], [0.02, 0.3]]
+    },
+    {
+      "group": "arm_short",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "shortest docking bloom",
+      "points": [[-0.3, -0.15], [-0.58, -0.32], [-0.52, -0.18], [-0.28, -0.02]]
+    }
+  ],
+  "details": [
+    {
+      "group": "arm_long",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window band, long arm",
+      "points": [[0.36, -0.09], [0.68, -0.12], [0.68, -0.06], [0.36, -0.04]],
+      "min_px": 10
+    },
+    {
+      "group": "arm_mid",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window band, mid arm",
+      "points": [[-0.13, 0.3], [-0.16, 0.55], [-0.1, 0.55], [-0.07, 0.3]],
+      "min_px": 10
+    },
+    {
+      "group": "arm_long",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "docking lamp, long arm tip",
+      "circle": [0.76, -0.06, 0.035],
+      "min_px": 6
+    },
+    {
+      "group": "arm_mid",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "docking lamp, mid arm tip",
+      "circle": [-0.13, 0.63, 0.03],
+      "min_px": 6
+    },
+    {
+      "group": "arm_short",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "docking lamp, short arm tip",
+      "circle": [-0.53, -0.26, 0.028],
+      "min_px": 6
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "identity": "A Vherathi communal hall from the front: one grown resin mass, its roofline rising higher and sharper on the left than the right, with a recessed entry and an off-center cluster of windows following the tallest ridge rather than a symmetric grid.",
+  "tier": "building",
+  "palette": "vherathi_pilot",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~2.7x PLAYER_H tall at its peak, ~3.7x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "grown wall mass, asymmetric roofline (left taller/sharper)",
+      "points": [[-58, 0], [58, 0], [50, -70], [20, -86], [-30, -84], [-58, -55]],
+      "flatten_px": 60
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry recess",
+      "points": [[-12, -34], [12, -34], [12, 0], [-12, 0]],
+      "flatten_px": 20
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "vein trace along the tallest ridge",
+      "points": [[16, -84], [22, -85], [26, -50], [20, -49]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window cluster, biased left toward the tall ridge",
+      "points": [[-38, -68], [-24, -70], [-22, -52], [-36, -50]],
+      "min_px": 12
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "second, smaller window, off-set from the first",
+      "points": [[-14, -60], [-4, -61], [-3, -48], [-13, -47]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "entry vein light",
+      "circle": [0, -36, 2.4],
+      "min_px": 6
+    }
+  ]
+}

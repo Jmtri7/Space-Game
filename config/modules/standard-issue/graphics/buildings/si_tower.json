@@ -1,0 +1,89 @@
+{
+  "identity": "SF Habitation Tower from the front: identical floors stacked straight, no lean, a centerline stripe running the full height, windows in a strict repeating grid.",
+  "tier": "building",
+  "palette": "standard_issue",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~4.2x PLAYER_H tall, ~1.2x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "straight stack, rounded top corners",
+      "points": [[-18, 0], [18, 0], [18, -122], [14, -128], [-14, -128], [-18, -122]],
+      "flatten_px": 40
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, centered at base",
+      "points": [[-7, -16], [7, -16], [7, 0], [-7, 0]],
+      "flatten_px": 15
+    },
+    {
+      "group": "body",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "full-height stripe",
+      "points": [[-2, -128], [2, -128], [2, 0], [-2, 0]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 1 window",
+      "points": [[-9, -34], [-3, -34], [-3, -24], [-9, -24]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 1 window - mirrored pair",
+      "points": [[3, -34], [9, -34], [9, -24], [3, -24]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 2 window",
+      "points": [[-9, -70], [-3, -70], [-3, -60], [-9, -60]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 2 window - mirrored pair",
+      "points": [[3, -70], [9, -70], [9, -60], [3, -60]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 3 window",
+      "points": [[-9, -106], [-3, -106], [-3, -96], [-9, -96]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "floor 3 window - mirrored pair",
+      "points": [[3, -106], [9, -106], [9, -96], [3, -96]],
+      "min_px": 10
+    }
+  ]
+}

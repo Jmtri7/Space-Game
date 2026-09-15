@@ -1,0 +1,15 @@
+{
+  "identity": "A pipe bench from the side: a scuffed steel plank on two pipe legs, no upholstery.",
+  "tier": "decoration",
+  "palette": "deeprock",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "near leg", "points": [[-11, -8], [-8, -8], [-8, 0], [-11, 0]] },
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "far leg", "points": [[8, -8], [11, -8], [11, 0], [8, 0]] },
+    { "group": "body", "color": "hull", "shade": "deep", "note": "seat plank", "points": [[-12, -9.6], [12, -9.6], [12, -7.6], [-12, -7.6]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard corner", "points": [[10, -9.4], [12, -9.4], [12, -7.8], [10, -7.8]], "min_px": 6 }
+  ]
+}

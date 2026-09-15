@@ -1,0 +1,43 @@
+{
+  "identity": "Warden's helm: a full resin helmet enclosing the head from crown to jaw, with a dark visor slit at eye level - heavy coverage, the head equivalent of the pauldrons and breastplate.",
+  "tier": "person",
+  "palette": "vherathi_pilot_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "metal",
+      "shade": "metal",
+      "note": "full helm, crown to jaw",
+      "outset": 0.05,
+      "tag": "vp_warden_helm",
+      "geometry": {
+        "masc": {
+          "points": [[-2.3, -27.0], [-2.4, -29.2], [-1.6, -30.9], [-0.3, -31.5], [1.1, -30.9], [1.9, -29.2], [1.8, -27.0], [1.2, -25.9], [-0.3, -25.6], [-1.7, -25.9]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-2.2, -25.5], [-2.3, -27.7], [-1.5, -29.4], [-0.3, -30.0], [1.05, -29.4], [1.8, -27.7], [1.7, -25.5], [1.1, -24.4], [-0.3, -24.1], [-1.6, -24.4]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "head",
+      "color": "denim",
+      "shade": "deep",
+      "note": "eye-level visor slit",
+      "outset": 0.07,
+      "tag": "vp_warden_helm",
+      "geometry": {
+        "masc": {
+          "points": [[-1.8, -29.3], [1.5, -29.3], [1.5, -28.6], [-1.8, -28.6]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-1.7, -27.8], [1.4, -27.8], [1.4, -27.1], [-1.7, -27.1]],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

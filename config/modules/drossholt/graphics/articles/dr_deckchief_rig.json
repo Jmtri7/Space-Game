@@ -1,0 +1,31 @@
+{
+  "identity": "Deck-chief's tool rig: a rectangular panel over the upper-center torso with a diagonal tool strap - medium coverage, wider than the Tallyman's tabard, short of full plate.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "matte",
+      "note": "chest panel",
+      "outset": 0.03,
+      "tag": "dr_deckchief_rig",
+      "geometry": {
+        "masc": { "points": [[-2.2, -25.3], [2.2, -25.3], [2.2, -19.0], [-2.2, -19.0]], "fits": [] },
+        "femme": { "points": [[-2.1, -23.8], [2.1, -23.8], [2.1, -17.8], [-2.1, -17.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "diagonal tool strap",
+      "outset": 0.05,
+      "tag": "dr_deckchief_rig",
+      "geometry": {
+        "masc": { "points": [[1.9, -25.0], [2.4, -24.6], [-1.6, -19.2], [-2.1, -19.6]], "fits": [] },
+        "femme": { "points": [[1.8, -23.5], [2.3, -23.1], [-1.5, -18.0], [-2.0, -18.4]], "fits": [] }
+      }
+    }
+  ]
+}

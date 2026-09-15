@@ -1,0 +1,22 @@
+{
+  "ships": {
+    "si_shuttle": { "design": "ships/si_shuttle", "culture": "standard_issue", "size": 11, "local_points": [[0.0, -0.85], [0.4, 0.6], [0.32, 0.7], [-0.32, 0.7], [-0.4, 0.6]], "thrusters": [[0.0, 0.66]], "thruster_width": 0.05, "thruster_length": 16 },
+    "si_cutter": { "design": "ships/si_cutter", "culture": "standard_issue", "size": 15, "local_points": [[0.56, -0.8], [0.56, 0.7], [-0.56, 0.7], [-0.56, -0.8]], "thrusters": [[0.34, 0.66], [-0.34, 0.66]], "thruster_width": 0.06, "thruster_length": 18 },
+    "si_transport": { "design": "ships/si_transport", "culture": "standard_issue", "size": 20, "local_points": [[0.0, -0.82], [0.3, -0.5], [0.3, 0.7], [-0.3, 0.7], [-0.3, -0.5]], "thrusters": [[0.0, 0.62]], "thruster_width": 0.07, "thruster_length": 22 }
+  },
+  "space_stations": {
+    "si_spine_ring": { "design": "stations/si_spine_ring", "culture": "standard_issue", "size": 260, "rotation_speed": 0.4, "landing_distance": 90, "windows": [] },
+    "si_octagon": { "design": "stations/si_octagon", "culture": "standard_issue", "size": 240, "rotation_speed": 0.45, "landing_distance": 85, "windows": [] }
+  },
+  "moons": {
+    "si_octagon": { "design": "stations/si_octagon", "culture": "standard_issue", "size": 240, "rotation_speed": 0.45, "landing_distance": 85, "windows": [] }
+  },
+  "outfits": {
+    "si_deckhand_masc": { "body": "human_masc", "set": "si_deckhand", "palette": "standard_issue_dress" },
+    "si_deckhand_femme": { "body": "human_femme", "set": "si_deckhand", "palette": "standard_issue_dress" },
+    "si_flightofficer_masc": { "body": "human_masc", "set": "si_flightofficer", "palette": "standard_issue_dress" },
+    "si_flightofficer_femme": { "body": "human_femme", "set": "si_flightofficer", "palette": "standard_issue_dress" },
+    "si_marshal_masc": { "body": "human_masc", "set": "si_marshal", "palette": "standard_issue_dress" },
+    "si_marshal_femme": { "body": "human_femme", "set": "si_marshal", "palette": "standard_issue_dress" }
+  }
+}

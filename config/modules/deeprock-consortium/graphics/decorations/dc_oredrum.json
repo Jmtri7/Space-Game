@@ -1,0 +1,14 @@
+{
+  "identity": "A stack of riveted ore drums from the side: two unequal-sized drums, one leaning on the other.",
+  "tier": "decoration",
+  "palette": "deeprock",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull", "shade": "matte", "note": "large drum", "points": [[-9, -20], [9, -20], [9, 0], [-9, 0]] },
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "small drum, leaning", "points": [[9, -14], [16, -16], [17, -2], [10, 0]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard band", "points": [[-9, -12], [9, -12], [9, -10], [-9, -10]], "min_px": 10 }
+  ]
+}

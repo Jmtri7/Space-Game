@@ -1,0 +1,77 @@
+{
+  "vp_courier_pilot": {
+    "name": "Tide-pilot Ossira",
+    "role": "courier_pilot",
+    "personality": "Ping-pongs between the ring and the lattice on a fixed schedule, no detours."
+  },
+  "vp_warden_pilot": {
+    "name": "Warden Vaeren",
+    "role": "patrol_officer",
+    "personality": "Circles a lane enclosing both stations, watching for trouble."
+  },
+  "vp_ark_pilot": {
+    "name": "Factor Kataris",
+    "role": "freighter_pilot",
+    "personality": "Runs cargo in and out of the Reef Ring, never strays far."
+  },
+  "dr_courier_pilot": {
+    "name": "Doss Kallen",
+    "role": "courier_pilot",
+    "personality": "Runs the same fixed circuit, no detours, no wasted fuel."
+  },
+  "dr_patrol_pilot": {
+    "name": "Grett Halvorsen",
+    "role": "patrol_officer",
+    "personality": "Circles a lane enclosing both stations, watching for trouble."
+  },
+  "dr_hauler_pilot": {
+    "name": "Tuck Barrow",
+    "role": "freighter_pilot",
+    "personality": "Hauls tanks in and out of the Yard, never strays far."
+  },
+  "si_shuttle_pilot": {
+    "name": "Deckhand Orin Vasse",
+    "role": "courier_pilot",
+    "personality": "Flies the prefab schedule to the letter."
+  },
+  "si_cutter_pilot": {
+    "name": "Flight Officer Reyes",
+    "role": "patrol_officer",
+    "personality": "Circles a lane enclosing both stations, watching for trouble."
+  },
+  "si_transport_pilot": {
+    "name": "Marshal Okafor",
+    "role": "freighter_pilot",
+    "personality": "Runs the transport route, hazard chevrons freshly painted."
+  },
+  "kd_picket_pilot": {
+    "name": "Line Crew Dassen",
+    "role": "courier_pilot",
+    "personality": "Holds the lane, challenges every transponder, escalates on a bad reply."
+  },
+  "kd_bastion_pilot": {
+    "name": "Line Officer Marrow",
+    "role": "patrol_officer",
+    "personality": "Circles a lane enclosing both stations, watching for trouble."
+  },
+  "kd_spearhead_pilot": {
+    "name": "Gate Warden Krell",
+    "role": "freighter_pilot",
+    "personality": "Ferries the garrison's hardware between the Redoubt and the Bulwark."
+  },
+  "dc_scout_pilot": {
+    "name": "Belt Crew Osei",
+    "role": "courier_pilot",
+    "personality": "Runs the belt loop, works a rock, hauls back to the platform."
+  },
+  "dc_carrier_pilot": {
+    "name": "Pit Foreman Raike",
+    "role": "patrol_officer",
+    "personality": "Circles a lane enclosing both stations, watching for trouble."
+  },
+  "dc_gnaw_pilot": {
+    "name": "Consortium Boss Venn",
+    "role": "freighter_pilot",
+    "personality": "Tours the claim in the biggest hull the Consortium owns."
+  }
+}

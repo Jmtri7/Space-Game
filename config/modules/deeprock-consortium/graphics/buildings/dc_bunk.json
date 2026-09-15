@@ -1,0 +1,46 @@
+{
+  "identity": "Mine Camp Bunk from the front: the smallest unit of Consortium housing - a scuffed riveted box, one window, a hazard-taped step.",
+  "tier": "building",
+  "palette": "deeprock",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~1.5x PLAYER_H tall, ~1.1x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "plain box",
+      "points": [[-17, 0], [17, 0], [17, -36], [-17, -36]],
+      "flatten_px": 20
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, off-center",
+      "points": [[-9, -14], [3, -14], [3, 0], [-9, 0]],
+      "flatten_px": 10
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "single window",
+      "points": [[5, -28], [12, -28], [12, -20], [5, -20]],
+      "min_px": 8
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "hazard step tape",
+      "points": [[-9, -1], [3, -1], [3, 0], [-9, 0]],
+      "min_px": 6
+    }
+  ]
+}

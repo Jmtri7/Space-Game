@@ -1,0 +1,6 @@
+{
+  "name": "drossholt",
+  "version": "0.1.0",
+  "description": "The Drossholt Company culture: blunt riveted plate, bolted seams, even mirrored symmetry - the deliberate opposite of Vherathi's asymmetry. Frontier trading/salvage outfit.",
+  "modules": ["figures-human"]
+}

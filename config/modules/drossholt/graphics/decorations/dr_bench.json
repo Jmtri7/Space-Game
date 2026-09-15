@@ -1,0 +1,16 @@
+{
+  "identity": "A riveted plank bench from the side: two identical legs, a flat plank seat and backrest - symmetric, no asymmetric drift.",
+  "tier": "decoration",
+  "palette": "drossholt",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "near leg", "points": [[-11, -8], [-8, -8], [-8, 0], [-11, 0]] },
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "far leg - identical, mirrored", "points": [[8, -8], [11, -8], [11, 0], [8, 0]] },
+    { "group": "body", "color": "hull", "shade": "deep", "note": "seat plank, flat", "points": [[-12, -9.6], [12, -9.6], [12, -7.6], [-12, -7.6]] },
+    { "group": "body", "color": "hull", "shade": "matte", "note": "backrest, flat", "points": [[-12, -15.5], [12, -15.5], [12, -13], [-12, -13]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "glow", "role": "detail", "note": "rivet line", "points": [[-12, -13], [12, -13], [12, -12.4], [-12, -12.4]], "min_px": 20 }
+  ]
+}

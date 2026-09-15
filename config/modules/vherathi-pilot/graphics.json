@@ -1,0 +1,67 @@
+{
+  "ships": {
+    "vp_courier": {
+      "design": "ships/vp_courier",
+      "culture": "vherathi_pilot",
+      "size": 11,
+      "local_points": [[0.0, -1.05], [0.16, 0.7], [0.42, 0.92], [-0.1, 0.9], [-0.13, -0.2]],
+      "thrusters": [[-0.02, 0.86]],
+      "thruster_width": 0.05,
+      "thruster_length": 16
+    },
+    "vp_warden": {
+      "design": "ships/vp_warden",
+      "culture": "vherathi_pilot",
+      "size": 15,
+      "local_points": [[0.0, -0.2], [1.02, -0.4], [0.14, 0.2], [-0.76, -0.34], [-0.1, 0.55]],
+      "thrusters": [[0.98, -0.5], [-0.73, -0.44]],
+      "thruster_width": 0.06,
+      "thruster_length": 20
+    },
+    "vp_ark": {
+      "design": "ships/vp_ark",
+      "culture": "vherathi_pilot",
+      "size": 20,
+      "local_points": [[0.0, -0.85], [0.55, 0.08], [0.5, 0.38], [-0.44, 0.62], [-0.28, 0.82]],
+      "thrusters": [[-0.2, 0.75]],
+      "thruster_width": 0.08,
+      "thruster_length": 24
+    }
+  },
+  "space_stations": {
+    "vp_reef_station": {
+      "design": "stations/vp_reef_station",
+      "culture": "vherathi_pilot",
+      "size": 260,
+      "rotation_speed": 0.05,
+      "landing_distance": 90,
+      "windows": []
+    },
+    "vp_lantern_station": {
+      "design": "stations/vp_lantern_station",
+      "culture": "vherathi_pilot",
+      "size": 240,
+      "rotation_speed": 0.04,
+      "landing_distance": 85,
+      "windows": []
+    }
+  },
+  "moons": {
+    "vp_lantern_station": {
+      "design": "stations/vp_lantern_station",
+      "culture": "vherathi_pilot",
+      "size": 240,
+      "rotation_speed": 0.04,
+      "landing_distance": 85,
+      "windows": []
+    }
+  },
+  "outfits": {
+    "vp_steward_masc": { "body": "human_masc", "set": "vp_steward", "palette": "vherathi_pilot_dress" },
+    "vp_steward_femme": { "body": "human_femme", "set": "vp_steward", "palette": "vherathi_pilot_dress" },
+    "vp_warden_masc": { "body": "human_masc", "set": "vp_warden", "palette": "vherathi_pilot_dress" },
+    "vp_warden_femme": { "body": "human_femme", "set": "vp_warden", "palette": "vherathi_pilot_dress" },
+    "vp_tide_pilot_masc": { "body": "human_masc", "set": "vp_tide_pilot", "palette": "vherathi_pilot_dress" },
+    "vp_tide_pilot_femme": { "body": "human_femme", "set": "vp_tide_pilot", "palette": "vherathi_pilot_dress" }
+  }
+}

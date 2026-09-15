@@ -1,0 +1,33 @@
+{
+  "id": "vp_test",
+  "version": "0.1.0",
+  "name": "Vherathi Pilot Preview",
+  "modules": [
+    "figures-human",
+    "vherathi-pilot",
+    "drossholt",
+    "standard-issue",
+    "kaethar-directorate",
+    "deeprock-consortium",
+    "audio-core",
+    "ships-core",
+    "common-goods",
+    "story-defaults"
+  ],
+  "description": "Throwaway preview story for the culture-design pipeline - not a real story, just somewhere to fly the ships and walk the interiors of every pilot culture module to eyeball the pipeline art.",
+  "difficulty": "easy",
+  "starting_system": "vp_home",
+  "default_outfit": "vp_tide_pilot_masc",
+  "start": {
+    "location": "station",
+    "interior": "vp_concourse",
+    "credits": 5000,
+    "ship": "vp_courier",
+    "items": {},
+    "outfits": [],
+    "flags": {}
+  },
+  "ships": {
+    "player_type": null
+  }
+}

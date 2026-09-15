@@ -1,0 +1,31 @@
+{
+  "identity": "Tallyman's shoulder tab: a flat riveted rectangle over each shoulder, identical both sides - Drossholt symmetry, not Vherathi asymmetry. Light coverage.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "leather",
+      "shade": "matte",
+      "note": "near tab, flat rectangle from neck seam to shoulder edge",
+      "outset": 0.04,
+      "tag": "dr_tally_tab",
+      "geometry": {
+        "masc": { "points": [[1.4, -25.6], [4.6, -25.6], [4.6, -23.5], [1.4, -23.5]], "fits": [] },
+        "femme": { "points": [[1.3, -24.2], [4.2, -24.2], [4.2, -22.3], [1.3, -22.3]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "leather",
+      "shade": "matte",
+      "note": "far tab - exact mirror, full symmetric coverage",
+      "outset": 0.04,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.4, -25.6], [-4.6, -25.6], [-4.6, -23.5], [-1.4, -23.5]], "fits": [] },
+        "femme": { "points": [[-1.3, -24.2], [-4.2, -24.2], [-4.2, -22.3], [-1.3, -22.3]], "fits": [] }
+      }
+    }
+  ]
+}

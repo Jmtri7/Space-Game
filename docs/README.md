@@ -19,6 +19,7 @@ that document as the work crosses areas. You should not need to read every doc.
 | Share config (assets, audio, catalogues) between stories | [CONFIG_MODULES.md](CONFIG_MODULES.md) | [ARCHITECTURE.md](ARCHITECTURE.md), [SAVE_SYSTEM.md](SAVE_SYSTEM.md) |
 | Design or build a new story from scratch | [STORY_DESIGN.md](STORY_DESIGN.md) | [architecture/config-formats.md](architecture/config-formats.md), [CONFIG_MODULES.md](CONFIG_MODULES.md) |
 | Add or change a graphic asset (ship, station, body, outfit, decoration, interior) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md) | [DESIGN_ATLAS.md](DESIGN_ATLAS.md) for the frozen `default`-story art |
+| Design a whole culture's art kit as a module (ships, outfits, stations, buildings...) | [CULTURE_DESIGN.md](CULTURE_DESIGN.md) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md), [CONFIG_MODULES.md](CONFIG_MODULES.md) |
 | Work in the `config/editor.html` vertex editor | [GRAPHICS_EDITOR.md](GRAPHICS_EDITOR.md) | [GRAPHICS_PIPELINE.md](GRAPHICS_PIPELINE.md) |
 | Add an entity, screen, role/routine, or ship type | [architecture/extensibility.md](architecture/extensibility.md) | [architecture/class-hierarchy.md](architecture/class-hierarchy.md), [DESIGN_PATTERNS.md](DESIGN_PATTERNS.md) |
 | Work on weapons, combat, or asteroid mining | [architecture/combat-and-mining.md](architecture/combat-and-mining.md) | [CONTROLS.md](CONTROLS.md) |

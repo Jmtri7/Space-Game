@@ -1,0 +1,5 @@
+{
+  "identity": "Deckhand's rig: light coverage - coveralls, shoes, the garrison cap, shoulder tabs, and the striped tabard.",
+  "palette": "standard_issue_dress",
+  "articles": ["tank_top", "pants", "shoes", "hair_short", "si_deckhand_tabard", "si_deckhand_tab", "si_deckhand_cap"]
+}

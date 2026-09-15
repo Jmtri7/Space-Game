@@ -1,0 +1,82 @@
+{
+  "identity": "SF Cutter - two identical rounded-rect hulls in parallel, joined by a thin connector spar. A twin-hull catamaran, unlike Drossholt's single-core-plus-pods or Vherathi's crescent.",
+  "tier": "ship_near",
+  "palette": "standard_issue",
+  "size": 15,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "hull_r",
+      "color": "hull",
+      "shade": "matte",
+      "note": "starboard hull",
+      "points": [[0.18, -0.8], [0.5, -0.8], [0.56, -0.7], [0.56, 0.6], [0.5, 0.7], [0.18, 0.7], [0.12, 0.6], [0.12, -0.7]]
+    },
+    {
+      "group": "hull_l",
+      "color": "hull",
+      "shade": "matte",
+      "note": "port hull - identical, mirrored",
+      "points": [[-0.18, -0.8], [-0.5, -0.8], [-0.56, -0.7], [-0.56, 0.6], [-0.5, 0.7], [-0.18, 0.7], [-0.12, 0.6], [-0.12, -0.7]]
+    },
+    {
+      "group": "hull_r",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "connector spar",
+      "points": [[-0.14, -0.1], [0.14, -0.1], [0.14, 0.15], [-0.14, 0.15]]
+    },
+    {
+      "group": "hull_r",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "starboard stripe",
+      "points": [[0.28, -0.75], [0.4, -0.75], [0.4, 0.65], [0.28, 0.65]]
+    },
+    {
+      "group": "hull_l",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "port stripe - mirrored",
+      "points": [[-0.28, -0.75], [-0.4, -0.75], [-0.4, 0.65], [-0.28, 0.65]]
+    }
+  ],
+  "details": [
+    {
+      "group": "hull_r",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard hazard chevron",
+      "points": [[0.22, 0.55], [0.46, 0.55], [0.34, 0.68]],
+      "min_px": 8
+    },
+    {
+      "group": "hull_l",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port hazard chevron - mirrored",
+      "points": [[-0.22, 0.55], [-0.46, 0.55], [-0.34, 0.68]],
+      "min_px": 8
+    },
+    {
+      "group": "hull_r",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard thruster",
+      "circle": [0.34, 0.66, 0.06],
+      "min_px": 6
+    },
+    {
+      "group": "hull_l",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port thruster - mirrored",
+      "circle": [-0.34, 0.66, 0.06],
+      "min_px": 6
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "identity": "Drossholt dress palette: ordinary human skin/hair/eyes, work-issue tan/brown fabric and riveted metal.",
+  "skin": "#c69b74",
+  "hair": "#3b2b21",
+  "eye": "#5a4633",
+  "sclera": "#efe8db",
+  "iris": "#6b4a2e",
+  "pupil": "#1a1109",
+  "lip": "#b07a63",
+  "cloth": "#825F41",
+  "denim": "#5A4130",
+  "leather": "#6b4a35",
+  "knit": "#BE9B73",
+  "metal": "#8A6845",
+  "glass": "#FFC850",
+  "lamp": "#FFC94F"
+}

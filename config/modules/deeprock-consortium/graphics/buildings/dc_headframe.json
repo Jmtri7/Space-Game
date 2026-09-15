@@ -1,0 +1,67 @@
+{
+  "identity": "Mine Headframe from the front: a tall open girder tower over the shaft, an asymmetric hoist arm to one side, a floodlamp at the peak. Open frame, not a solid wall.",
+  "tier": "building",
+  "palette": "deeprock",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~4.0x PLAYER_H tall, ~1.4x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "left girder leg",
+      "points": [[-20, 0], [-14, 0], [-6, -118], [-12, -118]]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "right girder leg",
+      "points": [[20, 0], [14, 0], [6, -118], [12, -118]]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "peak cap",
+      "points": [[-12, -118], [12, -118], [8, -128], [-8, -128]]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "asymmetric hoist arm, starboard only",
+      "points": [[6, -100], [26, -108], [26, -102], [8, -95]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "peak floodlamp",
+      "circle": [0, -128, 2.4],
+      "min_px": 6
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "hazard stripe, left leg",
+      "points": [[-16, -50], [-9, -50], [-8.5, -46], [-15.5, -46]],
+      "min_px": 8
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "hazard stripe, right leg - mirrored",
+      "points": [[16, -50], [9, -50], [8.5, -46], [15.5, -46]],
+      "min_px": 8
+    }
+  ]
+}

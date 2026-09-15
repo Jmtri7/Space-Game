@@ -1,0 +1,61 @@
+{
+  "identity": "Tide-pilot's vent pads: a streamlined fairing draping from the neck-shoulder seam fully over both shoulders, identical in size - the near one carries a vent-line seam the far one doesn't, which is the asymmetry. Medium coverage.",
+  "tier": "person",
+  "palette": "vherathi_pilot_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "fairing, near shoulder - reaches medially to the neck seam",
+      "outset": 0.04,
+      "tag": "vp_pilot_vent_pad",
+      "geometry": {
+        "masc": {
+          "points": [[1.4, -25.6], [2.3, -26.4], [3.6, -26.3], [4.4, -25.2], [4.6, -23.5], [3.5, -22.8], [1.9, -23.1], [1.4, -24.2]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[1.3, -24.2], [2.0, -25.0], [3.3, -24.9], [4.0, -23.8], [4.2, -22.1], [3.2, -21.4], [1.8, -21.7], [1.3, -22.8]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "denim",
+      "shade": "matte",
+      "note": "vent-line seam, near",
+      "outset": 0.05,
+      "tag": "vp_pilot_vent_pad",
+      "geometry": {
+        "masc": {
+          "points": [[2.6, -25.9], [3.1, -25.9], [3.7, -24.3], [3.1, -24.0]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[2.4, -24.5], [2.9, -24.5], [3.4, -22.9], [2.8, -22.6]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "far fairing - exact mirror of the near fairing, full coverage over the top of the far arm. No vent-line on this side, which is the asymmetry.",
+      "outset": 0.04,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": {
+          "points": [[-1.4, -25.6], [-2.3, -26.4], [-3.6, -26.3], [-4.4, -25.2], [-4.6, -23.5], [-3.5, -22.8], [-1.9, -23.1], [-1.4, -24.2]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[-1.3, -24.2], [-2.0, -25.0], [-3.3, -24.9], [-4.0, -23.8], [-4.2, -22.1], [-3.2, -21.4], [-1.8, -21.7], [-1.3, -22.8]],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

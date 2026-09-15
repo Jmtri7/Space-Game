@@ -1,0 +1,55 @@
+{
+  "identity": "Flight Officer's shoulder guard: a rounded-rect pad wider than the Deckhand's tab, identical both sides, with a bigger amber hazard corner. Medium coverage.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "metal",
+      "shade": "metal",
+      "note": "near guard",
+      "outset": 0.05,
+      "tag": "si_flightofficer_pad",
+      "geometry": {
+        "masc": { "points": [[1.5, -25.7], [4.7, -25.7], [5.0, -25.4], [5.0, -23.2], [4.7, -22.9], [1.5, -22.9]], "fits": [] },
+        "femme": { "points": [[1.4, -24.3], [4.3, -24.3], [4.6, -24.0], [4.6, -21.9], [4.3, -21.6], [1.4, -21.6]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "hazard corner, near",
+      "outset": 0.07,
+      "tag": "si_flightofficer_pad",
+      "geometry": {
+        "masc": { "points": [[4.2, -23.4], [4.8, -23.4], [4.8, -23.0], [4.2, -23.0]], "fits": [] },
+        "femme": { "points": [[3.8, -22.0], [4.4, -22.0], [4.4, -21.6], [3.8, -21.6]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far guard - exact mirror, full symmetric coverage",
+      "outset": 0.05,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.5, -25.7], [-4.7, -25.7], [-5.0, -25.4], [-5.0, -23.2], [-4.7, -22.9], [-1.5, -22.9]], "fits": [] },
+        "femme": { "points": [[-1.4, -24.3], [-4.3, -24.3], [-4.6, -24.0], [-4.6, -21.9], [-4.3, -21.6], [-1.4, -21.6]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "hazard corner, far",
+      "outset": 0.07,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-4.2, -23.4], [-4.8, -23.4], [-4.8, -23.0], [-4.2, -23.0]], "fits": [] },
+        "femme": { "points": [[-3.8, -22.0], [-4.4, -22.0], [-4.4, -21.6], [-3.8, -21.6]], "fits": [] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "identity": "Warden's turnout: heaviest coverage in the culture - a full breastplate and full helm over the everyday tank and trousers, duty boots, and pauldrons on both shoulders (the near one bulky). Hair is dropped since the helm covers it entirely.",
+  "palette": "vherathi_pilot_dress",
+  "articles": [
+    "tank_top",
+    "pants",
+    "duty_boots",
+    "vp_warden_breastplate",
+    "vp_warden_pauldron",
+    "vp_warden_helm"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "ships": {
+    "dc_scout": { "design": "ships/dc_scout", "culture": "deeprock_consortium", "size": 11, "local_points": [[0.0, -0.85], [0.52, 0.25], [0.25, 0.5], [-0.28, 0.55], [-0.28, -0.55]], "thrusters": [[0.0, 0.66]], "thruster_width": 0.05, "thruster_length": 16 },
+    "dc_carrier": { "design": "ships/dc_carrier", "culture": "deeprock_consortium", "size": 16, "local_points": [[0.0, -0.7], [0.72, 0.28], [0.08, 0.55], [-0.46, 0.25]], "thrusters": [[0.0, 0.52]], "thruster_width": 0.06, "thruster_length": 18 },
+    "dc_gnaw": { "design": "ships/dc_gnaw", "culture": "deeprock_consortium", "size": 22, "local_points": [[0.0, -0.85], [0.4, -0.04], [0.4, 0.58], [-0.4, 0.58], [-0.4, -0.04]], "thrusters": [[0.0, 0.5]], "thruster_width": 0.07, "thruster_length": 22 }
+  },
+  "space_stations": {
+    "dc_platform": { "design": "stations/dc_platform", "culture": "deeprock_consortium", "size": 260, "rotation_speed": 0.08, "landing_distance": 95, "windows": [] },
+    "dc_rig": { "design": "stations/dc_rig", "culture": "deeprock_consortium", "size": 240, "rotation_speed": 0.06, "landing_distance": 85, "windows": [] }
+  },
+  "moons": {
+    "dc_rig": { "design": "stations/dc_rig", "culture": "deeprock_consortium", "size": 240, "rotation_speed": 0.06, "landing_distance": 85, "windows": [] }
+  },
+  "outfits": {
+    "dc_boss_masc": { "body": "human_masc", "set": "dc_boss", "palette": "deeprock_dress" },
+    "dc_boss_femme": { "body": "human_femme", "set": "dc_boss", "palette": "deeprock_dress" },
+    "dc_foreman_masc": { "body": "human_masc", "set": "dc_foreman", "palette": "deeprock_dress" },
+    "dc_foreman_femme": { "body": "human_femme", "set": "dc_foreman", "palette": "deeprock_dress" },
+    "dc_beltcrew_masc": { "body": "human_masc", "set": "dc_beltcrew", "palette": "deeprock_dress" },
+    "dc_beltcrew_femme": { "body": "human_femme", "set": "dc_beltcrew", "palette": "deeprock_dress" }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "vherathi-pilot",
+  "version": "0.1.0",
+  "description": "Pilot module for the Vherathi Concord culture, distilled from config/stories/default/atlases/vherathi-concord.html: grown resin-crystal hulls and architecture, asymmetric and bioluminescent-veined. Placeholder/experimental - defines the per-culture module authoring process, not wired into any story yet.",
+  "modules": ["figures-human"]
+}

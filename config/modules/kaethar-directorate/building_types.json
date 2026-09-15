@@ -1,0 +1,8 @@
+{
+  "kd_garrison": { "culture": "kaethar_directorate", "name": "Garrison Block", "description": "A flat gunmetal garrison mass, red chevron over the entry.", "design": "buildings/kd_garrison", "footprint": { "width": 112, "depth": 40.0 } },
+  "kd_muster_spine": { "culture": "kaethar_directorate", "name": "Muster Spine", "description": "A rigid stepped tower, each tier narrower than the last.", "design": "buildings/kd_muster_spine", "footprint": { "width": 40, "depth": 22.0 } },
+  "kd_cell": { "culture": "kaethar_directorate", "name": "Cell Block", "description": "The smallest garrison unit - a plain gunmetal box.", "design": "buildings/kd_cell", "footprint": { "width": 34, "depth": 18.0 } },
+  "kd_bench": { "culture": "kaethar_directorate", "name": "Bolted Bench", "description": "Issue furniture stripped to the frame.", "design": "decorations/kd_bench", "footprint": { "width": 24, "depth": 9.0 } },
+  "kd_rack": { "culture": "kaethar_directorate", "name": "Kit Rack", "description": "A plain riveted frame with three shelf slots.", "design": "decorations/kd_rack", "footprint": { "width": 18, "depth": 8.0 } },
+  "kd_marker": { "culture": "kaethar_directorate", "name": "Sigil Marker", "description": "A floor-set unit sigil marker post.", "design": "decorations/kd_marker", "footprint": { "width": 6, "depth": 5.0 } }
+}

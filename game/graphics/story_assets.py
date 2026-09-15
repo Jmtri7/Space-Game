@@ -62,10 +62,11 @@ def get_floor_pattern(story, name):
 
 @functools.lru_cache(maxsize=None)
 def _expand_craft(story, ref, palette_name, lod, scale):
-    """A ship or station design -> parts list. `scale` multiplies every
-    coordinate: 1 for a ship (Ship.draw passes unit=size itself), the
-    design's own `size` for a station (LandingSite.draw passes unit=1, so
-    its parts are authored in absolute units - see graphics.json)."""
+    """A ship, station, or design-JSON moon -> parts list. `scale` multiplies
+    every coordinate: 1 for a ship (Ship.draw passes unit=size itself), the
+    design's own `size` for a station or moon (LandingSite.draw passes
+    unit=1 either way, so its parts are authored in absolute units - see
+    graphics.json)."""
     kind, name = ref.split("/", 1)
     design = _load(story, kind, name + ".json")
     if design is None:
@@ -104,8 +105,9 @@ def _design_view(story, ref):
 
 def attach_design(story, entry, kind="ships"):
     """If `entry` carries a `"design"` ref, expand it and attach `"parts"`.
-    `kind` is the graphics.json category: "space_stations" parts are scaled
-    to absolute units, "decorations" stay absolute, "ships" stay fractional.
+    `kind` is the graphics.json category: "space_stations"/"moons" parts are
+    scaled to absolute units (LandingSite draws either at unit=1 - see
+    _expand_craft), "decorations" stay absolute, "ships" stay fractional.
     Returns the same dict (mutated). A no-op for a plain inline entry."""
     ref = entry.get("design")
     if not ref:
@@ -118,7 +120,7 @@ def attach_design(story, entry, kind="ships"):
         if view:
             entry["view"] = view          # "elevation" -> LocationScreen billboards it
     else:
-        entry["parts"] = list(_expand_craft(story, ref, pal, lod, kind == "space_stations"))
+        entry["parts"] = list(_expand_craft(story, ref, pal, lod, kind in ("space_stations", "moons")))
     return entry
 
 

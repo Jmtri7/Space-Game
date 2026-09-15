@@ -1,0 +1,22 @@
+{
+  "identity": "Kaethar Redoubt - a cross-plan fortress ring: a square gunmetal core with four forward-swept docking spurs, red chevron trim on every spur edge, a spinal comms mast. No curve on the whole structure.",
+  "tier": "station",
+  "palette": "kaethar",
+  "size": 50,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "core", "color": "hull", "shade": "matte", "note": "square core", "points": [[-0.28, -0.28], [0.28, -0.28], [0.28, 0.28], [-0.28, 0.28]] },
+    { "group": "spur_n", "color": "hull_dk", "shade": "deep", "note": "north spur, forward-swept", "points": [[-0.14, -0.28], [0.2, -0.28], [0.3, -0.7], [0.05, -0.72]] },
+    { "group": "spur_s", "color": "hull_dk", "shade": "deep", "note": "south spur - mirrored pair", "points": [[0.14, 0.28], [-0.2, 0.28], [-0.3, 0.7], [-0.05, 0.72]] },
+    { "group": "spur_e", "color": "hull_dk", "shade": "deep", "note": "east spur, forward-swept", "points": [[0.28, -0.14], [0.28, 0.2], [0.7, 0.3], [0.72, 0.05]] },
+    { "group": "spur_w", "color": "hull_dk", "shade": "deep", "note": "west spur - mirrored pair", "points": [[-0.28, 0.14], [-0.28, -0.2], [-0.7, -0.3], [-0.72, -0.05]] },
+    { "group": "core", "color": "hull", "shade": "matte", "note": "spinal comms mast", "points": [[-0.03, -0.28], [0.03, -0.28], [0.03, -0.95], [-0.03, -0.95]] }
+  ],
+  "details": [
+    { "group": "core", "color": "lamp", "shade": "glow", "role": "detail", "note": "mast lamp", "circle": [0.0, -0.95, 0.03], "min_px": 6 },
+    { "group": "spur_n", "color": "lamp", "shade": "flat", "role": "detail", "note": "chevron, north spur", "points": [[0.0, -0.62], [0.2, -0.58], [0.1, -0.5]], "min_px": 8 },
+    { "group": "spur_s", "color": "lamp", "shade": "flat", "role": "detail", "note": "chevron, south spur - mirrored", "points": [[0.0, 0.62], [-0.2, 0.58], [-0.1, 0.5]], "min_px": 8 },
+    { "group": "spur_e", "color": "lamp", "shade": "flat", "role": "detail", "note": "chevron, east spur", "points": [[0.62, 0.0], [0.58, 0.2], [0.5, 0.1]], "min_px": 8 },
+    { "group": "spur_w", "color": "lamp", "shade": "flat", "role": "detail", "note": "chevron, west spur - mirrored", "points": [[-0.62, 0.0], [-0.58, -0.2], [-0.5, -0.1]], "min_px": 8 }
+  ]
+}

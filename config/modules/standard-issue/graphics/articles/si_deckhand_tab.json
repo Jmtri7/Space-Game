@@ -1,0 +1,55 @@
+{
+  "identity": "Deckhand's shoulder tab: a small rounded-rect pad (chamfered corners, not sharp) over each shoulder, identical both sides, with an amber hazard corner. Light coverage.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "near tab, rounded corners",
+      "outset": 0.04,
+      "tag": "si_deckhand_tab",
+      "geometry": {
+        "masc": { "points": [[1.7, -25.6], [4.3, -25.6], [4.6, -25.3], [4.6, -23.8], [4.3, -23.5], [1.7, -23.5]], "fits": [] },
+        "femme": { "points": [[1.6, -24.2], [3.9, -24.2], [4.2, -23.9], [4.2, -22.5], [3.9, -22.2], [1.6, -22.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "hazard corner, near",
+      "outset": 0.06,
+      "tag": "si_deckhand_tab",
+      "geometry": {
+        "masc": { "points": [[3.9, -23.8], [4.4, -23.8], [4.4, -23.5], [3.9, -23.5]], "fits": [] },
+        "femme": { "points": [[3.5, -22.5], [4.0, -22.5], [4.0, -22.2], [3.5, -22.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "cloth",
+      "shade": "matte",
+      "note": "far tab - exact mirror, full symmetric coverage",
+      "outset": 0.04,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.7, -25.6], [-4.3, -25.6], [-4.6, -25.3], [-4.6, -23.8], [-4.3, -23.5], [-1.7, -23.5]], "fits": [] },
+        "femme": { "points": [[-1.6, -24.2], [-3.9, -24.2], [-4.2, -23.9], [-4.2, -22.5], [-3.9, -22.2], [-1.6, -22.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "hazard corner, far",
+      "outset": 0.06,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-3.9, -23.8], [-4.4, -23.8], [-4.4, -23.5], [-3.9, -23.5]], "fits": [] },
+        "femme": { "points": [[-3.5, -22.5], [-4.0, -22.5], [-4.0, -22.2], [-3.5, -22.2]], "fits": [] }
+      }
+    }
+  ]
+}

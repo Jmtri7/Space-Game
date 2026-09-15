@@ -1,0 +1,8 @@
+{
+  "dc_headframe": { "culture": "deeprock_consortium", "name": "Mine Headframe", "description": "An open girder tower over the shaft, asymmetric hoist arm.", "design": "buildings/dc_headframe", "footprint": { "width": 40, "depth": 22.0 } },
+  "dc_shed": { "culture": "deeprock_consortium", "name": "Processing Shed", "description": "A riveted drum silo bolted to a low shed mass.", "design": "buildings/dc_shed", "footprint": { "width": 104, "depth": 40.0 } },
+  "dc_bunk": { "culture": "deeprock_consortium", "name": "Mine Camp Bunk", "description": "The smallest unit of Consortium housing.", "design": "buildings/dc_bunk", "footprint": { "width": 34, "depth": 18.0 } },
+  "dc_pipebench": { "culture": "deeprock_consortium", "name": "Pipe Bench", "description": "A scuffed steel plank on pipe legs.", "design": "decorations/dc_pipebench", "footprint": { "width": 24, "depth": 9.0 } },
+  "dc_toolboard": { "culture": "deeprock_consortium", "name": "Tool Board", "description": "A riveted panel with tool hooks.", "design": "decorations/dc_toolboard", "footprint": { "width": 20, "depth": 8.0 } },
+  "dc_oredrum": { "culture": "deeprock_consortium", "name": "Ore Drums", "description": "A stack of two unequal riveted ore drums.", "design": "decorations/dc_oredrum", "footprint": { "width": 20, "depth": 14.0 } }
+}

@@ -1,0 +1,64 @@
+{
+  "identity": "A Vherathi housing spire from the front: a single tall tapering resin column, leaning very slightly off vertical, with three window-veins climbing one face and no symmetric grid.",
+  "tier": "building",
+  "palette": "vherathi_pilot",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~4.5x PLAYER_H tall, ~1.3x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tapering column, leaning slightly right at the crown",
+      "points": [[-20, 0], [20, 0], [16, -80], [22, -130], [8, -140], [-16, -110]],
+      "flatten_px": 40
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry recess at the base",
+      "points": [[-8, -18], [8, -18], [8, 0], [-8, 0]],
+      "flatten_px": 15
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "vein climbing the leaning face, low",
+      "points": [[10, -30], [14, -30], [15, -70], [11, -70]],
+      "min_px": 8
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "vein continuing, mid",
+      "points": [[14, -75], [18, -75], [19, -105], [15, -105]],
+      "min_px": 8
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "single window near the crown",
+      "points": [[2, -118], [12, -119], [11, -104], [3, -103]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "crown lantern",
+      "circle": [8, -138, 2.0],
+      "min_px": 6
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "identity": "A riveted lamp post from the side: a perfectly straight pole, no lean, a square lamp head - the blunt opposite of the Vherathi lantern stalk.",
+  "tier": "decoration",
+  "palette": "drossholt",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "straight pole", "points": [[-1.4, 0], [1.4, 0], [1.4, -32], [-1.4, -32]] },
+    { "group": "body", "color": "hull", "shade": "matte", "note": "square lamp head", "points": [[-3, -32], [3, -32], [3, -37], [-3, -37]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "glow", "role": "detail", "note": "lamp glow", "circle": [0, -34.5, 2.2], "min_px": 6 }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "identity": "Kaethar Picket - a hard arrowhead hull, single sharp forward point, mirrored symmetric sides, red chevron trim at the nose. The smallest, sharpest Kaethar silhouette.",
+  "tier": "ship_near",
+  "palette": "kaethar",
+  "size": 11,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "hull",
+      "color": "hull",
+      "shade": "matte",
+      "note": "sharp arrowhead",
+      "points": [[0.0, -1.0], [0.3, -0.3], [0.35, 0.5], [0.15, 0.7], [-0.15, 0.7], [-0.35, 0.5], [-0.3, -0.3]]
+    },
+    {
+      "group": "hull",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "canopy, centered",
+      "points": [[-0.1, -0.55], [0.1, -0.55], [0.1, -0.15], [-0.1, -0.15]]
+    }
+  ],
+  "details": [
+    {
+      "group": "hull",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "nose chevron",
+      "points": [[-0.1, -0.95], [0.1, -0.95], [0.0, -0.8]],
+      "min_px": 6
+    },
+    {
+      "group": "hull",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard thruster",
+      "circle": [0.2, 0.66, 0.05],
+      "min_px": 6
+    },
+    {
+      "group": "hull",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port thruster - mirrored",
+      "circle": [-0.2, 0.66, 0.05],
+      "min_px": 6
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "identity": "Deck-chief's hard hat: a blunt riveted dome covering the crown down to ear level, face left open - medium coverage, more than the Tallyman's cap, less than the Gun-bosun's full helm.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "metal",
+      "shade": "metal",
+      "note": "hard hat dome, crown to ear level",
+      "outset": 0.05,
+      "tag": "dr_deckchief_hardhat",
+      "geometry": {
+        "masc": { "points": [[-2.2, -28.6], [-2.3, -30.3], [-0.3, -31.0], [1.7, -30.3], [1.6, -28.6], [-0.3, -28.9]], "fits": [] },
+        "femme": { "points": [[-2.1, -27.1], [-2.2, -28.8], [-0.3, -29.5], [1.6, -28.8], [1.5, -27.1], [-0.3, -27.4]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "center ridge rivet line",
+      "outset": 0.07,
+      "tag": "dr_deckchief_hardhat",
+      "geometry": {
+        "masc": { "points": [[-0.5, -29.0], [0.1, -29.0], [0.1, -30.7], [-0.5, -30.7]], "fits": [] },
+        "femme": { "points": [[-0.5, -27.5], [0.1, -27.5], [0.1, -29.2], [-0.5, -29.2]], "fits": [] }
+      }
+    }
+  ]
+}

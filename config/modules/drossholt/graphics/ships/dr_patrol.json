@@ -1,0 +1,73 @@
+{
+  "identity": "Drossholt Cutter - a flat rectangular core with a mirrored pair of side pods and a short tail spike. Wide and flat, unlike the courier's tall block.",
+  "tier": "ship_near",
+  "palette": "drossholt",
+  "size": 15,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "flat rectangular core",
+      "points": [[-0.3, -0.5], [0.3, -0.5], [0.3, 0.3], [-0.3, 0.3]]
+    },
+    {
+      "group": "pod_r",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "starboard pod - mirrored pair",
+      "points": [[0.3, -0.2], [0.78, -0.25], [0.82, 0.15], [0.3, 0.2]]
+    },
+    {
+      "group": "pod_l",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "port pod - mirrored pair",
+      "points": [[-0.3, -0.2], [-0.78, -0.25], [-0.82, 0.15], [-0.3, 0.2]]
+    },
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tail spike",
+      "points": [[-0.15, 0.28], [0.15, 0.28], [0.1, 0.55], [-0.1, 0.55]]
+    },
+    {
+      "group": "core",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "canopy window, centered",
+      "points": [[-0.12, -0.42], [0.12, -0.42], [0.12, -0.1], [-0.12, -0.1]]
+    }
+  ],
+  "details": [
+    {
+      "group": "pod_r",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard pod thruster",
+      "circle": [0.78, 0.1, 0.06],
+      "min_px": 6
+    },
+    {
+      "group": "pod_l",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port pod thruster - mirrored",
+      "circle": [-0.78, 0.1, 0.06],
+      "min_px": 6
+    },
+    {
+      "group": "core",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "tail thruster",
+      "circle": [0.0, 0.52, 0.05],
+      "min_px": 6
+    }
+  ]
+}

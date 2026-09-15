@@ -1,0 +1,56 @@
+{
+  "vherathi_pilot": {
+    "name": "The Vherathi Concord (pilot)",
+    "description": "Preview-story copy of the pilot culture, just enough for color resolution.",
+    "metal_color": [72, 48, 96],
+    "glass_color": [120, 255, 200],
+    "thrust_color": [220, 90, 255],
+    "wall_color": [58, 38, 78],
+    "floor_color": [110, 85, 125],
+    "wall_trim_color": [150, 120, 170]
+  },
+  "drossholt": {
+    "name": "The Drossholt Company",
+    "description": "A frontier trading and salvage outfit. Blunt riveted plate, bolted seams, even mirrored symmetry - the deliberate opposite of Vherathi asymmetry.",
+    "metal_color": [200, 150, 100],
+    "glass_color": [255, 200, 80],
+    "thrust_color": [255, 140, 60],
+    "wall_color": [130, 95, 65],
+    "floor_color": [190, 155, 115],
+    "wall_trim_color": [90, 65, 45]
+  },
+  "standard_issue": {
+    "name": "The Sol Federation",
+    "description": "The civil authority that runs the neutral stations. Prefab, painted, interchangeable modules - rounded fillets, a white centerline stripe, amber hazard chevrons.",
+    "metal_color": [65, 80, 106],
+    "glass_color": [207, 224, 240],
+    "thrust_color": [140, 185, 255],
+    "wall_color": [42, 52, 68],
+    "floor_color": [90, 104, 124],
+    "wall_trim_color": [200, 214, 226]
+  },
+  "kaethar_directorate": {
+    "name": "The Kaethar Directorate",
+    "description": "A cold, hierarchical military power that garrisons the lanes. Hard angles, gunmetal, one warning colour and nothing else - from the warships down to the mess-hall bench.",
+    "metal_color": [58, 63, 71],
+    "glass_color": [207, 214, 222],
+    "thrust_color": [159, 192, 216],
+    "wall_color": [40, 44, 51],
+    "floor_color": [90, 96, 106],
+    "wall_trim_color": [214, 64, 44],
+    "theme": "Kaethar hulls and buildings are stern angular masses - a hard arrowhead or flat gunmetal wall with recessed panel seams, never a curve. Red chevron trim marks every doorway, hatch, and hardpoint - the culture's one warning colour and nothing else. Windows and lights run in strict rows, mirrored pairs, no asymmetry.",
+    "naming": "PLACES: a system is a garrison designation, the star a bare number. Assets are a function plus a rank word - 'Redoubt', 'Muster Spine', 'Watch Post'. PEOPLE: rank plus surname (Gate Warden, Line Officer). Ships are a duty plus a hard noun (Picket, Bastion, Spearhead)."
+  },
+  "deeprock_consortium": {
+    "name": "The Deeprock Mining Consortium",
+    "description": "A working consortium of belt crews and ore haulers. Hardware built around the job it does, painted only where a warning is needed.",
+    "metal_color": [92, 82, 74],
+    "glass_color": [255, 224, 120],
+    "thrust_color": [255, 150, 70],
+    "wall_color": [65, 58, 52],
+    "floor_color": [110, 98, 88],
+    "wall_trim_color": [214, 176, 60],
+    "theme": "Deeprock hardware is front-heavy and functional - a toothed crusher jaw, riveted tank segments, a rung conveyor ridge, an asymmetric ore chute. Hazard yellow only at what needs a warning (vents, chute edges, dock claws) - everything else stays plain riveted metal.",
+    "naming": "PLACES: a claim number plus what was found there. Assets are the job itself - 'Mine Headframe', 'Processing Shed', 'Mine Camp'. PEOPLE: a role plus surname (Pit Foreman, Belt Crew). Ships are named for the job (Scout, Carrier, Gnaw)."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "identity": "Drossholt ship/building palette: warm tan-orange plate, a darker riveted seam tone, amber glass, orange thruster glow.",
+  "hull": "#C89664",
+  "hull_dk": "#8A6845",
+  "engine": "#5A4130",
+  "metal": "#5A4130",
+  "glass": "#FFC850",
+  "lamp": "#FFC94F",
+  "thrust": "#FF8C3C"
+}

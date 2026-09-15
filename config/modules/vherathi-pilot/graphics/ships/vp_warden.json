@@ -1,0 +1,75 @@
+{
+  "identity": "Vein-Warden - a wide crescent, two swept wing-blades opening forward from a small central hub like a boomerang. Reads as broad and low, the opposite silhouette of the courier's needle - width far exceeds length.",
+  "tier": "ship_near",
+  "palette": "vherathi_pilot",
+  "size": 15,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "hub",
+      "color": "hull",
+      "shade": "matte",
+      "note": "small central hub",
+      "points": [[-0.1, -0.2], [0.1, -0.2], [0.14, 0.1], [0.0, 0.2], [-0.14, 0.1]]
+    },
+    {
+      "group": "wing_r",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "long starboard wing-blade, sweeping forward",
+      "points": [[0.06, -0.15], [0.95, -0.62], [1.02, -0.4], [0.7, -0.05], [0.18, 0.08]]
+    },
+    {
+      "group": "wing_l",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "shorter port wing-blade, deliberately uneven with starboard",
+      "points": [[-0.06, -0.15], [-0.7, -0.55], [-0.76, -0.34], [-0.5, -0.02], [-0.14, 0.08]]
+    },
+    {
+      "group": "tail",
+      "color": "hull",
+      "shade": "matte",
+      "note": "short tail spike, off-center",
+      "points": [[-0.06, 0.15], [0.1, 0.18], [0.06, 0.55], [-0.08, 0.5]]
+    }
+  ],
+  "details": [
+    {
+      "group": "hub",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "canopy at the hub",
+      "points": [[-0.05, -0.1], [0.05, -0.1], [0.05, 0.02], [-0.05, 0.02]],
+      "min_px": 8
+    },
+    {
+      "group": "wing_r",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "starboard wingtip thruster",
+      "circle": [0.98, -0.5, 0.06],
+      "min_px": 6
+    },
+    {
+      "group": "wing_l",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "port wingtip thruster, smaller - matches the shorter wing",
+      "circle": [-0.73, -0.44, 0.045],
+      "min_px": 6
+    },
+    {
+      "group": "tail",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "tail vein light",
+      "circle": [0.0, 0.5, 0.04],
+      "min_px": 6
+    }
+  ]
+}

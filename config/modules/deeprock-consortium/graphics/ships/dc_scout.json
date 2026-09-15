@@ -1,0 +1,66 @@
+{
+  "identity": "Deeprock Scout - a front-heavy hauler: a toothed rock-crusher jaw at the nose, a riveted tank body, and a single asymmetric ore chute to starboard. Functional, not symmetric.",
+  "tier": "ship_near",
+  "palette": "deeprock",
+  "size": 11,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "jaw",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "toothed crusher jaw, jagged nose",
+      "points": [[-0.28, -0.55], [-0.2, -0.85], [-0.1, -0.6], [0.0, -0.85], [0.1, -0.6], [0.2, -0.85], [0.28, -0.55]]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tank body",
+      "points": [[-0.25, -0.58], [0.25, -0.58], [0.25, 0.5], [-0.25, 0.5]]
+    },
+    {
+      "group": "chute",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "asymmetric ore chute, starboard only",
+      "points": [[0.25, 0.1], [0.52, 0.25], [0.46, 0.46], [0.25, 0.36]]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "tail",
+      "points": [[-0.12, 0.5], [0.12, 0.5], [0.08, 0.7], [-0.08, 0.7]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window",
+      "points": [[-0.12, -0.35], [0.12, -0.35], [0.12, -0.1], [-0.12, -0.1]],
+      "min_px": 8
+    },
+    {
+      "group": "chute",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "hazard stripe, chute",
+      "points": [[0.3, 0.15], [0.45, 0.22], [0.42, 0.3], [0.28, 0.24]],
+      "min_px": 6
+    },
+    {
+      "group": "body",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "thruster glow",
+      "circle": [0.0, 0.66, 0.06],
+      "min_px": 6
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "identity": "Gun-bosun's chest plate: a near-full-torso riveted rectangle with a rivet-grid accent - heavy coverage, the widest and tallest torso item of the three roles.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "full plate",
+      "outset": 0.05,
+      "tag": "dr_bosun_plate",
+      "geometry": {
+        "masc": { "points": [[-3.5, -25.4], [3.5, -25.4], [3.5, -15.3], [-3.5, -15.3]], "fits": [] },
+        "femme": { "points": [[-3.3, -23.9], [3.3, -23.9], [3.3, -14.4], [-3.3, -14.4]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "denim",
+      "shade": "deep",
+      "note": "rivet-grid accent band",
+      "outset": 0.07,
+      "tag": "dr_bosun_plate",
+      "geometry": {
+        "masc": { "points": [[-3.0, -22.0], [3.0, -22.0], [3.0, -21.0], [-3.0, -21.0]], "fits": [] },
+        "femme": { "points": [[-2.85, -20.7], [2.85, -20.7], [2.85, -19.7], [-2.85, -19.7]], "fits": [] }
+      }
+    }
+  ]
+}

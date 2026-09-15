@@ -1,0 +1,19 @@
+{
+  "identity": "Tallyman's cap: a flat riveted band across the crown, blunt and rectangular - no dome, no lean. Light coverage.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "leather",
+      "shade": "matte",
+      "note": "flat crown band, ear to ear",
+      "outset": 0.04,
+      "tag": "dr_tally_cap",
+      "geometry": {
+        "masc": { "points": [[-2.1, -29.0], [1.6, -29.2], [1.7, -30.4], [-2.2, -30.2]], "fits": [] },
+        "femme": { "points": [[-2.0, -27.5], [1.5, -27.7], [1.6, -28.9], [-2.1, -28.7]], "fits": [] }
+      }
+    }
+  ]
+}

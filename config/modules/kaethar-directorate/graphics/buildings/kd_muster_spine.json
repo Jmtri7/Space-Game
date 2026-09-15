@@ -1,0 +1,69 @@
+{
+  "identity": "Kaethar Muster Spine from the front: a straight stepped tower, each tier narrower than the one below, a red chevron marking every tier line. Rigid and stacked, not tapering smoothly.",
+  "tier": "building",
+  "palette": "kaethar",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~4.2x PLAYER_H tall, ~1.3x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tier 1, widest",
+      "points": [[-20, 0], [20, 0], [20, -50], [-20, -50]],
+      "flatten_px": 40
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "tier 2, narrower",
+      "points": [[-14, -50], [14, -50], [14, -95], [-14, -95]]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tier 3, narrowest",
+      "points": [[-8, -95], [8, -95], [8, -130], [-8, -130]]
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, centered at base",
+      "points": [[-7, -16], [7, -16], [7, 0], [-7, 0]],
+      "flatten_px": 15
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "tier line, 1-2",
+      "points": [[-14, -50], [14, -50], [14, -48], [-14, -48]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "tier line, 2-3",
+      "points": [[-8, -95], [8, -95], [8, -93], [-8, -93]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "roof lamp",
+      "circle": [0, -130, 2.2],
+      "min_px": 6
+    }
+  ]
+}

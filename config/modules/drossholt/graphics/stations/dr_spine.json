@@ -1,0 +1,17 @@
+{
+  "identity": "Drossholt Spine - a long straight rectangular spine with a mirrored pair of pods at each end, perfectly vertical. The blunt opposite of a leaning Vherathi mast.",
+  "tier": "station",
+  "palette": "drossholt",
+  "size": 44,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "spine", "color": "hull", "shade": "matte", "note": "straight spine", "points": [[-0.15, -0.9], [0.15, -0.9], [0.15, 0.9], [-0.15, 0.9]] },
+    { "group": "pod_top", "color": "hull_dk", "shade": "deep", "note": "top pod", "points": [[-0.42, -0.9], [0.42, -0.9], [0.35, -0.6], [-0.35, -0.6]] },
+    { "group": "pod_bottom", "color": "hull_dk", "shade": "deep", "note": "bottom pod - mirrored pair", "points": [[-0.42, 0.9], [0.42, 0.9], [0.35, 0.6], [-0.35, 0.6]] }
+  ],
+  "details": [
+    { "group": "spine", "color": "glass", "shade": "sheen", "role": "detail", "note": "window band", "points": [[-0.08, -0.4], [0.08, -0.4], [0.08, 0.4], [-0.08, 0.4]], "min_px": 10 },
+    { "group": "pod_top", "color": "lamp", "shade": "glow", "role": "detail", "note": "top dock lamp", "circle": [0.0, -0.72, 0.04], "min_px": 6 },
+    { "group": "pod_bottom", "color": "lamp", "shade": "glow", "role": "detail", "note": "bottom dock lamp - mirrored", "circle": [0.0, 0.72, 0.04], "min_px": 6 }
+  ]
+}

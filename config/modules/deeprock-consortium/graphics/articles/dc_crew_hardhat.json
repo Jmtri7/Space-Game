@@ -1,0 +1,55 @@
+{
+  "identity": "Belt Crew's hard hat: a riveted dome with side ear-defenders covering the crown, ears, and brow - the Consortium's signature piece, that no other culture wears. Heavy coverage.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "metal",
+      "shade": "metal",
+      "note": "hard hat dome, crown to brow",
+      "outset": 0.05,
+      "tag": "dc_crew_hardhat",
+      "geometry": {
+        "masc": { "points": [[-2.2, -28.7], [-2.3, -30.4], [-0.3, -31.1], [1.8, -30.4], [1.7, -28.7], [-0.3, -29.0]], "fits": [] },
+        "femme": { "points": [[-2.1, -27.2], [-2.2, -28.9], [-0.3, -29.6], [1.7, -28.9], [1.6, -27.2], [-0.3, -27.5]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "denim",
+      "shade": "deep",
+      "note": "near ear-defender cup",
+      "outset": 0.08,
+      "tag": "dc_crew_hardhat",
+      "geometry": {
+        "masc": { "points": [[1.2, -28.9], [2.1, -28.7], [2.3, -27.6], [1.6, -27.0], [0.9, -27.7]], "fits": [] },
+        "femme": { "points": [[1.1, -27.4], [1.95, -27.2], [2.15, -26.1], [1.5, -25.5], [0.85, -26.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "denim",
+      "shade": "deep",
+      "note": "far ear-defender cup",
+      "outset": 0.08,
+      "tag": "dc_crew_hardhat",
+      "geometry": {
+        "masc": { "points": [[-1.7, -28.9], [-2.6, -28.7], [-2.8, -27.6], [-2.1, -27.0], [-1.4, -27.7]], "fits": [] },
+        "femme": { "points": [[-1.6, -27.4], [-2.45, -27.2], [-2.65, -26.1], [-2.0, -25.5], [-1.35, -26.2]], "fits": [] }
+      }
+    },
+    {
+      "group": "head",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "hazard band",
+      "outset": 0.07,
+      "tag": "dc_crew_hardhat",
+      "geometry": {
+        "masc": { "points": [[-1.9, -29.5], [1.5, -29.5], [1.5, -29.0], [-1.9, -29.0]], "fits": [] },
+        "femme": { "points": [[-1.8, -28.0], [1.4, -28.0], [1.4, -27.5], [-1.8, -27.5]], "fits": [] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "identity": "A grown planter pod from the side: a lopsided resin basin holding a single tall frond, leaning off vertical the way everything Vherathi does.",
+  "tier": "decoration",
+  "palette": "vherathi_pilot",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "scale_note": "basin ~0.35x PLAYER_H tall, frond another ~0.6x above it",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "lopsided basin",
+      "points": [[-8, -11], [8, -11], [7, 0], [-6, 0]]
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "single tall frond, leaning",
+      "points": [[-1, -11], [2, -11], [7, -30], [4, -30]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "basin rim vein",
+      "points": [[-8, -11], [8, -11], [8, -9.5], [-8, -9.5]],
+      "min_px": 12
+    }
+  ]
+}

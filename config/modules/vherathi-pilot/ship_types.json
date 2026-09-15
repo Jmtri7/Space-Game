@@ -1,0 +1,54 @@
+{
+  "vp_courier": {
+    "name": "Tide Skiff",
+    "description": "A single tapering resin wedge with one off-center canopy and a lone nacelle. Fast and nimble, negligible hold.",
+    "max_thrust": 0.4,
+    "max_velocity": 5.5,
+    "rotation_speed": 5,
+    "size": 11,
+    "color": [72, 48, 96],
+    "shape": "rectangle",
+    "cost": 2200,
+    "cargo_capacity": 4,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.15},
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.55}
+    ]
+  },
+  "vp_warden": {
+    "name": "Vein-Warden",
+    "description": "The Concord's patrol hull - a long spine traced by a single vein of light, with two boarding-guard nacelles set at uneven distances.",
+    "max_thrust": 0.42,
+    "max_velocity": 5.2,
+    "rotation_speed": 4.5,
+    "size": 15,
+    "color": [72, 48, 96],
+    "shape": "rectangle",
+    "cost": 4200,
+    "cargo_capacity": 10,
+    "slots": [
+      {"id": "weapon_1", "type": "weapon", "x": 0.5, "y": 0.1},
+      {"id": "weapon_2", "type": "weapon", "x": 0.3, "y": 0.4},
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.7, "y": 0.5}
+    ]
+  },
+  "vp_ark": {
+    "name": "Reef Ark",
+    "description": "A broad grown hauler swollen into two unequal cargo blooms rather than a mirrored pair. Slow, cavernous hold.",
+    "max_thrust": 0.28,
+    "max_velocity": 3.8,
+    "rotation_speed": 2.8,
+    "size": 20,
+    "color": [72, 48, 96],
+    "shape": "rectangle",
+    "cost": 5200,
+    "cargo_capacity": 60,
+    "slots": [
+      {"id": "engine_1", "type": "engine", "x": 0.5, "y": 0.9},
+      {"id": "utility_1", "type": "utility", "x": 0.5, "y": 0.5},
+      {"id": "utility_2", "type": "utility", "x": 0.3, "y": 0.3}
+    ]
+  }
+}

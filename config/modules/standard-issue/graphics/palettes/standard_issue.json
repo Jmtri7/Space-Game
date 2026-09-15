@@ -1,0 +1,11 @@
+{
+  "identity": "Sol Federation ship/building palette: cool blue-grey hull, pale glass, a light-blue thruster glow, plus the livery accents (white stripe, amber chevron) as extra keys.",
+  "hull": "#41506A",
+  "hull_dk": "#2A3444",
+  "engine": "#1E2530",
+  "metal": "#5A6B82",
+  "glass": "#CFE0F0",
+  "lamp": "#F2B23A",
+  "thrust": "#8CB9FF",
+  "stripe": "#F0F4F8"
+}

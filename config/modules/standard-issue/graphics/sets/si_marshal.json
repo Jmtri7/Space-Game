@@ -1,0 +1,5 @@
+{
+  "identity": "Marshal's rig: heavy coverage - coveralls, duty boots, the full helm, bulky shoulder guards, and the full chest plate. Hair dropped since the helm covers it entirely.",
+  "palette": "standard_issue_dress",
+  "articles": ["tank_top", "pants", "duty_boots", "si_marshal_plate", "si_marshal_pad", "si_marshal_helm"]
+}

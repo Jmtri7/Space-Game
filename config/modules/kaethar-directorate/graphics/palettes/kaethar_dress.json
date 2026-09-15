@@ -1,0 +1,17 @@
+{
+  "identity": "Kaethar dress palette: ordinary human skin/hair/eyes, gunmetal uniform fabric, the same single red warning accent as the hardware.",
+  "skin": "#c69b74",
+  "hair": "#221f22",
+  "eye": "#4a4a4a",
+  "sclera": "#e8e8e8",
+  "iris": "#4a4a4a",
+  "pupil": "#0a0a0a",
+  "lip": "#9a6a58",
+  "cloth": "#3A3F47",
+  "denim": "#282C33",
+  "leather": "#1C1F24",
+  "knit": "#4A4F57",
+  "metal": "#282C33",
+  "glass": "#CFD6DE",
+  "lamp": "#D6402C"
+}

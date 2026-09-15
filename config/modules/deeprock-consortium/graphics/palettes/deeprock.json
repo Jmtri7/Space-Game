@@ -1,0 +1,10 @@
+{
+  "identity": "Deeprock ship/building palette: worn tan-grey riveted metal, a warm yellow glass/light, an orange thruster glow, hazard yellow trim.",
+  "hull": "#5C524A",
+  "hull_dk": "#413A34",
+  "engine": "#2E2822",
+  "metal": "#413A34",
+  "glass": "#FFE078",
+  "lamp": "#D6B03C",
+  "thrust": "#FF9646"
+}

@@ -1,0 +1,15 @@
+{
+  "identity": "A kit rack from the side: a plain riveted frame with three identical shelf slots.",
+  "tier": "decoration",
+  "palette": "kaethar",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "frame", "points": [[-9, 0], [9, 0], [9, -28], [-9, -28]] }
+  ],
+  "details": [
+    { "group": "body", "color": "hull", "shade": "matte", "role": "detail", "note": "shelf 1", "points": [[-7, -8], [7, -8], [7, -6], [-7, -6]], "min_px": 8 },
+    { "group": "body", "color": "hull", "shade": "matte", "role": "detail", "note": "shelf 2", "points": [[-7, -16], [7, -16], [7, -14], [-7, -14]], "min_px": 8 },
+    { "group": "body", "color": "hull", "shade": "matte", "role": "detail", "note": "shelf 3", "points": [[-7, -24], [7, -24], [7, -22], [-7, -22]], "min_px": 8 }
+  ]
+}

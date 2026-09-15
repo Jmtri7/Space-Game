@@ -1,0 +1,5 @@
+{
+  "identity": "Tallyman's rig: light coverage - work coveralls, the flat crown cap, the shoulder tabs, and the tally tabard.",
+  "palette": "drossholt_dress",
+  "articles": ["tank_top", "pants", "shoes", "hair_short", "dr_tally_tabard", "dr_tally_tab", "dr_tally_cap"]
+}

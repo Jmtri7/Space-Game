@@ -751,6 +751,13 @@ mechanism on the **smallest asset that exercises it**.
 Gates are sequential: B needs A, D needs B and C, E needs D, H needs everything.
 Move a gate or add one when the work shows a seam that needs sign-off.
 
+Building a whole culture's art kit as one `config/modules/<name>/` module
+means running many assets through the per-asset gates above and adds a
+second, coarser gate on top — comparing every asset *of one kind* in the
+culture against each other, not just against itself, so three ships don't
+each individually pass their own silhouette gate while still reading as the
+same hull in different colors. See [CULTURE_DESIGN.md](CULTURE_DESIGN.md).
+
 ## Minimal asset set (pipeline test)
 
 All eight gates pass. The set below is what the gates needed and no more, and

@@ -1,0 +1,21 @@
+{
+  "identity": "Deeprock Platform - riveted ore-tank drums around a central conveyor spine, a floodlamp mast, and an asymmetric tailings chute jutting to starboard. Plant first, station second.",
+  "tier": "station",
+  "palette": "deeprock",
+  "size": 50,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "spine", "color": "hull_dk", "shade": "deep", "note": "conveyor spine", "points": [[-0.1, -0.85], [0.1, -0.85], [0.1, 0.85], [-0.1, 0.85]] },
+    { "group": "drum1", "color": "hull", "shade": "matte", "note": "drum, upper port", "points": [[-0.42, -0.62], [-0.1, -0.62], [-0.1, -0.22], [-0.42, -0.22]] },
+    { "group": "drum2", "color": "hull", "shade": "matte", "note": "drum, upper starboard", "points": [[0.1, -0.62], [0.42, -0.62], [0.42, -0.22], [0.1, -0.22]] },
+    { "group": "drum3", "color": "hull", "shade": "matte", "note": "drum, lower port", "points": [[-0.42, 0.2], [-0.1, 0.2], [-0.1, 0.6], [-0.42, 0.6]] },
+    { "group": "chute", "color": "hull_dk", "shade": "deep", "note": "asymmetric tailings chute, starboard only", "points": [[0.42, 0.3], [0.78, 0.5], [0.68, 0.7], [0.36, 0.55]] },
+    { "group": "spine", "color": "hull", "shade": "matte", "note": "floodlamp mast", "points": [[-0.03, -0.85], [0.03, -0.85], [0.03, -1.08], [-0.03, -1.08]] }
+  ],
+  "details": [
+    { "group": "spine", "color": "lamp", "shade": "glow", "role": "detail", "note": "mast floodlamp", "circle": [0.0, -1.08, 0.04], "min_px": 6 },
+    { "group": "drum1", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard band, drum 1", "points": [[-0.38, -0.46], [-0.14, -0.46], [-0.14, -0.4], [-0.38, -0.4]], "min_px": 8 },
+    { "group": "drum2", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard band, drum 2", "points": [[0.14, -0.46], [0.38, -0.46], [0.38, -0.4], [0.14, -0.4]], "min_px": 8 },
+    { "group": "chute", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard stripe, chute", "points": [[0.48, 0.4], [0.68, 0.52], [0.64, 0.58], [0.44, 0.46]], "min_px": 8 }
+  ]
+}

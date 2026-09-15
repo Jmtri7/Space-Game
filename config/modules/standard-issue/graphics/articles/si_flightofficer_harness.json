@@ -1,0 +1,43 @@
+{
+  "identity": "Flight Officer's chest harness: a rounded-rect panel wider than the Deckhand's tabard, with the centerline stripe and a hazard chevron at the collar. Medium coverage.",
+  "tier": "person",
+  "palette": "standard_issue_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "chest panel, rounded corners, wider than the tabard",
+      "outset": 0.04,
+      "tag": "si_flightofficer_harness",
+      "geometry": {
+        "masc": { "points": [[-2.2, -25.3], [2.2, -25.3], [2.4, -25.0], [2.4, -19.0], [2.2, -18.8], [-2.2, -18.8], [-2.4, -19.0], [-2.4, -25.0]], "fits": [] },
+        "femme": { "points": [[-2.1, -23.8], [2.1, -23.8], [2.3, -23.5], [2.3, -17.8], [2.1, -17.6], [-2.1, -17.6], [-2.3, -17.8], [-2.3, -23.5]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "centerline stripe",
+      "outset": 0.06,
+      "tag": "si_flightofficer_harness",
+      "geometry": {
+        "masc": { "points": [[-0.4, -25.0], [0.4, -25.0], [0.4, -19.0], [-0.4, -19.0]], "fits": [] },
+        "femme": { "points": [[-0.4, -23.5], [0.4, -23.5], [0.4, -17.8], [-0.4, -17.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "collar hazard chevron",
+      "outset": 0.07,
+      "tag": "si_flightofficer_harness",
+      "geometry": {
+        "masc": { "points": [[-1.2, -25.1], [1.2, -25.1], [0.7, -24.3], [-0.7, -24.3]], "fits": [] },
+        "femme": { "points": [[-1.1, -23.6], [1.1, -23.6], [0.65, -22.8], [-0.65, -22.8]], "fits": [] }
+      }
+    }
+  ]
+}

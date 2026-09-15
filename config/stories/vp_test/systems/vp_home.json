@@ -1,0 +1,99 @@
+{
+  "name": "Vherathi Pilot Home",
+  "description": "Preview system: the Reef Ring station and the Lantern Lattice (wired into the moon slot so both stations exist in one system - see docs/CULTURE_DESIGN.md), all three ships flying named roles between them, and every culture asset reachable without a jump.",
+  "star_map_position": { "x": 0, "y": 0 },
+  "station_asset": "vp_reef_station",
+  "moon_asset": "vp_lantern_station",
+  "central_star": { "x": 0.5, "y": 0.5, "name": "VP-1", "size": 60, "color": [220, 180, 255] },
+  "player_start": { "x": 0.3, "y": 0.5 },
+  "star_seed": 4242,
+  "asteroid_field": { "per_chunk_range": [0, 1], "types": [] },
+  "ai_ships": [
+    { "pilot": "vp_courier_pilot", "ship_type": "vp_courier", "x": 0.45, "y": 0.35, "route": ["station", "moon"] },
+    { "pilot": "vp_warden_pilot", "ship_type": "vp_warden", "x": 0.55, "y": 0.6, "route": ["station", "moon"] },
+    { "pilot": "vp_ark_pilot", "ship_type": "vp_ark", "x": 0.35, "y": 0.6, "route": ["station"] }
+  ],
+  "station": {
+    "x": 0.5, "y": 0.35, "name": "Reef Ring",
+    "interiors": {
+      "vp_concourse": {
+        "label": "Reef Ring - Concourse",
+        "culture": "vherathi_pilot",
+        "space_backdrop": true,
+        "floor_pattern": "vherathi_pilot",
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Atrium", "polygon": [[350.0, 160.0], [460.0, 190.0], [520.0, 280.0], [520.0, 400.0], [460.0, 490.0], [350.0, 520.0], [240.0, 490.0], [180.0, 400.0], [180.0, 280.0], [240.0, 190.0]] },
+          { "label": "Dock", "polygon": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 500, "building_type": "vp_hall" },
+          { "x": 230, "y": 220, "building_type": "vp_lantern_post" },
+          { "x": 470, "y": 220, "building_type": "vp_lantern_post" },
+          { "x": 350, "y": 260, "building_type": "vp_planter" },
+          { "x": 260, "y": 400, "building_type": "vp_bench" },
+          { "x": 440, "y": 400, "building_type": "vp_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Steward Ossilis",
+            "x": 350, "y": 250,
+            "role": "resident",
+            "outfit": "vp_steward_femme",
+            "greeting": "Welcome to the Reef Ring. Mind the veins in the floor - they're load-bearing, not decoration.",
+            "dialogue_options": ["Leave"]
+          },
+          {
+            "name": "Warden Vaeren's second",
+            "x": 420, "y": 470,
+            "role": "resident",
+            "outfit": "vp_warden_masc",
+            "greeting": "Quiet dock today. Keep it that way.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.65, "y": 0.65, "name": "Lantern Lattice",
+    "interiors": {
+      "vp_settlement": {
+        "label": "Lantern Lattice - Settlement Deck",
+        "culture": "vherathi_pilot",
+        "floor_pattern": "vherathi_pilot",
+        "entrance": { "x": 320, "y": 545 },
+        "portals": [
+          { "x": 320, "y": 556, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Plaza", "polygon": [[320.0, 140.0], [430.0, 165.0], [490.0, 250.0], [485.0, 360.0], [420.0, 440.0], [320.0, 470.0], [220.0, 435.0], [160.0, 355.0], [160.0, 245.0], [215.0, 165.0]] },
+          { "label": "Pad Approach", "polygon": [[280, 470], [360, 470], [360, 560], [280, 560]] }
+        ],
+        "structures": [
+          { "x": 320, "y": 190, "building_type": "vp_hall" },
+          { "x": 455, "y": 300, "building_type": "vp_spire" },
+          { "x": 195, "y": 320, "building_type": "vp_bloompod" },
+          { "x": 260, "y": 250, "building_type": "vp_planter" },
+          { "x": 380, "y": 250, "building_type": "vp_planter" },
+          { "x": 200, "y": 200, "building_type": "vp_lantern_post" },
+          { "x": 440, "y": 200, "building_type": "vp_lantern_post" },
+          { "x": 320, "y": 420, "building_type": "vp_lantern_post" },
+          { "x": 320, "y": 400, "building_type": "vp_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Tide-pilot Ossira's kin",
+            "x": 320, "y": 220,
+            "role": "resident",
+            "outfit": "vp_tide_pilot_femme",
+            "greeting": "The Lattice leans a little more every year. Nobody's worried yet.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

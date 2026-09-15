@@ -1,0 +1,21 @@
+{
+  "identity": "Deeprock Platform deck: a rectangular processing floor around the conveyor spine, drums and tool boards scattered, hazard yellow only where it's needed.",
+  "tier": "interior",
+  "palette": "deeprock",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down).",
+  "rooms": [
+    { "id": "floor", "color": "hull_dk", "points": [[260, 260], [440, 260], [440, 440], [260, 440]] },
+    { "id": "dock", "color": "hull", "points": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+  ],
+  "portals": [
+    { "id": "airlock", "to": "outside", "points": [[-27, 330], [-17, 330], [-17, 370], [-27, 370]] }
+  ],
+  "structures": [
+    { "building": "dc_shed", "at": [350, 200] }
+  ],
+  "placements": [
+    { "decoration": "dc_oredrum", "at": [280, 470] },
+    { "decoration": "dc_toolboard", "at": [420, 470] },
+    { "decoration": "dc_pipebench", "at": [350, 500], "angle": 0 }
+  ]
+}

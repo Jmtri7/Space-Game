@@ -1,0 +1,55 @@
+{
+  "identity": "Kaethar Garrison Block from the front: a flat gunmetal mass, recessed seams, a red chevron over the entrance and a unit sigil above it. No curve anywhere.",
+  "tier": "building",
+  "palette": "kaethar",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "~2.6x PLAYER_H tall, ~3.6x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "matte",
+      "note": "flat gunmetal wall, square corners",
+      "points": [[-56, 0], [56, 0], [56, -80], [-56, -80]],
+      "flatten_px": 60
+    },
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "entry, centered",
+      "points": [[-12, -32], [12, -32], [12, 0], [-12, 0]],
+      "flatten_px": 20
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "flat",
+      "role": "detail",
+      "note": "red chevron over entry",
+      "points": [[-12, -34], [12, -34], [0, -40]],
+      "min_px": 10
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window row, left",
+      "points": [[-46, -60], [-30, -60], [-30, -46], [-46, -46]],
+      "min_px": 12
+    },
+    {
+      "group": "body",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window row, right - mirrored pair",
+      "points": [[30, -60], [46, -60], [46, -46], [30, -46]],
+      "min_px": 12
+    }
+  ]
+}

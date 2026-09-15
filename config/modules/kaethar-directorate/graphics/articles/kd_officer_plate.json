@@ -1,0 +1,31 @@
+{
+  "identity": "Line Officer's chest plate: an angular panel wider than the Line Crew's harness, with the unit sigil and coat-length trim. Medium coverage.",
+  "tier": "person",
+  "palette": "kaethar_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "metal",
+      "shade": "metal",
+      "note": "chest panel, wider than the crew harness",
+      "outset": 0.04,
+      "tag": "kd_officer_plate",
+      "geometry": {
+        "masc": { "points": [[-2.2, -25.3], [2.2, -25.3], [2.2, -19.0], [-2.2, -19.0]], "fits": [] },
+        "femme": { "points": [[-2.1, -23.8], [2.1, -23.8], [2.1, -17.8], [-2.1, -17.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "unit sigil, diamond",
+      "outset": 0.06,
+      "tag": "kd_officer_plate",
+      "geometry": {
+        "masc": { "points": [[0, -24.0], [0.8, -23.2], [0, -22.4], [-0.8, -23.2]], "fits": [] },
+        "femme": { "points": [[0, -22.5], [0.75, -21.7], [0, -20.9], [-0.75, -21.7]], "fits": [] }
+      }
+    }
+  ]
+}

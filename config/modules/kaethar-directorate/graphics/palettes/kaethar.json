@@ -1,0 +1,10 @@
+{
+  "identity": "Kaethar ship/building palette: cold gunmetal hull, darker shadow, pale sensor-glass, a cool blue thruster glow, red the one warning colour.",
+  "hull": "#3A3F47",
+  "hull_dk": "#282C33",
+  "engine": "#1C1F24",
+  "metal": "#282C33",
+  "glass": "#CFD6DE",
+  "lamp": "#D6402C",
+  "thrust": "#9FC0D8"
+}

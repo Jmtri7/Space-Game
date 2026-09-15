@@ -1,0 +1,43 @@
+{
+  "identity": "Steward's mantle: a fitted resin sash from the near shoulder to the top of the far hip, with a bioluminescent vein along its leading edge. Nobody else in the culture wears one.",
+  "tier": "person",
+  "palette": "vherathi_pilot_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "deep",
+      "note": "sash, near shoulder to top of far hip",
+      "outset": 0.05,
+      "tag": "vp_reef_mantle",
+      "geometry": {
+        "masc": {
+          "points": [[3.0, -25.6], [4.2, -24.6], [-1.8, -17.5], [-3.2, -16.7]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[2.8, -24.2], [3.9, -23.2], [-1.7, -16.4], [-3.0, -15.6]],
+          "fits": []
+        }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "vein trim along the leading edge",
+      "outset": 0.07,
+      "tag": "vp_reef_mantle",
+      "geometry": {
+        "masc": {
+          "points": [[3.6, -25.0], [4.2, -24.6], [-1.8, -17.5], [-2.4, -17.9]],
+          "fits": []
+        },
+        "femme": {
+          "points": [[3.35, -23.6], [3.9, -23.2], [-1.7, -16.4], [-2.25, -16.8]],
+          "fits": []
+        }
+      }
+    }
+  ]
+}

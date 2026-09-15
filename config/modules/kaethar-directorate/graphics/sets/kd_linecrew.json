@@ -1,0 +1,5 @@
+{
+  "identity": "Line Crew's rig: light coverage - coveralls, shoes, the field cap, shoulder tabs, and the chest harness.",
+  "palette": "kaethar_dress",
+  "articles": ["tank_top", "pants", "shoes", "hair_short", "kd_crew_harness", "kd_crew_tab", "kd_crew_cap"]
+}

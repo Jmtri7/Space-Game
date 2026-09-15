@@ -1,0 +1,80 @@
+{
+  "identity": "SF Transport - three identical rounded-rect bays bolted in a straight line, necks overlapping well into each bay. Every module the same size, unlike Drossholt's tapering tanks or Vherathi's varying pods - interchangeable by design.",
+  "tier": "ship_near",
+  "palette": "standard_issue",
+  "size": 20,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "bay1",
+      "color": "hull",
+      "shade": "matte",
+      "note": "nose bay",
+      "points": [[-0.26, -0.82], [0.26, -0.82], [0.3, -0.75], [0.3, -0.5], [0.26, -0.44], [-0.26, -0.44], [-0.3, -0.5], [-0.3, -0.75]]
+    },
+    {
+      "group": "neck1",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "neck to mid bay - overlaps well into both",
+      "points": [[-0.15, -0.55], [0.15, -0.55], [0.15, -0.2], [-0.15, -0.2]]
+    },
+    {
+      "group": "bay2",
+      "color": "hull",
+      "shade": "matte",
+      "note": "mid bay - identical size to the other two",
+      "points": [[-0.26, -0.25], [0.26, -0.25], [0.3, -0.18], [0.3, 0.07], [0.26, 0.13], [-0.26, 0.13], [-0.3, 0.07], [-0.3, -0.18]]
+    },
+    {
+      "group": "neck2",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "neck to tail bay - overlaps well into both",
+      "points": [[-0.15, 0.02], [0.15, 0.02], [0.15, 0.37], [-0.15, 0.37]]
+    },
+    {
+      "group": "bay3",
+      "color": "hull",
+      "shade": "matte",
+      "note": "tail bay - identical size",
+      "points": [[-0.26, 0.32], [0.26, 0.32], [0.3, 0.39], [0.3, 0.64], [0.26, 0.7], [-0.26, 0.7], [-0.3, 0.64], [-0.3, 0.39]]
+    },
+    {
+      "group": "bay1",
+      "color": "stripe",
+      "shade": "flat",
+      "note": "centerline stripe, full length",
+      "points": [[-0.05, -0.78], [0.05, -0.78], [0.05, 0.66], [-0.05, 0.66]]
+    }
+  ],
+  "details": [
+    {
+      "group": "bay2",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "mid bay window",
+      "points": [[-0.15, -0.15], [0.15, -0.15], [0.15, 0.05], [-0.15, 0.05]],
+      "min_px": 10
+    },
+    {
+      "group": "bay3",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "hazard chevron",
+      "points": [[-0.18, 0.55], [0.18, 0.55], [0.0, 0.66]],
+      "min_px": 8
+    },
+    {
+      "group": "bay3",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "thruster glow",
+      "circle": [0.0, 0.62, 0.06],
+      "min_px": 6
+    }
+  ]
+}

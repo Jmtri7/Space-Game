@@ -1,0 +1,99 @@
+{
+  "name": "Drossholt Home",
+  "description": "Preview system: the Drossholt Yard and Spine stations, all three ships flying named roles between them.",
+  "star_map_position": { "x": -260, "y": 0 },
+  "station_asset": "dr_yard",
+  "moon_asset": "dr_spine",
+  "central_star": { "x": 0.5, "y": 0.5, "name": "DR-1", "size": 60, "color": [255, 200, 140] },
+  "player_start": { "x": 0.3, "y": 0.5 },
+  "star_seed": 5252,
+  "asteroid_field": { "per_chunk_range": [0, 1], "types": [] },
+  "ai_ships": [
+    { "pilot": "dr_courier_pilot", "ship_type": "dr_courier", "x": 0.45, "y": 0.35, "route": ["station", "moon"] },
+    { "pilot": "dr_patrol_pilot", "ship_type": "dr_patrol", "x": 0.55, "y": 0.6, "route": ["station", "moon"] },
+    { "pilot": "dr_hauler_pilot", "ship_type": "dr_hauler", "x": 0.35, "y": 0.6, "route": ["station"] }
+  ],
+  "station": {
+    "x": 0.5, "y": 0.35, "name": "Drossholt Yard",
+    "interiors": {
+      "dr_yard_deck": {
+        "label": "Drossholt Yard - Concourse",
+        "culture": "drossholt",
+        "space_backdrop": true,
+        "floor_pattern": "drossholt",
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Core", "polygon": [[260, 260], [440, 260], [440, 440], [260, 440]] },
+          { "label": "North Arm", "polygon": [[300, 120], [400, 120], [400, 260], [300, 260]] },
+          { "label": "South Arm", "polygon": [[300, 440], [400, 440], [400, 580], [300, 580]] },
+          { "label": "Dock", "polygon": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 200, "building_type": "dr_hall" },
+          { "x": 280, "y": 470, "building_type": "dr_lamp" },
+          { "x": 420, "y": 470, "building_type": "dr_lamp" },
+          { "x": 350, "y": 520, "building_type": "dr_bench" },
+          { "x": 300, "y": 380, "building_type": "dr_crate" }
+        ],
+        "npcs": [
+          {
+            "name": "Tallyman Ferro",
+            "x": 350, "y": 300,
+            "role": "resident",
+            "outfit": "dr_tallyman_femme",
+            "greeting": "New hull on the Yard? Log it with me before you fly out - Company keeps count.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.65, "y": 0.65, "name": "Drossholt Spine",
+    "interiors": {
+      "dr_settlement": {
+        "label": "Drossholt Spine - Outpost",
+        "culture": "drossholt",
+        "floor_pattern": "drossholt",
+        "entrance": { "x": 320, "y": 545 },
+        "portals": [
+          { "x": 320, "y": 556, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Yard", "polygon": [[160, 140], [480, 140], [480, 460], [160, 460]] },
+          { "label": "Pad Approach", "polygon": [[280, 460], [360, 460], [360, 560], [280, 560]] }
+        ],
+        "structures": [
+          { "x": 230, "y": 200, "building_type": "dr_hall" },
+          { "x": 410, "y": 220, "building_type": "dr_tower" },
+          { "x": 420, "y": 380, "building_type": "dr_shed" },
+          { "x": 200, "y": 400, "building_type": "dr_lamp" },
+          { "x": 440, "y": 400, "building_type": "dr_lamp" },
+          { "x": 320, "y": 420, "building_type": "dr_crate" },
+          { "x": 320, "y": 450, "building_type": "dr_crate" },
+          { "x": 320, "y": 300, "building_type": "dr_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Deck-chief Varga",
+            "x": 320, "y": 250,
+            "role": "resident",
+            "outfit": "dr_deckchief_masc",
+            "greeting": "Spine's quiet. Keep it that way.",
+            "dialogue_options": ["Leave"]
+          },
+          {
+            "name": "Gun-bosun Orlek",
+            "x": 380, "y": 320,
+            "role": "resident",
+            "outfit": "dr_gunbosun_femme",
+            "greeting": "State your business.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

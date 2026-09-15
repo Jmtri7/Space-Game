@@ -1,0 +1,10 @@
+{
+  "identity": "Vherathi ship/building palette: dark resin-crystal hull, a bioluminescent teal-green glass vein, a violet thruster glow.",
+  "hull": "#483060",
+  "hull_dk": "#2C1D3B",
+  "engine": "#1E1428",
+  "metal": "#9678AA",
+  "glass": "#78FFC8",
+  "lamp": "#B4FFDD",
+  "thrust": "#DC5AFF"
+}

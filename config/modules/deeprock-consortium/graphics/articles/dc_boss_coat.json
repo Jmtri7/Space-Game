@@ -1,0 +1,31 @@
+{
+  "identity": "Consortium Boss's coat panel: a narrow clean chest panel with a tally-board clip - light coverage, the least gear of the three roles.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "matte",
+      "note": "center chest panel",
+      "outset": 0.03,
+      "tag": "dc_boss_coat",
+      "geometry": {
+        "masc": { "points": [[-1.6, -25.2], [1.6, -25.2], [1.6, -18.0], [-1.6, -18.0]], "fits": [] },
+        "femme": { "points": [[-1.5, -23.7], [1.5, -23.7], [1.5, -16.8], [-1.5, -16.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "tally-board clip",
+      "outset": 0.05,
+      "tag": "dc_boss_coat",
+      "geometry": {
+        "masc": { "points": [[-0.6, -22.0], [0.6, -22.0], [0.6, -19.5], [-0.6, -19.5]], "fits": [] },
+        "femme": { "points": [[-0.55, -20.6], [0.55, -20.6], [0.55, -18.2], [-0.55, -18.2]], "fits": [] }
+      }
+    }
+  ]
+}

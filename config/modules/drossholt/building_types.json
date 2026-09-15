@@ -1,0 +1,8 @@
+{
+  "dr_hall": { "culture": "drossholt", "name": "Company Hall", "description": "The Company's administrative bunker - blunt, riveted, no asymmetry.", "design": "buildings/dr_hall", "footprint": { "width": 112, "depth": 40.0 } },
+  "dr_tower": { "culture": "drossholt", "name": "Storage Tower", "description": "A straight riveted storage silo.", "design": "buildings/dr_tower", "footprint": { "width": 36, "depth": 22.0 } },
+  "dr_shed": { "culture": "drossholt", "name": "Bunk Shed", "description": "The smallest unit of Company housing - a plain riveted box.", "design": "buildings/dr_shed", "footprint": { "width": 34, "depth": 18.0 } },
+  "dr_bench": { "culture": "drossholt", "name": "Riveted Bench", "description": "A flat plank bench on two identical legs.", "design": "decorations/dr_bench", "footprint": { "width": 24, "depth": 9.0 } },
+  "dr_crate": { "culture": "drossholt", "name": "Cargo Crates", "description": "A stack of two riveted cargo crates.", "design": "decorations/dr_crate", "footprint": { "width": 20, "depth": 14.0 } },
+  "dr_lamp": { "culture": "drossholt", "name": "Post Lamp", "description": "A perfectly straight riveted lamp post.", "design": "decorations/dr_lamp", "footprint": { "width": 6, "depth": 5.0 } }
+}

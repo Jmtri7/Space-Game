@@ -1,0 +1,13 @@
+{
+  "identity": "A floor-set unit sigil marker: a low post topped with a red diamond, straight and centered.",
+  "tier": "decoration",
+  "palette": "kaethar",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull_dk", "shade": "matte", "note": "straight post", "points": [[-1.4, 0], [1.4, 0], [1.4, -20], [-1.4, -20]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "flat", "role": "detail", "note": "red diamond", "points": [[0, -24], [3, -20], [0, -16], [-3, -20]], "min_px": 8 }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "identity": "Line Officer's rig: medium coverage - coveralls, duty boots, the crested helmet, shoulder guards, and the chest plate. Hair dropped since the helmet covers the crown.",
+  "palette": "kaethar_dress",
+  "articles": ["tank_top", "pants", "duty_boots", "kd_officer_plate", "kd_officer_pad", "kd_officer_helmet"]
+}

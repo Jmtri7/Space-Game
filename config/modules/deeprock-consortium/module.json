@@ -1,0 +1,6 @@
+{
+  "name": "deeprock-consortium",
+  "version": "0.1.0",
+  "description": "The Deeprock Mining Consortium: hardware built around the job it does, painted only where a warning is needed. Toothed crusher jaws, riveted tanks, asymmetric chutes.",
+  "modules": ["figures-human"]
+}

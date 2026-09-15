@@ -1,0 +1,5 @@
+{
+  "identity": "Gun-bosun's rig: heavy coverage - work coveralls, duty boots, the full box helm, bulky shoulder blocks, and the full chest plate. Hair dropped since the helm covers it entirely.",
+  "palette": "drossholt_dress",
+  "articles": ["tank_top", "pants", "duty_boots", "dr_bosun_plate", "dr_bosun_pad", "dr_bosun_helm"]
+}

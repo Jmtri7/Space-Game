@@ -1,0 +1,58 @@
+{
+  "identity": "SF Octagon - a true regular octagonal ring with four identical docking nubs at every other face. A closed ring, unlike the spine-and-collar station or any organic hub.",
+  "tier": "station",
+  "palette": "standard_issue",
+  "size": 46,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    {
+      "group": "ring",
+      "color": "hull",
+      "shade": "matte",
+      "note": "regular octagon ring",
+      "points": [[-0.18, -0.85], [0.18, -0.85], [0.6, -0.55], [0.85, -0.18], [0.85, 0.18], [0.6, 0.55], [0.18, 0.85], [-0.18, 0.85], [-0.6, 0.55], [-0.85, 0.18], [-0.85, -0.18], [-0.6, -0.55]]
+    },
+    {
+      "group": "ring",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "inner ring, flat core glow surface",
+      "points": [[-0.36, -0.36], [0.36, -0.36], [0.36, 0.36], [-0.36, 0.36]]
+    },
+    {
+      "group": "nub_n",
+      "color": "hull",
+      "shade": "matte",
+      "note": "north dock nub",
+      "points": [[-0.1, -0.85], [0.1, -0.85], [0.1, -1.05], [-0.1, -1.05]]
+    },
+    {
+      "group": "nub_s",
+      "color": "hull",
+      "shade": "matte",
+      "note": "south dock nub - identical, mirrored",
+      "points": [[-0.1, 0.85], [0.1, 0.85], [0.1, 1.05], [-0.1, 1.05]]
+    },
+    {
+      "group": "nub_e",
+      "color": "hull",
+      "shade": "matte",
+      "note": "east dock nub",
+      "points": [[0.85, -0.1], [1.05, -0.1], [1.05, 0.1], [0.85, 0.1]]
+    },
+    {
+      "group": "nub_w",
+      "color": "hull",
+      "shade": "matte",
+      "note": "west dock nub - identical, mirrored",
+      "points": [[-0.85, -0.1], [-1.05, -0.1], [-1.05, 0.1], [-0.85, 0.1]]
+    }
+  ],
+  "details": [
+    { "group": "ring", "color": "lamp", "shade": "glow", "role": "detail", "note": "core lamp", "circle": [0.0, 0.0, 0.1], "min_px": 6 },
+    { "group": "nub_n", "color": "lamp", "shade": "glow", "role": "detail", "note": "north dock lamp", "circle": [0.0, -1.0, 0.03], "min_px": 6 },
+    { "group": "nub_s", "color": "lamp", "shade": "glow", "role": "detail", "note": "south dock lamp - mirrored", "circle": [0.0, 1.0, 0.03], "min_px": 6 },
+    { "group": "nub_e", "color": "lamp", "shade": "glow", "role": "detail", "note": "east dock lamp", "circle": [1.0, 0.0, 0.03], "min_px": 6 },
+    { "group": "nub_w", "color": "lamp", "shade": "glow", "role": "detail", "note": "west dock lamp - mirrored", "circle": [-1.0, 0.0, 0.03], "min_px": 6 }
+  ]
+}

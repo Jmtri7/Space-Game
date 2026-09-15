@@ -1,0 +1,50 @@
+{
+  "identity": "Tide Skiff - a single needle-thin resin spike, almost no width at all. Reads as a blade or a thrown spear, not a wedge - nothing else in the culture is this narrow.",
+  "tier": "ship_near",
+  "palette": "vherathi_pilot",
+  "size": 11,
+  "units": "fractions of size, nose at -y.",
+  "silhouette": [
+    {
+      "group": "hull",
+      "color": "hull",
+      "shade": "matte",
+      "note": "needle-thin main spike",
+      "points": [[0.0, -1.05], [0.14, -0.4], [0.16, 0.7], [0.06, 0.9], [-0.1, 0.85], [-0.13, -0.2]]
+    },
+    {
+      "group": "fin",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "single small tail fin, off to one side only",
+      "points": [[0.1, 0.55], [0.42, 0.8], [0.3, 0.92], [0.08, 0.75]]
+    },
+    {
+      "group": "canopy",
+      "color": "glass",
+      "shade": "sheen",
+      "note": "thin canopy slit along the spike",
+      "points": [[-0.04, -0.55], [0.05, -0.5], [0.05, -0.1], [-0.04, -0.12]]
+    }
+  ],
+  "details": [
+    {
+      "group": "hull",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "nose vein light",
+      "circle": [0.0, -1.0, 0.03],
+      "min_px": 6
+    },
+    {
+      "group": "hull",
+      "color": "thrust",
+      "shade": "glow",
+      "role": "detail",
+      "note": "tail thruster glow",
+      "circle": [-0.02, 0.86, 0.06],
+      "min_px": 6
+    }
+  ]
+}

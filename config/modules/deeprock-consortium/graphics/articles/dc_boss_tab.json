@@ -1,0 +1,31 @@
+{
+  "identity": "Consortium Boss's shoulder tab: a small clean strap tab over each shoulder, identical both sides - the cleanest, least-worn gear in the Consortium. Light coverage.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "leather",
+      "shade": "matte",
+      "note": "near tab",
+      "outset": 0.04,
+      "tag": "dc_boss_tab",
+      "geometry": {
+        "masc": { "points": [[1.4, -25.6], [4.2, -25.6], [4.2, -23.8], [1.4, -23.8]], "fits": [] },
+        "femme": { "points": [[1.3, -24.2], [3.8, -24.2], [3.8, -22.5], [1.3, -22.5]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "leather",
+      "shade": "matte",
+      "note": "far tab - exact mirror, full symmetric coverage",
+      "outset": 0.04,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.4, -25.6], [-4.2, -25.6], [-4.2, -23.8], [-1.4, -23.8]], "fits": [] },
+        "femme": { "points": [[-1.3, -24.2], [-3.8, -24.2], [-3.8, -22.5], [-1.3, -22.5]], "fits": [] }
+      }
+    }
+  ]
+}

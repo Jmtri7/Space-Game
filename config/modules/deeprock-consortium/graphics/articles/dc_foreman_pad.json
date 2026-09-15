@@ -1,0 +1,43 @@
+{
+  "identity": "Pit Foreman's shoulder gear: a floodlamp mount on the near shoulder, a plain riveted pad on the far shoulder - both shoulders covered, but only one carries the lamp. Medium coverage.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "arm_near",
+      "color": "metal",
+      "shade": "metal",
+      "note": "near mount, floodlamp base",
+      "outset": 0.05,
+      "tag": "dc_foreman_pad",
+      "geometry": {
+        "masc": { "points": [[1.4, -25.7], [4.7, -25.7], [4.7, -23.2], [1.4, -23.2]], "fits": [] },
+        "femme": { "points": [[1.3, -24.3], [4.3, -24.3], [4.3, -21.9], [1.3, -21.9]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_near",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "floodlamp, near shoulder",
+      "outset": 0.09,
+      "tag": "dc_foreman_pad",
+      "geometry": {
+        "masc": { "points": [[4.3, -25.5], [5.3, -25.0], [5.1, -23.8], [4.2, -24.0]], "fits": [] },
+        "femme": { "points": [[3.9, -24.1], [4.9, -23.6], [4.7, -22.4], [3.8, -22.6]], "fits": [] }
+      }
+    },
+    {
+      "group": "arm_far",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far pad, plain - no lamp, asymmetric function",
+      "outset": 0.05,
+      "tag": "epaulette",
+      "geometry": {
+        "masc": { "points": [[-1.4, -25.7], [-4.7, -25.7], [-4.7, -23.2], [-1.4, -23.2]], "fits": [] },
+        "femme": { "points": [[-1.3, -24.3], [-4.3, -24.3], [-4.3, -21.9], [-1.3, -21.9]], "fits": [] }
+      }
+    }
+  ]
+}

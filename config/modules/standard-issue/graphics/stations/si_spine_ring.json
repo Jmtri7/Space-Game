@@ -1,0 +1,22 @@
+{
+  "identity": "SF Spine Ring - a straight spine with three identical ring collars stacked at even spacing. Interchangeable modules on a spine, not an organic hub or a plus-shaped cross.",
+  "tier": "station",
+  "palette": "standard_issue",
+  "size": 48,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "spine", "color": "hull", "shade": "matte", "note": "straight spine", "points": [[-0.12, -0.9], [0.12, -0.9], [0.12, 0.9], [-0.12, 0.9]] },
+    { "group": "ring_top", "color": "hull_dk", "shade": "deep", "note": "top ring collar", "points": [[-0.45, -0.62], [0.45, -0.62], [0.45, -0.42], [-0.45, -0.42]] },
+    { "group": "ring_mid", "color": "hull_dk", "shade": "deep", "note": "mid ring collar - identical size", "points": [[-0.45, -0.1], [0.45, -0.1], [0.45, 0.1], [-0.45, 0.1]] },
+    { "group": "ring_bot", "color": "hull_dk", "shade": "deep", "note": "bottom ring collar - identical size", "points": [[-0.45, 0.42], [0.45, 0.42], [0.45, 0.62], [-0.45, 0.62]] }
+  ],
+  "details": [
+    { "group": "spine", "color": "stripe", "shade": "flat", "role": "detail", "note": "centerline stripe", "points": [[-0.04, -0.85], [0.04, -0.85], [0.04, 0.85], [-0.04, 0.85]], "min_px": 8 },
+    { "group": "ring_top", "color": "lamp", "shade": "glow", "role": "detail", "note": "top dock lamp, starboard", "circle": [0.42, -0.52, 0.03], "min_px": 6 },
+    { "group": "ring_top", "color": "lamp", "shade": "glow", "role": "detail", "note": "top dock lamp, port - mirrored", "circle": [-0.42, -0.52, 0.03], "min_px": 6 },
+    { "group": "ring_mid", "color": "lamp", "shade": "glow", "role": "detail", "note": "mid dock lamp, starboard", "circle": [0.42, 0.0, 0.03], "min_px": 6 },
+    { "group": "ring_mid", "color": "lamp", "shade": "glow", "role": "detail", "note": "mid dock lamp, port - mirrored", "circle": [-0.42, 0.0, 0.03], "min_px": 6 },
+    { "group": "ring_bot", "color": "lamp", "shade": "glow", "role": "detail", "note": "bottom dock lamp, starboard", "circle": [0.42, 0.52, 0.03], "min_px": 6 },
+    { "group": "ring_bot", "color": "lamp", "shade": "glow", "role": "detail", "note": "bottom dock lamp, port - mirrored", "circle": [-0.42, 0.52, 0.03], "min_px": 6 }
+  ]
+}

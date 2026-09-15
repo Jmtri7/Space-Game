@@ -1,0 +1,84 @@
+{
+  "identity": "The Lantern Lattice - a tall grown mast station rather than a ring: a single asymmetric core with one long comms/light spire leaning off true-vertical, and two unequal docking blooms low on the body.",
+  "tier": "station",
+  "palette": "vherathi_pilot",
+  "size": 46,
+  "units": "fractions of size, roughly centred at 0,0. NOTE: this design's own \"size\" is the actual scale multiplier.",
+  "silhouette": [
+    {
+      "group": "core",
+      "color": "hull",
+      "shade": "matte",
+      "note": "main body, tapering upward",
+      "points": [[-0.18, 0.3], [0.2, 0.28], [0.14, -0.2], [-0.02, -0.4], [-0.2, -0.18]]
+    },
+    {
+      "group": "mast",
+      "color": "hull_dk",
+      "shade": "deep",
+      "note": "leaning comms spire, off vertical",
+      "points": [[-0.02, -0.4], [0.02, -0.4], [0.16, -0.95], [0.1, -0.95]]
+    },
+    {
+      "group": "bloom_a",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "larger docking bloom",
+      "points": [[0.18, 0.0], [0.5, -0.06], [0.5, 0.14], [0.2, 0.2]]
+    },
+    {
+      "group": "bloom_b",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "smaller docking bloom, opposite side, deliberately shorter",
+      "points": [[-0.18, 0.1], [-0.4, 0.08], [-0.38, 0.24], [-0.18, 0.26]]
+    }
+  ],
+  "details": [
+    {
+      "group": "mast",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "mast lantern",
+      "circle": [0.13, -0.95, 0.045],
+      "min_px": 6
+    },
+    {
+      "group": "core",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "core vein glow",
+      "points": [[-0.08, 0.1], [0.06, 0.08], [0.04, -0.15], [-0.06, -0.13]],
+      "min_px": 8
+    },
+    {
+      "group": "bloom_a",
+      "color": "glass",
+      "shade": "sheen",
+      "role": "detail",
+      "note": "window band, larger bloom",
+      "points": [[0.24, 0.0], [0.44, -0.03], [0.44, 0.05], [0.24, 0.08]],
+      "min_px": 10
+    },
+    {
+      "group": "bloom_a",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "docking lamp, larger bloom tip",
+      "circle": [0.48, 0.04, 0.03],
+      "min_px": 6
+    },
+    {
+      "group": "bloom_b",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "docking lamp, smaller bloom tip",
+      "circle": [-0.39, 0.16, 0.025],
+      "min_px": 6
+    }
+  ]
+}

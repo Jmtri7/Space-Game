@@ -1,0 +1,23 @@
+{
+  "identity": "A small Drossholt outpost: a rectangular paved yard with the hall on one side, the storage tower opposite, and a bunk shed at the back - square rooms, evenly-spaced crates and lamps.",
+  "tier": "interior",
+  "palette": "drossholt",
+  "units": "absolute local units, 31 = player height, +y is south (screen-down).",
+  "rooms": [
+    { "id": "yard", "color": "hull_dk", "points": [[160, 140], [480, 140], [480, 460], [160, 460]] },
+    { "id": "pad_approach", "color": "hull", "points": [[280, 460], [360, 460], [360, 560], [280, 560]] }
+  ],
+  "portals": [
+    { "id": "landing_pad", "to": "outside", "points": [[300, 556], [340, 556], [340, 576], [300, 576]] }
+  ],
+  "structures": [
+    { "building": "dr_hall", "at": [230, 200] },
+    { "building": "dr_tower", "at": [410, 220] },
+    { "building": "dr_shed", "at": [420, 380] },
+    { "decoration": "dr_lamp", "at": [200, 400] },
+    { "decoration": "dr_lamp", "at": [440, 400] },
+    { "decoration": "dr_crate", "at": [320, 420] },
+    { "decoration": "dr_crate", "at": [320, 450] },
+    { "decoration": "dr_bench", "at": [320, 300], "angle": 0 }
+  ]
+}

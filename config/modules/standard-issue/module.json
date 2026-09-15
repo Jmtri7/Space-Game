@@ -1,0 +1,6 @@
+{
+  "name": "standard-issue",
+  "version": "0.1.0",
+  "description": "The Sol Federation culture: prefab, painted, interchangeable modules - identical repeated bays, rounded-rect fillets, a white centerline stripe and amber hazard chevrons.",
+  "modules": ["figures-human"]
+}

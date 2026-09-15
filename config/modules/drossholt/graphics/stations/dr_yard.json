@@ -1,0 +1,21 @@
+{
+  "identity": "Drossholt Yard - a plus-shaped hub with four identical docking arms, evenly spaced, mirrored pairs both axes. The blunt opposite of an odd-armed Vherathi hub.",
+  "tier": "station",
+  "palette": "drossholt",
+  "size": 50,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "core", "color": "hull", "shade": "matte", "note": "square core", "points": [[-0.25, -0.25], [0.25, -0.25], [0.25, 0.25], [-0.25, 0.25]] },
+    { "group": "arm_n", "color": "hull_dk", "shade": "deep", "note": "north arm", "points": [[-0.12, -0.25], [0.12, -0.25], [0.12, -0.72], [-0.12, -0.72]] },
+    { "group": "arm_s", "color": "hull_dk", "shade": "deep", "note": "south arm - mirrored pair", "points": [[-0.12, 0.25], [0.12, 0.25], [0.12, 0.72], [-0.12, 0.72]] },
+    { "group": "arm_e", "color": "hull_dk", "shade": "deep", "note": "east arm", "points": [[0.25, -0.12], [0.72, -0.12], [0.72, 0.12], [0.25, 0.12]] },
+    { "group": "arm_w", "color": "hull_dk", "shade": "deep", "note": "west arm - mirrored pair", "points": [[-0.25, -0.12], [-0.72, -0.12], [-0.72, 0.12], [-0.25, 0.12]] }
+  ],
+  "details": [
+    { "group": "core", "color": "lamp", "shade": "glow", "role": "detail", "note": "core lamp", "circle": [0.0, 0.0, 0.08], "min_px": 6 },
+    { "group": "arm_n", "color": "lamp", "shade": "glow", "role": "detail", "note": "north dock lamp", "circle": [0.0, -0.68, 0.03], "min_px": 6 },
+    { "group": "arm_s", "color": "lamp", "shade": "glow", "role": "detail", "note": "south dock lamp", "circle": [0.0, 0.68, 0.03], "min_px": 6 },
+    { "group": "arm_e", "color": "lamp", "shade": "glow", "role": "detail", "note": "east dock lamp", "circle": [0.68, 0.0, 0.03], "min_px": 6 },
+    { "group": "arm_w", "color": "lamp", "shade": "glow", "role": "detail", "note": "west dock lamp", "circle": [-0.68, 0.0, 0.03], "min_px": 6 }
+  ]
+}

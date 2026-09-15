@@ -1,0 +1,8 @@
+{
+  "si_hall": { "culture": "standard_issue", "name": "Administration Hall", "description": "A prefab administrative block - rounded corners, painted livery.", "design": "buildings/si_hall", "footprint": { "width": 108, "depth": 40.0 } },
+  "si_tower": { "culture": "standard_issue", "name": "Habitation Tower", "description": "Identical floors stacked straight, no lean.", "design": "buildings/si_tower", "footprint": { "width": 36, "depth": 22.0 } },
+  "si_bunk": { "culture": "standard_issue", "name": "Bunk Module", "description": "The smallest prefab housing unit.", "design": "buildings/si_bunk", "footprint": { "width": 34, "depth": 18.0 } },
+  "si_bench": { "culture": "standard_issue", "name": "Prefab Bench", "description": "A rounded-corner bench with a white stripe.", "design": "decorations/si_bench", "footprint": { "width": 24, "depth": 9.0 } },
+  "si_bollard": { "culture": "standard_issue", "name": "Hazard Bollard", "description": "A short rounded post banded in amber.", "design": "decorations/si_bollard", "footprint": { "width": 5, "depth": 5.0 } },
+  "si_lamp": { "culture": "standard_issue", "name": "Post Lamp", "description": "A perfectly straight prefab lamp post.", "design": "decorations/si_lamp", "footprint": { "width": 6, "depth": 5.0 } }
+}

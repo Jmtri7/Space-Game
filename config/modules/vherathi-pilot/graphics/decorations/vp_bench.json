@@ -1,0 +1,42 @@
+{
+  "identity": "A grown resin bench from the side: a single asymmetric seat-slab that thickens toward one end, on two uneven legs rather than a mirrored pair. About 1.3 m long.",
+  "tier": "decoration",
+  "palette": "vherathi_pilot",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height). ELEVATION: x is facade width about 0, y<=0 is height above the floor.",
+  "scale_note": "seat at ~0.25x PLAYER_H, ~0.75x wide",
+  "silhouette": [
+    {
+      "group": "body",
+      "color": "hull_dk",
+      "shade": "matte",
+      "note": "near leg, thicker",
+      "points": [[-10.5, -8.0], [-6.5, -8.0], [-6.5, 0], [-10.5, 0]]
+    },
+    {
+      "group": "body",
+      "color": "metal",
+      "shade": "metal",
+      "note": "far leg, thinner",
+      "points": [[7.5, -8.0], [9.5, -8.0], [9.5, 0], [7.5, 0]]
+    },
+    {
+      "group": "body",
+      "color": "hull",
+      "shade": "deep",
+      "note": "seat slab, thicker toward the near leg",
+      "points": [[-11, -10.2], [11, -9.2], [11, -7.6], [-11, -8.6]]
+    }
+  ],
+  "details": [
+    {
+      "group": "body",
+      "color": "lamp",
+      "shade": "glow",
+      "role": "detail",
+      "note": "vein trace along the seat edge",
+      "points": [[-11, -8.6], [11, -7.6], [11, -7.2], [-11, -8.2]],
+      "min_px": 20
+    }
+  ]
+}

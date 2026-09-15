@@ -1,0 +1,6 @@
+{
+  "name": "kaethar-directorate",
+  "version": "0.1.0",
+  "description": "The Kaethar Directorate: cold hierarchical military power, hard angles, gunmetal, one red warning colour and nothing else.",
+  "modules": ["figures-human"]
+}

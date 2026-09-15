@@ -1,0 +1,13 @@
+{
+  "identity": "A hazard bollard from the side: a short rounded post banded in amber, marking a lane edge.",
+  "tier": "decoration",
+  "palette": "standard_issue",
+  "view": "elevation",
+  "units": "absolute local units (31 = player height).",
+  "silhouette": [
+    { "group": "body", "color": "hull", "shade": "matte", "note": "rounded post", "points": [[-2.5, 0], [2.5, 0], [2.2, -12], [-2.2, -12]] }
+  ],
+  "details": [
+    { "group": "body", "color": "lamp", "shade": "glow", "role": "detail", "note": "hazard band", "points": [[-2.4, -8], [2.4, -8], [2.3, -6], [-2.3, -6]], "min_px": 6 }
+  ]
+}

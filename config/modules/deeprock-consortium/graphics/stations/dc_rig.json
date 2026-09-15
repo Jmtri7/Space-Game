@@ -1,0 +1,19 @@
+{
+  "identity": "Deeprock Rig - an open girder headframe over the shaft mouth, an asymmetric hoist arm to port, a core cabin between the legs. Open frame, not a sealed hull - the opposite silhouette of the Platform's stacked drums.",
+  "tier": "station",
+  "palette": "deeprock",
+  "size": 48,
+  "units": "fractions of size, centred at 0,0.",
+  "silhouette": [
+    { "group": "leg_r", "color": "hull_dk", "shade": "matte", "note": "starboard girder leg", "points": [[0.32, 0.8], [0.2, 0.8], [0.04, -0.7], [0.16, -0.7]] },
+    { "group": "leg_l", "color": "hull_dk", "shade": "matte", "note": "port girder leg", "points": [[-0.32, 0.8], [-0.2, 0.8], [-0.04, -0.7], [-0.16, -0.7]] },
+    { "group": "cabin", "color": "hull", "shade": "matte", "note": "core cabin", "points": [[-0.16, -0.05], [0.16, -0.05], [0.16, 0.35], [-0.16, 0.35]] },
+    { "group": "hoist", "color": "hull_dk", "shade": "deep", "note": "asymmetric hoist arm, port only", "points": [[-0.16, -0.5], [-0.52, -0.62], [-0.5, -0.5], [-0.16, -0.4]] }
+  ],
+  "details": [
+    { "group": "cabin", "color": "glass", "shade": "sheen", "role": "detail", "note": "cabin window", "points": [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.2], [-0.1, 0.2]], "min_px": 8 },
+    { "group": "leg_r", "color": "lamp", "shade": "glow", "role": "detail", "note": "leg lamp, starboard", "circle": [0.09, -0.68, 0.03], "min_px": 6 },
+    { "group": "leg_l", "color": "lamp", "shade": "glow", "role": "detail", "note": "leg lamp, port - mirrored", "circle": [-0.09, -0.68, 0.03], "min_px": 6 },
+    { "group": "hoist", "color": "lamp", "shade": "flat", "role": "detail", "note": "hazard stripe, hoist", "points": [[-0.25, -0.55], [-0.42, -0.6], [-0.4, -0.52], [-0.23, -0.47]], "min_px": 8 }
+  ]
+}

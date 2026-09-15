@@ -1,0 +1,31 @@
+{
+  "identity": "Pit Foreman's tool vest: a rectangular panel wider than the Boss's coat, with a hazard-yellow pocket row. Medium coverage.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "matte",
+      "note": "chest panel",
+      "outset": 0.03,
+      "tag": "dc_foreman_vest",
+      "geometry": {
+        "masc": { "points": [[-2.2, -25.3], [2.2, -25.3], [2.2, -19.0], [-2.2, -19.0]], "fits": [] },
+        "femme": { "points": [[-2.1, -23.8], [2.1, -23.8], [2.1, -17.8], [-2.1, -17.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "flat",
+      "note": "pocket row",
+      "outset": 0.05,
+      "tag": "dc_foreman_vest",
+      "geometry": {
+        "masc": { "points": [[-1.9, -21.0], [1.9, -21.0], [1.9, -19.8], [-1.9, -19.8]], "fits": [] },
+        "femme": { "points": [[-1.8, -19.7], [1.8, -19.7], [1.8, -18.5], [-1.8, -18.5]], "fits": [] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "ships": {
+    "dr_courier": { "design": "ships/dr_courier", "culture": "drossholt", "size": 11, "local_points": [[0.0, -0.9], [0.58, 0.62], [0.35, 0.7], [-0.58, 0.62], [-0.35, 0.7]], "thrusters": [[0.2, 0.68], [-0.2, 0.68]], "thruster_width": 0.05, "thruster_length": 16 },
+    "dr_patrol": { "design": "ships/dr_patrol", "culture": "drossholt", "size": 15, "local_points": [[0.0, -0.5], [0.82, 0.15], [0.1, 0.55], [-0.82, 0.15], [-0.1, 0.55]], "thrusters": [[0.78, 0.1], [-0.78, 0.1]], "thruster_width": 0.06, "thruster_length": 18 },
+    "dr_hauler": { "design": "ships/dr_hauler", "culture": "drossholt", "size": 20, "local_points": [[0.0, -0.85], [0.32, -0.32], [0.24, 0.85], [-0.32, -0.32], [-0.24, 0.85]], "thrusters": [[0.14, 0.78], [-0.14, 0.78]], "thruster_width": 0.07, "thruster_length": 22 }
+  },
+  "space_stations": {
+    "dr_yard": { "design": "stations/dr_yard", "culture": "drossholt", "size": 260, "rotation_speed": 0.35, "landing_distance": 90, "windows": [] },
+    "dr_spine": { "design": "stations/dr_spine", "culture": "drossholt", "size": 240, "rotation_speed": 0.3, "landing_distance": 85, "windows": [] }
+  },
+  "moons": {
+    "dr_spine": { "design": "stations/dr_spine", "culture": "drossholt", "size": 240, "rotation_speed": 0.3, "landing_distance": 85, "windows": [] }
+  },
+  "outfits": {
+    "dr_tallyman_masc": { "body": "human_masc", "set": "dr_tallyman", "palette": "drossholt_dress" },
+    "dr_tallyman_femme": { "body": "human_femme", "set": "dr_tallyman", "palette": "drossholt_dress" },
+    "dr_deckchief_masc": { "body": "human_masc", "set": "dr_deckchief", "palette": "drossholt_dress" },
+    "dr_deckchief_femme": { "body": "human_femme", "set": "dr_deckchief", "palette": "drossholt_dress" },
+    "dr_gunbosun_masc": { "body": "human_masc", "set": "dr_gunbosun", "palette": "drossholt_dress" },
+    "dr_gunbosun_femme": { "body": "human_femme", "set": "dr_gunbosun", "palette": "drossholt_dress" }
+  }
+}

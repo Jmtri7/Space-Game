@@ -1,0 +1,31 @@
+{
+  "identity": "Tallyman's tabard: a flat rectangular bib panel down the center chest - blunt-edged, light coverage, no wrap-around.",
+  "tier": "person",
+  "palette": "drossholt_dress",
+  "regions": [
+    {
+      "group": "torso",
+      "color": "leather",
+      "shade": "matte",
+      "note": "center chest bib",
+      "outset": 0.03,
+      "tag": "dr_tally_tabard",
+      "geometry": {
+        "masc": { "points": [[-1.8, -25.3], [1.8, -25.3], [1.8, -18.0], [-1.8, -18.0]], "fits": [] },
+        "femme": { "points": [[-1.7, -23.8], [1.7, -23.8], [1.7, -16.8], [-1.7, -16.8]], "fits": [] }
+      }
+    },
+    {
+      "group": "torso",
+      "color": "lamp",
+      "shade": "glow",
+      "note": "tally-plate rivet accent",
+      "outset": 0.05,
+      "tag": "dr_tally_tabard",
+      "geometry": {
+        "masc": { "points": [[-0.5, -24.0], [0.5, -24.0], [0.5, -22.8], [-0.5, -22.8]], "fits": [] },
+        "femme": { "points": [[-0.5, -22.5], [0.5, -22.5], [0.5, -21.3], [-0.5, -21.3]], "fits": [] }
+      }
+    }
+  ]
+}

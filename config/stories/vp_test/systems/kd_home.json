@@ -1,0 +1,97 @@
+{
+  "name": "Kaethar Directorate Home",
+  "description": "Preview system: the Kaethar Redoubt and Bulwark stations, all three ships flying named roles between them.",
+  "star_map_position": { "x": -260, "y": 260 },
+  "station_asset": "kd_redoubt",
+  "moon_asset": "kd_bulwark",
+  "central_star": { "x": 0.5, "y": 0.5, "name": "KD-1", "size": 55, "color": [180, 200, 220] },
+  "player_start": { "x": 0.3, "y": 0.5 },
+  "star_seed": 7272,
+  "asteroid_field": { "per_chunk_range": [0, 1], "types": [] },
+  "ai_ships": [
+    { "pilot": "kd_picket_pilot", "ship_type": "kd_picket", "x": 0.45, "y": 0.35, "route": ["station", "moon"] },
+    { "pilot": "kd_bastion_pilot", "ship_type": "kd_bastion", "x": 0.55, "y": 0.6, "route": ["station", "moon"] },
+    { "pilot": "kd_spearhead_pilot", "ship_type": "kd_spearhead", "x": 0.35, "y": 0.6, "route": ["station"] }
+  ],
+  "station": {
+    "x": 0.5, "y": 0.35, "name": "Kaethar Redoubt",
+    "interiors": {
+      "kd_redoubt_deck": {
+        "label": "Kaethar Redoubt - Deck",
+        "culture": "kaethar_directorate",
+        "space_backdrop": true,
+        "floor_pattern": "kaethar",
+        "portals": [
+          { "x": -22, "y": 350, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Core", "polygon": [[260, 260], [440, 260], [440, 440], [260, 440]] },
+          { "label": "North Spur", "polygon": [[300, 120], [400, 120], [400, 260], [300, 260]] },
+          { "label": "Dock", "polygon": [[-20, 310], [180, 310], [180, 390], [-20, 390]] }
+        ],
+        "structures": [
+          { "x": 350, "y": 200, "building_type": "kd_garrison" },
+          { "x": 280, "y": 470, "building_type": "kd_marker" },
+          { "x": 420, "y": 470, "building_type": "kd_marker" },
+          { "x": 350, "y": 500, "building_type": "kd_bench" },
+          { "x": 300, "y": 400, "building_type": "kd_rack" }
+        ],
+        "npcs": [
+          {
+            "name": "Line Crew Dassen's second",
+            "x": 350, "y": 300,
+            "role": "resident",
+            "outfit": "kd_linecrew_masc",
+            "greeting": "Transponder, now.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  },
+  "moon": {
+    "x": 0.65, "y": 0.65, "name": "Kaethar Bulwark",
+    "interiors": {
+      "kd_garrison_yard": {
+        "label": "Kaethar Bulwark - Garrison Yard",
+        "culture": "kaethar_directorate",
+        "floor_pattern": "kaethar",
+        "entrance": { "x": 320, "y": 545 },
+        "portals": [
+          { "x": 320, "y": 556, "connected_locations": [], "return_to_ship": true }
+        ],
+        "rooms": [
+          { "label": "Yard", "polygon": [[160, 140], [480, 140], [480, 460], [160, 460]] },
+          { "label": "Pad Approach", "polygon": [[280, 460], [360, 460], [360, 560], [280, 560]] }
+        ],
+        "structures": [
+          { "x": 230, "y": 200, "building_type": "kd_garrison" },
+          { "x": 410, "y": 220, "building_type": "kd_muster_spine" },
+          { "x": 420, "y": 380, "building_type": "kd_cell" },
+          { "x": 200, "y": 400, "building_type": "kd_marker" },
+          { "x": 440, "y": 400, "building_type": "kd_marker" },
+          { "x": 320, "y": 420, "building_type": "kd_rack" },
+          { "x": 320, "y": 300, "building_type": "kd_bench" }
+        ],
+        "npcs": [
+          {
+            "name": "Line Officer Marrow's second",
+            "x": 320, "y": 250,
+            "role": "resident",
+            "outfit": "kd_lineofficer_femme",
+            "greeting": "State your unit designation.",
+            "dialogue_options": ["Leave"]
+          },
+          {
+            "name": "Gate Warden Krell's second",
+            "x": 380, "y": 320,
+            "role": "resident",
+            "outfit": "kd_gatewarden_masc",
+            "greeting": "Halt.",
+            "dialogue_options": ["Leave"]
+          }
+        ]
+      }
+    }
+  }
+}

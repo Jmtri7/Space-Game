@@ -1,0 +1,22 @@
+{
+  "ships": {
+    "kd_picket": { "design": "ships/kd_picket", "culture": "kaethar_directorate", "size": 11, "local_points": [[0.0, -1.0], [0.35, 0.5], [0.15, 0.7], [-0.15, 0.7], [-0.35, 0.5]], "thrusters": [[0.2, 0.66], [-0.2, 0.66]], "thruster_width": 0.05, "thruster_length": 16 },
+    "kd_bastion": { "design": "ships/kd_bastion", "culture": "kaethar_directorate", "size": 16, "local_points": [[0.0, -0.85], [0.64, 0.15], [0.0, 0.75], [-0.64, 0.15]], "thrusters": [[0.0, 0.7]], "thruster_width": 0.06, "thruster_length": 18 },
+    "kd_spearhead": { "design": "ships/kd_spearhead", "culture": "kaethar_directorate", "size": 22, "local_points": [[0.0, -0.95], [0.5, 0.6], [-0.5, 0.6]], "thrusters": [[0.3, 0.55], [-0.3, 0.55]], "thruster_width": 0.07, "thruster_length": 22 }
+  },
+  "space_stations": {
+    "kd_redoubt": { "design": "stations/kd_redoubt", "culture": "kaethar_directorate", "size": 260, "rotation_speed": 0.1, "landing_distance": 95, "windows": [] },
+    "kd_bulwark": { "design": "stations/kd_bulwark", "culture": "kaethar_directorate", "size": 240, "rotation_speed": 0.15, "landing_distance": 85, "windows": [] }
+  },
+  "moons": {
+    "kd_bulwark": { "design": "stations/kd_bulwark", "culture": "kaethar_directorate", "size": 240, "rotation_speed": 0.15, "landing_distance": 85, "windows": [] }
+  },
+  "outfits": {
+    "kd_linecrew_masc": { "body": "human_masc", "set": "kd_linecrew", "palette": "kaethar_dress" },
+    "kd_linecrew_femme": { "body": "human_femme", "set": "kd_linecrew", "palette": "kaethar_dress" },
+    "kd_lineofficer_masc": { "body": "human_masc", "set": "kd_lineofficer", "palette": "kaethar_dress" },
+    "kd_lineofficer_femme": { "body": "human_femme", "set": "kd_lineofficer", "palette": "kaethar_dress" },
+    "kd_gatewarden_masc": { "body": "human_masc", "set": "kd_gatewarden", "palette": "kaethar_dress" },
+    "kd_gatewarden_femme": { "body": "human_femme", "set": "kd_gatewarden", "palette": "kaethar_dress" }
+  }
+}

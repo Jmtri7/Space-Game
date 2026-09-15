@@ -1,0 +1,19 @@
+{
+  "identity": "Consortium Boss's cap: a plain flat cap across the crown, no hard hat, no ear-defenders - the cleanest headgear in the Consortium. Light coverage.",
+  "tier": "person",
+  "palette": "deeprock_dress",
+  "regions": [
+    {
+      "group": "head",
+      "color": "leather",
+      "shade": "matte",
+      "note": "flat cap, ear to ear",
+      "outset": 0.04,
+      "tag": "dc_boss_cap",
+      "geometry": {
+        "masc": { "points": [[-2.1, -29.0], [1.6, -29.2], [1.7, -30.4], [-2.2, -30.2]], "fits": [] },
+        "femme": { "points": [[-2.0, -27.5], [1.5, -27.7], [1.6, -28.9], [-2.1, -28.7]], "fits": [] }
+      }
+    }
+  ]
+}
