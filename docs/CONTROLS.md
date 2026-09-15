@@ -131,6 +131,7 @@ moment any hostile ship is destroyed in its target system.
 |---------|--------|
 | **Click** a system | Select it as the jump target |
 | **Click + drag** empty space | Pan the map |
+| **Mouse wheel** | Zoom in / out, anchored on the cursor |
 | **V** | Close the map and jump to the selected system (space view only - from a station/moon interior the map is view-and-select only, and **V** just closes it) |
 | **1**, **ESC**, or the **Close Map** button (top-left) | Close the map (selection persists) |
 
@@ -144,6 +145,11 @@ Pressing **V** (either on the map or back in the space view) starts the jump
 if the target is a different system, or the current one while far enough
 from its center (`JUMP_SELF_MIN_DISTANCE`); from too close to the center a
 self-jump just flashes a brief "too close" notice instead.
+
+The map is bounded by a border drawn at each story's map size
+(`story.json`'s `star_map`, default `constants.STAR_MAP_WIDTH`/`_HEIGHT` -
+see config-formats.md); panning is clamped so an edge can be dragged as far
+as the middle of the screen but never past it into empty space.
 
 The star map also opens from a station/moon interior (**1**) - handy for
 planning your next hop while docked. Jumping needs the cockpit, so **V**

@@ -22,6 +22,18 @@ INTERIOR_CAMERA_ZOOM = 3.0
 INTERIOR_CAMERA_ZOOM_MIN = 2.0
 INTERIOR_CAMERA_ZOOM_MAX = 9.0
 CAMERA_ZOOM_STEP = 0.25  # zoom change per mouse-wheel notch
+
+# Galaxy star map (game/ui/star_map.py). half-width/height of the pannable
+# area in star-map space (same units as systems/*.json's "star_map_position")
+# - overridable per story via story.json's "star_map": {"width", "height"}.
+# Panning is clamped so a map edge can reach the middle of the screen but
+# never scroll past it into empty space beyond.
+STAR_MAP_WIDTH = 1600
+STAR_MAP_HEIGHT = 1200
+STAR_MAP_ZOOM = 1.0
+STAR_MAP_ZOOM_MIN = 0.5
+STAR_MAP_ZOOM_MAX = 2.5
+STAR_MAP_ZOOM_STEP = 1.15  # multiplicative factor per mouse-wheel notch
 SAVE_DIR = "saves"
 # Where MusicPlayer caches its procedurally-rendered tracks so they only
 # have to be synthesized once per machine (see game/audio/music.py).

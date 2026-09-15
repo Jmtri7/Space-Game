@@ -1,8 +1,12 @@
 """Galaxy-scale star map overlay: drag to pan, click a system to select it.
 Mouse-only."""
 import pygame
-from game.constants import WHITE, YELLOW, GREEN, CYAN
-from game.utils import get_ui_scale, get_star_systems, get_font, system_unlocked
+from game.constants import (
+    WHITE, YELLOW, GREEN, CYAN,
+    STAR_MAP_WIDTH, STAR_MAP_HEIGHT,
+    STAR_MAP_ZOOM, STAR_MAP_ZOOM_MIN, STAR_MAP_ZOOM_MAX, STAR_MAP_ZOOM_STEP,
+)
+from game.utils import get_ui_scale, get_star_systems, get_story, get_font, system_unlocked
 from game.ui.menu_base import MenuBase
 from game.ui.ui_theme import draw_glass_panel
 from game.controls import Action, primary_label
@@ -39,12 +43,26 @@ class StarMap(MenuBase):
         self.pan_x = current_pos.get("x", 0)
         self.pan_y = current_pos.get("y", 0)
 
+        # Per-story map extent (story.json's "star_map": {"width", "height"})
+        # - half-extents in star-map space. Panning is clamped to these so a
+        # map edge can be dragged as far as screen center but no further.
+        story_config = get_story(story).get("star_map", {})
+        self.half_width = story_config.get("width", STAR_MAP_WIDTH) / 2
+        self.half_height = story_config.get("height", STAR_MAP_HEIGHT) / 2
+        self._clamp_pan()
+
+        self.zoom = STAR_MAP_ZOOM
+
         self.dragging = False
         self.drag_start_mouse = (0, 0)
         self.drag_start_pan = (self.pan_x, self.pan_y)
         self._screen_positions = {}  # system_id -> (sx, sy), refreshed each draw()
         self._hud_click_rects = []  # UI panel rects, refreshed each draw()
         self.button_index = 0
+
+    def _clamp_pan(self):
+        self.pan_x = max(-self.half_width, min(self.half_width, self.pan_x))
+        self.pan_y = max(-self.half_height, min(self.half_height, self.pan_y))
 
     def _unlocked(self, system_id):
         return system_unlocked(self.systems.get(system_id, {}), self.flags)
@@ -77,12 +95,35 @@ class StarMap(MenuBase):
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.dragging = False
             elif event.type == pygame.MOUSEMOTION and self.dragging:
-                ui_scale = get_ui_scale()
-                dx = (event.pos[0] - self.drag_start_mouse[0]) / ui_scale
-                dy = (event.pos[1] - self.drag_start_mouse[1]) / ui_scale
+                scale = get_ui_scale() * self.zoom
+                dx = (event.pos[0] - self.drag_start_mouse[0]) / scale
+                dy = (event.pos[1] - self.drag_start_mouse[1]) / scale
                 self.pan_x = self.drag_start_pan[0] - dx
                 self.pan_y = self.drag_start_pan[1] - dy
+                self._clamp_pan()
+            elif event.type == pygame.MOUSEWHEEL:
+                self._zoom_at(pygame.mouse.get_pos(), event.y)
         return None
+
+    def _zoom_at(self, mouse_pos, notches):
+        """Zoom in/out (wheel up = in), keeping the world point under the
+        cursor fixed on screen so zooming feels anchored to the pointer."""
+        if notches == 0:
+            return
+        import game.utils as _u
+        ui_scale = get_ui_scale()
+        center_x, center_y = _u.screen_width / 2, _u.screen_height / 2
+        old_scale = ui_scale * self.zoom
+        world_x = self.pan_x + (mouse_pos[0] - center_x) / old_scale
+        world_y = self.pan_y + (mouse_pos[1] - center_y) / old_scale
+
+        factor = STAR_MAP_ZOOM_STEP ** notches
+        self.zoom = max(STAR_MAP_ZOOM_MIN, min(STAR_MAP_ZOOM_MAX, self.zoom * factor))
+
+        new_scale = ui_scale * self.zoom
+        self.pan_x = world_x - (mouse_pos[0] - center_x) / new_scale
+        self.pan_y = world_y - (mouse_pos[1] - center_y) / new_scale
+        self._clamp_pan()
 
     def _system_at(self, mouse_pos, radius=16):
         for system_id, (sx, sy) in self._screen_positions.items():
@@ -95,17 +136,25 @@ class StarMap(MenuBase):
     def draw_content(self, surface):
         surface.fill((8, 8, 20))
         ui_scale = get_ui_scale()
+        map_scale = ui_scale * self.zoom
         center_x, center_y = surface.get_width() / 2, surface.get_height() / 2
 
         font_label = get_font(int(20 * ui_scale))
         font_title = get_font(int(32 * ui_scale))
         font_tag = get_font(int(16 * ui_scale))
 
+        border_left = int(center_x + (-self.half_width - self.pan_x) * map_scale)
+        border_top = int(center_y + (-self.half_height - self.pan_y) * map_scale)
+        border_rect = pygame.Rect(
+            border_left, border_top,
+            int(self.half_width * 2 * map_scale), int(self.half_height * 2 * map_scale))
+        pygame.draw.rect(surface, (60, 60, 90), border_rect, max(1, int(2 * ui_scale)))
+
         self._screen_positions = {}
         for system_id, sysdata in self.systems.items():
             pos = sysdata.get("star_map_position", {"x": 0, "y": 0})
-            sx = int(center_x + (pos["x"] - self.pan_x) * ui_scale)
-            sy = int(center_y + (pos["y"] - self.pan_y) * ui_scale)
+            sx = int(center_x + (pos["x"] - self.pan_x) * map_scale)
+            sy = int(center_y + (pos["y"] - self.pan_y) * map_scale)
             self._screen_positions[system_id] = (sx, sy)
 
             is_current = system_id == self.current_system_id

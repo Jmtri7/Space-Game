@@ -393,6 +393,7 @@ except where a story clearly needs it; code holds the default.
 | `brake_slow_threshold` | Speed the tutorial's braking stage completes below |
 | `camera_zoom` / `camera_zoom_min` / `camera_zoom_max` | Space View world-render magnification: starting level + mouse-wheel zoom bounds (defaults `constants.CAMERA_ZOOM` / `_MIN` / `_MAX`) |
 | `interior_camera_zoom` / `interior_camera_zoom_min` / `interior_camera_zoom_max` | Same, for interiors - a separate level and range (defaults `constants.INTERIOR_CAMERA_ZOOM` / `_MIN` / `_MAX`) |
+| `star_map` | `{"width", "height"}` - full extent of the galaxy star map in star-map space (same units as `star_map_position`), centered on (0, 0). Defaults `constants.STAR_MAP_WIDTH` / `_HEIGHT`. Panning (`game/ui/star_map.py`) is clamped to this box - an edge can be dragged to the middle of the screen but no further - and the box is drawn as a border. Mouse wheel zooms in/out (`constants.STAR_MAP_ZOOM_MIN`/`_MAX`/`_STEP`), anchored on the cursor |
 | `walking_speed` | On-foot pace, player + AI dock-walkers (default `constants.WALKING_SPEED`) |
 | `default_outfit` | `graphics.json` `outfits` id for the player + AI pilots |
 | `ships.player_type` | Placeholder ship stats before one is owned (usually `null`) |
